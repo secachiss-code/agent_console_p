@@ -13,10 +13,10 @@ import msgspec
 
 from aconsole.contracts.errors import ErrorData, ErrorObject, MessageTooLargeDetails, error_by_name
 from aconsole.contracts.ipc import ResponseErr
+from aconsole.core.application.services.tabs import TabService
 from aconsole.core.infrastructure.ipc.framing import MAX_MESSAGE_BYTES, MessageTooLargeError, encode_line, read_frame
 from aconsole.core.infrastructure.ipc.ring import EventRing
 from aconsole.core.infrastructure.ipc.session import Connection
-from aconsole.core.infrastructure.tabs import default_tabs
 
 
 def peer_uid(sock: object) -> int:
@@ -50,11 +50,11 @@ def _peer_uid(writer: asyncio.StreamWriter) -> int:
 class IpcServer:
     """Accept local clients and run one ``Connection`` each."""
 
-    def __init__(self, path: Path, ring: EventRing | None = None) -> None:
+    def __init__(self, path: Path, ring: EventRing | None = None, *, tabs: TabService) -> None:
         self.path = path
         self.ring = ring or EventRing()
         self.peers: list[int] = []
-        self.tabs = default_tabs()
+        self.tabs = tabs
         self._server: asyncio.AbstractServer | None = None
         self._encoder = msgspec.json.Encoder()
 

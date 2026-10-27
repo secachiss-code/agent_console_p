@@ -1,9 +1,12 @@
 """`aconsoled --serve` and `python -m aconsole.core --fake SCENARIO [--socket PATH]`."""
 
+from __future__ import annotations
+
 import asyncio
 import signal
 import sys
 import threading
+from typing import TYPE_CHECKING
 
 from aconsole.core.bootstrap import (
     EXIT_REFUSED,
@@ -18,6 +21,9 @@ from aconsole.core.bootstrap import (
 )
 from aconsole.core.infrastructure.fake.server import FakeCore
 from aconsole.core.infrastructure.persistence.startup import default_database
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 _SCENARIO_ONLY = 2
 _WITH_SOCKET = 4
@@ -41,6 +47,13 @@ def _usage() -> None:
     _ = sys.stdout.write(_FAKE_USAGE + _SERVE_USAGE)
 
 
+def serve_daemon(socket: Path) -> Daemon:
+    """The daemon `__main__` serves. Its tab host uses this same socket path."""
+    daemon = Daemon(socket, database=default_database())
+    daemon.serve_ingest = True
+    return daemon
+
+
 def _serve(argv: list[str]) -> int:
     parsed = parse_serve(argv)
     if parsed is None:
@@ -55,9 +68,7 @@ def _serve(argv: list[str]) -> int:
     if message is not None:
         _ = sys.stderr.write(f"{message}\n")
         return EXIT_REFUSED
-    daemon = Daemon(socket_path, database=default_database())
-    daemon.serve_ingest = True
-    return asyncio.run(run_with_signals(daemon))
+    return asyncio.run(run_with_signals(serve_daemon(socket_path)))
 
 
 def main(argv: list[str]) -> int:

@@ -43,6 +43,7 @@ from aconsole.core.infrastructure.persistence.startup import (
     sqlite_url,
 )
 from aconsole.core.infrastructure.persistence.writer import Writer
+from aconsole.core.infrastructure.tabs import default_tabs
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterator
@@ -234,7 +235,8 @@ def test_round6_k22_without_drained_backpressure_fires() -> None:
 
 
 async def _drain_calls(path: Path, calls: list[int]) -> int:
-    server = IpcServer(path / "aconsole" / "core.sock")
+    sock = path / "aconsole" / "core.sock"
+    server = IpcServer(sock, tabs=default_tabs(socket_path=str(sock)))
     await server.start()
     try:
         reader, writer = await asyncio.open_unix_connection(server.path)

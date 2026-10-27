@@ -34,6 +34,7 @@ from aconsole.core.infrastructure.ipc.framing import (
 from aconsole.core.infrastructure.ipc.ring import EventRing
 from aconsole.core.infrastructure.ipc.server import IpcServer, allow_peer
 from aconsole.core.infrastructure.ipc.session import OUTBOUND_LIMIT, Connection
+from aconsole.core.infrastructure.tabs import default_tabs
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -176,7 +177,8 @@ def _notice(name: str) -> Notify:
 
 
 async def _socket(path: Path) -> tuple[int, int, list[int]]:
-    server = IpcServer(path / "aconsole" / "core.sock")
+    sock = path / "aconsole" / "core.sock"
+    server = IpcServer(sock, tabs=default_tabs(socket_path=str(sock)))
     await server.start()
     try:
         mode = stat.S_IMODE(server.path.stat().st_mode)
