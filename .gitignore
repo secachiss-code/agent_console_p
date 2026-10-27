@@ -11,7 +11,7 @@ __pycache__/
 .coverage.*
 htmlcov/
 .aconsole-dev/
-docs/
+/docs
 
 # Local agent configuration and instructions
 .agents/
@@ -19,7 +19,7 @@ docs/
 .claude/
 .codex/
 .cursor/
-.grok/
+.grok
 AGENTS.md
 
 # Development caches and logs
