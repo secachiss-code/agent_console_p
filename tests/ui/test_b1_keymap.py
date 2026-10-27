@@ -7,9 +7,9 @@ import pytest
 
 def test_b1_keymap_defaults_and_overrides() -> None:
     """`keymap_overrides` from settings replace, disable, and validate defaults."""
-    from aconsole.ui.viewmodels.logic.keymap import DEFAULT_BINDINGS, resolve_keymap
     from aconsole.ui.client.core_client import CoreClient
     from aconsole.ui.viewmodels.app_vm import AppViewModel
+    from aconsole.ui.viewmodels.logic.keymap import DEFAULT_BINDINGS, resolve_keymap
 
     defaults = {binding.action_id: binding.accelerators for binding in DEFAULT_BINDINGS}
     expected = {
@@ -69,7 +69,7 @@ def test_b1_keymap_defaults_and_overrides() -> None:
     assert vm.apply_overrides({"palette": "<Control>x", "new-tab": "<Control>x"}) is False
     assert vm.bindings == accepted
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r".+"):
         resolve_keymap({"not-an-action": "<Control>x"})
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r".+"):
         resolve_keymap({"palette": "<Control>x", "new-tab": "<Control>x"})
