@@ -1,0 +1,50 @@
+{
+  "$defs": {
+    "Toast": {
+      "properties": {
+        "action_item_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "action_label": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "message": {
+          "type": "string"
+        },
+        "timeout_s": {
+          "default": 5,
+          "type": "integer"
+        },
+        "type": {
+          "enum": [
+            "toast"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "message",
+        "action_label",
+        "action_item_id"
+      ],
+      "title": "Toast",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/Toast",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

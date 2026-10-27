@@ -1,0 +1,29 @@
+{
+  "$defs": {
+    "DiffSummaryParams": {
+      "properties": {
+        "base": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "tab_id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "tab_id"
+      ],
+      "title": "DiffSummaryParams",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/DiffSummaryParams",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

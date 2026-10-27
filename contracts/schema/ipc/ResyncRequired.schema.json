@@ -1,0 +1,27 @@
+{
+  "$defs": {
+    "ResyncRequired": {
+      "properties": {
+        "reason": {
+          "enum": [
+            "backpressure",
+            "restart"
+          ]
+        },
+        "type": {
+          "enum": [
+            "resync_required"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "reason"
+      ],
+      "title": "ResyncRequired",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/ResyncRequired",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

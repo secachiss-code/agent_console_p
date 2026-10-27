@@ -1,0 +1,29 @@
+{
+  "$defs": {
+    "ScreenTextReplyParams": {
+      "properties": {
+        "lines": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "request_id": {
+          "type": "string"
+        },
+        "tab_id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "request_id",
+        "tab_id",
+        "lines"
+      ],
+      "title": "ScreenTextReplyParams",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/ScreenTextReplyParams",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

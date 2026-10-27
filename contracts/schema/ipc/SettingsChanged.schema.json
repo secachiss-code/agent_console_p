@@ -1,0 +1,24 @@
+{
+  "$defs": {
+    "SettingsChanged": {
+      "properties": {
+        "rev": {
+          "type": "integer"
+        },
+        "type": {
+          "enum": [
+            "settings_changed"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "rev"
+      ],
+      "title": "SettingsChanged",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/SettingsChanged",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

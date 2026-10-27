@@ -1,0 +1,18 @@
+{
+  "$defs": {
+    "ProjectIdParams": {
+      "properties": {
+        "project_id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "project_id"
+      ],
+      "title": "ProjectIdParams",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/ProjectIdParams",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

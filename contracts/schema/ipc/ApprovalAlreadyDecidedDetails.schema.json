@@ -1,0 +1,24 @@
+{
+  "$defs": {
+    "ApprovalAlreadyDecidedDetails": {
+      "properties": {
+        "decision": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "APPROVAL_ALREADY_DECIDED"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "decision"
+      ],
+      "title": "ApprovalAlreadyDecidedDetails",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/ApprovalAlreadyDecidedDetails",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

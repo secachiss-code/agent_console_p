@@ -1,0 +1,24 @@
+{
+  "$defs": {
+    "ProjectNotFoundDetails": {
+      "properties": {
+        "project_id": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "PROJECT_NOT_FOUND"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "project_id"
+      ],
+      "title": "ProjectNotFoundDetails",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/ProjectNotFoundDetails",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

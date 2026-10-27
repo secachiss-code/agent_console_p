@@ -1,0 +1,24 @@
+{
+  "$defs": {
+    "NoteNotFoundDetails": {
+      "properties": {
+        "note_ref": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "NOTE_NOT_FOUND"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "note_ref"
+      ],
+      "title": "NoteNotFoundDetails",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/NoteNotFoundDetails",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

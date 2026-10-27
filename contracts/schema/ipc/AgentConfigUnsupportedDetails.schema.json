@@ -1,0 +1,32 @@
+{
+  "$defs": {
+    "AgentConfigUnsupportedDetails": {
+      "properties": {
+        "agent": {
+          "type": "string"
+        },
+        "supported": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "AGENT_CONFIG_UNSUPPORTED_VERSION"
+          ]
+        },
+        "version": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "agent",
+        "version",
+        "supported"
+      ],
+      "title": "AgentConfigUnsupportedDetails",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/AgentConfigUnsupportedDetails",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

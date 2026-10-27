@@ -1,0 +1,32 @@
+{
+  "$defs": {
+    "PermissionDecision": {
+      "properties": {
+        "behavior": {
+          "enum": [
+            "allow",
+            "deny"
+          ]
+        },
+        "message": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "behavior"
+      ],
+      "title": "PermissionDecision",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/PermissionDecision",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

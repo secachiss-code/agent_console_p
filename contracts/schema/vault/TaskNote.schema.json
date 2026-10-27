@@ -1,0 +1,117 @@
+{
+  "$defs": {
+    "AgentKind": {
+      "enum": [
+        "claude",
+        "codex",
+        "cursor",
+        "grok",
+        "opencode"
+      ],
+      "title": "AgentKind"
+    },
+    "NodeStatus": {
+      "enum": [
+        "blocked",
+        "cancelled",
+        "done",
+        "failed",
+        "in_progress",
+        "pending",
+        "verifying"
+      ],
+      "title": "NodeStatus"
+    },
+    "TaskNote": {
+      "properties": {
+        "acceptance": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "aconsole": {
+          "default": 1,
+          "enum": [
+            1
+          ]
+        },
+        "depends_on": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "id": {
+          "pattern": "^[0-9A-HJKMNP-TV-Z]{26}$",
+          "type": "string"
+        },
+        "key": {
+          "type": "string"
+        },
+        "lease": {
+          "default": "",
+          "type": "string"
+        },
+        "owner_agent": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AgentKind"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "paths": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "plan": {
+          "type": "string"
+        },
+        "review_required": {
+          "default": false,
+          "type": "boolean"
+        },
+        "status": {
+          "$ref": "#/$defs/NodeStatus"
+        },
+        "tags": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "type": {
+          "default": "task",
+          "enum": [
+            "task"
+          ]
+        },
+        "updated": {
+          "format": "date-time",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "plan",
+        "key",
+        "status",
+        "updated"
+      ],
+      "title": "TaskNote",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/TaskNote",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

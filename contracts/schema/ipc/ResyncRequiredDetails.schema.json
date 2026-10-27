@@ -1,0 +1,24 @@
+{
+  "$defs": {
+    "ResyncRequiredDetails": {
+      "properties": {
+        "oldest_seq": {
+          "type": "integer"
+        },
+        "type": {
+          "enum": [
+            "RESYNC_REQUIRED"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "oldest_seq"
+      ],
+      "title": "ResyncRequiredDetails",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/ResyncRequiredDetails",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

@@ -1,0 +1,47 @@
+{
+  "$defs": {
+    "ImpactView": {
+      "properties": {
+        "canvas": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "hops": {
+          "type": "integer"
+        },
+        "layers": {
+          "items": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "type": "array"
+        },
+        "target": {
+          "type": "string"
+        },
+        "truncated": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "target",
+        "hops",
+        "layers",
+        "truncated",
+        "canvas"
+      ],
+      "title": "ImpactView",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/ImpactView",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

@@ -1,0 +1,27 @@
+{
+  "$defs": {
+    "NodeNotReadyDetails": {
+      "properties": {
+        "blocked_by": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "type": {
+          "enum": [
+            "NODE_NOT_READY"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "blocked_by"
+      ],
+      "title": "NodeNotReadyDetails",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/NodeNotReadyDetails",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

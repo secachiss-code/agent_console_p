@@ -1,0 +1,22 @@
+{
+  "$defs": {
+    "ExitedParams": {
+      "properties": {
+        "tab_id": {
+          "type": "string"
+        },
+        "wait_status": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "tab_id",
+        "wait_status"
+      ],
+      "title": "ExitedParams",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/ExitedParams",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

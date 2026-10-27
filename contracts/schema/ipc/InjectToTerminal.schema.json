@@ -1,0 +1,32 @@
+{
+  "$defs": {
+    "InjectToTerminal": {
+      "properties": {
+        "submit": {
+          "type": "boolean"
+        },
+        "tab_id": {
+          "type": "string"
+        },
+        "text": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "inject_to_terminal"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "tab_id",
+        "text",
+        "submit"
+      ],
+      "title": "InjectToTerminal",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/InjectToTerminal",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

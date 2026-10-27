@@ -1,0 +1,28 @@
+{
+  "$defs": {
+    "DiffTooLargeDetails": {
+      "properties": {
+        "bytes": {
+          "type": "integer"
+        },
+        "files": {
+          "type": "integer"
+        },
+        "type": {
+          "enum": [
+            "DIFF_TOO_LARGE"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "files",
+        "bytes"
+      ],
+      "title": "DiffTooLargeDetails",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/DiffTooLargeDetails",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

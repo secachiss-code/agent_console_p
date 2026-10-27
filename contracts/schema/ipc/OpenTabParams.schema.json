@@ -1,0 +1,118 @@
+{
+  "$defs": {
+    "AgentKind": {
+      "enum": [
+        "claude",
+        "codex",
+        "cursor",
+        "grok",
+        "opencode"
+      ],
+      "title": "AgentKind"
+    },
+    "OpenTabParams": {
+      "properties": {
+        "agent": {
+          "$ref": "#/$defs/AgentKind"
+        },
+        "base_branch": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "existing_worktree": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "fork": {
+          "default": false,
+          "type": "boolean"
+        },
+        "plan_node": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "project_id": {
+          "type": "string"
+        },
+        "resume_session": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "start_now": {
+          "default": true,
+          "type": "boolean"
+        },
+        "title": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "workspace": {
+          "$ref": "#/$defs/WorkspaceMode"
+        },
+        "worktree_name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "project_id",
+        "agent",
+        "workspace"
+      ],
+      "title": "OpenTabParams",
+      "type": "object"
+    },
+    "WorkspaceMode": {
+      "enum": [
+        "existing_worktree",
+        "main_checkout",
+        "new_worktree"
+      ],
+      "title": "WorkspaceMode"
+    }
+  },
+  "$ref": "#/$defs/OpenTabParams",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

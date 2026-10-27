@@ -1,0 +1,18 @@
+{
+  "$defs": {
+    "PlanIdParams": {
+      "properties": {
+        "plan_id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "plan_id"
+      ],
+      "title": "PlanIdParams",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/PlanIdParams",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

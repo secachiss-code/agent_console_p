@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "node_id": {
+      "title": "Node Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "node_id"
+  ],
+  "title": "NodeClaimIn",
+  "type": "object"
+}

@@ -1,0 +1,28 @@
+{
+  "$defs": {
+    "VaultEditRejectedDetails": {
+      "properties": {
+        "note_ref": {
+          "type": "string"
+        },
+        "reason": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "VAULT_EDIT_REJECTED"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "note_ref",
+        "reason"
+      ],
+      "title": "VaultEditRejectedDetails",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/VaultEditRejectedDetails",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

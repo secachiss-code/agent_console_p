@@ -1,0 +1,18 @@
+{
+  "$defs": {
+    "SubscribeResult": {
+      "properties": {
+        "current_seq": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "current_seq"
+      ],
+      "title": "SubscribeResult",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/SubscribeResult",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

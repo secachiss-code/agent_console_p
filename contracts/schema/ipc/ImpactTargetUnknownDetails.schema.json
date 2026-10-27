@@ -1,0 +1,24 @@
+{
+  "$defs": {
+    "ImpactTargetUnknownDetails": {
+      "properties": {
+        "target": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "IMPACT_TARGET_UNKNOWN"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "target"
+      ],
+      "title": "ImpactTargetUnknownDetails",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/ImpactTargetUnknownDetails",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

@@ -1,0 +1,24 @@
+{
+  "$defs": {
+    "TabStateConflictDetails": {
+      "properties": {
+        "status": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "TAB_STATE_CONFLICT"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "status"
+      ],
+      "title": "TabStateConflictDetails",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/TabStateConflictDetails",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

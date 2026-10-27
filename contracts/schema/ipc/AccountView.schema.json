@@ -1,0 +1,115 @@
+{
+  "$defs": {
+    "AccountView": {
+      "properties": {
+        "agent": {
+          "$ref": "#/$defs/AgentKind"
+        },
+        "id": {
+          "type": "string"
+        },
+        "plan_label": {
+          "type": "string"
+        },
+        "quota": {
+          "items": {
+            "$ref": "#/$defs/QuotaWindowView"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "agent",
+        "plan_label",
+        "quota"
+      ],
+      "title": "AccountView",
+      "type": "object"
+    },
+    "AgentKind": {
+      "enum": [
+        "claude",
+        "codex",
+        "cursor",
+        "grok",
+        "opencode"
+      ],
+      "title": "AgentKind"
+    },
+    "QuotaLevel": {
+      "enum": [
+        "critical",
+        "ok",
+        "unknown",
+        "warn"
+      ],
+      "title": "QuotaLevel"
+    },
+    "QuotaWindowView": {
+      "properties": {
+        "estimated": {
+          "type": "boolean"
+        },
+        "key": {
+          "enum": [
+            "5h",
+            "7d",
+            "budget",
+            "month",
+            "week"
+          ]
+        },
+        "level": {
+          "$ref": "#/$defs/QuotaLevel"
+        },
+        "observed_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "resets_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "used_pct": {
+          "anyOf": [
+            {
+              "maximum": 100,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "key",
+        "used_pct",
+        "resets_at",
+        "level",
+        "observed_at",
+        "estimated"
+      ],
+      "title": "QuotaWindowView",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/AccountView",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

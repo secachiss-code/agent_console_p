@@ -1,0 +1,36 @@
+{
+  "$defs": {
+    "PaletteQuery": {
+      "properties": {
+        "project_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "tab_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "tab_id",
+        "project_id"
+      ],
+      "title": "PaletteQuery",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/PaletteQuery",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

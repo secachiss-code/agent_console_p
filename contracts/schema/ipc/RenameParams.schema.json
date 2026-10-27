@@ -1,0 +1,24 @@
+{
+  "$defs": {
+    "RenameParams": {
+      "properties": {
+        "tab_id": {
+          "type": "string"
+        },
+        "title": {
+          "maxLength": 80,
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "tab_id",
+        "title"
+      ],
+      "title": "RenameParams",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/RenameParams",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

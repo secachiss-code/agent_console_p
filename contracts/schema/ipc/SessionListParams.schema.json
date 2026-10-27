@@ -1,0 +1,32 @@
+{
+  "$defs": {
+    "AgentKind": {
+      "enum": [
+        "claude",
+        "codex",
+        "cursor",
+        "grok",
+        "opencode"
+      ],
+      "title": "AgentKind"
+    },
+    "SessionListParams": {
+      "properties": {
+        "agent": {
+          "$ref": "#/$defs/AgentKind"
+        },
+        "project_id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "project_id",
+        "agent"
+      ],
+      "title": "SessionListParams",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/SessionListParams",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

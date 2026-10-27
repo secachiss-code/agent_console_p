@@ -1,0 +1,26 @@
+{
+  "$defs": {
+    "ErrorSpec": {
+      "properties": {
+        "code": {
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        },
+        "retryable": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "code",
+        "name",
+        "retryable"
+      ],
+      "title": "ErrorSpec",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/ErrorSpec",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

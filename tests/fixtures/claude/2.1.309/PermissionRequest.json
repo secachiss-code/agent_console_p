@@ -1,0 +1,16 @@
+{
+  "session_id": "22222222-2222-4222-8222-222222222222",
+  "transcript_path": "/home/sas/.containers/containers/agent-claude/.claude/projects/-/22222222-2222-4222-8222-222222222222.jsonl",
+  "cwd": "/",
+  "prompt_id": "fa09aacb-ed4c-4a1b-b76c-18b87270629a",
+  "permission_mode": "default",
+  "effort": {
+    "level": "medium"
+  },
+  "hook_event_name": "PermissionRequest",
+  "tool_name": "Bash",
+  "tool_input": {
+    "command": "echo ac-hold-full",
+    "description": "Echo the requested string"
+  }
+}

@@ -1,0 +1,157 @@
+{
+  "$defs": {
+    "PaletteArgument": {
+      "properties": {
+        "choices": {
+          "anyOf": [
+            {
+              "items": {
+                "items": false,
+                "maxItems": 2,
+                "minItems": 2,
+                "prefixItems": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "string"
+                  }
+                ],
+                "type": "array"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "label": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "label",
+        "choices"
+      ],
+      "title": "PaletteArgument",
+      "type": "object"
+    },
+    "PaletteItem": {
+      "properties": {
+        "aliases": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "argument": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PaletteArgument"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "disabled_reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "id": {
+          "type": "string"
+        },
+        "keywords": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "kind": {
+          "$ref": "#/$defs/PaletteKind"
+        },
+        "score_hint": {
+          "type": "number"
+        },
+        "shortcut": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "subtitle": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "title": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "title",
+        "subtitle",
+        "keywords",
+        "aliases",
+        "score_hint",
+        "enabled",
+        "disabled_reason",
+        "argument",
+        "shortcut"
+      ],
+      "title": "PaletteItem",
+      "type": "object"
+    },
+    "PaletteItemsResult": {
+      "properties": {
+        "items": {
+          "items": {
+            "$ref": "#/$defs/PaletteItem"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "items"
+      ],
+      "title": "PaletteItemsResult",
+      "type": "object"
+    },
+    "PaletteKind": {
+      "enum": [
+        "action",
+        "approval",
+        "command",
+        "native_skill",
+        "note",
+        "plan_node",
+        "session",
+        "tab"
+      ],
+      "title": "PaletteKind"
+    }
+  },
+  "$ref": "#/$defs/PaletteItemsResult",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

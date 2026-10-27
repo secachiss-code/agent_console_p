@@ -1,0 +1,32 @@
+{
+  "$defs": {
+    "ScreenTextRequested": {
+      "properties": {
+        "last_lines": {
+          "type": "integer"
+        },
+        "request_id": {
+          "type": "string"
+        },
+        "tab_id": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "screen_text_requested"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "request_id",
+        "tab_id",
+        "last_lines"
+      ],
+      "title": "ScreenTextRequested",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/ScreenTextRequested",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

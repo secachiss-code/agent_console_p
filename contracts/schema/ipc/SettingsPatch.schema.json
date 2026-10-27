@@ -1,0 +1,95 @@
+{
+  "$defs": {
+    "SettingsPatch": {
+      "properties": {
+        "approval_hold_seconds": {
+          "maximum": 540,
+          "minimum": 30,
+          "type": "integer"
+        },
+        "approvals_mode": {
+          "enum": [
+            "inline",
+            "native"
+          ]
+        },
+        "checkpoints_enabled": {
+          "type": "boolean"
+        },
+        "checkpoints_keep": {
+          "maximum": 500,
+          "minimum": 5,
+          "type": "integer"
+        },
+        "codegraph_languages": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
+        "keymap_overrides": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
+        },
+        "notify_when": {
+          "enum": [
+            "always",
+            "never",
+            "unfocused"
+          ]
+        },
+        "quota_critical_pct": {
+          "maximum": 100,
+          "minimum": 0,
+          "type": "number"
+        },
+        "quota_warn_pct": {
+          "maximum": 100,
+          "minimum": 0,
+          "type": "number"
+        },
+        "scrollback_lines": {
+          "maximum": 200000,
+          "minimum": 1000,
+          "type": "integer"
+        },
+        "terminal_font": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "terminal_font_size": {
+          "maximum": 32,
+          "minimum": 8,
+          "type": "integer"
+        },
+        "theme": {
+          "enum": [
+            "dark",
+            "light",
+            "system"
+          ]
+        },
+        "vault_path": {
+          "type": "string"
+        },
+        "worktrees_dir": {
+          "type": "string"
+        }
+      },
+      "required": [],
+      "title": "SettingsPatch",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/SettingsPatch",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

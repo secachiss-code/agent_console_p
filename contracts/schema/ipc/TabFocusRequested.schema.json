@@ -1,0 +1,24 @@
+{
+  "$defs": {
+    "TabFocusRequested": {
+      "properties": {
+        "tab_id": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "tab_focus_requested"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "tab_id"
+      ],
+      "title": "TabFocusRequested",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/TabFocusRequested",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

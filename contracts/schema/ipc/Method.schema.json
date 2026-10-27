@@ -1,0 +1,58 @@
+{
+  "$defs": {
+    "Method": {
+      "properties": {
+        "capability": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "errors": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "long": {
+          "default": false,
+          "type": "boolean"
+        },
+        "name": {
+          "type": "string"
+        },
+        "params": {
+          "type": "string"
+        },
+        "result": {
+          "type": "string"
+        },
+        "roles": {
+          "default": [
+            "ui",
+            "cli"
+          ],
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "name",
+        "params",
+        "result"
+      ],
+      "title": "Method",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/Method",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

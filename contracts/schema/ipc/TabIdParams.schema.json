@@ -1,0 +1,18 @@
+{
+  "$defs": {
+    "TabIdParams": {
+      "properties": {
+        "tab_id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "tab_id"
+      ],
+      "title": "TabIdParams",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/TabIdParams",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

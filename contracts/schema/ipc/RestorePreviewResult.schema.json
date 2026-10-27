@@ -1,0 +1,33 @@
+{
+  "$defs": {
+    "RestorePreviewResult": {
+      "properties": {
+        "confirm_token": {
+          "type": "string"
+        },
+        "diffstat": {
+          "type": "string"
+        },
+        "files": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "scope_note": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "diffstat",
+        "files",
+        "confirm_token",
+        "scope_note"
+      ],
+      "title": "RestorePreviewResult",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/RestorePreviewResult",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

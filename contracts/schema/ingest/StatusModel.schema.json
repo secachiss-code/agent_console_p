@@ -1,0 +1,29 @@
+{
+  "$defs": {
+    "StatusModel": {
+      "properties": {
+        "display_name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "title": "StatusModel",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/StatusModel",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

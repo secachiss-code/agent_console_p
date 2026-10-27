@@ -1,0 +1,28 @@
+{
+  "$defs": {
+    "LeaseHeldDetails": {
+      "properties": {
+        "expires_at": {
+          "type": "string"
+        },
+        "holder_tab": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "LEASE_HELD"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "holder_tab",
+        "expires_at"
+      ],
+      "title": "LeaseHeldDetails",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/LeaseHeldDetails",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

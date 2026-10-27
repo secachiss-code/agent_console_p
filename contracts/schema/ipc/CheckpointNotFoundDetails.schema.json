@@ -1,0 +1,24 @@
+{
+  "$defs": {
+    "CheckpointNotFoundDetails": {
+      "properties": {
+        "checkpoint_id": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "CHECKPOINT_NOT_FOUND"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "checkpoint_id"
+      ],
+      "title": "CheckpointNotFoundDetails",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/CheckpointNotFoundDetails",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

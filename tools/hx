@@ -1,0 +1,8 @@
+#!/bin/sh
+# Temporary host command runner used until hostrun is on PATH.
+# The host cwd is fixed: host-spawn cannot see /run/host/... paths.
+if [ "$#" -lt 1 ]; then
+  echo "usage: tools/hx COMMAND [ARG...]" >&2
+  exit 2
+fi
+exec host-spawn -no-pty -cwd /home/sas/Projects/sp_aconsole_prototype "$@"

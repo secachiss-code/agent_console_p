@@ -1,0 +1,22 @@
+{
+  "$defs": {
+    "StartedParams": {
+      "properties": {
+        "pid": {
+          "type": "integer"
+        },
+        "tab_id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "tab_id",
+        "pid"
+      ],
+      "title": "StartedParams",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/StartedParams",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

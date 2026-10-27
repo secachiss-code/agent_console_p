@@ -1,0 +1,17 @@
+#!/bin/sh
+# Fake distrobox for A2.4. `enter -d NAME` prints one dry-run line and records the name.
+set -eu
+log=${DISTROBOX_FAKE_LOG-}
+if [ "${1-}" != "enter" ] || [ "${2-}" != "-d" ] || [ "${3-}" = "" ]; then
+  echo "usage" >&2
+  exit 2
+fi
+if [ -n "$log" ]; then
+  printf '%s\n' "$3" >>"$log"
+fi
+path=${DISTROBOX_FAKE_PATH-}
+if [ -z "$path" ]; then
+  printf 'podman exec --user sas %s\n' "$3"
+  exit 0
+fi
+printf 'podman exec --interactive --detach-keys= --user sas --env PATH=%s %s\n' "$path" "$3"

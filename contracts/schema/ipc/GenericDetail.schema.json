@@ -1,0 +1,24 @@
+{
+  "$defs": {
+    "GenericDetail": {
+      "properties": {
+        "json_preview": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "generic"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "json_preview"
+      ],
+      "title": "GenericDetail",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/GenericDetail",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

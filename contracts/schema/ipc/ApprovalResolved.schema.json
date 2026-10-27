@@ -1,0 +1,42 @@
+{
+  "$defs": {
+    "ApprovalResolved": {
+      "properties": {
+        "approval_id": {
+          "type": "string"
+        },
+        "by": {
+          "enum": [
+            "agent",
+            "rule",
+            "timeout",
+            "user"
+          ]
+        },
+        "outcome": {
+          "enum": [
+            "allowed",
+            "cancelled",
+            "denied",
+            "expired_to_native"
+          ]
+        },
+        "type": {
+          "enum": [
+            "approval_resolved"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "approval_id",
+        "outcome",
+        "by"
+      ],
+      "title": "ApprovalResolved",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/ApprovalResolved",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

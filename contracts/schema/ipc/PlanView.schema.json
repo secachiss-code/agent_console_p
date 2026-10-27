@@ -1,0 +1,179 @@
+{
+  "$defs": {
+    "AgentKind": {
+      "enum": [
+        "claude",
+        "codex",
+        "cursor",
+        "grok",
+        "opencode"
+      ],
+      "title": "AgentKind"
+    },
+    "NodeStatus": {
+      "enum": [
+        "blocked",
+        "cancelled",
+        "done",
+        "failed",
+        "in_progress",
+        "pending",
+        "verifying"
+      ],
+      "title": "NodeStatus"
+    },
+    "PlanNodeView": {
+      "properties": {
+        "depends_on": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "id": {
+          "type": "string"
+        },
+        "key": {
+          "type": "string"
+        },
+        "layer": {
+          "type": "integer"
+        },
+        "lease_expires_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "note": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "owner_agent": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AgentKind"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "priority": {
+          "type": "number"
+        },
+        "ready": {
+          "type": "boolean"
+        },
+        "status": {
+          "$ref": "#/$defs/NodeStatus"
+        },
+        "tab_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "title": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "key",
+        "title",
+        "status",
+        "ready",
+        "layer",
+        "priority",
+        "depends_on",
+        "owner_agent",
+        "tab_id",
+        "lease_expires_at",
+        "note"
+      ],
+      "title": "PlanNodeView",
+      "type": "object"
+    },
+    "PlanView": {
+      "properties": {
+        "canvas": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "done": {
+          "type": "integer"
+        },
+        "goal": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "nodes": {
+          "items": {
+            "$ref": "#/$defs/PlanNodeView"
+          },
+          "type": "array"
+        },
+        "project_id": {
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "active",
+            "archived",
+            "completed"
+          ]
+        },
+        "title": {
+          "type": "string"
+        },
+        "total": {
+          "type": "integer"
+        },
+        "updated_at": {
+          "format": "date-time",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "project_id",
+        "title",
+        "goal",
+        "status",
+        "nodes",
+        "done",
+        "total",
+        "canvas",
+        "updated_at"
+      ],
+      "title": "PlanView",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/PlanView",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

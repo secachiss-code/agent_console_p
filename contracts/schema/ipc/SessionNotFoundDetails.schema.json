@@ -1,0 +1,24 @@
+{
+  "$defs": {
+    "SessionNotFoundDetails": {
+      "properties": {
+        "session_id": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "SESSION_NOT_FOUND"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "session_id"
+      ],
+      "title": "SessionNotFoundDetails",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/SessionNotFoundDetails",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

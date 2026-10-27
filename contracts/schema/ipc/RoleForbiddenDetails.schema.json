@@ -1,0 +1,24 @@
+{
+  "$defs": {
+    "RoleForbiddenDetails": {
+      "properties": {
+        "role": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "ROLE_FORBIDDEN"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "role"
+      ],
+      "title": "RoleForbiddenDetails",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/RoleForbiddenDetails",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

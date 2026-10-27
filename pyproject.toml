@@ -1,0 +1,195 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "aconsole"
+version = "0.0.0"
+description = "Agents Console core and UI."
+requires-python = ">=3.15"
+dependencies = [
+  "alembic==1.20.1",
+  "mcp==2.3.0",
+  "msgspec==0.22.0",
+  "ruamel.yaml==0.19.1",
+  "sqlalchemy==2.1.6",
+  "uvicorn==0.54.0",
+  "watchdog==6.0.0",
+]
+
+[dependency-groups]
+ui = [
+  "pygobject==3.58.1",
+  "pygobject-stubs==2.20.0",
+  "rapidfuzz==3.14.6",
+]
+dev = [
+  "basedpyright==1.40.2",
+  "hypothesis>=6.140",
+  "import-linter==2.11",
+  "pytest>=9",
+  "pytest-cov>=7",
+  "pytest-run-parallel==0.10.0",
+  "ruff==0.17.2",
+]
+
+[project.scripts]
+aconsoled = "aconsole.core.__main__:console"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/aconsole"]
+
+[tool.basedpyright]
+typeCheckingMode = "all"
+pythonVersion = "3.15"
+enableTypeIgnoreComments = false
+failOnWarnings = true
+reportMissingModuleSource = "none"
+venvPath = "."
+venv = ".venv-ui"
+include = ["src"]
+
+[tool.ruff]
+target-version = "py315"
+line-length = 120
+src = ["src"]
+extend-exclude = [
+  ".aconsole-dev",
+  ".venv",
+  ".venv-core",
+  ".venv-daemon",
+  ".venv-ui",
+  "docs/plan/core/gate_prototype",
+  "tests/gate/corpus",
+  "tests/fixtures/ui_banned",
+  "tests/gate/fixtures",
+  "tests/hostrun",
+  "tools/hostrun",
+]
+
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = ["D", "COM812", "ISC001", "CPY"]
+
+[tool.ruff.lint.flake8-tidy-imports.banned-api]
+"sqlalchemy.text" = { msg = "Use the ORM. Raw text() is limited to persistence/engine.py." }
+"typing.Any" = { msg = "Name a concrete type." }
+"typing.cast" = { msg = "Do not cast." }
+
+[tool.ruff.lint.per-file-ignores]
+# Pytest tests are asserts. Scripts spawn git and ruff by name.
+# PLC0415: UI tests import gi inside the test. Importing it at collection enables the GIL.
+"tests/**" = ["PLC0415", "PLR0913", "PLR0917", "S101", "S603", "S607", "SLF001", "PLR2004"]
+"spikes/**" = [
+  "ASYNC110",
+  "C901",
+  "E402",
+  "EM101",
+  "EM102",
+  "N802",
+  "PLC0415",
+  "PLR0402",
+  "PLR2004",
+  "S603",
+  "S606",
+  "S607",
+  "SLF001",
+  "TC003",
+  "TRY003",
+]
+# msgspec reads annotations at runtime, so these imports are not type-checking-only.
+"src/aconsole/contracts/**" = ["TC001", "TC002", "TC003"]
+# Domain signatures are the runtime types. Ruff still treats them as typing-only.
+"src/aconsole/core/domain/**" = ["TC001", "TC002", "TC003"]
+"src/aconsole/core/application/**" = ["TC001", "TC002", "TC003"]
+"src/aconsole/core/infrastructure/**" = ["TC001", "TC002", "TC003"]
+"src/aconsole/devcli/**" = ["TC001", "TC002", "TC003"]
+"src/aconsole/ui/**" = ["TC001", "TC002", "TC003"]
+"tools/**" = [
+  "C901",
+  "EM101",
+  "EM102",
+  "FBT001",
+  "FBT003",
+  "PERF401",
+  "PLR0911",
+  "PLR0912",
+  "PLR0913",
+  "PLR0915",
+  "PLR0917",
+  "PLR1704",
+  "PLR2004",
+  "S603",
+  "S607",
+  "SIM102",
+  "TRY003",
+]
+
+[tool.pytest.ini_options]
+addopts = "-q"
+pythonpath = ["src"]
+testpaths = ["tests"]
+
+[tool.coverage.run]
+branch = true
+source = ["aconsole"]
+
+[tool.coverage.report]
+fail_under = 90
+show_missing = true
+
+[tool.importlinter]
+root_packages = ["aconsole"]
+include_external_packages = true
+
+[[tool.importlinter.contracts]]
+name = "UI does not import the core"
+type = "forbidden"
+source_modules = ["aconsole.ui"]
+forbidden_modules = ["aconsole.core"]
+
+[[tool.importlinter.contracts]]
+name = "Core does not import the UI or gi"
+type = "forbidden"
+source_modules = ["aconsole.core"]
+forbidden_modules = ["aconsole.ui", "gi"]
+
+[[tool.importlinter.contracts]]
+name = "Domain stays free of infrastructure libraries"
+type = "forbidden"
+source_modules = ["aconsole.core.domain"]
+forbidden_modules = ["sqlalchemy", "msgspec", "mcp", "uvicorn", "watchdog", "subprocess"]
+
+[[tool.importlinter.contracts]]
+name = "Application does not import infrastructure"
+type = "forbidden"
+source_modules = ["aconsole.core.application"]
+forbidden_modules = ["aconsole.core.infrastructure"]
+
+[[tool.importlinter.contracts]]
+name = "Contracts do not import the rest of aconsole"
+type = "forbidden"
+source_modules = ["aconsole.contracts"]
+forbidden_modules = [
+  "aconsole.core",
+  "aconsole.devcli",
+  "aconsole.sidecar",
+  "aconsole.ui",
+]
+
+[[tool.importlinter.contracts]]
+name = "Sidecar stays on the standard library"
+type = "forbidden"
+source_modules = ["aconsole.sidecar"]
+forbidden_modules = [
+  "aconsole.contracts",
+  "aconsole.core",
+  "aconsole.devcli",
+  "aconsole.ui",
+  "gi",
+  "mcp",
+  "msgspec",
+  "sqlalchemy",
+  "uvicorn",
+  "watchdog",
+]

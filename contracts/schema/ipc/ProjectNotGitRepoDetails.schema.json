@@ -1,0 +1,24 @@
+{
+  "$defs": {
+    "ProjectNotGitRepoDetails": {
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "PROJECT_NOT_A_GIT_REPO"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "path"
+      ],
+      "title": "ProjectNotGitRepoDetails",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/ProjectNotGitRepoDetails",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

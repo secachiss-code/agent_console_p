@@ -1,0 +1,78 @@
+{
+  "$defs": {
+    "DiffFileView": {
+      "properties": {
+        "change": {
+          "enum": [
+            "added",
+            "binary",
+            "deleted",
+            "modified",
+            "renamed"
+          ]
+        },
+        "deletions": {
+          "type": "integer"
+        },
+        "insertions": {
+          "type": "integer"
+        },
+        "old_path": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "path": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "path",
+        "old_path",
+        "change",
+        "insertions",
+        "deletions"
+      ],
+      "title": "DiffFileView",
+      "type": "object"
+    },
+    "DiffSummaryResult": {
+      "properties": {
+        "base": {
+          "type": "string"
+        },
+        "deletions": {
+          "type": "integer"
+        },
+        "files": {
+          "items": {
+            "$ref": "#/$defs/DiffFileView"
+          },
+          "type": "array"
+        },
+        "head": {
+          "type": "string"
+        },
+        "insertions": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "base",
+        "head",
+        "files",
+        "insertions",
+        "deletions"
+      ],
+      "title": "DiffSummaryResult",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/DiffSummaryResult",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

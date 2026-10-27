@@ -1,0 +1,70 @@
+{
+  "$defs": {
+    "ClaudeStop": {
+      "properties": {
+        "cwd": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "hook_event_name": {
+          "type": "string"
+        },
+        "last_assistant_message": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "permission_mode": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "session_id": {
+          "type": "string"
+        },
+        "stop_hook_active": {
+          "default": false,
+          "type": "boolean"
+        },
+        "transcript_path": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "session_id",
+        "hook_event_name"
+      ],
+      "title": "ClaudeStop",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/ClaudeStop",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

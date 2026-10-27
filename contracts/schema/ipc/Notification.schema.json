@@ -1,0 +1,32 @@
+{
+  "$defs": {
+    "Notification": {
+      "properties": {
+        "jsonrpc": {
+          "default": "2.0",
+          "enum": [
+            "2.0"
+          ]
+        },
+        "kind": {
+          "enum": [
+            "notification"
+          ]
+        },
+        "method": {
+          "type": "string"
+        },
+        "params": {}
+      },
+      "required": [
+        "kind",
+        "method",
+        "params"
+      ],
+      "title": "Notification",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/Notification",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

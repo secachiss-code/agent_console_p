@@ -1,0 +1,44 @@
+{
+  "$defs": {
+    "SetupRequired": {
+      "properties": {
+        "setup": {
+          "$ref": "#/$defs/SetupState"
+        },
+        "type": {
+          "enum": [
+            "setup_required"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "setup"
+      ],
+      "title": "SetupRequired",
+      "type": "object"
+    },
+    "SetupState": {
+      "properties": {
+        "failing_checks": {
+          "type": "integer"
+        },
+        "required": {
+          "type": "boolean"
+        },
+        "warnings": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "required",
+        "failing_checks",
+        "warnings"
+      ],
+      "title": "SetupState",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/SetupRequired",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

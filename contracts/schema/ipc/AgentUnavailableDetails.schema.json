@@ -1,0 +1,28 @@
+{
+  "$defs": {
+    "AgentUnavailableDetails": {
+      "properties": {
+        "agent": {
+          "type": "string"
+        },
+        "container": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "AGENT_UNAVAILABLE"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "agent",
+        "container"
+      ],
+      "title": "AgentUnavailableDetails",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/AgentUnavailableDetails",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

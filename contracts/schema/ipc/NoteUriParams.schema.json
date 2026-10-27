@@ -1,0 +1,18 @@
+{
+  "$defs": {
+    "NoteUriParams": {
+      "properties": {
+        "note": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "note"
+      ],
+      "title": "NoteUriParams",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/NoteUriParams",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

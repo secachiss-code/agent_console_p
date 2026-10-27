@@ -1,0 +1,24 @@
+{
+  "$defs": {
+    "ApprovalExpiredDetails": {
+      "properties": {
+        "request_id": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "APPROVAL_EXPIRED"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "request_id"
+      ],
+      "title": "ApprovalExpiredDetails",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/ApprovalExpiredDetails",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

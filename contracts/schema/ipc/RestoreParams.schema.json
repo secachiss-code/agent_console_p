@@ -1,0 +1,22 @@
+{
+  "$defs": {
+    "RestoreParams": {
+      "properties": {
+        "checkpoint_id": {
+          "type": "string"
+        },
+        "confirm_token": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "checkpoint_id",
+        "confirm_token"
+      ],
+      "title": "RestoreParams",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/RestoreParams",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

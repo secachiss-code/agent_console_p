@@ -1,0 +1,43 @@
+{
+  "$defs": {
+    "PaletteArgument": {
+      "properties": {
+        "choices": {
+          "anyOf": [
+            {
+              "items": {
+                "items": false,
+                "maxItems": 2,
+                "minItems": 2,
+                "prefixItems": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "string"
+                  }
+                ],
+                "type": "array"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "label": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "label",
+        "choices"
+      ],
+      "title": "PaletteArgument",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/PaletteArgument",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

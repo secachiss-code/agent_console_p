@@ -1,0 +1,38 @@
+{
+  "$defs": {
+    "EditDetail": {
+      "properties": {
+        "diff_preview": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "files": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "type": {
+          "enum": [
+            "edit"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "files",
+        "diff_preview"
+      ],
+      "title": "EditDetail",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/EditDetail",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

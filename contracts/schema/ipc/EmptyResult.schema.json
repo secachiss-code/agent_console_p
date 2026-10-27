@@ -1,0 +1,12 @@
+{
+  "$defs": {
+    "EmptyResult": {
+      "properties": {},
+      "required": [],
+      "title": "EmptyResult",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/EmptyResult",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

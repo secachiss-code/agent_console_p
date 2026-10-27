@@ -1,0 +1,51 @@
+{
+  "$defs": {
+    "PaletteExecuteParams": {
+      "properties": {
+        "argument": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "item_id": {
+          "type": "string"
+        },
+        "project_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "tab_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "item_id",
+        "tab_id",
+        "project_id",
+        "argument"
+      ],
+      "title": "PaletteExecuteParams",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/PaletteExecuteParams",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

@@ -1,0 +1,25 @@
+{
+  "$defs": {
+    "ResetRankingParams": {
+      "properties": {
+        "item_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "item_id"
+      ],
+      "title": "ResetRankingParams",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/ResetRankingParams",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

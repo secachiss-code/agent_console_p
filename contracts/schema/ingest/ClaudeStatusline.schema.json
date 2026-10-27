@@ -1,0 +1,254 @@
+{
+  "$defs": {
+    "ClaudeStatusline": {
+      "properties": {
+        "context_window": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/StatusContext"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "cost": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/StatusCost"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "model": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/StatusModel"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "rate_limits": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/StatusRateLimits"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "session_id": {
+          "type": "string"
+        },
+        "transcript_path": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "session_id"
+      ],
+      "title": "ClaudeStatusline",
+      "type": "object"
+    },
+    "RateWindow": {
+      "properties": {
+        "resets_at": {
+          "type": "integer"
+        },
+        "used_percentage": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "used_percentage",
+        "resets_at"
+      ],
+      "title": "RateWindow",
+      "type": "object"
+    },
+    "StatusContext": {
+      "properties": {
+        "context_window_size": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "remaining_percentage": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "used_percentage": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [],
+      "title": "StatusContext",
+      "type": "object"
+    },
+    "StatusCost": {
+      "properties": {
+        "total_api_duration_ms": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "total_cost_usd": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "total_duration_ms": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "total_lines_added": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "total_lines_removed": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [],
+      "title": "StatusCost",
+      "type": "object"
+    },
+    "StatusModel": {
+      "properties": {
+        "display_name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "title": "StatusModel",
+      "type": "object"
+    },
+    "StatusRateLimits": {
+      "properties": {
+        "five_hour": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RateWindow"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "seven_day": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RateWindow"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [],
+      "title": "StatusRateLimits",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/ClaudeStatusline",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

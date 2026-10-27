@@ -1,0 +1,25 @@
+{
+  "$defs": {
+    "PlanListParams": {
+      "properties": {
+        "project_id": {
+          "type": "string"
+        },
+        "status": {
+          "default": "active",
+          "enum": [
+            "active",
+            "all"
+          ]
+        }
+      },
+      "required": [
+        "project_id"
+      ],
+      "title": "PlanListParams",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/PlanListParams",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

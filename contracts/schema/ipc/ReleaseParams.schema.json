@@ -1,0 +1,22 @@
+{
+  "$defs": {
+    "ReleaseParams": {
+      "properties": {
+        "approval_id": {
+          "type": "string"
+        },
+        "nonce": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "approval_id",
+        "nonce"
+      ],
+      "title": "ReleaseParams",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/ReleaseParams",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

@@ -1,0 +1,51 @@
+{
+  "$defs": {
+    "RateWindow": {
+      "properties": {
+        "resets_at": {
+          "type": "integer"
+        },
+        "used_percentage": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "used_percentage",
+        "resets_at"
+      ],
+      "title": "RateWindow",
+      "type": "object"
+    },
+    "StatusRateLimits": {
+      "properties": {
+        "five_hour": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RateWindow"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "seven_day": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RateWindow"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [],
+      "title": "StatusRateLimits",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/StatusRateLimits",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

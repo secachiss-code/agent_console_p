@@ -1,0 +1,24 @@
+{
+  "$defs": {
+    "LeaseStaleFenceDetails": {
+      "properties": {
+        "current_fence": {
+          "type": "integer"
+        },
+        "type": {
+          "enum": [
+            "LEASE_STALE_FENCE"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "current_fence"
+      ],
+      "title": "LeaseStaleFenceDetails",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/LeaseStaleFenceDetails",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

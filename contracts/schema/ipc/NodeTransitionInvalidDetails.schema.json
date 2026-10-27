@@ -1,0 +1,35 @@
+{
+  "$defs": {
+    "NodeTransitionInvalidDetails": {
+      "properties": {
+        "allowed": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "from": {
+          "type": "string"
+        },
+        "to": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "NODE_TRANSITION_INVALID"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "from",
+        "to",
+        "allowed"
+      ],
+      "title": "NodeTransitionInvalidDetails",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/NodeTransitionInvalidDetails",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

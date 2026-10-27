@@ -1,0 +1,42 @@
+{
+  "$defs": {
+    "Problem": {
+      "properties": {
+        "detail": {
+          "type": "string"
+        },
+        "instance": {
+          "type": "string"
+        },
+        "reason": {
+          "type": "string"
+        },
+        "retryable": {
+          "type": "boolean"
+        },
+        "status": {
+          "type": "integer"
+        },
+        "title": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "title",
+        "status",
+        "detail",
+        "instance",
+        "reason",
+        "retryable"
+      ],
+      "title": "Problem",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/Problem",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

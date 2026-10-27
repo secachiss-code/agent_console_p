@@ -1,0 +1,73 @@
+{
+  "$defs": {
+    "SessionInfo": {
+      "properties": {
+        "branch": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "cwd": {
+          "type": "string"
+        },
+        "preview": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "session_id": {
+          "type": "string"
+        },
+        "started_at": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "updated_at": {
+          "format": "date-time",
+          "type": "string"
+        }
+      },
+      "required": [
+        "session_id",
+        "title",
+        "started_at",
+        "updated_at",
+        "cwd",
+        "branch",
+        "preview"
+      ],
+      "title": "SessionInfo",
+      "type": "object"
+    },
+    "SessionListResult": {
+      "properties": {
+        "sessions": {
+          "items": {
+            "$ref": "#/$defs/SessionInfo"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "sessions"
+      ],
+      "title": "SessionListResult",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/SessionListResult",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

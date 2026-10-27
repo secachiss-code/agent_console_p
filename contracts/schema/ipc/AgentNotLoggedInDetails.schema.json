@@ -1,0 +1,24 @@
+{
+  "$defs": {
+    "AgentNotLoggedInDetails": {
+      "properties": {
+        "agent": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "AGENT_NOT_LOGGED_IN"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "agent"
+      ],
+      "title": "AgentNotLoggedInDetails",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/AgentNotLoggedInDetails",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

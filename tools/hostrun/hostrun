@@ -1,0 +1,94 @@
+#!/bin/sh
+# hostrun client. POSIX sh + curl. Prints the command stream and exits with
+# the trailer code. The server, not this script, decides the argv.
+set -eu
+
+SOCK="${HOSTRUN_SOCK:-/home/sas/.containers/hostrun/hostrun.sock}"
+
+if [ "$#" -lt 1 ]; then
+  echo "usage: hostrun ACTION [ARG...]" >&2
+  exit 2
+fi
+
+json_quote() {
+  printf '"'
+  printf '%s' "$1" | od -An -tu1 | tr -s ' \t' '\n' | while IFS= read -r byte; do
+    [ -n "$byte" ] || continue
+    case "$byte" in
+      8) printf '\\b' ;;
+      9) printf '\\t' ;;
+      10) printf '\\n' ;;
+      12) printf '\\f' ;;
+      13) printf '\\r' ;;
+      34) printf '\\"' ;;
+      92) printf '\\\\' ;;
+      *)
+        if [ "$byte" -lt 32 ]; then
+          printf '\\u%04x' "$byte"
+        else
+          oct=$(printf '%03o' "$byte")
+          printf "\\$oct"
+        fi
+        ;;
+    esac
+  done
+  printf '"'
+}
+
+action_json=$(json_quote "$1")
+shift
+args_json='['
+comma=''
+for argument in "$@"; do
+  quoted=$(json_quote "$argument")
+  args_json="${args_json}${comma}${quoted}"
+  comma=','
+done
+args_json="${args_json}]"
+if [ -n "${HOSTRUN_CWD:-}" ]; then
+  cwd_json=$(json_quote "$HOSTRUN_CWD")
+  payload="{\"action\":${action_json},\"args\":${args_json},\"cwd\":${cwd_json}}"
+else
+  payload="{\"action\":${action_json},\"args\":${args_json}}"
+fi
+
+hdr=$(mktemp)
+fifo=$(mktemp -u)
+trap 'rm -f "$hdr"; rm -f "$fifo"' EXIT
+mkfifo "$fifo"
+
+curl --unix-socket "$SOCK" -sS -N \
+  -D "$hdr" \
+  -o "$fifo" \
+  -H 'Content-Type: application/json' \
+  -X POST \
+  --data-binary "$payload" \
+  http://127.0.0.1/run &
+curl_pid=$!
+
+awk_status=0
+awk '
+  NR > 1 { print prev }
+  { prev = $0 }
+  END {
+    if (prev ~ /^__EXIT__ [0-9]+$/) {
+      split(prev, parts, " ")
+      exit parts[2]
+    }
+    if (NR > 0) {
+      print prev
+    }
+    exit 1
+  }
+' "$fifo" || awk_status=$?
+
+wait "$curl_pid" || {
+  echo "hostrun: request failed" >&2
+  exit 1
+}
+
+status=$(awk 'BEGIN { code = 0 } $1 ~ /^HTTP\// { code = $2 } END { print code + 0 }' "$hdr")
+if [ "$status" != "200" ]; then
+  exit 1
+fi
+exit "$awk_status"

@@ -1,0 +1,24 @@
+{
+  "$defs": {
+    "PlanNotFoundDetails": {
+      "properties": {
+        "plan_id": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "PLAN_NOT_FOUND"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "plan_id"
+      ],
+      "title": "PlanNotFoundDetails",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/PlanNotFoundDetails",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

@@ -1,0 +1,33 @@
+__pycache__/
+*.pyc
+.venv/
+.venv-*/
+.pytest_cache/
+.ruff_cache/
+.hypothesis/
+.import_linter_cache/
+.mypy_cache/
+.coverage
+.coverage.*
+htmlcov/
+.aconsole-dev/
+docs/
+
+# Local agent configuration and instructions
+.agents/
+.aws/
+.claude/
+.codex/
+.cursor/
+.grok/
+AGENTS.md
+
+# Development caches and logs
+.cache*/
+cache/
+*-cache/
+*_cache/
+*.cache
+*.log
+*.log.*
+logs/

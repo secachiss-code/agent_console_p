@@ -1,0 +1,53 @@
+{
+  "$defs": {
+    "FixPreview": {
+      "properties": {
+        "commands": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "confirm_token": {
+          "type": "string"
+        },
+        "diff": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "expires_at": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "fix_id": {
+          "type": "string"
+        },
+        "reversible": {
+          "type": "boolean"
+        },
+        "summary": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "fix_id",
+        "summary",
+        "diff",
+        "commands",
+        "reversible",
+        "confirm_token",
+        "expires_at"
+      ],
+      "title": "FixPreview",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/FixPreview",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

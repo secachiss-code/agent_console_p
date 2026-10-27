@@ -1,0 +1,28 @@
+{
+  "$defs": {
+    "InvalidParamsDetails": {
+      "properties": {
+        "expected": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "INVALID_PARAMS"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "path",
+        "expected"
+      ],
+      "title": "InvalidParamsDetails",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/InvalidParamsDetails",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

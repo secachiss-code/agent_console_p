@@ -1,0 +1,18 @@
+{
+  "$defs": {
+    "CheckpointListParams": {
+      "properties": {
+        "tab_id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "tab_id"
+      ],
+      "title": "CheckpointListParams",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/CheckpointListParams",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

@@ -1,0 +1,24 @@
+{
+  "$defs": {
+    "WorktreeCreateFailedDetails": {
+      "properties": {
+        "stderr_tail": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "WORKTREE_CREATE_FAILED"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "stderr_tail"
+      ],
+      "title": "WorktreeCreateFailedDetails",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/WorktreeCreateFailedDetails",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

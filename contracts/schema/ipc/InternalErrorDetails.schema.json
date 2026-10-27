@@ -1,0 +1,24 @@
+{
+  "$defs": {
+    "InternalErrorDetails": {
+      "properties": {
+        "incident_id": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "INTERNAL_ERROR"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "incident_id"
+      ],
+      "title": "InternalErrorDetails",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/InternalErrorDetails",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

@@ -1,0 +1,27 @@
+{
+  "$defs": {
+    "PlanCycleDetails": {
+      "properties": {
+        "cycle": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "type": {
+          "enum": [
+            "PLAN_CYCLE"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "cycle"
+      ],
+      "title": "PlanCycleDetails",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/PlanCycleDetails",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

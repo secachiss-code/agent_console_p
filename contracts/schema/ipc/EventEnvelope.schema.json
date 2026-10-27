@@ -1,0 +1,2654 @@
+{
+  "$defs": {
+    "AccountView": {
+      "properties": {
+        "agent": {
+          "$ref": "#/$defs/AgentKind"
+        },
+        "id": {
+          "type": "string"
+        },
+        "plan_label": {
+          "type": "string"
+        },
+        "quota": {
+          "items": {
+            "$ref": "#/$defs/QuotaWindowView"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "agent",
+        "plan_label",
+        "quota"
+      ],
+      "title": "AccountView",
+      "type": "object"
+    },
+    "AgentConfigUnsupportedDetails": {
+      "properties": {
+        "agent": {
+          "type": "string"
+        },
+        "supported": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "AGENT_CONFIG_UNSUPPORTED_VERSION"
+          ]
+        },
+        "version": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "agent",
+        "version",
+        "supported"
+      ],
+      "title": "AgentConfigUnsupportedDetails",
+      "type": "object"
+    },
+    "AgentInfo": {
+      "properties": {
+        "available": {
+          "type": "boolean"
+        },
+        "capabilities": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
+        "container": {
+          "type": "string"
+        },
+        "display_name": {
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/$defs/AgentKind"
+        },
+        "logged_in": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "supported": {
+          "type": "boolean"
+        },
+        "unavailable_reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "kind",
+        "display_name",
+        "container",
+        "available",
+        "unavailable_reason",
+        "logged_in",
+        "version",
+        "supported",
+        "capabilities"
+      ],
+      "title": "AgentInfo",
+      "type": "object"
+    },
+    "AgentKind": {
+      "enum": [
+        "claude",
+        "codex",
+        "cursor",
+        "grok",
+        "opencode"
+      ],
+      "title": "AgentKind"
+    },
+    "AgentNotLoggedInDetails": {
+      "properties": {
+        "agent": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "AGENT_NOT_LOGGED_IN"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "agent"
+      ],
+      "title": "AgentNotLoggedInDetails",
+      "type": "object"
+    },
+    "AgentUnavailableDetails": {
+      "properties": {
+        "agent": {
+          "type": "string"
+        },
+        "container": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "AGENT_UNAVAILABLE"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "agent",
+        "container"
+      ],
+      "title": "AgentUnavailableDetails",
+      "type": "object"
+    },
+    "AgentsChanged": {
+      "properties": {
+        "agents": {
+          "items": {
+            "$ref": "#/$defs/AgentInfo"
+          },
+          "type": "array"
+        },
+        "type": {
+          "enum": [
+            "agents_changed"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "agents"
+      ],
+      "title": "AgentsChanged",
+      "type": "object"
+    },
+    "ApprovalAlreadyDecidedDetails": {
+      "properties": {
+        "decision": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "APPROVAL_ALREADY_DECIDED"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "decision"
+      ],
+      "title": "ApprovalAlreadyDecidedDetails",
+      "type": "object"
+    },
+    "ApprovalExpiredDetails": {
+      "properties": {
+        "request_id": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "APPROVAL_EXPIRED"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "request_id"
+      ],
+      "title": "ApprovalExpiredDetails",
+      "type": "object"
+    },
+    "ApprovalNotFoundDetails": {
+      "properties": {
+        "request_id": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "APPROVAL_NOT_FOUND"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "request_id"
+      ],
+      "title": "ApprovalNotFoundDetails",
+      "type": "object"
+    },
+    "ApprovalRequested": {
+      "properties": {
+        "approval": {
+          "$ref": "#/$defs/ApprovalView"
+        },
+        "type": {
+          "enum": [
+            "approval_requested"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "approval"
+      ],
+      "title": "ApprovalRequested",
+      "type": "object"
+    },
+    "ApprovalResolved": {
+      "properties": {
+        "approval_id": {
+          "type": "string"
+        },
+        "by": {
+          "enum": [
+            "agent",
+            "rule",
+            "timeout",
+            "user"
+          ]
+        },
+        "outcome": {
+          "enum": [
+            "allowed",
+            "cancelled",
+            "denied",
+            "expired_to_native"
+          ]
+        },
+        "type": {
+          "enum": [
+            "approval_resolved"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "approval_id",
+        "outcome",
+        "by"
+      ],
+      "title": "ApprovalResolved",
+      "type": "object"
+    },
+    "ApprovalView": {
+      "properties": {
+        "agent": {
+          "$ref": "#/$defs/AgentKind"
+        },
+        "allow_tab_session": {
+          "type": "boolean"
+        },
+        "cwd": {
+          "type": "string"
+        },
+        "detail": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CommandDetail"
+            },
+            {
+              "$ref": "#/$defs/EditDetail"
+            },
+            {
+              "$ref": "#/$defs/GenericDetail"
+            }
+          ],
+          "discriminator": {
+            "mapping": {
+              "command": "#/$defs/CommandDetail",
+              "edit": "#/$defs/EditDetail",
+              "generic": "#/$defs/GenericDetail"
+            },
+            "propertyName": "type"
+          }
+        },
+        "expires_at": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "nonce": {
+          "type": "string"
+        },
+        "requested_at": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "risk": {
+          "items": {
+            "$ref": "#/$defs/RiskTag"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
+        "summary": {
+          "type": "string"
+        },
+        "tab_id": {
+          "type": "string"
+        },
+        "tool": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "nonce",
+        "tab_id",
+        "agent",
+        "tool",
+        "summary",
+        "detail",
+        "cwd",
+        "risk",
+        "requested_at",
+        "expires_at",
+        "allow_tab_session"
+      ],
+      "title": "ApprovalView",
+      "type": "object"
+    },
+    "Banner": {
+      "properties": {
+        "button_item_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "button_label": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "id": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "banner"
+          ]
+        },
+        "visible": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "id",
+        "message",
+        "button_label",
+        "button_item_id",
+        "visible"
+      ],
+      "title": "Banner",
+      "type": "object"
+    },
+    "BranchCheckedOutDetails": {
+      "properties": {
+        "branch": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "BRANCH_ALREADY_CHECKED_OUT"
+          ]
+        },
+        "worktree": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "branch",
+        "worktree"
+      ],
+      "title": "BranchCheckedOutDetails",
+      "type": "object"
+    },
+    "CheckpointCreated": {
+      "properties": {
+        "checkpoint": {
+          "$ref": "#/$defs/CheckpointView"
+        },
+        "type": {
+          "enum": [
+            "checkpoint_created"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "checkpoint"
+      ],
+      "title": "CheckpointCreated",
+      "type": "object"
+    },
+    "CheckpointNotFoundDetails": {
+      "properties": {
+        "checkpoint_id": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "CHECKPOINT_NOT_FOUND"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "checkpoint_id"
+      ],
+      "title": "CheckpointNotFoundDetails",
+      "type": "object"
+    },
+    "CheckpointRestoreConflictDetails": {
+      "properties": {
+        "status": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "CHECKPOINT_RESTORE_CONFLICT"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "status"
+      ],
+      "title": "CheckpointRestoreConflictDetails",
+      "type": "object"
+    },
+    "CheckpointView": {
+      "properties": {
+        "created_at": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "deletions": {
+          "type": "integer"
+        },
+        "files_changed": {
+          "type": "integer"
+        },
+        "id": {
+          "type": "string"
+        },
+        "insertions": {
+          "type": "integer"
+        },
+        "label": {
+          "type": "string"
+        },
+        "tab_id": {
+          "type": "string"
+        },
+        "turn": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "id",
+        "tab_id",
+        "turn",
+        "created_at",
+        "files_changed",
+        "insertions",
+        "deletions",
+        "label"
+      ],
+      "title": "CheckpointView",
+      "type": "object"
+    },
+    "CodegraphExtractorFailedDetails": {
+      "properties": {
+        "language": {
+          "type": "string"
+        },
+        "stderr_tail": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "CODEGRAPH_EXTRACTOR_FAILED"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "language",
+        "stderr_tail"
+      ],
+      "title": "CodegraphExtractorFailedDetails",
+      "type": "object"
+    },
+    "CommandDetail": {
+      "properties": {
+        "args_preview": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "command": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "command"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "command",
+        "args_preview"
+      ],
+      "title": "CommandDetail",
+      "type": "object"
+    },
+    "ContainerStartFailedDetails": {
+      "properties": {
+        "container": {
+          "type": "string"
+        },
+        "stderr_tail": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "CONTAINER_START_FAILED"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "container",
+        "stderr_tail"
+      ],
+      "title": "ContainerStartFailedDetails",
+      "type": "object"
+    },
+    "DiffTooLargeDetails": {
+      "properties": {
+        "bytes": {
+          "type": "integer"
+        },
+        "files": {
+          "type": "integer"
+        },
+        "type": {
+          "enum": [
+            "DIFF_TOO_LARGE"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "files",
+        "bytes"
+      ],
+      "title": "DiffTooLargeDetails",
+      "type": "object"
+    },
+    "EditDetail": {
+      "properties": {
+        "diff_preview": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "files": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "type": {
+          "enum": [
+            "edit"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "files",
+        "diff_preview"
+      ],
+      "title": "EditDetail",
+      "type": "object"
+    },
+    "ErrorData": {
+      "properties": {
+        "details": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/MethodNotFoundDetails"
+                },
+                {
+                  "$ref": "#/$defs/InvalidParamsDetails"
+                },
+                {
+                  "$ref": "#/$defs/InternalErrorDetails"
+                },
+                {
+                  "$ref": "#/$defs/ProtocolVersionUnsupportedDetails"
+                },
+                {
+                  "$ref": "#/$defs/MessageTooLargeDetails"
+                },
+                {
+                  "$ref": "#/$defs/ServerBusyDetails"
+                },
+                {
+                  "$ref": "#/$defs/ResyncRequiredDetails"
+                },
+                {
+                  "$ref": "#/$defs/RoleForbiddenDetails"
+                },
+                {
+                  "$ref": "#/$defs/IngestPayloadInvalidDetails"
+                },
+                {
+                  "$ref": "#/$defs/ProjectNotFoundDetails"
+                },
+                {
+                  "$ref": "#/$defs/ProjectNotGitRepoDetails"
+                },
+                {
+                  "$ref": "#/$defs/TabNotFoundDetails"
+                },
+                {
+                  "$ref": "#/$defs/TabStateConflictDetails"
+                },
+                {
+                  "$ref": "#/$defs/AgentUnavailableDetails"
+                },
+                {
+                  "$ref": "#/$defs/AgentNotLoggedInDetails"
+                },
+                {
+                  "$ref": "#/$defs/ContainerStartFailedDetails"
+                },
+                {
+                  "$ref": "#/$defs/WorktreeCreateFailedDetails"
+                },
+                {
+                  "$ref": "#/$defs/WorktreeDirtyDetails"
+                },
+                {
+                  "$ref": "#/$defs/BranchCheckedOutDetails"
+                },
+                {
+                  "$ref": "#/$defs/PathNotAllowedDetails"
+                },
+                {
+                  "$ref": "#/$defs/SessionNotFoundDetails"
+                },
+                {
+                  "$ref": "#/$defs/ApprovalNotFoundDetails"
+                },
+                {
+                  "$ref": "#/$defs/ApprovalExpiredDetails"
+                },
+                {
+                  "$ref": "#/$defs/ApprovalAlreadyDecidedDetails"
+                },
+                {
+                  "$ref": "#/$defs/CheckpointNotFoundDetails"
+                },
+                {
+                  "$ref": "#/$defs/CheckpointRestoreConflictDetails"
+                },
+                {
+                  "$ref": "#/$defs/DiffTooLargeDetails"
+                },
+                {
+                  "$ref": "#/$defs/PlanNotFoundDetails"
+                },
+                {
+                  "$ref": "#/$defs/NodeNotFoundDetails"
+                },
+                {
+                  "$ref": "#/$defs/PlanCycleDetails"
+                },
+                {
+                  "$ref": "#/$defs/NodeTransitionInvalidDetails"
+                },
+                {
+                  "$ref": "#/$defs/NodeNotReadyDetails"
+                },
+                {
+                  "$ref": "#/$defs/LeaseHeldDetails"
+                },
+                {
+                  "$ref": "#/$defs/LeaseStaleFenceDetails"
+                },
+                {
+                  "$ref": "#/$defs/PathsOverlapDetails"
+                },
+                {
+                  "$ref": "#/$defs/VaultWriteDeferredDetails"
+                },
+                {
+                  "$ref": "#/$defs/VaultConflictDetails"
+                },
+                {
+                  "$ref": "#/$defs/VaultEditRejectedDetails"
+                },
+                {
+                  "$ref": "#/$defs/NoteNotFoundDetails"
+                },
+                {
+                  "$ref": "#/$defs/CodegraphExtractorFailedDetails"
+                },
+                {
+                  "$ref": "#/$defs/ImpactTargetUnknownDetails"
+                },
+                {
+                  "$ref": "#/$defs/SetupFixUnknownDetails"
+                },
+                {
+                  "$ref": "#/$defs/SetupFixFailedDetails"
+                },
+                {
+                  "$ref": "#/$defs/AgentConfigUnsupportedDetails"
+                },
+                {
+                  "$ref": "#/$defs/UnexpectedDetails"
+                }
+              ],
+              "discriminator": {
+                "mapping": {
+                  "AGENT_CONFIG_UNSUPPORTED_VERSION": "#/$defs/AgentConfigUnsupportedDetails",
+                  "AGENT_NOT_LOGGED_IN": "#/$defs/AgentNotLoggedInDetails",
+                  "AGENT_UNAVAILABLE": "#/$defs/AgentUnavailableDetails",
+                  "APPROVAL_ALREADY_DECIDED": "#/$defs/ApprovalAlreadyDecidedDetails",
+                  "APPROVAL_EXPIRED": "#/$defs/ApprovalExpiredDetails",
+                  "APPROVAL_NOT_FOUND": "#/$defs/ApprovalNotFoundDetails",
+                  "BRANCH_ALREADY_CHECKED_OUT": "#/$defs/BranchCheckedOutDetails",
+                  "CHECKPOINT_NOT_FOUND": "#/$defs/CheckpointNotFoundDetails",
+                  "CHECKPOINT_RESTORE_CONFLICT": "#/$defs/CheckpointRestoreConflictDetails",
+                  "CODEGRAPH_EXTRACTOR_FAILED": "#/$defs/CodegraphExtractorFailedDetails",
+                  "CONTAINER_START_FAILED": "#/$defs/ContainerStartFailedDetails",
+                  "DIFF_TOO_LARGE": "#/$defs/DiffTooLargeDetails",
+                  "IMPACT_TARGET_UNKNOWN": "#/$defs/ImpactTargetUnknownDetails",
+                  "INGEST_PAYLOAD_INVALID": "#/$defs/IngestPayloadInvalidDetails",
+                  "INTERNAL_ERROR": "#/$defs/InternalErrorDetails",
+                  "INVALID_PARAMS": "#/$defs/InvalidParamsDetails",
+                  "LEASE_HELD": "#/$defs/LeaseHeldDetails",
+                  "LEASE_STALE_FENCE": "#/$defs/LeaseStaleFenceDetails",
+                  "MESSAGE_TOO_LARGE": "#/$defs/MessageTooLargeDetails",
+                  "METHOD_NOT_FOUND": "#/$defs/MethodNotFoundDetails",
+                  "NODE_NOT_FOUND": "#/$defs/NodeNotFoundDetails",
+                  "NODE_NOT_READY": "#/$defs/NodeNotReadyDetails",
+                  "NODE_TRANSITION_INVALID": "#/$defs/NodeTransitionInvalidDetails",
+                  "NOTE_NOT_FOUND": "#/$defs/NoteNotFoundDetails",
+                  "PATHS_OVERLAP": "#/$defs/PathsOverlapDetails",
+                  "PATH_NOT_ALLOWED": "#/$defs/PathNotAllowedDetails",
+                  "PLAN_CYCLE": "#/$defs/PlanCycleDetails",
+                  "PLAN_NOT_FOUND": "#/$defs/PlanNotFoundDetails",
+                  "PROJECT_NOT_A_GIT_REPO": "#/$defs/ProjectNotGitRepoDetails",
+                  "PROJECT_NOT_FOUND": "#/$defs/ProjectNotFoundDetails",
+                  "PROTOCOL_VERSION_UNSUPPORTED": "#/$defs/ProtocolVersionUnsupportedDetails",
+                  "RESYNC_REQUIRED": "#/$defs/ResyncRequiredDetails",
+                  "ROLE_FORBIDDEN": "#/$defs/RoleForbiddenDetails",
+                  "SERVER_BUSY": "#/$defs/ServerBusyDetails",
+                  "SESSION_NOT_FOUND": "#/$defs/SessionNotFoundDetails",
+                  "SETUP_FIX_FAILED": "#/$defs/SetupFixFailedDetails",
+                  "SETUP_FIX_UNKNOWN": "#/$defs/SetupFixUnknownDetails",
+                  "TAB_NOT_FOUND": "#/$defs/TabNotFoundDetails",
+                  "TAB_STATE_CONFLICT": "#/$defs/TabStateConflictDetails",
+                  "UNEXPECTED": "#/$defs/UnexpectedDetails",
+                  "VAULT_CONFLICT": "#/$defs/VaultConflictDetails",
+                  "VAULT_EDIT_REJECTED": "#/$defs/VaultEditRejectedDetails",
+                  "VAULT_WRITE_DEFERRED": "#/$defs/VaultWriteDeferredDetails",
+                  "WORKTREE_CREATE_FAILED": "#/$defs/WorktreeCreateFailedDetails",
+                  "WORKTREE_DIRTY": "#/$defs/WorktreeDirtyDetails"
+                },
+                "propertyName": "type"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "domain": {
+          "enum": [
+            "aconsole.core",
+            "aconsole.ingest",
+            "aconsole.ipc",
+            "aconsole.mcp"
+          ]
+        },
+        "hint": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "reason": {
+          "type": "string"
+        },
+        "retryable": {
+          "type": "boolean"
+        },
+        "user_message_args": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "default": {},
+          "type": "object"
+        },
+        "user_message_key": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "reason",
+        "domain",
+        "retryable",
+        "user_message_key"
+      ],
+      "title": "ErrorData",
+      "type": "object"
+    },
+    "ErrorObject": {
+      "properties": {
+        "code": {
+          "type": "integer"
+        },
+        "data": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ErrorData"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "code",
+        "message"
+      ],
+      "title": "ErrorObject",
+      "type": "object"
+    },
+    "EventEnvelope": {
+      "properties": {
+        "at": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "event": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TabAdded"
+            },
+            {
+              "$ref": "#/$defs/TabUpdated"
+            },
+            {
+              "$ref": "#/$defs/TabRemoved"
+            },
+            {
+              "$ref": "#/$defs/TabFocusRequested"
+            },
+            {
+              "$ref": "#/$defs/ApprovalRequested"
+            },
+            {
+              "$ref": "#/$defs/ApprovalResolved"
+            },
+            {
+              "$ref": "#/$defs/QuotaUpdated"
+            },
+            {
+              "$ref": "#/$defs/PlanUpdated"
+            },
+            {
+              "$ref": "#/$defs/ProjectsChanged"
+            },
+            {
+              "$ref": "#/$defs/AgentsChanged"
+            },
+            {
+              "$ref": "#/$defs/SettingsChanged"
+            },
+            {
+              "$ref": "#/$defs/Notify"
+            },
+            {
+              "$ref": "#/$defs/Toast"
+            },
+            {
+              "$ref": "#/$defs/Banner"
+            },
+            {
+              "$ref": "#/$defs/InjectToTerminal"
+            },
+            {
+              "$ref": "#/$defs/CheckpointCreated"
+            },
+            {
+              "$ref": "#/$defs/OperationProgress"
+            },
+            {
+              "$ref": "#/$defs/VaultEditRejected"
+            },
+            {
+              "$ref": "#/$defs/ScreenTextRequested"
+            },
+            {
+              "$ref": "#/$defs/ResyncRequired"
+            },
+            {
+              "$ref": "#/$defs/SetupRequired"
+            }
+          ],
+          "discriminator": {
+            "mapping": {
+              "agents_changed": "#/$defs/AgentsChanged",
+              "approval_requested": "#/$defs/ApprovalRequested",
+              "approval_resolved": "#/$defs/ApprovalResolved",
+              "banner": "#/$defs/Banner",
+              "checkpoint_created": "#/$defs/CheckpointCreated",
+              "inject_to_terminal": "#/$defs/InjectToTerminal",
+              "notify": "#/$defs/Notify",
+              "operation_progress": "#/$defs/OperationProgress",
+              "plan_updated": "#/$defs/PlanUpdated",
+              "projects_changed": "#/$defs/ProjectsChanged",
+              "quota_updated": "#/$defs/QuotaUpdated",
+              "resync_required": "#/$defs/ResyncRequired",
+              "screen_text_requested": "#/$defs/ScreenTextRequested",
+              "settings_changed": "#/$defs/SettingsChanged",
+              "setup_required": "#/$defs/SetupRequired",
+              "tab_added": "#/$defs/TabAdded",
+              "tab_focus_requested": "#/$defs/TabFocusRequested",
+              "tab_removed": "#/$defs/TabRemoved",
+              "tab_updated": "#/$defs/TabUpdated",
+              "toast": "#/$defs/Toast",
+              "vault_edit_rejected": "#/$defs/VaultEditRejected"
+            },
+            "propertyName": "type"
+          }
+        },
+        "seq": {
+          "minimum": 1,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "seq",
+        "at",
+        "event"
+      ],
+      "title": "EventEnvelope",
+      "type": "object"
+    },
+    "GenericDetail": {
+      "properties": {
+        "json_preview": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "generic"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "json_preview"
+      ],
+      "title": "GenericDetail",
+      "type": "object"
+    },
+    "ImpactTargetUnknownDetails": {
+      "properties": {
+        "target": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "IMPACT_TARGET_UNKNOWN"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "target"
+      ],
+      "title": "ImpactTargetUnknownDetails",
+      "type": "object"
+    },
+    "IngestPayloadInvalidDetails": {
+      "properties": {
+        "agent": {
+          "type": "string"
+        },
+        "event": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "INGEST_PAYLOAD_INVALID"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "agent",
+        "event"
+      ],
+      "title": "IngestPayloadInvalidDetails",
+      "type": "object"
+    },
+    "InjectToTerminal": {
+      "properties": {
+        "submit": {
+          "type": "boolean"
+        },
+        "tab_id": {
+          "type": "string"
+        },
+        "text": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "inject_to_terminal"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "tab_id",
+        "text",
+        "submit"
+      ],
+      "title": "InjectToTerminal",
+      "type": "object"
+    },
+    "InternalErrorDetails": {
+      "properties": {
+        "incident_id": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "INTERNAL_ERROR"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "incident_id"
+      ],
+      "title": "InternalErrorDetails",
+      "type": "object"
+    },
+    "InvalidParamsDetails": {
+      "properties": {
+        "expected": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "INVALID_PARAMS"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "path",
+        "expected"
+      ],
+      "title": "InvalidParamsDetails",
+      "type": "object"
+    },
+    "LeaseHeldDetails": {
+      "properties": {
+        "expires_at": {
+          "type": "string"
+        },
+        "holder_tab": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "LEASE_HELD"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "holder_tab",
+        "expires_at"
+      ],
+      "title": "LeaseHeldDetails",
+      "type": "object"
+    },
+    "LeaseStaleFenceDetails": {
+      "properties": {
+        "current_fence": {
+          "type": "integer"
+        },
+        "type": {
+          "enum": [
+            "LEASE_STALE_FENCE"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "current_fence"
+      ],
+      "title": "LeaseStaleFenceDetails",
+      "type": "object"
+    },
+    "MessageTooLargeDetails": {
+      "properties": {
+        "limit": {
+          "type": "integer"
+        },
+        "type": {
+          "enum": [
+            "MESSAGE_TOO_LARGE"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "limit"
+      ],
+      "title": "MessageTooLargeDetails",
+      "type": "object"
+    },
+    "MethodNotFoundDetails": {
+      "properties": {
+        "method": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "METHOD_NOT_FOUND"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "method"
+      ],
+      "title": "MethodNotFoundDetails",
+      "type": "object"
+    },
+    "NodeNotFoundDetails": {
+      "properties": {
+        "node_id": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "NODE_NOT_FOUND"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "node_id"
+      ],
+      "title": "NodeNotFoundDetails",
+      "type": "object"
+    },
+    "NodeNotReadyDetails": {
+      "properties": {
+        "blocked_by": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "type": {
+          "enum": [
+            "NODE_NOT_READY"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "blocked_by"
+      ],
+      "title": "NodeNotReadyDetails",
+      "type": "object"
+    },
+    "NodeStatus": {
+      "enum": [
+        "blocked",
+        "cancelled",
+        "done",
+        "failed",
+        "in_progress",
+        "pending",
+        "verifying"
+      ],
+      "title": "NodeStatus"
+    },
+    "NodeTransitionInvalidDetails": {
+      "properties": {
+        "allowed": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "from": {
+          "type": "string"
+        },
+        "to": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "NODE_TRANSITION_INVALID"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "from",
+        "to",
+        "allowed"
+      ],
+      "title": "NodeTransitionInvalidDetails",
+      "type": "object"
+    },
+    "NoteNotFoundDetails": {
+      "properties": {
+        "note_ref": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "NOTE_NOT_FOUND"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "note_ref"
+      ],
+      "title": "NoteNotFoundDetails",
+      "type": "object"
+    },
+    "Notify": {
+      "properties": {
+        "body": {
+          "type": "string"
+        },
+        "episode_id": {
+          "type": "string"
+        },
+        "priority": {
+          "enum": [
+            "high",
+            "normal"
+          ]
+        },
+        "tab_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "title": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "notify"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "tab_id",
+        "title",
+        "body",
+        "priority",
+        "episode_id"
+      ],
+      "title": "Notify",
+      "type": "object"
+    },
+    "OperationProgress": {
+      "properties": {
+        "done": {
+          "type": "boolean"
+        },
+        "error": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ErrorObject"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "fraction": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "operation_id": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "operation_progress"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "operation_id",
+        "title",
+        "fraction",
+        "done",
+        "error"
+      ],
+      "title": "OperationProgress",
+      "type": "object"
+    },
+    "PathNotAllowedDetails": {
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "PATH_NOT_ALLOWED"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "path"
+      ],
+      "title": "PathNotAllowedDetails",
+      "type": "object"
+    },
+    "PathsOverlapDetails": {
+      "properties": {
+        "conflicting_node": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "PATHS_OVERLAP"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "conflicting_node"
+      ],
+      "title": "PathsOverlapDetails",
+      "type": "object"
+    },
+    "PlanCycleDetails": {
+      "properties": {
+        "cycle": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "type": {
+          "enum": [
+            "PLAN_CYCLE"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "cycle"
+      ],
+      "title": "PlanCycleDetails",
+      "type": "object"
+    },
+    "PlanNodeView": {
+      "properties": {
+        "depends_on": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "id": {
+          "type": "string"
+        },
+        "key": {
+          "type": "string"
+        },
+        "layer": {
+          "type": "integer"
+        },
+        "lease_expires_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "note": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "owner_agent": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AgentKind"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "priority": {
+          "type": "number"
+        },
+        "ready": {
+          "type": "boolean"
+        },
+        "status": {
+          "$ref": "#/$defs/NodeStatus"
+        },
+        "tab_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "title": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "key",
+        "title",
+        "status",
+        "ready",
+        "layer",
+        "priority",
+        "depends_on",
+        "owner_agent",
+        "tab_id",
+        "lease_expires_at",
+        "note"
+      ],
+      "title": "PlanNodeView",
+      "type": "object"
+    },
+    "PlanNotFoundDetails": {
+      "properties": {
+        "plan_id": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "PLAN_NOT_FOUND"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "plan_id"
+      ],
+      "title": "PlanNotFoundDetails",
+      "type": "object"
+    },
+    "PlanUpdated": {
+      "properties": {
+        "plan": {
+          "$ref": "#/$defs/PlanView"
+        },
+        "type": {
+          "enum": [
+            "plan_updated"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "plan"
+      ],
+      "title": "PlanUpdated",
+      "type": "object"
+    },
+    "PlanView": {
+      "properties": {
+        "canvas": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "done": {
+          "type": "integer"
+        },
+        "goal": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "nodes": {
+          "items": {
+            "$ref": "#/$defs/PlanNodeView"
+          },
+          "type": "array"
+        },
+        "project_id": {
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "active",
+            "archived",
+            "completed"
+          ]
+        },
+        "title": {
+          "type": "string"
+        },
+        "total": {
+          "type": "integer"
+        },
+        "updated_at": {
+          "format": "date-time",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "project_id",
+        "title",
+        "goal",
+        "status",
+        "nodes",
+        "done",
+        "total",
+        "canvas",
+        "updated_at"
+      ],
+      "title": "PlanView",
+      "type": "object"
+    },
+    "ProjectNotFoundDetails": {
+      "properties": {
+        "project_id": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "PROJECT_NOT_FOUND"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "project_id"
+      ],
+      "title": "ProjectNotFoundDetails",
+      "type": "object"
+    },
+    "ProjectNotGitRepoDetails": {
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "PROJECT_NOT_A_GIT_REPO"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "path"
+      ],
+      "title": "ProjectNotGitRepoDetails",
+      "type": "object"
+    },
+    "ProjectView": {
+      "properties": {
+        "default_branch": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "languages": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
+        "name": {
+          "type": "string"
+        },
+        "root": {
+          "type": "string"
+        },
+        "vault_folder": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "root",
+        "default_branch",
+        "vault_folder",
+        "languages"
+      ],
+      "title": "ProjectView",
+      "type": "object"
+    },
+    "ProjectsChanged": {
+      "properties": {
+        "active_project": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "projects": {
+          "items": {
+            "$ref": "#/$defs/ProjectView"
+          },
+          "type": "array"
+        },
+        "type": {
+          "enum": [
+            "projects_changed"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "projects",
+        "active_project"
+      ],
+      "title": "ProjectsChanged",
+      "type": "object"
+    },
+    "ProtocolVersionUnsupportedDetails": {
+      "properties": {
+        "supported": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "type": {
+          "enum": [
+            "PROTOCOL_VERSION_UNSUPPORTED"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "supported"
+      ],
+      "title": "ProtocolVersionUnsupportedDetails",
+      "type": "object"
+    },
+    "QuotaLevel": {
+      "enum": [
+        "critical",
+        "ok",
+        "unknown",
+        "warn"
+      ],
+      "title": "QuotaLevel"
+    },
+    "QuotaUpdated": {
+      "properties": {
+        "account": {
+          "$ref": "#/$defs/AccountView"
+        },
+        "type": {
+          "enum": [
+            "quota_updated"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "account"
+      ],
+      "title": "QuotaUpdated",
+      "type": "object"
+    },
+    "QuotaWindowView": {
+      "properties": {
+        "estimated": {
+          "type": "boolean"
+        },
+        "key": {
+          "enum": [
+            "5h",
+            "7d",
+            "budget",
+            "month",
+            "week"
+          ]
+        },
+        "level": {
+          "$ref": "#/$defs/QuotaLevel"
+        },
+        "observed_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "resets_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "used_pct": {
+          "anyOf": [
+            {
+              "maximum": 100,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "key",
+        "used_pct",
+        "resets_at",
+        "level",
+        "observed_at",
+        "estimated"
+      ],
+      "title": "QuotaWindowView",
+      "type": "object"
+    },
+    "ResyncRequired": {
+      "properties": {
+        "reason": {
+          "enum": [
+            "backpressure",
+            "restart"
+          ]
+        },
+        "type": {
+          "enum": [
+            "resync_required"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "reason"
+      ],
+      "title": "ResyncRequired",
+      "type": "object"
+    },
+    "ResyncRequiredDetails": {
+      "properties": {
+        "oldest_seq": {
+          "type": "integer"
+        },
+        "type": {
+          "enum": [
+            "RESYNC_REQUIRED"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "oldest_seq"
+      ],
+      "title": "ResyncRequiredDetails",
+      "type": "object"
+    },
+    "RiskTag": {
+      "enum": [
+        "destructive",
+        "network",
+        "outside_worktree",
+        "privilege",
+        "publish",
+        "secrets"
+      ],
+      "title": "RiskTag"
+    },
+    "RoleForbiddenDetails": {
+      "properties": {
+        "role": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "ROLE_FORBIDDEN"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "role"
+      ],
+      "title": "RoleForbiddenDetails",
+      "type": "object"
+    },
+    "ScreenTextRequested": {
+      "properties": {
+        "last_lines": {
+          "type": "integer"
+        },
+        "request_id": {
+          "type": "string"
+        },
+        "tab_id": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "screen_text_requested"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "request_id",
+        "tab_id",
+        "last_lines"
+      ],
+      "title": "ScreenTextRequested",
+      "type": "object"
+    },
+    "ServerBusyDetails": {
+      "properties": {
+        "retry_after_ms": {
+          "type": "integer"
+        },
+        "type": {
+          "enum": [
+            "SERVER_BUSY"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "retry_after_ms"
+      ],
+      "title": "ServerBusyDetails",
+      "type": "object"
+    },
+    "SessionNotFoundDetails": {
+      "properties": {
+        "session_id": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "SESSION_NOT_FOUND"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "session_id"
+      ],
+      "title": "SessionNotFoundDetails",
+      "type": "object"
+    },
+    "SettingsChanged": {
+      "properties": {
+        "rev": {
+          "type": "integer"
+        },
+        "type": {
+          "enum": [
+            "settings_changed"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "rev"
+      ],
+      "title": "SettingsChanged",
+      "type": "object"
+    },
+    "SetupFixFailedDetails": {
+      "properties": {
+        "stderr_tail": {
+          "type": "string"
+        },
+        "step": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "SETUP_FIX_FAILED"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "step",
+        "stderr_tail"
+      ],
+      "title": "SetupFixFailedDetails",
+      "type": "object"
+    },
+    "SetupFixUnknownDetails": {
+      "properties": {
+        "fix_id": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "SETUP_FIX_UNKNOWN"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "fix_id"
+      ],
+      "title": "SetupFixUnknownDetails",
+      "type": "object"
+    },
+    "SetupRequired": {
+      "properties": {
+        "setup": {
+          "$ref": "#/$defs/SetupState"
+        },
+        "type": {
+          "enum": [
+            "setup_required"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "setup"
+      ],
+      "title": "SetupRequired",
+      "type": "object"
+    },
+    "SetupState": {
+      "properties": {
+        "failing_checks": {
+          "type": "integer"
+        },
+        "required": {
+          "type": "boolean"
+        },
+        "warnings": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "required",
+        "failing_checks",
+        "warnings"
+      ],
+      "title": "SetupState",
+      "type": "object"
+    },
+    "TabAdded": {
+      "properties": {
+        "tab": {
+          "$ref": "#/$defs/TabView"
+        },
+        "type": {
+          "enum": [
+            "tab_added"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "tab"
+      ],
+      "title": "TabAdded",
+      "type": "object"
+    },
+    "TabFocusRequested": {
+      "properties": {
+        "tab_id": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "tab_focus_requested"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "tab_id"
+      ],
+      "title": "TabFocusRequested",
+      "type": "object"
+    },
+    "TabNotFoundDetails": {
+      "properties": {
+        "tab_id": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "TAB_NOT_FOUND"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "tab_id"
+      ],
+      "title": "TabNotFoundDetails",
+      "type": "object"
+    },
+    "TabRemoved": {
+      "properties": {
+        "tab_id": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "tab_removed"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "tab_id"
+      ],
+      "title": "TabRemoved",
+      "type": "object"
+    },
+    "TabStateConflictDetails": {
+      "properties": {
+        "status": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "TAB_STATE_CONFLICT"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "status"
+      ],
+      "title": "TabStateConflictDetails",
+      "type": "object"
+    },
+    "TabStatus": {
+      "enum": [
+        "error",
+        "exited",
+        "idle",
+        "starting",
+        "unknown",
+        "waiting_approval",
+        "waiting_input",
+        "working"
+      ],
+      "title": "TabStatus"
+    },
+    "TabUpdated": {
+      "properties": {
+        "changed": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
+        "tab": {
+          "$ref": "#/$defs/TabView"
+        },
+        "type": {
+          "enum": [
+            "tab_updated"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "tab",
+        "changed"
+      ],
+      "title": "TabUpdated",
+      "type": "object"
+    },
+    "TabView": {
+      "properties": {
+        "account_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "agent": {
+          "$ref": "#/$defs/AgentKind"
+        },
+        "agent_session_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "ahead": {
+          "type": "integer"
+        },
+        "attention": {
+          "type": "boolean"
+        },
+        "base_branch": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "behind": {
+          "type": "integer"
+        },
+        "branch": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "checkpoints": {
+          "type": "integer"
+        },
+        "context_used_pct": {
+          "anyOf": [
+            {
+              "maximum": 100,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "id": {
+          "type": "string"
+        },
+        "last_message": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "order": {
+          "type": "integer"
+        },
+        "pending_approvals": {
+          "type": "integer"
+        },
+        "plan_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "plan_node": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "plan_node_title": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "project_id": {
+          "type": "string"
+        },
+        "session_cost_usd": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "started": {
+          "type": "boolean"
+        },
+        "status": {
+          "$ref": "#/$defs/TabStatus"
+        },
+        "status_detail": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "status_since": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "worktree_dirty": {
+          "type": "boolean"
+        },
+        "worktree_path": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "project_id",
+        "agent",
+        "account_id",
+        "title",
+        "order",
+        "status",
+        "status_detail",
+        "status_since",
+        "attention",
+        "last_message",
+        "worktree_path",
+        "branch",
+        "base_branch",
+        "worktree_dirty",
+        "ahead",
+        "behind",
+        "plan_id",
+        "plan_node",
+        "plan_node_title",
+        "context_used_pct",
+        "session_cost_usd",
+        "agent_session_id",
+        "pending_approvals",
+        "checkpoints",
+        "started"
+      ],
+      "title": "TabView",
+      "type": "object"
+    },
+    "Toast": {
+      "properties": {
+        "action_item_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "action_label": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "message": {
+          "type": "string"
+        },
+        "timeout_s": {
+          "default": 5,
+          "type": "integer"
+        },
+        "type": {
+          "enum": [
+            "toast"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "message",
+        "action_label",
+        "action_item_id"
+      ],
+      "title": "Toast",
+      "type": "object"
+    },
+    "UnexpectedDetails": {
+      "properties": {
+        "incident_id": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "UNEXPECTED"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "incident_id"
+      ],
+      "title": "UnexpectedDetails",
+      "type": "object"
+    },
+    "VaultConflictDetails": {
+      "properties": {
+        "fields": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "note_ref": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "VAULT_CONFLICT"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "note_ref",
+        "fields"
+      ],
+      "title": "VaultConflictDetails",
+      "type": "object"
+    },
+    "VaultEditRejected": {
+      "properties": {
+        "note": {
+          "type": "string"
+        },
+        "reason": {
+          "type": "string"
+        },
+        "restored": {
+          "type": "boolean"
+        },
+        "type": {
+          "enum": [
+            "vault_edit_rejected"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "note",
+        "reason",
+        "restored"
+      ],
+      "title": "VaultEditRejected",
+      "type": "object"
+    },
+    "VaultEditRejectedDetails": {
+      "properties": {
+        "note_ref": {
+          "type": "string"
+        },
+        "reason": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "VAULT_EDIT_REJECTED"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "note_ref",
+        "reason"
+      ],
+      "title": "VaultEditRejectedDetails",
+      "type": "object"
+    },
+    "VaultWriteDeferredDetails": {
+      "properties": {
+        "note_ref": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "VAULT_WRITE_DEFERRED"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "note_ref"
+      ],
+      "title": "VaultWriteDeferredDetails",
+      "type": "object"
+    },
+    "WorktreeCreateFailedDetails": {
+      "properties": {
+        "stderr_tail": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "WORKTREE_CREATE_FAILED"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "stderr_tail"
+      ],
+      "title": "WorktreeCreateFailedDetails",
+      "type": "object"
+    },
+    "WorktreeDirtyDetails": {
+      "properties": {
+        "dirty_summary": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "WORKTREE_DIRTY"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "dirty_summary"
+      ],
+      "title": "WorktreeDirtyDetails",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/EventEnvelope",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

@@ -1,0 +1,239 @@
+{
+  "$defs": {
+    "AgentKind": {
+      "enum": [
+        "claude",
+        "codex",
+        "cursor",
+        "grok",
+        "opencode"
+      ],
+      "title": "AgentKind"
+    },
+    "TabAdded": {
+      "properties": {
+        "tab": {
+          "$ref": "#/$defs/TabView"
+        },
+        "type": {
+          "enum": [
+            "tab_added"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "tab"
+      ],
+      "title": "TabAdded",
+      "type": "object"
+    },
+    "TabStatus": {
+      "enum": [
+        "error",
+        "exited",
+        "idle",
+        "starting",
+        "unknown",
+        "waiting_approval",
+        "waiting_input",
+        "working"
+      ],
+      "title": "TabStatus"
+    },
+    "TabView": {
+      "properties": {
+        "account_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "agent": {
+          "$ref": "#/$defs/AgentKind"
+        },
+        "agent_session_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "ahead": {
+          "type": "integer"
+        },
+        "attention": {
+          "type": "boolean"
+        },
+        "base_branch": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "behind": {
+          "type": "integer"
+        },
+        "branch": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "checkpoints": {
+          "type": "integer"
+        },
+        "context_used_pct": {
+          "anyOf": [
+            {
+              "maximum": 100,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "id": {
+          "type": "string"
+        },
+        "last_message": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "order": {
+          "type": "integer"
+        },
+        "pending_approvals": {
+          "type": "integer"
+        },
+        "plan_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "plan_node": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "plan_node_title": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "project_id": {
+          "type": "string"
+        },
+        "session_cost_usd": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "started": {
+          "type": "boolean"
+        },
+        "status": {
+          "$ref": "#/$defs/TabStatus"
+        },
+        "status_detail": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "status_since": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "worktree_dirty": {
+          "type": "boolean"
+        },
+        "worktree_path": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "project_id",
+        "agent",
+        "account_id",
+        "title",
+        "order",
+        "status",
+        "status_detail",
+        "status_since",
+        "attention",
+        "last_message",
+        "worktree_path",
+        "branch",
+        "base_branch",
+        "worktree_dirty",
+        "ahead",
+        "behind",
+        "plan_id",
+        "plan_node",
+        "plan_node_title",
+        "context_used_pct",
+        "session_cost_usd",
+        "agent_session_id",
+        "pending_approvals",
+        "checkpoints",
+        "started"
+      ],
+      "title": "TabView",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/TabAdded",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

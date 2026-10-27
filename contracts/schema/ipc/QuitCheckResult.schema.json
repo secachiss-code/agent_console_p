@@ -1,0 +1,25 @@
+{
+  "$defs": {
+    "QuitCheckResult": {
+      "properties": {
+        "busy_tabs": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "pending_approvals": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "busy_tabs",
+        "pending_approvals"
+      ],
+      "title": "QuitCheckResult",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/QuitCheckResult",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

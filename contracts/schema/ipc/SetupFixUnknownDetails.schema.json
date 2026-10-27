@@ -1,0 +1,24 @@
+{
+  "$defs": {
+    "SetupFixUnknownDetails": {
+      "properties": {
+        "fix_id": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "SETUP_FIX_UNKNOWN"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "fix_id"
+      ],
+      "title": "SetupFixUnknownDetails",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/SetupFixUnknownDetails",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

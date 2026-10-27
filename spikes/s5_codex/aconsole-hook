@@ -1,0 +1,7 @@
+#!/bin/sh
+# Codex command hook. Appends stdin and prints an empty decision.
+out="${ACONSOLE_CODEX_HOOK_OUT:-/tmp/codex-hook.jsonl}"
+mkdir -p "$(dirname "$out")"
+cat >> "$out"
+printf '%s\n' '{}'
+exit 0

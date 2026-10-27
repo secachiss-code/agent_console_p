@@ -1,0 +1,28 @@
+{
+  "$defs": {
+    "IngestPayloadInvalidDetails": {
+      "properties": {
+        "agent": {
+          "type": "string"
+        },
+        "event": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "INGEST_PAYLOAD_INVALID"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "agent",
+        "event"
+      ],
+      "title": "IngestPayloadInvalidDetails",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/IngestPayloadInvalidDetails",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

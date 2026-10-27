@@ -1,0 +1,19 @@
+{
+  "$defs": {
+    "CancelParams": {
+      "properties": {
+        "id": {
+          "minimum": 1,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "title": "CancelParams",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/CancelParams",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

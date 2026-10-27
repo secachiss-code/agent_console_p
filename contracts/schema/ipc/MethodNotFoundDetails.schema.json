@@ -1,0 +1,24 @@
+{
+  "$defs": {
+    "MethodNotFoundDetails": {
+      "properties": {
+        "method": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "METHOD_NOT_FOUND"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "method"
+      ],
+      "title": "MethodNotFoundDetails",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/MethodNotFoundDetails",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

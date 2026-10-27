@@ -1,0 +1,22 @@
+{
+  "$defs": {
+    "Health": {
+      "properties": {
+        "ok": {
+          "type": "boolean"
+        },
+        "version": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "ok",
+        "version"
+      ],
+      "title": "Health",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/Health",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

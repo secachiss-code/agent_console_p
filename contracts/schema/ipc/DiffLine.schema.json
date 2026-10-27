@@ -1,0 +1,67 @@
+{
+  "$defs": {
+    "DiffLine": {
+      "properties": {
+        "kind": {
+          "enum": [
+            "add",
+            "context",
+            "del",
+            "meta"
+          ]
+        },
+        "new_no": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "old_no": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "text": {
+          "type": "string"
+        },
+        "word_spans": {
+          "default": [],
+          "items": {
+            "items": false,
+            "maxItems": 2,
+            "minItems": 2,
+            "prefixItems": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "integer"
+              }
+            ],
+            "type": "array"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "kind",
+        "old_no",
+        "new_no",
+        "text"
+      ],
+      "title": "DiffLine",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/DiffLine",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

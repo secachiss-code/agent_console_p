@@ -1,0 +1,54 @@
+{
+  "$defs": {
+    "Banner": {
+      "properties": {
+        "button_item_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "button_label": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "id": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "banner"
+          ]
+        },
+        "visible": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "id",
+        "message",
+        "button_label",
+        "button_item_id",
+        "visible"
+      ],
+      "title": "Banner",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/Banner",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

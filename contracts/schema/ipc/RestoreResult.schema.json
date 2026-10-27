@@ -1,0 +1,22 @@
+{
+  "$defs": {
+    "RestoreResult": {
+      "properties": {
+        "restored": {
+          "type": "boolean"
+        },
+        "safety_checkpoint": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "restored",
+        "safety_checkpoint"
+      ],
+      "title": "RestoreResult",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/RestoreResult",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

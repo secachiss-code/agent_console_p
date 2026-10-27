@@ -1,0 +1,96 @@
+# Copy to ~/.config/aconsole-hostrun/policy.toml
+# Named actions only. The server never accepts a raw command line.
+
+socket_path = "/home/sas/.containers/hostrun/hostrun.sock"
+audit_path = "/home/sas/.local/state/aconsole-hostrun/audit.jsonl"
+state_dir = "/home/sas/.local/state/aconsole-hostrun"
+projects_root = "/home/sas/Projects"
+repo = "/home/sas/Projects/sp_aconsole_prototype"
+output_limit_bytes = 5242880
+default_timeout_s = 120
+
+[timeouts]
+check = 180
+deps-sync = 600
+test = 900
+gate = 900
+ui-snapshot = 180
+ui-run = 3600
+fake-core = 30
+core-run = 86400
+podman-ps = 30
+distrobox-dry-run = 60
+git = 60
+conformance = 600
+devtools = 600
+
+# Core executor (Grok CLI in agent-grok; agent-cursor kept for the Cursor variant):
+# free-threaded venv .venv-core via `uv venv --python 3.15t`, plus the UI venv and gate.
+# Each container is bound to its own worktree (P1, PARALLEL §2).
+[containers.agent-grok]
+worktree = "/home/sas/Projects/.aconsole-worktrees/sp_aconsole_prototype/core"
+actions = [
+  "check",
+  "deps-sync",
+  "test",
+  "ui-snapshot",
+  "ui-run",
+  "fake-core",
+  "core-run",
+  "podman-ps",
+  "distrobox-dry-run",
+  "git",
+  "gate",
+  "conformance",
+  "devtools",
+]
+
+[containers.agent-cursor]
+worktree = "/home/sas/Projects/.aconsole-worktrees/sp_aconsole_prototype/core"
+actions = [
+  "check",
+  "deps-sync",
+  "test",
+  "ui-snapshot",
+  "ui-run",
+  "fake-core",
+  "core-run",
+  "podman-ps",
+  "distrobox-dry-run",
+  "git",
+  "gate",
+  "conformance",
+  "devtools",
+]
+
+[containers.agent-claude]
+worktree = "/home/sas/Projects/sp_aconsole_prototype"
+actions = [
+  "check",
+  "deps-sync",
+  "test",
+  "ui-snapshot",
+  "ui-run",
+  "fake-core",
+  "core-run",
+  "podman-ps",
+  "distrobox-dry-run",
+  "git",
+  "gate",
+  "conformance",
+  "devtools",
+]
+
+# Frontend executor. No gate, core-run, distrobox-dry-run, conformance, or devtools.
+[containers.agent-codex]
+worktree = "/home/sas/Projects/.aconsole-worktrees/sp_aconsole_prototype/front"
+actions = [
+  "check",
+  "deps-sync",
+  "test",
+  "ui-snapshot",
+  "ui-run",
+  "fake-core",
+  "podman-ps",
+  "git",
+]

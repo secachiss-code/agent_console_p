@@ -1,0 +1,31 @@
+{
+  "$defs": {
+    "VaultConflictDetails": {
+      "properties": {
+        "fields": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "note_ref": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "VAULT_CONFLICT"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "note_ref",
+        "fields"
+      ],
+      "title": "VaultConflictDetails",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/VaultConflictDetails",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

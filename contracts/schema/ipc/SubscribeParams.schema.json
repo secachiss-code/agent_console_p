@@ -1,0 +1,18 @@
+{
+  "$defs": {
+    "SubscribeParams": {
+      "properties": {
+        "after_seq": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "after_seq"
+      ],
+      "title": "SubscribeParams",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/SubscribeParams",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

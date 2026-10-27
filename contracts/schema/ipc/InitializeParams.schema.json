@@ -1,0 +1,105 @@
+{
+  "$defs": {
+    "ClientRole": {
+      "enum": [
+        "cli",
+        "sidecar",
+        "ui"
+      ],
+      "title": "ClientRole"
+    },
+    "InitializeParams": {
+      "properties": {
+        "capabilities": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
+        "client_name": {
+          "type": "string"
+        },
+        "client_version": {
+          "type": "string"
+        },
+        "locale": {
+          "default": "ru",
+          "type": "string"
+        },
+        "pid": {
+          "type": "integer"
+        },
+        "protocol": {
+          "items": false,
+          "maxItems": 2,
+          "minItems": 2,
+          "prefixItems": [
+            {
+              "$ref": "#/$defs/ProtocolVersion"
+            },
+            {
+              "$ref": "#/$defs/ProtocolVersion"
+            }
+          ],
+          "type": "array"
+        },
+        "role": {
+          "$ref": "#/$defs/ClientRole"
+        },
+        "sidecar_token": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "tab_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "protocol",
+        "role",
+        "client_name",
+        "client_version",
+        "pid",
+        "capabilities"
+      ],
+      "title": "InitializeParams",
+      "type": "object"
+    },
+    "ProtocolVersion": {
+      "properties": {
+        "major": {
+          "minimum": 1,
+          "type": "integer"
+        },
+        "minor": {
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "major",
+        "minor"
+      ],
+      "title": "ProtocolVersion",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/InitializeParams",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

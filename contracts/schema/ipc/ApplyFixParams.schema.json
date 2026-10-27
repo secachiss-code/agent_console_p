@@ -1,0 +1,22 @@
+{
+  "$defs": {
+    "ApplyFixParams": {
+      "properties": {
+        "confirm_token": {
+          "type": "string"
+        },
+        "fix_id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "fix_id",
+        "confirm_token"
+      ],
+      "title": "ApplyFixParams",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/ApplyFixParams",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

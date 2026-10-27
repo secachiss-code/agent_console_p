@@ -1,0 +1,25 @@
+{
+  "$defs": {
+    "ProtocolLimits": {
+      "properties": {
+        "event_ring_size": {
+          "default": 4096,
+          "type": "integer"
+        },
+        "max_inflight_requests": {
+          "default": 64,
+          "type": "integer"
+        },
+        "max_message_bytes": {
+          "default": 16777216,
+          "type": "integer"
+        }
+      },
+      "required": [],
+      "title": "ProtocolLimits",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/ProtocolLimits",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

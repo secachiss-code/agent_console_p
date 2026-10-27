@@ -1,0 +1,67 @@
+{
+  "$defs": {
+    "CanvasFile": {
+      "properties": {
+        "edges": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "nodes": {
+          "items": {
+            "$ref": "#/$defs/CanvasNode"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "nodes"
+      ],
+      "title": "CanvasFile",
+      "type": "object"
+    },
+    "CanvasNode": {
+      "properties": {
+        "file": {
+          "type": "string"
+        },
+        "height": {
+          "type": "integer"
+        },
+        "id": {
+          "pattern": "^[0-9A-HJKMNP-TV-Z]{26}$",
+          "type": "string"
+        },
+        "type": {
+          "default": "file",
+          "enum": [
+            "file"
+          ]
+        },
+        "width": {
+          "type": "integer"
+        },
+        "x": {
+          "type": "integer"
+        },
+        "y": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "id",
+        "file",
+        "x",
+        "y",
+        "width",
+        "height"
+      ],
+      "title": "CanvasNode",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/CanvasFile",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

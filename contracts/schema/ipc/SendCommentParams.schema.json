@@ -1,0 +1,30 @@
+{
+  "$defs": {
+    "SendCommentParams": {
+      "properties": {
+        "hunk_id": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "tab_id": {
+          "type": "string"
+        },
+        "text": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "tab_id",
+        "path",
+        "hunk_id",
+        "text"
+      ],
+      "title": "SendCommentParams",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/SendCommentParams",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

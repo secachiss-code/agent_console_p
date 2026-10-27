@@ -1,0 +1,33 @@
+{
+  "$defs": {
+    "ResponseOk": {
+      "properties": {
+        "id": {
+          "minimum": 1,
+          "type": "integer"
+        },
+        "jsonrpc": {
+          "default": "2.0",
+          "enum": [
+            "2.0"
+          ]
+        },
+        "kind": {
+          "enum": [
+            "result"
+          ]
+        },
+        "result": {}
+      },
+      "required": [
+        "kind",
+        "id",
+        "result"
+      ],
+      "title": "ResponseOk",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/ResponseOk",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

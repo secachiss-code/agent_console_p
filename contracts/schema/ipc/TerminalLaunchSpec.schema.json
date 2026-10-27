@@ -1,0 +1,40 @@
+{
+  "$defs": {
+    "TerminalLaunchSpec": {
+      "properties": {
+        "argv": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "cwd": {
+          "type": "string"
+        },
+        "env": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
+        },
+        "scrollback_lines": {
+          "type": "integer"
+        },
+        "title": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "argv",
+        "env",
+        "cwd",
+        "scrollback_lines",
+        "title"
+      ],
+      "title": "TerminalLaunchSpec",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/TerminalLaunchSpec",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

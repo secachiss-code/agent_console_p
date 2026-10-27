@@ -1,0 +1,22 @@
+{
+  "$defs": {
+    "ReorderParams": {
+      "properties": {
+        "order": {
+          "type": "integer"
+        },
+        "tab_id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "tab_id",
+        "order"
+      ],
+      "title": "ReorderParams",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/ReorderParams",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

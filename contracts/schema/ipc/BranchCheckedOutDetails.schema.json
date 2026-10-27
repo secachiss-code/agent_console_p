@@ -1,0 +1,28 @@
+{
+  "$defs": {
+    "BranchCheckedOutDetails": {
+      "properties": {
+        "branch": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "BRANCH_ALREADY_CHECKED_OUT"
+          ]
+        },
+        "worktree": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "branch",
+        "worktree"
+      ],
+      "title": "BranchCheckedOutDetails",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/BranchCheckedOutDetails",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

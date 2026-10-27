@@ -1,0 +1,32 @@
+{
+  "$defs": {
+    "CloseTabParams": {
+      "properties": {
+        "decision": {
+          "anyOf": [
+            {
+              "enum": [
+                "keep",
+                "remove"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "tab_id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "tab_id"
+      ],
+      "title": "CloseTabParams",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/CloseTabParams",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

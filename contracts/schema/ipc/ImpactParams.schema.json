@@ -1,0 +1,43 @@
+{
+  "$defs": {
+    "ImpactParams": {
+      "properties": {
+        "hops": {
+          "default": 3,
+          "maximum": 3,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "kinds": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array",
+              "uniqueItems": true
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "project_id": {
+          "type": "string"
+        },
+        "target": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "project_id",
+        "target"
+      ],
+      "title": "ImpactParams",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/ImpactParams",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

@@ -1,0 +1,8 @@
+filters:
+  and:
+    - file.hasTag("aconsole/task")
+views:
+  - type: table
+    name: tasks
+    order:
+      - file.name

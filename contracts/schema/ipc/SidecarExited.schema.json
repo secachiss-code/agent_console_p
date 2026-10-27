@@ -1,0 +1,36 @@
+{
+  "$defs": {
+    "SidecarExited": {
+      "properties": {
+        "exit_code": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "signal": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "exit_code",
+        "signal"
+      ],
+      "title": "SidecarExited",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/SidecarExited",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

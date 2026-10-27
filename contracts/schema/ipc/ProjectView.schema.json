@@ -1,0 +1,49 @@
+{
+  "$defs": {
+    "ProjectView": {
+      "properties": {
+        "default_branch": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "languages": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
+        "name": {
+          "type": "string"
+        },
+        "root": {
+          "type": "string"
+        },
+        "vault_folder": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "root",
+        "default_branch",
+        "vault_folder",
+        "languages"
+      ],
+      "title": "ProjectView",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/ProjectView",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

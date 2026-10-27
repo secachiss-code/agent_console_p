@@ -1,0 +1,50 @@
+{
+  "$defs": {
+    "Notify": {
+      "properties": {
+        "body": {
+          "type": "string"
+        },
+        "episode_id": {
+          "type": "string"
+        },
+        "priority": {
+          "enum": [
+            "high",
+            "normal"
+          ]
+        },
+        "tab_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "title": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "notify"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "tab_id",
+        "title",
+        "body",
+        "priority",
+        "episode_id"
+      ],
+      "title": "Notify",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/Notify",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

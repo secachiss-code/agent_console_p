@@ -1,0 +1,24 @@
+{
+  "$defs": {
+    "ServerBusyDetails": {
+      "properties": {
+        "retry_after_ms": {
+          "type": "integer"
+        },
+        "type": {
+          "enum": [
+            "SERVER_BUSY"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "retry_after_ms"
+      ],
+      "title": "ServerBusyDetails",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/ServerBusyDetails",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

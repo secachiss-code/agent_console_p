@@ -1,0 +1,1198 @@
+{
+  "$defs": {
+    "AgentConfigUnsupportedDetails": {
+      "properties": {
+        "agent": {
+          "type": "string"
+        },
+        "supported": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "AGENT_CONFIG_UNSUPPORTED_VERSION"
+          ]
+        },
+        "version": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "agent",
+        "version",
+        "supported"
+      ],
+      "title": "AgentConfigUnsupportedDetails",
+      "type": "object"
+    },
+    "AgentNotLoggedInDetails": {
+      "properties": {
+        "agent": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "AGENT_NOT_LOGGED_IN"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "agent"
+      ],
+      "title": "AgentNotLoggedInDetails",
+      "type": "object"
+    },
+    "AgentUnavailableDetails": {
+      "properties": {
+        "agent": {
+          "type": "string"
+        },
+        "container": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "AGENT_UNAVAILABLE"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "agent",
+        "container"
+      ],
+      "title": "AgentUnavailableDetails",
+      "type": "object"
+    },
+    "ApprovalAlreadyDecidedDetails": {
+      "properties": {
+        "decision": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "APPROVAL_ALREADY_DECIDED"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "decision"
+      ],
+      "title": "ApprovalAlreadyDecidedDetails",
+      "type": "object"
+    },
+    "ApprovalExpiredDetails": {
+      "properties": {
+        "request_id": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "APPROVAL_EXPIRED"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "request_id"
+      ],
+      "title": "ApprovalExpiredDetails",
+      "type": "object"
+    },
+    "ApprovalNotFoundDetails": {
+      "properties": {
+        "request_id": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "APPROVAL_NOT_FOUND"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "request_id"
+      ],
+      "title": "ApprovalNotFoundDetails",
+      "type": "object"
+    },
+    "BranchCheckedOutDetails": {
+      "properties": {
+        "branch": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "BRANCH_ALREADY_CHECKED_OUT"
+          ]
+        },
+        "worktree": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "branch",
+        "worktree"
+      ],
+      "title": "BranchCheckedOutDetails",
+      "type": "object"
+    },
+    "CheckpointNotFoundDetails": {
+      "properties": {
+        "checkpoint_id": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "CHECKPOINT_NOT_FOUND"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "checkpoint_id"
+      ],
+      "title": "CheckpointNotFoundDetails",
+      "type": "object"
+    },
+    "CheckpointRestoreConflictDetails": {
+      "properties": {
+        "status": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "CHECKPOINT_RESTORE_CONFLICT"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "status"
+      ],
+      "title": "CheckpointRestoreConflictDetails",
+      "type": "object"
+    },
+    "CodegraphExtractorFailedDetails": {
+      "properties": {
+        "language": {
+          "type": "string"
+        },
+        "stderr_tail": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "CODEGRAPH_EXTRACTOR_FAILED"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "language",
+        "stderr_tail"
+      ],
+      "title": "CodegraphExtractorFailedDetails",
+      "type": "object"
+    },
+    "ContainerStartFailedDetails": {
+      "properties": {
+        "container": {
+          "type": "string"
+        },
+        "stderr_tail": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "CONTAINER_START_FAILED"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "container",
+        "stderr_tail"
+      ],
+      "title": "ContainerStartFailedDetails",
+      "type": "object"
+    },
+    "DiffTooLargeDetails": {
+      "properties": {
+        "bytes": {
+          "type": "integer"
+        },
+        "files": {
+          "type": "integer"
+        },
+        "type": {
+          "enum": [
+            "DIFF_TOO_LARGE"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "files",
+        "bytes"
+      ],
+      "title": "DiffTooLargeDetails",
+      "type": "object"
+    },
+    "ErrorData": {
+      "properties": {
+        "details": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/MethodNotFoundDetails"
+                },
+                {
+                  "$ref": "#/$defs/InvalidParamsDetails"
+                },
+                {
+                  "$ref": "#/$defs/InternalErrorDetails"
+                },
+                {
+                  "$ref": "#/$defs/ProtocolVersionUnsupportedDetails"
+                },
+                {
+                  "$ref": "#/$defs/MessageTooLargeDetails"
+                },
+                {
+                  "$ref": "#/$defs/ServerBusyDetails"
+                },
+                {
+                  "$ref": "#/$defs/ResyncRequiredDetails"
+                },
+                {
+                  "$ref": "#/$defs/RoleForbiddenDetails"
+                },
+                {
+                  "$ref": "#/$defs/IngestPayloadInvalidDetails"
+                },
+                {
+                  "$ref": "#/$defs/ProjectNotFoundDetails"
+                },
+                {
+                  "$ref": "#/$defs/ProjectNotGitRepoDetails"
+                },
+                {
+                  "$ref": "#/$defs/TabNotFoundDetails"
+                },
+                {
+                  "$ref": "#/$defs/TabStateConflictDetails"
+                },
+                {
+                  "$ref": "#/$defs/AgentUnavailableDetails"
+                },
+                {
+                  "$ref": "#/$defs/AgentNotLoggedInDetails"
+                },
+                {
+                  "$ref": "#/$defs/ContainerStartFailedDetails"
+                },
+                {
+                  "$ref": "#/$defs/WorktreeCreateFailedDetails"
+                },
+                {
+                  "$ref": "#/$defs/WorktreeDirtyDetails"
+                },
+                {
+                  "$ref": "#/$defs/BranchCheckedOutDetails"
+                },
+                {
+                  "$ref": "#/$defs/PathNotAllowedDetails"
+                },
+                {
+                  "$ref": "#/$defs/SessionNotFoundDetails"
+                },
+                {
+                  "$ref": "#/$defs/ApprovalNotFoundDetails"
+                },
+                {
+                  "$ref": "#/$defs/ApprovalExpiredDetails"
+                },
+                {
+                  "$ref": "#/$defs/ApprovalAlreadyDecidedDetails"
+                },
+                {
+                  "$ref": "#/$defs/CheckpointNotFoundDetails"
+                },
+                {
+                  "$ref": "#/$defs/CheckpointRestoreConflictDetails"
+                },
+                {
+                  "$ref": "#/$defs/DiffTooLargeDetails"
+                },
+                {
+                  "$ref": "#/$defs/PlanNotFoundDetails"
+                },
+                {
+                  "$ref": "#/$defs/NodeNotFoundDetails"
+                },
+                {
+                  "$ref": "#/$defs/PlanCycleDetails"
+                },
+                {
+                  "$ref": "#/$defs/NodeTransitionInvalidDetails"
+                },
+                {
+                  "$ref": "#/$defs/NodeNotReadyDetails"
+                },
+                {
+                  "$ref": "#/$defs/LeaseHeldDetails"
+                },
+                {
+                  "$ref": "#/$defs/LeaseStaleFenceDetails"
+                },
+                {
+                  "$ref": "#/$defs/PathsOverlapDetails"
+                },
+                {
+                  "$ref": "#/$defs/VaultWriteDeferredDetails"
+                },
+                {
+                  "$ref": "#/$defs/VaultConflictDetails"
+                },
+                {
+                  "$ref": "#/$defs/VaultEditRejectedDetails"
+                },
+                {
+                  "$ref": "#/$defs/NoteNotFoundDetails"
+                },
+                {
+                  "$ref": "#/$defs/CodegraphExtractorFailedDetails"
+                },
+                {
+                  "$ref": "#/$defs/ImpactTargetUnknownDetails"
+                },
+                {
+                  "$ref": "#/$defs/SetupFixUnknownDetails"
+                },
+                {
+                  "$ref": "#/$defs/SetupFixFailedDetails"
+                },
+                {
+                  "$ref": "#/$defs/AgentConfigUnsupportedDetails"
+                },
+                {
+                  "$ref": "#/$defs/UnexpectedDetails"
+                }
+              ],
+              "discriminator": {
+                "mapping": {
+                  "AGENT_CONFIG_UNSUPPORTED_VERSION": "#/$defs/AgentConfigUnsupportedDetails",
+                  "AGENT_NOT_LOGGED_IN": "#/$defs/AgentNotLoggedInDetails",
+                  "AGENT_UNAVAILABLE": "#/$defs/AgentUnavailableDetails",
+                  "APPROVAL_ALREADY_DECIDED": "#/$defs/ApprovalAlreadyDecidedDetails",
+                  "APPROVAL_EXPIRED": "#/$defs/ApprovalExpiredDetails",
+                  "APPROVAL_NOT_FOUND": "#/$defs/ApprovalNotFoundDetails",
+                  "BRANCH_ALREADY_CHECKED_OUT": "#/$defs/BranchCheckedOutDetails",
+                  "CHECKPOINT_NOT_FOUND": "#/$defs/CheckpointNotFoundDetails",
+                  "CHECKPOINT_RESTORE_CONFLICT": "#/$defs/CheckpointRestoreConflictDetails",
+                  "CODEGRAPH_EXTRACTOR_FAILED": "#/$defs/CodegraphExtractorFailedDetails",
+                  "CONTAINER_START_FAILED": "#/$defs/ContainerStartFailedDetails",
+                  "DIFF_TOO_LARGE": "#/$defs/DiffTooLargeDetails",
+                  "IMPACT_TARGET_UNKNOWN": "#/$defs/ImpactTargetUnknownDetails",
+                  "INGEST_PAYLOAD_INVALID": "#/$defs/IngestPayloadInvalidDetails",
+                  "INTERNAL_ERROR": "#/$defs/InternalErrorDetails",
+                  "INVALID_PARAMS": "#/$defs/InvalidParamsDetails",
+                  "LEASE_HELD": "#/$defs/LeaseHeldDetails",
+                  "LEASE_STALE_FENCE": "#/$defs/LeaseStaleFenceDetails",
+                  "MESSAGE_TOO_LARGE": "#/$defs/MessageTooLargeDetails",
+                  "METHOD_NOT_FOUND": "#/$defs/MethodNotFoundDetails",
+                  "NODE_NOT_FOUND": "#/$defs/NodeNotFoundDetails",
+                  "NODE_NOT_READY": "#/$defs/NodeNotReadyDetails",
+                  "NODE_TRANSITION_INVALID": "#/$defs/NodeTransitionInvalidDetails",
+                  "NOTE_NOT_FOUND": "#/$defs/NoteNotFoundDetails",
+                  "PATHS_OVERLAP": "#/$defs/PathsOverlapDetails",
+                  "PATH_NOT_ALLOWED": "#/$defs/PathNotAllowedDetails",
+                  "PLAN_CYCLE": "#/$defs/PlanCycleDetails",
+                  "PLAN_NOT_FOUND": "#/$defs/PlanNotFoundDetails",
+                  "PROJECT_NOT_A_GIT_REPO": "#/$defs/ProjectNotGitRepoDetails",
+                  "PROJECT_NOT_FOUND": "#/$defs/ProjectNotFoundDetails",
+                  "PROTOCOL_VERSION_UNSUPPORTED": "#/$defs/ProtocolVersionUnsupportedDetails",
+                  "RESYNC_REQUIRED": "#/$defs/ResyncRequiredDetails",
+                  "ROLE_FORBIDDEN": "#/$defs/RoleForbiddenDetails",
+                  "SERVER_BUSY": "#/$defs/ServerBusyDetails",
+                  "SESSION_NOT_FOUND": "#/$defs/SessionNotFoundDetails",
+                  "SETUP_FIX_FAILED": "#/$defs/SetupFixFailedDetails",
+                  "SETUP_FIX_UNKNOWN": "#/$defs/SetupFixUnknownDetails",
+                  "TAB_NOT_FOUND": "#/$defs/TabNotFoundDetails",
+                  "TAB_STATE_CONFLICT": "#/$defs/TabStateConflictDetails",
+                  "UNEXPECTED": "#/$defs/UnexpectedDetails",
+                  "VAULT_CONFLICT": "#/$defs/VaultConflictDetails",
+                  "VAULT_EDIT_REJECTED": "#/$defs/VaultEditRejectedDetails",
+                  "VAULT_WRITE_DEFERRED": "#/$defs/VaultWriteDeferredDetails",
+                  "WORKTREE_CREATE_FAILED": "#/$defs/WorktreeCreateFailedDetails",
+                  "WORKTREE_DIRTY": "#/$defs/WorktreeDirtyDetails"
+                },
+                "propertyName": "type"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "domain": {
+          "enum": [
+            "aconsole.core",
+            "aconsole.ingest",
+            "aconsole.ipc",
+            "aconsole.mcp"
+          ]
+        },
+        "hint": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "reason": {
+          "type": "string"
+        },
+        "retryable": {
+          "type": "boolean"
+        },
+        "user_message_args": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "default": {},
+          "type": "object"
+        },
+        "user_message_key": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "reason",
+        "domain",
+        "retryable",
+        "user_message_key"
+      ],
+      "title": "ErrorData",
+      "type": "object"
+    },
+    "ErrorObject": {
+      "properties": {
+        "code": {
+          "type": "integer"
+        },
+        "data": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ErrorData"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "code",
+        "message"
+      ],
+      "title": "ErrorObject",
+      "type": "object"
+    },
+    "ImpactTargetUnknownDetails": {
+      "properties": {
+        "target": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "IMPACT_TARGET_UNKNOWN"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "target"
+      ],
+      "title": "ImpactTargetUnknownDetails",
+      "type": "object"
+    },
+    "IngestPayloadInvalidDetails": {
+      "properties": {
+        "agent": {
+          "type": "string"
+        },
+        "event": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "INGEST_PAYLOAD_INVALID"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "agent",
+        "event"
+      ],
+      "title": "IngestPayloadInvalidDetails",
+      "type": "object"
+    },
+    "InternalErrorDetails": {
+      "properties": {
+        "incident_id": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "INTERNAL_ERROR"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "incident_id"
+      ],
+      "title": "InternalErrorDetails",
+      "type": "object"
+    },
+    "InvalidParamsDetails": {
+      "properties": {
+        "expected": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "INVALID_PARAMS"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "path",
+        "expected"
+      ],
+      "title": "InvalidParamsDetails",
+      "type": "object"
+    },
+    "LeaseHeldDetails": {
+      "properties": {
+        "expires_at": {
+          "type": "string"
+        },
+        "holder_tab": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "LEASE_HELD"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "holder_tab",
+        "expires_at"
+      ],
+      "title": "LeaseHeldDetails",
+      "type": "object"
+    },
+    "LeaseStaleFenceDetails": {
+      "properties": {
+        "current_fence": {
+          "type": "integer"
+        },
+        "type": {
+          "enum": [
+            "LEASE_STALE_FENCE"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "current_fence"
+      ],
+      "title": "LeaseStaleFenceDetails",
+      "type": "object"
+    },
+    "MessageTooLargeDetails": {
+      "properties": {
+        "limit": {
+          "type": "integer"
+        },
+        "type": {
+          "enum": [
+            "MESSAGE_TOO_LARGE"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "limit"
+      ],
+      "title": "MessageTooLargeDetails",
+      "type": "object"
+    },
+    "MethodNotFoundDetails": {
+      "properties": {
+        "method": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "METHOD_NOT_FOUND"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "method"
+      ],
+      "title": "MethodNotFoundDetails",
+      "type": "object"
+    },
+    "NodeNotFoundDetails": {
+      "properties": {
+        "node_id": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "NODE_NOT_FOUND"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "node_id"
+      ],
+      "title": "NodeNotFoundDetails",
+      "type": "object"
+    },
+    "NodeNotReadyDetails": {
+      "properties": {
+        "blocked_by": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "type": {
+          "enum": [
+            "NODE_NOT_READY"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "blocked_by"
+      ],
+      "title": "NodeNotReadyDetails",
+      "type": "object"
+    },
+    "NodeTransitionInvalidDetails": {
+      "properties": {
+        "allowed": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "from": {
+          "type": "string"
+        },
+        "to": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "NODE_TRANSITION_INVALID"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "from",
+        "to",
+        "allowed"
+      ],
+      "title": "NodeTransitionInvalidDetails",
+      "type": "object"
+    },
+    "NoteNotFoundDetails": {
+      "properties": {
+        "note_ref": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "NOTE_NOT_FOUND"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "note_ref"
+      ],
+      "title": "NoteNotFoundDetails",
+      "type": "object"
+    },
+    "PathNotAllowedDetails": {
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "PATH_NOT_ALLOWED"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "path"
+      ],
+      "title": "PathNotAllowedDetails",
+      "type": "object"
+    },
+    "PathsOverlapDetails": {
+      "properties": {
+        "conflicting_node": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "PATHS_OVERLAP"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "conflicting_node"
+      ],
+      "title": "PathsOverlapDetails",
+      "type": "object"
+    },
+    "PlanCycleDetails": {
+      "properties": {
+        "cycle": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "type": {
+          "enum": [
+            "PLAN_CYCLE"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "cycle"
+      ],
+      "title": "PlanCycleDetails",
+      "type": "object"
+    },
+    "PlanNotFoundDetails": {
+      "properties": {
+        "plan_id": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "PLAN_NOT_FOUND"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "plan_id"
+      ],
+      "title": "PlanNotFoundDetails",
+      "type": "object"
+    },
+    "ProjectNotFoundDetails": {
+      "properties": {
+        "project_id": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "PROJECT_NOT_FOUND"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "project_id"
+      ],
+      "title": "ProjectNotFoundDetails",
+      "type": "object"
+    },
+    "ProjectNotGitRepoDetails": {
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "PROJECT_NOT_A_GIT_REPO"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "path"
+      ],
+      "title": "ProjectNotGitRepoDetails",
+      "type": "object"
+    },
+    "ProtocolVersionUnsupportedDetails": {
+      "properties": {
+        "supported": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "type": {
+          "enum": [
+            "PROTOCOL_VERSION_UNSUPPORTED"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "supported"
+      ],
+      "title": "ProtocolVersionUnsupportedDetails",
+      "type": "object"
+    },
+    "ResponseErr": {
+      "properties": {
+        "error": {
+          "$ref": "#/$defs/ErrorObject"
+        },
+        "id": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "jsonrpc": {
+          "default": "2.0",
+          "enum": [
+            "2.0"
+          ]
+        },
+        "kind": {
+          "enum": [
+            "error"
+          ]
+        }
+      },
+      "required": [
+        "kind",
+        "id",
+        "error"
+      ],
+      "title": "ResponseErr",
+      "type": "object"
+    },
+    "ResyncRequiredDetails": {
+      "properties": {
+        "oldest_seq": {
+          "type": "integer"
+        },
+        "type": {
+          "enum": [
+            "RESYNC_REQUIRED"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "oldest_seq"
+      ],
+      "title": "ResyncRequiredDetails",
+      "type": "object"
+    },
+    "RoleForbiddenDetails": {
+      "properties": {
+        "role": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "ROLE_FORBIDDEN"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "role"
+      ],
+      "title": "RoleForbiddenDetails",
+      "type": "object"
+    },
+    "ServerBusyDetails": {
+      "properties": {
+        "retry_after_ms": {
+          "type": "integer"
+        },
+        "type": {
+          "enum": [
+            "SERVER_BUSY"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "retry_after_ms"
+      ],
+      "title": "ServerBusyDetails",
+      "type": "object"
+    },
+    "SessionNotFoundDetails": {
+      "properties": {
+        "session_id": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "SESSION_NOT_FOUND"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "session_id"
+      ],
+      "title": "SessionNotFoundDetails",
+      "type": "object"
+    },
+    "SetupFixFailedDetails": {
+      "properties": {
+        "stderr_tail": {
+          "type": "string"
+        },
+        "step": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "SETUP_FIX_FAILED"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "step",
+        "stderr_tail"
+      ],
+      "title": "SetupFixFailedDetails",
+      "type": "object"
+    },
+    "SetupFixUnknownDetails": {
+      "properties": {
+        "fix_id": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "SETUP_FIX_UNKNOWN"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "fix_id"
+      ],
+      "title": "SetupFixUnknownDetails",
+      "type": "object"
+    },
+    "TabNotFoundDetails": {
+      "properties": {
+        "tab_id": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "TAB_NOT_FOUND"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "tab_id"
+      ],
+      "title": "TabNotFoundDetails",
+      "type": "object"
+    },
+    "TabStateConflictDetails": {
+      "properties": {
+        "status": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "TAB_STATE_CONFLICT"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "status"
+      ],
+      "title": "TabStateConflictDetails",
+      "type": "object"
+    },
+    "UnexpectedDetails": {
+      "properties": {
+        "incident_id": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "UNEXPECTED"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "incident_id"
+      ],
+      "title": "UnexpectedDetails",
+      "type": "object"
+    },
+    "VaultConflictDetails": {
+      "properties": {
+        "fields": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "note_ref": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "VAULT_CONFLICT"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "note_ref",
+        "fields"
+      ],
+      "title": "VaultConflictDetails",
+      "type": "object"
+    },
+    "VaultEditRejectedDetails": {
+      "properties": {
+        "note_ref": {
+          "type": "string"
+        },
+        "reason": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "VAULT_EDIT_REJECTED"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "note_ref",
+        "reason"
+      ],
+      "title": "VaultEditRejectedDetails",
+      "type": "object"
+    },
+    "VaultWriteDeferredDetails": {
+      "properties": {
+        "note_ref": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "VAULT_WRITE_DEFERRED"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "note_ref"
+      ],
+      "title": "VaultWriteDeferredDetails",
+      "type": "object"
+    },
+    "WorktreeCreateFailedDetails": {
+      "properties": {
+        "stderr_tail": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "WORKTREE_CREATE_FAILED"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "stderr_tail"
+      ],
+      "title": "WorktreeCreateFailedDetails",
+      "type": "object"
+    },
+    "WorktreeDirtyDetails": {
+      "properties": {
+        "dirty_summary": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "WORKTREE_DIRTY"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "dirty_summary"
+      ],
+      "title": "WorktreeDirtyDetails",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/ResponseErr",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

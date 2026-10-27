@@ -1,0 +1,65 @@
+{
+  "$defs": {
+    "CheckpointCreated": {
+      "properties": {
+        "checkpoint": {
+          "$ref": "#/$defs/CheckpointView"
+        },
+        "type": {
+          "enum": [
+            "checkpoint_created"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "checkpoint"
+      ],
+      "title": "CheckpointCreated",
+      "type": "object"
+    },
+    "CheckpointView": {
+      "properties": {
+        "created_at": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "deletions": {
+          "type": "integer"
+        },
+        "files_changed": {
+          "type": "integer"
+        },
+        "id": {
+          "type": "string"
+        },
+        "insertions": {
+          "type": "integer"
+        },
+        "label": {
+          "type": "string"
+        },
+        "tab_id": {
+          "type": "string"
+        },
+        "turn": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "id",
+        "tab_id",
+        "turn",
+        "created_at",
+        "files_changed",
+        "insertions",
+        "deletions",
+        "label"
+      ],
+      "title": "CheckpointView",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/CheckpointCreated",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

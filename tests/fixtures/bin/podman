@@ -1,0 +1,67 @@
+#!/bin/sh
+# Fake podman for A2.4. It prints inspect JSON, records start/exec, and lists orphan pids.
+set -eu
+cmd=${1-}
+if [ "$#" -gt 0 ]; then
+  shift
+fi
+log=${PODMAN_FAKE_LOG-}
+case "$cmd" in
+inspect)
+  name=
+  prev=
+  for arg in "$@"; do
+    if [ "$prev" = "--format" ]; then
+      prev=
+      continue
+    fi
+    prev=$arg
+    case "$arg" in
+    --format) ;;
+    *) name=$arg ;;
+    esac
+  done
+  if [ "$name" = "absent" ]; then
+    echo "no such container" >&2
+    exit 125
+  fi
+  running=${PODMAN_FAKE_RUNNING:-true}
+  printf '[{"Id":"id-%s","Name":"%s","State":{"Running":%s}}]\n' "$name" "$name" "$running"
+  ;;
+start)
+  if [ "${1-}" = "" ]; then
+    echo "missing name" >&2
+    exit 2
+  fi
+  if [ -n "$log" ]; then
+    printf 'start %s\n' "$1" >>"$log"
+  fi
+  if [ "$1" = "broken" ]; then
+    echo "start failed" >&2
+    exit 125
+  fi
+  ;;
+exec)
+  if [ -n "$log" ]; then
+    printf 'exec' >>"$log"
+    for arg in "$@"; do
+      printf ' %s' "$arg" >>"$log"
+    done
+    printf '\n' >>"$log"
+  fi
+  if [ -n "${PODMAN_FAKE_ORPHANS-}" ]; then
+    # Pids are digits separated by spaces. The shell splits them into lines.
+    # shellcheck disable=SC2086
+    printf '%s\n' ${PODMAN_FAKE_ORPHANS}
+  fi
+  code=${PODMAN_FAKE_EXEC_CODE:-0}
+  if [ "$code" != "0" ]; then
+    echo "exec failed" >&2
+    exit "$code"
+  fi
+  ;;
+*)
+  echo "unknown command" >&2
+  exit 2
+  ;;
+esac

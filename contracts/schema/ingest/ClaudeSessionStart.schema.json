@@ -1,0 +1,66 @@
+{
+  "$defs": {
+    "ClaudeSessionStart": {
+      "properties": {
+        "cwd": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "hook_event_name": {
+          "type": "string"
+        },
+        "permission_mode": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "session_id": {
+          "type": "string"
+        },
+        "source": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "transcript_path": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "session_id",
+        "hook_event_name"
+      ],
+      "title": "ClaudeSessionStart",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/ClaudeSessionStart",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

@@ -1,0 +1,8 @@
+{
+  "session_id": "0e1173cb-15a1-448c-aad0-314af45509be",
+  "transcript_path": "/home/sas/.containers/containers/agent-claude/.claude/projects/-/0e1173cb-15a1-448c-aad0-314af45509be.jsonl",
+  "cwd": "/",
+  "prompt_id": "f60e3b51-1e34-45eb-b800-9450944cd288",
+  "hook_event_name": "SessionEnd",
+  "reason": "other"
+}

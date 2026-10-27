@@ -1,0 +1,15 @@
+{
+  "session_id": "1e06202a-6ad7-4a32-a91a-fee9611c3cee",
+  "transcript_path": "/home/sas/.containers/containers/agent-claude/.claude/projects/-/1e06202a-6ad7-4a32-a91a-fee9611c3cee.jsonl",
+  "cwd": "/",
+  "prompt_id": "36d3eccc-d201-4097-9e10-ad8b712ee38c",
+  "permission_mode": "default",
+  "effort": {
+    "level": "medium"
+  },
+  "hook_event_name": "Stop",
+  "stop_hook_active": false,
+  "last_assistant_message": "pong",
+  "background_tasks": [],
+  "session_crons": []
+}

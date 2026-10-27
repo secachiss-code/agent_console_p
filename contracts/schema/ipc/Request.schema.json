@@ -1,0 +1,48 @@
+{
+  "$defs": {
+    "Request": {
+      "properties": {
+        "id": {
+          "minimum": 1,
+          "type": "integer"
+        },
+        "jsonrpc": {
+          "default": "2.0",
+          "enum": [
+            "2.0"
+          ]
+        },
+        "kind": {
+          "enum": [
+            "request"
+          ]
+        },
+        "method": {
+          "type": "string"
+        },
+        "params": {},
+        "timeout_ms": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "kind",
+        "id",
+        "method",
+        "params"
+      ],
+      "title": "Request",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/Request",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

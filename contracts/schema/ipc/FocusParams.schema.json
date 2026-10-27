@@ -1,0 +1,29 @@
+{
+  "$defs": {
+    "FocusParams": {
+      "properties": {
+        "tab_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "window_active": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "tab_id",
+        "window_active"
+      ],
+      "title": "FocusParams",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/FocusParams",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

@@ -1,0 +1,18 @@
+{
+  "$defs": {
+    "AppliedResult": {
+      "properties": {
+        "applied": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "applied"
+      ],
+      "title": "AppliedResult",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/AppliedResult",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

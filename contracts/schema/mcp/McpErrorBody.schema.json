@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "code": {
+      "title": "Code",
+      "type": "integer"
+    },
+    "hint": {
+      "title": "Hint",
+      "type": "string"
+    },
+    "message": {
+      "title": "Message",
+      "type": "string"
+    },
+    "reason": {
+      "title": "Reason",
+      "type": "string"
+    }
+  },
+  "required": [
+    "code",
+    "reason",
+    "message",
+    "hint"
+  ],
+  "title": "McpErrorBody",
+  "type": "object"
+}

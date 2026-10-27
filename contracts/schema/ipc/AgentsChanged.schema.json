@@ -1,0 +1,106 @@
+{
+  "$defs": {
+    "AgentInfo": {
+      "properties": {
+        "available": {
+          "type": "boolean"
+        },
+        "capabilities": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
+        "container": {
+          "type": "string"
+        },
+        "display_name": {
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/$defs/AgentKind"
+        },
+        "logged_in": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "supported": {
+          "type": "boolean"
+        },
+        "unavailable_reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "kind",
+        "display_name",
+        "container",
+        "available",
+        "unavailable_reason",
+        "logged_in",
+        "version",
+        "supported",
+        "capabilities"
+      ],
+      "title": "AgentInfo",
+      "type": "object"
+    },
+    "AgentKind": {
+      "enum": [
+        "claude",
+        "codex",
+        "cursor",
+        "grok",
+        "opencode"
+      ],
+      "title": "AgentKind"
+    },
+    "AgentsChanged": {
+      "properties": {
+        "agents": {
+          "items": {
+            "$ref": "#/$defs/AgentInfo"
+          },
+          "type": "array"
+        },
+        "type": {
+          "enum": [
+            "agents_changed"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "agents"
+      ],
+      "title": "AgentsChanged",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/AgentsChanged",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

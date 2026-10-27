@@ -1,0 +1,28 @@
+{
+  "$defs": {
+    "CodegraphExtractorFailedDetails": {
+      "properties": {
+        "language": {
+          "type": "string"
+        },
+        "stderr_tail": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "CODEGRAPH_EXTRACTOR_FAILED"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "language",
+        "stderr_tail"
+      ],
+      "title": "CodegraphExtractorFailedDetails",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/CodegraphExtractorFailedDetails",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

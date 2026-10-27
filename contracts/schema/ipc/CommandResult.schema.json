@@ -1,0 +1,84 @@
+{
+  "$defs": {
+    "CommandResult": {
+      "properties": {
+        "ok": {
+          "type": "boolean"
+        },
+        "open_page": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PageRef"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "open_uri": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "opened_tab": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "toast": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "ok",
+        "toast"
+      ],
+      "title": "CommandResult",
+      "type": "object"
+    },
+    "PageRef": {
+      "properties": {
+        "kind": {
+          "enum": [
+            "checkpoints",
+            "diff",
+            "impact",
+            "plan",
+            "sessions"
+          ]
+        },
+        "ref": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "ref"
+      ],
+      "title": "PageRef",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/CommandResult",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

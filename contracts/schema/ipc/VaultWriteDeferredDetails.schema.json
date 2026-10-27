@@ -1,0 +1,24 @@
+{
+  "$defs": {
+    "VaultWriteDeferredDetails": {
+      "properties": {
+        "note_ref": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "VAULT_WRITE_DEFERRED"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "note_ref"
+      ],
+      "title": "VaultWriteDeferredDetails",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/VaultWriteDeferredDetails",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

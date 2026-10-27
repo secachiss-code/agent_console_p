@@ -1,0 +1,55 @@
+{
+  "$defs": {
+    "ApprovalDecision": {
+      "enum": [
+        "allow",
+        "deny"
+      ],
+      "title": "ApprovalDecision"
+    },
+    "ApprovalScope": {
+      "enum": [
+        "once",
+        "tab_session"
+      ],
+      "title": "ApprovalScope"
+    },
+    "DecideParams": {
+      "properties": {
+        "approval_id": {
+          "type": "string"
+        },
+        "decision": {
+          "$ref": "#/$defs/ApprovalDecision"
+        },
+        "message": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "nonce": {
+          "type": "string"
+        },
+        "scope": {
+          "$ref": "#/$defs/ApprovalScope",
+          "default": "once"
+        }
+      },
+      "required": [
+        "approval_id",
+        "nonce",
+        "decision"
+      ],
+      "title": "DecideParams",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/DecideParams",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

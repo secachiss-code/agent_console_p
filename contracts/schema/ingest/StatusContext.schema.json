@@ -1,0 +1,46 @@
+{
+  "$defs": {
+    "StatusContext": {
+      "properties": {
+        "context_window_size": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "remaining_percentage": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "used_percentage": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [],
+      "title": "StatusContext",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/StatusContext",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

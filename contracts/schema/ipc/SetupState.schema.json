@@ -1,0 +1,26 @@
+{
+  "$defs": {
+    "SetupState": {
+      "properties": {
+        "failing_checks": {
+          "type": "integer"
+        },
+        "required": {
+          "type": "boolean"
+        },
+        "warnings": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "required",
+        "failing_checks",
+        "warnings"
+      ],
+      "title": "SetupState",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/SetupState",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

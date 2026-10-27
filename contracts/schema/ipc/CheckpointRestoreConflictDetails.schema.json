@@ -1,0 +1,24 @@
+{
+  "$defs": {
+    "CheckpointRestoreConflictDetails": {
+      "properties": {
+        "status": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "CHECKPOINT_RESTORE_CONFLICT"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "status"
+      ],
+      "title": "CheckpointRestoreConflictDetails",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/CheckpointRestoreConflictDetails",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

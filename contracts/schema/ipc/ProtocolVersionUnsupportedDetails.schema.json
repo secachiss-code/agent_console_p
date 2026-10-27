@@ -1,0 +1,27 @@
+{
+  "$defs": {
+    "ProtocolVersionUnsupportedDetails": {
+      "properties": {
+        "supported": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "type": {
+          "enum": [
+            "PROTOCOL_VERSION_UNSUPPORTED"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "supported"
+      ],
+      "title": "ProtocolVersionUnsupportedDetails",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/ProtocolVersionUnsupportedDetails",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

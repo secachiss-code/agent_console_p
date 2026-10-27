@@ -1,0 +1,18 @@
+{
+  "$defs": {
+    "FixIdParams": {
+      "properties": {
+        "fix_id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "fix_id"
+      ],
+      "title": "FixIdParams",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/FixIdParams",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

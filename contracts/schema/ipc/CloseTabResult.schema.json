@@ -1,0 +1,33 @@
+{
+  "$defs": {
+    "CloseTabResult": {
+      "properties": {
+        "closed": {
+          "type": "boolean"
+        },
+        "dirty_summary": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "needs_decision": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "closed",
+        "needs_decision",
+        "dirty_summary"
+      ],
+      "title": "CloseTabResult",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/CloseTabResult",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

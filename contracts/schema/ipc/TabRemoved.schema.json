@@ -1,0 +1,24 @@
+{
+  "$defs": {
+    "TabRemoved": {
+      "properties": {
+        "tab_id": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "tab_removed"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "tab_id"
+      ],
+      "title": "TabRemoved",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/TabRemoved",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

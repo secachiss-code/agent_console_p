@@ -1,0 +1,79 @@
+{
+  "$defs": {
+    "InitializeResult": {
+      "properties": {
+        "capabilities": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
+        "limits": {
+          "$ref": "#/$defs/ProtocolLimits"
+        },
+        "protocol": {
+          "$ref": "#/$defs/ProtocolVersion"
+        },
+        "server_pid": {
+          "type": "integer"
+        },
+        "server_version": {
+          "type": "string"
+        },
+        "session_id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "protocol",
+        "server_version",
+        "server_pid",
+        "session_id",
+        "capabilities",
+        "limits"
+      ],
+      "title": "InitializeResult",
+      "type": "object"
+    },
+    "ProtocolLimits": {
+      "properties": {
+        "event_ring_size": {
+          "default": 4096,
+          "type": "integer"
+        },
+        "max_inflight_requests": {
+          "default": 64,
+          "type": "integer"
+        },
+        "max_message_bytes": {
+          "default": 16777216,
+          "type": "integer"
+        }
+      },
+      "required": [],
+      "title": "ProtocolLimits",
+      "type": "object"
+    },
+    "ProtocolVersion": {
+      "properties": {
+        "major": {
+          "minimum": 1,
+          "type": "integer"
+        },
+        "minor": {
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "major",
+        "minor"
+      ],
+      "title": "ProtocolVersion",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/InitializeResult",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

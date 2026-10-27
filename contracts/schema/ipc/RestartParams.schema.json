@@ -1,0 +1,22 @@
+{
+  "$defs": {
+    "RestartParams": {
+      "properties": {
+        "resume": {
+          "type": "boolean"
+        },
+        "tab_id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "tab_id",
+        "resume"
+      ],
+      "title": "RestartParams",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/RestartParams",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

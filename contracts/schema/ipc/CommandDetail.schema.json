@@ -1,0 +1,35 @@
+{
+  "$defs": {
+    "CommandDetail": {
+      "properties": {
+        "args_preview": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "command": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "command"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "command",
+        "args_preview"
+      ],
+      "title": "CommandDetail",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/CommandDetail",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

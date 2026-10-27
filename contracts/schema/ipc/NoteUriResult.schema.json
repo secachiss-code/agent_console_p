@@ -1,0 +1,18 @@
+{
+  "$defs": {
+    "NoteUriResult": {
+      "properties": {
+        "uri": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "uri"
+      ],
+      "title": "NoteUriResult",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/NoteUriResult",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

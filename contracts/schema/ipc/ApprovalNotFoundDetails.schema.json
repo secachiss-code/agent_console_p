@@ -1,0 +1,24 @@
+{
+  "$defs": {
+    "ApprovalNotFoundDetails": {
+      "properties": {
+        "request_id": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "APPROVAL_NOT_FOUND"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "request_id"
+      ],
+      "title": "ApprovalNotFoundDetails",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/ApprovalNotFoundDetails",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

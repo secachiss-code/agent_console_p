@@ -1,0 +1,30 @@
+{
+  "$defs": {
+    "SidecarStats": {
+      "properties": {
+        "bytes_out": {
+          "type": "integer"
+        },
+        "frames": {
+          "type": "integer"
+        },
+        "frames_timed_out": {
+          "type": "integer"
+        },
+        "max_frame_bytes": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "bytes_out",
+        "frames",
+        "frames_timed_out",
+        "max_frame_bytes"
+      ],
+      "title": "SidecarStats",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/SidecarStats",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

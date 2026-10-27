@@ -1,0 +1,24 @@
+{
+  "$defs": {
+    "PathNotAllowedDetails": {
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "PATH_NOT_ALLOWED"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "path"
+      ],
+      "title": "PathNotAllowedDetails",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/PathNotAllowedDetails",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

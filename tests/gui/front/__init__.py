@@ -1,0 +1,1 @@
+"""Frontend GUI acceptance tests."""

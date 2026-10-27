@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "fence": {
+      "title": "Fence",
+      "type": "integer"
+    },
+    "kind": {
+      "enum": [
+        "commit",
+        "file",
+        "test_report",
+        "url",
+        "note"
+      ],
+      "title": "Kind",
+      "type": "string"
+    },
+    "node_id": {
+      "title": "Node Id",
+      "type": "string"
+    },
+    "ref": {
+      "title": "Ref",
+      "type": "string"
+    },
+    "title": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Title"
+    }
+  },
+  "required": [
+    "node_id",
+    "fence",
+    "kind",
+    "ref"
+  ],
+  "title": "NodeAttachIn",
+  "type": "object"
+}

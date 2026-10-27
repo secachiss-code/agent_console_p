@@ -1,0 +1,24 @@
+{
+  "$defs": {
+    "MessageTooLargeDetails": {
+      "properties": {
+        "limit": {
+          "type": "integer"
+        },
+        "type": {
+          "enum": [
+            "MESSAGE_TOO_LARGE"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "limit"
+      ],
+      "title": "MessageTooLargeDetails",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/MessageTooLargeDetails",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

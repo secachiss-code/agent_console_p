@@ -1,0 +1,24 @@
+{
+  "$defs": {
+    "PathsOverlapDetails": {
+      "properties": {
+        "conflicting_node": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "PATHS_OVERLAP"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "conflicting_node"
+      ],
+      "title": "PathsOverlapDetails",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/PathsOverlapDetails",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

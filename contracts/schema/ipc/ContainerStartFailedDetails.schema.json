@@ -1,0 +1,28 @@
+{
+  "$defs": {
+    "ContainerStartFailedDetails": {
+      "properties": {
+        "container": {
+          "type": "string"
+        },
+        "stderr_tail": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "CONTAINER_START_FAILED"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "container",
+        "stderr_tail"
+      ],
+      "title": "ContainerStartFailedDetails",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/ContainerStartFailedDetails",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

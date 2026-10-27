@@ -1,0 +1,24 @@
+{
+  "$defs": {
+    "ProtocolVersion": {
+      "properties": {
+        "major": {
+          "minimum": 1,
+          "type": "integer"
+        },
+        "minor": {
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "major",
+        "minor"
+      ],
+      "title": "ProtocolVersion",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/ProtocolVersion",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

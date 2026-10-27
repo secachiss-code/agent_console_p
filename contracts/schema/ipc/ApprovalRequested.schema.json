@@ -1,0 +1,204 @@
+{
+  "$defs": {
+    "AgentKind": {
+      "enum": [
+        "claude",
+        "codex",
+        "cursor",
+        "grok",
+        "opencode"
+      ],
+      "title": "AgentKind"
+    },
+    "ApprovalRequested": {
+      "properties": {
+        "approval": {
+          "$ref": "#/$defs/ApprovalView"
+        },
+        "type": {
+          "enum": [
+            "approval_requested"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "approval"
+      ],
+      "title": "ApprovalRequested",
+      "type": "object"
+    },
+    "ApprovalView": {
+      "properties": {
+        "agent": {
+          "$ref": "#/$defs/AgentKind"
+        },
+        "allow_tab_session": {
+          "type": "boolean"
+        },
+        "cwd": {
+          "type": "string"
+        },
+        "detail": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CommandDetail"
+            },
+            {
+              "$ref": "#/$defs/EditDetail"
+            },
+            {
+              "$ref": "#/$defs/GenericDetail"
+            }
+          ],
+          "discriminator": {
+            "mapping": {
+              "command": "#/$defs/CommandDetail",
+              "edit": "#/$defs/EditDetail",
+              "generic": "#/$defs/GenericDetail"
+            },
+            "propertyName": "type"
+          }
+        },
+        "expires_at": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "nonce": {
+          "type": "string"
+        },
+        "requested_at": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "risk": {
+          "items": {
+            "$ref": "#/$defs/RiskTag"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
+        "summary": {
+          "type": "string"
+        },
+        "tab_id": {
+          "type": "string"
+        },
+        "tool": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "nonce",
+        "tab_id",
+        "agent",
+        "tool",
+        "summary",
+        "detail",
+        "cwd",
+        "risk",
+        "requested_at",
+        "expires_at",
+        "allow_tab_session"
+      ],
+      "title": "ApprovalView",
+      "type": "object"
+    },
+    "CommandDetail": {
+      "properties": {
+        "args_preview": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "command": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "command"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "command",
+        "args_preview"
+      ],
+      "title": "CommandDetail",
+      "type": "object"
+    },
+    "EditDetail": {
+      "properties": {
+        "diff_preview": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "files": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "type": {
+          "enum": [
+            "edit"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "files",
+        "diff_preview"
+      ],
+      "title": "EditDetail",
+      "type": "object"
+    },
+    "GenericDetail": {
+      "properties": {
+        "json_preview": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "generic"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "json_preview"
+      ],
+      "title": "GenericDetail",
+      "type": "object"
+    },
+    "RiskTag": {
+      "enum": [
+        "destructive",
+        "network",
+        "outside_worktree",
+        "privilege",
+        "publish",
+        "secrets"
+      ],
+      "title": "RiskTag"
+    }
+  },
+  "$ref": "#/$defs/ApprovalRequested",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

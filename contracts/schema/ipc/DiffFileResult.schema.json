@@ -1,0 +1,125 @@
+{
+  "$defs": {
+    "DiffFileResult": {
+      "properties": {
+        "hunks": {
+          "items": {
+            "$ref": "#/$defs/DiffHunk"
+          },
+          "type": "array"
+        },
+        "truncated": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "hunks",
+        "truncated"
+      ],
+      "title": "DiffFileResult",
+      "type": "object"
+    },
+    "DiffHunk": {
+      "properties": {
+        "header": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "lines": {
+          "items": {
+            "$ref": "#/$defs/DiffLine"
+          },
+          "type": "array"
+        },
+        "new_lines": {
+          "type": "integer"
+        },
+        "new_start": {
+          "type": "integer"
+        },
+        "old_lines": {
+          "type": "integer"
+        },
+        "old_start": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "id",
+        "header",
+        "old_start",
+        "old_lines",
+        "new_start",
+        "new_lines",
+        "lines"
+      ],
+      "title": "DiffHunk",
+      "type": "object"
+    },
+    "DiffLine": {
+      "properties": {
+        "kind": {
+          "enum": [
+            "add",
+            "context",
+            "del",
+            "meta"
+          ]
+        },
+        "new_no": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "old_no": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "text": {
+          "type": "string"
+        },
+        "word_spans": {
+          "default": [],
+          "items": {
+            "items": false,
+            "maxItems": 2,
+            "minItems": 2,
+            "prefixItems": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "integer"
+              }
+            ],
+            "type": "array"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "kind",
+        "old_no",
+        "new_no",
+        "text"
+      ],
+      "title": "DiffLine",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/DiffFileResult",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

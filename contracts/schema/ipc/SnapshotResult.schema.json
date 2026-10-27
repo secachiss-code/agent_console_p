@@ -1,0 +1,878 @@
+{
+  "$defs": {
+    "AccountView": {
+      "properties": {
+        "agent": {
+          "$ref": "#/$defs/AgentKind"
+        },
+        "id": {
+          "type": "string"
+        },
+        "plan_label": {
+          "type": "string"
+        },
+        "quota": {
+          "items": {
+            "$ref": "#/$defs/QuotaWindowView"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "agent",
+        "plan_label",
+        "quota"
+      ],
+      "title": "AccountView",
+      "type": "object"
+    },
+    "AgentInfo": {
+      "properties": {
+        "available": {
+          "type": "boolean"
+        },
+        "capabilities": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
+        "container": {
+          "type": "string"
+        },
+        "display_name": {
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/$defs/AgentKind"
+        },
+        "logged_in": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "supported": {
+          "type": "boolean"
+        },
+        "unavailable_reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "kind",
+        "display_name",
+        "container",
+        "available",
+        "unavailable_reason",
+        "logged_in",
+        "version",
+        "supported",
+        "capabilities"
+      ],
+      "title": "AgentInfo",
+      "type": "object"
+    },
+    "AgentKind": {
+      "enum": [
+        "claude",
+        "codex",
+        "cursor",
+        "grok",
+        "opencode"
+      ],
+      "title": "AgentKind"
+    },
+    "AppSnapshot": {
+      "properties": {
+        "accounts": {
+          "items": {
+            "$ref": "#/$defs/AccountView"
+          },
+          "type": "array"
+        },
+        "active_project": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "agents": {
+          "items": {
+            "$ref": "#/$defs/AgentInfo"
+          },
+          "type": "array"
+        },
+        "api_version": {
+          "type": "string"
+        },
+        "approvals": {
+          "items": {
+            "$ref": "#/$defs/ApprovalView"
+          },
+          "type": "array"
+        },
+        "plans": {
+          "items": {
+            "$ref": "#/$defs/PlanView"
+          },
+          "type": "array"
+        },
+        "projects": {
+          "items": {
+            "$ref": "#/$defs/ProjectView"
+          },
+          "type": "array"
+        },
+        "settings_rev": {
+          "type": "integer"
+        },
+        "setup": {
+          "$ref": "#/$defs/SetupState"
+        },
+        "tabs": {
+          "items": {
+            "$ref": "#/$defs/TabView"
+          },
+          "type": "array"
+        },
+        "vault_ok": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "api_version",
+        "projects",
+        "active_project",
+        "agents",
+        "accounts",
+        "tabs",
+        "approvals",
+        "plans",
+        "vault_ok",
+        "setup",
+        "settings_rev"
+      ],
+      "title": "AppSnapshot",
+      "type": "object"
+    },
+    "ApprovalView": {
+      "properties": {
+        "agent": {
+          "$ref": "#/$defs/AgentKind"
+        },
+        "allow_tab_session": {
+          "type": "boolean"
+        },
+        "cwd": {
+          "type": "string"
+        },
+        "detail": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CommandDetail"
+            },
+            {
+              "$ref": "#/$defs/EditDetail"
+            },
+            {
+              "$ref": "#/$defs/GenericDetail"
+            }
+          ],
+          "discriminator": {
+            "mapping": {
+              "command": "#/$defs/CommandDetail",
+              "edit": "#/$defs/EditDetail",
+              "generic": "#/$defs/GenericDetail"
+            },
+            "propertyName": "type"
+          }
+        },
+        "expires_at": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "nonce": {
+          "type": "string"
+        },
+        "requested_at": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "risk": {
+          "items": {
+            "$ref": "#/$defs/RiskTag"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
+        "summary": {
+          "type": "string"
+        },
+        "tab_id": {
+          "type": "string"
+        },
+        "tool": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "nonce",
+        "tab_id",
+        "agent",
+        "tool",
+        "summary",
+        "detail",
+        "cwd",
+        "risk",
+        "requested_at",
+        "expires_at",
+        "allow_tab_session"
+      ],
+      "title": "ApprovalView",
+      "type": "object"
+    },
+    "CommandDetail": {
+      "properties": {
+        "args_preview": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "command": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "command"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "command",
+        "args_preview"
+      ],
+      "title": "CommandDetail",
+      "type": "object"
+    },
+    "EditDetail": {
+      "properties": {
+        "diff_preview": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "files": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "type": {
+          "enum": [
+            "edit"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "files",
+        "diff_preview"
+      ],
+      "title": "EditDetail",
+      "type": "object"
+    },
+    "GenericDetail": {
+      "properties": {
+        "json_preview": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "generic"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "json_preview"
+      ],
+      "title": "GenericDetail",
+      "type": "object"
+    },
+    "NodeStatus": {
+      "enum": [
+        "blocked",
+        "cancelled",
+        "done",
+        "failed",
+        "in_progress",
+        "pending",
+        "verifying"
+      ],
+      "title": "NodeStatus"
+    },
+    "PlanNodeView": {
+      "properties": {
+        "depends_on": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "id": {
+          "type": "string"
+        },
+        "key": {
+          "type": "string"
+        },
+        "layer": {
+          "type": "integer"
+        },
+        "lease_expires_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "note": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "owner_agent": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AgentKind"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "priority": {
+          "type": "number"
+        },
+        "ready": {
+          "type": "boolean"
+        },
+        "status": {
+          "$ref": "#/$defs/NodeStatus"
+        },
+        "tab_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "title": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "key",
+        "title",
+        "status",
+        "ready",
+        "layer",
+        "priority",
+        "depends_on",
+        "owner_agent",
+        "tab_id",
+        "lease_expires_at",
+        "note"
+      ],
+      "title": "PlanNodeView",
+      "type": "object"
+    },
+    "PlanView": {
+      "properties": {
+        "canvas": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "done": {
+          "type": "integer"
+        },
+        "goal": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "nodes": {
+          "items": {
+            "$ref": "#/$defs/PlanNodeView"
+          },
+          "type": "array"
+        },
+        "project_id": {
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "active",
+            "archived",
+            "completed"
+          ]
+        },
+        "title": {
+          "type": "string"
+        },
+        "total": {
+          "type": "integer"
+        },
+        "updated_at": {
+          "format": "date-time",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "project_id",
+        "title",
+        "goal",
+        "status",
+        "nodes",
+        "done",
+        "total",
+        "canvas",
+        "updated_at"
+      ],
+      "title": "PlanView",
+      "type": "object"
+    },
+    "ProjectView": {
+      "properties": {
+        "default_branch": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "languages": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
+        "name": {
+          "type": "string"
+        },
+        "root": {
+          "type": "string"
+        },
+        "vault_folder": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "root",
+        "default_branch",
+        "vault_folder",
+        "languages"
+      ],
+      "title": "ProjectView",
+      "type": "object"
+    },
+    "QuotaLevel": {
+      "enum": [
+        "critical",
+        "ok",
+        "unknown",
+        "warn"
+      ],
+      "title": "QuotaLevel"
+    },
+    "QuotaWindowView": {
+      "properties": {
+        "estimated": {
+          "type": "boolean"
+        },
+        "key": {
+          "enum": [
+            "5h",
+            "7d",
+            "budget",
+            "month",
+            "week"
+          ]
+        },
+        "level": {
+          "$ref": "#/$defs/QuotaLevel"
+        },
+        "observed_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "resets_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "used_pct": {
+          "anyOf": [
+            {
+              "maximum": 100,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "key",
+        "used_pct",
+        "resets_at",
+        "level",
+        "observed_at",
+        "estimated"
+      ],
+      "title": "QuotaWindowView",
+      "type": "object"
+    },
+    "RiskTag": {
+      "enum": [
+        "destructive",
+        "network",
+        "outside_worktree",
+        "privilege",
+        "publish",
+        "secrets"
+      ],
+      "title": "RiskTag"
+    },
+    "SetupState": {
+      "properties": {
+        "failing_checks": {
+          "type": "integer"
+        },
+        "required": {
+          "type": "boolean"
+        },
+        "warnings": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "required",
+        "failing_checks",
+        "warnings"
+      ],
+      "title": "SetupState",
+      "type": "object"
+    },
+    "SnapshotResult": {
+      "properties": {
+        "seq": {
+          "type": "integer"
+        },
+        "snapshot": {
+          "$ref": "#/$defs/AppSnapshot"
+        }
+      },
+      "required": [
+        "snapshot",
+        "seq"
+      ],
+      "title": "SnapshotResult",
+      "type": "object"
+    },
+    "TabStatus": {
+      "enum": [
+        "error",
+        "exited",
+        "idle",
+        "starting",
+        "unknown",
+        "waiting_approval",
+        "waiting_input",
+        "working"
+      ],
+      "title": "TabStatus"
+    },
+    "TabView": {
+      "properties": {
+        "account_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "agent": {
+          "$ref": "#/$defs/AgentKind"
+        },
+        "agent_session_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "ahead": {
+          "type": "integer"
+        },
+        "attention": {
+          "type": "boolean"
+        },
+        "base_branch": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "behind": {
+          "type": "integer"
+        },
+        "branch": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "checkpoints": {
+          "type": "integer"
+        },
+        "context_used_pct": {
+          "anyOf": [
+            {
+              "maximum": 100,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "id": {
+          "type": "string"
+        },
+        "last_message": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "order": {
+          "type": "integer"
+        },
+        "pending_approvals": {
+          "type": "integer"
+        },
+        "plan_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "plan_node": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "plan_node_title": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "project_id": {
+          "type": "string"
+        },
+        "session_cost_usd": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "started": {
+          "type": "boolean"
+        },
+        "status": {
+          "$ref": "#/$defs/TabStatus"
+        },
+        "status_detail": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "status_since": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "worktree_dirty": {
+          "type": "boolean"
+        },
+        "worktree_path": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "project_id",
+        "agent",
+        "account_id",
+        "title",
+        "order",
+        "status",
+        "status_detail",
+        "status_since",
+        "attention",
+        "last_message",
+        "worktree_path",
+        "branch",
+        "base_branch",
+        "worktree_dirty",
+        "ahead",
+        "behind",
+        "plan_id",
+        "plan_node",
+        "plan_node_title",
+        "context_used_pct",
+        "session_cost_usd",
+        "agent_session_id",
+        "pending_approvals",
+        "checkpoints",
+        "started"
+      ],
+      "title": "TabView",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/SnapshotResult",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

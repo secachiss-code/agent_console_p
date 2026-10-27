@@ -1,0 +1,18 @@
+{
+  "$defs": {
+    "ReleasedResult": {
+      "properties": {
+        "released": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "released"
+      ],
+      "title": "ReleasedResult",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/ReleasedResult",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

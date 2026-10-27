@@ -1,0 +1,22 @@
+{
+  "$defs": {
+    "RateWindow": {
+      "properties": {
+        "resets_at": {
+          "type": "integer"
+        },
+        "used_percentage": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "used_percentage",
+        "resets_at"
+      ],
+      "title": "RateWindow",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/RateWindow",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

@@ -1,0 +1,28 @@
+{
+  "$defs": {
+    "PageRef": {
+      "properties": {
+        "kind": {
+          "enum": [
+            "checkpoints",
+            "diff",
+            "impact",
+            "plan",
+            "sessions"
+          ]
+        },
+        "ref": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "ref"
+      ],
+      "title": "PageRef",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/PageRef",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

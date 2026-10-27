@@ -1,0 +1,45 @@
+{
+  "$defs": {
+    "NodeStatus": {
+      "enum": [
+        "blocked",
+        "cancelled",
+        "done",
+        "failed",
+        "in_progress",
+        "pending",
+        "verifying"
+      ],
+      "title": "NodeStatus"
+    },
+    "SetNodeStatusParams": {
+      "properties": {
+        "node_id": {
+          "type": "string"
+        },
+        "note": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "status": {
+          "$ref": "#/$defs/NodeStatus"
+        }
+      },
+      "required": [
+        "node_id",
+        "status"
+      ],
+      "title": "SetNodeStatusParams",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/SetNodeStatusParams",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

@@ -1,0 +1,24 @@
+{
+  "$defs": {
+    "NodeNotFoundDetails": {
+      "properties": {
+        "node_id": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "NODE_NOT_FOUND"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "node_id"
+      ],
+      "title": "NodeNotFoundDetails",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/NodeNotFoundDetails",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

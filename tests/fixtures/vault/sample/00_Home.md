@@ -1,0 +1,3 @@
+# AConsole
+
+Generated sample vault.

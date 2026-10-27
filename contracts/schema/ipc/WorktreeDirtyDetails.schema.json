@@ -1,0 +1,24 @@
+{
+  "$defs": {
+    "WorktreeDirtyDetails": {
+      "properties": {
+        "dirty_summary": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "WORKTREE_DIRTY"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "dirty_summary"
+      ],
+      "title": "WorktreeDirtyDetails",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/WorktreeDirtyDetails",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

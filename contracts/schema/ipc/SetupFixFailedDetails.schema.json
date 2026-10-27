@@ -1,0 +1,28 @@
+{
+  "$defs": {
+    "SetupFixFailedDetails": {
+      "properties": {
+        "stderr_tail": {
+          "type": "string"
+        },
+        "step": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "SETUP_FIX_FAILED"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "step",
+        "stderr_tail"
+      ],
+      "title": "SetupFixFailedDetails",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/SetupFixFailedDetails",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

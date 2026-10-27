@@ -1,0 +1,75 @@
+{
+  "$defs": {
+    "CheckResult": {
+      "properties": {
+        "detail": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "fix_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "id": {
+          "type": "string"
+        },
+        "ok": {
+          "type": "boolean"
+        },
+        "requires_confirmation": {
+          "type": "boolean"
+        },
+        "severity": {
+          "enum": [
+            "error",
+            "info",
+            "warning"
+          ]
+        },
+        "title": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "ok",
+        "severity",
+        "detail",
+        "fix_id",
+        "requires_confirmation"
+      ],
+      "title": "CheckResult",
+      "type": "object"
+    },
+    "ChecksResult": {
+      "properties": {
+        "checks": {
+          "items": {
+            "$ref": "#/$defs/CheckResult"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "checks"
+      ],
+      "title": "ChecksResult",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/ChecksResult",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}
