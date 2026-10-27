@@ -97,6 +97,14 @@ class CheckpointLog:
         self._items: list[Checkpoint] = []
         self._tokens: dict[str, tuple[str, datetime]] = {}
 
+    def next_number(self) -> int:
+        if not self._items:
+            return 1
+        return self._items[-1].number + 1
+
+    def items(self) -> tuple[Checkpoint, ...]:
+        return tuple(self._items)
+
     def record(self, draft: CheckpointDraft) -> tuple[Checkpoint, tuple[Checkpoint, ...]]:
         number = 1 if not self._items else self._items[-1].number + 1
         created = Checkpoint(
