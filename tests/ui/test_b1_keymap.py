@@ -2,7 +2,12 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import pytest
+
+if TYPE_CHECKING:
+    from aconsole.ui.viewmodels.logic.keymap import BindingSpec
 
 
 def test_b1_keymap_defaults_and_overrides() -> None:
@@ -97,7 +102,6 @@ def test_b1_app_vm_rejects_binding_callback_atomically_and_dispatches() -> None:
     # Failed binding replacement preserves the last valid map; dispatch notifies both handlers.
     from aconsole.ui.client.core_client import CoreClient
     from aconsole.ui.viewmodels.app_vm import AppViewModel
-    from aconsole.ui.viewmodels.logic.keymap import BindingSpec
 
     vm = AppViewModel(CoreClient("unused"))
     before = vm.bindings

@@ -18,13 +18,19 @@ gi.require_version("GdkX11", "4.0")
 gi.require_version("Vte", "3.91")
 from gi.repository import Adw, Gdk, GdkX11, GLib, Gtk, Vte  # noqa: E402
 
-from aconsole.ui.bootstrap import run_app  # noqa: E402
+from aconsole.contracts.settings import Settings  # noqa: E402
+from aconsole.ui.bootstrap import run_app, spawn_task  # noqa: E402
 from aconsole.ui.client.core_client import CoreClient  # noqa: E402
 from aconsole.ui.views.app import AConsoleApp, SnapshotRequest  # noqa: E402
 from aconsole.ui.views.shortcuts import ShortcutManager  # noqa: E402, F401
 
 if TYPE_CHECKING:
     from pathlib import Path
+
+    import msgspec
+    import pytest
+
+    from aconsole.ui.viewmodels.logic.keymap import BindingSpec
 
 
 class _XTestKeyboard:
@@ -289,6 +295,145 @@ class _KeyboardApp(AConsoleApp):
             self.window.destroy()
         except (GLib.Error, OSError, RuntimeError, TypeError):
             self.input_error = self.input_error or RuntimeError("failed to destroy B1 test window")
+
+
+class _SettingsProbeApp(AConsoleApp):
+    def __init__(self, client: CoreClient) -> None:
+        super().__init__(client)
+        self.applied_bindings: tuple[BindingSpec, ...] = ()
+        self.controller_triggers: set[tuple[int, int]] = set()
+        self.input_error: Exception | None = None
+        self._polls = 0
+        self._watchdog_id: int | None = None
+        self._finished = False
+
+    async def _open(self) -> None:
+        self._watchdog_id = GLib.timeout_add_seconds(8, self._watchdog)
+        try:
+            await super()._open()
+            if self.window is None:
+                self.input_error = AssertionError("application opened without a window")
+                self._finish_probe()
+                return
+            GLib.timeout_add(10, self._wait_for_override)
+        except Exception as error:  # noqa: BLE001 -- retain async startup failures for assertions
+            self.input_error = error
+            self._finish_probe()
+
+    def _wait_for_override(self) -> bool:
+        window = self.window
+        if window is None:
+            self.input_error = AssertionError("window disappeared before settings applied")
+            self._finish_probe()
+            return GLib.SOURCE_REMOVE
+        self.applied_bindings = tuple(window.app_vm.bindings)
+        palette = next((item for item in self.applied_bindings if item.action_id == "palette"), None)
+        if palette is not None and palette.accelerators == ("<Control><Alt>p",):
+            controller = window.shortcut_manager.controller
+            self.controller_triggers = _controller_triggers(controller)
+            self._finish_probe()
+            return GLib.SOURCE_REMOVE
+        self._polls += 1
+        if self._polls >= 100:
+            self.input_error = TimeoutError("settings override was not applied within one second")
+            self._finish_probe()
+            return GLib.SOURCE_REMOVE
+        return GLib.SOURCE_CONTINUE
+
+    def _watchdog(self) -> bool:
+        self._watchdog_id = None
+        self.input_error = TimeoutError("settings GUI test exceeded its 8 second watchdog")
+        self._close_window()
+        self.quit()
+        return GLib.SOURCE_REMOVE
+
+    def _finish_probe(self) -> None:
+        if self._finished:
+            return
+        self._finished = True
+        self._close_window()
+        _ = spawn_task(self._close_client())
+
+    async def _close_client(self) -> None:
+        try:
+            await self.client.close()
+        except Exception as error:  # noqa: BLE001 -- surface close failures rather than leaving app active
+            self.input_error = self.input_error or error
+        finally:
+            if self._watchdog_id is not None:
+                GLib.source_remove(self._watchdog_id)
+                self._watchdog_id = None
+            self.quit()
+
+    def _close_window(self) -> None:
+        if self.window is None:
+            return
+        try:
+            self.window.set_visible(False)
+        except (GLib.Error, OSError, RuntimeError, TypeError):
+            self.input_error = self.input_error or RuntimeError("failed to hide settings test window")
+        try:
+            self.window.destroy()
+        except (GLib.Error, OSError, RuntimeError, TypeError):
+            self.input_error = self.input_error or RuntimeError("failed to destroy settings test window")
+
+
+def _controller_triggers(controller: Gtk.ShortcutController) -> set[tuple[int, int]]:
+    triggers: set[tuple[int, int]] = set()
+    for index in range(controller.get_n_items()):
+        shortcut = controller.get_item(index)
+        if not isinstance(shortcut, Gtk.Shortcut):
+            continue
+        trigger = shortcut.get_trigger()
+        if isinstance(trigger, Gtk.KeyvalTrigger):
+            triggers.add((trigger.get_keyval(), int(trigger.get_modifiers())))
+    return triggers
+
+
+def test_b1_keys_settings_override_updates_controller(
+    running_app: str,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A settings override replaces the palette accelerator in the active window controller."""
+    client = CoreClient(running_app)
+    original_request = client.request
+    settings = Settings(
+        rev=17,
+        vault_path="/vault",
+        worktrees_dir="/worktrees",
+        keymap_overrides={"palette": "<Control><Alt>p"},
+    )
+    requests: list[str] = []
+
+    async def request_with_override(
+        method: str,
+        params: msgspec.Struct,
+        result_type: type[msgspec.Struct],
+        *,
+        long: bool = False,
+    ) -> msgspec.Struct:
+        requests.append(method)
+        if method == "settings/get":
+            assert result_type is Settings
+            return settings
+        return await original_request(method, params, result_type, long=long)
+
+    monkeypatch.setattr(client, "request", request_with_override)
+    app = _SettingsProbeApp(client)
+    try:
+        assert run_app(lambda: app, ["aconsole-test-b1-settings"]) == 0
+    finally:
+        if not app._finished:
+            app._finish_probe()
+        app._close_window()
+
+    assert app.input_error is None, app.input_error
+    assert "settings/get" in requests
+    assert {"app/snapshot", "events/subscribe"} <= set(requests)
+    palette = next(item for item in app.applied_bindings if item.action_id == "palette")
+    assert palette.accelerators == ("<Control><Alt>p",)
+    assert (Gdk.KEY_p, int(Gdk.ModifierType.CONTROL_MASK | Gdk.ModifierType.ALT_MASK)) in app.controller_triggers
+    assert (Gdk.KEY_p, int(Gdk.ModifierType.CONTROL_MASK | Gdk.ModifierType.SHIFT_MASK)) not in app.controller_triggers
 
 
 def _walk(widget: Gtk.Widget) -> list[Gtk.Widget]:
