@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import ctypes
 import ctypes.util
 import os
@@ -378,6 +379,103 @@ class _SettingsProbeApp(AConsoleApp):
             self.input_error = self.input_error or RuntimeError("failed to destroy settings test window")
 
 
+class _SettingsRaceProbeApp(AConsoleApp):
+    def __init__(self, client: CoreClient) -> None:
+        super().__init__(client)
+        self.settings_started = 0
+        self.settings_returned = 0
+        self.old_response: asyncio.Future[Settings] | None = None
+        self.old_response_released = False
+        self.final_bindings: tuple[BindingSpec, ...] = ()
+        self.final_triggers: set[tuple[int, int]] = set()
+        self.input_error: Exception | None = None
+        self._settle_polls = 0
+        self._polls = 0
+        self._watchdog_id: int | None = None
+
+    async def _open(self) -> None:
+        self._watchdog_id = GLib.timeout_add_seconds(8, self._watchdog)
+        try:
+            await super()._open()
+            if self.window is None:
+                self.input_error = AssertionError("application opened without a window")
+                self._finish_probe()
+                return
+            window = self.window
+            _ = spawn_task(window._refresh_settings())
+            GLib.timeout_add(10, self._wait_for_race)
+        except Exception as error:  # noqa: BLE001 -- retain async startup failures for assertions
+            self.input_error = error
+            self._finish_probe()
+
+    def _release_old_response(self) -> bool:
+        future = self.old_response
+        if future is not None and not future.done():
+            future.set_result(
+                Settings(
+                    rev=1,
+                    vault_path="/vault",
+                    worktrees_dir="/worktrees",
+                    keymap_overrides={"palette": "<Control><Alt>p"},
+                )
+            )
+        self.old_response_released = True
+        return GLib.SOURCE_REMOVE
+
+    def _wait_for_race(self) -> bool:
+        if self.settings_returned >= 2 and self.old_response_released:
+            self._settle_polls += 1
+            if self._settle_polls >= 5:
+                window = self.window
+                if window is None:
+                    self.input_error = AssertionError("window disappeared before race completed")
+                else:
+                    self.final_bindings = tuple(window.app_vm.bindings)
+                    self.final_triggers = _controller_triggers(window.shortcut_manager.controller)
+                self._finish_probe()
+                return GLib.SOURCE_REMOVE
+        self._polls += 1
+        if self._polls >= 100:
+            self.input_error = TimeoutError("settings revision race did not settle within one second")
+            self._finish_probe()
+            return GLib.SOURCE_REMOVE
+        return GLib.SOURCE_CONTINUE
+
+    def _watchdog(self) -> bool:
+        self._watchdog_id = None
+        self.input_error = TimeoutError("settings revision GUI test exceeded its 8 second watchdog")
+        self._close_window()
+        self.quit()
+        return GLib.SOURCE_REMOVE
+
+    def _finish_probe(self) -> None:
+        self._close_window()
+        _ = spawn_task(self._close_client())
+
+    async def _close_client(self) -> None:
+        try:
+            await self.client.close()
+        except Exception as error:  # noqa: BLE001 -- surface close failures rather than leave app active
+            self.input_error = self.input_error or error
+        finally:
+            if self._watchdog_id is not None:
+                GLib.source_remove(self._watchdog_id)
+                self._watchdog_id = None
+            self.quit()
+
+    def _close_window(self) -> None:
+        if self.window is None:
+            return
+        try:
+            self.window.set_visible(False)
+        except (GLib.Error, OSError, RuntimeError, TypeError):
+            self.input_error = self.input_error or RuntimeError("failed to hide settings-race test window")
+        try:
+            self.window.destroy()
+        except (GLib.Error, OSError, RuntimeError, TypeError):
+            self.input_error = self.input_error or RuntimeError("failed to destroy settings-race test window")
+
+
 class _ShortcutActionProbeApp(AConsoleApp):
     def __init__(self, client: CoreClient) -> None:
         super().__init__(client)
@@ -523,6 +621,61 @@ def test_b1_keys_settings_override_updates_controller(
     assert palette.accelerators == ("<Control><Alt>p",)
     assert (Gdk.KEY_p, int(Gdk.ModifierType.CONTROL_MASK | Gdk.ModifierType.ALT_MASK)) in app.controller_triggers
     assert (Gdk.KEY_p, int(Gdk.ModifierType.CONTROL_MASK | Gdk.ModifierType.SHIFT_MASK)) not in app.controller_triggers
+
+
+def test_b1_keys_older_settings_response_cannot_replace_keymap(
+    running_app: str,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """An older valid settings reply cannot replace defaults after a newer invalid reply."""
+    client = CoreClient(running_app)
+    original_request = client.request
+    app = _SettingsRaceProbeApp(client)
+    settings_rev_2 = Settings(
+        rev=2,
+        vault_path="/vault",
+        worktrees_dir="/worktrees",
+        keymap_overrides={"unknown-action": "<Control>x"},
+    )
+
+    async def request_with_race(
+        method: str,
+        params: msgspec.Struct,
+        result_type: type[msgspec.Struct],
+        *,
+        long: bool = False,
+    ) -> msgspec.Struct:
+        if method != "settings/get":
+            return await original_request(method, params, result_type, long=long)
+        app.settings_started += 1
+        if app.settings_started == 1:
+            app.old_response = asyncio.get_running_loop().create_future()
+            response = await app.old_response
+        elif app.settings_started == 2:
+            GLib.timeout_add(50, app._release_old_response)
+            response = settings_rev_2
+        else:
+            response = settings_rev_2
+        app.settings_returned += 1
+        return response
+
+    monkeypatch.setattr(client, "request", request_with_race)
+    try:
+        assert run_app(lambda: app, ["aconsole-test-b1-settings-race"]) == 0
+    finally:
+        app._close_window()
+        if app._watchdog_id is not None:
+            GLib.source_remove(app._watchdog_id)
+            app._watchdog_id = None
+
+    assert app.input_error is None, app.input_error
+    assert app.settings_started >= 2
+    assert app.settings_returned >= 2
+    assert app.old_response_released
+    palette = next(item for item in app.final_bindings if item.action_id == "palette")
+    assert palette.accelerators == ("<Control><Shift>p",)
+    assert (Gdk.KEY_p, int(Gdk.ModifierType.CONTROL_MASK | Gdk.ModifierType.SHIFT_MASK)) in app.final_triggers
+    assert (Gdk.KEY_p, int(Gdk.ModifierType.CONTROL_MASK | Gdk.ModifierType.ALT_MASK)) not in app.final_triggers
 
 
 def test_b1_keys_palette_shortcut_action_dispatches(running_app: str) -> None:
