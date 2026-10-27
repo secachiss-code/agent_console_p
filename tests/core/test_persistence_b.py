@@ -79,7 +79,10 @@ from aconsole.core.infrastructure.persistence.uow import UnitOfWork
 from aconsole.core.infrastructure.persistence.writer import Writer
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
     from pathlib import Path
+
+    from sqlalchemy.engine import Engine
 
 _WHEN = datetime(2026, 10, 26, tzinfo=UTC)
 _EVENTS = 10_000
@@ -631,3 +634,187 @@ async def _event_rate(path: Path) -> int:
         stored = session.scalar(select(func.count()).select_from(EventLog))
     assert stored == _EVENTS
     return int(stored)
+
+
+_TICK_RATE = 10_000
+_TICK_SPAN_S = 3.0
+_TICK_WARMUP_S = 0.5
+_TICK_LIMIT_S = 0.005
+_TICK_BATCH = 100
+
+
+def test_persistence_b_tick(tmp_path: Path) -> None:
+    lags, stored = asyncio.run(_tick_lags(tmp_path))
+    ordered = sorted(lags)
+    worst = ordered[-1]
+    middle = ordered[len(ordered) // 2]
+    high = ordered[(len(ordered) * 99) // 100]
+    assert stored == _TICK_RATE * int(_TICK_SPAN_S)
+    assert worst < _TICK_LIMIT_S, f"p50={middle} p99={high} max={worst} n={len(ordered)}"
+
+
+def _seed_tick(path: Path) -> tuple[Engine, str]:
+    url = _prepare(path)
+    engine = write_engine(url)
+    factory = sessionmaker(bind=engine, expire_on_commit=False)
+    tab = _key(7)
+    with UnitOfWork(factory) as uow:
+        session = uow.session
+        assert session is not None
+        ProjectRepository().add(
+            session,
+            ProjectRecord(
+                id=_key(1),
+                name="demo",
+                root_path="/home/sas/Projects/demo",
+                default_branch="main",
+                vault_folder=None,
+                languages=[],
+                created_at=_WHEN,
+            ),
+        )
+        AgentAccountRepository().add(
+            session,
+            AgentAccountRecord(id="claude:demo", agent_kind=AgentKind.CLAUDE, plan_label="Pro", container_name="box"),
+        )
+        WorkspaceRepository().add(
+            session,
+            WorkspaceRecord(
+                id=_key(2),
+                project_id=_key(1),
+                mode=WorkspaceMode.MAIN_CHECKOUT,
+                path="/home/sas/Projects/demo",
+                branch=None,
+                base_branch=None,
+                base_commit=None,
+                locked=False,
+                dirty_cached=False,
+                created_at=_WHEN,
+                removed_at=None,
+            ),
+        )
+        PlanRepository().add(
+            session,
+            PlanRecord(
+                id=_key(3),
+                project_id=_key(1),
+                title="plan",
+                goal="ship",
+                status=PlanStatus.ACTIVE,
+                canvas_note_ref=None,
+                created_by_tab=None,
+                created_at=_WHEN,
+                updated_at=_WHEN,
+            ),
+        )
+        PlanNodeRepository().add(
+            session,
+            PlanNodeRecord(
+                id=_key(4),
+                plan_id=_key(3),
+                node_key="N-01",
+                title="node",
+                objective="do",
+                status=NodeStatus.PENDING,
+                owner_agent=None,
+                paths=[],
+                acceptance=[],
+                test_cmd=None,
+                review_required=False,
+                evidence=None,
+                note_ref=None,
+                layer=0,
+                priority=1.0,
+                unmet_blockers=0,
+                fence_seq=0,
+                created_at=_WHEN,
+                updated_at=_WHEN,
+            ),
+        )
+        TabRepository().add(
+            session,
+            TabRecord(
+                id=tab,
+                project_id=_key(1),
+                workspace_id=_key(2),
+                agent_kind=AgentKind.CLAUDE,
+                account_id="claude:demo",
+                title="tab",
+                tab_order=0,
+                last_status=TabStatus.IDLE,
+                status_detail=None,
+                plan_node_id=_key(4),
+                context_used_pct=None,
+                session_cost_usd=None,
+                agent_session_id=None,
+                closed_at=None,
+                created_at=_WHEN,
+                updated_at=_WHEN,
+            ),
+        )
+        uow.commit()
+    return engine, tab
+
+
+def _tick_job(start: int, tab: str, moment: datetime) -> Callable[[Session], object]:
+    def _insert(db: Session) -> int:
+        db.execute(
+            insert(EventLog),
+            [
+                {
+                    "tab_id": tab,
+                    "source": EventSource.CORE,
+                    "event_type": "tick",
+                    "payload": {"n": start + offset},
+                    "at": moment,
+                }
+                for offset in range(_TICK_BATCH)
+            ],
+        )
+        return start
+
+    return _insert
+
+
+async def _tick_lags(path: Path) -> tuple[list[float], int]:
+    engine, tab = _seed_tick(path)
+    writer = Writer(engine)
+    writer.start()
+    lags: list[float] = []
+    try:
+        await _measure_ticks(writer, tab, lags)
+        _ = await writer.submit(lambda _db: None)
+    finally:
+        writer.stop()
+    with Session(engine) as session:
+        stored = session.scalar(select(func.count()).select_from(EventLog))
+    return lags, int(stored)
+
+
+async def _measure_ticks(writer: Writer, tab: str, lags: list[float]) -> None:
+    loop = asyncio.get_running_loop()
+    started = loop.time()
+    deadline = started + _TICK_SPAN_S
+    warmup = started + _TICK_WARMUP_S
+    moment = datetime.now(UTC)
+    total = _TICK_RATE * int(_TICK_SPAN_S)
+    step = _TICK_BATCH / _TICK_RATE
+
+    async def _feed() -> None:
+        next_at = loop.time()
+        for start in range(0, total, _TICK_BATCH):
+            _ = writer.submit(_tick_job(start, tab, moment))
+            next_at += step
+            delay = next_at - loop.time()
+            await asyncio.sleep(max(0.0, delay))
+
+    async def _probe() -> None:
+        previous = loop.time()
+        while previous < deadline:
+            await asyncio.sleep(0)
+            now = loop.time()
+            if now >= warmup:
+                lags.append(now - previous)
+            previous = now
+
+    await asyncio.gather(_feed(), _probe())
