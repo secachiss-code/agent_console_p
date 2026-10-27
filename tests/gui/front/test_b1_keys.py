@@ -316,6 +316,38 @@ def test_b1_keys_terminal_passthrough(running_app: str, tmp_path: Path) -> None:
     assert result_path.read_bytes() == expected
 
 
+def test_b1_keys_initial_shortcut_controller(running_app: str, tmp_path: Path) -> None:
+    """Ctrl+Shift+P is registered on the window controller in CAPTURE phase at startup."""
+    request = SnapshotRequest(
+        view="window", theme="light", width=1280, height=800, out=tmp_path / "b1-controller.png",
+    )
+    app = AConsoleApp(CoreClient(running_app), request)
+    try:
+        assert run_app(lambda: app, ["aconsole-test-b1-controller"]) == 0
+        assert not app.failed
+        window = app.window
+        assert window is not None
+        controller = window.shortcut_manager.controller
+        assert controller.get_propagation_phase() is Gtk.PropagationPhase.CAPTURE
+        assert controller.get_n_items() > 0
+        palette_registered = False
+        for index in range(controller.get_n_items()):
+            shortcut = controller.get_item(index)
+            assert isinstance(shortcut, Gtk.Shortcut)
+            trigger = shortcut.get_trigger()
+            if not isinstance(trigger, Gtk.KeyvalTrigger):
+                continue
+            modifiers = Gdk.ModifierType.CONTROL_MASK | Gdk.ModifierType.SHIFT_MASK
+            if trigger.get_keyval() == Gdk.KEY_p and trigger.get_modifiers() == modifiers:
+                palette_registered = True
+                break
+        assert palette_registered, "Ctrl+Shift+P palette shortcut was not installed at startup"
+    finally:
+        if app.window is not None:
+            app.window.set_visible(False)
+            app.window.destroy()
+
+
 def test_b1_keys_narrow_window(running_app: str, tmp_path: Path) -> None:
     """At 700 px the sidebar collapses and the content header keeps title-button space."""
     request = SnapshotRequest(
