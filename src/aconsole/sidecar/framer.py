@@ -16,6 +16,10 @@ from typing import Final, Literal, final
 _BSU: Final = b"\x1b[?2026h"
 _ESU: Final = b"\x1b[?2026l"
 _OSC: Final = b"\x1b]"
+# BEL, an OSC start, or a finished BSU/ESU. A marker cut off at the end is checked separately.
+_MARK: Final = re.compile(rb"\x07|\x1b\]|\x1b\[\?2026[hl]")
+_LEFT_BRACKET: Final = 0x5B
+_RIGHT_BRACKET: Final = 0x5D
 _ST: Final = b"\x1b\\"
 _BEL: Final = 0x07
 _ESC: Final = 0x1B
@@ -23,8 +27,6 @@ LIMIT: Final = 4 * 1024 * 1024
 FLUSH_S: Final = 0.05
 _OSC_HOLD: Final = 4096
 _OSC_WAIT_S: Final = 0.25
-# BEL, an OSC start, a BSU/ESU, or the start of one of these cut off at the end of the buffer.
-_SPECIAL: Final = re.compile(rb"\x07|\x1b(?:\]|\[\?2026[hl])|\x1b(?:\[(?:\?(?:2(?:0(?:2(?:6)?)?)?)?)?)?\Z")
 # OSC numbers this framer turns into signals. One of them that is malformed is dropped, not passed on.
 _OWN_OSC: Final = (b"\x1b]0;", b"\x1b]2;", b"\x1b]9;", b"\x1b]777;")
 _TEXT: Final = 512
@@ -111,17 +113,22 @@ class Framer:
         out = bytearray()
         data = self._pending
         pos = 0
-        while pos < len(data):
-            byte = data[pos]
-            if byte == _BEL:
+        length = len(data)
+        while pos < length:
+            found = _next_special(data, pos)
+            if found >= length:
+                self._emit(data[pos:], out)
+                pos = length
+                break
+            if found > pos:
+                self._emit(data[pos:found], out)
+            if data[found] == _BEL:
                 self._signals.append(Signal(kind="bell"))
-                step: int | None = pos + _ONE
-            elif byte == _ESC and _SPECIAL.match(data, pos) is not None:
-                step = self._escape(data, pos, out, now)
-            else:
-                step = _next_special(data, pos + _ONE)
-                self._emit(bytes(data[pos:step]), out)
+                pos = found + _ONE
+                continue
+            step = self._escape(data, found, out, now)
             if step is None:
+                pos = found
                 break
             pos = step
         del data[:pos]
@@ -129,22 +136,27 @@ class Framer:
 
     def _escape(self, data: bytearray, pos: int, out: bytearray, now: float) -> int | None:
         """Consume the escape at `pos`. Returns the next position, or None to wait for more bytes."""
-        if data.startswith(_BSU, pos):
-            self._depth += _ONE
-            if self._depth == _ONE:
-                self._held_since = now
-            return pos + len(_BSU)
-        if data.startswith(_ESU, pos):
-            if self._depth > _ZERO:
-                self._depth -= _ONE
-                if self._depth == _ZERO:
-                    out.extend(self._release(timed_out=False))
-            return pos + len(_ESU)
-        if data.startswith(_OSC, pos):
+        nxt = pos + _ONE
+        if nxt >= len(data):
+            return None
+        kind = data[nxt]
+        if kind == _RIGHT_BRACKET:
             return self._osc(data, pos, out, now)
+        if kind == _LEFT_BRACKET:
+            if data.startswith(_BSU, pos):
+                self._depth += _ONE
+                if self._depth == _ONE:
+                    self._held_since = now
+                return pos + len(_BSU)
+            if data.startswith(_ESU, pos):
+                if self._depth > _ZERO:
+                    self._depth -= _ONE
+                    if self._depth == _ZERO:
+                        out.extend(self._release(timed_out=False))
+                return pos + len(_ESU)
         if _incomplete(bytes(data[pos : pos + len(_BSU)])):
             return None
-        self._emit(bytes(data[pos : pos + _ONE]), out)
+        self._emit(data[pos : pos + _ONE], out)
         return pos + _ONE
 
     def _osc(self, data: bytearray, pos: int, out: bytearray, now: float) -> int | None:
@@ -156,15 +168,15 @@ class Framer:
                 return None
             # Too long to be a signal: pass the raw bytes on and let the terminal parse them.
             self._osc_since = None
-            self._emit(bytes(data[pos:]), out)
+            self._emit(data[pos:], out)
             return len(data)
         self._osc_since = None
-        osc = bytes(data[pos:end])
-        signal = _signal_from_osc(osc)
-        if signal is not None:
-            self._signals.append(signal)
-        elif not osc.startswith(_OWN_OSC):
-            self._emit(osc, out)
+        if _owned_osc(data, pos):
+            signal = _signal_from_osc(bytes(data[pos:end]))
+            if signal is not None:
+                self._signals.append(signal)
+            return end
+        self._emit(data[pos:end], out)
         return end
 
     def _give_up_osc(self, out: bytearray) -> None:
@@ -174,11 +186,11 @@ class Framer:
         self._emit(bytes(self._pending[:end]), out)
         del self._pending[:end]
 
-    def _emit(self, chunk: bytes, out: bytearray) -> None:
+    def _emit(self, chunk: bytes | bytearray, out: bytearray) -> None:
         if not chunk:
             return
         if self._depth > _ZERO:
-            self._hold(chunk, out)
+            self._hold(bytes(chunk), out)
             return
         out.extend(chunk)
         self.bytes_out += len(chunk)
@@ -224,8 +236,38 @@ def _next_special(data: bytearray, start: int) -> int:
 
     Other escapes (colors, cursor moves) are plain output and do not split the run.
     """
-    found = _SPECIAL.search(data, start)
-    return len(data) if found is None else found.start()
+    found = _MARK.search(data, start)
+    if found is not None:
+        return found.start()
+    limit = len(data)
+    begin = max(start, limit - (len(_BSU) - _ONE))
+    for pos in range(begin, limit):
+        if data[pos] == _ESC and _marked(data, pos):
+            return pos
+    return limit
+
+
+def _marked(data: bytearray, pos: int) -> bool:
+    """True when `pos` is an OSC, a BSU/ESU, or a prefix of one of those cut off at the end."""
+    nxt = pos + _ONE
+    limit = len(data)
+    if nxt >= limit:
+        return True
+    kind = data[nxt]
+    if kind == _RIGHT_BRACKET:
+        return True
+    if kind != _LEFT_BRACKET:
+        return False
+    if data.startswith(_BSU, pos) or data.startswith(_ESU, pos):
+        return True
+    if limit - pos >= len(_BSU):
+        return False
+    return _incomplete(bytes(data[pos:]))
+
+
+def _owned_osc(data: bytearray, pos: int) -> bool:
+    """True for OSC 0, 2, 9 and 777, the sequences this framer turns into signals."""
+    return data.startswith(_OWN_OSC, pos)
 
 
 def _osc_end(data: bytearray, start: int) -> int | None:
@@ -233,12 +275,11 @@ def _osc_end(data: bytearray, start: int) -> int | None:
     body = start + len(_OSC)
     bel = data.find(_BEL, body)
     st = data.find(_ST, body)
-    ends: list[int] = []
-    if bel >= _ZERO:
-        ends.append(bel + _ONE)
-    if st >= _ZERO:
-        ends.append(st + len(_ST))
-    return min(ends) if ends else None
+    if bel < _ZERO:
+        return None if st < _ZERO else st + len(_ST)
+    if st < _ZERO or bel < st:
+        return bel + _ONE
+    return st + len(_ST)
 
 
 def _signal_from_osc(osc: bytes) -> Signal | None:
@@ -247,6 +288,8 @@ def _signal_from_osc(osc: bytes) -> Signal | None:
         body = body[: -len(_ST)]
     elif body.endswith(bytes((_BEL,))):
         body = body[:-1]
+    if not body.startswith((b"0;", b"2;", b"9;", b"777;")):
+        return None
     text = body.decode("utf-8", errors="replace")
     if text.startswith(("0;", "2;")):
         return Signal(kind="osc_title", text=text[2:][:_TEXT])
