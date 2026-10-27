@@ -1,6 +1,7 @@
 """Check a task's progress file against its brief: "Готово, когда" is copied, not rewritten.
 
-The brief is read from `docs/plan/CORE.md` at the task base, so an edit made during the task does not count.
+The brief is read from `docs/plan/CORE.md` at the task base, so an edit made during the task does not count. When the
+plan is not tracked by git (`/docs` is ignored since the history rewrite), the file on disk is read instead.
 Rules: every `Done when` item is a verbatim piece of the brief's "Готово, когда" text (whitespace aside); every
 backticked command of that text appears in some item; `Status: done` only when every item is `[x]`. Tasks from before
 the rule (A0-A2) get no exemption: a reopened task starts over with a verbatim copy (ROUND6 K1.5).
@@ -110,6 +111,20 @@ def _show(repo: str, base: str, relative: str) -> str | None:
     return shown.stdout if shown.returncode == 0 else None
 
 
+def _brief(repo: Path, base: str) -> str | None:
+    """CORE.md at the task base; the file on disk only when git does not track it at all."""
+    shown = _show(str(repo), base, BRIEFS)
+    if shown is not None:
+        return shown
+    tracked = subprocess.run(
+        ["git", "-C", str(repo), "ls-files", "--error-unmatch", BRIEFS], capture_output=True, check=False
+    )
+    if tracked.returncode == 0:
+        return None
+    on_disk = repo / BRIEFS
+    return on_disk.read_text(encoding="utf-8") if on_disk.is_file() else None
+
+
 def main(argv: list[str]) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     _ = parser.add_argument("--repo", required=True)
@@ -122,7 +137,7 @@ def main(argv: list[str]) -> int:
     if progress_path.is_file():
         hits = check(
             progress_path.read_text(encoding="utf-8"),
-            _show(str(repo), str(args.base), BRIEFS),
+            _brief(repo, str(args.base)),
             phase,
         )
     else:

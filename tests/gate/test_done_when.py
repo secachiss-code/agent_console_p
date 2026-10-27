@@ -250,3 +250,18 @@ def test_empty_and_fragment_items_are_rewrites() -> None:
         hit["detail"] for hit in done_when.check(progress, brief, "A9.1") if hit["rule"] == "done-when-rewritten"
     ]
     assert details == ["0", "(empty item)"]
+
+
+def test_cli_reads_the_brief_from_disk_when_the_plan_is_not_in_git(tmp_path: Path) -> None:
+    _ = _git(tmp_path, "init")
+    _write(tmp_path / ".gitignore", "/docs\n")
+    _ = _git(tmp_path, "add", ".")
+    _ = _git(tmp_path, "commit", "-m", "base without the plan")
+    base = _git(tmp_path, "rev-parse", "HEAD")
+    _write(tmp_path / CORE_REL, BRIEFS)
+    _write(tmp_path / PROGRESS_REL, _progress(VERBATIM_ITEMS))
+    passed = _run_cli(tmp_path, base)
+    assert passed.returncode == 0
+    assert json.loads(passed.stdout) == {"violations": []}
+    _write(tmp_path / PROGRESS_REL, _progress("- [ ] `hostrun gate A9.1` returns zero"))
+    assert _run_cli(tmp_path, base).returncode == 1

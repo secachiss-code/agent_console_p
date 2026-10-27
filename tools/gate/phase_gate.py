@@ -111,15 +111,34 @@ def _base_from_file(repo: Path, phase: str) -> str | None:
     return value
 
 
+def _record_base(repo: Path, phase: str) -> str:
+    """Write HEAD as the task base into ``bases.json`` on the first gate run of a task.
+
+    The plan is not tracked by git since the history rewrite, so the progress-file history no longer gives a base.
+    The task commit comes after the gate passes, so HEAD at the first run is the state before the task.
+    """
+    head = _git(repo, "rev-parse", "HEAD").stdout.strip()
+    path = repo / BASES_FILE
+    bases: dict[str, object] = {}
+    if path.is_file():
+        parsed = json.loads(path.read_text(encoding="utf-8"))
+        if isinstance(parsed, dict):
+            bases = {str(key): value for key, value in parsed.items()}
+    bases[phase] = head
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(bases, indent=2) + "\n", encoding="utf-8")
+    return head
+
+
 def _base_commit(repo: Path, phase: str) -> str:
-    """Prefer ``bases.json`` for this task. Otherwise use the progress-file history."""
+    """Prefer ``bases.json`` for this task, then the progress-file history, else record HEAD."""
     recorded = _base_from_file(repo, phase)
     if recorded is not None:
         return recorded
     progress = f"{PROGRESS_DIR}/{phase}.md"
     added = _git(repo, "log", "--diff-filter=A", "--format=%H", "--", progress).stdout.split()
     if not added:
-        raise SystemExit(f"{progress} is not committed; commit the progress file first")
+        return _record_base(repo, phase)
     first = added[-1]
     parent = _git(repo, "rev-parse", "--verify", "--quiet", f"{first}^", check=False)
     if parent.returncode != 0:

@@ -177,10 +177,16 @@ def test_base_is_parent_of_first_progress_commit(tmp_path: Path) -> None:
     assert json.loads(out) == base
 
 
-def test_missing_progress_commit_fails(tmp_path: Path) -> None:
-    _ = _base_repo(tmp_path)
-    out = _exit_message(f"gate._base_commit(Path({str(tmp_path)!r}), 'A9.1')")
-    assert json.loads(out) == "docs/plan/core/progress/A9.1.md is not committed; commit the progress file first"
+def test_missing_progress_commit_records_head_as_base(tmp_path: Path) -> None:
+    head = _base_repo(tmp_path)
+    out = _probe(f"print(json.dumps(gate._base_commit(Path({str(tmp_path)!r}), 'A9.1')))\n")
+    assert json.loads(out) == head
+    bases = json.loads((tmp_path / "docs" / "plan" / "core" / "bases.json").read_text(encoding="utf-8"))
+    assert bases["A9.1"] == head
+    _write(tmp_path / "src" / "later.py", "X = 1\n")
+    _commit(tmp_path, "later")
+    again = _probe(f"print(json.dumps(gate._base_commit(Path({str(tmp_path)!r}), 'A9.1')))\n")
+    assert json.loads(again) == head
 
 
 def test_bases_key_overrides_history(tmp_path: Path) -> None:

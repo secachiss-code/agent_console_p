@@ -112,7 +112,7 @@ def running(tmp_path: Path) -> Iterator[Running]:
 
 def test_gate_ids_match_the_plan(tmp_path: Path) -> None:
     repo = str(tmp_path)
-    accepted = ("A1.1", "A1.10", "A1.1b", "A0.0r", "H1", "R0b", "I0", "B5a")
+    accepted = ("A1.1", "A1.10", "A1.1b", "A0.0r", "A2.1br", "A1.6r", "H1", "R0b", "I0", "B5a")
     for task_id in accepted:
         plan = actions.build_plan("gate", [task_id], tmp_path, repo, 30)
         assert plan.steps[0].argv[-1] == task_id
