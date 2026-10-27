@@ -9,10 +9,12 @@ from collections.abc import Awaitable, Callable
 import msgspec
 
 from aconsole.contracts.ingest import CodexNotify
+from aconsole.core.infrastructure.agents.claude.telemetry import read_claude
 from aconsole.core.infrastructure.http.routes import IngestItem, IngestQueue
 
 _LOG = logging.getLogger(__name__)
 _HOOKS = frozenset({"claude.hook", "codex.hook"})
+_CLAUDE = frozenset({"claude.hook", "claude.statusline"})
 
 
 class _HookName(msgspec.Struct, frozen=True, kw_only=True):
@@ -41,10 +43,20 @@ async def consume(queue: IngestQueue, ready: asyncio.Event, apply: Callable[[str
         _ = await ready.wait()
         ready.clear()
         while (item := queue.pop()) is not None:
-            name = hook_event(item)
-            if name is None:
-                continue
             try:
+                name = _event_name(item)
+                if name is None:
+                    continue
                 await apply(item.tab_id, name)
             except Exception:  # noqa: BLE001 -- one bad item must not stop the consumer
                 _LOG.exception("ingest item for %s failed", item.tab_id)
+
+
+def _event_name(item: IngestItem) -> str | None:
+    """Claude bodies go through telemetry. Codex still uses the event name alone."""
+    if item.kind in _CLAUDE:
+        signal = read_claude(item.body, kind=item.kind)
+        if signal.status is None:
+            return None
+        return signal.event
+    return hook_event(item)
