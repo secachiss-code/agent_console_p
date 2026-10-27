@@ -65,6 +65,18 @@ _SIDECAR: Final = ("-I", "-m", "aconsole.sidecar", "--")
 _ATTENTION: Final = frozenset({TabStatus.WAITING_APPROVAL, TabStatus.WAITING_INPUT, TabStatus.ERROR})
 
 
+def _launch_command(agent: AgentKind, session: str | None, *, fork: bool) -> tuple[str, ...]:
+    """Claude resume and fork flags. Other agents stay a single argv word."""
+    if agent is not AgentKind.CLAUDE or (session is None and not fork):
+        return (agent.value,)
+    command = [agent.value]
+    if session is not None:
+        command.extend(("--resume", session))
+    if fork:
+        command.append("--fork-session")
+    return tuple(command)
+
+
 def _resting(status: TabStatus) -> TabStatus:
     """A dead process cannot still be working. Idle and exited are already resting states."""
     if status is TabStatus.IDLE or status is TabStatus.EXITED:
@@ -179,6 +191,7 @@ class _Tab:
     dirty: bool
     plan_node: str | None
     session: str | None
+    fork: bool
     running: bool
     repo: str
     container: str
@@ -347,6 +360,7 @@ class TabService:
             dirty=False,
             plan_node=None if params.plan_node is None else str(params.plan_node),
             session=params.resume_session,
+            fork=params.fork,
             running=False,
             repo=project.root,
             container=project.container,
@@ -373,7 +387,7 @@ class TabService:
         secret = self._ports.new_secret()
         tab.sidecar = secret
         path = self._ports.container_path(tab.container)
-        command = (tab.agent.value,)
+        command = _launch_command(tab.agent, tab.session, fork=tab.fork)
         # Hooks run inside the container: they need the tab, its ingest token, and the ingest port (INGEST_HTTP §1).
         inner = {
             _ENV_TAB: tab.id,
@@ -485,6 +499,7 @@ class TabService:
             dirty=False,
             plan_node=tab.plan_node,
             session=tab.session,
+            fork=tab.fork,
             running=False,
             repo=tab.repo,
             container=tab.container,
@@ -661,6 +676,7 @@ class TabService:
             dirty=saved.dirty,
             plan_node=saved.plan_node,
             session=saved.session,
+            fork=False,
             running=False,
             repo=saved.project_root,
             container=saved.container,
