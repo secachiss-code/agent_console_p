@@ -324,3 +324,102 @@ def test_disjoint_user_edits_commute(left: list[str], right: list[str]) -> None:
     after_right = _apply(BASE, right, "right")
     right_then_left = _apply(after_right, left, "left")
     assert left_then_right == right_then_left
+
+
+_USER_FIELDS = ("title", "objective", "acceptance", "review_required")
+_APP_FIELDS = ("tags", "lease", "updated")
+_WORD = st.text(alphabet="abcdefghijklmnopqrstuvwxyz", min_size=0, max_size=6)
+_TOKEN = st.text(alphabet="abcdefghijklmnopqrstuvwxyz", min_size=1, max_size=6)
+
+
+def _section_note(draw: st.DrawFn) -> Note:
+    """A plan-node note with the §3 sections. Shared fields stay legal."""
+    return Note(
+        status="pending",
+        owner_agent=draw(_WORD),
+        depends_on=(),
+        paths=(),
+        acceptance=(draw(_TOKEN),),
+        review_required=draw(st.booleans()),
+        tags=(draw(_TOKEN),),
+        lease=draw(_WORD),
+        updated=draw(_WORD),
+        title=draw(_WORD),
+        objective=draw(_WORD),
+    )
+
+
+def _put_user(note: Note, field: str, text: str) -> Note:
+    if field == "title":
+        return replace(note, title=text)
+    if field == "objective":
+        return replace(note, objective=text)
+    if field == "acceptance":
+        return replace(note, acceptance=(text,))
+    return replace(note, review_required=text == "1")
+
+
+def _put_app(note: Note, field: str, text: str) -> Note:
+    if field == "tags":
+        return replace(note, tags=(text,))
+    if field == "lease":
+        return replace(note, lease=text)
+    return replace(note, updated=text)
+
+
+def _read(note: Note, field: str) -> object:
+    values: dict[str, object] = {
+        "title": note.title,
+        "objective": note.objective,
+        "acceptance": note.acceptance,
+        "review_required": note.review_required,
+        "tags": note.tags,
+        "lease": note.lease,
+        "updated": note.updated,
+    }
+    return values[field]
+
+
+def _overlay(note: Note, fields: tuple[str, ...], values: dict[str, str]) -> Note:
+    current = note
+    for field in fields:
+        current = _put_user(current, field, values[field])
+    return current
+
+
+@st.composite
+def _commuting_edits(
+    draw: st.DrawFn,
+) -> tuple[Note, Note, tuple[str, ...], tuple[str, ...], dict[str, str]]:
+    base = _section_note(draw)
+    left_set = draw(st.frozensets(st.sampled_from(_USER_FIELDS)))
+    rest = tuple(field for field in _USER_FIELDS if field not in left_set)
+    right_set = draw(st.frozensets(st.sampled_from(rest))) if rest else frozenset()
+    values: dict[str, str] = {}
+    for field in sorted(left_set | right_set):
+        values[field] = "1" if draw(st.booleans()) else "0" if field == "review_required" else draw(_TOKEN)
+    app = base
+    for field in draw(st.lists(st.sampled_from(_APP_FIELDS), min_size=1, max_size=len(_APP_FIELDS), unique=True)):
+        drawn = draw(_TOKEN) if field == "tags" else draw(_WORD)
+        app = _put_app(app, field, drawn)
+    return base, app, tuple(sorted(left_set)), tuple(sorted(right_set)), values
+
+
+@given(_commuting_edits())
+@settings(max_examples=200, deadline=None)
+def test_vault_sync_commute(
+    case: tuple[Note, Note, tuple[str, ...], tuple[str, ...], dict[str, str]],
+) -> None:
+    base, app, left, right, values = case
+    assume(base != app)
+    owners = _owners()
+    user_then = _overlay(_overlay(base, left, values), right, values)
+    swapped = _overlay(_overlay(base, right, values), left, values)
+    merged = merge(base, user_then, app, owners)
+    assert merged == merge(base, swapped, app, owners)
+    got = merged.apply
+    for field in (*left, *right):
+        assert _read(got, field) == _read(user_then, field)
+    for field in _APP_FIELDS:
+        if _read(base, field) != _read(app, field):
+            assert _read(got, field) == _read(app, field)
