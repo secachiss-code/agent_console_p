@@ -6,7 +6,21 @@ from typing import final
 import msgspec
 
 from aconsole.contracts.app import AppSnapshot
-from aconsole.contracts.events import ResyncRequired, TabAdded, TabRemoved, TabUpdated, UiEvent
+from aconsole.contracts.events import (
+    AgentsChanged,
+    ApprovalRequested,
+    ApprovalResolved,
+    PlanUpdated,
+    ProjectsChanged,
+    QuotaUpdated,
+    ResyncRequired,
+    SettingsChanged,
+    SetupRequired,
+    TabAdded,
+    TabRemoved,
+    TabUpdated,
+    UiEvent,
+)
 from aconsole.contracts.ipc import EventEnvelope
 
 CONNECTING_BANNER = "Подключение к ядру…"
@@ -99,6 +113,7 @@ class CoreStore:
             return False
         self.seq = envelope.seq
         self._apply_tab(envelope.event)
+        self._apply_model(envelope.event)
         self._notify(envelope.event)
         return True
 
@@ -128,3 +143,57 @@ class CoreStore:
         if isinstance(event, TabUpdated):
             replaced = tuple(event.tab if tab.id == event.tab.id else tab for tab in snapshot.tabs)
             self.snapshot = msgspec.structs.replace(snapshot, tabs=replaced)
+
+    def _apply_model(self, event: UiEvent) -> None:
+        snapshot = self.snapshot
+        if snapshot is None:
+            return
+        updated = _model(snapshot, event)
+        if updated is not snapshot:
+            self.snapshot = updated
+
+
+def _put[Item](items: tuple[Item, ...], item: Item, key: Callable[[Item], object]) -> tuple[Item, ...]:
+    item_key = key(item)
+    if any(key(current) == item_key for current in items):
+        return tuple(item if key(current) == item_key else current for current in items)
+    return (*items, item)
+
+
+def _model(snapshot: AppSnapshot, event: UiEvent) -> AppSnapshot:
+    if isinstance(event, ApprovalRequested | ApprovalResolved):
+        return _approvals(snapshot, event)
+    if isinstance(event, QuotaUpdated | PlanUpdated):
+        return _resources(snapshot, event)
+    if isinstance(event, ProjectsChanged | AgentsChanged | SettingsChanged | SetupRequired):
+        return _catalog(snapshot, event)
+    return snapshot
+
+
+def _approvals(snapshot: AppSnapshot, event: ApprovalRequested | ApprovalResolved) -> AppSnapshot:
+    if isinstance(event, ApprovalRequested):
+        approvals = _put(snapshot.approvals, event.approval, lambda item: item.id)
+        return msgspec.structs.replace(snapshot, approvals=approvals)
+    kept = tuple(item for item in snapshot.approvals if item.id != event.approval_id)
+    return msgspec.structs.replace(snapshot, approvals=kept)
+
+
+def _resources(snapshot: AppSnapshot, event: QuotaUpdated | PlanUpdated) -> AppSnapshot:
+    if isinstance(event, QuotaUpdated):
+        accounts = _put(snapshot.accounts, event.account, lambda item: item.id)
+        return msgspec.structs.replace(snapshot, accounts=accounts)
+    plans = _put(snapshot.plans, event.plan, lambda item: item.id)
+    return msgspec.structs.replace(snapshot, plans=plans)
+
+
+def _catalog(
+    snapshot: AppSnapshot,
+    event: ProjectsChanged | AgentsChanged | SettingsChanged | SetupRequired,
+) -> AppSnapshot:
+    if isinstance(event, ProjectsChanged):
+        return msgspec.structs.replace(snapshot, projects=event.projects, active_project=event.active_project)
+    if isinstance(event, AgentsChanged):
+        return msgspec.structs.replace(snapshot, agents=event.agents)
+    if isinstance(event, SettingsChanged):
+        return msgspec.structs.replace(snapshot, settings_rev=event.rev)
+    return msgspec.structs.replace(snapshot, setup=event.setup)

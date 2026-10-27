@@ -281,7 +281,7 @@ def demo_snapshot() -> AppSnapshot:
         tabs=tabs,
         approvals=_approvals(tabs[0].id),
         plans=(_plan(project_a),),
-        vault_ok=True,
+        vault_ok=False,
         setup=SetupState(required=False, failing_checks=0, warnings=0),
         settings_rev=1,
     )
@@ -321,11 +321,15 @@ def stress_snapshot() -> AppSnapshot:
 
 
 def demo_events(snapshot: AppSnapshot) -> tuple[UiEvent, ...]:
+    """Events whose fold from `empty_snapshot()` is `snapshot`.
+
+    A remove or resolve is followed by the same add or request, so the snapshot
+    still holds tab 0 and the pending approvals. `ResyncRequired` is last: the
+    client does not apply it, and nothing after it has to change the snapshot.
+    """
     tab = snapshot.tabs[0]
-    account = snapshot.accounts[0]
-    plan = snapshot.plans[0]
-    project = snapshot.projects[0]
-    approval = snapshot.approvals[0]
+    tabs = snapshot.tabs
+    approvals = snapshot.approvals
     checkpoint = CheckpointView(
         id=CheckpointId(_ulid(500)),
         tab_id=tab.id,
@@ -336,18 +340,26 @@ def demo_events(snapshot: AppSnapshot) -> tuple[UiEvent, ...]:
         deletions=0,
         label="hello",
     )
+    added = tuple(TabAdded(tab=item) for item in tabs)
+    removed = tuple(TabRemoved(tab_id=item.id) for item in tabs)
+    requested = tuple(ApprovalRequested(approval=item) for item in approvals)
+    resolved = tuple(
+        ApprovalResolved(approval_id=item.id, outcome="allowed", by="user") for item in approvals
+    )
     return (
-        TabAdded(tab=tab),
+        *added,
         TabUpdated(tab=tab, changed=frozenset({"status"})),
-        TabRemoved(tab_id=tab.id),
+        *removed,
+        *added,
         TabFocusRequested(tab_id=tab.id),
-        ApprovalRequested(approval=approval),
-        ApprovalResolved(approval_id=approval.id, outcome="allowed", by="user"),
-        QuotaUpdated(account=account),
-        PlanUpdated(plan=plan),
-        ProjectsChanged(projects=(project,), active_project=project.id),
+        *requested,
+        *resolved,
+        *requested,
+        *(QuotaUpdated(account=item) for item in snapshot.accounts),
+        *(PlanUpdated(plan=item) for item in snapshot.plans),
+        ProjectsChanged(projects=snapshot.projects, active_project=snapshot.active_project),
         AgentsChanged(agents=snapshot.agents),
-        SettingsChanged(rev=2),
+        SettingsChanged(rev=snapshot.settings_rev),
         Notify(tab_id=tab.id, title="Wait", body="approval", priority="high", episode_id="ep-1"),
         Toast(message="saved", action_label=None, action_item_id=None),
         Banner(id="b1", message="core", button_label=None, button_item_id=None, visible=True),
@@ -356,8 +368,8 @@ def demo_events(snapshot: AppSnapshot) -> tuple[UiEvent, ...]:
         OperationProgress(operation_id="op-1", title="open", fraction=0.5, done=False, error=None),
         VaultEditRejected(note=NoteRef("plans/demo/N-01.md"), reason="cycle", restored=True),
         ScreenTextRequested(request_id="r1", tab_id=tab.id, last_lines=20),
+        SetupRequired(setup=snapshot.setup),
         ResyncRequired(reason="restart"),
-        SetupRequired(setup=SetupState(required=False, failing_checks=0, warnings=0)),
     )
 
 
