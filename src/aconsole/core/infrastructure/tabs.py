@@ -160,6 +160,10 @@ class HostTabs:
         """The daemon binds the ingest socket after the tab book exists; launches made later carry this port."""
         self._port = str(port)
 
+    def set_worktrees_dir(self, path: Path) -> None:
+        """Use `Settings.worktrees_dir`. A leading `~` is the user's home."""
+        self._worktrees = path.expanduser()
+
 
 def default_worktrees() -> Path:
     """`$XDG_DATA_HOME/aconsole/worktrees` (APP_API Settings.worktrees_dir default)."""

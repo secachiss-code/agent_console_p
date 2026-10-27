@@ -41,6 +41,7 @@ from aconsole.core.infrastructure.ipc.server import allow_peer, peer_uid
 from aconsole.core.infrastructure.ipc.session import Connection
 from aconsole.core.infrastructure.persistence.cleanup import sweep
 from aconsole.core.infrastructure.persistence.engine import write_engine
+from aconsole.core.infrastructure.persistence.repositories.tabs import TabDatabase
 from aconsole.core.infrastructure.persistence.startup import prepare_database, sqlite_url
 from aconsole.core.infrastructure.persistence.writer import Writer
 from aconsole.core.infrastructure.tabs import HostTabs
@@ -284,6 +285,7 @@ class Daemon:
         self._worker = ThreadPoolExecutor(max_workers=1, thread_name_prefix="aconsole-tabs")
         try:
             await self._open_database()
+            await self._restore_tabs()
             await self._open_ingest()
             await self._listen()
             self._listening = True
@@ -382,6 +384,32 @@ class Daemon:
         for task in tasks:
             with contextlib.suppress(asyncio.CancelledError, Exception):
                 await task
+
+    async def _restore_tabs(self) -> None:
+        """Load settings and open tabs before the socket accepts anyone.
+
+        `tab_added` is published here, so the first `events/subscribe` replays tabs that already exist.
+        Restored tabs carry no token; `tab/launchSpec` mints the next one.
+        """
+        writer = self._writer
+        if writer is None:
+            return
+        store = TabDatabase(writer)
+        self.tabs.use_store(store)
+        found = await asyncio.to_thread(store.settings)
+        self.tabs.note_settings(found.rev)
+        if found.worktrees_dir is not None:
+            self._host.set_worktrees_dir(Path(found.worktrees_dir))
+        caught: list[UiEvent] = []
+        previous = self.tabs.listener
+        self.tabs.listener = caught.append
+        try:
+            await self._in_worker(self.tabs.reload)
+        finally:
+            self.tabs.listener = previous
+        live = self.tabs.running_count()
+        for event in caught:
+            self._publish(event, live, None)
 
     async def _open_database(self) -> None:
         """DATA_MODEL §5: backup and upgrade before the pool opens, then the writer and the sweep loop."""

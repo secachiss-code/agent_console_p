@@ -7,7 +7,7 @@ from typing import final
 
 import msgspec
 
-from aconsole.contracts.app import SubscribeParams, SubscribeResult
+from aconsole.contracts.app import EmptyParams, SnapshotResult, SubscribeParams, SubscribeResult
 from aconsole.contracts.common import ClientRole
 from aconsole.contracts.errors import (
     ErrorData,
@@ -35,6 +35,7 @@ from aconsole.core.infrastructure.ipc.ring import EventRing
 _SERVER = ProtocolVersion(major=1, minor=0)
 _SERVER_CAPS = frozenset({"events.v1", "diff.v1", "checkpoints.v1"})
 _HOLD = "core/hold"
+_SNAPSHOT = "app/snapshot"
 _SIDECAR_PREFIX = "sidecar/"
 OUTBOUND_LIMIT = 1024
 
@@ -115,7 +116,7 @@ class Connection:
         if request.method == _HOLD:
             self.inflight.add(request.id)
             return ()
-        if self.tabs is not None and request.method in TAB_METHODS:
+        if request.method == _SNAPSHOT or (self.tabs is not None and request.method in TAB_METHODS):
             return self._tab(request)
         return (self._err(request.id, "METHOD_NOT_FOUND"),)
 
@@ -123,12 +124,22 @@ class Connection:
         tabs = self.tabs
         if tabs is None:
             return (self._err(request.id, "METHOD_NOT_FOUND"),)
+        if request.method == _SNAPSHOT:
+            return self._snapshot(request, tabs)
         try:
             result = tabs.dispatch(request.method, bytes(request.params))
         except TabRequestError as exc:
             return (self._err(request.id, exc.name),)
         except msgspec.DecodeError:
             return (self._err(request.id, "INVALID_PARAMS"),)
+        return (self._ok(request.id, result),)
+
+    def _snapshot(self, request: Request, tabs: TabService) -> tuple[bytes, ...]:
+        try:
+            _ = msgspec.json.decode(request.params, type=EmptyParams)
+        except msgspec.DecodeError:
+            return (self._err(request.id, "INVALID_PARAMS"),)
+        result = SnapshotResult(snapshot=tabs.snapshot(), seq=self.ring.current_seq)
         return (self._ok(request.id, result),)
 
     def _notification(self, note: Notification) -> tuple[bytes, ...]:

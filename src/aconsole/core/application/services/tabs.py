@@ -4,13 +4,16 @@ from __future__ import annotations
 
 import hmac
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import datetime
+from pathlib import Path
 from typing import Final, Protocol, final
 
 import msgspec
 
+from aconsole.contracts import API_VERSION
 from aconsole.contracts.app import (
+    AppSnapshot,
     CloseTabParams,
     CloseTabResult,
     EmptyResult,
@@ -20,6 +23,7 @@ from aconsole.contracts.app import (
     RenameParams,
     ReorderParams,
     RestartParams,
+    SetupState,
     StartedParams,
     TabIdParams,
     TabView,
@@ -27,6 +31,7 @@ from aconsole.contracts.app import (
 )
 from aconsole.contracts.common import AgentKind, NodeId, ProjectId, TabId, TabStatus, WorkspaceMode
 from aconsole.contracts.events import TabAdded, TabRemoved, TabUpdated, UiEvent
+from aconsole.core.application.ports.tab_store import StoredTab, TabStore
 from aconsole.core.domain.clock import Clock
 
 _ZERO: Final = 0
@@ -58,6 +63,15 @@ _ENV_PORT: Final = "ACONSOLE_PORT"
 _SIDECAR: Final = ("-I", "-m", "aconsole.sidecar", "--")
 # APP_API §8: these statuses need the user.
 _ATTENTION: Final = frozenset({TabStatus.WAITING_APPROVAL, TabStatus.WAITING_INPUT, TabStatus.ERROR})
+
+
+def _resting(status: TabStatus) -> TabStatus:
+    """A dead process cannot still be working. Idle and exited are already resting states."""
+    if status is TabStatus.IDLE or status is TabStatus.EXITED:
+        return status
+    return TabStatus.EXITED
+
+
 # Hook event -> tab status. Claude and Codex share these names; unknown events leave the status alone.
 _HOOK_STATUS: Final = {
     "SessionStart": TabStatus.IDLE,
@@ -169,9 +183,15 @@ class _Tab:
     repo: str
     container: str
     created_here: bool
+    created: datetime
+    mode: str
     ingest: str
     sidecar: str
     pid: int | None
+
+
+def _by_order(tab: _Tab) -> tuple[int, str]:
+    return tab.order, tab.id
 
 
 @final
@@ -198,8 +218,12 @@ class TabService:
         self._tabs: dict[str, _Tab] = {}
         self._window_active = True
         self._focused: str | None = None
+        self._store: TabStore | None = None
+        self._settings_rev = 0
         # Receives tab_added / tab_updated / tab_removed on the thread that changed the tab.
         self.listener: Callable[[UiEvent], None] | None = listener
+        # Filled when `tab/launchSpec` mints an ingest token for a restored tab. The daemon registers it.
+        self.on_ingest: Callable[[str, str], None] | None = None
         self._routes: dict[str, Callable[[bytes], msgspec.Struct]] = {
             "tab/open": self._route_open,
             "tab/launchSpec": self._route_launch,
@@ -217,14 +241,52 @@ class TabService:
         """Register a project. `project/add` is a later method; tests and the host pass the seed."""
         self._projects[seed.project_id] = seed
 
+    def use_store(self, store: TabStore) -> None:
+        """Persist later changes. Existing in-memory tabs are written by `reload` or the next edit."""
+        self._store = store
+
+    def note_settings(self, rev: int) -> None:
+        """Remember the settings revision the snapshot reports."""
+        self._settings_rev = rev
+
+    def reload(self) -> None:
+        """Replace the book with the open rows. A process that died with the core is exited or idle.
+
+        Each restored tab emits `tab_added`. Tokens are left empty until `tab/launchSpec`.
+        """
+        store = self._store
+        if store is None:
+            return
+        for saved in store.load_open():
+            self._adopt(saved)
+
+    def snapshot(self) -> AppSnapshot:
+        """The tabs the core would hand to `app/snapshot`, in display order."""
+        ordered = sorted(self._tabs.values(), key=_by_order)
+        return AppSnapshot(
+            api_version=API_VERSION,
+            projects=(),
+            active_project=None,
+            agents=(),
+            accounts=(),
+            tabs=tuple(self._view(tab) for tab in ordered),
+            approvals=(),
+            plans=(),
+            vault_ok=False,
+            setup=SetupState(required=False, failing_checks=0, warnings=0),
+            settings_rev=self._settings_rev,
+        )
+
     def running_count(self) -> int:
         """Tabs whose process the UI reported started and not yet exited. The core stays up for them."""
         return sum(1 for tab in self._tabs.values() if tab.running)
 
     def ingest_token(self, tab_id: str) -> str | None:
-        """The bearer token the tab's hooks present to the ingest server."""
+        """The bearer token the tab's hooks present. Empty after a restore, until `tab/launchSpec`."""
         tab = self._tabs.get(tab_id)
-        return None if tab is None else tab.ingest
+        if tab is None or tab.ingest == "":
+            return None
+        return tab.ingest
 
     def claim_sidecar(self, tab_id: str, token: str) -> bool:
         """Accept the one-shot sidecar token of `tab/launchSpec` once. A second use, or any other token, fails."""
@@ -246,6 +308,7 @@ class TabService:
         tab.since = self._clock.now()
         if self._refresh_attention(tab):
             changed.add("attention")
+        self._remember(tab)
         return self._updated(tab, changed)
 
     def dispatch(self, method: str, raw: bytes) -> msgspec.Struct:
@@ -267,6 +330,7 @@ class TabService:
         tab_id = self._ports.new_id()
         dest, branch, created = self._place(params, project, tab_id)
         detail = None if project.logged_in else _LOGIN
+        now = self._clock.now()
         tab = _Tab(
             id=tab_id,
             project_id=project.project_id,
@@ -275,7 +339,7 @@ class TabService:
             order=self._next_order(),
             status=TabStatus.IDLE,
             status_detail=detail,
-            since=self._clock.now(),
+            since=now,
             attention=False,
             worktree=dest,
             branch=branch,
@@ -287,17 +351,25 @@ class TabService:
             repo=project.root,
             container=project.container,
             created_here=created,
+            created=now,
+            mode=params.workspace.value,
             ingest=self._ports.new_secret(),
             sidecar="",
             pid=None,
         )
         self._tabs[tab_id] = tab
+        self._remember(tab)
         return self._added(tab)
 
     def launch_spec(self, params: TabIdParams) -> TerminalLaunchSpec:
         """A new one-shot sidecar secret and the argv the UI spawns. This is the lazy start."""
         tab = self._require(str(params.tab_id))
         self._ports.ensure_container(tab.container)
+        if tab.ingest == "":
+            tab.ingest = self._ports.new_secret()
+            notify = self.on_ingest
+            if notify is not None:
+                notify(tab.id, tab.ingest)
         secret = self._ports.new_secret()
         tab.sidecar = secret
         path = self._ports.container_path(tab.container)
@@ -326,6 +398,7 @@ class TabService:
         tab.status = TabStatus.WORKING
         tab.since = self._clock.now()
         _ = self._refresh_attention(tab)
+        self._remember(tab)
         _ = self._updated(tab, {"started", "status", "status_since", "attention"})
         return EmptyResult()
 
@@ -337,6 +410,7 @@ class TabService:
         tab.status_detail = str(params.wait_status)
         tab.since = self._clock.now()
         _ = self._refresh_attention(tab)
+        self._remember(tab)
         _ = self._updated(tab, {"started", "status", "status_detail", "status_since", "attention"})
         return EmptyResult()
 
@@ -346,6 +420,7 @@ class TabService:
         summary = self._summary(tab)
         if summary is not None and params.decision is None:
             tab.dirty = True
+            self._remember(tab)
             return CloseTabResult(closed=False, needs_decision=True, dirty_summary=summary)
         if summary not in {None, _IGNORED} and params.decision == _REMOVE:
             raise TabRequestError(_DIRTY)
@@ -353,6 +428,7 @@ class TabService:
         # A failed orphan scan may leave processes in the tree: keep it rather than delete files under them.
         decision = params.decision if stopped else _KEEP
         self._finish_tree(tab, decision, discard_ignored=summary == _IGNORED)
+        self._forget(tab, drop_worktree=tab.created_here and decision != _KEEP)
         del self._tabs[tab.id]
         if self._focused == tab.id:
             self._focused = None
@@ -377,6 +453,7 @@ class TabService:
         if not params.resume:
             tab.session = None
         _ = self._refresh_attention(tab)
+        self._remember(tab)
         return self._updated(tab, {"started", "status", "status_since", "attention", "agent_session_id"})
 
     def fork(self, params: TabIdParams) -> TabView:
@@ -385,10 +462,13 @@ class TabService:
         dest = tab.worktree
         branch = tab.branch
         created = False
+        mode = WorkspaceMode.EXISTING_WORKTREE.value
         if self._fork_new:
             slug = f"{tab.agent.value}-fork"
             dest, branch = self._ports.create_worktree(tab.repo, tab_id, slug, tab.base or _HEAD)
             created = True
+            mode = WorkspaceMode.NEW_WORKTREE.value
+        now = self._clock.now()
         copy = _Tab(
             id=tab_id,
             project_id=tab.project_id,
@@ -397,7 +477,7 @@ class TabService:
             order=self._next_order(),
             status=TabStatus.IDLE,
             status_detail=None,
-            since=self._clock.now(),
+            since=now,
             attention=False,
             worktree=dest,
             branch=branch,
@@ -409,22 +489,27 @@ class TabService:
             repo=tab.repo,
             container=tab.container,
             created_here=created,
+            created=now,
+            mode=mode,
             ingest=self._ports.new_secret(),
             sidecar="",
             pid=None,
         )
         self._tabs[tab_id] = copy
+        self._remember(copy)
         return self._added(copy)
 
     def rename(self, params: RenameParams) -> EmptyResult:
         tab = self._require(str(params.tab_id))
         tab.title = params.title
+        self._remember(tab)
         _ = self._updated(tab, {"title"})
         return EmptyResult()
 
     def reorder(self, params: ReorderParams) -> EmptyResult:
         tab = self._require(str(params.tab_id))
         tab.order = params.order
+        self._remember(tab)
         _ = self._updated(tab, {"order"})
         return EmptyResult()
 
@@ -548,6 +633,82 @@ class TabService:
         if requested:
             return requested[:_TITLE]
         return f"{agent.value}-{tab_id}"[:_TITLE]
+
+    def _adopt(self, saved: StoredTab) -> None:
+        status = _resting(TabStatus(saved.status))
+        current = saved if status.value == saved.status else replace(saved, status=status.value)
+        if current is not saved:
+            self._store_save(current)
+        tab = self._materialize(current)
+        self._tabs[tab.id] = tab
+        _ = self._added(tab)
+
+    def _materialize(self, saved: StoredTab) -> _Tab:
+        status = _resting(TabStatus(saved.status))
+        return _Tab(
+            id=saved.id,
+            project_id=saved.project_id,
+            agent=AgentKind(saved.agent),
+            title=saved.title,
+            order=saved.order,
+            status=status,
+            status_detail=saved.status_detail,
+            since=saved.since,
+            attention=False,
+            worktree=saved.worktree,
+            branch=saved.branch,
+            base=saved.base_branch,
+            dirty=saved.dirty,
+            plan_node=saved.plan_node,
+            session=saved.session,
+            running=False,
+            repo=saved.project_root,
+            container=saved.container,
+            created_here=saved.workspace_mode == WorkspaceMode.NEW_WORKTREE,
+            created=saved.created_at,
+            mode=saved.workspace_mode,
+            ingest="",
+            sidecar="",
+            pid=None,
+        )
+
+    def _remember(self, tab: _Tab) -> None:
+        self._store_save(self._export(tab))
+
+    def _forget(self, tab: _Tab, *, drop_worktree: bool) -> None:
+        store = self._store
+        if store is None:
+            return
+        store.remove(tab.id, closed_at=self._clock.now(), drop_worktree=drop_worktree)
+
+    def _store_save(self, saved: StoredTab) -> None:
+        store = self._store
+        if store is not None:
+            store.save(saved)
+
+    def _export(self, tab: _Tab) -> StoredTab:
+        name = Path(tab.repo).name or tab.project_id
+        return StoredTab(
+            id=tab.id,
+            project_id=tab.project_id,
+            project_name=name[:_TITLE],
+            project_root=tab.repo,
+            container=tab.container,
+            agent=tab.agent.value,
+            title=tab.title,
+            order=tab.order,
+            status=tab.status.value,
+            status_detail=tab.status_detail,
+            since=tab.since,
+            created_at=tab.created,
+            worktree=tab.worktree,
+            branch=tab.branch,
+            base_branch=tab.base,
+            dirty=tab.dirty,
+            workspace_mode=tab.mode,
+            plan_node=tab.plan_node,
+            session=tab.session,
+        )
 
     def _view(self, tab: _Tab) -> TabView:
         return TabView(
