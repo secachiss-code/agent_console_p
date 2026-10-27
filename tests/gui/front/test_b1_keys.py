@@ -378,6 +378,95 @@ class _SettingsProbeApp(AConsoleApp):
             self.input_error = self.input_error or RuntimeError("failed to destroy settings test window")
 
 
+class _ShortcutActionProbeApp(AConsoleApp):
+    def __init__(self, client: CoreClient) -> None:
+        super().__init__(client)
+        self.actions: list[str] = []
+        self.action_activated = False
+        self.input_error: Exception | None = None
+        self._watchdog_id: int | None = None
+
+    async def _open(self) -> None:
+        self._watchdog_id = GLib.timeout_add_seconds(8, self._watchdog)
+        try:
+            await super()._open()
+            if self.window is None:
+                self.input_error = AssertionError("application opened without a window")
+                self._finish_probe()
+                return
+            self.window.app_vm.on_action = self.actions.append
+            GLib.idle_add(self._activate_palette)
+        except Exception as error:  # noqa: BLE001 -- retain async startup failures for assertions
+            self.input_error = error
+            self._finish_probe()
+
+    def _activate_palette(self) -> bool:
+        window = self.window
+        try:
+            assert window is not None
+            controller = window.shortcut_manager.controller
+            modifiers = Gdk.ModifierType.CONTROL_MASK | Gdk.ModifierType.SHIFT_MASK
+            palette_found = False
+            for index in range(controller.get_n_items()):
+                shortcut = controller.get_item(index)
+                if not isinstance(shortcut, Gtk.Shortcut):
+                    continue
+                trigger = shortcut.get_trigger()
+                if not isinstance(trigger, Gtk.KeyvalTrigger):
+                    continue
+                if trigger.get_keyval() != Gdk.KEY_p or trigger.get_modifiers() != modifiers:
+                    continue
+                action = shortcut.get_action()
+                assert isinstance(action, Gtk.ShortcutAction)
+                self.action_activated = action.activate(
+                    Gtk.ShortcutActionFlags.EXCLUSIVE,
+                    window,
+                    None,
+                )
+                palette_found = True
+                break
+            if not palette_found:
+                self.input_error = AssertionError("registered Ctrl+Shift+P palette shortcut was not found")
+        except (AssertionError, GLib.Error, RuntimeError, TypeError, ValueError) as error:
+            self.input_error = error
+        self._finish_probe()
+        return GLib.SOURCE_REMOVE
+
+    def _watchdog(self) -> bool:
+        self._watchdog_id = None
+        self.input_error = TimeoutError("shortcut-action GUI test exceeded its 8 second watchdog")
+        self._close_window()
+        self.quit()
+        return GLib.SOURCE_REMOVE
+
+    def _finish_probe(self) -> None:
+        self._close_window()
+        _ = spawn_task(self._close_client())
+
+    async def _close_client(self) -> None:
+        try:
+            await self.client.close()
+        except Exception as error:  # noqa: BLE001 -- surface close failures rather than leave app active
+            self.input_error = self.input_error or error
+        finally:
+            if self._watchdog_id is not None:
+                GLib.source_remove(self._watchdog_id)
+                self._watchdog_id = None
+            self.quit()
+
+    def _close_window(self) -> None:
+        if self.window is None:
+            return
+        try:
+            self.window.set_visible(False)
+        except (GLib.Error, OSError, RuntimeError, TypeError):
+            self.input_error = self.input_error or RuntimeError("failed to hide shortcut-action test window")
+        try:
+            self.window.destroy()
+        except (GLib.Error, OSError, RuntimeError, TypeError):
+            self.input_error = self.input_error or RuntimeError("failed to destroy shortcut-action test window")
+
+
 def _controller_triggers(controller: Gtk.ShortcutController) -> set[tuple[int, int]]:
     triggers: set[tuple[int, int]] = set()
     for index in range(controller.get_n_items()):
@@ -434,6 +523,21 @@ def test_b1_keys_settings_override_updates_controller(
     assert palette.accelerators == ("<Control><Alt>p",)
     assert (Gdk.KEY_p, int(Gdk.ModifierType.CONTROL_MASK | Gdk.ModifierType.ALT_MASK)) in app.controller_triggers
     assert (Gdk.KEY_p, int(Gdk.ModifierType.CONTROL_MASK | Gdk.ModifierType.SHIFT_MASK)) not in app.controller_triggers
+
+
+def test_b1_keys_palette_shortcut_action_dispatches(running_app: str) -> None:
+    """Activating the registered palette ShortcutAction calls the app view model action."""
+    app = _ShortcutActionProbeApp(CoreClient(running_app))
+    try:
+        assert run_app(lambda: app, ["aconsole-test-b1-palette-action"]) == 0
+    finally:
+        app._close_window()
+        if app._watchdog_id is not None:
+            GLib.source_remove(app._watchdog_id)
+            app._watchdog_id = None
+    assert app.input_error is None, app.input_error
+    assert app.action_activated
+    assert app.actions == ["palette"]
 
 
 def _walk(widget: Gtk.Widget) -> list[Gtk.Widget]:
