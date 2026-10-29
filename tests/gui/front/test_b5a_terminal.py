@@ -341,11 +341,14 @@ def test_b5a_terminal_late_success_after_cancel_still_reports_lifecycle(
 
 
 class _ProbeViewModel:
-    def __init__(self, events: list[tuple[str, int]]) -> None:
+    def __init__(
+        self, events: list[tuple[str, int]], spec: TerminalLaunchSpec | None = None
+    ) -> None:
         self.events = events
+        self.spec = spec
 
     async def launch_spec(self) -> TerminalLaunchSpec:
-        return TerminalLaunchSpec(
+        return self.spec or TerminalLaunchSpec(
             argv=("/usr/bin/false",),
             env={},
             cwd="/workspace/terminal-cwd",
@@ -429,6 +432,7 @@ def _test_vte_spawn_with_app(
     vte: object,
     run_app: Callable[..., int],
     spawn_task: Callable[..., asyncio.Task[None]],
+    spec: TerminalLaunchSpec | None = None,
 ) -> tuple[list[tuple[str, int]], list[int], dict[str, object]]:
     gtk.init()  # pyright: ignore[reportAttributeAccessIssue] -- Gtk is loaded after the required GI version is selected.
     events: list[tuple[str, int]] = []
@@ -446,7 +450,7 @@ def _test_vte_spawn_with_app(
         _ = terminal.connect("child-exited", lambda _terminal, status: observed_exit.append(status))
         from aconsole.ui.views.terminal.session import TerminalSession
 
-        session = TerminalSession(terminal, _ProbeViewModel(events))  # pyright: ignore[reportArgumentType] -- The probe implements TerminalViewModel's async surface.
+        session = TerminalSession(terminal, _ProbeViewModel(events, spec))  # pyright: ignore[reportArgumentType] -- The probe implements TerminalViewModel's async surface.
         probe_loops.append(asyncio.get_running_loop())
         application.hold()  # pyright: ignore[reportAttributeAccessIssue] -- Hold the app open until the async probe settles.
         probe_tasks.append(spawn_task(_run_vte_probe(application, session, outcome)))
@@ -496,4 +500,42 @@ def test_b5a_real_vte_spawn_async_reports_exit_and_raw_wait_status() -> None:
     raw_status = observed_exit[0]
     assert os.WIFEXITED(raw_status)
     assert os.WEXITSTATUS(raw_status) == 1
+    assert events == [("started", outcome["pid"]), ("exited", raw_status)]
+
+
+def test_b5a_real_vte_does_not_inherit_parent_environment(monkeypatch: pytest.MonkeyPatch) -> None:
+    """A short child verifies the actual environment VTE gives it, without a window."""
+    import os
+
+    import gi
+
+    gi.require_version("Gtk", "4.0")
+    gi.require_version("Vte", "3.91")
+    from gi.repository import Gio, Gtk, Vte
+
+    from aconsole.ui.bootstrap import run_app, spawn_task
+
+    parent_marker = "ACONSOLE_B5A_PARENT_ENV_SENTINEL"
+    monkeypatch.setenv(parent_marker, "must-not-reach-child")
+    # A child that exits immediately with status 0 only when the parent-only
+    # sentinel is absent. No terminal window is presented and no input is sent.
+    child_code = f"import os,sys; sys.exit(0 if {parent_marker!r} not in os.environ else 42)"
+    spec = TerminalLaunchSpec(
+        argv=("/usr/bin/python3", "-c", child_code),
+        env={},
+        cwd="/",
+        scrollback_lines=0,
+        title="vte-env-probe",
+    )
+    events, observed_exit, outcome = _test_vte_spawn_with_app(
+        Gtk, Gio, Vte, run_app, spawn_task, spec
+    )
+    assert "error" not in outcome, repr(outcome.get("error"))
+    assert "cleanup_error" not in outcome, repr(outcome.get("cleanup_error"))
+    assert outcome.get("timed_out") is not True
+    assert outcome.get("lifecycle_errors") == (None, None)
+    assert len(observed_exit) == 1
+    raw_status = observed_exit[0]
+    assert os.WIFEXITED(raw_status)
+    assert os.WEXITSTATUS(raw_status) == 0, "VTE child inherited the parent-only sentinel"
     assert events == [("started", outcome["pid"]), ("exited", raw_status)]
