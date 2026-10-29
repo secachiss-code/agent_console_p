@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hmac
+import re
 from collections.abc import Callable
 from dataclasses import dataclass, replace
 from datetime import datetime
@@ -63,18 +64,35 @@ _ENV_PORT: Final = "ACONSOLE_PORT"
 _SIDECAR: Final = ("-I", "-m", "aconsole.sidecar", "--")
 # APP_API §8: these statuses need the user.
 _ATTENTION: Final = frozenset({TabStatus.WAITING_APPROVAL, TabStatus.WAITING_INPUT, TabStatus.ERROR})
+_CODEX_ID: Final = re.compile(r"^[A-Za-z0-9_-]{1,128}$")
 
 
 def _launch_command(agent: AgentKind, session: str | None, *, fork: bool) -> tuple[str, ...]:
-    """Claude resume and fork flags. Other agents stay a single argv word."""
-    if agent is not AgentKind.CLAUDE or (session is None and not fork):
-        return (agent.value,)
-    command = [agent.value]
+    """Claude flags, or Codex ``resume`` / ``fork``. Other agents stay a single argv word."""
+    if agent is AgentKind.CLAUDE:
+        return _claude_command(session, fork=fork)
+    if agent is AgentKind.CODEX:
+        return _codex_command(session, fork=fork)
+    return (agent.value,)
+
+
+def _claude_command(session: str | None, *, fork: bool) -> tuple[str, ...]:
+    if session is None and not fork:
+        return ("claude",)
+    command = ["claude"]
     if session is not None:
         command.extend(("--resume", session))
     if fork:
         command.append("--fork-session")
     return tuple(command)
+
+
+def _codex_command(session: str | None, *, fork: bool) -> tuple[str, ...]:
+    if session is None or _CODEX_ID.fullmatch(session) is None:
+        return ("codex",)
+    if fork:
+        return ("codex", "fork", session)
+    return ("codex", "resume", session)
 
 
 def _resting(status: TabStatus) -> TabStatus:
