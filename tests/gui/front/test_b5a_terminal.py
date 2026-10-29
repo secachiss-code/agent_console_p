@@ -159,8 +159,10 @@ def test_b5a_terminal_session_spawn(monkeypatch: pytest.MonkeyPatch) -> None:
         args = terminal.spawn_args
         assert args is not None
         assert args[1] == vm.spec.cwd
-        assert args[2] == vm.spec.argv
-        assert args[3] == tuple(
+        assert isinstance(args[2], (list, tuple))
+        assert tuple(args[2]) == vm.spec.argv
+        assert isinstance(args[3], (list, tuple))
+        assert tuple(args[3]) == tuple(
             f"{key}={value}" for key, value in vm.spec.env.items()
         )
         assert _spawn_flags(args) & int(vte.SPAWN_NO_PARENT_ENVV)  # pyright: ignore[reportAttributeAccessIssue] -- VTE constants come from the dynamically imported adapter module.
