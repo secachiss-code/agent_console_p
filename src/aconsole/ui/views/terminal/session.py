@@ -38,10 +38,18 @@ class TerminalSession:
             self._finished = loop.create_future()
             self._phase = "spec"
             self._worker = spawn_task(self._run())
+            self._worker.add_done_callback(self._worker_done)
         if self._pid is None:
             message = "terminal startup was not initialized"
             raise RuntimeError(message)
         return await asyncio.shield(self._pid)
+
+    def _worker_done(self, worker: asyncio.Task[None]) -> None:
+        if worker.cancelled():
+            self._phase = "done"
+            for result in (self._pid, self._started, self._finished):
+                if result is not None and not result.done():
+                    _ = result.cancel()
 
     async def started_report(self) -> Exception | None:
         if self._started is None:
