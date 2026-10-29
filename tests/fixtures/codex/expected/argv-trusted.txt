@@ -1,0 +1,29 @@
+codex
+-c
+mcp_servers.aconsole.url="http://127.0.0.1:8765/mcp"
+-c
+mcp_servers.aconsole.bearer_token_env_var=ACONSOLE_TAB_TOKEN
+-c
+mcp_servers.aconsole.tool_timeout_sec=60
+-c
+notify=["__AGENT_HOME__/.aconsole/bin/aconsole-notify","codex"]
+-c
+hooks.PermissionRequest=[{hooks=[{type="command",command="__AGENT_HOME__/.aconsole/bin/aconsole-hook codex",timeout=600}]}]
+-c
+hooks.SessionStart=[{hooks=[{type="command",command="__AGENT_HOME__/.aconsole/bin/aconsole-hook codex",timeout=5}]}]
+-c
+hooks.UserPromptSubmit=[{hooks=[{type="command",command="__AGENT_HOME__/.aconsole/bin/aconsole-hook codex",timeout=5}]}]
+-c
+hooks.PreToolUse=[{hooks=[{type="command",command="__AGENT_HOME__/.aconsole/bin/aconsole-hook codex",timeout=5}]}]
+-c
+hooks.PostToolUse=[{hooks=[{type="command",command="__AGENT_HOME__/.aconsole/bin/aconsole-hook codex",timeout=5}]}]
+-c
+hooks.Stop=[{hooks=[{type="command",command="__AGENT_HOME__/.aconsole/bin/aconsole-hook codex",timeout=5}]}]
+-c
+hooks.SessionEnd=[{hooks=[{type="command",command="__AGENT_HOME__/.aconsole/bin/aconsole-hook codex",timeout=5}]}]
+-c
+hooks.state={ "aconsole:PermissionRequest" = { trusted_hash = "sha256:8ce46d8315aef06b5c59beec595b5a7281710ad21c869735ca41c4e1861d7361" }, "aconsole:SessionStart" = { trusted_hash = "sha256:8ce46d8315aef06b5c59beec595b5a7281710ad21c869735ca41c4e1861d7361" }, "aconsole:UserPromptSubmit" = { trusted_hash = "sha256:8ce46d8315aef06b5c59beec595b5a7281710ad21c869735ca41c4e1861d7361" }, "aconsole:PreToolUse" = { trusted_hash = "sha256:8ce46d8315aef06b5c59beec595b5a7281710ad21c869735ca41c4e1861d7361" }, "aconsole:PostToolUse" = { trusted_hash = "sha256:8ce46d8315aef06b5c59beec595b5a7281710ad21c869735ca41c4e1861d7361" }, "aconsole:Stop" = { trusted_hash = "sha256:8ce46d8315aef06b5c59beec595b5a7281710ad21c869735ca41c4e1861d7361" }, "aconsole:SessionEnd" = { trusted_hash = "sha256:8ce46d8315aef06b5c59beec595b5a7281710ad21c869735ca41c4e1861d7361" } }
+-c
+tui.notification_method="bel"
+-c
+tui.notification_condition="always"

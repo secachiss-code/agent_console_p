@@ -1,0 +1,11 @@
+#!/bin/sh
+if [ -n "$2" ]; then
+  printf '%s' "$2" | curl -sS -m 2 -H "Authorization: Bearer $ACONSOLE_TAB_TOKEN" \
+    --data-binary @- "http://127.0.0.1:$ACONSOLE_PORT/v1/tabs/$ACONSOLE_TAB/codex/notify" \
+    >/dev/null 2>&1 || true
+else
+  curl -sS -m 2 -H "Authorization: Bearer $ACONSOLE_TAB_TOKEN" \
+    --data-binary @- "http://127.0.0.1:$ACONSOLE_PORT/v1/tabs/$ACONSOLE_TAB/codex/notify" \
+    >/dev/null 2>&1 || true
+fi
+exit 0

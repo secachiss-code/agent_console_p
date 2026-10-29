@@ -1,0 +1,2 @@
+{"timestamp":"2026-10-24T12:00:00Z","type":"session_meta","payload":{"id":"01a16dd1-b420-7432-938c-eb76df822f72","cwd":"/tmp/aconsole-a41"}}
+{"timestamp":"2026-10-24T12:00:01Z","type":"event_msg","payload":{"type":"token_count","rate_limits":{"primary":{"used_percent":25,"window_minutes":300,"resets_at":1700000000},"secondary":{"used_percent":3,"window_minutes":10080,"resets_at":1700001000}}}}

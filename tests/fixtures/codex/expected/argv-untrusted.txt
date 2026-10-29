@@ -1,0 +1,13 @@
+codex
+-c
+mcp_servers.aconsole.url="http://127.0.0.1:8765/mcp"
+-c
+mcp_servers.aconsole.bearer_token_env_var=ACONSOLE_TAB_TOKEN
+-c
+mcp_servers.aconsole.tool_timeout_sec=60
+-c
+notify=["__AGENT_HOME__/.aconsole/bin/aconsole-notify","codex"]
+-c
+tui.notification_method="bel"
+-c
+tui.notification_condition="always"

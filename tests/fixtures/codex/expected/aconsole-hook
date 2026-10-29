@@ -1,0 +1,5 @@
+#!/bin/sh
+curl -sS --max-time 590 -H "Authorization: Bearer $ACONSOLE_TAB_TOKEN" \
+  --data-binary @- "http://127.0.0.1:$ACONSOLE_PORT/v1/tabs/$ACONSOLE_TAB/codex/hook" \
+  2>/dev/null || true
+exit 0
