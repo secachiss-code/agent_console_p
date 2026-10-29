@@ -39,6 +39,8 @@ from aconsole.core.infrastructure.ipc.framing import (
 from aconsole.core.infrastructure.ipc.ring import EventRing
 from aconsole.core.infrastructure.ipc.server import allow_peer, peer_uid
 from aconsole.core.infrastructure.ipc.session import Connection
+from aconsole.core.infrastructure.mcp.server import TabTokens, beside_ingest, build_server, http_app
+from aconsole.core.infrastructure.mcp.tools import PlanBoard, TabContext
 from aconsole.core.infrastructure.persistence.cleanup import sweep
 from aconsole.core.infrastructure.persistence.engine import write_engine
 from aconsole.core.infrastructure.persistence.repositories.tabs import TabDatabase
@@ -49,6 +51,7 @@ from aconsole.core.infrastructure.tabs import HostTabs
 if TYPE_CHECKING:
     from collections.abc import Callable
 
+    from mcp.server.mcpserver import MCPServer
     from sqlalchemy.engine import Engine
     from sqlalchemy.orm import Session
 
@@ -235,6 +238,12 @@ class Daemon:
         self.serve_ingest: bool = False
         self.ingest_port: int | None = None
         self._tokens: TokenBook = TokenBook()
+        self._plans: PlanBoard = PlanBoard()
+        self._mcp_tokens: TabTokens = TabTokens()
+        self._mcp: MCPServer = build_server(
+            self._plans,
+            TabContext(tab_id="local", project_id="local", worktree=None, agent="claude"),
+        )
         self._ingest_queue: IngestQueue = IngestQueue()
         self._ingest_ready: asyncio.Event | None = None
         self._ingest_tasks: list[asyncio.Task[None]] = []
@@ -317,9 +326,22 @@ class Daemon:
     def _publish(self, event: UiEvent, live: int, token: str | None) -> None:
         """Number the event once, send it to every subscribed connection, and keep tokens and liveness current."""
         if isinstance(event, TabAdded) and token is not None:
-            self._tokens.register(str(event.tab.id), token)
+            tab_id = str(event.tab.id)
+            self._tokens.register(tab_id, token)
+            worktree = event.tab.worktree_path
+            self._mcp_tokens.register(
+                tab_id,
+                token,
+                TabContext(
+                    tab_id=tab_id,
+                    project_id=str(event.tab.project_id),
+                    worktree=Path(worktree) if worktree else None,
+                    agent=str(event.tab.agent),
+                ),
+            )
         if isinstance(event, TabRemoved):
             self._tokens.drop(str(event.tab_id))
+            self._mcp_tokens.drop(str(event.tab_id))
         item = self._ring.append(event, datetime.now(UTC))
         for connection, writer in tuple(self._connections.items()):
             self._deliver(connection, writer, item)
@@ -352,7 +374,11 @@ class Daemon:
             del item
             ready.set()
 
-        app = IngestApp(self._tokens, self._ingest_queue, observer=wake)
+        app = beside_ingest(
+            IngestApp(self._tokens, self._ingest_queue, observer=wake),
+            http_app(self._mcp),
+            self._mcp_tokens,
+        )
         listener = sockets.socket(sockets.AF_INET, sockets.SOCK_STREAM)
         listener.setsockopt(sockets.SOL_SOCKET, sockets.SO_REUSEADDR, 1)
         listener.bind(("127.0.0.1", 0))

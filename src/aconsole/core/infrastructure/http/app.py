@@ -163,10 +163,10 @@ class IngestApp:
             _LOG.exception("ingest handler failed for %s", item.tab_id)
 
 
-def serve_config(app: IngestApp, *, port: int, host: str = _HOST) -> uvicorn.Config:
+def serve_config(app: object, *, port: int, host: str = _HOST) -> uvicorn.Config:
     """Localhost uvicorn config. The caller chooses the port."""
     return uvicorn.Config(
-        app,
+        app,  # pyright: ignore[reportArgumentType] -- uvicorn accepts the combined ASGI callable beside Starlette
         host=host,
         port=port,
         access_log=False,
