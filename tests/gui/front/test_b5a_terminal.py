@@ -539,3 +539,136 @@ def test_b5a_real_vte_does_not_inherit_parent_environment(monkeypatch: pytest.Mo
     assert os.WIFEXITED(raw_status)
     assert os.WEXITSTATUS(raw_status) == 0, "VTE child inherited the parent-only sentinel"
     assert events == [("started", outcome["pid"]), ("exited", raw_status)]
+
+
+_LIGHT_COLORS = (
+    "#241f31", "#c01c28", "#26743e", "#8a5a00", "#1a5fb4", "#813d9c", "#0b6e7a", "#5e5c64",
+    "#5e5c64", "#a51d2d", "#1f6b38", "#704700", "#154e96", "#613583", "#095a64", "#3d3846",
+)
+_DARK_COLORS = (
+    "#3d3846", "#f66151", "#57e389", "#f6d32d", "#62a0ea", "#dc8add", "#5bc8d2", "#deddda",
+    "#9a9996", "#ff8a7a", "#8ff0a4", "#f9f06b", "#99c1f1", "#e8b4ea", "#93e1e8", "#ffffff",
+)
+
+
+class _FakeStyleManager:
+    def __init__(self, dark: bool) -> None:  # noqa: FBT001 -- Mirrors Adw.StyleManager's boolean dark state.
+        self._dark = dark
+        self.handlers: dict[int, tuple[str, Callable[..., None]]] = {}
+        self.next_handler = 1
+        self.disconnect_calls: list[int] = []
+
+    def get_dark(self) -> bool:
+        return self._dark
+
+    def connect(self, signal: str, callback: Callable[..., None]) -> int:
+        handler_id = self.next_handler
+        self.next_handler += 1
+        self.handlers[handler_id] = (signal, callback)
+        return handler_id
+
+    def disconnect(self, handler_id: int) -> None:
+        self.disconnect_calls.append(handler_id)
+        self.handlers.pop(handler_id, None)
+
+    def set_dark(self, dark: bool) -> None:  # noqa: FBT001 -- Mirrors Adw.StyleManager's boolean dark state.
+        self._dark = dark
+        for signal, callback in tuple(self.handlers.values()):
+            if signal == "notify::dark":
+                callback(self, None)
+
+
+class _PaletteTerminal:
+    def __init__(self) -> None:
+        self.color_calls: list[tuple[object, object, object]] = []
+
+    def set_colors(self, foreground: object, background: object, palette: object) -> None:
+        self.color_calls.append((foreground, background, palette))
+
+
+def _palette_binding_api() -> tuple[object, object]:
+    import gi
+
+    gi.require_version("Adw", "1")
+    gi.require_version("Vte", "3.91")
+    from gi.repository import Gdk
+
+    module = importlib.import_module("aconsole.ui.views.terminal.palette")
+    return module, Gdk
+
+
+def _rgba_components(color: object) -> tuple[float, float, float, float]:
+    return (color.red, color.green, color.blue, color.alpha)  # pyright: ignore[reportAttributeAccessIssue] -- A parsed Gdk.RGBA carries these four channels.
+
+
+def _parse_rgba(gdk: object, value: str) -> object:
+    color = gdk.RGBA()  # pyright: ignore[reportAttributeAccessIssue] -- Use the real Gdk parser in this fake-terminal test.
+    assert color.parse(value)  # pyright: ignore[reportAttributeAccessIssue] -- RGBA.parse returns whether the design value parsed.
+    return color
+
+
+def _assert_applied_colors(
+    gdk: object,
+    terminal: _PaletteTerminal,
+    *,
+    foreground: str,
+    background: str,
+    palette: tuple[str, ...],
+) -> None:
+    assert len(terminal.color_calls) >= 1
+    actual_foreground, actual_background, actual_palette = terminal.color_calls[-1]
+    assert isinstance(actual_palette, (list, tuple))
+    assert len(actual_palette) == 16
+    expected = (foreground, background, *palette)
+    actual = (actual_foreground, actual_background, *actual_palette)
+    assert len(actual) == len(expected)
+    for actual_color, expected_color in zip(actual, expected, strict=True):
+        assert _rgba_components(actual_color) == pytest.approx(
+            _rgba_components(_parse_rgba(gdk, expected_color))
+        )
+
+
+@pytest.mark.parametrize(
+    ("theme", "foreground", "background", "palette"),
+    [
+        ("light", "#241f31", "#ffffff", _LIGHT_COLORS),
+        ("dark", "#deddda", "#1e1e1e", _DARK_COLORS),
+    ],
+)
+def test_b5a_terminal_palette_binding_initial_theme_uses_exact_design_colors(
+    theme: str, foreground: str, background: str, palette: tuple[str, ...]
+) -> None:
+    module, gdk = _palette_binding_api()
+    manager = _FakeStyleManager(theme == "dark")
+    terminal = _PaletteTerminal()
+
+    binding = module.TerminalPaletteBinding(terminal, manager)  # pyright: ignore[reportAttributeAccessIssue] -- The injected fakes implement the manager and VTE surfaces used by the binding.
+
+    assert len(terminal.color_calls) == 1
+    _assert_applied_colors(
+        gdk, terminal, foreground=foreground, background=background, palette=palette
+    )
+    assert [signal for signal, _callback in manager.handlers.values()] == ["notify::dark"]
+    binding.close()  # pyright: ignore[reportAttributeAccessIssue] -- Close the concrete binding after checking its initial application.
+
+
+def test_b5a_terminal_palette_binding_updates_on_theme() -> None:
+    module, gdk = _palette_binding_api()
+    manager = _FakeStyleManager(dark=False)
+    terminal = _PaletteTerminal()
+    binding = module.TerminalPaletteBinding(terminal, manager)  # pyright: ignore[reportAttributeAccessIssue] -- The injected fakes implement the manager and VTE surfaces used by the binding.
+
+    assert len(terminal.color_calls) == 1
+    manager.set_dark(True)
+    assert len(terminal.color_calls) == 2
+    _assert_applied_colors(
+        gdk, terminal, foreground="#deddda", background="#1e1e1e", palette=_DARK_COLORS
+    )
+
+    binding.close()  # pyright: ignore[reportAttributeAccessIssue] -- Close the concrete binding after its theme update.
+    binding.close()  # pyright: ignore[reportAttributeAccessIssue] -- A second close must remain harmless.
+    assert len(manager.disconnect_calls) == 1
+    assert manager.handlers == {}
+    manager.set_dark(False)
+    assert len(terminal.color_calls) == 2
+
