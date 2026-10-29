@@ -284,6 +284,38 @@ def test_b5a_terminal_cancel_before_spawn_cancels_spec_fetch(
     asyncio.run(exercise())
 
 
+def test_b5a_terminal_cancel_before_worker_starts_settles_all_waiters(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    async def exercise() -> None:
+        module, _ = _adapter(monkeypatch)
+        terminal = _FakeTerminal()
+        vm = _FakeViewModel()
+        session = module.TerminalSession(terminal, vm)  # pyright: ignore[reportAttributeAccessIssue] -- Adapter module is imported dynamically for this GUI-free test.
+        cancel_results: list[bool] = []
+
+        first = asyncio.create_task(session.start())
+        second = asyncio.create_task(session.start())
+        asyncio.get_running_loop().call_soon(
+            lambda: cancel_results.append(session.cancel_pending_spawn())
+        )
+
+        with pytest.raises(asyncio.CancelledError):
+            await _bounded(first)
+        with pytest.raises(asyncio.CancelledError):
+            await _bounded(second)
+        with pytest.raises(asyncio.CancelledError):
+            await _bounded(session.started_report())
+        with pytest.raises(asyncio.CancelledError):
+            await _bounded(session.wait_finished())
+
+        assert cancel_results == [True]
+        assert not vm.spec_entered.is_set()
+        assert session.cancel_pending_spawn() is False
+
+    asyncio.run(exercise())
+
+
 def test_b5a_terminal_late_success_after_cancel_still_reports_lifecycle(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
