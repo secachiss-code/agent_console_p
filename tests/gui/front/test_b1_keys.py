@@ -12,6 +12,7 @@ from textwrap import dedent
 from typing import TYPE_CHECKING
 
 import gi
+import pytest
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
@@ -29,7 +30,6 @@ if TYPE_CHECKING:
     from pathlib import Path
 
     import msgspec
-    import pytest
 
     from aconsole.ui.viewmodels.logic.keymap import BindingSpec
 
@@ -704,6 +704,8 @@ def _walk(widget: Gtk.Widget) -> list[Gtk.Widget]:
 
 def test_b1_keys_terminal_passthrough(running_app: str, tmp_path: Path) -> None:
     """Ctrl+Shift+P opens the palette; Ctrl+K/T/W/V and Shift+Tab reach focused VTE."""
+    pytest.fail("B1 keyboard test is blocked until hostrun provides an isolated display")
+
     ready_path = tmp_path / "pty-ready"
     result_path = tmp_path / "pty-result"
     app = _KeyboardApp(CoreClient(running_app), ready_path, result_path)
