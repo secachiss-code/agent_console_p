@@ -22,12 +22,13 @@ from aconsole.core.infrastructure.agents.codex.limits import CodexLimits
 from aconsole.core.infrastructure.agents.codex.sessions import list_sessions, readonly_engine, resume_argv
 
 _FIXTURES = Path(__file__).resolve().parents[1] / "fixtures" / "codex" / "0.164.0"
-_SESSION = "01a16dd1-b420-7432-938c-eb76df822f72"
+_SESSION = "01a18e40-592d-72a0-b435-d30b29521a9a"
 _CWD = "/tmp/aconsole-a41"  # noqa: S108 -- cwd stored in the fixture row, not a file this test creates
 _HIDDEN = "BODY-MUST-NOT-LEAK"
 _WHEN = datetime(2026, 10, 29, tzinfo=UTC)
 _NOW = datetime(2023, 1, 1, tzinfo=UTC)
-_RESET_5H = datetime.fromtimestamp(1700000000, tz=UTC)
+_RESET_5H = datetime.fromtimestamp(1793405940, tz=UTC)
+_RESET_7D = datetime.fromtimestamp(1793784697, tz=UTC)
 _RESUME = "sess-1"
 
 
@@ -111,8 +112,8 @@ def test_codex_sessions_lists_the_fixture_without_the_rollout_body(tmp_path: Pat
     assert [item.session_id for item in listed.sessions] == [_SESSION]
     info = listed.sessions[0]
     when = datetime.fromtimestamp(1_700_000_000, tz=UTC)
-    assert info.title == "probe"
-    assert info.preview == "probe"
+    assert info.title == "Probe thread"
+    assert info.preview == "Probe thread"
     assert info.cwd == _CWD
     assert info.branch == "main"
     assert info.started_at == when
@@ -180,17 +181,20 @@ def test_codex_sessions_rate_limits_update_quota() -> None:
     payload = msgspec.json.decode(msgspec.json.encode(event), type=dict[str, msgspec.Raw])
     assert msgspec.json.decode(payload["type"], type=str) == "quota_updated"
     account = event.account
-    assert account.id == "codex:" + hashlib.sha256(b"codex").hexdigest()[:12]
+    assert account.id == "codex:" + hashlib.sha256(b"redacted").hexdigest()[:12]
     assert account.agent == "codex"
-    assert account.plan_label == ""
+    assert account.plan_label == "Plus"
     five_hour, seven_day = account.quota
     assert five_hour.key == "5h"
-    assert five_hour.used_pct == 25.0
+    assert five_hour.used_pct == 0.0
+    assert isinstance(five_hour.used_pct, float)
     assert five_hour.resets_at == _RESET_5H
     assert five_hour.level is QuotaLevel.OK
     assert five_hour.observed_at == _NOW
     assert seven_day.key == "7d"
-    assert seven_day.used_pct == 3.0
+    assert seven_day.used_pct == 49.0
+    assert isinstance(seven_day.used_pct, float)
+    assert seven_day.resets_at == _RESET_7D
     assert limits.on_rate_limits("tab-1", b"{") is None
 
 
