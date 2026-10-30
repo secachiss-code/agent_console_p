@@ -72,6 +72,10 @@ class Step:
     env: tuple[tuple[str, str], ...] = ()
 
 
+# devtools is stopped after a host reboot; `podman start` on a running container is a no-op.
+_START_DEVTOOLS = Step(argv=("podman", "start", _DEVTOOLS))
+
+
 @dataclass(frozen=True, kw_only=True)
 class Plan:
     """What the server is allowed to run for one request."""
@@ -157,9 +161,9 @@ def build_plan(
     if action == "gate":
         return Plan(mode="exec", steps=(_gate(args, repo),), timeout_s=timeout_s, repo=repo, side=side)
     if action == "conformance":
-        return Plan(mode="exec", steps=(_conformance(args, repo),), timeout_s=timeout_s)
+        return Plan(mode="exec", steps=(_START_DEVTOOLS, _conformance(args, repo)), timeout_s=timeout_s)
     if action == "devtools":
-        return Plan(mode="exec", steps=(_devtools(args, repo),), timeout_s=timeout_s)
+        return Plan(mode="exec", steps=(_START_DEVTOOLS, _devtools(args, repo)), timeout_s=timeout_s)
     raise ActionError(400, "unknown action")
 
 

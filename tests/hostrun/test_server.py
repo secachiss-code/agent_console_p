@@ -482,7 +482,8 @@ def test_conformance_server_argv_is_exact(tmp_path: Path) -> None:
     repo = str(tmp_path)
     plan = actions.build_plan("conformance", ["server", MCP_URL], tmp_path, repo, 30)
     assert plan.mode == "exec"
-    assert plan.steps[0].argv == ("podman", "exec", "--workdir", repo, "devtools", *CONFORMANCE_ARGV_TAIL)
+    assert plan.steps[0].argv == ("podman", "start", "devtools")
+    assert plan.steps[1].argv == ("podman", "exec", "--workdir", repo, "devtools", *CONFORMANCE_ARGV_TAIL)
 
 
 @pytest.mark.parametrize(
@@ -541,13 +542,14 @@ DEVTOOLS_CASES = [
 def test_devtools_extractor_argv(tmp_path: Path, extractor: str, path: str, tail: tuple[str, ...]) -> None:
     repo = str(tmp_path)
     plan = actions.build_plan("devtools", [extractor, path], tmp_path, repo, 30)
-    assert plan.steps[0].argv == ("podman", "exec", "--workdir", repo, "devtools", *tail)
+    assert plan.steps[0].argv == ("podman", "start", "devtools")
+    assert plan.steps[1].argv == ("podman", "exec", "--workdir", repo, "devtools", *tail)
 
 
 def test_devtools_rust_metadata_appends_cargo_toml_after_a_trailing_slash(tmp_path: Path) -> None:
     repo = str(tmp_path)
     plan = actions.build_plan("devtools", ["rust-metadata", "crates/core/"], tmp_path, repo, 30)
-    assert plan.steps[0].argv[-1] == "crates/core/Cargo.toml"
+    assert plan.steps[-1].argv[-1] == "crates/core/Cargo.toml"
 
 
 @pytest.mark.parametrize(
