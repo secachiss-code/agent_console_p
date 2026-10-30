@@ -13,6 +13,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Final
 
+import msgspec
+
 from aconsole.core.infrastructure.agents.codex.trust import HookTrustCache
 
 _DIR_MODE: Final = 0o700
@@ -21,18 +23,21 @@ _SCRIPT_MODE: Final = 0o700
 _PORT_MAX: Final = 65535
 _PERMISSION_TIMEOUT: Final = 600
 _HOOK_TIMEOUT: Final = 5
+_SESSION_END_TIMEOUT: Final = 3
+_STATE_PREFIX: Final = "/<session-flags>/config.toml"
 _ENV_PORT: Final = "ACONSOLE_PORT"
 _ENV_TAB: Final = "ACONSOLE_TAB"
 _ENV_AUTH: Final = "ACONSOLE_TAB_TOKEN"
 _TAB_ID: Final = re.compile(r"^[A-Za-z0-9_-]{1,64}$")
-_EVENTS: Final = (
-    "PermissionRequest",
-    "SessionStart",
-    "UserPromptSubmit",
-    "PreToolUse",
-    "PostToolUse",
-    "Stop",
-    "SessionEnd",
+# PascalCase `-c` name, snake_case key segment, timeout seconds. SessionEnd is 3: Codex clamps a larger value.
+_HOOKS: Final = (
+    ("PermissionRequest", "permission_request", _PERMISSION_TIMEOUT),
+    ("SessionStart", "session_start", _HOOK_TIMEOUT),
+    ("UserPromptSubmit", "user_prompt_submit", _HOOK_TIMEOUT),
+    ("PreToolUse", "pre_tool_use", _HOOK_TIMEOUT),
+    ("PostToolUse", "post_tool_use", _HOOK_TIMEOUT),
+    ("Stop", "stop", _HOOK_TIMEOUT),
+    ("SessionEnd", "session_end", _SESSION_END_TIMEOUT),
 )
 _ABS: Final = "agent home must be absolute"
 _HOME: Final = "agent home must be a directory"
@@ -110,9 +115,51 @@ class CodexLauncher:
         )
 
 
+class ThreadStartParams(msgspec.Struct, frozen=True, omit_defaults=True, rename="camel"):
+    """``thread/start`` params. ``sessionStartSource`` is present only for ``/clear``."""
+
+    cwd: str
+    session_start_source: str | None = None
+
+
+class ThreadStartRequest(msgspec.Struct, frozen=True, kw_only=True):
+    """JSON-RPC ``thread/start``. The response does not echo ``sessionStartSource``."""
+
+    method: str
+    id: int
+    params: ThreadStartParams
+
+
+def thread_start_request(*, cwd: str, request_id: int, clear: bool) -> ThreadStartRequest:
+    """Build ``/new`` or ``/clear``. They differ only by ``params.sessionStartSource``."""
+    source = "clear" if clear else None
+    return ThreadStartRequest(
+        method="thread/start",
+        id=request_id,
+        params=ThreadStartParams(cwd=cwd, session_start_source=source),
+    )
+
+
+def _state_key(snake: str) -> str:
+    return f"{_STATE_PREFIX}:{snake}:0:0"
+
+
+def _trusted_hooks(trust: HookTrustCache) -> tuple[tuple[str, str, str, int], ...]:
+    """One row per hook whose hash is in the cache. A hash already used by another hook is skipped."""
+    chosen: list[tuple[str, str, str, int]] = []
+    used: set[str] = set()
+    for name, snake, timeout in _HOOKS:
+        digest = trust.hash_for(_state_key(snake))
+        if digest is None or digest in used:
+            continue
+        used.add(digest)
+        chosen.append((name, _state_key(snake), digest, timeout))
+    return tuple(chosen)
+
+
 def _argv(port: int, hook: Path, notify: Path, trust: HookTrustCache) -> tuple[str, ...]:
     command = f"{hook} codex"
-    trusted = tuple((name, digest) for name in _EVENTS if (digest := trust.hash_for(f"aconsole:{name}")) is not None)
+    trusted = _trusted_hooks(trust)
     args = [
         "codex",
         "-c",
@@ -124,11 +171,10 @@ def _argv(port: int, hook: Path, notify: Path, trust: HookTrustCache) -> tuple[s
         "-c",
         f'notify=["{notify}","codex"]',
     ]
-    for name, _digest in trusted:
-        timeout = _PERMISSION_TIMEOUT if name == "PermissionRequest" else _HOOK_TIMEOUT
+    for name, _key, _digest, timeout in trusted:
         args.extend(("-c", f'hooks.{name}=[{{hooks=[{{type="command",command="{command}",timeout={timeout}}}]}}]'))
     if trusted:
-        body = ", ".join(f'"aconsole:{name}" = {{ trusted_hash = "{digest}" }}' for name, digest in trusted)
+        body = ", ".join(f'"{key}" = {{ trusted_hash = "{digest}" }}' for _name, key, digest, _timeout in trusted)
         args.extend(("-c", f"hooks.state={{ {body} }}"))
     args.extend(("-c", 'tui.notification_method="bel"', "-c", 'tui.notification_condition="always"'))
     return tuple(args)

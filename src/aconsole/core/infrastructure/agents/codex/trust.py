@@ -18,24 +18,39 @@ _HEX: Final = 64
 class HookTrustCache:
     """``currentHash`` by hook key. A new observation replaces the old hash."""
 
-    _hashes: dict[str, str]
+    _hooks: dict[str, tuple[str, str]]
 
     def __init__(self) -> None:
-        self._hashes = {}
+        self._hooks = {}
 
-    def observe(self, key: str, current_hash: str) -> None:
-        """Remember one hash. Blank keys and hashes that are not ``sha256:`` + 64 hex digits are ignored."""
+    def observe(self, key: str, current_hash: str, event_name: str = "") -> None:
+        """Remember one hash. Blank keys and hashes that are not ``sha256:`` + 64 hex digits are ignored.
+
+        ``event_name`` is kept only when it is camelCase (``permissionRequest``, ``stop``). A bad name does not
+        drop the hash.
+        """
         if key == "" or not _hash_ok(current_hash):
             return
-        self._hashes[key] = current_hash
+        name = event_name if _event_ok(event_name) else ""
+        self._hooks[key] = (current_hash, name)
 
     def hash_for(self, key: str) -> str | None:
         """The hash last observed for ``key``, or None."""
-        return self._hashes.get(key)
+        found = self._hooks.get(key)
+        if found is None:
+            return None
+        return found[0]
+
+    def event_name(self, key: str) -> str | None:
+        """The camelCase ``eventName`` last observed for ``key``, or None."""
+        found = self._hooks.get(key)
+        if found is None or found[1] == "":
+            return None
+        return found[1]
 
     def accepts(self, key: str, current_hash: str) -> bool:
         """True only when ``current_hash`` is the one stored for ``key``."""
-        stored = self._hashes.get(key)
+        stored = self.hash_for(key)
         return stored is not None and stored == current_hash
 
     def load(self, raw: bytes) -> None:
@@ -51,6 +66,13 @@ class HookTrustCache:
             if result is None:
                 continue
             _load_result(self, result)
+
+
+def _event_ok(value: str) -> bool:
+    """CamelCase event names from ``hooks/list``: a lower first letter and no separators."""
+    if value == "" or not value[0].islower():
+        return False
+    return all(char.isascii() and char.isalnum() for char in value)
 
 
 def _hash_ok(value: str) -> bool:
@@ -89,9 +111,10 @@ def _load_hooks(cache: HookTrustCache, raw: msgspec.Raw) -> None:
     for hook in hooks:
         key = _text(hook.get("key"))
         current = _text(hook.get("currentHash"))
+        event = _text(hook.get("eventName"))
         if key is None or current is None:
             continue
-        cache.observe(key, current)
+        cache.observe(key, current, "" if event is None else event)
 
 
 def _text(raw: msgspec.Raw | None) -> str | None:

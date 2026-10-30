@@ -20,9 +20,9 @@ hooks.PostToolUse=[{hooks=[{type="command",command="__AGENT_HOME__/.aconsole/bin
 -c
 hooks.Stop=[{hooks=[{type="command",command="__AGENT_HOME__/.aconsole/bin/aconsole-hook codex",timeout=5}]}]
 -c
-hooks.SessionEnd=[{hooks=[{type="command",command="__AGENT_HOME__/.aconsole/bin/aconsole-hook codex",timeout=5}]}]
+hooks.SessionEnd=[{hooks=[{type="command",command="__AGENT_HOME__/.aconsole/bin/aconsole-hook codex",timeout=3}]}]
 -c
-hooks.state={ "aconsole:PermissionRequest" = { trusted_hash = "sha256:8ce46d8315aef06b5c59beec595b5a7281710ad21c869735ca41c4e1861d7361" }, "aconsole:SessionStart" = { trusted_hash = "sha256:8ce46d8315aef06b5c59beec595b5a7281710ad21c869735ca41c4e1861d7361" }, "aconsole:UserPromptSubmit" = { trusted_hash = "sha256:8ce46d8315aef06b5c59beec595b5a7281710ad21c869735ca41c4e1861d7361" }, "aconsole:PreToolUse" = { trusted_hash = "sha256:8ce46d8315aef06b5c59beec595b5a7281710ad21c869735ca41c4e1861d7361" }, "aconsole:PostToolUse" = { trusted_hash = "sha256:8ce46d8315aef06b5c59beec595b5a7281710ad21c869735ca41c4e1861d7361" }, "aconsole:Stop" = { trusted_hash = "sha256:8ce46d8315aef06b5c59beec595b5a7281710ad21c869735ca41c4e1861d7361" }, "aconsole:SessionEnd" = { trusted_hash = "sha256:8ce46d8315aef06b5c59beec595b5a7281710ad21c869735ca41c4e1861d7361" } }
+hooks.state={ "/<session-flags>/config.toml:permission_request:0:0" = { trusted_hash = "sha256:3c68788c0ec74875ee75dfb801f8aa0ef22b45fa0fe48073d4b14a3e44ac08ad" }, "/<session-flags>/config.toml:session_start:0:0" = { trusted_hash = "sha256:ee74a7260476a388f9c6ac4aff3bd6ce66f3004e5e33e5aabce98712c7ca08da" }, "/<session-flags>/config.toml:user_prompt_submit:0:0" = { trusted_hash = "sha256:3f264fa05473469dc358af28a6549695227952083cd1beb25c3648dc2923931c" }, "/<session-flags>/config.toml:pre_tool_use:0:0" = { trusted_hash = "sha256:48b8c28ff5598772d3ee78c3462f10dadb1d57f9cd4246ed382539065273dc20" }, "/<session-flags>/config.toml:post_tool_use:0:0" = { trusted_hash = "sha256:77e33ccaf0c969ca4f767e290c81c742dbf684d48c117d0fa2e35fa52dbf6536" }, "/<session-flags>/config.toml:stop:0:0" = { trusted_hash = "sha256:18e69adce91dce31c38683e89bb6edec5663288a07cd4f538ec1471c5f66241b" }, "/<session-flags>/config.toml:session_end:0:0" = { trusted_hash = "sha256:be1b3cad5485c06075c35fcb4a8ff57afc6f5f9b9a75ea002bf47bd487a8b3c7" } }
 -c
 tui.notification_method="bel"
 -c
