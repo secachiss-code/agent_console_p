@@ -269,6 +269,11 @@ def _tabs(project: str, count: int) -> tuple[TabView, ...]:
     return tuple(built)
 
 
+def _setup(*, completed: bool, failing: int = 0, warnings: int = 0) -> SetupState:
+    """`required` follows the stored flag. A failed check does not reopen the wizard."""
+    return SetupState(required=not completed, failing_checks=failing, warnings=warnings)
+
+
 def demo_snapshot() -> AppSnapshot:
     project_a = _ulid(1)
     tabs = _tabs(project_a, 5)
@@ -282,7 +287,7 @@ def demo_snapshot() -> AppSnapshot:
         approvals=_approvals(tabs[0].id),
         plans=(_plan(project_a),),
         vault_ok=False,
-        setup=SetupState(required=False, failing_checks=0, warnings=0),
+        setup=_setup(completed=True),
         settings_rev=1,
     )
 
@@ -298,7 +303,7 @@ def empty_snapshot() -> AppSnapshot:
         approvals=(),
         plans=(),
         vault_ok=False,
-        setup=SetupState(required=True, failing_checks=2, warnings=1),
+        setup=_setup(completed=False, failing=2, warnings=1),
         settings_rev=0,
     )
 
@@ -315,7 +320,7 @@ def stress_snapshot() -> AppSnapshot:
         approvals=_approvals(TabId(_ulid(101))),
         plans=(),
         vault_ok=True,
-        setup=SetupState(required=False, failing_checks=0, warnings=0),
+        setup=_setup(completed=True),
         settings_rev=1,
     )
 

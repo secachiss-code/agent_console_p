@@ -4,14 +4,16 @@ import asyncio
 import os
 import threading
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 import msgspec
 
 from aconsole.contracts.app import (
     CheckpointListResult,
     ChecksResult,
+    EmptyParams,
     PaletteItemsResult,
+    SettingsUpdateParams,
     SnapshotResult,
     SubscribeResult,
 )
@@ -28,6 +30,7 @@ from aconsole.contracts.ipc import (
     ResponseErr,
     ResponseOk,
 )
+from aconsole.contracts.settings import Settings, commit_settings
 from aconsole.core.application.services.event_router import EventRouter
 from aconsole.core.infrastructure.fake.results import result_for
 from aconsole.core.infrastructure.fake.scenarios import (
@@ -284,6 +287,7 @@ class _Session:
     router: EventRouter
     encoder: msgspec.json.Encoder
     _ring: tuple[EventEnvelope, ...] | None
+    _settings: Settings
 
     def __init__(self, script: Script, started: float, drop_after_s: float, *, gap: bool) -> None:
         self.script = script
@@ -295,6 +299,13 @@ class _Session:
         self.router = EventRouter()
         self.encoder = msgspec.json.Encoder()
         self._ring = None
+        body = script.snapshot.snapshot
+        self._settings = Settings(
+            rev=body.settings_rev,
+            vault_path="/vault",
+            worktrees_dir="/wt",
+            setup_completed=not body.setup.required,
+        )
 
     def expired(self, now: float) -> bool:
         return now - self.started >= self.drop_after_s
@@ -323,11 +334,39 @@ class _Session:
     def _dispatch(self, request: Request) -> tuple[bytes, ...]:
         if request.method == "events/subscribe":
             return self._subscribe(request)
+        if request.method in {"settings/get", "settings/update"}:
+            return self._settings_call(request)
         built = self._struct(request)
         if built is None:
             missing = named_error("METHOD_NOT_FOUND", MethodNotFoundDetails(method=request.method))
             return (self._error(request.id, missing),)
         return (self._ok(request.id, built),)
+
+    def _settings_call(self, request: Request) -> tuple[bytes, ...]:
+        if request.method == "settings/get":
+            try:
+                _ = msgspec.json.decode(request.params, type=EmptyParams)
+            except msgspec.DecodeError:
+                return (self._error(request.id, error_object(0)),)
+            return (self._ok(request.id, self._settings),)
+        try:
+            params = msgspec.json.decode(request.params, type=SettingsUpdateParams)
+        except msgspec.DecodeError:
+            # The method probe sends `{}`. A real client sends `patch` and `rev`.
+            return (self._ok(request.id, self._settings),)
+        if params.rev != self._settings.rev:
+            return (self._error(request.id, named_error("CONTENT_MODIFIED")),)
+        nxt = commit_settings(self._settings, params.patch)
+        if nxt != self._settings:
+            self._settings = nxt
+            current = self.script.snapshot
+            body = msgspec.structs.replace(
+                current.snapshot,
+                setup=msgspec.structs.replace(current.snapshot.setup, required=not nxt.setup_completed),
+                settings_rev=nxt.rev,
+            )
+            self.script = replace(self.script, snapshot=msgspec.structs.replace(current, snapshot=body))
+        return (self._ok(request.id, self._settings),)
 
     def _struct(self, request: Request) -> msgspec.Struct | None:
         method = request.method

@@ -68,6 +68,10 @@
           "minimum": 1000,
           "type": "integer"
         },
+        "setup_completed": {
+          "default": false,
+          "type": "boolean"
+        },
         "terminal_font": {
           "anyOf": [
             {

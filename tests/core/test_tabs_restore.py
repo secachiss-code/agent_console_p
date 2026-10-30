@@ -146,6 +146,7 @@ class _Memory:
 
     def __init__(self) -> None:
         self.rows: dict[str, StoredTab] = {}
+        self.directory: TabDirectory = TabDirectory(worktrees_dir=None, rev=0)
 
     def save(self, tab: StoredTab) -> None:
         self.rows[tab.id] = tab
@@ -158,7 +159,14 @@ class _Memory:
         return tuple(self.rows[key] for key in sorted(self.rows))
 
     def settings(self) -> TabDirectory:
-        return TabDirectory(worktrees_dir=None, rev=0)
+        return self.directory
+
+    def save_setup(self, *, completed: bool, rev: int) -> None:
+        self.directory = TabDirectory(
+            worktrees_dir=self.directory.worktrees_dir,
+            rev=rev,
+            setup_completed=completed,
+        )
 
 
 async def _restart(tmp_path: Path) -> tuple[tuple[TabView, ...], tuple[TabView, ...], tuple[str, ...], bool]:

@@ -28,7 +28,7 @@ from aconsole.contracts.ipc import (
     ResponseErr,
     ResponseOk,
 )
-from aconsole.core.application.services.tabs import TAB_METHODS, TabRequestError, TabService
+from aconsole.core.application.services.tabs import SETTINGS_METHODS, TAB_METHODS, TabRequestError, TabService
 from aconsole.core.infrastructure.ipc.framing import decode_envelope, encode_line
 from aconsole.core.infrastructure.ipc.ring import EventRing
 
@@ -116,7 +116,8 @@ class Connection:
         if request.method == _HOLD:
             self.inflight.add(request.id)
             return ()
-        if request.method == _SNAPSHOT or (self.tabs is not None and request.method in TAB_METHODS):
+        served = TAB_METHODS | SETTINGS_METHODS
+        if request.method == _SNAPSHOT or (self.tabs is not None and request.method in served):
             return self._tab(request)
         return (self._err(request.id, "METHOD_NOT_FOUND"),)
 

@@ -17,6 +17,7 @@ from aconsole.contracts.app import (
     AppSnapshot,
     CloseTabParams,
     CloseTabResult,
+    EmptyParams,
     EmptyResult,
     ExitedParams,
     FocusParams,
@@ -24,6 +25,7 @@ from aconsole.contracts.app import (
     RenameParams,
     ReorderParams,
     RestartParams,
+    SettingsUpdateParams,
     SetupState,
     StartedParams,
     TabIdParams,
@@ -32,7 +34,8 @@ from aconsole.contracts.app import (
 )
 from aconsole.contracts.common import AgentKind, NodeId, ProjectId, TabId, TabStatus, WorkspaceMode
 from aconsole.contracts.events import TabAdded, TabRemoved, TabUpdated, UiEvent
-from aconsole.core.application.ports.tab_store import StoredTab, TabStore
+from aconsole.contracts.settings import Settings, commit_settings
+from aconsole.core.application.ports.tab_store import StoredTab, TabDirectory, TabStore
 from aconsole.core.domain.clock import Clock
 
 _ZERO: Final = 0
@@ -47,6 +50,7 @@ _HEAD: Final = "HEAD"
 _PATH_ENV: Final = "PATH"
 _LOGIN: Final = "AGENT_NOT_LOGGED_IN"
 _METHOD: Final = "METHOD_NOT_FOUND"
+_MODIFIED: Final = "CONTENT_MODIFIED"
 _PROJECT: Final = "PROJECT_NOT_FOUND"
 _UNAVAILABLE: Final = "AGENT_UNAVAILABLE"
 _SESSION: Final = "SESSION_NOT_FOUND"
@@ -131,6 +135,8 @@ TAB_METHODS: Final = frozenset(
         "tab/focus",
     }
 )
+
+SETTINGS_METHODS: Final = frozenset({"settings/get", "settings/update"})
 
 
 @final
@@ -251,6 +257,9 @@ class TabService:
         self._focused: str | None = None
         self._store: TabStore | None = None
         self._settings_rev = 0
+        self._setup_completed = False
+        self._failing_checks = 0
+        self._warnings = 0
         # Receives tab_added / tab_updated / tab_removed on the thread that changed the tab.
         self.listener: Callable[[UiEvent], None] | None = listener
         # Filled when `tab/launchSpec` mints an ingest token for a restored tab. The daemon registers it.
@@ -266,6 +275,8 @@ class TabService:
             "tab/rename": self._route_rename,
             "tab/reorder": self._route_reorder,
             "tab/focus": self._route_focus,
+            "settings/get": self._route_settings_get,
+            "settings/update": self._route_settings_update,
         }
 
     def add_project(self, seed: ProjectSeed) -> None:
@@ -276,9 +287,15 @@ class TabService:
         """Persist later changes. Existing in-memory tabs are written by `reload` or the next edit."""
         self._store = store
 
-    def note_settings(self, rev: int) -> None:
-        """Remember the settings revision the snapshot reports."""
+    def note_settings(self, rev: int, *, setup_completed: bool = False) -> None:
+        """Remember the settings revision and wizard flag the snapshot reports."""
         self._settings_rev = rev
+        self._setup_completed = setup_completed
+
+    def note_setup_checks(self, failing: int, warnings: int) -> None:
+        """Record live setup checks. They never reopen the wizard."""
+        self._failing_checks = failing
+        self._warnings = warnings
 
     def reload(self) -> None:
         """Replace the book with the open rows. A process that died with the core is exited or idle.
@@ -294,6 +311,7 @@ class TabService:
     def snapshot(self) -> AppSnapshot:
         """The tabs the core would hand to `app/snapshot`, in display order."""
         ordered = sorted(self._tabs.values(), key=_by_order)
+        stored = self._stored_settings()
         return AppSnapshot(
             api_version=API_VERSION,
             projects=(),
@@ -304,8 +322,12 @@ class TabService:
             approvals=(),
             plans=(),
             vault_ok=False,
-            setup=SetupState(required=False, failing_checks=0, warnings=0),
-            settings_rev=self._settings_rev,
+            setup=SetupState(
+                required=not stored.setup_completed,
+                failing_checks=self._failing_checks,
+                warnings=self._warnings,
+            ),
+            settings_rev=stored.rev,
         )
 
     def running_count(self) -> int:
@@ -341,6 +363,45 @@ class TabService:
             changed.add("attention")
         self._remember(tab)
         return self._updated(tab, changed)
+
+    def current_settings(self) -> Settings:
+        """The settings document. Unset strings stay empty until a patch writes them."""
+        found = self._stored_settings()
+        worktrees = found.worktrees_dir if found.worktrees_dir is not None else ""
+        return Settings(
+            rev=found.rev,
+            vault_path="",
+            worktrees_dir=worktrees,
+            setup_completed=found.setup_completed,
+        )
+
+    def update_settings(self, params: SettingsUpdateParams) -> Settings:
+        """Apply a settings patch. The same values do not grow `rev`."""
+        current = self.current_settings()
+        if params.rev != current.rev:
+            raise TabRequestError(_MODIFIED)
+        nxt = commit_settings(current, params.patch)
+        if nxt == current:
+            return current
+        self._settings_rev = nxt.rev
+        self._setup_completed = nxt.setup_completed
+        store = self._store
+        if store is not None:
+            store.save_setup(completed=nxt.setup_completed, rev=nxt.rev)
+        return nxt
+
+    def _stored_settings(self) -> TabDirectory:
+        store = self._store
+        if store is None:
+            return TabDirectory(worktrees_dir=None, rev=self._settings_rev, setup_completed=self._setup_completed)
+        return store.settings()
+
+    def _route_settings_get(self, raw: bytes) -> Settings:
+        _ = msgspec.json.decode(raw, type=EmptyParams)
+        return self.current_settings()
+
+    def _route_settings_update(self, raw: bytes) -> Settings:
+        return self.update_settings(msgspec.json.decode(raw, type=SettingsUpdateParams))
 
     def dispatch(self, method: str, raw: bytes) -> msgspec.Struct:
         """Decode one §4.3 call and return its result struct."""

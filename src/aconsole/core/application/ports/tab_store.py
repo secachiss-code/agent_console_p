@@ -34,10 +34,11 @@ class StoredTab:
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class TabDirectory:
-    """`Settings.worktrees_dir` and the settings row revision. Both are absent when unset."""
+    """`Settings.worktrees_dir`, the settings revision, and whether the first-run wizard is finished."""
 
     worktrees_dir: str | None
     rev: int
+    setup_completed: bool = False
 
 
 class TabStore(Protocol):
@@ -57,4 +58,8 @@ class TabStore(Protocol):
 
     def settings(self) -> TabDirectory:
         """The stored worktree directory, or none when settings were never written."""
+        ...
+
+    def save_setup(self, *, completed: bool, rev: int) -> None:
+        """Store `Settings.setup_completed` and the settings revision. Other keys stay."""
         ...

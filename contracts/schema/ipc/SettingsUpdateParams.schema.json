@@ -56,6 +56,9 @@
           "minimum": 1000,
           "type": "integer"
         },
+        "setup_completed": {
+          "type": "boolean"
+        },
         "terminal_font": {
           "anyOf": [
             {

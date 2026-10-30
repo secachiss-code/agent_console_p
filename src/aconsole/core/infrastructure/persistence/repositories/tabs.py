@@ -69,13 +69,28 @@ def load_open_tabs(session: Session) -> tuple[StoredTab, ...]:
 
 
 def read_settings(session: Session) -> TabDirectory:
-    """`worktrees_dir` from the settings document. Missing or blank means the host default."""
+    """`worktrees_dir` and `setup_completed` from the settings document. A blank directory means the host default."""
     row = session.get(Setting, SETTINGS_KEY)
     if row is None:
         return TabDirectory(worktrees_dir=None, rev=0)
     raw = row.value.get("worktrees_dir")
     directory = raw if isinstance(raw, str) and raw != "" else None
-    return TabDirectory(worktrees_dir=directory, rev=row.rev)
+    raw_done = row.value.get("setup_completed")
+    completed = raw_done if isinstance(raw_done, bool) else False
+    return TabDirectory(worktrees_dir=directory, rev=row.rev, setup_completed=completed)
+
+
+def write_setup_completed(session: Session, *, completed: bool, rev: int) -> None:
+    """Merge `setup_completed` into the settings document and store `rev`. Other keys stay."""
+    row = session.get(Setting, SETTINGS_KEY)
+    if row is None:
+        session.add(Setting(key=SETTINGS_KEY, value={"setup_completed": completed}, rev=rev))
+        session.flush()
+        return
+    merged = dict(row.value)
+    merged["setup_completed"] = completed
+    row.value = merged
+    row.rev = rev
 
 
 @final
@@ -106,6 +121,9 @@ class TabDatabase:
         if not isinstance(found, TabDirectory):
             raise TypeError(_BAD_RESULT)
         return found
+
+    def save_setup(self, *, completed: bool, rev: int) -> None:
+        _ = self._writer.call(lambda session: write_setup_completed(session, completed=completed, rev=rev))
 
 
 def _upsert_project(session: Session, tab: StoredTab) -> None:

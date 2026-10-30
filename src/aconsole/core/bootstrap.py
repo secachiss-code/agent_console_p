@@ -423,7 +423,7 @@ class Daemon:
         store = TabDatabase(writer)
         self.tabs.use_store(store)
         found = await asyncio.to_thread(store.settings)
-        self.tabs.note_settings(found.rev)
+        self.tabs.note_settings(found.rev, setup_completed=found.setup_completed)
         if found.worktrees_dir is not None:
             self._host.set_worktrees_dir(Path(found.worktrees_dir))
         caught: list[UiEvent] = []
