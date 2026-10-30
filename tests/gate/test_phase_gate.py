@@ -233,6 +233,7 @@ def test_pytest_steps_are_split() -> None:
     assert "tests/hostrun" in core
     assert ui[0].endswith(".venv-ui/bin/python")
     assert ui[-2:] == ["tests/ui", "tests/gui"]
+    assert "--ignore=tests/gui/front" in ui
     cov = [item for item in core if item.startswith("--cov=")]
     assert cov == [
         "--cov=aconsole.core",

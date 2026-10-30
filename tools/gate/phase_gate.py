@@ -196,6 +196,8 @@ def ui_pytest_argv(repo: Path, junit: Path) -> list[str]:
         "-p",
         "no:cacheprovider",
         f"--junitxml={junit}",
+        # Front GUI tests belong to the front gate (Luna's verdict); the core gate keeps the client GUI tests.
+        "--ignore=tests/gui/front",
         "tests/ui",
         "tests/gui",
     ]
