@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+import sys
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -44,6 +45,8 @@ _REPO_PATH = re.compile(r"[A-Za-z0-9_][A-Za-z0-9_./-]{0,511}\Z")
 
 # Container with node, dotnet, rust and python (PLAN §4). It mounts $HOME, so worktree paths are the same there.
 _DEVTOOLS = "devtools"
+# Lives beside this file: the service runs from the main checkout, never from a worktree.
+_ISOLATED_X = Path(__file__).resolve().parent / "isolated_x.py"
 # 0.2.0-alpha.12 is the first release that knows the 2026-07-28 requirement set; 0.1.16 (latest) stops at 2025-11-25.
 _CONFORMANCE = "@modelcontextprotocol/conformance@0.2.0-alpha.12"
 _MCP_REVISION = "2026-07-28"
@@ -256,6 +259,9 @@ def _test(args: list[str], repo: str) -> Step:
         raise ActionError(400, "too many test paths")
     paths = tuple(_pytest_path(path) for path in rest) if rest else _SUITES[suite]
     command.extend(paths)
+    if suite == "gui":
+        # GUI tests get a private X server, so XTest never types into the user's session.
+        return Step(argv=(sys.executable, str(_ISOLATED_X), "--", *command), env=env)
     return Step(argv=tuple(command), env=env)
 
 
