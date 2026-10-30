@@ -1,0 +1,36 @@
+{
+  "modules": [
+    {
+      "source": "src/leaf.ts",
+      "dependencies": []
+    },
+    {
+      "source": "src/main.ts",
+      "dependencies": [
+        {
+          "couldNotResolve": false,
+          "dependencyTypes": ["local"],
+          "module": "./util",
+          "resolved": "src/util.ts"
+        }
+      ]
+    },
+    {
+      "source": "src/util.ts",
+      "dependencies": [
+        {
+          "couldNotResolve": false,
+          "dependencyTypes": ["local"],
+          "module": "./leaf",
+          "resolved": "src/leaf.ts"
+        },
+        {
+          "couldNotResolve": true,
+          "coreModule": true,
+          "module": "fs",
+          "resolved": "fs"
+        }
+      ]
+    }
+  ]
+}
