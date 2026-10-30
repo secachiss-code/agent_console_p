@@ -23,14 +23,25 @@ def _place(root: Path, day: str, name: str, body: bytes) -> Path:
 
 def test_codex_rollout_reads_the_fixture_quota_once() -> None:
     lines = _FIXTURE.read_bytes().splitlines()
-    assert quotas(lines[0]) == ()
-    windows = quotas(lines[1])
+    counted = [line for line in lines if quotas(line)]
+    assert counted
+    windows = quotas(counted[0])
     assert windows[0].key is QuotaKey.FIVE_HOUR
-    assert windows[0].used_pct == 25.0
-    assert windows[0].resets_at == 1700000000
+    assert windows[0].used_pct == 91.0
+    assert isinstance(windows[0].used_pct, float)
+    assert windows[0].resets_at == 1793317107
     assert windows[1].key is QuotaKey.SEVEN_DAY
-    assert windows[1].used_pct == 3.0
+    assert windows[1].used_pct == 43.0
+    assert isinstance(windows[1].used_pct, float)
+    assert windows[1].resets_at == 1793784697
+    assert all(quotas(line) == () for line in lines if line not in counted)
     assert quotas(b'{"type":"event_msg","payload":{"type":"token_count","rate_limits":{"primary":') == ()
+    fractional = (
+        b'{"type":"event_msg","payload":{"type":"token_count","rate_limits":{"limit_id":"codex",'
+        b'"primary":{"used_percent":12.5,"window_minutes":300,"resets_at":1793317107},'
+        b'"credits":{"balance":"0"},"plan_type":"plus","individual_limit":null}}}'
+    )
+    assert quotas(fractional)[0].used_pct == 12.5
 
 
 def test_codex_rollout_tail_holds_a_cut_line_and_does_not_reread(tmp_path: Path) -> None:
@@ -55,8 +66,10 @@ def test_codex_rollout_zst_and_rotation(tmp_path: Path) -> None:
     tail = RolloutTail(tmp_path)
     first = tail.read(_SESSION)
     assert first.path == compressed
-    assert len(first.lines) == 2
-    assert quotas(first.lines[1])[0].key is QuotaKey.FIVE_HOUR
+    quota_lines = [line for line in first.lines if quotas(line)]
+    assert quota_lines
+    assert quotas(quota_lines[0])[0].key is QuotaKey.FIVE_HOUR
+    assert quotas(quota_lines[0])[0].used_pct == 91.0
     assert tail.read(_SESSION).lines == ()
     os.utime(compressed, (1, 1))
     rotated = _place(tmp_path, "25", f"rollout-2-{_SESSION}.jsonl", b'{"type":"session_meta","payload":{"id":"n"}}\n')
