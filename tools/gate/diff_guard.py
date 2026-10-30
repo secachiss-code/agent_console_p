@@ -230,16 +230,20 @@ def _contracts(doc: dict[str, object]) -> object:
 
 
 _PROGRESS_PREFIX = "docs/plan/core/progress/"
+_CORE_TOOL_PREFIXES = ("tools/codegraph/", "tools/csgraph/")
 
 
 def is_protected(path: str) -> bool:
-    """Every tool, gate, hostrun and plan file is protected; only progress records are not.
+    """Every tool, gate, hostrun and plan file is protected, except progress records and core-owned tools.
 
     MAIN commits (the user or the fix track) change protected files between core tasks,
     so a task diff never contains them.
     """
     normalized = path.replace("\\", "/")
     if normalized.startswith(_PROGRESS_PREFIX):
+        return False
+    # Core-owned tools (ROUND7 §2): the code-graph extractors and the state generator.
+    if normalized == "tools/gen_state.py" or normalized.startswith(_CORE_TOOL_PREFIXES):
         return False
     if normalized in {"AGENTS.md", "src/aconsole/core/AGENTS.md", "src/aconsole/ui/AGENTS.md"}:
         return True

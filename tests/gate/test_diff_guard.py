@@ -252,6 +252,9 @@ def test_is_protected_covers_tools_plan_and_grok(path: str) -> None:
     [
         "src/aconsole/core/x.py",
         "docs/plan/core/progress/A2.6.md",
+        "tools/gen_state.py",
+        "tools/codegraph/extract_python.py",
+        "tools/csgraph/Program.cs",
     ],
 )
 def test_is_protected_leaves_core_and_progress_open(path: str) -> None:
