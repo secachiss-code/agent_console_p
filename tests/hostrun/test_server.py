@@ -145,7 +145,12 @@ def test_gate_audit_ui_is_400_over_http(running: Running) -> None:
 
 def test_policy_rejects_a_container_without_worktree(tmp_path: Path) -> None:
     source = (ROOT / "tools" / "hostrun" / "policy.example.toml").read_text(encoding="utf-8")
-    broken = source.replace('worktree = "/home/sas/Projects/.aconsole-worktrees/sp_aconsole_prototype/front"\n', "", 1)
+    head, tail = source.split("[containers.agent-codex]", 1)
+    broken = (
+        head
+        + "[containers.agent-codex]"
+        + tail.replace('worktree = "/home/sas/Projects/sp_aconsole_prototype"\n', "", 1)
+    )
     assert broken != source
     path = tmp_path / "policy.toml"
     _ = path.write_text(broken, encoding="utf-8")
@@ -180,21 +185,19 @@ def test_default_paths_stay_inside_the_suite(tmp_path: Path) -> None:
 def test_example_policy_loads() -> None:
     policy = server.load_policy(ROOT / "tools" / "hostrun" / "policy.example.toml")
     assert "check" in policy.containers["agent-cursor"].actions
-    assert policy.containers["agent-cursor"].worktree.endswith("sp_aconsole_prototype/core")
+    assert policy.containers["agent-cursor"].worktree== "/home/sas/Projects/sp_aconsole_prototype"
     assert "gate" in policy.containers["agent-claude"].actions
     assert "gate" not in policy.containers["agent-codex"].actions
     assert "core-run" not in policy.containers["agent-codex"].actions
 
 
-def test_example_policy_binds_each_container_to_a_worktree() -> None:
+def test_example_policy_binds_every_container_to_the_main_checkout() -> None:
     policy = server.load_policy(ROOT / "tools" / "hostrun" / "policy.example.toml")
     assert set(policy.containers) == {"agent-grok", "agent-cursor", "agent-claude", "agent-codex"}
     for name, container in policy.containers.items():
         assert container.worktree.startswith("/"), name
-    assert (
-        policy.containers["agent-grok"].worktree == "/home/sas/Projects/.aconsole-worktrees/sp_aconsole_prototype/core"
-    )
-    assert policy.containers["agent-codex"].worktree.endswith("sp_aconsole_prototype/front")
+    for name in ("agent-grok", "agent-cursor", "agent-codex", "agent-claude"):
+        assert policy.containers[name].worktree == "/home/sas/Projects/sp_aconsole_prototype", name
     assert "gate" in policy.containers["agent-grok"].actions
 
 

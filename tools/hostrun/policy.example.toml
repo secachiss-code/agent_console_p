@@ -26,9 +26,9 @@ devtools = 600
 
 # Core executor (Grok CLI in agent-grok; agent-cursor kept for the Cursor variant):
 # free-threaded venv .venv-core via `uv venv --python 3.15t`, plus the UI venv and gate.
-# Each container is bound to its own worktree (P1, PARALLEL §2).
+# All agents work in the main checkout (user decision 2026-10-30); worktree is the default cwd.
 [containers.agent-grok]
-worktree = "/home/sas/Projects/.aconsole-worktrees/sp_aconsole_prototype/core"
+worktree = "/home/sas/Projects/sp_aconsole_prototype"
 actions = [
   "check",
   "deps-sync",
@@ -46,7 +46,7 @@ actions = [
 ]
 
 [containers.agent-cursor]
-worktree = "/home/sas/Projects/.aconsole-worktrees/sp_aconsole_prototype/core"
+worktree = "/home/sas/Projects/sp_aconsole_prototype"
 actions = [
   "check",
   "deps-sync",
@@ -83,7 +83,7 @@ actions = [
 
 # Frontend executor. No gate, core-run, distrobox-dry-run, conformance, or devtools.
 [containers.agent-codex]
-worktree = "/home/sas/Projects/.aconsole-worktrees/sp_aconsole_prototype/front"
+worktree = "/home/sas/Projects/sp_aconsole_prototype"
 actions = [
   "check",
   "deps-sync",
