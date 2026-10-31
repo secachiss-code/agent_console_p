@@ -17,8 +17,8 @@ from aconsole.contracts.app import (
     CommandDetail,
     DecideParams,
     EmptyParams,
-    ReleaseParams,
     ReleasedResult,
+    ReleaseParams,
     SettingsUpdateParams,
     SubscribeParams,
 )
@@ -568,7 +568,7 @@ async def _daemon_rpc_any(
 
 async def _daemon_event(
     reader: asyncio.StreamReader,
-    event_type: type[ApprovalRequested] | type[ApprovalResolved],
+    event_type: type[ApprovalRequested | ApprovalResolved],
 ) -> tuple[EventEnvelope, tuple[EventEnvelope, ...]]:
     loop = asyncio.get_running_loop()
     deadline = loop.time() + 5
