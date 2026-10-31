@@ -2,6 +2,8 @@
 
 import asyncio
 import fcntl
+import gc
+import logging
 import os
 import sys
 import tempfile
@@ -10,7 +12,7 @@ from pathlib import Path
 import pytest
 
 from aconsole.contracts import API_VERSION
-from aconsole.contracts.app import EmptyParams, OpenTabParams, SubscribeParams, TabIdParams
+from aconsole.contracts.app import EmptyParams, OpenTabParams, SnapshotResult, SubscribeParams, TabIdParams
 from aconsole.contracts.common import AgentKind, ProjectId, WorkspaceMode
 from aconsole.core.infrastructure.fake.scenarios import APP_EVENT_TYPES
 from aconsole.core.infrastructure.fake.server import FakeCore
@@ -84,6 +86,14 @@ def test_fake_errors_resync_after_a_seq_gap() -> None:
 
 def test_client_starts_the_fake_daemon() -> None:
     asyncio.run(_spawn())
+
+
+def test_send_failure_during_close_consumes_pending_future_exception(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    caplog.set_level(logging.ERROR, logger="asyncio")
+    asyncio.run(_send_close_race())
+    assert "Future exception was never retrieved" not in caplog.text
 
 
 async def _reject(path: str) -> None:
@@ -178,3 +188,26 @@ async def _spawn() -> None:
         assert client.daemon_pid is not None
     finally:
         await client.close()
+
+
+async def _send_close_race() -> None:
+    send_started = asyncio.Event()
+    fail_send = asyncio.Event()
+
+    class BlockedSendClient(CoreClient):
+        async def _send(self, payload: bytes) -> None:
+            _ = payload
+            send_started.set()
+            await fail_send.wait()
+            raise ConnectionError("send failed")
+
+    client = BlockedSendClient("unused")
+    request = asyncio.create_task(client.request("app/snapshot", EmptyParams(), SnapshotResult))
+    await send_started.wait()
+    client._fail_pending()
+    fail_send.set()
+    with pytest.raises(ConnectionError, match="send failed"):
+        _ = await request
+    del request
+    _ = gc.collect()
+    await asyncio.sleep(0)
