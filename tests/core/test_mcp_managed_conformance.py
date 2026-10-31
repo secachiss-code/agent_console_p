@@ -72,7 +72,7 @@ def _mcp_request(
 
 
 def _assert_port_closed(port: int) -> None:
-    with pytest.raises(OSError):
+    with pytest.raises(ConnectionRefusedError):
         _ = socket.create_connection(("127.0.0.1", port), timeout=0.2)
 
 
@@ -166,7 +166,6 @@ def test_run_managed_preflight_failure_does_not_start_daemon_or_touch_state(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     root, default_db = _prepare_root(tmp_path)
-    urls: list[str] = []
     suite_called = False
 
     async def probe_tooling(_root: Path) -> int:
@@ -178,7 +177,7 @@ def test_run_managed_preflight_failure_does_not_start_daemon_or_touch_state(
         return 0
 
     def daemon_must_not_start(*_args: object, **_kwargs: object) -> None:
-        raise AssertionError("preflight failure started the daemon")
+        pytest.fail("preflight failure started the daemon")
 
     monkeypatch.setattr(mcp_conformance, "_probe_tooling", probe_tooling)
     monkeypatch.setattr(mcp_conformance, "_run_suite", run_suite)
@@ -219,7 +218,9 @@ def test_run_managed_cancellation_stops_daemon_and_removes_only_owned_state(
 
 def test_main_rejects_arguments_without_starting_the_runner(monkeypatch: pytest.MonkeyPatch) -> None:
     def run_managed(*, root: Path, suite_timeout_s: float = 90.0) -> int:
-        raise AssertionError(f"runner started with {root} and timeout {suite_timeout_s}")
+        assert root.is_absolute()
+        assert suite_timeout_s > 0
+        pytest.fail("the runner must not start when CLI arguments are unsupported")
 
     monkeypatch.setattr(mcp_conformance, "run_managed", run_managed)
 
@@ -269,10 +270,10 @@ def test_probe_tooling_uses_only_the_pinned_offline_npx_package(monkeypatch: pyt
     assert result == 0
 
 
-@pytest.mark.parametrize("cancel", [False, True])
+@pytest.mark.parametrize("termination", ["timeout", "cancel"])
 def test_run_suite_terminates_and_reaps_its_process_group_on_timeout_or_cancel(
     monkeypatch: pytest.MonkeyPatch,
-    cancel: bool,
+    termination: str,
 ) -> None:
     process = _Process(block=True)
     captured: dict[str, object] = {}
@@ -295,7 +296,7 @@ def test_run_suite_terminates_and_reaps_its_process_group_on_timeout_or_cancel(
             mcp_conformance._run_suite(Path("/repo"), "http://127.0.0.1:8765/mcp", 0.01)
         )
         await process.started.wait()
-        if cancel:
+        if termination == "cancel":
             task.cancel()
             with pytest.raises(asyncio.CancelledError):
                 await task
@@ -315,7 +316,7 @@ def test_run_suite_terminates_and_reaps_its_process_group_on_timeout_or_cancel(
     assert kwargs["start_new_session"] is True
     assert signals == [(process.pid, signal.SIGTERM), (process.pid, signal.SIGKILL)]
     assert process.waited is True
-    if cancel:
+    if termination == "cancel":
         assert result == -1
     else:
         assert result == 124
