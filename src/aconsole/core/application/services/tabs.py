@@ -257,6 +257,8 @@ class TabService:
         self._focused: str | None = None
         self._store: TabStore | None = None
         self._settings_rev = 0
+        self._approvals_mode: str = "inline"
+        self._approval_hold_seconds: int = 540
         self._setup_completed = False
         self._failing_checks = 0
         self._warnings = 0
@@ -373,6 +375,8 @@ class TabService:
             vault_path="",
             worktrees_dir=worktrees,
             setup_completed=found.setup_completed,
+            approvals_mode="native" if found.approvals_mode == "native" else "inline",
+            approval_hold_seconds=found.approval_hold_seconds,
         )
 
     def update_settings(self, params: SettingsUpdateParams) -> Settings:
@@ -385,15 +389,22 @@ class TabService:
             return current
         self._settings_rev = nxt.rev
         self._setup_completed = nxt.setup_completed
+        self._approvals_mode = nxt.approvals_mode
+        self._approval_hold_seconds = nxt.approval_hold_seconds
         store = self._store
         if store is not None:
             store.save_setup(completed=nxt.setup_completed, rev=nxt.rev)
+            # Older TabStore implementations persist only setup; the database adapter also stores approval settings.
+            save_approval = getattr(store, "save_approval_settings", None)
+            if callable(save_approval):
+                _ = save_approval(mode=nxt.approvals_mode, hold=nxt.approval_hold_seconds, rev=nxt.rev)
         return nxt
 
     def _stored_settings(self) -> TabDirectory:
         store = self._store
         if store is None:
-            return TabDirectory(worktrees_dir=None, rev=self._settings_rev, setup_completed=self._setup_completed)
+            return TabDirectory(worktrees_dir=None, rev=self._settings_rev, setup_completed=self._setup_completed,
+                approvals_mode=self._approvals_mode, approval_hold_seconds=self._approval_hold_seconds)
         return store.settings()
 
     def _route_settings_get(self, raw: bytes) -> Settings:

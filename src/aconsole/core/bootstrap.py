@@ -19,15 +19,19 @@ from typing import TYPE_CHECKING
 import msgspec
 import uvicorn
 
-from aconsole.contracts.common import ClientRole
+from aconsole.contracts.common import ClientRole, TabId
 from aconsole.contracts.errors import ErrorData, ErrorObject, MessageTooLargeDetails, error_by_name
-from aconsole.contracts.events import TabAdded, TabRemoved, UiEvent
+from aconsole.contracts.events import Notify, TabAdded, TabRemoved, UiEvent
 from aconsole.contracts.ipc import InitializeParams, Request, ResponseErr
+from aconsole.core.application.services.approval_broker import ApprovalHold
 from aconsole.core.application.services.tabs import TabService
+from aconsole.core.domain.approvals import Approval, ApprovalBook
 from aconsole.core.domain.clock import Clock
 from aconsole.core.infrastructure.http.app import IngestApp, serve_config
+from aconsole.core.infrastructure.http.approval import handle_permission
 from aconsole.core.infrastructure.http.auth import TokenBook
 from aconsole.core.infrastructure.http.consumer import consume
+from aconsole.core.infrastructure.http.problem import HttpResponse, empty_json, json_response
 from aconsole.core.infrastructure.http.routes import IngestItem, IngestQueue
 from aconsole.core.infrastructure.ipc.framing import (
     MAX_MESSAGE_BYTES,
@@ -43,6 +47,8 @@ from aconsole.core.infrastructure.mcp.server import TabTokens, beside_ingest, bu
 from aconsole.core.infrastructure.mcp.tools import PlanBoard, TabContext
 from aconsole.core.infrastructure.persistence.cleanup import sweep
 from aconsole.core.infrastructure.persistence.engine import write_engine
+from aconsole.core.infrastructure.persistence.models import ApprovalStatus
+from aconsole.core.infrastructure.persistence.repositories.catalog import ApprovalRecord, ApprovalRepository
 from aconsole.core.infrastructure.persistence.repositories.tabs import TabDatabase
 from aconsole.core.infrastructure.persistence.startup import prepare_database, sqlite_url
 from aconsole.core.infrastructure.persistence.writer import Writer
@@ -227,6 +233,8 @@ class Daemon:
         self._idle: asyncio.Task[None] | None = None
         self._writers: set[asyncio.StreamWriter] = set()
         self._ring: EventRing = EventRing()
+        self.approvals: ApprovalHold = ApprovalHold(ApprovalBook(), publish=self._approval_event,
+            notify=self._approval_notify, audit=self._approval_audit, now=lambda: datetime.now(UTC))
         self._host: HostTabs = HostTabs(socket_path=str(socket))
         self.tabs: TabService = TabService(Clock(), self._host, listener=self._from_worker)
         self._encoder: msgspec.json.Encoder = msgspec.json.Encoder()
@@ -323,6 +331,44 @@ class Daemon:
         if loop is not None and not loop.is_closed():
             _ = loop.call_soon_threadsafe(self._publish, event, live, token)
 
+    def _approval_event(self, event: UiEvent) -> None:
+        self._publish(event, self._live_tabs, None)
+
+    def _approval_notify(self, approval: Approval) -> None:
+        self._approval_event(Notify(tab_id=TabId(approval.tab_id), title="Требуется подтверждение",
+            body=approval.command or approval.tool, priority="high", episode_id=approval.id))
+
+    def _approval_audit(self, approval: Approval) -> None:
+        writer = self._writer
+        if writer is None:
+            return
+        record = ApprovalRecord(id=approval.id, tab_id=approval.tab_id, agent_session_id=approval.session_id,
+            tool=approval.tool, input_sha256=approval.input_sha256, nonce=approval.nonce,
+            summary=approval.command or approval.tool, risk=[tag.value for tag in approval.risk],
+            status=ApprovalStatus(approval.phase.value), decided_by=approval.by.value if approval.by else None,
+            requested_at=approval.requested_at, decided_at=datetime.now(UTC), expires_at=approval.expires_at)
+        future = writer.submit(lambda session: ApprovalRepository().add(session, record))
+        future.add_done_callback(self._audit_done)
+
+    @staticmethod
+    def _audit_done(future: asyncio.Future[object]) -> None:
+        if not future.cancelled() and future.exception() is not None:
+            _LOG.error("approval audit failed: %s", future.exception())
+
+    async def _permission(self, item: IngestItem) -> HttpResponse:
+        settings = await self._in_worker(self.tabs.current_settings)
+        capable = any(connection.ready and connection.role is ClientRole.UI and
+            "approvals.inline" in connection.capabilities for connection in self._connections)
+        if settings.approvals_mode == "native" or not capable:
+            return json_response(empty_json())
+        snapshot = await self._in_worker(self.tabs.snapshot)
+        tab = next((tab for tab in snapshot.tabs if str(tab.id) == item.tab_id), None)
+        if tab is None:
+            return json_response(empty_json())
+        return await handle_permission(
+            item, self.approvals, hold_seconds=settings.approval_hold_seconds, worktree=tab.worktree_path,
+        )
+
     def _publish(self, event: UiEvent, live: int, token: str | None) -> None:
         """Number the event once, send it to every subscribed connection, and keep tokens and liveness current."""
         if isinstance(event, TabAdded) and token is not None:
@@ -375,7 +421,7 @@ class Daemon:
             ready.set()
 
         app = beside_ingest(
-            IngestApp(self._tokens, self._ingest_queue, observer=wake),
+            IngestApp(self._tokens, self._ingest_queue, observer=wake, permission_handler=self._permission),
             http_app(self._mcp),
             self._mcp_tokens,
         )
@@ -557,7 +603,11 @@ class Daemon:
     async def _answer(self, connection: Connection, writer: asyncio.StreamWriter, frame: bytes) -> bool:
         """Handle one frame on the worker and write the replies. False when the frame cannot be decoded."""
         try:
-            payloads = await self._in_worker(lambda: connection.receive(frame))
+            envelope = decode_envelope(frame)
+            if isinstance(envelope, Request) and envelope.method == "approval/decide":
+                payloads = connection.receive(frame)
+            else:
+                payloads = await self._in_worker(lambda: connection.receive(frame))
         except msgspec.DecodeError:
             return False
         for payload in payloads:
@@ -572,7 +622,7 @@ class Daemon:
             writer.close()
             await writer.wait_closed()
             return
-        connection = Connection(self._ring, tabs=self.tabs)
+        connection = Connection(self._ring, tabs=self.tabs, approval_hold=self.approvals)
         counted = False
         self._writers.add(writer)
         self._connections[connection] = writer

@@ -77,7 +77,11 @@ def read_settings(session: Session) -> TabDirectory:
     directory = raw if isinstance(raw, str) and raw != "" else None
     raw_done = row.value.get("setup_completed")
     completed = raw_done if isinstance(raw_done, bool) else False
-    return TabDirectory(worktrees_dir=directory, rev=row.rev, setup_completed=completed)
+    mode = row.value.get("approvals_mode")
+    hold = row.value.get("approval_hold_seconds")
+    return TabDirectory(worktrees_dir=directory, rev=row.rev, setup_completed=completed,
+        approvals_mode=mode if mode in ("inline", "native") else "inline",
+        approval_hold_seconds=hold if isinstance(hold, int) and 30 <= hold <= 540 else 540)  # noqa: PLR2004
 
 
 def write_setup_completed(session: Session, *, completed: bool, rev: int) -> None:
@@ -124,6 +128,18 @@ class TabDatabase:
 
     def save_setup(self, *, completed: bool, rev: int) -> None:
         _ = self._writer.call(lambda session: write_setup_completed(session, completed=completed, rev=rev))
+
+    def save_approval_settings(self, *, mode: str, hold: int, rev: int) -> None:
+        def save(session: Session) -> None:
+            row = session.get(Setting, SETTINGS_KEY)
+            if row is None:
+                session.add(Setting(
+                    key=SETTINGS_KEY, value={"approvals_mode": mode, "approval_hold_seconds": hold}, rev=rev,
+                ))
+            else:
+                row.value = {**row.value, "approvals_mode": mode, "approval_hold_seconds": hold}
+                row.rev = rev
+        _ = self._writer.call(save)
 
 
 def _upsert_project(session: Session, tab: StoredTab) -> None:

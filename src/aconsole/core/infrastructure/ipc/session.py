@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import final
 
 import msgspec
 
-from aconsole.contracts.app import EmptyParams, SnapshotResult, SubscribeParams, SubscribeResult
+from aconsole.contracts.app import DecideParams, EmptyParams, SnapshotResult, SubscribeParams, SubscribeResult
 from aconsole.contracts.common import ClientRole
 from aconsole.contracts.errors import (
     ErrorData,
@@ -15,7 +15,7 @@ from aconsole.contracts.errors import (
     ProtocolVersionUnsupportedDetails,
     error_by_name,
 )
-from aconsole.contracts.events import ResyncRequired, UiEvent
+from aconsole.contracts.events import ApprovalRequested, ApprovalResolved, ResyncRequired, UiEvent
 from aconsole.contracts.ipc import (
     CancelParams,
     EventEnvelope,
@@ -28,12 +28,14 @@ from aconsole.contracts.ipc import (
     ResponseErr,
     ResponseOk,
 )
+from aconsole.core.application.services.approval_broker import ApprovalHold
 from aconsole.core.application.services.tabs import SETTINGS_METHODS, TAB_METHODS, TabRequestError, TabService
+from aconsole.core.domain.errors import DomainError
 from aconsole.core.infrastructure.ipc.framing import decode_envelope, encode_line
 from aconsole.core.infrastructure.ipc.ring import EventRing
 
 _SERVER = ProtocolVersion(major=1, minor=0)
-_SERVER_CAPS = frozenset({"events.v1", "diff.v1", "checkpoints.v1"})
+_SERVER_CAPS = frozenset({"events.v1", "diff.v1", "checkpoints.v1", "approvals.inline", "notifications.desktop"})
 _HOLD = "core/hold"
 _SNAPSHOT = "app/snapshot"
 _SIDECAR_PREFIX = "sidecar/"
@@ -51,11 +53,14 @@ class Connection:
         outbound_limit: int = OUTBOUND_LIMIT,
         session_id: str = "ipc-session",
         tabs: TabService | None = None,
+        approval_hold: ApprovalHold | None = None,
     ) -> None:
         self.ring = ring
         self.outbound_limit = outbound_limit
         self.session_id = session_id
         self.tabs = tabs
+        self.approval_hold = approval_hold
+        self.capabilities: frozenset[str] = frozenset()
         self.ready = False
         self.paused = False
         self.subscribed = False
@@ -84,6 +89,11 @@ class Connection:
         """Frames for an event the ring already numbered. Nothing before `events/subscribe` or while paused."""
         if not self.ready or self.paused or not self.subscribed:
             return ()
+        if (
+            isinstance(item.event, (ApprovalRequested, ApprovalResolved))
+            and "approvals.inline" not in self.capabilities
+        ):
+            return ()
         if self._queued >= self.outbound_limit:
             self.paused = True
             self._queued = 0
@@ -103,7 +113,7 @@ class Connection:
             return (self._err(request.id, "NOT_INITIALIZED"),)
         return self._ready(request)
 
-    def _ready(self, request: Request) -> tuple[bytes, ...]:
+    def _ready(self, request: Request) -> tuple[bytes, ...]:  # noqa: PLR0911 -- protocol dispatch
         # APP_API §9: a sidecar may call only `sidecar/*`; ui and cli may not call those.
         if (self.role is ClientRole.SIDECAR) != request.method.startswith(_SIDECAR_PREFIX):
             return (self._err(request.id, "ROLE_FORBIDDEN"),)
@@ -116,6 +126,17 @@ class Connection:
         if request.method == _HOLD:
             self.inflight.add(request.id)
             return ()
+        if request.method == "approval/decide" and self.approval_hold is not None:
+            try:
+                params = msgspec.json.decode(request.params, type=DecideParams)
+                result = self.approval_hold.decide(params, at=datetime.now(UTC))
+            except msgspec.DecodeError:
+                return (self._err(request.id, "INVALID_PARAMS"),)
+            except DomainError as exc:
+                return (self._err(request.id, exc.name),)
+            except ValueError:
+                return (self._err(request.id, "INVALID_PARAMS"),)
+            return (self._ok(request.id, result),)
         served = TAB_METHODS | SETTINGS_METHODS
         if request.method == _SNAPSHOT or (self.tabs is not None and request.method in served):
             return self._tab(request)
@@ -140,7 +161,10 @@ class Connection:
             _ = msgspec.json.decode(request.params, type=EmptyParams)
         except msgspec.DecodeError:
             return (self._err(request.id, "INVALID_PARAMS"),)
-        result = SnapshotResult(snapshot=tabs.snapshot(), seq=self.ring.current_seq)
+        snapshot = tabs.snapshot()
+        if self.approval_hold is not None and "approvals.inline" in self.capabilities:
+            snapshot = msgspec.structs.replace(snapshot, approvals=self.approval_hold.pending_views())
+        result = SnapshotResult(snapshot=snapshot, seq=self.ring.current_seq)
         return (self._ok(request.id, result),)
 
     def _notification(self, note: Notification) -> tuple[bytes, ...]:
@@ -166,12 +190,13 @@ class Connection:
             return (self._err(request.id, "SIDECAR_TOKEN_INVALID"),)
         self.ready = True
         self.role = params.role
+        self.capabilities = _SERVER_CAPS & params.capabilities
         result = InitializeResult(
             protocol=chosen,
             server_version="0.0.0",
             server_pid=0,
             session_id=self.session_id,
-            capabilities=_SERVER_CAPS & params.capabilities,
+            capabilities=self.capabilities,
             limits=self._limits,
         )
         return (self._ok(request.id, result),)
@@ -190,9 +215,14 @@ class Connection:
             return (self._err(request.id, "RESYNC_REQUIRED"),)
         self.subscribed = True
         frames = [self._ok(request.id, SubscribeResult(current_seq=self.ring.current_seq))]
-        frames.extend(self._event(item) for item in replay)
+        frames.extend(self._event(item) for item in replay if self._visible(item))
         self._queued += len(replay)
         return tuple(frames)
+
+    def _visible(self, item: EventEnvelope) -> bool:
+        if isinstance(item.event, (ApprovalRequested, ApprovalResolved)):
+            return "approvals.inline" in self.capabilities
+        return True
 
     def _ok(self, request_id: int, result: msgspec.Struct) -> bytes:
         body = ResponseOk(id=request_id, result=msgspec.Raw(self._encoder.encode(result)))

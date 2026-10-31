@@ -39,6 +39,8 @@ class TabDirectory:
     worktrees_dir: str | None
     rev: int
     setup_completed: bool = False
+    approvals_mode: str = "inline"
+    approval_hold_seconds: int = 540
 
 
 class TabStore(Protocol):

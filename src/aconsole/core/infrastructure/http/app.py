@@ -40,6 +40,10 @@ class Observer(Protocol):
     async def __call__(self, item: IngestItem) -> None: ...
 
 
+class PermissionHandler(Protocol):
+    async def __call__(self, item: IngestItem) -> HttpResponse: ...
+
+
 class Receive(Protocol):
     async def __call__(self) -> Mapping[str, object]: ...
 
@@ -52,7 +56,7 @@ class Send(Protocol):
 class IngestApp:
     """HTTP ingest. Observational hooks return before the observer runs."""
 
-    def __init__(
+    def __init__(  # noqa: PLR0913 -- optional ingest collaborators
         self,
         book: TokenBook,
         queue: IngestQueue,
@@ -60,6 +64,7 @@ class IngestApp:
         version: str = API_VERSION,
         body_limit: int = MAX_BODY_BYTES,
         observer: Observer | None = None,
+        permission_handler: PermissionHandler | None = None,
     ) -> None:
         if body_limit < 1:
             message = "body limit must be positive"
@@ -69,6 +74,7 @@ class IngestApp:
         self._version = version
         self._body_limit = body_limit
         self._observer = observer
+        self._permission_handler = permission_handler
         self._ids = 0
         self._invalid = 0
         self._tasks: set[asyncio.Task[None]] = set()
@@ -122,7 +128,7 @@ class IngestApp:
         body = await _read_body(receive, limit=self._body_limit)
         if body is None:
             return _problem("MESSAGE_TOO_LARGE", instance)
-        return self._accept(route, body)
+        return await self._accept(route, body)
 
     def _refused(self, tab_id: str, headers: dict[str, str], instance: str) -> HttpResponse | None:
         decision = self._book.check(headers.get("authorization"), tab_id)
@@ -132,14 +138,22 @@ class IngestApp:
             return _problem("INGEST_UNAUTHORIZED", instance)
         return None
 
-    def _accept(self, route: Route, body: bytes) -> HttpResponse:
-        if classify(route.kind, body) is None:
+    async def _accept(self, route: Route, body: bytes) -> HttpResponse:
+        parsed = classify(route.kind, body)
+        if parsed is None:
             self._invalid += 1
             _LOG.info("ingest payload invalid for %s", route.tab_id)
             return json_response(empty_json())
         item = IngestItem(tab_id=route.tab_id, kind=route.kind, body=body)
         self._queue.push(item)
         self._schedule(item)
+        handler = self._permission_handler
+        if (
+            handler is not None
+            and route.kind in {"claude.hook", "codex.hook"}
+            and getattr(parsed, "hook_event_name", None) == "PermissionRequest"
+        ):
+            return await handler(item)
         if route.kind in _NO_CONTENT_KINDS:
             return no_content()
         return json_response(empty_json())
