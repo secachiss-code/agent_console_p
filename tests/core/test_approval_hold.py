@@ -4,29 +4,34 @@ from __future__ import annotations
 
 import asyncio
 import os
-from collections.abc import Mapping
-from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
+from http.client import HTTPConnection
+from typing import TYPE_CHECKING
 
 import msgspec
 import pytest
+from sqlalchemy.orm import Session
 
 from aconsole.contracts.app import (
     AppliedResult,
     ApprovalView,
     CommandDetail,
     DecideParams,
+    EmptyParams,
+    SettingsUpdateParams,
     SubscribeParams,
 )
 from aconsole.contracts.common import (
     AgentKind,
-    ApprovalDecision as ContractDecision,
     ApprovalId,
     ApprovalScope,
     ClientRole,
     TabId,
+    TabStatus,
+    WorkspaceMode,
 )
-from aconsole.contracts.events import ApprovalRequested, ApprovalResolved
+from aconsole.contracts.common import ApprovalDecision as ContractDecision
+from aconsole.contracts.events import ApprovalRequested, ApprovalResolved, Notify
 from aconsole.contracts.ingest import HookResponse, HookSpecificOutput, PermissionDecision
 from aconsole.contracts.ipc import (
     EventEnvelope,
@@ -35,9 +40,12 @@ from aconsole.contracts.ipc import (
     Notification,
     ProtocolVersion,
     Request,
+    ResponseErr,
     ResponseOk,
 )
+from aconsole.contracts.settings import Settings, SettingsPatch
 from aconsole.core.application.services.approval_broker import ApprovalHold, HookOutcome
+from aconsole.core.bootstrap import Daemon
 from aconsole.core.domain.approvals import Approval, ApprovalBook, ApprovalPhase, OpenRequest
 from aconsole.core.domain.errors import DomainError
 from aconsole.core.infrastructure.http.app import IngestApp
@@ -47,6 +55,15 @@ from aconsole.core.infrastructure.http.routes import IngestItem, IngestQueue
 from aconsole.core.infrastructure.ipc.framing import decode_envelope, encode_line
 from aconsole.core.infrastructure.ipc.ring import EventRing
 from aconsole.core.infrastructure.ipc.session import Connection
+from aconsole.core.infrastructure.persistence.engine import write_engine
+from aconsole.core.infrastructure.persistence.models import ApprovalStatus, Project, Tab, Workspace
+from aconsole.core.infrastructure.persistence.repositories.catalog import ApprovalRepository
+from aconsole.core.infrastructure.persistence.startup import prepare_database, sqlite_url
+from tests.core.conftest import wait_for_socket
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
+    from pathlib import Path
 
 _AT = datetime(2026, 10, 31, 12, 0, tzinfo=UTC)
 _HOLD = timedelta(seconds=60)
@@ -257,14 +274,20 @@ async def _remembered_deny_rule_returns_deny_outcome_not_native() -> None:
         (
             "claude.hook",
             "/v1/tabs/tab-1/claude/hook",
-            b'{"session_id":"s-1","hook_event_name":"PermissionRequest","tool_name":"Bash","tool_input":{"command":"git status"}}',
+            (
+                b'{"session_id":"s-1","hook_event_name":"PermissionRequest",'
+                b'"tool_name":"Bash","tool_input":{"command":"git status"}}'
+            ),
             ContractDecision.ALLOW,
             None,
         ),
         (
             "codex.hook",
             "/v1/tabs/tab-1/codex/hook",
-            b'{"session_id":"s-1","hook_event_name":"PermissionRequest","tool_name":"Bash","tool_input":{"command":"git status"}}',
+            (
+                b'{"session_id":"s-1","hook_event_name":"PermissionRequest",'
+                b'"tool_name":"Bash","tool_input":{"command":"git status"}}'
+            ),
             ContractDecision.DENY,
             "Denied in AConsole",
         ),
@@ -502,3 +525,225 @@ def _subscribe(connection: Connection, request_id: int) -> tuple[bytes, ...]:
         params=msgspec.Raw(_ENCODER.encode(params)),
     )
     return connection.receive(encode_line(_ENCODER, request))
+
+
+def test_daemon_permission_hook_waits_for_ipc_decision_and_persists_audit(tmp_path: Path) -> None:
+    asyncio.run(_daemon_permission_hook_waits_for_ipc_decision_and_persists_audit(tmp_path))
+
+
+async def _daemon_permission_hook_waits_for_ipc_decision_and_persists_audit(tmp_path: Path) -> None:
+    database = tmp_path / "aconsole.db"
+    tab_id = "01JBF5SW7QNZ2X5QR8M6K9H000"
+    _seed_daemon_tab(database, tmp_path, tab_id)
+    daemon = Daemon(tmp_path / "core.sock", idle_s=30, database=database)
+    daemon.serve_ingest = True
+    daemon._tokens.register(tab_id, "test-tab-token")
+    serving = asyncio.create_task(daemon.serve())
+    await wait_for_socket(daemon.socket)
+    reader: asyncio.StreamReader | None = None
+    writer: asyncio.StreamWriter | None = None
+    hook: asyncio.Task[tuple[int, bytes]] | None = None
+    try:
+        assert daemon.ingest_port is not None
+        reader, writer = await asyncio.open_unix_connection(daemon.socket)
+        initialized, _ = await _daemon_rpc(
+            reader,
+            writer,
+            1,
+            "initialize",
+            InitializeParams(
+                protocol=(ProtocolVersion(major=1, minor=0), ProtocolVersion(major=1, minor=0)),
+                role=ClientRole.UI,
+                client_name="approval-integration-test",
+                client_version="0.0.0",
+                pid=1,
+                capabilities=frozenset({"events.v1", "approvals.inline", "notifications.desktop"}),
+            ),
+        )
+        negotiated = msgspec.json.decode(initialized.result, type=InitializeResult)
+        assert "approvals.inline" in negotiated.capabilities
+        assert "notifications.desktop" in negotiated.capabilities
+        _, _ = await _daemon_rpc(reader, writer, 2, "events/subscribe", SubscribeParams(after_seq=0))
+
+        settings_response, _ = await _daemon_rpc(reader, writer, 3, "settings/get", EmptyParams())
+        settings = msgspec.json.decode(settings_response.result, type=Settings)
+        assert settings.approvals_mode == "inline"
+        updated_settings, _ = await _daemon_rpc(
+            reader,
+            writer,
+            4,
+            "settings/update",
+            SettingsUpdateParams(patch=SettingsPatch(approvals_mode="inline"), rev=settings.rev),
+        )
+        assert updated_settings.id == 4
+
+        hook = asyncio.create_task(
+            asyncio.to_thread(
+                _post_daemon_permission_hook,
+                daemon.ingest_port,
+                "test-tab-token",
+                tab_id,
+                b'{"session_id":"daemon-session","hook_event_name":"PermissionRequest",'
+                b'"tool_name":"Bash","tool_input":{"command":"git status"}}',
+            )
+        )
+        approval_event, earlier_events = await _daemon_event(reader)
+        assert isinstance(approval_event.event, ApprovalRequested)
+        approval = approval_event.event.approval
+        assert approval.tab_id == tab_id
+        assert not hook.done(), "HTTP hook returned before the UI made a decision"
+
+        decision_response, resolved_events = await _daemon_rpc(
+            reader,
+            writer,
+            5,
+            "approval/decide",
+            DecideParams(approval_id=approval.id, nonce=approval.nonce, decision=ContractDecision.ALLOW),
+        )
+        assert msgspec.json.decode(decision_response.result, type=AppliedResult).applied
+        assert any(
+            isinstance(event.event, ApprovalResolved)
+            and event.event.approval_id == approval.id
+            and event.event.outcome == "allowed"
+            for event in resolved_events
+        )
+        approval_notifications = [
+            event.event
+            for event in (*earlier_events, *resolved_events)
+            if isinstance(event.event, Notify) and event.event.episode_id == approval.id
+        ]
+        assert len(approval_notifications) == 1
+
+        status, response_body = await asyncio.wait_for(hook, 5)
+        assert status == 200
+        response = msgspec.json.decode(response_body, type=HookResponse)
+        assert response.hook_specific_output.decision.behavior == "allow"
+        assert daemon._writer is not None
+        audit_status = await asyncio.wait_for(
+            daemon._writer.submit(
+                lambda session: ApprovalRepository().one(session, str(approval.id)).status
+            ),
+            5,
+        )
+        assert audit_status is ApprovalStatus.ALLOWED
+    finally:
+        if writer is not None:
+            writer.close()
+            await writer.wait_closed()
+        daemon.request_stop()
+        await asyncio.wait_for(serving, 15)
+
+
+async def _daemon_rpc(
+    reader: asyncio.StreamReader,
+    writer: asyncio.StreamWriter,
+    request_id: int,
+    method: str,
+    params: msgspec.Struct,
+) -> tuple[ResponseOk, tuple[EventEnvelope, ...]]:
+    request = Request(id=request_id, method=method, params=msgspec.Raw(_ENCODER.encode(params)))
+    writer.write(encode_line(_ENCODER, request))
+    await writer.drain()
+    events: list[EventEnvelope] = []
+    while True:
+        envelope = decode_envelope(await asyncio.wait_for(reader.readuntil(b"\n"), 5))
+        if isinstance(envelope, Notification) and envelope.method == "$/event":
+            events.append(msgspec.json.decode(envelope.params, type=EventEnvelope))
+            continue
+        if isinstance(envelope, ResponseErr):
+            pytest.fail(f"{method} failed: {envelope.error.message}")
+        assert isinstance(envelope, ResponseOk)
+        if envelope.id != request_id:
+            pytest.fail(f"{method} returned id {envelope.id}, expected {request_id}")
+        return envelope, tuple(events)
+
+
+async def _daemon_event(reader: asyncio.StreamReader) -> tuple[EventEnvelope, tuple[EventEnvelope, ...]]:
+    loop = asyncio.get_running_loop()
+    deadline = loop.time() + 5
+    skipped: list[EventEnvelope] = []
+    while True:
+        remaining = deadline - loop.time()
+        if remaining <= 0:
+            pytest.fail("daemon did not publish an ApprovalRequested event")
+        envelope = decode_envelope(await asyncio.wait_for(reader.readuntil(b"\n"), remaining))
+        if not isinstance(envelope, Notification) or envelope.method != "$/event":
+            pytest.fail("daemon sent a non-event frame while waiting for ApprovalRequested")
+        event = msgspec.json.decode(envelope.params, type=EventEnvelope)
+        if isinstance(event.event, ApprovalRequested):
+            return event, tuple(skipped)
+        skipped.append(event)
+
+
+def _post_daemon_permission_hook(port: int, token: str, tab_id: str, body: bytes) -> tuple[int, bytes]:
+    connection = HTTPConnection("127.0.0.1", port, timeout=5)
+    try:
+        connection.request(
+            "POST",
+            f"/v1/tabs/{tab_id}/claude/hook",
+            body=body,
+            headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"},
+        )
+        response = connection.getresponse()
+        return response.status, response.read()
+    finally:
+        connection.close()
+
+
+def _seed_daemon_tab(database: Path, tmp_path: Path, tab_id: str) -> None:
+    now = datetime.now(UTC)
+    project_id = "01JBF5SW7QNZ2X5QR8M6K9H001"
+    workspace_id = "01JBF5SW7QNZ2X5QR8M6K9H002"
+    _ = prepare_database(database, now=now)
+    engine = write_engine(sqlite_url(database))
+    try:
+        with Session(engine) as session:
+            session.add(
+                Project(
+                    id=project_id,
+                    name="approval-test",
+                    root_path=str(tmp_path / "project"),
+                    languages=["rust"],
+                    created_at=now,
+                )
+            )
+            session.flush()
+            session.add(
+                Workspace(
+                    id=workspace_id,
+                    project_id=project_id,
+                    mode=WorkspaceMode.MAIN_CHECKOUT,
+                    path=str(tmp_path / "project"),
+                    branch="main",
+                    base_branch="main",
+                    base_commit=None,
+                    locked=False,
+                    dirty_cached=False,
+                    created_at=now,
+                    removed_at=None,
+                )
+            )
+            session.flush()
+            session.add(
+                Tab(
+                    id=tab_id,
+                    project_id=project_id,
+                    workspace_id=workspace_id,
+                    agent_kind=AgentKind.CLAUDE,
+                    account_id=None,
+                    title="approval test",
+                    tab_order=0,
+                    last_status=TabStatus.IDLE,
+                    status_detail=None,
+                    plan_node_id=None,
+                    context_used_pct=None,
+                    session_cost_usd=None,
+                    agent_session_id=None,
+                    closed_at=None,
+                    created_at=now,
+                    updated_at=now,
+                )
+            )
+            session.commit()
+    finally:
+        engine.dispose()
