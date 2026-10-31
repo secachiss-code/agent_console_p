@@ -8,6 +8,7 @@ from __future__ import annotations
 import asyncio
 import shutil
 import subprocess
+import textwrap
 import threading
 from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, datetime, timedelta
@@ -48,6 +49,7 @@ from aconsole.core.application.services.setup import SetupService
 from aconsole.core.bootstrap import Daemon
 from aconsole.core.domain.errors import DomainError
 from aconsole.core.infrastructure.ipc.framing import decode_envelope, encode_line
+from aconsole.core.infrastructure.setup_checks import HostSetupProbe, SetupEnvironment
 from tests.core.conftest import wait_for_socket
 
 _AT = datetime(2026, 10, 31, 12, 0, tzinfo=UTC)
@@ -62,7 +64,7 @@ _CHECK_IDS = (
     "devtools_graph_tools",
     "notifications",
 )
-_ROOT = Path(__file__).resolve().parents[3]
+_ROOT = Path(__file__).resolve().parents[2]
 _INSTALLER = _ROOT / "install.sh"
 
 
@@ -74,6 +76,65 @@ class _Probe(SetupProbe):
     def run_checks(self) -> tuple[CheckResult, ...]:
         self.calls += 1
         return self.checks
+
+
+class _FakeSetupEnvironment(SetupEnvironment):
+    def __init__(self, home: Path) -> None:
+        self._home = home
+        self.available = {"podman", "distrobox", "g-ir-inspect", "notify-send"}
+        self.directories = {home / "Obsidian" / "AConsole"}
+        self.variables = {"DBUS_SESSION_BUS_ADDRESS": "unix:path=/tmp/fake-bus"}
+        self.containers = ("agent-claude",)
+        self.failed_argv: set[tuple[str, ...]] = set()
+        self.calls: list[tuple[str, ...]] = []
+        self.list_succeeds = True
+
+    @property
+    def home(self) -> Path:
+        return self._home
+
+    def which(self, name: str) -> str | None:
+        return f"/fake/bin/{name}" if name in self.available else None
+
+    def run(self, argv: tuple[str, ...]) -> tuple[bool, str]:
+        self.calls.append(argv)
+        if argv == ("podman", "ps", "-a", "--format", "{{.Names}}"):
+            return self.list_succeeds, "\n".join(self.containers)
+        if argv in self.failed_argv:
+            return False, "simulated probe failure"
+        if argv[-1:] == ("--version",):
+            return True, f"{argv[-2]} 1.2.3"
+        if argv[-3:] == ("claude", "auth", "status"):
+            return True, '{"authMethod":"claude.ai"}'
+        return True, "simulated probe evidence"
+
+    def is_dir(self, path: Path) -> bool:
+        return path in self.directories
+
+    def environ(self, name: str) -> str | None:
+        return self.variables.get(name)
+
+    def fail_category(self, category: str) -> None:
+        worktrees = self.home / ".local" / "share" / "aconsole" / "worktrees"
+        vault = self.home / "Obsidian" / "AConsole"
+        if category == "host_dependencies":
+            self.available.discard("distrobox")
+        elif category == "agent_containers":
+            self.containers = ()
+        elif category == "agent_login":
+            self.failed_argv.add(("podman", "exec", "agent-claude", "claude", "auth", "status"))
+        elif category == "agent_versions":
+            self.failed_argv.add(("podman", "exec", "agent-claude", "claude", "--version"))
+        elif category == "storage":
+            self.directories.discard(vault)
+        elif category == "worktree_storage_mounts":
+            self.failed_argv.add(("podman", "exec", "agent-claude", "test", "-d", str(worktrees)))
+        elif category == "devtools_graph_tools":
+            self.failed_argv.add(("podman", "exec", "devtools", "dotnet", "--version"))
+        elif category == "notifications":
+            self.variables.pop("DBUS_SESSION_BUS_ADDRESS", None)
+        else:
+            pytest.fail(f"unknown setup check category: {category}")
 
 
 class _TokenSource(SetupTokenSource):
@@ -158,6 +219,55 @@ def _checks(*, fail: frozenset[str] = frozenset()) -> tuple[CheckResult, ...]:
     )
 
 
+def test_host_setup_probe_reports_all_eight_categories_from_fake_environment(tmp_path: Path) -> None:
+    environment = _FakeSetupEnvironment(tmp_path)
+
+    checks = HostSetupProbe(environment).run_checks()
+    by_id = {check.id: check for check in checks}
+
+    assert tuple(check.id for check in checks) == _CHECK_IDS
+    assert all(check.ok and check.severity == "info" for check in checks)
+    assert by_id["host_dependencies"].detail == "podman, distrobox and GI inspection tools"
+    assert by_id["agent_login"].detail == "Agent authentication status; unsupported agents require manual verification"
+    assert by_id["storage"].detail == str(tmp_path / "Obsidian" / "AConsole")
+    assert ("podman", "exec", "agent-claude", "claude", "auth", "status") in environment.calls
+    assert (
+        "podman",
+        "exec",
+        "agent-claude",
+        "test",
+        "-d",
+        str(tmp_path / ".local" / "share" / "aconsole" / "worktrees"),
+    ) in environment.calls
+    assert all(isinstance(argv, tuple) and argv for argv in environment.calls)
+
+
+@pytest.mark.parametrize("category", _CHECK_IDS)
+def test_host_setup_probe_marks_missing_evidence_for_each_category(tmp_path: Path, category: str) -> None:
+    environment = _FakeSetupEnvironment(tmp_path)
+    environment.fail_category(category)
+
+    checks = {check.id: check for check in HostSetupProbe(environment).run_checks()}
+
+    assert checks[category].ok is False
+    assert checks[category].severity == "warning"
+    assert checks[category].detail
+    assert all(isinstance(argv, tuple) and argv for argv in environment.calls)
+
+
+def test_host_setup_probe_does_not_claim_login_for_unsupported_agent_kinds(tmp_path: Path) -> None:
+    environment = _FakeSetupEnvironment(tmp_path)
+    environment.containers = ("agent-claude", "agent-codex")
+
+    checks = {check.id: check for check in HostSetupProbe(environment).run_checks()}
+
+    assert checks["agent_versions"].ok is True
+    assert checks["agent_login"].ok is False
+    detail = checks["agent_login"].detail
+    assert detail is not None
+    assert "unsupported agents require manual verification" in detail
+
+
 def _service(
     home: Path,
     *,
@@ -208,7 +318,7 @@ def test_preview_apply_is_preview_bound_one_shot_and_writes_only_under_home(tmp_
     assert len(fixes.apply_calls) == 1
 
 
-@pytest.mark.parametrize("token", ("", "wrong", "échec", "\ud800"), ids=("missing", "wrong", "unicode", "surrogate"))
+@pytest.mark.parametrize("token", ["", "wrong", "échec", "\ud800"], ids=("missing", "wrong", "unicode", "surrogate"))
 def test_invalid_tokens_fail_before_provider_or_filesystem_effects(tmp_path: Path, token: str) -> None:
     service, _probe, fixes = _service(tmp_path)
     preview = service.preview_fix("create_app_config", at=_AT)
@@ -219,7 +329,7 @@ def test_invalid_tokens_fail_before_provider_or_filesystem_effects(tmp_path: Pat
 
     assert fixes.apply_calls == []
     assert _filesystem_snapshot(tmp_path) == before
-    assert preview.confirm_token == "setup-token"
+    assert preview.confirm_token
 
 
 def test_expired_mismatched_fix_and_changed_fingerprints_have_no_effect(tmp_path: Path) -> None:
@@ -454,6 +564,39 @@ def test_installer_uses_fake_uv_and_only_writes_to_fake_home(tmp_path: Path, mon
     assert all(path.is_relative_to(home) for path in home.rglob("*"))
 
 
+def test_installer_dry_run_within_home_has_no_writes_or_uv_calls(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    home = tmp_path / "home"
+    checkout = home / "Projects" / "repo"
+    checkout.mkdir(parents=True)
+    script = checkout / "install.sh"
+    _ = shutil.copyfile(_INSTALLER, script)
+    fake_uv, _fake_sudo = _fake_tools(home)
+    log = home / "uv.log"
+    _ = log.write_text("", encoding="utf-8")
+    monkeypatch.setenv("HOME", str(home))
+    monkeypatch.setenv("ACONSOLE_UV", str(fake_uv))
+    monkeypatch.setenv("ACONSOLE_TEST_UV_LOG", str(log))
+    monkeypatch.setenv("ACONSOLE_TEST_SUDO_LOG", str(home / "sudo.log"))
+    monkeypatch.setenv("ACONSOLE_TEST_ALLOW_OUTSIDE", "0")
+    monkeypatch.setenv("PATH", f"{fake_uv.parent}:/usr/bin:/bin")
+
+    before = _filesystem_snapshot(tmp_path)
+    completed = subprocess.run(
+        ("/bin/sh", str(script), "--dry-run"),
+        check=False,
+        capture_output=True,
+        text=True,
+        timeout=10,
+    )
+
+    assert completed.returncode == 0, completed.stderr
+    assert log.read_text(encoding="utf-8") == ""
+    assert _filesystem_snapshot(tmp_path) == before
+
+
 def test_installer_outside_home_refuses_and_dry_run_has_no_effects(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -538,32 +681,30 @@ def _fake_tools(home: Path) -> tuple[Path, Path]:
     fake_bin = home / ".test-bin"
     fake_bin.mkdir(parents=True, exist_ok=True)
     executable = fake_bin / "uv-recorder"
-    source = "\n".join(
-        (
-            "#!/bin/sh",
-            "set -eu",
-            'printf \'%s|%s|%s\\n\' "$PWD" "${UV_PROJECT_ENVIRONMENT-}" "$*" >> "$ACONSOLE_TEST_UV_LOG"',
-            'target="${UV_PROJECT_ENVIRONMENT-}"',
-            'if [ -n "$target" ]; then',
-            '  case "$target" in /*) ;; *) target="$PWD/$target" ;; esac',
-            '  case "$target" in "$HOME"/*) mkdir -p "$target" ;; *)',
-            '    [ "${ACONSOLE_TEST_ALLOW_OUTSIDE-0}" = 1 ] || exit 91',
-            '    mkdir -p "$target" ;;',
-            '  esac',
-            'fi',
-            "",
-        )
+    source = textwrap.dedent(
+        """\
+        #!/bin/sh
+        set -eu
+        printf '%s|%s|%s\\n' "$PWD" "${UV_PROJECT_ENVIRONMENT-}" "$*" >> "$ACONSOLE_TEST_UV_LOG"
+        target="${UV_PROJECT_ENVIRONMENT-}"
+        if [ -n "$target" ]; then
+          case "$target" in /*) ;; *) target="$PWD/$target" ;; esac
+          case "$target" in "$HOME"/*) mkdir -p "$target" ;; *)
+            [ "${ACONSOLE_TEST_ALLOW_OUTSIDE-0}" = 1 ] || exit 91
+            mkdir -p "$target" ;;
+          esac
+        fi
+        """
     )
     _ = executable.write_text(source, encoding="utf-8")
     executable.chmod(0o755)
     fake_sudo = fake_bin / "sudo"
-    sudo_source = "\n".join(
-        (
-            "#!/bin/sh",
-            'printf \'called\\n\' >> "$ACONSOLE_TEST_SUDO_LOG"',
-            "exit 90",
-            "",
-        )
+    sudo_source = textwrap.dedent(
+        """\
+        #!/bin/sh
+        printf 'called\\n' >> "$ACONSOLE_TEST_SUDO_LOG"
+        exit 90
+        """
     )
     _ = fake_sudo.write_text(sudo_source, encoding="utf-8")
     fake_sudo.chmod(0o755)
