@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import os
+import shutil
 import signal
 import sys
 import tempfile
@@ -33,7 +34,16 @@ async def _terminate(process: asyncio.subprocess.Process) -> None:
 
 
 async def _command(root: Path, args: tuple[str, ...], timeout_s: float) -> int:
-    process = await asyncio.create_subprocess_exec(*args, cwd=root, start_new_session=True)
+    env = os.environ.copy()
+    if shutil.which("npx") is None and (home := env.get("HOME")):
+        binary = Path(home) / ".local/share/fnm/node-versions/v24.22.0/installation/bin"
+        if all(path.is_file() and os.access(path, os.X_OK) for path in (binary / "node", binary / "npx")):
+            env["PATH"] = f"{binary}{os.pathsep}{env.get('PATH', '')}"
+    try:
+        process = await asyncio.create_subprocess_exec(*args, cwd=root, start_new_session=True, env=env)
+    except FileNotFoundError as exc:
+        _ = sys.stderr.write(f"managed conformance executable unavailable: {exc}\n")
+        return 127
     try:
         _ = await asyncio.wait_for(process.communicate(), timeout_s)
     except TimeoutError:
