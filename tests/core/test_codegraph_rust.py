@@ -176,6 +176,39 @@ def test_codegraph_rust_cargo_modules_dot_rejects_malformed_documents() -> None:
             _ = from_cargo_modules_dot(raw)
 
 
+def test_codegraph_rust_cargo_modules_dot_decodes_escaped_identifier_characters() -> None:
+    raw = br"""digraph {
+"crate::quoted\"module";
+"crate::path\\module";
+"crate::quoted\"module" -> "crate::path\\module" [label="owns"];
+}"""
+
+    assert from_cargo_modules_dot(raw) == ExtractorGraph(
+        version=1,
+        nodes=(
+            GraphNode(
+                id="crate::path\\module",
+                path="crate::path\\module",
+                name="path\\module",
+                kind="module",
+            ),
+            GraphNode(
+                id='crate::quoted"module',
+                path='crate::quoted"module',
+                name='quoted"module',
+                kind="module",
+            ),
+        ),
+        edges=(
+            GraphEdge(
+                source='crate::quoted"module',
+                target="crate::path\\module",
+                kind="owns",
+            ),
+        ),
+    )
+
+
 def test_codegraph_rust_runner_dispatches_cargo_metadata_to_rust_parser(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
