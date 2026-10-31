@@ -220,8 +220,15 @@ class CoreClient:
             params=msgspec.Raw(msgspec.json.encode(params)),
             timeout_ms=int(timeout * _MS_PER_S),
         )
-        await self._send(msgspec.json.encode(body) + b"\n")
-        envelope = await self._wait(future, request_id, method, timeout)
+        try:
+            await self._send(msgspec.json.encode(body) + b"\n")
+            envelope = await self._wait(future, request_id, method, timeout)
+        finally:
+            _ = self._pending.pop(request_id, None)
+            if future.done() and not future.cancelled():
+                _ = future.exception()
+            elif not future.done():
+                _ = future.cancel()
         if isinstance(envelope, ResponseErr):
             raise CoreCallError(envelope.error)
         if not isinstance(envelope, ResponseOk):
