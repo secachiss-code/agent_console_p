@@ -23,7 +23,17 @@ def _request(
     return f"Request: example\nTask: {task}\nStatus: {status}\n\n{sections}"
 
 
-@pytest.mark.parametrize("status", ["accepted", "accepted (G)", "accepted (MAIN)", "done(2026-10-31)"])
+@pytest.mark.parametrize(
+    "status",
+    [
+        "accepted",
+        "accepted (G)",
+        "accepted (MAIN)",
+        "done(2026-10-31)",
+        "done (439c627)",
+        "done (MAIN 57a6c83)",
+    ],
+)
 def test_contract_request_accepts_documented_statuses(status: str) -> None:
     criteria, hits = done_when._contract_request_criteria({"request.md": _request(status=status)}, "C1")
 
