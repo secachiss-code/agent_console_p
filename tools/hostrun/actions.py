@@ -24,6 +24,7 @@ KNOWN_ACTIONS: frozenset[str] = frozenset(
         "distrobox-dry-run",
         "git",
         "gate",
+        "gate-review",
         "conformance",
         "devtools",
     }
@@ -111,6 +112,8 @@ class Plan:
     repo: str = ""
     socket_path: str = ""
     side: str = ""
+    gate_id: str = ""
+    review_args: tuple[str, ...] = ()
 
 
 def validate_cwd(cwd: str, projects_root: str) -> Path:
@@ -183,7 +186,20 @@ def build_plan(
     if action == "git":
         return Plan(mode="exec", steps=(_git(args, cwd),), timeout_s=timeout_s)
     if action == "gate":
-        return Plan(mode="exec", steps=(_gate(args, repo),), timeout_s=timeout_s, repo=repo, side=side)
+        return Plan(mode="exec", steps=(_gate(args, repo),), timeout_s=timeout_s, repo=repo, side=side,
+                    gate_id=args[0] if len(args) == 1 else "")
+    if action == "gate-review":
+        if (len(args) not in (3, 4) or args[0] not in ("inspect", "approve")
+                or len(args) != (3 if args[0] == "inspect" else 4)
+                or _TASK.fullmatch(args[1]) is None
+                or re.fullmatch(r"tools/(?:gate|hostrun)/[A-Za-z0-9_./-]+", args[2]) is None
+                or ".." in args[2].split("/")
+                or (len(args) == 4 and re.fullmatch(r"[0-9a-f]{64}", args[3]) is None)):
+            raise ActionError(400, "invalid gate review request")
+        target = Path(repo) / args[2]
+        if not target.is_file() or target.resolve() != Path(repo).resolve() / args[2]:
+            raise ActionError(400, "gate review path must be an existing tracked file")
+        return Plan(mode="gate-review", steps=(), timeout_s=timeout_s, repo=repo, review_args=tuple(args))
     if action == "conformance":
         return Plan(mode="exec", steps=(_START_DEVTOOLS, _conformance(args, repo)), timeout_s=timeout_s)
     if action == "devtools":

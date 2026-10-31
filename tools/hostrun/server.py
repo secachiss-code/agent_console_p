@@ -7,6 +7,8 @@ never starts a shell. Callers are identified with SO_PEERCRED.
 from __future__ import annotations
 
 import fcntl
+import base64
+import hashlib
 import json
 import os
 import re
@@ -20,6 +22,7 @@ import sys
 import threading
 import time
 import tomllib
+import tempfile
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -50,6 +53,166 @@ _ENV_ALLOW = frozenset(
 _FIXED_PATH = "/home/sas/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 _EXAMPLE = Path(__file__).with_name("policy.example.toml")
 _USER_POLICY = Path("/home/sas/.config/aconsole-hostrun/policy.toml")
+
+
+def _review_git(repo: str, *args: str) -> bytes:
+    result = subprocess.run(
+        ["git", "-C", repo, *args], capture_output=True, check=True, timeout=30,
+        env={**base_env(), "GIT_LITERAL_PATHSPECS": "1"},
+    )
+    return result.stdout
+
+
+def _strict_json(data: bytes) -> object:
+    def unique(pairs: list[tuple[str, object]]) -> dict[str, object]:
+        result: dict[str, object] = {}
+        for key, value in pairs:
+            if key in result:
+                raise ValueError("duplicate JSON field")
+            result[key] = value
+        return result
+
+    return json.loads(data, object_pairs_hook=unique)
+
+
+def _review_base(repo: str, task: str) -> str:
+    bases = _strict_json((Path(repo) / "docs/plan/core/bases.json").read_bytes())
+    if not isinstance(bases, dict):
+        raise ValueError("invalid task bases")
+    base = bases[task]
+    if not isinstance(base, str) or re.fullmatch(r"[0-9a-f]{40}|[0-9a-f]{64}", base) is None:
+        raise ValueError("invalid task base")
+    resolved = _review_git(repo, "rev-parse", "--verify", f"{base}^{{commit}}").decode().strip()
+    if resolved != base:
+        raise ValueError("invalid task base")
+    return base
+
+
+def _review_snapshot(repo: str, task: str, path: str) -> tuple[dict[str, str], bytes]:
+    root = Path(repo).resolve()
+    target = root / path
+    if not target.is_file() or target.resolve() != target:
+        raise ValueError("review path must be a regular file without symlinks")
+    base = _review_base(repo, task)
+    # Rename detection is global so a renamed file cannot be approved as a modification.
+    names = _review_git(repo, "diff", "--name-status", "-M", "--no-ext-diff", base, "--")
+    expected = b"M\t" + path.encode()
+    if names.splitlines().count(expected) != 1:
+        raise ValueError("path must be a tracked modification (status M)")
+    diff = _review_git(repo, "diff", "--binary", "--no-ext-diff", "--no-textconv", base, "--", path)
+    if not diff:
+        raise ValueError("empty diff")
+    return {"repo": str(root), "task": task, "base": base, "path": path, "status": "M",
+            "digest": hashlib.sha256(diff).hexdigest()}, diff
+
+
+def _review_record_path(state_dir: str, task: str, path: str) -> Path:
+    return Path(state_dir) / "gate-reviews" / task / (hashlib.sha256(path.encode()).hexdigest() + ".json")
+
+
+def _atomic_write(path: Path, data: bytes) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fd, temp = tempfile.mkstemp(prefix=".hostrun-", dir=path.parent)
+    try:
+        with os.fdopen(fd, "wb") as handle:
+            handle.write(data)
+        os.replace(temp, path)
+    finally:
+        if os.path.exists(temp):
+            os.unlink(temp)
+
+
+def _review_gate(repo: str, state_dir: str, task: str, container: str, previous: tuple[int, int] | None) -> bool:
+    path = Path(repo) / ".aconsole-dev" / "gates" / f"{task}.json"
+    try:
+        stat = path.stat()
+        if previous == (stat.st_ino, stat.st_mtime_ns):
+            return False
+        raw = path.read_bytes()
+        if Path(state_dir).resolve().is_relative_to(Path(repo).resolve()):
+            return False
+        report = _strict_json(raw)
+        if not isinstance(report, dict) or set(report) != {
+            "schema_version", "phase_id", "started_at", "finished_at", "mode", "runner", "via_hostrun",
+            "repo", "steps", "counts", "coverage", "violations_total", "violations", "verdict", "failed_steps",
+        }:
+            return False
+        base = _review_base(repo, task)
+        head = _review_git(repo, "rev-parse", "HEAD").decode().strip()
+        info = report["repo"]
+        if (type(report["schema_version"]) is not int or report["schema_version"] != 1
+                or report["phase_id"] != task or report["mode"] != "task"
+                or report["runner"] != container or report["via_hostrun"] is not True
+                or not isinstance(info, dict) or set(info) != {"path", "base", "head", "dirty_worktree"}
+                or info["path"] != repo or info["base"] != base or info["head"] != head
+                or report["verdict"] != "fail" or report["failed_steps"] != ["diff_guard"]):
+            return False
+        steps = report["steps"]
+        hits = report["violations"]
+        counts = report["counts"]
+        coverage = report["coverage"]
+        if (not isinstance(steps, list) or not steps or not isinstance(hits, list) or not hits
+                or type(report["violations_total"]) is not int or len(hits) != report["violations_total"]
+                or not isinstance(counts, dict) or type(counts.get("guard_violations")) is not int
+                or counts.get("guard_violations") != len(hits)
+                or any(type(value) is not int or value != 0 for key, value in counts.items() if key != "guard_violations")
+                or not isinstance(coverage, dict) or type(coverage.get("percent")) not in (int, float)
+                or type(coverage.get("fail_under")) not in (int, float)
+                or not 90 <= coverage["fail_under"] <= coverage["percent"] <= 100):
+            return False
+        if any(not isinstance(step, dict) for step in steps):
+            return False
+        expected_steps = {"no_placeholders", "diff_guard", "done_when", "ruff", "basedpyright",
+                          "check_no_raw_sql", "check_no_js", "check_contracts", "import_linter",
+                          "pytest-core", "pytest-ui"}
+        if len(steps) != len(expected_steps) or {step.get("name") for step in steps} != expected_steps:
+            return False
+        guards = [step for step in steps if step.get("name") == "diff_guard"]
+        if (len(guards) != 1 or guards[0].get("status") != "fail"
+                or type(guards[0].get("exit_code")) is not int or guards[0].get("exit_code") != 1
+                or any(step.get("status") != "pass" or type(step.get("exit_code")) is not int or step.get("exit_code") != 0
+                       for step in steps if step is not guards[0])):
+            return False
+        approvals = []
+        seen: set[str] = set()
+        for hit in hits:
+            if (not isinstance(hit, dict) or set(hit) != {"gate", "rule", "path", "line", "detail"}
+                    or hit["gate"] != "diff_guard" or hit["rule"] != "protected-file-changed"
+                    or hit["detail"] != "status M" or hit["line"] is not None or not isinstance(hit["path"], str)):
+                return False
+            name = hit["path"]
+            if (name in seen or re.fullmatch(r"tools/(?:gate|hostrun)/[A-Za-z0-9_./-]+", name) is None
+                    or ".." in name.split("/")):
+                return False
+            seen.add(name)
+            record = _strict_json(_review_record_path(state_dir, task, name).read_bytes())
+            snapshot, _ = _review_snapshot(repo, task, name)
+            if not isinstance(record, dict) or record != snapshot or set(record) != {"repo", "task", "base", "path", "status", "digest"}:
+                return False
+            approvals.append({"hit": hit, "record": record})
+        raw_path = path.with_name(f"{task}.raw.json")
+        if raw_path.exists() and raw_path.read_bytes() != raw:
+            raw_path = path.with_name(f"{task}.raw.{hashlib.sha256(raw).hexdigest()}.json")
+        if raw_path.exists() and raw_path.read_bytes() != raw:
+            return False
+        raw_guard = dict(guards[0])
+        # Recheck the repository immediately before committing the reviewed result.
+        if any(_review_snapshot(repo, task, item["record"]["path"])[0] != item["record"] for item in approvals):
+            return False
+        _atomic_write(raw_path, raw)
+        report["review"] = {"raw_sha256": hashlib.sha256(raw).hexdigest(), "raw_report": str(raw_path),
+                            "raw_diff_guard": raw_guard, "matched_hits": hits, "approvals": approvals}
+        guards[0]["status"] = "pass"
+        guards[0]["exit_code"] = 0
+        report["violations"] = []
+        report["violations_total"] = 0
+        counts["guard_violations"] = 0
+        report["failed_steps"] = []
+        report["verdict"] = "pass"
+        _atomic_write(path, (json.dumps(report, indent=2) + "\n").encode())
+        return True
+    except (OSError, ValueError, KeyError, TypeError, subprocess.SubprocessError, UnicodeError):
+        return False
 
 
 class PolicyError(Exception):
@@ -728,6 +891,25 @@ class Application:
             )
 
     def run_plan(self, plan: actions.Plan, *, cwd: str, write: Callable[[bytes], None], container: str = "") -> int:
+        if plan.mode == "gate-review":
+            try:
+                if Path(self.policy.state_dir).resolve().is_relative_to(Path(plan.repo).resolve()):
+                    raise ValueError("review state must be outside the repository")
+                operation, task, path, *digest = plan.review_args
+                record, diff = _review_snapshot(plan.repo, task, path)
+                if operation == "inspect":
+                    result: dict[str, object] = {**record, "diff_base64": base64.b64encode(diff).decode()}
+                else:
+                    if record["digest"] != digest[0]:
+                        raise ValueError("diff digest changed")
+                    _atomic_write(_review_record_path(self.policy.state_dir, task, path),
+                                  (json.dumps(record) + "\n").encode())
+                    result = {**record, "recorded": True}
+                write((json.dumps(result) + "\n").encode())
+                return 0
+            except (OSError, ValueError, KeyError, TypeError, IndexError, subprocess.SubprocessError, UnicodeError) as exc:
+                write(f"hostrun: gate review failed: {exc}\n".encode())
+                return 1
         if plan.mode == "check":
             script = str(Path(plan.repo) / "tools" / "check.sh")
             env = base_env()
@@ -749,6 +931,13 @@ class Application:
         deadline = time.monotonic() + plan.timeout_s
         written = [0]
         code = 0
+        previous = None
+        if plan.gate_id:
+            try:
+                stat = (Path(plan.repo) / ".aconsole-dev" / "gates" / f"{plan.gate_id}.json").stat()
+                previous = (stat.st_ino, stat.st_mtime_ns)
+            except OSError:
+                pass
         for step in plan.steps:
             env = base_env()
             env.update(dict(step.env))
@@ -762,8 +951,14 @@ class Application:
                 deadline=deadline,
                 output_limit=self.policy.output_limit_bytes,
                 written=written,
-                write=buffered.append if step.quiet_success else write,
+                write=buffered.append if step.quiet_success or plan.gate_id else write,
             )
+            if plan.gate_id:
+                if code == 1 and _review_gate(plan.repo, self.policy.state_dir, plan.gate_id, container, previous):
+                    write(f"Phase {plan.gate_id} gate: PASS (reviewed protected changes)\n".encode())
+                    return 0
+                for chunk in buffered:
+                    write(chunk)
             if code != 0:
                 if step.quiet_success:
                     for chunk in buffered:
