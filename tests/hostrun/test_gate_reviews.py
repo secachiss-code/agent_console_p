@@ -5,11 +5,13 @@ from __future__ import annotations
 import base64
 import hashlib
 import json
+import shutil
 import socket
 import subprocess
 import sys
 import threading
 import time
+from dataclasses import replace
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -83,6 +85,34 @@ def _repo_with_tracked_main_edit(tmp: Path, task: str = TASK) -> tuple[server.Po
     return policy, repo, base, PATH, diff
 
 
+def _repo_with_internal_symlink_change(tmp: Path) -> tuple[server.Policy, Path, str, str]:
+    policy = _policy(tmp)
+    repo = Path(policy.repo)
+    gate = repo / "tools" / "gate"
+    gate.mkdir(parents=True)
+    shell_guard = gate / "shell_guard.py"
+    other_guard = gate / "other_guard.py"
+    alias = gate / "alias.py"
+    shell_guard.write_bytes(b"before\n")
+    other_guard.write_bytes(b"other\n")
+    alias.symlink_to("shell_guard.py")
+    _git(repo, "init", "-q")
+    _git(repo, "config", "user.name", "hostrun test")
+    _git(repo, "config", "user.email", "hostrun-test@example.invalid")
+    _git(repo, "add", "tools/gate/shell_guard.py", "tools/gate/other_guard.py", "tools/gate/alias.py")
+    _git(repo, "commit", "-qm", "task base")
+    base = _git(repo, "rev-parse", "HEAD").decode().strip()
+    exclude = repo / ".git" / "info" / "exclude"
+    exclude.write_text("/docs/plan/core/bases.json\n", encoding="utf-8")
+    bases = repo / "docs" / "plan" / "core" / "bases.json"
+    bases.parent.mkdir(parents=True)
+    bases.write_text(json.dumps({TASK: base}), encoding="utf-8")
+    alias.unlink()
+    alias.symlink_to("other_guard.py")
+    shell_guard.write_bytes(b"after\n")
+    return policy, repo, base, "tools/gate/alias.py"
+
+
 def _review_path(policy: server.Policy, task: str, path: str = PATH) -> Path:
     key = hashlib.sha256(path.encode("utf-8")).hexdigest()
     return Path(policy.state_dir) / "gate-reviews" / task / f"{key}.json"
@@ -134,6 +164,7 @@ def _inspect_and_approve(policy: server.Policy, task: str, path: str, diff: byte
     record = json.loads(output)
     assert record == {
         "task": task,
+        "repo": str(Path(policy.repo).resolve()),
         "base": inspection["base"],
         "path": path,
         "status": "M",
@@ -202,7 +233,16 @@ def _gate_report(
         "repo": {"path": str(repo), "base": base, "head": head, "dirty_worktree": True},
         "steps": steps,
         "counts": {
+            "placeholder_bypass": 0,
             "guard_violations": sum(1 for item in violations if item["gate"] == "diff_guard"),
+            "done_when": 0,
+            "ruff": 0,
+            "basedpyright": 0,
+            "check_no_raw_sql": 0,
+            "check_no_js": 0,
+            "check_contracts": 0,
+            "import_linter": 0,
+            "coverage_layers": 0,
         },
         "coverage": {"percent": 91.2, "fail_under": 90, "layers": {}},
         "violations_total": len(violations),
@@ -260,6 +300,7 @@ def test_inspect_and_approve_bind_record_to_exact_task_base_path_status_and_diff
 
     assert record == {
         "task": TASK,
+        "repo": str(repo.resolve()),
         "base": base,
         "path": path,
         "status": "M",
@@ -316,6 +357,19 @@ def test_review_inspection_accepts_only_tracked_modifications(
     assert b"tracked" in output.lower() or b"status" in output.lower()
 
 
+def test_review_inspection_rejects_symlink_to_another_in_repo_main_file(tmp_path: Path) -> None:
+    policy, _repo, _base, alias = _repo_with_internal_symlink_change(tmp_path)
+
+    try:
+        plan = _review_plan(policy, "inspect", TASK, alias)
+    except actions.ActionError:
+        return
+    code, output = _run_plan(policy, plan)
+
+    assert code != 0
+    assert b"symlink" in output.lower() or b"regular" in output.lower() or b"tracked" in output.lower()
+
+
 def test_approve_rejects_a_diff_that_changed_after_inspection(tmp_path: Path) -> None:
     policy, repo, base, path, _diff = _repo_with_tracked_main_edit(tmp_path)
     inspect = _review_plan(policy, "inspect", TASK, path)
@@ -356,8 +410,59 @@ def test_approved_protected_hit_effectively_passes_and_preserves_raw_report_byte
     assert review["raw_sha256"] == hashlib.sha256(raw).hexdigest()
     assert review["raw_report"] == str(raw_path)
     assert review["raw_diff_guard"]["exit_code"] == 1
-    assert review["matched_hits"] == [effective["review"]["approvals"][0]["hit"]]
+    assert review["matched_hits"] == json.loads(raw)["violations"]
+    assert review["matched_hits"][0] == effective["review"]["approvals"][0]["hit"]
     assert effective["review"]["approvals"][0]["record"] == record
+
+
+def test_repeated_acceptance_preserves_first_raw_and_content_addresses_later_reports(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    policy, repo, base, path, diff = _repo_with_tracked_main_edit(tmp_path)
+    _ = _inspect_and_approve(policy, TASK, path, diff)
+    first_raw = _gate_report(repo, TASK, base, path)
+    code, _output, canonical_path = _run_gate_with_report(monkeypatch, policy, repo, TASK, first_raw)
+    assert code == 0
+    original_raw_path = canonical_path.with_name(f"{TASK}.raw.json")
+    assert original_raw_path.read_bytes() == first_raw
+
+    second_report = json.loads(_gate_report(repo, TASK, base, path))
+    second_report["finished_at"] = "2026-10-31T00:00:02+00:00"
+    second_raw = (json.dumps(second_report, indent=2) + "\n").encode("utf-8")
+    code, _output, canonical_path = _run_gate_with_report(monkeypatch, policy, repo, TASK, second_raw)
+
+    assert code == 0
+    assert original_raw_path.read_bytes() == first_raw
+    effective = json.loads(canonical_path.read_text(encoding="utf-8"))
+    raw_sha = hashlib.sha256(second_raw).hexdigest()
+    later_raw_path = Path(effective["review"]["raw_report"])
+    assert later_raw_path.name == f"{TASK}.raw.{raw_sha}.json"
+    assert later_raw_path.read_bytes() == second_raw
+
+
+def test_approval_cannot_be_reused_from_a_copied_repository(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    policy, repo, base, path, diff = _repo_with_tracked_main_edit(tmp_path)
+    _ = _inspect_and_approve(policy, TASK, path, diff)
+    copied_repo = repo.parent / "copied"
+    shutil.copytree(repo, copied_repo)
+    copied_policy = replace(policy, repo=str(copied_repo), projects_root=str(copied_repo.parent))
+    raw = _gate_report(copied_repo, TASK, base, path)
+
+    code, _output, canonical_path = _run_gate_with_report(
+        monkeypatch,
+        copied_policy,
+        copied_repo,
+        TASK,
+        raw,
+    )
+
+    assert code != 0
+    assert canonical_path.read_bytes() == raw
+    assert not canonical_path.with_name(f"{TASK}.raw.json").exists()
 
 
 @pytest.mark.parametrize("corruption", ["malformed", "extra", "missing", "unavailable", "task", "base", "status"])
@@ -461,6 +566,61 @@ def test_review_does_not_override_independent_gate_failures(
         extra_violations=extra_violations,
         extra_failed_step=extra_failed_step,
     )
+
+    code, _output, canonical_path = _run_gate_with_report(monkeypatch, policy, repo, TASK, raw)
+
+    assert code != 0
+    assert canonical_path.read_bytes() == raw
+
+
+@pytest.mark.parametrize("inconsistency", ["nonzero-count", "coverage-below-floor"])
+def test_review_rejects_inconsistent_counts_or_global_coverage(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    inconsistency: str,
+) -> None:
+    policy, repo, base, path, diff = _repo_with_tracked_main_edit(tmp_path)
+    _ = _inspect_and_approve(policy, TASK, path, diff)
+    report = json.loads(_gate_report(repo, TASK, base, path))
+    if inconsistency == "nonzero-count":
+        report["counts"]["ruff"] = 1
+    else:
+        report["coverage"]["percent"] = 89.99
+    raw = (json.dumps(report, indent=2) + "\n").encode("utf-8")
+
+    code, _output, canonical_path = _run_gate_with_report(monkeypatch, policy, repo, TASK, raw)
+
+    assert code != 0
+    assert canonical_path.read_bytes() == raw
+
+
+@pytest.mark.parametrize(
+    "malformation",
+    ["bool-schema", "bool-guard-exit", "bool-violation-count", "bool-guard-count", "bool-pass-exit", "duplicate-field"],
+)
+def test_review_rejects_boolean_integer_fields_and_duplicate_json_keys(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    malformation: str,
+) -> None:
+    policy, repo, base, path, diff = _repo_with_tracked_main_edit(tmp_path)
+    _ = _inspect_and_approve(policy, TASK, path, diff)
+    raw = _gate_report(repo, TASK, base, path)
+    if malformation == "duplicate-field":
+        raw = raw.replace(b'"schema_version": 1,', b'"schema_version": 1,\n  "schema_version": 1,', 1)
+    else:
+        report = json.loads(raw)
+        if malformation == "bool-schema":
+            report["schema_version"] = True
+        elif malformation == "bool-guard-exit":
+            next(step for step in report["steps"] if step["name"] == "diff_guard")["exit_code"] = True
+        elif malformation == "bool-violation-count":
+            report["violations_total"] = True
+        elif malformation == "bool-guard-count":
+            report["counts"]["guard_violations"] = True
+        else:
+            next(step for step in report["steps"] if step["name"] == "ruff")["exit_code"] = False
+        raw = (json.dumps(report, indent=2) + "\n").encode("utf-8")
 
     code, _output, canonical_path = _run_gate_with_report(monkeypatch, policy, repo, TASK, raw)
 
