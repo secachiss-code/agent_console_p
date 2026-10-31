@@ -1,0 +1,8 @@
+digraph {
+  "console_core";
+  "console_core::approvals";
+  "console_core::tabs";
+  "console_core" -> "console_core::approvals";
+  "console_core" -> "console_core::tabs";
+  "console_core" -> "console_core::approvals";
+}
