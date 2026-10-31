@@ -14,9 +14,11 @@ import json
 import re
 import subprocess
 import sys
-from collections.abc import Mapping
 from pathlib import Path
-from typing import TypedDict
+from typing import TYPE_CHECKING, TypedDict
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
 
 PROGRESS_DIR = "docs/plan/core/progress"
 BRIEFS = "docs/plan/CORE.md"
@@ -131,7 +133,9 @@ def _contract_request_criteria(requests: Mapping[str, str], task: str) -> tuple[
     if len(re.findall(r"^Task:[^\r\n]*$", source, re.MULTILINE)) != 1:
         return None, [Hit(rule="contract-request-not-unique", path=path, detail="expected one Task line")]
     statuses = re.findall(r"^Status:\s*([^\r\n]*?)\s*$", source, re.MULTILINE)
-    if len(statuses) != 1 or re.fullmatch(r"(?:accepted(?: \((?:G|MAIN)\))?|done(?: ?\([^\r\n()]+\))?)", statuses[0]) is None:
+    if len(statuses) != 1 or re.fullmatch(
+        r"(?:accepted(?: \((?:G|MAIN)\))?|done(?: ?\([^\r\n()]+\))?)", statuses[0]
+    ) is None:
         return None, [Hit(rule="contract-request-status", path=path, detail="request is not accepted or done")]
     headings = list(re.finditer(r"^##\s+([^\r\n]+?)\s*$", source, re.MULTILINE))
     accepted = [i for i, heading in enumerate(headings) if heading.group(1) in ("Acceptance", "Готово, когда")]
