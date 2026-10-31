@@ -199,7 +199,8 @@ async def _send_close_race() -> None:
             _ = payload
             send_started.set()
             await fail_send.wait()
-            raise ConnectionError("send failed")
+            message = "send failed"
+            raise ConnectionError(message)
 
     client = BlockedSendClient("unused")
     request = asyncio.create_task(client.request("app/snapshot", EmptyParams(), SnapshotResult))
