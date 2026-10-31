@@ -37,6 +37,12 @@ class SetupService:
         self._lock = threading.Lock()
         self._pending: dict[str, tuple[SetupFixPlan, datetime]] = {}
 
+    def _prune_expired(self, at: datetime) -> None:
+        """Discard expired confirmations while the caller holds the lock."""
+        for token in tuple(self._pending):
+            if at >= self._pending[token][1]:
+                del self._pending[token]
+
     def checks(self) -> ChecksResult:
         return ChecksResult(checks=self._probe.run_checks())
 
@@ -47,6 +53,7 @@ class SetupService:
         token = self._tokens.new_token()
         expires = at + self._ttl
         with self._lock:
+            self._prune_expired(at)
             self._pending[token] = (plan, expires)
         return FixPreview(fix_id=fix_id, summary=plan.summary, diff=plan.diff, commands=plan.commands,
                           reversible=plan.reversible, confirm_token=token, expires_at=expires)
@@ -57,6 +64,7 @@ class SetupService:
         except UnicodeEncodeError as exc:
             raise _error(_INVALID) from exc
         with self._lock:
+            self._prune_expired(at)
             plan = self._fixes.preview(fix_id)
             if plan is None:
                 raise _error(_UNKNOWN)
