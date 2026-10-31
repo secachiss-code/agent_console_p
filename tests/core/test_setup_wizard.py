@@ -351,6 +351,34 @@ def test_expired_mismatched_fix_and_changed_fingerprints_have_no_effect(tmp_path
     assert _filesystem_snapshot(tmp_path) == ()
 
 
+def test_expired_previews_are_pruned_and_newest_token_remains_usable(tmp_path: Path) -> None:
+    count = 64
+    tokens = tuple(f"setup-token-{index}" for index in range(count))
+    service, _probe, fixes = _service(tmp_path, tokens=tokens)
+    previews = tuple(
+        service.preview_fix("create_app_config", at=_AT + index * timedelta(minutes=6))
+        for index in range(count)
+    )
+    latest_at = _AT + (count - 1) * timedelta(minutes=6)
+    before = _filesystem_snapshot(tmp_path)
+
+    assert len(service._pending) <= 1
+    with pytest.raises(DomainError, match="CONFIRM_TOKEN_INVALID"):
+        service.apply_fix("create_app_config", previews[0].confirm_token, at=latest_at)
+
+    assert fixes.apply_calls == []
+    assert _filesystem_snapshot(tmp_path) == before
+
+    result = service.apply_fix(
+        "create_app_config",
+        previews[-1].confirm_token,
+        at=latest_at + timedelta(seconds=1),
+    )
+
+    assert result.id == "fix_applied"
+    assert len(fixes.apply_calls) == 1
+
+
 def test_unknown_fix_is_rejected_without_runner_call(tmp_path: Path) -> None:
     service, _probe, fixes = _service(tmp_path)
 
