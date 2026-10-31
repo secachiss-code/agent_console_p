@@ -7,7 +7,14 @@ from typing import final
 
 import msgspec
 
-from aconsole.contracts.app import DecideParams, EmptyParams, SnapshotResult, SubscribeParams, SubscribeResult
+from aconsole.contracts.app import (
+    DecideParams,
+    EmptyParams,
+    ReleaseParams,
+    SnapshotResult,
+    SubscribeParams,
+    SubscribeResult,
+)
 from aconsole.contracts.common import ClientRole
 from aconsole.contracts.errors import (
     ErrorData,
@@ -127,20 +134,35 @@ class Connection:
             self.inflight.add(request.id)
             return ()
         if request.method == "approval/decide" and self.approval_hold is not None:
-            try:
-                params = msgspec.json.decode(request.params, type=DecideParams)
-                result = self.approval_hold.decide(params, at=datetime.now(UTC))
-            except msgspec.DecodeError:
-                return (self._err(request.id, "INVALID_PARAMS"),)
-            except DomainError as exc:
-                return (self._err(request.id, exc.name),)
-            except ValueError:
-                return (self._err(request.id, "INVALID_PARAMS"),)
-            return (self._ok(request.id, result),)
+            return self._decide_approval(request, self.approval_hold)
+        if request.method == "approval/releaseToNative" and self.approval_hold is not None:
+            return self._release_to_native(request, self.approval_hold)
         served = TAB_METHODS | SETTINGS_METHODS
         if request.method == _SNAPSHOT or (self.tabs is not None and request.method in served):
             return self._tab(request)
         return (self._err(request.id, "METHOD_NOT_FOUND"),)
+
+    def _decide_approval(self, request: Request, hold: ApprovalHold) -> tuple[bytes, ...]:
+        try:
+            params = msgspec.json.decode(request.params, type=DecideParams)
+            result = hold.decide(params, at=datetime.now(UTC))
+        except msgspec.DecodeError:
+            return (self._err(request.id, "INVALID_PARAMS"),)
+        except DomainError as exc:
+            return (self._err(request.id, exc.name),)
+        except ValueError:
+            return (self._err(request.id, "INVALID_PARAMS"),)
+        return (self._ok(request.id, result),)
+
+    def _release_to_native(self, request: Request, hold: ApprovalHold) -> tuple[bytes, ...]:
+        try:
+            params = msgspec.json.decode(request.params, type=ReleaseParams)
+            released = hold.release_to_native(params, at=datetime.now(UTC))
+        except msgspec.DecodeError:
+            return (self._err(request.id, "INVALID_PARAMS"),)
+        except DomainError as exc:
+            return (self._err(request.id, exc.name),)
+        return (self._ok(request.id, released),)
 
     def _tab(self, request: Request) -> tuple[bytes, ...]:
         tabs = self.tabs

@@ -7,7 +7,13 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Protocol
 
-from aconsole.contracts.app import AppliedResult, ApprovalView, DecideParams
+from aconsole.contracts.app import (
+    AppliedResult,
+    ApprovalView,
+    DecideParams,
+    ReleasedResult,
+    ReleaseParams,
+)
 from aconsole.contracts.common import ApprovalId, ApprovalScope
 from aconsole.contracts.events import ApprovalRequested, ApprovalResolved
 from aconsole.core.domain.approvals import Approval, ApprovalBook, ApprovalDecision, ApprovalPhase, OpenRequest
@@ -110,6 +116,16 @@ class ApprovalHold:
 
     def expire(self, *, at: datetime) -> None:
         for approval in self._book.expire(at):
+            self._settle(approval, None)
+
+    def release_to_native(self, params: ReleaseParams, *, at: datetime) -> ReleasedResult:
+        approval = self._book.release(str(params.approval_id), nonce=params.nonce, at=at)
+        self._settle(approval, None)
+        return ReleasedResult(released=True)
+
+    def release_pending(self) -> None:
+        """Settle all held hooks when no capable UI remains or the daemon stops."""
+        for approval in self._book.release_pending():
             self._settle(approval, None)
 
     def _expire_due(self, at: datetime) -> None:

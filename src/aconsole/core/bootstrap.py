@@ -313,6 +313,7 @@ class Daemon:
             self._closing = True
             self._listening = False
             self._cancel_idle()
+            self.approvals.release_pending()
             try:
                 await self._close_server()
                 await self._close_ingest()
@@ -357,17 +358,19 @@ class Daemon:
 
     async def _permission(self, item: IngestItem) -> HttpResponse:
         settings = await self._in_worker(self.tabs.current_settings)
-        capable = any(connection.ready and connection.role is ClientRole.UI and
-            "approvals.inline" in connection.capabilities for connection in self._connections)
-        if settings.approvals_mode == "native" or not capable:
+        if settings.approvals_mode == "native" or not self._has_approval_ui() or self._stop_requested:
             return json_response(empty_json())
         snapshot = await self._in_worker(self.tabs.snapshot)
         tab = next((tab for tab in snapshot.tabs if str(tab.id) == item.tab_id), None)
-        if tab is None:
+        if tab is None or not self._has_approval_ui() or self._stop_requested:
             return json_response(empty_json())
         return await handle_permission(
             item, self.approvals, hold_seconds=settings.approval_hold_seconds, worktree=tab.worktree_path,
         )
+
+    def _has_approval_ui(self) -> bool:
+        return any(connection.ready and connection.role is ClientRole.UI and
+            "approvals.inline" in connection.capabilities for connection in self._connections)
 
     def _publish(self, event: UiEvent, live: int, token: str | None) -> None:
         """Number the event once, send it to every subscribed connection, and keep tokens and liveness current."""
@@ -604,7 +607,7 @@ class Daemon:
         """Handle one frame on the worker and write the replies. False when the frame cannot be decoded."""
         try:
             envelope = decode_envelope(frame)
-            if isinstance(envelope, Request) and envelope.method == "approval/decide":
+            if isinstance(envelope, Request) and envelope.method in {"approval/decide", "approval/releaseToNative"}:
                 payloads = connection.receive(frame)
             else:
                 payloads = await self._in_worker(lambda: connection.receive(frame))
@@ -647,6 +650,9 @@ class Daemon:
         finally:
             self._writers.discard(writer)
             _ = self._connections.pop(connection, None)
+            if (connection.ready and connection.role is ClientRole.UI and
+                "approvals.inline" in connection.capabilities and not self._has_approval_ui()):
+                self.approvals.release_pending()
             if counted:
                 self._lose_holder()
             if not writer.is_closing():

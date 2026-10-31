@@ -282,6 +282,13 @@ class ApprovalBook:
         current = self._live(approval_id, nonce, at)
         return self._replace(current, phase=ApprovalPhase.EXPIRED_TO_NATIVE, by=DecisionBy.USER)
 
+    def release_pending(self) -> tuple[Approval, ...]:
+        """Return every pending request to the agent's native prompt."""
+        pending = tuple(item for item in self._items.values() if item.phase is ApprovalPhase.PENDING)
+        return tuple(
+            self._replace(item, phase=ApprovalPhase.EXPIRED_TO_NATIVE, by=DecisionBy.TIMEOUT) for item in pending
+        )
+
     def expire(self, at: datetime) -> tuple[Approval, ...]:
         due = [item for item in self._items.values() if item.phase is ApprovalPhase.PENDING and at >= item.expires_at]
         return tuple(self._replace(item, phase=ApprovalPhase.EXPIRED_TO_NATIVE, by=DecisionBy.TIMEOUT) for item in due)
