@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 import subprocess
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pytest
-
 from tools.gate import done_when
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 _BODY = "- First criterion is copied verbatim.\n- Second criterion is copied verbatim.\n"
 
@@ -107,9 +109,15 @@ def test_contract_request_accepts_the_legacy_done_when_section() -> None:
 
 def test_contract_check_reuses_verbatim_and_backticked_command_rules() -> None:
     criteria = "- first criterion is satisfied\n- run `hostrun test ui tests/gui/test_core_client.py`\n"
-    matching = "## Done when\n- [x] first criterion is satisfied\n- [x] run `hostrun test ui tests/gui/test_core_client.py`\n"
+    matching = (
+        "## Done when\n- [x] first criterion is satisfied\n"
+        "- [x] run `hostrun test ui tests/gui/test_core_client.py`\n"
+    )
     missing_command = "## Done when\n- [x] first criterion is satisfied\n"
-    rewritten = "## Done when\n- [x] first requirement completed\n- [x] run `hostrun test ui tests/gui/test_core_client.py`\n"
+    rewritten = (
+        "## Done when\n- [x] first requirement completed\n"
+        "- [x] run `hostrun test ui tests/gui/test_core_client.py`\n"
+    )
 
     assert done_when.check_contract(matching, criteria, "C1") == []
     assert any(hit["rule"] == "done-when-dropped" for hit in done_when.check_contract(missing_command, criteria, "C1"))
