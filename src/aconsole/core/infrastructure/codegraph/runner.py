@@ -18,6 +18,7 @@ from aconsole.contracts.errors import (
     error_by_name,
 )
 from aconsole.core.infrastructure.codegraph.protocol import ExtractorGraph, ExtractorProtocolError, decode_graph
+from aconsole.core.infrastructure.codegraph.rust import from_cargo_metadata
 
 _HOSTRUN: Final = Path("/home/sas/.containers/host-bins/hostrun")
 _TIMEOUT_S: Final = 60.0
@@ -103,9 +104,12 @@ def _parse(language: str, completed: subprocess.CompletedProcess[str]) -> Extrac
     if completed.returncode != _OK:
         return ExtractorRun(graph=None, error=_failure(language, _tail(completed.stderr)))
     try:
-        graph = decode_graph(completed.stdout.encode("utf-8"))
+        raw = completed.stdout.encode("utf-8")
+        graph = from_cargo_metadata(raw) if language == "rust-metadata" else decode_graph(raw)
     except ExtractorProtocolError as exc:
         return ExtractorRun(graph=None, error=_failure(language, exc.detail))
+    except ValueError as exc:
+        return ExtractorRun(graph=None, error=_failure(language, str(exc)))
     return ExtractorRun(graph=graph, error=None)
 
 
