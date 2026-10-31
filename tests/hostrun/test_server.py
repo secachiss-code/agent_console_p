@@ -532,27 +532,52 @@ def test_conformance_rejects_wrong_argument_shape(tmp_path: Path, args: list[str
 DEVTOOLS_CASES = [
     ("python", "src/aconsole", ("python3", "tools/codegraph/extract_python.py", "src/aconsole")),
     ("ts", "src", ("npx", "--yes", "dependency-cruiser@18.7.0", "--output-type", "json", "src")),
-    (
-        "rust-metadata",
-        "crates/core",
-        ("cargo", "metadata", "--format-version", "1", "--no-deps", "--manifest-path", "crates/core/Cargo.toml"),
-    ),
+    ("rust-metadata", "crates/core", None),
     ("csharp", "src/Cs", ("dotnet", "run", "--project", "tools/csgraph", "--", "src/Cs")),
 ]
 
 
 @pytest.mark.parametrize(("extractor", "path", "tail"), DEVTOOLS_CASES)
-def test_devtools_extractor_argv(tmp_path: Path, extractor: str, path: str, tail: tuple[str, ...]) -> None:
+def test_devtools_extractor_argv(
+    tmp_path: Path,
+    extractor: str,
+    path: str,
+    tail: tuple[str, ...] | None,
+) -> None:
     repo = str(tmp_path)
+    manifest: Path | None = None
+    if extractor == "rust-metadata":
+        manifest = tmp_path / path / "Cargo.toml"
+        manifest.parent.mkdir(parents=True)
+        manifest.write_text("[workspace]\nmembers = []\n", encoding="utf-8")
     plan = actions.build_plan("devtools", [extractor, path], tmp_path, repo, 30)
     assert plan.steps[0].argv == ("podman", "start", "devtools")
-    assert plan.steps[1].argv == ("podman", "exec", "--workdir", repo, "devtools", *tail)
+    argv = plan.steps[1].argv
+    if extractor == "rust-metadata":
+        assert manifest is not None
+        _assert_rust_metadata_wrapper(argv, repo, manifest)
+    else:
+        assert tail is not None
+        assert argv == ("podman", "exec", "--workdir", repo, "devtools", *tail)
+
+
+def _assert_rust_metadata_wrapper(argv: tuple[str, ...], repo: str, manifest: Path) -> None:
+    assert argv[:5] == ("podman", "exec", "--workdir", repo, "devtools")
+    assert argv[5:7] == ("/bin/sh", "-c")
+    script = argv[7]
+    assert "--offline" in script
+    assert "$1" in script
+    assert str(manifest.resolve()) not in script
+    assert argv[-2:] == ("aconsole-rust", str(manifest.resolve()))
 
 
 def test_devtools_rust_metadata_appends_cargo_toml_after_a_trailing_slash(tmp_path: Path) -> None:
     repo = str(tmp_path)
+    manifest = tmp_path / "crates" / "core" / "Cargo.toml"
+    manifest.parent.mkdir(parents=True)
+    manifest.write_text("[workspace]\nmembers = []\n", encoding="utf-8")
     plan = actions.build_plan("devtools", ["rust-metadata", "crates/core/"], tmp_path, repo, 30)
-    assert plan.steps[-1].argv[-1] == "crates/core/Cargo.toml"
+    _assert_rust_metadata_wrapper(plan.steps[-1].argv, repo, manifest)
 
 
 @pytest.mark.parametrize(
