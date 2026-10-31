@@ -14,11 +14,13 @@ import json
 import re
 import subprocess
 import sys
+from collections.abc import Mapping
 from pathlib import Path
 from typing import TypedDict
 
 PROGRESS_DIR = "docs/plan/core/progress"
 BRIEFS = "docs/plan/CORE.md"
+REQUESTS = "docs/contracts/requests"
 _DONE_WHEN = "**Готово, когда"
 _STOP = ("**Запрещено", "**Зависит от", "**Файлы", "**Шаги")
 _ITEM = re.compile(r"^- \[( |x|X)\](.*)$")
@@ -87,6 +89,12 @@ def check(progress: str, briefs: str | None, phase: str) -> list[Hit]:
     if brief is None:
         hits.append(Hit(rule="brief-not-found", path=BRIEFS, detail=f"no '**{phase} ·' brief with 'Готово, когда'"))
         return hits
+    hits.extend(_check_items(items, brief, path))
+    return hits
+
+
+def _check_items(items: list[tuple[bool, str]], brief: str, path: str) -> list[Hit]:
+    hits: list[Hit] = []
     if not items:
         hits.append(Hit(rule="done-when-empty", path=path, detail="no '- [ ]' items under '## Done when'"))
         return hits
@@ -102,6 +110,68 @@ def check(progress: str, briefs: str | None, phase: str) -> list[Hit]:
         if f"`{command}`" not in joined
     )
     return hits
+
+
+def check_contract(progress: str, criteria: str, phase: str) -> list[Hit]:
+    path = f"{PROGRESS_DIR}/{phase}.md"
+    items = progress_items(progress)
+    hits: list[Hit] = []
+    if _is_done(progress) and not all(ticked for ticked, _ in items):
+        hits.append(Hit(rule="done-with-open-items", path=path, detail="Status: done while a Done when item is [ ]"))
+    hits.extend(_check_items(items, _normal(criteria), path))
+    return hits
+
+
+def _contract_request_criteria(requests: Mapping[str, str], task: str) -> tuple[str | None, list[Hit]]:
+    matches = [(path, source) for path, source in requests.items()
+               for value in re.findall(r"^Task:\s*([^\r\n]*?)\s*$", source, re.MULTILINE) if value == task]
+    if len(matches) != 1:
+        return None, [Hit(rule="contract-request-not-unique", path=REQUESTS, detail=f"expected one Task: {task}")]
+    path, source = matches[0]
+    if len(re.findall(r"^Task:[^\r\n]*$", source, re.MULTILINE)) != 1:
+        return None, [Hit(rule="contract-request-not-unique", path=path, detail="expected one Task line")]
+    statuses = re.findall(r"^Status:\s*([^\r\n]*?)\s*$", source, re.MULTILINE)
+    if len(statuses) != 1 or re.fullmatch(r"(?:accepted(?: \((?:G|MAIN)\))?|done(?:\([^\r\n()]+\))?)", statuses[0]) is None:
+        return None, [Hit(rule="contract-request-status", path=path, detail="request is not accepted or done")]
+    headings = list(re.finditer(r"^##\s+([^\r\n]+?)\s*$", source, re.MULTILINE))
+    accepted = [i for i, heading in enumerate(headings) if heading.group(1) in ("Acceptance", "Готово, когда")]
+    if len(accepted) != 1:
+        return None, [Hit(rule="contract-criteria-not-unique", path=path, detail="expected one acceptance section")]
+    index = accepted[0]
+    end = headings[index + 1].start() if index + 1 < len(headings) else len(source)
+    criteria = _normal(source[headings[index].end():end])
+    if not criteria:
+        return None, [Hit(rule="contract-criteria-empty", path=path, detail="acceptance section is empty")]
+    return criteria, []
+
+
+def _contract_request_sources(repo: Path, base: str) -> dict[str, str]:
+    tracked_base = subprocess.run(
+        ["git", "-C", str(repo), "ls-tree", "-r", "--name-only", "-z", base, "--", REQUESTS],
+        capture_output=True, check=True,
+    ).stdout.decode().split("\0")
+    tracked_now = subprocess.run(
+        ["git", "-C", str(repo), "ls-files", "-z", "--", REQUESTS], capture_output=True, check=True,
+    ).stdout.decode().split("\0")
+    sources: dict[str, str] = {}
+    for name in tracked_base:
+        if name.endswith(".md"):
+            value = _show(str(repo), base, name)
+            if value is None:
+                raise ValueError(f"cannot read base request {name}")
+            sources[name] = value
+    directory = repo / REQUESTS
+    if directory.is_dir():
+        for file in directory.glob("*.md"):
+            name = file.relative_to(repo).as_posix()
+            if name in tracked_now or name in sources:
+                continue
+            ignored = subprocess.run(["git", "-C", str(repo), "check-ignore", "-q", "--", name], check=False)
+            if ignored.returncode == 0:
+                sources[name] = file.read_text(encoding="utf-8")
+            elif ignored.returncode != 1:
+                raise ValueError(f"cannot check request {name}")
+    return sources
 
 
 def _show(repo: str, base: str, relative: str) -> str | None:
@@ -135,11 +205,16 @@ def main(argv: list[str]) -> int:
     phase = str(args.phase)
     progress_path = repo / PROGRESS_DIR / f"{phase}.md"
     if progress_path.is_file():
-        hits = check(
-            progress_path.read_text(encoding="utf-8"),
-            _brief(repo, str(args.base)),
-            phase,
-        )
+        progress = progress_path.read_text(encoding="utf-8")
+        if re.fullmatch(r"C[0-9]{1,2}", phase):
+            try:
+                criteria, hits = _contract_request_criteria(_contract_request_sources(repo, str(args.base)), phase)
+                if criteria is not None:
+                    hits.extend(check_contract(progress, criteria, phase))
+            except (OSError, ValueError, UnicodeError, subprocess.SubprocessError) as exc:
+                hits = [Hit(rule="contract-request-unreadable", path=REQUESTS, detail=str(exc))]
+        else:
+            hits = check(progress, _brief(repo, str(args.base)), phase)
     else:
         hits = [Hit(rule="progress-missing", path=f"{PROGRESS_DIR}/{phase}.md", detail="")]
     _ = sys.stdout.write(json.dumps({"violations": hits}) + "\n")
