@@ -62,7 +62,52 @@ _EXTRACTORS: dict[str, tuple[str, ...]] = {
     "ts": ("npx", "--yes", "dependency-cruiser@18.7.0", "--output-type", "json"),
     "rust-metadata": (),
     "csharp": ("dotnet", "run", "--project", "tools/csgraph", "--"),
+    "csharp-info": (),
 }
+
+# Fixed inventory only: the validated context argument is deliberately unused.
+_CSHARP_INFO_SCRIPT = '''
+export DOTNET_CLI_TELEMETRY_OPTOUT=1 DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1
+export DOTNET_NOLOGO=1 DOTNET_MULTILEVEL_LOOKUP=0
+printf 'HOME=%s\\nDOTNET_ROOT=%s\\n' "${HOME:-}" "${DOTNET_ROOT:-}"
+dotnet=$(command -v dotnet || :)
+if [ -z "$dotnet" ]; then
+    for candidate in "${DOTNET_ROOT:-}/dotnet" "${HOME:-}/.dotnet/dotnet" \\
+        /usr/share/dotnet/dotnet /usr/lib/dotnet/dotnet \\
+        /home/sas/.containers/containers/devtools/.dotnet/dotnet; do
+        if [ -x "$candidate" ]; then dotnet=$candidate; break; fi
+    done
+fi
+if [ -z "$dotnet" ]; then
+    echo "dotnet is unavailable" >&2
+    exit 127
+fi
+printf 'DOTNET=%s\\n' "$dotnet"
+sdks=$("$dotnet" --list-sdks) || exit $?
+printf '%s\\n' "$sdks" | while IFS= read -r line; do
+    [ -n "$line" ] || continue
+    version=${line%% *}
+    sdkroot=${line#*[}
+    sdkroot=${sdkroot%]}
+    sdk="$sdkroot/$version"
+    [ -d "$sdk" ] || continue
+    printf 'SDK=%s\\n' "$version"
+    compiler="$sdk/Roslyn/bincore/csc.dll"
+    if [ -f "$compiler" ]; then
+        printf 'CSC=%s\\n' "$compiler"
+        csc_version=$("$dotnet" "$compiler" -version) || exit $?
+        printf 'CSC_VERSION=%s\\n' "$csc_version"
+    fi
+    for pack in "$sdkroot"/../packs/Microsoft.NETCore.App.Ref/*; do
+        [ -d "$pack" ] || continue
+        pack=$(cd "$pack" && pwd -P) || exit $?
+        printf 'REF=%s\\n' "$pack"
+        for ref in "$pack"/ref/*; do
+            if [ -d "$ref" ]; then printf 'REF=%s\\n' "$ref"; fi
+        done
+    done
+done
+'''
 
 # Fixed script: the manifest is supplied only as a positional argument.
 _RUST_METADATA_SCRIPT = '''
@@ -430,6 +475,13 @@ def _devtools(args: list[str], repo: str) -> Step:
     path = args[1]
     if _REPO_PATH.fullmatch(path) is None or ".." in path.split("/"):
         raise ActionError(400, "devtools path must be relative to the worktree")
+    if args[0] == "csharp-info":
+        return Step(
+            argv=(
+                "podman", "exec", "--workdir", repo, _DEVTOOLS,
+                "/bin/sh", "-c", _CSHARP_INFO_SCRIPT, "hostrun-csharp-info", path,
+            )
+        )
     if args[0] == "rust-metadata":
         root = Path(repo).resolve()
         candidate = root / path
