@@ -251,7 +251,7 @@ class _Process:
         return self.returncode
 
 
-def test_probe_tooling_uses_only_the_pinned_offline_npx_package(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_probe_tooling_delimits_offline_npx_options_before_the_package(monkeypatch: pytest.MonkeyPatch) -> None:
     captured: dict[str, object] = {}
     process = _Process(block=False)
 
@@ -266,9 +266,7 @@ def test_probe_tooling_uses_only_the_pinned_offline_npx_package(monkeypatch: pyt
 
     args = captured["args"]
     assert isinstance(args, tuple)
-    assert args[:3] == ("npx", "--offline", "--no")
-    assert _CONFORMANCE in args
-    assert args[-1] == "--help"
+    assert args == ("npx", "--offline", "--no", "--", _CONFORMANCE, "--help")
     assert result == 0
 
 
@@ -373,7 +371,43 @@ def test_probe_tooling_fails_missing_npx_without_install_attempt(
     result = asyncio.run(mcp_conformance._probe_tooling(tmp_path))
 
     assert result != 0
-    assert calls == [("npx", "--offline", "--no", _CONFORMANCE, "--help")]
+    assert calls == [("npx", "--offline", "--no", "--", _CONFORMANCE, "--help")]
+
+
+def test_preflight_false_positive_does_not_start_daemon_when_cached_package_is_missing(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    root, default_db = _prepare_root(tmp_path)
+    calls: list[tuple[str, ...]] = []
+    suite_called = False
+
+    async def npm_exec_parser(*args: str, **_kwargs: object) -> _Process:
+        calls.append(args)
+        package_index = args.index(_CONFORMANCE)
+        has_separator = "--" in args[:package_index]
+        # Without the separator, npm handles --help itself and exits zero.
+        # With it, the package is resolved and a missing offline cache fails.
+        return _Process(block=False, exit_code=1 if has_separator else 0)
+
+    async def run_suite(_root: Path, _url: str, _timeout_s: float) -> int:
+        nonlocal suite_called
+        suite_called = True
+        return 0
+
+    def daemon_must_not_start(*_args: object, **_kwargs: object) -> None:
+        pytest.fail("missing cached conformance package started the daemon")
+
+    monkeypatch.setattr(asyncio, "create_subprocess_exec", npm_exec_parser)
+    monkeypatch.setattr(mcp_conformance, "_run_suite", run_suite)
+    monkeypatch.setattr(mcp_conformance, "Daemon", daemon_must_not_start)
+
+    result = asyncio.run(mcp_conformance.run_managed(root=root))
+
+    assert result == 1
+    assert calls == [("npx", "--offline", "--no", "--", _CONFORMANCE, "--help")]
+    assert suite_called is False
+    _assert_only_owned_state_was_removed(root, default_db)
 
 
 @pytest.mark.parametrize("termination", ["timeout", "cancel"])
@@ -413,8 +447,7 @@ def test_run_suite_terminates_and_reaps_its_process_group_on_timeout_or_cancel(
 
     args = captured["args"]
     assert isinstance(args, tuple)
-    assert args[:3] == ("npx", "--offline", "--no")
-    assert _CONFORMANCE in args
+    assert args[:5] == ("npx", "--offline", "--no", "--", _CONFORMANCE)
     assert "http://127.0.0.1:8765/mcp" in args
     assert _REVISION in args
     kwargs = captured["kwargs"]
