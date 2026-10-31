@@ -12,6 +12,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from io import StringIO
 from pathlib import Path
+from typing import Protocol
 
 from ruamel.yaml import YAML
 
@@ -33,8 +34,14 @@ def _engine() -> YAML:
     return engine
 
 
-def _load(engine: YAML, text: str) -> object:
-    return engine.load(text)  # pyright: ignore[reportAny, reportUnknownMemberType] -- ruamel load returns Any
+class _YamlLoader(Protocol):
+    def load(self, stream: str) -> object:
+        """Load a YAML document."""
+        ...
+
+
+def _load(engine: _YamlLoader, text: str) -> object:
+    return engine.load(text)
 
 
 def _dump(engine: YAML, value: object) -> str:
