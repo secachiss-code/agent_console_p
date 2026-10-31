@@ -446,6 +446,14 @@ def _gate(args: list[str], repo: str) -> Step:
 
 def _conformance(args: list[str], repo: str) -> Step:
     """`conformance server <url>`: the pinned MCP conformance suite, run in devtools against a loopback server."""
+    if args == ["managed"]:
+        return Step(
+            argv=(
+                "podman", "exec", "--workdir", repo, _DEVTOOLS,
+                _core_python(repo), "-m", "aconsole.devcli.mcp_conformance",
+            ),
+            env=_gil_off(),
+        )
     match = _MCP_URL.fullmatch(args[1]) if len(args) == 2 and args[0] == "server" else None
     if match is None or not 1024 <= int(match.group("port")) <= 65535:
         raise ActionError(400, "conformance expects: server http://127.0.0.1:<port>/mcp")
