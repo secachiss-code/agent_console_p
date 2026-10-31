@@ -1,0 +1,30 @@
+// Reduced subset from official cargo-modules main: docs/dependencies_output.dot.
+// Its current Cargo.toml is version 0.28.0; this is not a tag-pinned output capture.
+digraph {
+graph [
+label="readme_graph_example",
+labelloc=t,
+pad=0.4,
+layout=neato,
+overlap=false,
+splines="line",
+rankdir=LR,
+fontname="Helvetica",
+fontsize="36",
+];
+node [
+fontname="monospace",
+fontsize="10",
+shape="record",
+style="filled",
+];
+edge [
+fontname="monospace",
+fontsize="10",
+];
+"readme_graph_example" [label="crate|readme_graph_example", fillcolor="#5397c8"]; // "crate" node
+"readme_graph_example::methods" [label="pub(crate) mod|readme_graph_example::methods", fillcolor="#f8c04c"]; // "mod" node
+"readme_graph_example::uses" [label="pub(crate) mod|readme_graph_example::uses", fillcolor="#f8c04c"]; // "mod" node
+"readme_graph_example" -> "readme_graph_example::methods" [label="owns", color="#000000", style="solid"] [constraint=true]; // "owns" edge
+"readme_graph_example" -> "readme_graph_example::uses" [label="owns", color="#000000", style="solid"] [constraint=true]; // "owns" edge
+}

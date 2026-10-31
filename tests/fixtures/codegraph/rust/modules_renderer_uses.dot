@@ -1,0 +1,12 @@
+// Reduced subset from official cargo-modules main: docs/dependencies_output.dot.
+// Its current Cargo.toml is version 0.28.0; this is not a tag-pinned output capture.
+digraph {
+graph [layout=neato, overlap=false];
+node [fontname="monospace", shape="record", style="filled"];
+edge [fontname="monospace", fontsize="10"];
+"bool" [label="external builtin|bool", fillcolor="#81c169"]; // "builtin" node
+"readme_graph_example::derives::Dummy" [label="pub(self) struct|readme_graph_example::derives::Dummy", fillcolor="#db5367"]; // "struct" node
+"readme_graph_example::derives::Dummy::clone" [label="pub(self) fn|readme_graph_example::derives::Dummy::clone", fillcolor="#db5367"]; // "fn" node
+"readme_graph_example::derives::Dummy::clone" -> "bool" [label="uses", color="#7f7f7f", style="dashed"] [constraint=false]; // "uses" edge
+"readme_graph_example::derives::Dummy::clone" -> "readme_graph_example::derives::Dummy" [label="uses", color="#7f7f7f", style="dashed"] [constraint=false]; // "uses" edge
+}

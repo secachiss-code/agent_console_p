@@ -7,8 +7,8 @@ from pathlib import Path
 import pytest
 
 from aconsole.core.infrastructure.codegraph.protocol import ExtractorGraph, GraphEdge, GraphNode
-from aconsole.core.infrastructure.codegraph.rust import from_cargo_metadata, from_cargo_modules_dot
 from aconsole.core.infrastructure.codegraph.runner import ExtractorRunner
+from aconsole.core.infrastructure.codegraph.rust import from_cargo_metadata, from_cargo_modules_dot
 
 _ROOT = Path(__file__).resolve().parents[2]
 _RUST = _ROOT / "tests" / "fixtures" / "codegraph" / "rust"
@@ -72,7 +72,7 @@ def test_codegraph_rust_metadata_skips_unresolved_registry_dependency() -> None:
 
 def test_codegraph_rust_metadata_rejects_malformed_documents() -> None:
     for raw in (b"", b"not json", b"[]", b'{"packages": "not an array"}'):
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="Cargo metadata does not match the schema"):
             _ = from_cargo_metadata(raw)
 
 
@@ -103,6 +103,59 @@ def test_codegraph_rust_cargo_modules_dot_matches_fully_qualified_module_ids() -
     )
 
 
+def test_codegraph_rust_cargo_modules_dot_parses_renderer_attributes_and_relationships() -> None:
+    graph = from_cargo_modules_dot((_RUST / "modules_renderer_subset.dot").read_bytes())
+
+    assert graph == ExtractorGraph(
+        version=1,
+        nodes=(
+            GraphNode(
+                id="readme_graph_example",
+                path="readme_graph_example",
+                name="readme_graph_example",
+                kind="module",
+            ),
+            GraphNode(
+                id="readme_graph_example::methods",
+                path="readme_graph_example::methods",
+                name="methods",
+                kind="module",
+            ),
+            GraphNode(
+                id="readme_graph_example::uses",
+                path="readme_graph_example::uses",
+                name="uses",
+                kind="module",
+            ),
+        ),
+        edges=(
+            GraphEdge(
+                source="readme_graph_example",
+                target="readme_graph_example::methods",
+                kind="owns",
+            ),
+            GraphEdge(source="readme_graph_example", target="readme_graph_example::uses", kind="owns"),
+        ),
+    )
+
+
+def test_codegraph_rust_cargo_modules_dot_preserves_uses_edge_labels() -> None:
+    graph = from_cargo_modules_dot((_RUST / "modules_renderer_uses.dot").read_bytes())
+
+    assert graph.edges == (
+        GraphEdge(
+            source="readme_graph_example::derives::Dummy::clone",
+            target="bool",
+            kind="uses",
+        ),
+        GraphEdge(
+            source="readme_graph_example::derives::Dummy::clone",
+            target="readme_graph_example::derives::Dummy",
+            kind="uses",
+        ),
+    )
+
+
 def test_codegraph_rust_cargo_modules_dot_sorts_and_deduplicates_edges() -> None:
     raw = (_RUST / "modules.dot").read_bytes()
     graph = from_cargo_modules_dot(raw)
@@ -119,7 +172,7 @@ def test_codegraph_rust_cargo_modules_dot_rejects_malformed_documents() -> None:
         b"not dot",
         b'digraph { "console_core" -> "missing"; }',
     ):
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="unsupported or malformed cargo-modules DOT"):
             _ = from_cargo_modules_dot(raw)
 
 
