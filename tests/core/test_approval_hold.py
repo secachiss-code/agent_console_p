@@ -440,7 +440,9 @@ def test_ipc_decide_dispatches_to_approval_hold_and_negotiates_capability() -> N
 
 async def _ipc_decide_dispatches_to_approval_hold_and_negotiates_capability() -> None:
     harness = _Harness()
-    request = _request()
+    at = datetime.now(UTC)
+    harness.now_at = at
+    request = _request(at=at, expires_at=at + _HOLD)
     waiter = asyncio.create_task(harness.service.hold(request, _view(request)))
     await harness.requested.wait()
     connection = Connection(EventRing(), approval_hold=harness.service)
