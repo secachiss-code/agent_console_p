@@ -24,6 +24,7 @@ from aconsole.contracts.errors import ErrorData, ErrorObject, MessageTooLargeDet
 from aconsole.contracts.events import Notify, TabAdded, TabRemoved, UiEvent
 from aconsole.contracts.ipc import InitializeParams, Request, ResponseErr
 from aconsole.core.application.services.approval_broker import ApprovalHold
+from aconsole.core.application.services.setup import SetupService
 from aconsole.core.application.services.tabs import TabService
 from aconsole.core.domain.approvals import Approval, ApprovalBook
 from aconsole.core.domain.clock import Clock
@@ -52,6 +53,7 @@ from aconsole.core.infrastructure.persistence.repositories.catalog import Approv
 from aconsole.core.infrastructure.persistence.repositories.tabs import TabDatabase
 from aconsole.core.infrastructure.persistence.startup import prepare_database, sqlite_url
 from aconsole.core.infrastructure.persistence.writer import Writer
+from aconsole.core.infrastructure.setup_checks import HostSetupFixes, HostSetupProbe, SetupTokens
 from aconsole.core.infrastructure.tabs import HostTabs
 
 if TYPE_CHECKING:
@@ -202,7 +204,7 @@ def _too_large(encoder: msgspec.json.Encoder, limit: int) -> bytes:
 class Daemon:
     """The core process. A second instance refuses the lock. Idle clients shut it down."""
 
-    def __init__(
+    def __init__(  # noqa: PLR0913 -- daemon configuration and injection points
         self,
         socket: Path,
         *,
@@ -210,6 +212,7 @@ class Daemon:
         live_tabs: int = 0,
         frame_limit: int = MAX_MESSAGE_BYTES,
         database: Path | None = None,
+        setup_service: SetupService | None = None,
     ) -> None:
         if idle_s < 0:
             message = "idle seconds cannot be negative"
@@ -237,6 +240,9 @@ class Daemon:
             notify=self._approval_notify, audit=self._approval_audit, now=lambda: datetime.now(UTC))
         self._host: HostTabs = HostTabs(socket_path=str(socket))
         self.tabs: TabService = TabService(Clock(), self._host, listener=self._from_worker)
+        self.setup_service: SetupService = setup_service or SetupService(
+            probe=HostSetupProbe(), fixes=HostSetupFixes(), tokens=SetupTokens()
+        )
         self._encoder: msgspec.json.Encoder = msgspec.json.Encoder()
         # Tab calls block (podman, git, the 3 s stop wait): one worker thread runs them in order, off the loop.
         self._worker: ThreadPoolExecutor | None = None
@@ -625,7 +631,9 @@ class Daemon:
             writer.close()
             await writer.wait_closed()
             return
-        connection = Connection(self._ring, tabs=self.tabs, approval_hold=self.approvals)
+        connection = Connection(
+            self._ring, tabs=self.tabs, approval_hold=self.approvals, setup_service=self.setup_service
+        )
         counted = False
         self._writers.add(writer)
         self._connections[connection] = writer

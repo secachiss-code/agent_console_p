@@ -8,8 +8,10 @@ from typing import final
 import msgspec
 
 from aconsole.contracts.app import (
+    ApplyFixParams,
     DecideParams,
     EmptyParams,
+    FixIdParams,
     ReleaseParams,
     SnapshotResult,
     SubscribeParams,
@@ -36,6 +38,7 @@ from aconsole.contracts.ipc import (
     ResponseOk,
 )
 from aconsole.core.application.services.approval_broker import ApprovalHold
+from aconsole.core.application.services.setup import SetupService
 from aconsole.core.application.services.tabs import SETTINGS_METHODS, TAB_METHODS, TabRequestError, TabService
 from aconsole.core.domain.errors import DomainError
 from aconsole.core.infrastructure.ipc.framing import decode_envelope, encode_line
@@ -53,7 +56,7 @@ OUTBOUND_LIMIT = 1024
 class Connection:
     """Protocol state for a single accepted socket."""
 
-    def __init__(
+    def __init__(  # noqa: PLR0913 -- connection limits and service injection
         self,
         ring: EventRing,
         *,
@@ -61,12 +64,14 @@ class Connection:
         session_id: str = "ipc-session",
         tabs: TabService | None = None,
         approval_hold: ApprovalHold | None = None,
+        setup_service: SetupService | None = None,
     ) -> None:
         self.ring = ring
         self.outbound_limit = outbound_limit
         self.session_id = session_id
         self.tabs = tabs
         self.approval_hold = approval_hold
+        self.setup_service = setup_service
         self.capabilities: frozenset[str] = frozenset()
         self.ready = False
         self.paused = False
@@ -137,9 +142,35 @@ class Connection:
             return self._decide_approval(request, self.approval_hold)
         if request.method == "approval/releaseToNative" and self.approval_hold is not None:
             return self._release_to_native(request, self.approval_hold)
+        if request.method.startswith("setup/") and self.setup_service is not None:
+            return self._setup(request, self.setup_service)
         served = TAB_METHODS | SETTINGS_METHODS
         if request.method == _SNAPSHOT or (self.tabs is not None and request.method in served):
             return self._tab(request)
+        return (self._err(request.id, "METHOD_NOT_FOUND"),)
+
+    def _setup(self, request: Request, service: SetupService) -> tuple[bytes, ...]:
+        try:
+            if request.method == "setup/checks":
+                _ = msgspec.json.decode(request.params, type=EmptyParams)
+                checks = service.checks()
+                if self.tabs is not None:
+                    self.tabs.note_setup_checks(
+                        sum(not item.ok and item.severity == "error" for item in checks.checks),
+                        sum(not item.ok and item.severity == "warning" for item in checks.checks),
+                    )
+                return (self._ok(request.id, checks),)
+            if request.method == "setup/previewFix":
+                preview = msgspec.json.decode(request.params, type=FixIdParams)
+                return (self._ok(request.id, service.preview_fix(preview.fix_id, at=datetime.now(UTC))),)
+            if request.method == "setup/applyFix":
+                apply = msgspec.json.decode(request.params, type=ApplyFixParams)
+                result = service.apply_fix(apply.fix_id, apply.confirm_token, at=datetime.now(UTC))
+                return (self._ok(request.id, result),)
+        except msgspec.DecodeError:
+            return (self._err(request.id, "INVALID_PARAMS"),)
+        except DomainError as exc:
+            return (self._err(request.id, exc.name),)
         return (self._err(request.id, "METHOD_NOT_FOUND"),)
 
     def _decide_approval(self, request: Request, hold: ApprovalHold) -> tuple[bytes, ...]:
