@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import http.client
 import json
+import os
 import signal
 import socket
 from pathlib import Path
@@ -228,10 +229,11 @@ def test_main_rejects_arguments_without_starting_the_runner(monkeypatch: pytest.
 
 
 class _Process:
-    def __init__(self, *, block: bool) -> None:
+    def __init__(self, *, block: bool, exit_code: int = 0) -> None:
         self.pid = 43120
         self.returncode: int | None = None
         self.block = block
+        self.exit_code = exit_code
         self.started = asyncio.Event()
         self.waited = False
 
@@ -239,7 +241,7 @@ class _Process:
         self.started.set()
         if self.block:
             await asyncio.Future()
-        self.returncode = 0
+        self.returncode = self.exit_code
         return b"", b""
 
     async def wait(self) -> int:
@@ -268,6 +270,110 @@ def test_probe_tooling_uses_only_the_pinned_offline_npx_package(monkeypatch: pyt
     assert _CONFORMANCE in args
     assert args[-1] == "--help"
     assert result == 0
+
+
+def _write_executable(path: Path) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text("#!/bin/sh\nexit 0\n", encoding="utf-8")
+    path.chmod(0o755)
+
+
+def _captured_env(captured: dict[str, object]) -> dict[str, str]:
+    kwargs = captured["kwargs"]
+    assert isinstance(kwargs, dict)
+    env = kwargs["env"]
+    assert isinstance(env, dict)
+    values: dict[str, str] = {}
+    for key, value in env.items():
+        assert isinstance(key, str)
+        assert isinstance(value, str)
+        values[key] = value
+    return values
+
+
+def _fake_fnm_bin(home: Path) -> Path:
+    binary_dir = home / ".local" / "share" / "fnm" / "node-versions" / "v24.22.0" / "installation" / "bin"
+    _write_executable(binary_dir / "node")
+    _write_executable(binary_dir / "npx")
+    return binary_dir
+
+
+def test_probe_tooling_prepends_only_the_known_fnm_bin_when_npx_is_missing(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    home = tmp_path / "fake-home"
+    fallback_bin = _fake_fnm_bin(home)
+    initial_path = str(tmp_path / "empty-path")
+    Path(initial_path).mkdir()
+    monkeypatch.setenv("HOME", str(home))
+    monkeypatch.setenv("PATH", initial_path)
+    captured: dict[str, object] = {}
+    process = _Process(block=False)
+
+    async def create_subprocess_exec(*args: str, **kwargs: object) -> _Process:
+        captured["args"] = args
+        captured["kwargs"] = kwargs
+        return process
+
+    monkeypatch.setattr(asyncio, "create_subprocess_exec", create_subprocess_exec)
+
+    result = asyncio.run(mcp_conformance._probe_tooling(tmp_path))
+
+    env = _captured_env(captured)
+    assert env["PATH"] == f"{fallback_bin}{os.pathsep}{initial_path}"
+    assert env["HOME"] == str(home)
+    assert result == 0
+
+
+def test_probe_tooling_preserves_preferred_npx_path_and_failure_without_fallback(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    home = tmp_path / "fake-home"
+    _ = _fake_fnm_bin(home)
+    preferred_bin = tmp_path / "preferred-bin"
+    _write_executable(preferred_bin / "npx")
+    initial_path = f"{preferred_bin}{os.pathsep}{tmp_path / 'system-bin'}"
+    monkeypatch.setenv("HOME", str(home))
+    monkeypatch.setenv("PATH", initial_path)
+    captured: dict[str, object] = {}
+    process = _Process(block=False, exit_code=44)
+
+    async def create_subprocess_exec(*args: str, **kwargs: object) -> _Process:
+        captured["args"] = args
+        captured["kwargs"] = kwargs
+        return process
+
+    monkeypatch.setattr(asyncio, "create_subprocess_exec", create_subprocess_exec)
+
+    result = asyncio.run(mcp_conformance._probe_tooling(tmp_path))
+
+    assert _captured_env(captured)["PATH"] == initial_path
+    assert result == 44
+
+
+def test_probe_tooling_fails_missing_npx_without_install_attempt(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    home = tmp_path / "fake-home"
+    initial_path = str(tmp_path / "empty-path")
+    Path(initial_path).mkdir()
+    monkeypatch.setenv("HOME", str(home))
+    monkeypatch.setenv("PATH", initial_path)
+    calls: list[tuple[str, ...]] = []
+
+    async def missing_executable(*args: str, **_kwargs: object) -> _Process:
+        calls.append(args)
+        raise FileNotFoundError
+
+    monkeypatch.setattr(asyncio, "create_subprocess_exec", missing_executable)
+
+    result = asyncio.run(mcp_conformance._probe_tooling(tmp_path))
+
+    assert result != 0
+    assert calls == [("npx", "--offline", "--no", _CONFORMANCE, "--help")]
 
 
 @pytest.mark.parametrize("termination", ["timeout", "cancel"])
