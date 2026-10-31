@@ -56,13 +56,13 @@ async def _command(root: Path, args: tuple[str, ...], timeout_s: float) -> int:
 
 
 async def _probe_tooling(root: Path) -> int:
-    return await _command(root, ("npx", "--offline", "--no", _SUITE, "--help"), 30.0)
+    return await _command(root, ("npx", "--offline", "--no", "--", _SUITE, "--help"), 30.0)
 
 
 async def _run_suite(root: Path, url: str, timeout_s: float) -> int:
     return await _command(
         root,
-        ("npx", "--offline", "--no", _SUITE, "server", "--url", url, "--requirements", _REVISION),
+        ("npx", "--offline", "--no", "--", _SUITE, "server", "--url", url, "--requirements", _REVISION),
         timeout_s,
     )
 
