@@ -309,6 +309,142 @@ def test_output_limit(tmp_path: Path) -> None:
     assert b"output limit exceeded" in payload
 
 
+def test_run_plan_discards_startup_output_on_success(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    policy = _policy(tmp_path)
+    repo = Path(policy.repo)
+    manifest = repo / "crates" / "core" / "Cargo.toml"
+    manifest.parent.mkdir(parents=True)
+    manifest.write_text("[workspace]\nmembers = []\n", encoding="utf-8")
+    plan = actions.build_plan("devtools", ["rust-metadata", "crates/core"], repo, policy.repo, 30)
+    assert plan.steps[0].quiet_success is True
+    calls: list[tuple[str, ...]] = []
+    deadlines: list[float] = []
+    output_limits: list[int] = []
+
+    def fake_execute(
+        argv: tuple[str, ...],
+        *,
+        cwd: str,
+        env: dict[str, str],
+        deadline: float,
+        output_limit: int,
+        written: list[int],
+        write: Callable[[bytes], None],
+    ) -> int:
+        del cwd, env, written
+        calls.append(argv)
+        deadlines.append(deadline)
+        output_limits.append(output_limit)
+        if argv == plan.steps[0].argv:
+            write(b"devtools\n")
+            return 0
+        write(b'{"packages":[]}\n')
+        return 0
+
+    monkeypatch.setattr(server, "execute_argv", fake_execute)
+    output: list[bytes] = []
+
+    code = server.Application(policy).run_plan(
+        plan,
+        cwd=policy.repo,
+        write=output.append,
+        container="agent-codex",
+    )
+
+    assert code == 0
+    assert calls == [step.argv for step in plan.steps]
+    assert len(deadlines) == 2 and deadlines[0] == deadlines[1]
+    assert output_limits == [policy.output_limit_bytes, policy.output_limit_bytes]
+    assert b"".join(output) == b'{"packages":[]}\n'
+
+
+def test_run_plan_preserves_startup_diagnostic_and_stops_on_failure(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    policy = _policy(tmp_path)
+    repo = Path(policy.repo)
+    manifest = repo / "crates" / "core" / "Cargo.toml"
+    manifest.parent.mkdir(parents=True)
+    manifest.write_text("[workspace]\nmembers = []\n", encoding="utf-8")
+    plan = actions.build_plan("devtools", ["rust-metadata", "crates/core"], repo, policy.repo, 30)
+    assert plan.steps[0].quiet_success is True
+    calls: list[tuple[str, ...]] = []
+    diagnostic = b"podman start devtools failed\n"
+
+    def fake_execute(
+        argv: tuple[str, ...],
+        *,
+        cwd: str,
+        env: dict[str, str],
+        deadline: float,
+        output_limit: int,
+        written: list[int],
+        write: Callable[[bytes], None],
+    ) -> int:
+        del cwd, env, deadline, output_limit, written
+        calls.append(argv)
+        write(diagnostic)
+        return 125
+
+    monkeypatch.setattr(server, "execute_argv", fake_execute)
+    output: list[bytes] = []
+
+    code = server.Application(policy).run_plan(
+        plan,
+        cwd=policy.repo,
+        write=output.append,
+        container="agent-codex",
+    )
+
+    assert code == 125
+    assert calls == [plan.steps[0].argv]
+    assert b"".join(output) == diagnostic
+
+
+def test_run_plan_streams_output_from_ordinary_steps(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    policy = _policy(tmp_path)
+    plan = actions.Plan(
+        mode="exec",
+        steps=(actions.Step(argv=("ordinary-action",)),),
+        timeout_s=30,
+    )
+    diagnostic = b"ordinary action diagnostic\n"
+
+    def fake_execute(
+        _argv: tuple[str, ...],
+        *,
+        cwd: str,
+        env: dict[str, str],
+        deadline: float,
+        output_limit: int,
+        written: list[int],
+        write: Callable[[bytes], None],
+    ) -> int:
+        del cwd, env, deadline, output_limit, written
+        write(diagnostic)
+        return 17
+
+    monkeypatch.setattr(server, "execute_argv", fake_execute)
+    output: list[bytes] = []
+
+    code = server.Application(policy).run_plan(
+        plan,
+        cwd=policy.repo,
+        write=output.append,
+        container="agent-codex",
+    )
+
+    assert code == 17
+    assert b"".join(output) == diagnostic
+
+
 def test_unknown_container_returns_403(running: Running) -> None:
     policy, holder = running
     holder["name"] = None
