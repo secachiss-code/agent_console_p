@@ -754,6 +754,7 @@ class Application:
             env.update(dict(step.env))
             if container:
                 env["HOSTRUN_CONTAINER"] = container
+            buffered: list[bytes] = []
             code = execute_argv(
                 step.argv,
                 cwd=cwd,
@@ -761,9 +762,12 @@ class Application:
                 deadline=deadline,
                 output_limit=self.policy.output_limit_bytes,
                 written=written,
-                write=write,
+                write=buffered.append if step.quiet_success else write,
             )
             if code != 0:
+                if step.quiet_success:
+                    for chunk in buffered:
+                        write(chunk)
                 return code
         return code
 

@@ -1,4 +1,8 @@
-"""Named hostrun actions. Each action becomes a fixed argv. No shell."""
+"""Named hostrun actions use fixed argv, including a fixed Rust shell script.
+
+The validated Rust manifest is passed separately as a positional argument;
+user input is never interpreted as shell code.
+"""
 
 from __future__ import annotations
 
@@ -55,9 +59,25 @@ _MCP_REVISION = "2026-07-28"
 _EXTRACTORS: dict[str, tuple[str, ...]] = {
     "python": ("python3", "tools/codegraph/extract_python.py"),
     "ts": ("npx", "--yes", "dependency-cruiser@18.7.0", "--output-type", "json"),
-    "rust-metadata": ("cargo", "metadata", "--format-version", "1", "--no-deps", "--manifest-path"),
+    "rust-metadata": (),
     "csharp": ("dotnet", "run", "--project", "tools/csgraph", "--"),
 }
+
+# Fixed script: the manifest is supplied only as a positional argument.
+_RUST_METADATA_SCRIPT = '''
+toolchain=stable-x86_64-unknown-linux-gnu/bin
+bin="${RUSTUP_HOME:-${HOME}/.rustup}/toolchains/$toolchain"
+if [ ! -x "$bin/cargo" ] || [ ! -x "$bin/rustc" ]; then
+    bin="/home/sas/.containers/containers/devtools/.rustup/toolchains/$toolchain"
+fi
+if [ ! -x "$bin/cargo" ] || [ ! -x "$bin/rustc" ]; then
+    echo "Rust stable toolchain is unavailable" >&2
+    exit 127
+fi
+PATH="$bin:$PATH"
+export PATH
+exec "$bin/cargo" metadata --offline --format-version 1 --no-deps --manifest-path "$1"
+'''
 
 
 class ActionError(Exception):
@@ -73,10 +93,11 @@ class ActionError(Exception):
 class Step:
     argv: tuple[str, ...]
     env: tuple[tuple[str, str], ...] = ()
+    quiet_success: bool = False
 
 
 # devtools is stopped after a host reboot; `podman start` on a running container is a no-op.
-_START_DEVTOOLS = Step(argv=("podman", "start", _DEVTOOLS))
+_START_DEVTOOLS = Step(argv=("podman", "start", _DEVTOOLS), quiet_success=True)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -394,5 +415,21 @@ def _devtools(args: list[str], repo: str) -> Step:
     if _REPO_PATH.fullmatch(path) is None or ".." in path.split("/"):
         raise ActionError(400, "devtools path must be relative to the worktree")
     if args[0] == "rust-metadata":
-        path = f"{path.rstrip('/')}/Cargo.toml"
+        root = Path(repo).resolve()
+        candidate = root / path
+        if candidate.is_dir():
+            candidate = candidate / "Cargo.toml"
+        try:
+            manifest = candidate.resolve(strict=True)
+            manifest.relative_to(root)
+        except (OSError, ValueError, RuntimeError):
+            raise ActionError(400, "devtools path must resolve to a repository Cargo.toml") from None
+        if manifest.name != "Cargo.toml" or not manifest.is_file():
+            raise ActionError(400, "devtools path must resolve to a repository Cargo.toml")
+        return Step(
+            argv=(
+                "podman", "exec", "--workdir", repo, _DEVTOOLS,
+                "/bin/sh", "-c", _RUST_METADATA_SCRIPT, "aconsole-rust", str(manifest),
+            )
+        )
     return Step(argv=("podman", "exec", "--workdir", repo, _DEVTOOLS, *_EXTRACTORS[args[0]], path))
