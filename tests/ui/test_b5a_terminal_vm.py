@@ -105,6 +105,30 @@ def test_b5a_terminal_vm_reports_exited_with_raw_wait_status() -> None:
     ]
 
 
+@pytest.mark.parametrize("resume", [True, False])
+def test_b5a_terminal_vm_restarts_with_explicit_resume_choice(
+    resume: bool,  # noqa: FBT001 -- pytest parametrizes both explicit restart choices.
+) -> None:
+    from aconsole.contracts.app import RestartParams
+    from aconsole.core.infrastructure.fake.scenarios import demo_snapshot
+    from aconsole.ui.viewmodels.terminal_vm import TerminalViewModel
+
+    tab = demo_snapshot().tabs[0]
+    client = _RecordingClient(tab)
+    view_model = TerminalViewModel(client, tab.id)
+
+    result = asyncio.run(view_model.restart(resume=resume))
+
+    assert result is tab
+    assert client.calls == [
+        _Call(
+            "tab/restart",
+            RestartParams(tab_id=tab.id, resume=resume),
+            type(tab),
+        )
+    ]
+
+
 @pytest.mark.parametrize("operation", ["launch", "started", "exited"])
 def test_b5a_terminal_vm_propagates_client_errors_unchanged(operation: str) -> None:
     from aconsole.ui.viewmodels.terminal_vm import TerminalViewModel
