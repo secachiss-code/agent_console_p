@@ -13,9 +13,9 @@ gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
 from gi.repository import Adw, Gio, Gtk  # noqa: E402
 
-from aconsole.contracts.app import AccountView, PlanView, QuotaWindowView  # noqa: E402
+from aconsole.contracts.app import AccountView, QuotaWindowView  # noqa: E402
 from aconsole.contracts.common import AgentKind, QuotaLevel  # noqa: E402
-from aconsole.contracts.events import PlanUpdated, QuotaUpdated  # noqa: E402
+from aconsole.contracts.events import PlanUpdated, QuotaUpdated, TabUpdated  # noqa: E402
 from aconsole.contracts.ipc import EventEnvelope  # noqa: E402
 from aconsole.core.infrastructure.fake.scenarios import demo_snapshot  # noqa: E402
 from aconsole.ui.bootstrap import run_app, spawn_task  # noqa: E402
@@ -25,6 +25,9 @@ from aconsole.ui.views.window import MainWindow  # noqa: E402
 
 if TYPE_CHECKING:
     from collections.abc import Awaitable, Callable
+
+    from aconsole.ui.views.quota_dialog import QuotaDialog
+    from aconsole.ui.views.sidebar.quota_card import QuotaCard
 
 
 _NOW = datetime(2026, 10, 31, 12, 0, tzinfo=UTC)
@@ -120,7 +123,80 @@ def _labels(widget: Gtk.Widget) -> list[str]:
     return texts
 
 
+def _assert_quota_card_rows(card: QuotaCard) -> None:
+    labels = [row.percent_label.get_text() for row in card.window_rows]
+    assert any("76" in label for label in labels)
+    assert any("31" in label for label in labels)
+    assert any("97" in label and "≈" in label for label in labels)
+    assert all(label not in {"0%", "0 %"} for label in labels)
+    assert any(row.time_label.get_text() for row in card.window_rows)
+    assert any(row.key_label.get_text() in {"5h", "5 h", "5 ч"} for row in card.window_rows)
+    assert any(row.key_label.get_text() in {"7d", "7 d", "7 д"} for row in card.window_rows)
+
+    normal_row = next(row for row in card.window_rows if row.window.used_pct == 76)
+    assert normal_row.level_bar.get_min_value() == 0
+    assert normal_row.level_bar.get_max_value() == 1
+    assert normal_row.level_bar.get_value() == 0.76
+    has_low, low = normal_row.level_bar.get_offset_value("low")
+    has_high, high = normal_row.level_bar.get_offset_value("high")
+    assert has_low
+    assert low == 0.8
+    assert has_high
+    assert high == 0.95
+
+    unknown_row = next(row for row in card.window_rows if row.window.used_pct is None)
+    assert not unknown_row.level_bar.get_visible()
+    unknown_explanation = unknown_row.get_tooltip_text()
+    assert unknown_explanation is not None
+    assert unknown_explanation.strip()
+    assert "0%" not in unknown_explanation
+    assert "0 %" not in unknown_explanation
+
+
+def _assert_quota_dialog(dialog: QuotaDialog) -> None:
+    assert dialog.get_visible()
+    child = dialog.get_child()
+    assert child is not None
+    dialog_labels = _labels(child)
+    assert any("76" in label for label in dialog_labels)
+    assert any("97" in label and "≈" in label for label in dialog_labels)
+    assert any(
+        any(value in label for value in ("5h", "5 h", "5 ч"))
+        for label in dialog_labels
+    )
+    assert any(
+        any(value in label for value in ("7d", "7 d", "7 д"))
+        for label in dialog_labels
+    )
+    dialog_unknown = next(
+        row for row in dialog.window_rows if row.window.used_pct is None
+    )
+    assert not dialog_unknown.level_bar.get_visible()
+    assert dialog_unknown.get_tooltip_text()
+    before_times = [row.time_label.get_text() for row in dialog.window_rows]
+    dialog.refresh_times()
+    assert [row.time_label.get_text() for row in dialog.window_rows] == before_times
+
+
+def _assert_summary_container(window: MainWindow) -> None:
+    summary = window.summary_card
+    assert isinstance(summary, Gtk.Box)
+    assert summary.get_visible()
+    assert window.plan_card.get_parent() is summary
+    assert window.quota_card.get_parent() is summary
+    children: list[Gtk.Widget] = []
+    child = summary.get_first_child()
+    while child is not None:
+        children.append(child)
+        child = child.get_next_sibling()
+    assert len(children) == 3
+    assert children[0] is window.plan_card
+    assert isinstance(children[1], Gtk.Separator)
+    assert children[2] is window.quota_card
+
+
 def test_b4b_quota_card_shows_normal_unknown_estimated_and_critical_windows() -> None:
+    from aconsole.ui.views.quota_dialog import QuotaDialog
     from aconsole.ui.views.sidebar.quota_card import QuotaCard
 
     async def scenario(app: _QuotaTestApp) -> None:
@@ -133,43 +209,20 @@ def test_b4b_quota_card_shows_normal_unknown_estimated_and_critical_windows() ->
         await asyncio.sleep(0.05)
 
         assert card.get_visible()
-        labels = [row.percent_label.get_text() for row in card.window_rows]
-        assert any("76" in label for label in labels)
-        assert any("31" in label for label in labels)
-        assert any("97" in label and "≈" in label for label in labels)
-        assert all(label not in {"0%", "0 %"} for label in labels)
-        assert any(row.time_label.get_text() for row in card.window_rows)
-        assert any(
-            row.key_label.get_text() in {"5h", "5 h", "5 ч"}
-            for row in card.window_rows
-        )
-        assert any(
-            row.key_label.get_text() in {"7d", "7 d", "7 д"}
-            for row in card.window_rows
-        )
+        _assert_quota_card_rows(card)
 
         dialog = card.open_details(window)
+        assert isinstance(dialog, QuotaDialog)
         assert isinstance(dialog, Adw.Dialog)
-        assert dialog.get_visible()
-        child = dialog.get_child()
-        assert child is not None
-        dialog_labels = _labels(child)
-        assert any("76" in label for label in dialog_labels)
-        assert any("97" in label and "≈" in label for label in dialog_labels)
-        assert any(
-            any(value in label for value in ("5h", "5 h", "5 ч"))
-            for label in dialog_labels
-        )
-        assert any(
-            any(value in label for value in ("7d", "7 d", "7 д"))
-            for label in dialog_labels
-        )
+        _assert_quota_dialog(dialog)
         dialog.close()
 
     _run_ui(scenario)
 
 
 def test_b4b_summary_card_combines_plan_and_quota_and_tracks_live_updates() -> None:
+    from aconsole.ui.views.quota_dialog import QuotaDialog
+
     async def scenario(app: _QuotaTestApp) -> None:
         snapshot = demo_snapshot()
         accounts = _quota_accounts()
@@ -180,20 +233,7 @@ def test_b4b_summary_card_combines_plan_and_quota_and_tracks_live_updates() -> N
         window.present()
         await asyncio.sleep(0.05)
 
-        summary = window.summary_card
-        assert isinstance(summary, Gtk.Box)
-        assert summary.get_visible()
-        assert window.plan_card.get_parent() is summary
-        assert window.quota_card.get_parent() is summary
-        children: list[Gtk.Widget] = []
-        child = summary.get_first_child()
-        while child is not None:
-            children.append(child)
-            child = child.get_next_sibling()
-        assert len(children) == 3
-        assert children[0] is window.plan_card
-        assert isinstance(children[1], Gtk.Separator)
-        assert children[2] is window.quota_card
+        _assert_summary_container(window)
 
         plan = next(
             item
@@ -204,7 +244,14 @@ def test_b4b_summary_card_combines_plan_and_quota_and_tracks_live_updates() -> N
         assert window.plan_card.title_label.get_text() == plan.title
         assert any("76" in row.percent_label.get_text() for row in window.quota_card.window_rows)
 
-        changed_plan: PlanView = msgspec.structs.replace(
+        dialog = window.quota_card.open_details(window)
+        assert isinstance(dialog, QuotaDialog)
+        assert dialog.get_visible()
+        assert window.quota_card.open_details(window) is dialog
+        window.quota_card.emit("clicked")
+        assert window.quota_card.details_dialog is dialog
+
+        changed_plan = msgspec.structs.replace(
             plan, title="Live Plan Update", done=plan.done + 1, updated_at=_NOW
         )
         account = next(item for item in accounts if item.agent is AgentKind.CLAUDE)
@@ -219,10 +266,24 @@ def test_b4b_summary_card_combines_plan_and_quota_and_tracks_live_updates() -> N
         assert app.client.store.apply(
             EventEnvelope(seq=2, at=_NOW, event=QuotaUpdated(account=changed_account))
         )
+        tab = next(item for item in snapshot.tabs if item.account_id == account.id)
+        changed_tab = msgspec.structs.replace(tab, title="Live Tab Update")
+        assert app.client.store.apply(
+            EventEnvelope(
+                seq=3,
+                at=_NOW,
+                event=TabUpdated(tab=changed_tab, changed=frozenset({"title"})),
+            )
+        )
         await asyncio.sleep(0.05)
 
         assert window.plan_card.title_label.get_text() == "Live Plan Update"
         assert str(changed_plan.done) in window.plan_card.progress_label.get_text()
         assert any("88" in row.percent_label.get_text() for row in window.quota_card.window_rows)
+        assert any("88" in row.percent_label.get_text() for row in dialog.window_rows)
+        dialog_child = dialog.get_child()
+        assert dialog_child is not None
+        assert "Live Tab Update" in " ".join(_labels(dialog_child))
+        dialog.close()
 
     _run_ui(scenario)
