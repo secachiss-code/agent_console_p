@@ -19,3 +19,6 @@
 .ac-quota-details { margin: 16px; }
 .ac-quota-warn levelbar block.filled { background-color: @warning_bg_color; }
 .ac-quota-critical levelbar block.filled { background-color: @error_bg_color; }
+.ac-terminal { padding: 4px 6px; }
+.ac-session-ended { padding: 16px; border-radius: 12px; background-color: @card_bg_color; }
+.ac-session-error { padding: 12px; margin: 12px; border-radius: 6px; background-color: @card_bg_color; }

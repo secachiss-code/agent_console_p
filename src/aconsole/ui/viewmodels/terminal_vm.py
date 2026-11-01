@@ -2,7 +2,15 @@
 
 import asyncio
 
-from aconsole.contracts.app import EmptyResult, ExitedParams, StartedParams, TabIdParams, TerminalLaunchSpec
+from aconsole.contracts.app import (
+    EmptyResult,
+    ExitedParams,
+    RestartParams,
+    StartedParams,
+    TabIdParams,
+    TabView,
+    TerminalLaunchSpec,
+)
 from aconsole.contracts.common import TabId
 from aconsole.ui.client.core_client import CoreClient
 
@@ -16,6 +24,9 @@ class TerminalViewModel:
 
     async def launch_spec(self) -> TerminalLaunchSpec:
         return await self._client.request("tab/launchSpec", TabIdParams(tab_id=self._tab_id), TerminalLaunchSpec)
+
+    async def restart(self, *, resume: bool) -> TabView:
+        return await self._client.request("tab/restart", RestartParams(tab_id=self._tab_id, resume=resume), TabView)
 
     async def report_started(self, pid: int) -> None:
         _ = await self._client.request("tab/started", StartedParams(tab_id=self._tab_id, pid=pid), EmptyResult)

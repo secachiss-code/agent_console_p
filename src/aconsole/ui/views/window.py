@@ -12,7 +12,7 @@ gi.require_version("Adw", "1")
 from gi.repository import Adw, Gio, GLib, GObject, Gtk  # noqa: E402
 
 from aconsole.contracts.app import EmptyParams  # noqa: E402
-from aconsole.contracts.common import PlanId  # noqa: E402
+from aconsole.contracts.common import PlanId, TabId  # noqa: E402
 from aconsole.contracts.events import SettingsChanged, UiEvent  # noqa: E402
 from aconsole.contracts.settings import Settings  # noqa: E402
 from aconsole.ui.bootstrap import spawn_task  # noqa: E402
@@ -27,6 +27,8 @@ from aconsole.ui.views.sidebar.messages import _ as translate  # noqa: E402
 from aconsole.ui.views.sidebar.plan_card import PlanCard, create_plan_placeholder  # noqa: E402
 from aconsole.ui.views.sidebar.quota_card import QuotaCard  # noqa: E402
 from aconsole.ui.views.tabs.sidebar import TabSidebar  # noqa: E402
+from aconsole.ui.views.terminal.messages import _ as terminal_text  # noqa: E402
+from aconsole.ui.views.terminal.page import TerminalPage  # noqa: E402
 
 _LOG = logging.getLogger(__name__)
 
@@ -58,7 +60,6 @@ class MainWindow(Adw.ApplicationWindow):
         self.tabs_sidebar: TabSidebar = TabSidebar(tabs)
         self.selection: Gtk.SingleSelection = self.tabs_sidebar.selection
         self.tab_list: Gtk.ListView = self.tabs_sidebar.tab_list
-        _ = self.selection.connect("notify::selected-item", self._focus_changed)
         _ = self.connect("notify::is-active", self._focus_changed)
         sidebar.set_content(self._build_summary())
         self.split.set_sidebar(sidebar)
@@ -78,7 +79,9 @@ class MainWindow(Adw.ApplicationWindow):
         )
         content.add_top_bar(header)
         self._install_quota_banner(content)
-        content.set_content(Adw.StatusPage(title="AConsole"))
+        self._setup_terminals(content)
+        _ = self.selection.connect("notify::selected-item", self._selection_changed)
+        _ = self.connect("unrealize", self._dispose_terminals)
         self.toast_overlay: Adw.ToastOverlay = Adw.ToastOverlay()
         self.toast_overlay.set_child(content)
         self.tabs_sidebar.on_error = self._tab_error
@@ -86,6 +89,10 @@ class MainWindow(Adw.ApplicationWindow):
         self.set_content(self.split)
         self._summary_vm.on_changed = self._update_summary
         self._update_summary()
+        self._show_selected_terminal()
+        self._install_breakpoint(app)
+
+    def _install_breakpoint(self, app: Adw.Application) -> None:
         narrow = Adw.Breakpoint.new(Adw.BreakpointCondition.parse("max-width: 720sp"))
         narrow.add_setter(self.split, "collapsed", True)  # noqa: FBT003 -- GI setter takes a positional GValue
         # Stub: snapshot_request is a test seam, not a field of Adw.Application.
@@ -111,6 +118,55 @@ class MainWindow(Adw.ApplicationWindow):
         self.summary_card.append(self.quota_card)
         body.append(self.summary_card)
         return body
+
+    def _setup_terminals(self, content: Adw.ToolbarView) -> None:
+        self._terminals_disposed: bool = False
+        self.terminal_pages: dict[str, TerminalPage] = {}
+        self.terminal_stack: Gtk.Stack = Gtk.Stack()
+        self.terminal_stack.set_transition_type(Gtk.StackTransitionType.NONE)
+        _ = self.terminal_stack.add_named(Adw.StatusPage(title=terminal_text("terminal.empty")), "empty")
+        content.set_content(self.terminal_stack)
+
+    def _show_selected_terminal(self, *, show_content: bool = True) -> None:
+        if self._terminals_disposed:
+            return
+        selected = self.selection.get_selected_item()
+        if not isinstance(selected, TabItem):
+            self.terminal_stack.set_visible_child_name("empty")
+            return
+        tab_id = str(selected.tab_id)
+        page = self.terminal_pages.get(tab_id)
+        if page is None:
+            page = TerminalPage(self.tabs.client, TabId(tab_id), self._terminal_new, self._terminal_close)
+            self.terminal_pages[tab_id] = page
+            _ = self.terminal_stack.add_named(page, tab_id)
+        self.terminal_stack.set_visible_child(page)
+        if show_content and self.content_view.get_content() is not self.terminal_stack:
+            self.content_view.set_content(self.terminal_stack)
+        page.start()
+
+    def _terminal_new(self) -> None:
+        self.app_vm.dispatch("new-tab")
+
+    def _terminal_close(self, tab_id: str) -> None:
+        if self._close_tab_handler is not None:
+            self._close_tab_handler(tab_id)
+
+    def _sync_terminal_pages(self, store: CoreStore) -> None:
+        if self._terminals_disposed or store.reconnecting or store.snapshot is None:
+            return
+        present = {str(tab.id) for tab in store.snapshot.tabs}
+        for tab_id in tuple(self.terminal_pages):
+            if tab_id not in present:
+                page = self.terminal_pages.pop(tab_id)
+                page.close()
+                self.terminal_stack.remove(page)
+        self._show_selected_terminal(show_content=False)
+
+    def _dispose_terminals(self, _widget: Gtk.Widget) -> None:
+        self._terminals_disposed = True
+        for page in self.terminal_pages.values():
+            page.close()
 
     def _install_quota_banner(self, content: Adw.ToolbarView) -> None:
         self.quota_banner: Adw.Banner = Adw.Banner(title=translate("quota.critical"))
@@ -178,6 +234,10 @@ class MainWindow(Adw.ApplicationWindow):
         if parameter is not None and self._close_tab_handler is not None:
             self._close_tab_handler(parameter.get_string())
 
+    def _selection_changed(self, _object: object, _property: object) -> None:
+        self._show_selected_terminal()
+        self._focus_changed(_object, _property)
+
     def _focus_changed(self, _object: object, _property: object) -> None:
         if self._snapshot_mode:
             return
@@ -196,10 +256,12 @@ class MainWindow(Adw.ApplicationWindow):
             self.split.set_show_sidebar(not self.split.get_show_sidebar())
 
     def _store_event(self, event: UiEvent, _store: CoreStore) -> None:
+        self._sync_terminal_pages(_store)
         if isinstance(event, SettingsChanged):
             _ = spawn_task(self._refresh_settings())
 
     def _snapshot_changed(self, _store: CoreStore) -> None:
+        self._sync_terminal_pages(_store)
         _ = spawn_task(self._refresh_settings())
 
     async def _refresh_settings(self) -> None:

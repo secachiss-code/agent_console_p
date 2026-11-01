@@ -1,0 +1,28 @@
+"""Terminal page messages for the B11 translation catalog."""
+
+import locale
+
+_MESSAGES = {
+    "terminal.ended": ("Session ended", "Сессия завершена"),
+    "terminal.resume": ("Resume", "Возобновить"),
+    "terminal.new": ("New", "Новая"),
+    "terminal.close": ("Close", "Закрыть"),
+    "terminal.empty": ("Select an agent tab", "Выберите вкладку агента"),
+    "terminal.error": (
+        "Could not start the session: {error}",
+        "Не удалось запустить сессию: {error}",  # noqa: RUF001 -- Russian UI text
+    ),
+    "terminal.report_error": (
+        "Could not report session state",
+        "Не удалось передать состояние сессии",  # noqa: RUF001 -- Russian UI text
+    ),
+    "terminal.restart_error": (
+        "Could not restart the session",
+        "Не удалось перезапустить сессию",  # noqa: RUF001 -- Russian UI text
+    ),
+}
+
+
+def _(key: str) -> str:
+    language = locale.getlocale()[0] or ""
+    return _MESSAGES[key][1 if language.startswith("ru") else 0]
