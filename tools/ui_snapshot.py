@@ -83,8 +83,7 @@ def _preview_app(client: CoreClient, request: SnapshotRequest | None, scenario: 
             if window is None or snapshot is None:
                 return None
             if snapshot.view == "quota-dialog":
-                dialog = window.quota_card.details_dialog
-                return dialog.get_child() if dialog is not None else None
+                return window.quota_card.details_dialog
             return window.plan_card.graph_popover
 
         def _arm_preview(self) -> bool:

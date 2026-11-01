@@ -44,6 +44,7 @@ _MESSAGES = {
     "quota.tabs": ("Tabs using this account", "Вкладки этого аккаунта"),
     "quota.critical": ("An account has reached 95% of its limit", "Использовано не менее 95 % лимита аккаунта"),
     "quota.details": ("Details", "Подробнее"),
+    "quota.source_unknown": ("Usage source unavailable", "Источник данных не указан"),
 }
 
 
