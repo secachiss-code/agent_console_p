@@ -56,7 +56,7 @@ def run_ui(
     parser = argparse.ArgumentParser()
     _ = parser.add_argument("--fake", "--fake-core", choices=("demo", "empty", "stress", "errors"))
     _ = parser.add_argument("--socket")
-    _ = parser.add_argument("--snapshot-view", choices=("window", "tabs", "plan-graph", "quota-dialog"))
+    _ = parser.add_argument("--snapshot-view", choices=("window", "tabs", "plan-graph", "quota-dialog", "palette"))
     _ = parser.add_argument("--theme", choices=("light", "dark"), default="light")
     _ = parser.add_argument("--size", default="1280x800")
     _ = parser.add_argument("--out", type=Path)

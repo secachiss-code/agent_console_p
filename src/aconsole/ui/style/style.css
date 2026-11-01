@@ -29,3 +29,6 @@
 .ac-plan-in_progress, .ac-plan-verifying { color: @warning_color; }
 .ac-plan-failed { color: @error_color; }
 .ac-plan-ready { border: 1px dashed @accent_bg_color; }
+.ac-palette { margin: 12px; }
+.ac-palette-row { padding: 8px 12px; }
+.ac-palette-group { padding: 8px 4px 4px; font-size: 9pt; font-weight: bold; }

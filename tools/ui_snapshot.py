@@ -36,7 +36,9 @@ def main(argv: list[str]) -> int:
 
     parser = argparse.ArgumentParser()
     _ = parser.add_argument("--scenario", required=True, choices=("demo", "empty", "stress", "errors"))
-    _ = parser.add_argument("--view", required=True, choices=("window", "tabs", "plan-graph", "quota-dialog"))
+    _ = parser.add_argument(
+        "--view", required=True, choices=("window", "tabs", "plan-graph", "quota-dialog", "palette"),
+    )
     _ = parser.add_argument("--theme", required=True, choices=("light", "dark"))
     _ = parser.add_argument("--size", required=True)
     _ = parser.add_argument("--out", required=True, type=Path)
@@ -44,7 +46,7 @@ def main(argv: list[str]) -> int:
     result = run_ui([
         "--fake", args.scenario, "--snapshot-view", args.view, "--theme", args.theme,
         "--size", args.size, "--out", str(args.out),
-    ], app_factory=_preview_app if args.view in {"plan-graph", "quota-dialog"} else None)
+    ], app_factory=_preview_app if args.view in {"plan-graph", "quota-dialog", "palette"} else None)
     if result or not args.out.is_file() or args.out.stat().st_size == 0:
         _ = sys.stderr.write("snapshot missing or application failed\n")
         return result or 1
@@ -64,6 +66,7 @@ def _preview_app(client: CoreClient, request: SnapshotRequest | None, scenario: 
         _paint_handle: int | None = None
         _paint_clock: Gdk.FrameClock | None = None
         _preview_watchdog: int | None = None
+        _preview_waits: int = 0
 
         def _capture(self) -> None:
             window = self.window
@@ -73,6 +76,10 @@ def _preview_app(client: CoreClient, request: SnapshotRequest | None, scenario: 
                 return
             if snapshot.view == "plan-graph":
                 window.plan_card.show_graph()
+            elif snapshot.view == "palette":
+                window.app_vm.dispatch("palette")
+                if window.palette_dialog is not None:
+                    window.palette_dialog.search_entry.set_text("command")
             else:
                 _ = window.quota_card.open_details(window)
             _ = GLib.timeout_add(450, self._arm_preview)
@@ -84,9 +91,18 @@ def _preview_app(client: CoreClient, request: SnapshotRequest | None, scenario: 
                 return None
             if snapshot.view == "quota-dialog":
                 return window.quota_card.details_dialog
+            if snapshot.view == "palette":
+                return window.palette_dialog
             return window.plan_card.graph_popover
 
         def _arm_preview(self) -> bool:
+            window = self.window
+            snapshot = self.snapshot_request
+            if snapshot is not None and snapshot.view == "palette" and window is not None:
+                palette = window.palette_dialog
+                if palette is not None and palette.viewmodel.loading:
+                    self._preview_waits += 1
+                    return GLib.SOURCE_CONTINUE if self._preview_waits < 12 else self._preview_timed_out()
             target = self._preview_target()
             self._paint_clock = target.get_frame_clock() if target is not None else None
             if target is None or self._paint_clock is None:

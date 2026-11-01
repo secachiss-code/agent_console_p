@@ -11,7 +11,7 @@ gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
 from gi.repository import Adw, Gio, GLib, GObject, Gtk  # noqa: E402
 
-from aconsole.contracts.app import EmptyParams  # noqa: E402
+from aconsole.contracts.app import CommandResult, EmptyParams, PaletteQuery  # noqa: E402
 from aconsole.contracts.common import PlanId, TabId  # noqa: E402
 from aconsole.contracts.events import SettingsChanged, UiEvent  # noqa: E402
 from aconsole.contracts.settings import Settings  # noqa: E402
@@ -22,6 +22,8 @@ from aconsole.ui.viewmodels.app_vm import AppViewModel  # noqa: E402
 from aconsole.ui.viewmodels.logic.quota_fmt import quota_level  # noqa: E402
 from aconsole.ui.viewmodels.sidebar_vm import SidebarSummaryViewModel  # noqa: E402
 from aconsole.ui.viewmodels.tabs_vm import TabItem, TabsViewModel  # noqa: E402
+from aconsole.ui.views.palette.dialog import PaletteDialog  # noqa: E402
+from aconsole.ui.views.palette.messages import _ as palette_text  # noqa: E402
 from aconsole.ui.views.shortcuts import ShortcutManager  # noqa: E402
 from aconsole.ui.views.sidebar.messages import _ as translate  # noqa: E402
 from aconsole.ui.views.sidebar.plan_card import PlanCard, create_plan_placeholder  # noqa: E402
@@ -212,6 +214,7 @@ class MainWindow(Adw.ApplicationWindow):
         self.add_action(self.close_tab_action)
 
     def _init_shortcuts(self, app: Adw.Application) -> None:
+        self.palette_dialog: PaletteDialog | None = None
         client = getattr(app, "client", None)
         if not isinstance(client, CoreClient):
             message = "application has no core client"
@@ -261,6 +264,38 @@ class MainWindow(Adw.ApplicationWindow):
     def _handle_action(self, action_id: str) -> None:
         if action_id == "toggle-sidebar":
             self.split.set_show_sidebar(not self.split.get_show_sidebar())
+        elif action_id == "palette":
+            self._open_palette()
+
+    def _open_palette(self) -> None:
+        if self.palette_dialog is None:
+            self.palette_dialog = PaletteDialog(self.tabs.client, self._palette_result)
+        selected = self.selection.get_selected_item()
+        snapshot = self.tabs.client.store.snapshot
+        context = PaletteQuery(
+            tab_id=TabId(str(selected.tab_id)) if isinstance(selected, TabItem) else None,
+            project_id=snapshot.active_project if snapshot is not None else None,
+        )
+        self.palette_dialog.open(context, self)
+
+    def _palette_result(self, result: CommandResult) -> None:
+        if result.toast:
+            self.toast_overlay.add_toast(Adw.Toast.new(result.toast))
+        if not result.ok:
+            return
+        if result.opened_tab is not None:
+            self._select_tab(result.opened_tab)
+        if result.open_page is not None and result.open_page.kind == "plan":
+            self._open_plan(PlanId(result.open_page.ref))
+        if result.open_uri is not None:
+            launcher = Gtk.UriLauncher.new(result.open_uri)
+            launcher.launch(self, None, self._uri_opened)
+
+    def _uri_opened(self, launcher: Gtk.UriLauncher, result: Gio.AsyncResult) -> None:
+        try:
+            _ = launcher.launch_finish(result)
+        except GLib.Error:
+            self.toast_overlay.add_toast(Adw.Toast.new(palette_text("palette.uri_error")))
 
     def _store_event(self, event: UiEvent, _store: CoreStore) -> None:
         self._sync_terminal_pages(_store)
