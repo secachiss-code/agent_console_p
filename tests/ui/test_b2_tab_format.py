@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from typing import TYPE_CHECKING
 
 import msgspec
@@ -61,6 +61,30 @@ def test_b2_tab_format_status(case: _StatusCase) -> None:
 
     assert presentation.status_symbol == case.symbol
     assert presentation.spinning is case.spinning
+
+
+@pytest.mark.parametrize(
+    ("status", "age", "expected"),
+    [
+        (TabStatus.WAITING_APPROVAL, timedelta(minutes=4, seconds=59), 4),
+        (TabStatus.WAITING_INPUT, timedelta(seconds=59), 0),
+        (TabStatus.WAITING_INPUT, timedelta(minutes=-2), 0),
+        (TabStatus.IDLE, timedelta(minutes=8), None),
+        (TabStatus.WORKING, timedelta(minutes=8), None),
+    ],
+)
+def test_b2_tab_format_waiting_minutes_only_for_waiting_tabs(
+    status: TabStatus, age: timedelta, expected: int | None
+) -> None:
+    from aconsole.ui.viewmodels.logic.tab_format import format_tab
+
+    snapshot = demo_snapshot()
+    tab = msgspec.structs.replace(
+        snapshot.tabs[0], status=status, status_since=NOW - age
+    )
+    account = next(item for item in snapshot.accounts if item.id == tab.account_id)
+
+    assert format_tab(tab, (account,), NOW).waiting_minutes == expected
 
 
 @pytest.mark.parametrize(
