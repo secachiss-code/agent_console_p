@@ -9,10 +9,17 @@ from aconsole.contracts.app import (
     CheckResult,
     ChecksResult,
     EmptyParams,
+    EmptyResult,
     FixIdParams,
     FixPreview,
+    OpenTabParams,
+    ProjectAddParams,
+    ProjectIdParams,
+    ProjectView,
     SettingsUpdateParams,
+    TabView,
 )
+from aconsole.contracts.common import AgentKind, ProjectId, WorkspaceMode
 from aconsole.contracts.settings import Settings, SettingsPatch
 from aconsole.ui.client.core_client import CoreClient
 
@@ -32,6 +39,18 @@ class SetupViewModel:
         result = await self._client.request("setup/checks", EmptyParams(), ChecksResult, long=True)
         if generation == self._checks_generation:
             self.checks = result.checks
+
+    async def add_project(self, root: str) -> ProjectView:
+        return await self._client.request("project/add", ProjectAddParams(root=root), ProjectView)
+
+    async def select_project(self, project_id: ProjectId) -> None:
+        _ = await self._client.request("project/setActive", ProjectIdParams(project_id=project_id), EmptyResult)
+
+    async def start_first_task(self, project_id: ProjectId, agent: AgentKind) -> TabView:
+        return await self._client.request(
+            "tab/open", OpenTabParams(project_id=project_id, agent=agent, workspace=WorkspaceMode.NEW_WORKTREE),
+            TabView, long=True,
+        )
 
     async def preview_fix(self, fix_id: str) -> None:
         self._generation += 1
@@ -88,14 +107,20 @@ class PreferencesViewModel:
         return unsubscribe
 
     def _publish(self, settings: Settings) -> None:
+        if self.settings is not None and settings.rev < self.settings.rev:
+            return
         self.settings = settings
         for callback in tuple(self._listeners):
             callback(settings)
 
+    def accept(self, settings: Settings) -> None:
+        """Accept a server-confirmed snapshot without rolling back a newer revision."""
+        self._publish(settings)
+
     async def _load(self) -> Settings:
         settings = await self._client.request("settings/get", EmptyParams(), Settings)
         self._publish(settings)
-        return settings
+        return self.settings if self.settings is not None else settings
 
     async def load(self) -> Settings:
         async with self._lock:
@@ -108,4 +133,4 @@ class PreferencesViewModel:
                 "settings/update", SettingsUpdateParams(patch=patch, rev=current.rev), Settings,
             )
             self._publish(settings)
-            return settings
+            return self.settings if self.settings is not None else settings

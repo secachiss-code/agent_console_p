@@ -9,9 +9,10 @@ import gi
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Vte", "3.91")
-from gi.repository import Gtk, Vte  # noqa: E402
+from gi.repository import Gio, Gtk, Pango, Vte  # noqa: E402
 
 from aconsole.contracts.common import TabId  # noqa: E402
+from aconsole.contracts.settings import Settings  # noqa: E402
 from aconsole.ui.bootstrap import spawn_task  # noqa: E402
 from aconsole.ui.client.core_client import CoreClient  # noqa: E402
 from aconsole.ui.viewmodels.terminal_vm import TerminalViewModel  # noqa: E402
@@ -41,6 +42,8 @@ class TerminalPage(Gtk.Overlay):
         self.palette: TerminalPaletteBinding = TerminalPaletteBinding(self.terminal)
         self.session: TerminalSession = TerminalSession(self.terminal, self.viewmodel)
         self.worker: asyncio.Task[None] | None = None
+        self._settings: Settings | None = None
+        self.font_description: Pango.FontDescription | None = None
         self._setup_overlays()
 
     def _setup_overlays(self) -> None:
@@ -78,6 +81,8 @@ class TerminalPage(Gtk.Overlay):
             return
         try:
             _ = await session.start()
+            if self._settings is not None and not self._closed:
+                self.apply_settings(self._settings)
             started_error = await session.started_report()
             if started_error is not None and not self._closed and session is self.session:
                 self._show_error(translate("terminal.report_error"))
@@ -96,6 +101,26 @@ class TerminalPage(Gtk.Overlay):
     def _show_error(self, message: str) -> None:
         self.error_label.set_label(message)
         self.error_label.set_visible(True)
+
+    def apply_settings(self, settings: Settings) -> None:
+        if self._closed:
+            return
+        self._settings = settings
+        family = settings.terminal_font or self._system_font()
+        description = Pango.FontDescription.from_string(family)
+        description.set_size(settings.terminal_font_size * Pango.SCALE)
+        self.font_description = description
+        self.terminal.set_font(description)
+        self.terminal.set_scrollback_lines(settings.scrollback_lines)
+
+    @staticmethod
+    def _system_font() -> str:
+        source = Gio.SettingsSchemaSource.get_default()
+        schema = source.lookup("org.gnome.desktop.interface", recursive=True) if source is not None else None
+        if schema is not None:
+            settings = Gio.Settings.new_full(schema, None, None)
+            return settings.get_string("monospace-font-name") or "Monospace"
+        return "Monospace"
 
     def _resume(self, _button: Gtk.Button) -> None:
         self._request_restart(resume=True)

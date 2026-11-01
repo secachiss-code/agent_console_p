@@ -37,7 +37,7 @@ def main(argv: list[str]) -> int:
     parser = argparse.ArgumentParser()
     _ = parser.add_argument("--scenario", required=True, choices=("demo", "empty", "stress", "errors"))
     _ = parser.add_argument(
-        "--view", required=True, choices=("window", "tabs", "plan-graph", "quota-dialog", "palette"),
+        "--view", required=True, choices=("window", "tabs", "plan-graph", "quota-dialog", "palette", "setup", "prefs"),
     )
     _ = parser.add_argument("--theme", required=True, choices=("light", "dark"))
     _ = parser.add_argument("--size", required=True)
@@ -46,7 +46,7 @@ def main(argv: list[str]) -> int:
     result = run_ui([
         "--fake", args.scenario, "--snapshot-view", args.view, "--theme", args.theme,
         "--size", args.size, "--out", str(args.out),
-    ], app_factory=_preview_app if args.view in {"plan-graph", "quota-dialog", "palette"} else None)
+    ], app_factory=_preview_app if args.view in {"plan-graph", "quota-dialog", "palette", "setup", "prefs"} else None)
     if result or not args.out.is_file() or args.out.stat().st_size == 0:
         _ = sys.stderr.write("snapshot missing or application failed\n")
         return result or 1
@@ -80,6 +80,10 @@ def _preview_app(client: CoreClient, request: SnapshotRequest | None, scenario: 
                 window.app_vm.dispatch("palette")
                 if window.palette_dialog is not None:
                     window.palette_dialog.search_entry.set_text("command")
+            elif snapshot.view == "setup":
+                window.show_setup()
+            elif snapshot.view == "prefs":
+                window.app_vm.dispatch("settings")
             else:
                 _ = window.quota_card.open_details(window)
             _ = GLib.timeout_add(450, self._arm_preview)
@@ -93,14 +97,26 @@ def _preview_app(client: CoreClient, request: SnapshotRequest | None, scenario: 
                 return window.quota_card.details_dialog
             if snapshot.view == "palette":
                 return window.palette_dialog
+            if snapshot.view == "setup":
+                return window.setup_wizard
+            if snapshot.view == "prefs":
+                return window.preferences_dialog
             return window.plan_card.graph_popover
 
         def _arm_preview(self) -> bool:
             window = self.window
             snapshot = self.snapshot_request
-            if snapshot is not None and snapshot.view == "palette" and window is not None:
-                palette = window.palette_dialog
-                if palette is not None and palette.viewmodel.loading:
+            if snapshot is not None and window is not None:
+                loading = (
+                    snapshot.view == "palette" and window.palette_dialog is not None
+                    and window.palette_dialog.viewmodel.loading
+                ) or (
+                    snapshot.view == "setup" and window.setup_wizard is not None and window.setup_wizard.loading
+                ) or (
+                    snapshot.view == "prefs" and window.preferences_dialog is not None
+                    and window.preferences_dialog.loading
+                )
+                if loading:
                     self._preview_waits += 1
                     return GLib.SOURCE_CONTINUE if self._preview_waits < 12 else self._preview_timed_out()
             target = self._preview_target()

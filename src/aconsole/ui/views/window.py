@@ -20,10 +20,14 @@ from aconsole.ui.client.core_client import CoreClient  # noqa: E402
 from aconsole.ui.client.store import CoreStore  # noqa: E402
 from aconsole.ui.viewmodels.app_vm import AppViewModel  # noqa: E402
 from aconsole.ui.viewmodels.logic.quota_fmt import quota_level  # noqa: E402
+from aconsole.ui.viewmodels.setup_vm import PreferencesViewModel  # noqa: E402
 from aconsole.ui.viewmodels.sidebar_vm import SidebarSummaryViewModel  # noqa: E402
 from aconsole.ui.viewmodels.tabs_vm import TabItem, TabsViewModel  # noqa: E402
 from aconsole.ui.views.palette.dialog import PaletteDialog  # noqa: E402
 from aconsole.ui.views.palette.messages import _ as palette_text  # noqa: E402
+from aconsole.ui.views.setup.messages import _ as setup_text  # noqa: E402
+from aconsole.ui.views.setup.preferences import PreferencesDialog  # noqa: E402
+from aconsole.ui.views.setup.wizard import SetupWizard  # noqa: E402
 from aconsole.ui.views.shortcuts import ShortcutManager  # noqa: E402
 from aconsole.ui.views.sidebar.messages import _ as translate  # noqa: E402
 from aconsole.ui.views.sidebar.plan_card import PlanCard, create_plan_placeholder  # noqa: E402
@@ -68,6 +72,7 @@ class MainWindow(Adw.ApplicationWindow):
         content = Adw.ToolbarView()
         self.content_view: Adw.ToolbarView = content
         header = Adw.HeaderBar()
+        self._install_settings_menu(header)
         self.sidebar_button: Gtk.Button = Gtk.Button(icon_name="sidebar-show-symbolic")
         self.sidebar_button.set_action_name("win.toggle-sidebar")
         header.pack_start(self.sidebar_button)
@@ -93,6 +98,7 @@ class MainWindow(Adw.ApplicationWindow):
         self._update_summary()
         self._show_selected_terminal()
         self._install_breakpoint(app)
+        _ = self.connect("map", self._maybe_setup)
 
     def _install_breakpoint(self, app: Adw.Application) -> None:
         narrow = Adw.Breakpoint.new(Adw.BreakpointCondition.parse("max-width: 720sp"))
@@ -140,6 +146,8 @@ class MainWindow(Adw.ApplicationWindow):
         page = self.terminal_pages.get(tab_id)
         if page is None:
             page = TerminalPage(self.tabs.client, TabId(tab_id), self._terminal_new, self._terminal_close)
+            if self._terminal_settings is not None:
+                page.apply_settings(self._terminal_settings)
             self.terminal_pages[tab_id] = page
             _ = self.terminal_stack.add_named(page, tab_id)
         self.terminal_stack.set_visible_child(page)
@@ -174,6 +182,7 @@ class MainWindow(Adw.ApplicationWindow):
 
     def _dispose_terminals(self, _widget: Gtk.Widget) -> None:
         self._terminals_disposed = True
+        self._preferences_unsubscribe()
         for page in self.terminal_pages.values():
             page.close()
 
@@ -221,6 +230,12 @@ class MainWindow(Adw.ApplicationWindow):
             raise TypeError(message)
         self.app_vm: AppViewModel = AppViewModel(client)
         self._settings_revision: int = -1
+        self._terminal_settings: Settings | None = None
+        self.preferences_vm: PreferencesViewModel = PreferencesViewModel(client)
+        self._preferences_unsubscribe: Callable[[], None] = self.preferences_vm.subscribe(self._apply_preferences)
+        self.preferences_dialog: PreferencesDialog | None = None
+        self.setup_wizard: SetupWizard | None = None
+        self._setup_shown: bool = False
         self.app_vm.action_handler = self._handle_action
         self.shortcut_manager: ShortcutManager = ShortcutManager(self, self.app_vm)
         self.app_vm.client.store.subscribe(self._store_event)
@@ -266,6 +281,55 @@ class MainWindow(Adw.ApplicationWindow):
             self.split.set_show_sidebar(not self.split.get_show_sidebar())
         elif action_id == "palette":
             self._open_palette()
+        elif action_id == "settings":
+            self._open_preferences()
+
+    def _install_settings_menu(self, header: Adw.HeaderBar) -> None:
+        menu = Gio.Menu()
+        for name, label in (
+            ("palette", palette_text("palette.title")),
+            ("settings", setup_text("prefs.title")),
+            ("setup", setup_text("setup.restart")),
+        ):
+            action = Gio.SimpleAction.new(name, None)
+            _ = action.connect("activate", self._settings_menu_action)
+            self.add_action(action)
+            menu.append(label, f"win.{name}")
+        button = Gtk.MenuButton(icon_name="open-menu-symbolic", menu_model=menu)
+        header.pack_end(button)
+
+    def _settings_menu_action(self, action: Gio.SimpleAction, _parameter: object) -> None:
+        if action.get_name() == "setup":
+            _ = spawn_task(self._restart_setup())
+        else:
+            self.app_vm.dispatch(action.get_name())
+
+    def _open_preferences(self) -> None:
+        if self.preferences_dialog is None:
+            self.preferences_dialog = PreferencesDialog(self.preferences_vm)
+        self.preferences_dialog.open(self)
+
+    def show_setup(self) -> None:
+        self._setup_shown = True
+        if self.setup_wizard is None:
+            self.setup_wizard = SetupWizard(self.tabs.client, self.preferences_vm, self._select_tab)
+        self.setup_wizard.open(self)
+
+    async def _restart_setup(self) -> None:
+        from aconsole.contracts.settings import SettingsPatch  # noqa: PLC0415
+
+        try:
+            _ = await self.preferences_vm.update(SettingsPatch(setup_completed=False))
+            if not self._terminals_disposed:
+                self.show_setup()
+        except Exception:  # noqa: BLE001 -- failure to persist rerun state must remain visible
+            if not self._terminals_disposed:
+                self.toast_overlay.add_toast(Adw.Toast.new(setup_text("setup.error")))
+
+    def _maybe_setup(self, _widget: Gtk.Widget) -> None:
+        snapshot = self.tabs.client.store.snapshot
+        if not self._snapshot_mode and not self._setup_shown and snapshot is not None and snapshot.setup.required:
+            self.show_setup()
 
     def _open_palette(self) -> None:
         if self.palette_dialog is None:
@@ -312,7 +376,17 @@ class MainWindow(Adw.ApplicationWindow):
         except Exception:  # noqa: BLE001 -- preserve the last working keymap when the core is unavailable
             _LOG.debug("Could not refresh keyboard settings", exc_info=True)
             return
-        if settings.rev < self._settings_revision:
+        self.preferences_vm.accept(settings)
+
+    def _apply_preferences(self, settings: Settings) -> None:
+        if self._terminals_disposed or settings.rev < self._settings_revision:
             return
         self._settings_revision = settings.rev
+        self._terminal_settings = settings
         _ = self.app_vm.apply_overrides(settings.keymap_overrides)
+        for page in self.terminal_pages.values():
+            page.apply_settings(settings)
+        if not self._snapshot_mode:
+            schemes = {"system": Adw.ColorScheme.DEFAULT, "light": Adw.ColorScheme.FORCE_LIGHT,
+                       "dark": Adw.ColorScheme.FORCE_DARK}
+            Adw.StyleManager.get_default().set_color_scheme(schemes[settings.theme])
