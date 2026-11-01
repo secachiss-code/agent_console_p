@@ -184,6 +184,134 @@ def test_b4a_plan_card_empty_state_explains_missing_plan() -> None:
     _in_gtk_context(check)
 
 
+def test_b4a_plan_graph_preview_shows_hides_and_closes_when_plan_clears() -> None:
+    from aconsole.ui.views.sidebar.plan_card import PlanCard
+
+    plan = _demo_plan()
+
+    def check() -> None:
+        card = PlanCard(on_activate=lambda _plan_id: None)
+        card.set_plan(plan)
+        window = Gtk.Window()
+        window.set_child(card)
+        window.present()
+        try:
+            card.show_graph()
+            assert card.graph is not None
+            assert card.graph_popover.get_visible()
+
+            card.hide_graph()
+            assert not card.graph_popover.get_visible()
+
+            card.show_graph()
+            assert card.graph_popover.get_visible()
+            card.set_plan(None)
+            assert not card.graph_popover.get_visible()
+        finally:
+            window.close()
+
+    _in_gtk_context(check)
+
+
+def test_b4a_plan_graph_caps_nodes_and_emphasizes_hovered_node_neighbors() -> None:
+    import msgspec
+
+    from aconsole.contracts.common import NodeId
+    from aconsole.ui.views.sidebar.plan_card import PlanCard
+
+    plan = _demo_plan()
+    template = plan.nodes[0]
+    nodes = tuple(
+        msgspec.structs.replace(
+            template,
+            id=NodeId(f"graph-node-{index}"),
+            key=f"N-{index:02}",
+            title=f"Graph node {index}",
+            layer=index // 10,
+            depends_on=(),
+        )
+        for index in range(31)
+    )
+    large_plan = msgspec.structs.replace(plan, nodes=nodes, total=len(nodes))
+
+    def check() -> None:
+        card = PlanCard(on_activate=lambda _plan_id: None)
+        card.set_plan(large_plan)
+        window = Gtk.Window()
+        window.set_child(card)
+        window.present()
+        try:
+            card.show_graph()
+            graph = card.graph
+            assert graph is not None
+            assert len(graph.node_buttons) == 30
+            assert len(graph.node_buttons) <= 30
+        finally:
+            card.hide_graph()
+            window.close()
+
+        neighbor_source = msgspec.structs.replace(
+            nodes[0], id=NodeId("neighbor-source"), key="N-source", title="Source",
+            layer=0, depends_on=(),
+        )
+        connected = msgspec.structs.replace(
+            nodes[1], id=NodeId("connected"), key="N-connected", title="Connected",
+            layer=1, depends_on=(neighbor_source.id,),
+        )
+        unrelated = msgspec.structs.replace(
+            nodes[2], id=NodeId("unrelated"), key="N-unrelated", title="Unrelated",
+            layer=1, depends_on=(),
+        )
+        hover_plan = msgspec.structs.replace(
+            plan, nodes=(neighbor_source, connected, unrelated), total=3
+        )
+        hover_card = PlanCard(on_activate=lambda _plan_id: None)
+        hover_card.set_plan(hover_plan)
+        hover_window = Gtk.Window()
+        hover_window.set_child(hover_card)
+        hover_window.present()
+        try:
+            hover_card.show_graph()
+            graph = hover_card.graph
+            assert graph is not None
+            graph.set_hovered(connected.id)
+            details = graph.details_label.get_text()
+            assert connected.title in details or connected.key in details
+            assert graph.node_buttons[connected.id].get_opacity() == 1.0
+            assert graph.node_buttons[neighbor_source.id].get_opacity() == 1.0
+            assert graph.node_buttons[unrelated.id].get_opacity() == 0.45
+        finally:
+            hover_card.hide_graph()
+            hover_window.close()
+
+    _in_gtk_context(check)
+
+
+def test_b4a_plan_graph_tab_action_targets_hovered_nodes_tab() -> None:
+    import msgspec
+
+    from aconsole.contracts.common import TabId
+    from aconsole.ui.views.sidebar.plan_card import PlanCard
+
+    base = _demo_plan()
+    tab_id = TabId("01J9Z5W6FX1M2A3B4C5D6E7F8G")
+    node = msgspec.structs.replace(base.nodes[0], tab_id=tab_id)
+    plan = msgspec.structs.replace(base, nodes=(node,))
+
+    def check() -> None:
+        opened: list[TabId] = []
+        card = PlanCard(on_activate=lambda _plan_id: None, on_tab=opened.append)
+        card.set_plan(plan)
+        graph = card.graph
+        assert graph is not None
+        graph.set_hovered(node.id)
+        assert graph.tab_button.get_sensitive()
+        graph.tab_button.emit("clicked")
+        assert opened == [tab_id]
+
+    _in_gtk_context(check)
+
+
 def test_b4a_window_plan_card_demo(running_app: str) -> None:
     """The live demo window mounts its active project's plan card in the sidebar."""
     plan = _demo_plan()
