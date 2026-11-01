@@ -28,11 +28,11 @@ class TabPresentation:
     status_symbol: str
     spinning: bool
     attention: bool
+    waiting_minutes: int | None
 
 
 def format_tab(tab: TabView, accounts: tuple[AccountView, ...], now: datetime) -> TabPresentation:
     """Convert a tab snapshot into the visible row fields."""
-    del now  # Reserved for a future waiting-duration presentation.
     account = next((item for item in accounts if item.id == tab.account_id), None)
     section_title = tab.agent.value.upper()
     if account is not None and account.plan_label:
@@ -46,4 +46,8 @@ def format_tab(tab: TabView, accounts: tuple[AccountView, ...], now: datetime) -
         status_symbol=_SYMBOLS[tab.status],
         spinning=tab.status is TabStatus.WORKING,
         attention=tab.attention,
+        waiting_minutes=(
+            max(0, int((now - tab.status_since).total_seconds()) // 60)
+            if tab.status in (TabStatus.WAITING_APPROVAL, TabStatus.WAITING_INPUT) else None
+        ),
     )

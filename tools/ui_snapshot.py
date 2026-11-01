@@ -31,7 +31,7 @@ def main(argv: list[str]) -> int:
 
     parser = argparse.ArgumentParser()
     _ = parser.add_argument("--scenario", required=True, choices=("demo", "empty", "stress", "errors"))
-    _ = parser.add_argument("--view", required=True, choices=("window",))
+    _ = parser.add_argument("--view", required=True, choices=("window", "tabs"))
     _ = parser.add_argument("--theme", required=True, choices=("light", "dark"))
     _ = parser.add_argument("--size", required=True)
     _ = parser.add_argument("--out", required=True, type=Path)

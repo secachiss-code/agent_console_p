@@ -1,13 +1,19 @@
-"""Tab titles projected from the core store for the pilot sidebar."""
+"""Tab rows projected from the core store for the sidebar."""
 
+from datetime import UTC, datetime
 from typing import override
 
 from gi.repository import Gio, GObject
 
-from aconsole.contracts.events import TabAdded, TabRemoved, TabUpdated, UiEvent
+from aconsole.contracts.app import AccountView, EmptyResult, FocusParams, RenameParams, ReorderParams, TabView
+from aconsole.contracts.common import TabId
+from aconsole.contracts.events import QuotaUpdated, TabAdded, TabRemoved, TabUpdated, UiEvent
 from aconsole.ui.client.core_client import CoreClient
 from aconsole.ui.client.store import CoreStore
 from aconsole.ui.gtk_typed import TypedListStore, gproperty
+from aconsole.ui.viewmodels.logic.tab_format import format_tab
+
+MAX_TAB_TITLE_LENGTH = 80
 
 
 class TabItem(GObject.Object):
@@ -15,11 +21,34 @@ class TabItem(GObject.Object):
 
     tab_id: object = gproperty(str, "")
     title: object = gproperty(str, "")
+    section_key: object = gproperty(str, "")
+    section_title: object = gproperty(str, "")
+    subtitle: object = gproperty(str, "")
+    detail: object = gproperty(str, "")
+    status_symbol: object = gproperty(str, "")
+    status_code: object = gproperty(str, "")
+    spinning: object = gproperty(bool, False)  # noqa: FBT003 -- GObject property default is positional
+    attention: object = gproperty(bool, False)  # noqa: FBT003 -- GObject property default is positional
+    waiting_minutes: object = gproperty(int, -1)
 
     def __init__(self, tab_id: str, title: str) -> None:
         super().__init__()
         self.set_property("tab-id", tab_id)
         self.set_property("title", title)
+
+    def apply(self, tab: TabView, accounts: tuple[AccountView, ...]) -> None:
+        display = format_tab(tab, accounts, datetime.now(UTC))
+        values: tuple[tuple[str, object], ...] = (
+            ("title", display.title), ("section-key", display.section_key),
+            ("section-title", display.section_title), ("subtitle", display.subtitle),
+            ("detail", display.detail), ("status-symbol", display.status_symbol),
+            ("status-code", tab.status.value),
+            ("spinning", display.spinning), ("attention", display.attention),
+            ("waiting-minutes", display.waiting_minutes if display.waiting_minutes is not None else -1),
+        )
+        for name, value in values:
+            if self.get_property(name) != value:
+                self.set_property(name, value)
 
 
 class TabListStore(TypedListStore[TabItem]):
@@ -52,6 +81,7 @@ class TabsViewModel:
     """One instance lives for the client lifetime; no private wrapper access."""
 
     def __init__(self, client: CoreClient) -> None:
+        self.client: CoreClient = client
         self._store: TabListStore = TabListStore()
         self.model: Gio.ListStore = self._store.model
         self._refresh(client.store)
@@ -64,11 +94,92 @@ class TabsViewModel:
 
     def _refresh(self, state: CoreStore) -> None:
         snapshot = state.snapshot
-        items = [] if snapshot is None else [
-            TabItem(str(tab.id), tab.title) for tab in sorted(snapshot.tabs, key=lambda tab: tab.order)
-        ]
+        items: list[TabItem] = []
+        if snapshot is not None:
+            for tab in sorted(snapshot.tabs, key=lambda tab: tab.order):
+                item = TabItem(str(tab.id), tab.title)
+                item.apply(tab, snapshot.accounts)
+                items.append(item)
         self._store.replace(items)
 
     def _on_event(self, event: UiEvent, state: CoreStore) -> None:
-        if isinstance(event, (TabAdded, TabRemoved, TabUpdated)) and not state.reconnecting:
+        if state.reconnecting:
+            return
+        if isinstance(event, TabUpdated) and self._retitle(state):
+            return
+        if isinstance(event, QuotaUpdated):
+            _ = self._retitle(state)
+            return
+        if isinstance(event, (TabAdded, TabRemoved, TabUpdated)):
             self._refresh(state)
+
+    def _retitle(self, state: CoreStore) -> bool:
+        """Keep the same row objects when only titles change. A new id or order rebuilds the list."""
+        snapshot = state.snapshot
+        if snapshot is None:
+            return False
+        ordered = sorted(snapshot.tabs, key=lambda tab: tab.order)
+        count = self._store.get_n_items()
+        if count != len(ordered):
+            return False
+        rows = [self._store.get(index) for index in range(count)]
+        if [row.get_property("tab-id") for row in rows] != [str(tab.id) for tab in ordered]:
+            return False
+        for row, tab in zip(rows, ordered, strict=True):
+            row.apply(tab, snapshot.accounts)
+        return True
+
+    def refresh_times(self) -> None:
+        """Update elapsed waiting time without replacing rows or selection."""
+        _ = self._retitle(self.client.store)
+
+    async def rename(self, tab_id: str, title: str) -> None:
+        if not title.strip() or len(title) > MAX_TAB_TITLE_LENGTH:
+            message = "tab title must contain 1 to 80 characters"
+            raise ValueError(message)
+        try:
+            _ = await self.client.request("tab/rename", RenameParams(tab_id=TabId(tab_id), title=title), EmptyResult)
+        except Exception:
+            self._refresh(self.client.store)
+            raise
+
+    async def focus(self, tab_id: str | None, *, window_active: bool) -> None:
+        _ = await self.client.request(
+            "tab/focus",
+            FocusParams(tab_id=TabId(tab_id) if tab_id is not None else None, window_active=window_active),
+            EmptyResult,
+        )
+
+    async def reorder(self, tab_id: str, order: int) -> None:
+        snapshot = self.client.store.snapshot
+        if snapshot is None:
+            message = "tab snapshot is unavailable"
+            raise ValueError(message)
+        ordered = sorted(snapshot.tabs, key=lambda tab: tab.order)
+        source = next((tab for tab in ordered if str(tab.id) == tab_id), None)
+        if source is None or not 0 <= order < len(ordered):
+            message = "invalid tab reorder"
+            raise ValueError(message)
+        desired = [tab for tab in ordered if tab.id != source.id]
+        desired.insert(order, source)
+        if desired == ordered:
+            return
+        positions = [tab.order for tab in ordered]
+        assignments = list(zip(desired, positions, strict=True))
+        if ordered.index(source) > order:
+            assignments.reverse()
+        try:
+            _ = await self.client.request(
+                "tab/reorder", ReorderParams(tab_id=source.id, order=max(positions) + 1), EmptyResult,
+            )
+            for tab, position in assignments:
+                if tab.id != source.id and tab.order != position:
+                    _ = await self.client.request(
+                        "tab/reorder", ReorderParams(tab_id=tab.id, order=position), EmptyResult,
+                    )
+            _ = await self.client.request(
+                "tab/reorder", ReorderParams(tab_id=source.id, order=positions[order]), EmptyResult,
+            )
+        except Exception:
+            self._refresh(self.client.store)
+            raise
