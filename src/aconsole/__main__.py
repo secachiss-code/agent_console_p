@@ -6,9 +6,15 @@ import argparse
 import sys
 import tempfile
 from pathlib import Path
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
 
 from aconsole.ui.spike import run_spike
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from aconsole.ui.client.core_client import CoreClient
+    from aconsole.ui.views.app import AConsoleApp, SnapshotRequest
 
 _IPC_P99_LIMIT_MS = 5.0
 
@@ -37,7 +43,11 @@ def main(argv: list[str]) -> int:
     return run_ui(argv)
 
 
-def run_ui(argv: list[str]) -> int:
+def run_ui(
+    argv: list[str],
+    *,
+    app_factory: Callable[[CoreClient, SnapshotRequest | None, str | None], AConsoleApp] | None = None,
+) -> int:
     """Launch a client with an isolated daemon in fake mode."""
     from aconsole.ui.bootstrap import run_app  # noqa: PLC0415
     from aconsole.ui.client.core_client import CoreClient  # noqa: PLC0415
@@ -46,7 +56,7 @@ def run_ui(argv: list[str]) -> int:
     parser = argparse.ArgumentParser()
     _ = parser.add_argument("--fake", "--fake-core", choices=("demo", "empty", "stress", "errors"))
     _ = parser.add_argument("--socket")
-    _ = parser.add_argument("--snapshot-view", choices=("window", "tabs"))
+    _ = parser.add_argument("--snapshot-view", choices=("window", "tabs", "plan-graph", "quota-dialog"))
     _ = parser.add_argument("--theme", choices=("light", "dark"), default="light")
     _ = parser.add_argument("--size", default="1280x800")
     _ = parser.add_argument("--out", type=Path)
@@ -68,7 +78,9 @@ def run_ui(argv: list[str]) -> int:
         )
     with tempfile.TemporaryDirectory(prefix="aconsole-ui-") as directory:
         client = CoreClient(args.socket or str(Path(directory) / "core.sock"))
-        app = AConsoleApp(client, snapshot, scenario=args.fake)
+        app = AConsoleApp(client, snapshot, scenario=args.fake) if app_factory is None else app_factory(
+            client, snapshot, args.fake,
+        )
         result = run_app(lambda: app, ["aconsole"])
     return 1 if app.failed else result
 

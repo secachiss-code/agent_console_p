@@ -111,7 +111,7 @@ class MainWindow(Adw.ApplicationWindow):
         body.append(self.tabs_sidebar)
         self.summary_card: Gtk.Box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         self.summary_card.add_css_class("ac-summary-card")
-        self.plan_card: PlanCard = PlanCard(on_activate=self._open_plan)
+        self.plan_card: PlanCard = PlanCard(on_activate=self._open_plan, on_tab=self._select_tab)
         self.quota_card: QuotaCard = QuotaCard()
         self.summary_card.append(self.plan_card)
         self.summary_card.append(Gtk.Separator())
@@ -147,6 +147,13 @@ class MainWindow(Adw.ApplicationWindow):
 
     def _terminal_new(self) -> None:
         self.app_vm.dispatch("new-tab")
+
+    def _select_tab(self, tab_id: TabId) -> None:
+        for index in range(self.selection.get_n_items()):
+            item = self.selection.get_item(index)
+            if isinstance(item, TabItem) and str(item.tab_id) == str(tab_id):
+                self.selection.set_selected(index)
+                break
 
     def _terminal_close(self, tab_id: str) -> None:
         if self._close_tab_handler is not None:

@@ -22,3 +22,10 @@
 .ac-terminal { padding: 4px 6px; }
 .ac-session-ended { padding: 16px; border-radius: 12px; background-color: @card_bg_color; }
 .ac-session-error { padding: 12px; margin: 12px; border-radius: 6px; background-color: @card_bg_color; }
+.ac-popover-anchor { min-width: 0; min-height: 0; padding: 0; margin: 0; background-color: transparent; box-shadow: none; }
+.ac-popover-anchor > button { min-width: 0; min-height: 0; padding: 0; margin: 0; border: 0; box-shadow: none; }
+.ac-plan-preview { padding: 12px; }
+.ac-plan-done { color: @success_color; }
+.ac-plan-in_progress, .ac-plan-verifying { color: @warning_color; }
+.ac-plan-failed { color: @error_color; }
+.ac-plan-ready { border: 1px dashed @accent_bg_color; }
