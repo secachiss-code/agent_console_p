@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import sys
 import tempfile
@@ -24,6 +25,7 @@ if TYPE_CHECKING:
     from aconsole.ui.client.core_client import CoreClient
 
 _LOG = logging.getLogger(__name__)
+_STOP_DEADLINE_S = 5.0
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -105,7 +107,9 @@ class AConsoleApp(Adw.Application):
         finally:
             self.release()
 
-    def _close_requested(self, _window: Gtk.Window) -> bool:
+    def _close_requested(self, window: Gtk.Window) -> bool:
+        # The window goes at once; stopping the core must never be what the user is left looking at.
+        window.set_visible(False)
         _ = spawn_task(self._finish())
         return True
 
@@ -138,7 +142,9 @@ class AConsoleApp(Adw.Application):
             return
         self._finishing = True
         try:
-            await self.client.close()
+            await asyncio.wait_for(self.client.close(), _STOP_DEADLINE_S)
+        except TimeoutError:
+            _LOG.warning("The core did not stop in time")
         except Exception:  # noqa: BLE001 -- cleanup failure must produce a failing CLI status
             self.failed = True
             _LOG.exception("Cannot stop AConsole")

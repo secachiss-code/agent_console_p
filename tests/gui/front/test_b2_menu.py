@@ -147,6 +147,8 @@ def test_b2_close_intent_is_disabled_without_handler_and_targets_bound_row(
         window.present()
         action = window.lookup_action("request-close-tab")
         assert action is not None
+        assert action.get_enabled()  # a real window closes tabs through the core
+        window.set_close_tab_handler(None)
         assert not action.get_enabled()
 
         calls: list[str] = []

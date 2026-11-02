@@ -13,6 +13,20 @@ _MESSAGES = {
     "tabs.wait_minutes": ("{minutes} min", "{minutes} мин"),
     "tabs.wait_hours": ("{hours} h", "{hours} ч"),
     "tabs.wait_days": ("{days} d", "{days} д"),
+    "tabs.new.agent": ("Agent", "Агент"),
+    "tabs.new.project": ("Project", "Проект"),
+    "tabs.new.add_project": ("Add project…", "Добавить проект…"),
+    "tabs.new.open": ("Open", "Открыть"),
+    "tabs.new.no_agents": ("No agents are available", "Нет доступных агентов"),
+    "tabs.new.no_projects": ("Add a project to open a tab", "Добавьте проект, чтобы открыть вкладку"),
+    "tabs.new.error": ("Could not open the tab: {error}", "Не удалось открыть вкладку: {error}"),  # noqa: RUF001 -- Russian UI text
+    "tabs.new.project_error": ("Could not add the project: {error}", "Не удалось добавить проект: {error}"),  # noqa: RUF001 -- Russian UI text
+    "tabs.close_error": ("Could not close the tab: {error}", "Не удалось закрыть вкладку: {error}"),  # noqa: RUF001 -- Russian UI text
+    "tabs.close_heading": ("Keep the working copy?", "Оставить рабочую копию?"),
+    "tabs.close_body": ("The tab has its own working copy", "У вкладки есть своя рабочая копия"),  # noqa: RUF001 -- Russian UI text
+    "tabs.close_cancel": ("Cancel", "Отмена"),
+    "tabs.close_keep": ("Keep", "Оставить"),
+    "tabs.close_remove": ("Remove", "Удалить"),
     "tabs.reorder_error": (
         "Could not finish reordering. Tab order may have changed",
         "Не удалось завершить перестановку. Порядок вкладок мог измениться",  # noqa: RUF001 -- Russian UI text

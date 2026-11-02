@@ -24,6 +24,7 @@ from aconsole.ui.bootstrap import run_app, spawn_task  # noqa: E402
 from aconsole.ui.client.core_client import CoreClient  # noqa: E402
 from aconsole.ui.views.app import AConsoleApp  # noqa: E402
 from aconsole.ui.views.sidebar.plan_graph import PlanGraph  # noqa: E402
+from aconsole.ui.views.tabs.new_tab import NewTabDialog  # noqa: E402
 
 
 def _demo_plan() -> PlanView:
@@ -286,5 +287,16 @@ def test_b4a_window_plan_card_opens_page(running_app: str) -> None:
         assert window.content_view.get_content() is window.plan_page
         window.tabs_sidebar.on_row_pressed()
         assert window.content_view.get_content() is window.terminal_stack
+
+    _run_window_probe(running_app, check)
+
+
+def test_window_actions_reach_the_core(running_app: str) -> None:
+    """The close and new-tab controls have real handlers, not only the ones tests install."""
+
+    def check(window: MainWindow) -> None:
+        assert window.close_tab_action.get_enabled()
+        dialog = NewTabDialog(window.tabs, lambda _tab: None, lambda _error: None)
+        assert dialog.open_button.get_sensitive()
 
     _run_window_probe(running_app, check)

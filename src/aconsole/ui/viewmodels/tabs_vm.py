@@ -1,12 +1,24 @@
 """Tab rows projected from the core store for the sidebar."""
 
 from datetime import UTC, datetime
-from typing import override
+from typing import Literal, override
 
 from gi.repository import Gio, GObject
 
-from aconsole.contracts.app import AccountView, EmptyResult, FocusParams, RenameParams, ReorderParams, TabView
-from aconsole.contracts.common import TabId
+from aconsole.contracts.app import (
+    AccountView,
+    CloseTabParams,
+    CloseTabResult,
+    EmptyResult,
+    FocusParams,
+    OpenTabParams,
+    ProjectAddParams,
+    ProjectView,
+    RenameParams,
+    ReorderParams,
+    TabView,
+)
+from aconsole.contracts.common import AgentKind, ProjectId, TabId, WorkspaceMode
 from aconsole.contracts.events import QuotaUpdated, TabAdded, TabRemoved, TabUpdated, UiEvent
 from aconsole.ui.client.core_client import CoreClient
 from aconsole.ui.client.store import CoreStore
@@ -132,6 +144,21 @@ class TabsViewModel:
     def refresh_times(self) -> None:
         """Update elapsed waiting time without replacing rows or selection."""
         _ = self._retitle(self.client.store)
+
+    async def close(self, tab_id: str, decision: Literal["keep", "remove"] | None = None) -> CloseTabResult:
+        return await self.client.request(
+            "tab/close", CloseTabParams(tab_id=TabId(tab_id), decision=decision), CloseTabResult,
+        )
+
+    async def open(self, project_id: ProjectId, agent: AgentKind) -> TabView:
+        return await self.client.request(
+            "tab/open",
+            OpenTabParams(project_id=project_id, agent=agent, workspace=WorkspaceMode.NEW_WORKTREE),
+            TabView,
+        )
+
+    async def add_project(self, root: str) -> ProjectView:
+        return await self.client.request("project/add", ProjectAddParams(root=root), ProjectView)
 
     async def rename(self, tab_id: str, title: str) -> None:
         if not title.strip() or len(title) > MAX_TAB_TITLE_LENGTH:

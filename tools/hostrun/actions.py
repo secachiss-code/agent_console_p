@@ -385,6 +385,8 @@ def _ui_snapshot(args: list[str], repo: str) -> Step:
 
 def _ui_run(args: list[str], repo: str) -> Step:
     python = _ui_python(repo)
+    if not args:
+        return Step(argv=(python, "-m", "aconsole"))
     if args == ["--spike"]:
         return Step(argv=(python, "-m", "aconsole", "--spike"))
     if len(args) == 2 and args[0] == "--fake" and _SCENARIO.fullmatch(args[1]) is not None:
