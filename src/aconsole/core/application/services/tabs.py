@@ -255,6 +255,7 @@ class _Tab:
     ingest: str
     sidecar: str
     pid: int | None
+    live_sidecar: str = ""
 
 
 def _by_order(tab: _Tab) -> tuple[int, str]:
@@ -442,7 +443,25 @@ class TabService:
         if tab is None or tab.sidecar == "" or not hmac.compare_digest(tab.sidecar, token):
             return False
         tab.sidecar = ""
+        tab.live_sidecar = token
         return True
+
+    def sidecar_gone(self, tab_id: str, token: str) -> None:
+        """The terminal of the tab is gone. `podman exec` leaves its agent running, and nothing can reach it again."""
+        tab = self._tabs.get(tab_id)
+        if tab is None or tab.live_sidecar != token:
+            return
+        tab.live_sidecar = ""
+        _ = self._stop_orphans(tab)
+        if not tab.running:
+            return
+        tab.pid = None
+        tab.running = False
+        tab.status = TabStatus.EXITED
+        tab.since = self._clock.now()
+        _ = self._refresh_attention(tab)
+        self._remember(tab)
+        _ = self._updated(tab, {"started", "status", "status_since", "attention"})
 
     def apply_hook(self, tab_id: str, event_name: str) -> TabView | None:
         """Move the tab to the status a hook event implies. None when the tab is gone or the event is not mapped."""
@@ -573,6 +592,9 @@ class TabService:
             notify = self.on_ingest
             if notify is not None:
                 notify(tab.id, tab.ingest)
+        # A new terminal replaces the old one: a window that closed or crashed may have left its agent behind.
+        tab.live_sidecar = ""
+        _ = self._stop_orphans(tab)
         secret = self._ports.new_secret()
         tab.sidecar = secret
         path = self._ports.container_path(tab.container)
@@ -882,6 +904,10 @@ class TabService:
         if tab.pid is not None:
             self._ports.stop_process(tab.pid)
             self._ports.pause(self._stop_s)
+        return self._stop_orphans(tab)
+
+    def _stop_orphans(self, tab: _Tab) -> bool:
+        """Stop what still runs with this tab's id in its container. False when the scan failed."""
         try:
             found = self._ports.orphans(tab.container, tab.id)
         except TabRequestError:

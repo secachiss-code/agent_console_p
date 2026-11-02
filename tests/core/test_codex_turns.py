@@ -59,7 +59,7 @@ def test_codex_waits_for_the_user_until_new_lines_appear() -> None:
     assert status() is TabStatus.WAITING_APPROVAL
     service.codex_turn(cwd, working=True)
     assert status() is TabStatus.WAITING_APPROVAL, "lines written right after asking do not end the wait"
-    service._clock = FrozenClock(start + timedelta(seconds=3))  # pyright: ignore[reportPrivateUsage]  # noqa: SLF001
+    service._clock = FrozenClock(start + timedelta(seconds=3))  # pyright: ignore[reportPrivateUsage]
     service.codex_turn(cwd, working=True)
     assert status() is TabStatus.WORKING
     service.agent_notice(str(opened.id), "Agent turn complete")

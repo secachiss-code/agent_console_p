@@ -96,6 +96,7 @@ class Connection:
         self.role: ClientRole | None = None
         self.on_agent_notice: Callable[[str, str], None] | None = None
         self._sidecar_tab: str | None = None
+        self.sidecar_claim: tuple[str, str] | None = None
         self.inflight: set[int] = set()
         self._queued = 0
         self._encoder = msgspec.json.Encoder()
@@ -321,6 +322,7 @@ class Connection:
         claimed = tabs.claim_sidecar(str(params.tab_id), params.sidecar_token)
         if claimed:
             self._sidecar_tab = str(params.tab_id)
+            self.sidecar_claim = (str(params.tab_id), params.sidecar_token)
         return claimed
 
     def _subscribe(self, request: Request) -> tuple[bytes, ...]:

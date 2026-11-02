@@ -399,3 +399,27 @@ def _init_repo(repo: Path) -> None:
 
 def _git(repo: Path, *args: str) -> None:
     _ = subprocess.run([_GIT, "-C", str(repo), *args], check=True, capture_output=True, text=True)
+
+
+def test_a_gone_terminal_stops_its_agent_and_a_new_one_replaces_leftovers() -> None:
+    ports = FakeTabPorts()
+    service = TabService(FrozenClock(_WHEN), ports)
+    service.add_project(ProjectSeed(project_id="proj", root="/repo", container="agentbox", sessions=frozenset()))
+    opened = service.open_tab(
+        OpenTabParams(project_id=ProjectId("proj"), agent=AgentKind.CLAUDE, workspace=WorkspaceMode.MAIN_CHECKOUT),
+    )
+    ports.orphan_pids = (77,)
+    first = service.launch_spec(TabIdParams(tab_id=opened.id))
+    assert ports.stopped == [77], "a leftover of an earlier window goes before the new agent starts"
+    token = first.env["ACONSOLE_SIDECAR_TOKEN"]
+    assert service.claim_sidecar(str(opened.id), token)
+    _ = service.started(StartedParams(tab_id=opened.id, pid=5))
+    ports.stopped.clear()
+    service.sidecar_gone(str(opened.id), "an older terminal")
+    assert ports.stopped == []
+    assert service.snapshot().tabs[0].started is True
+    service.sidecar_gone(str(opened.id), token)
+    assert ports.stopped == [77]
+    view = service.snapshot().tabs[0]
+    assert view.started is False
+    assert view.status is TabStatus.EXITED

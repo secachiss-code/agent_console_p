@@ -510,6 +510,15 @@ class Daemon:
         if event_name == "Stop":
             self._claude_usage_due.set()
 
+    def _sidecar_left(self, connection: Connection) -> None:
+        """Not while this core stops: agents outlive a core restart, and the next core restores their tabs."""
+        claim = connection.sidecar_claim
+        if claim is None or self._closing:
+            return
+        task = asyncio.create_task(self._in_worker(lambda: self.tabs.sidecar_gone(*claim)))
+        self._notices.add(task)
+        task.add_done_callback(self._notices.discard)
+
     def _agent_notice(self, tab_id: str, text: str) -> None:
         task = asyncio.create_task(self._in_worker(lambda: self.tabs.agent_notice(tab_id, text)))
         self._notices.add(task)
@@ -775,6 +784,7 @@ class Daemon:
         finally:
             self._writers.discard(writer)
             _ = self._connections.pop(connection, None)
+            self._sidecar_left(connection)
             if (connection.ready and connection.role is ClientRole.UI and
                 "approvals.inline" in connection.capabilities and not self._has_approval_ui()):
                 self.approvals.release_pending()
