@@ -2,9 +2,24 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Protocol
+from typing import Final, Protocol
+
+# `Settings` fields stored as they are. The ones with their own meaning for the core are stored apart.
+PREFERENCE_KEYS: Final = (
+    "notify_when",
+    "terminal_font",
+    "terminal_font_size",
+    "scrollback_lines",
+    "theme",
+    "quota_warn_pct",
+    "quota_critical_pct",
+    "quota_display",
+    "checkpoints_enabled",
+    "checkpoints_keep",
+    "keymap_overrides",
+)
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -41,7 +56,7 @@ class TabDirectory:
     setup_completed: bool = False
     approvals_mode: str = "inline"
     approval_hold_seconds: int = 540
-    quota_display: str = "used"
+    preferences: dict[str, object] = field(default_factory=dict[str, object])
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)

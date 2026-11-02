@@ -289,13 +289,13 @@ async def _wait_status(client: _Client, other_than: TabStatus) -> TabStatus:
     return other_than
 
 
-def test_limits_display_choice_survives_a_restart(tmp_path: Path) -> None:
-    async def scenario() -> tuple[str, str, str]:
+def test_preferences_survive_a_restart(tmp_path: Path) -> None:
+    async def scenario() -> tuple[str, str, str, str, int, str | None]:
         daemon = _daemon(tmp_path, serve_ingest=False)
         task = asyncio.create_task(daemon.serve())
         client = await _connect(daemon.socket)
         first = await client.call("settings/get", EmptyParams(), Settings)
-        patch = SettingsPatch(quota_display="remaining")
+        patch = SettingsPatch(quota_display="remaining", theme="dark", terminal_font_size=14, terminal_font="Mono")
         changed = await client.call("settings/update", SettingsUpdateParams(patch=patch, rev=first.rev), Settings)
         await _stop(daemon, task, client)
         daemon = _daemon(tmp_path, serve_ingest=False)
@@ -303,6 +303,9 @@ def test_limits_display_choice_survives_a_restart(tmp_path: Path) -> None:
         client = await _connect(daemon.socket)
         restored = await client.call("settings/get", EmptyParams(), Settings)
         await _stop(daemon, task, client)
-        return first.quota_display, changed.quota_display, restored.quota_display
+        return (
+            first.quota_display, changed.quota_display, restored.quota_display, restored.theme,
+            restored.terminal_font_size, restored.terminal_font,
+        )
 
-    assert asyncio.run(scenario()) == ("used", "remaining", "remaining")
+    assert asyncio.run(scenario()) == ("used", "remaining", "remaining", "dark", 14, "Mono")

@@ -8,7 +8,13 @@ from typing import Final, final
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from aconsole.core.application.ports.tab_store import ProjectRecord, StoredProjects, StoredTab, TabDirectory
+from aconsole.core.application.ports.tab_store import (
+    PREFERENCE_KEYS,
+    ProjectRecord,
+    StoredProjects,
+    StoredTab,
+    TabDirectory,
+)
 from aconsole.core.domain.agent import AgentKind
 from aconsole.core.domain.tab_status import TabStatus
 from aconsole.core.domain.workspace import WorkspaceMode
@@ -83,7 +89,7 @@ def read_settings(session: Session) -> TabDirectory:
     return TabDirectory(worktrees_dir=directory, rev=row.rev, setup_completed=completed,
         approvals_mode=mode if mode in ("inline", "native") else "inline",
         approval_hold_seconds=hold if isinstance(hold, int) and 30 <= hold <= 540 else 540,  # noqa: PLR2004
-        quota_display="remaining" if row.value.get("quota_display") == "remaining" else "used")
+        preferences={key: row.value[key] for key in PREFERENCE_KEYS if key in row.value})
 
 
 def write_setup_completed(session: Session, *, completed: bool, rev: int) -> None:
@@ -198,13 +204,13 @@ class TabDatabase:
                 row.rev = rev
         _ = self._writer.call(save)
 
-    def save_quota_display(self, *, display: str, rev: int) -> None:
+    def save_preferences(self, *, values: dict[str, object], rev: int) -> None:
         def save(session: Session) -> None:
             row = session.get(Setting, SETTINGS_KEY)
             if row is None:
-                session.add(Setting(key=SETTINGS_KEY, value={"quota_display": display}, rev=rev))
+                session.add(Setting(key=SETTINGS_KEY, value=values, rev=rev))
             else:
-                row.value = {**row.value, "quota_display": display}
+                row.value = {**row.value, **values}
                 row.rev = rev
         _ = self._writer.call(save)
 

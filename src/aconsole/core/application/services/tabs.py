@@ -40,7 +40,14 @@ from aconsole.contracts.app import (
 from aconsole.contracts.common import AgentKind, NodeId, ProjectId, TabId, TabStatus, WorkspaceMode
 from aconsole.contracts.events import ProjectsChanged, TabAdded, TabRemoved, TabUpdated, UiEvent
 from aconsole.contracts.settings import Settings, commit_settings
-from aconsole.core.application.ports.tab_store import ProjectRecord, ProjectStore, StoredTab, TabDirectory, TabStore
+from aconsole.core.application.ports.tab_store import (
+    PREFERENCE_KEYS,
+    ProjectRecord,
+    ProjectStore,
+    StoredTab,
+    TabDirectory,
+    TabStore,
+)
 from aconsole.core.application.services.projects import ProjectCatalog
 from aconsole.core.domain.clock import Clock
 
@@ -258,6 +265,21 @@ class _Tab:
     live_sidecar: str = ""
 
 
+def _preferences_of(settings: Settings) -> dict[str, object]:
+    """The keys the store keeps as they are, in JSON types."""
+    plain: dict[str, object] = msgspec.to_builtins(settings)  # pyright: ignore[reportAny] -- a struct gives a dict
+    return {key: plain[key] for key in PREFERENCE_KEYS}
+
+
+def _with_preferences(base: Settings, stored: dict[str, object]) -> Settings:
+    """A stored document that no longer fits the contract falls back to the defaults, and the app still opens."""
+    plain: dict[str, object] = msgspec.to_builtins(base)  # pyright: ignore[reportAny] -- a struct gives a dict
+    try:
+        return msgspec.convert({**plain, **stored}, Settings)
+    except msgspec.ValidationError:
+        return base
+
+
 def _by_order(tab: _Tab) -> tuple[int, str]:
     return tab.order, tab.id
 
@@ -291,7 +313,7 @@ class TabService:
         self._approvals_mode: str = "inline"
         self._approval_hold_seconds: int = 540
         self._setup_completed = False
-        self._quota_display: str = "used"
+        self._preferences: dict[str, object] = {}
         self._failing_checks = 0
         self._warnings = 0
         # Receives tab_added / tab_updated / tab_removed on the thread that changed the tab.
@@ -482,15 +504,15 @@ class TabService:
         """The settings document. Unset strings stay empty until a patch writes them."""
         found = self._stored_settings()
         worktrees = found.worktrees_dir if found.worktrees_dir is not None else ""
-        return Settings(
+        base = Settings(
             rev=found.rev,
             vault_path="",
             worktrees_dir=worktrees,
             setup_completed=found.setup_completed,
             approvals_mode="native" if found.approvals_mode == "native" else "inline",
             approval_hold_seconds=found.approval_hold_seconds,
-            quota_display="remaining" if found.quota_display == "remaining" else "used",
         )
+        return _with_preferences(base, found.preferences)
 
     def update_settings(self, params: SettingsUpdateParams) -> Settings:
         """Apply a settings patch. The same values do not grow `rev`."""
@@ -504,7 +526,7 @@ class TabService:
         self._setup_completed = nxt.setup_completed
         self._approvals_mode = nxt.approvals_mode
         self._approval_hold_seconds = nxt.approval_hold_seconds
-        self._quota_display = nxt.quota_display
+        self._preferences = _preferences_of(nxt)
         store = self._store
         if store is not None:
             store.save_setup(completed=nxt.setup_completed, rev=nxt.rev)
@@ -512,9 +534,9 @@ class TabService:
             save_approval = getattr(store, "save_approval_settings", None)
             if callable(save_approval):
                 _ = save_approval(mode=nxt.approvals_mode, hold=nxt.approval_hold_seconds, rev=nxt.rev)
-            save_display = getattr(store, "save_quota_display", None)
-            if callable(save_display):
-                _ = save_display(display=nxt.quota_display, rev=nxt.rev)
+            save_preferences = getattr(store, "save_preferences", None)
+            if callable(save_preferences):
+                _ = save_preferences(values=_preferences_of(nxt), rev=nxt.rev)
         return nxt
 
     def _stored_settings(self) -> TabDirectory:
@@ -522,7 +544,7 @@ class TabService:
         if store is None:
             return TabDirectory(worktrees_dir=None, rev=self._settings_rev, setup_completed=self._setup_completed,
                 approvals_mode=self._approvals_mode, approval_hold_seconds=self._approval_hold_seconds,
-                quota_display=self._quota_display)
+                preferences=self._preferences)
         return store.settings()
 
     def _route_settings_get(self, raw: bytes) -> Settings:
