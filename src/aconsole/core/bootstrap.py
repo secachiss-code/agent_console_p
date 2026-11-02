@@ -547,6 +547,9 @@ class Daemon:
                 event = await asyncio.to_thread(self._claude_limits.on_usage, text)
                 if event is not None:
                     self._account_observed(event)
+                elif text.strip():
+                    # The card keeps showing when it last heard: the numbers look stale rather than wrong.
+                    _LOG.warning("claude /usage gave no limits: %.200s", text)
             except Exception:  # noqa: BLE001 -- limits must never stop the core
                 _LOG.exception("cannot read Claude limits")
             self._claude_usage_due.clear()
