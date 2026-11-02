@@ -4,6 +4,7 @@ import asyncio
 import contextlib
 import fcntl
 import os
+import signal
 from pathlib import Path
 
 import msgspec
@@ -177,6 +178,21 @@ class CoreClient:
                 delay = min(delay * 2, _BACKOFF_S[-1])
         message = "core socket did not appear"
         raise ConnectionError(message)
+
+    async def replace_daemon(self, pid: int, argv: list[str], *, runtime: Path) -> InitializeResult:
+        """Stop the core on ``pid`` and start ``argv``. Agents keep running; the new core restores the tabs.
+
+        A core that does not let go of its lock in time stays, and this connects to it again.
+        """
+        await self.close()
+        self._closing = False
+        with contextlib.suppress(ProcessLookupError):
+            os.kill(pid, signal.SIGTERM)
+        _socket, lock = core_paths(runtime)
+        deadline = asyncio.get_running_loop().time() + _READY_DEADLINE_S
+        while lock_held(lock) and asyncio.get_running_loop().time() < deadline:  # noqa: ASYNC110 -- the lock is held by another process, nothing here can signal an Event
+            await asyncio.sleep(_BACKOFF_S[0])
+        return await self.start_daemon(argv, runtime=runtime)
 
     async def close(self) -> None:
         self._closing = True

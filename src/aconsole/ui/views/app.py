@@ -17,6 +17,7 @@ gi.require_version("Adw", "1")
 from gi.repository import Adw, Gdk, Gio, Gtk  # noqa: E402
 
 from aconsole.ui.bootstrap import spawn_task  # noqa: E402
+from aconsole.ui.client.core_age import core_is_older_than_code  # noqa: E402
 from aconsole.ui.snapshot import after_first_paint, capture_window  # noqa: E402
 from aconsole.ui.viewmodels.tabs_vm import TabsViewModel  # noqa: E402
 from aconsole.ui.views.window import MainWindow  # noqa: E402
@@ -79,7 +80,11 @@ class AConsoleApp(Adw.Application):
             if self.core_command is not None:
                 self.client.keep_daemon = True
                 Path(self.client.path).parent.mkdir(parents=True, exist_ok=True)
-                _ = await self.client.start_daemon(self.core_command, runtime=Path(self.client.path).parents[1])
+                runtime = Path(self.client.path).parents[1]
+                started = await self.client.start_daemon(self.core_command, runtime=runtime)
+                if core_is_older_than_code(started.server_pid):
+                    _LOG.info("Core %d is older than the code, restarting it", started.server_pid)
+                    _ = await self.client.replace_daemon(started.server_pid, self.core_command, runtime=runtime)
             elif self.scenario is None:
                 _ = await self.client.connect()
             else:
