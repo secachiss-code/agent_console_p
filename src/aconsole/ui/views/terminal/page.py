@@ -9,7 +9,7 @@ import gi
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Vte", "3.91")
-from gi.repository import Gio, Gtk, Pango, Vte  # noqa: E402
+from gi.repository import Gdk, Gio, Gtk, Pango, Vte  # noqa: E402
 
 from aconsole.contracts.common import TabId  # noqa: E402
 from aconsole.contracts.settings import Settings  # noqa: E402
@@ -19,6 +19,8 @@ from aconsole.ui.viewmodels.terminal_vm import TerminalViewModel  # noqa: E402
 from aconsole.ui.views.terminal.messages import _ as translate  # noqa: E402
 from aconsole.ui.views.terminal.palette import TerminalPaletteBinding  # noqa: E402
 from aconsole.ui.views.terminal.session import TerminalSession  # noqa: E402
+
+_TEXT_TYPES = ("text/plain;charset=utf-8", "text/plain", "UTF8_STRING")
 
 
 class TerminalPage(Gtk.Overlay):
@@ -39,12 +41,37 @@ class TerminalPage(Gtk.Overlay):
         terminal_widget: Gtk.Widget = self.terminal  # pyright: ignore[reportAssignmentType] -- VTE Gtk3 stub base mismatch
         terminal_widget.add_css_class("ac-terminal")
         self.set_child(terminal_widget)
+        keys = Gtk.EventControllerKey()
+        keys.set_propagation_phase(Gtk.PropagationPhase.CAPTURE)
+        _ = keys.connect("key-pressed", self._key_pressed)
+        self.add_controller(keys)
         self.palette: TerminalPaletteBinding = TerminalPaletteBinding(self.terminal)
         self.session: TerminalSession = TerminalSession(self.terminal, self.viewmodel)
         self.worker: asyncio.Task[None] | None = None
         self._settings: Settings | None = None
         self.font_description: Pango.FontDescription | None = None
         self._setup_overlays()
+
+    def _key_pressed(self, _keys: Gtk.EventControllerKey, keyval: int, _code: int, state: Gdk.ModifierType) -> bool:
+        """Copy and paste belong to the terminal: an agent in a container cannot reach the desktop clipboard."""
+        modifiers = state & Gtk.accelerator_get_default_mod_mask()
+        key = Gdk.keyval_to_lower(keyval)
+        with_shift = modifiers == Gdk.ModifierType.CONTROL_MASK | Gdk.ModifierType.SHIFT_MASK
+        plain = modifiers == Gdk.ModifierType.CONTROL_MASK
+        if key == Gdk.KEY_c and (with_shift or (plain and self.terminal.get_has_selection())):
+            self.terminal.copy_clipboard_format(Vte.Format.TEXT)
+            if plain:
+                self.terminal.unselect_all()
+            return True
+        # Plain Ctrl+V with something other than text is the agent's own image paste.
+        if key == Gdk.KEY_v and (with_shift or (plain and self._clipboard_has_text())):
+            self.terminal.paste_clipboard()
+            return True
+        return False
+
+    def _clipboard_has_text(self) -> bool:
+        formats = self.get_clipboard().get_formats()
+        return any(formats.contain_mime_type(kind) for kind in _TEXT_TYPES)
 
     def _setup_overlays(self) -> None:
         self.error_label: Gtk.Label = Gtk.Label(wrap=True)
