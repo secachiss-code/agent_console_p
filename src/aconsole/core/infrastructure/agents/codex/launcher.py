@@ -176,7 +176,7 @@ def _argv(port: int, hook: Path, notify: Path, trust: HookTrustCache) -> tuple[s
     if trusted:
         body = ", ".join(f'"{key}" = {{ trusted_hash = "{digest}" }}' for _name, key, digest, _timeout in trusted)
         args.extend(("-c", f"hooks.state={{ {body} }}"))
-    args.extend(("-c", 'tui.notification_method="bel"', "-c", 'tui.notification_condition="always"'))
+    args.extend(("-c", 'tui.notification_method="osc9"', "-c", 'tui.notification_condition="always"'))
     return tuple(args)
 
 

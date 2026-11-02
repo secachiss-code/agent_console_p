@@ -77,6 +77,9 @@ _ENV_PORT: Final = "ACONSOLE_PORT"
 _SIDECAR: Final = ("-I", "-m", "aconsole.sidecar", "--")
 # APP_API §8: these statuses need the user.
 _ATTENTION: Final = frozenset({TabStatus.WAITING_APPROVAL, TabStatus.WAITING_INPUT, TabStatus.ERROR})
+_CODEX_ASKS_APPROVAL: Final = ("Approval requested", "Codex wants to edit")
+_CODEX_ASKS_INPUT: Final = ("Plan mode prompt", "Question:")
+_ASK_SETTLE_S: Final = 2.0
 _CODEX_ID: Final = re.compile(r"^[A-Za-z0-9_-]{1,128}$")
 
 
@@ -413,9 +416,25 @@ class TabService:
     def codex_turn(self, cwd: str, *, working: bool) -> None:
         """A Codex session in ``cwd`` started or ended a turn. Moves the running Codex tabs of that directory."""
         event = "UserPromptSubmit" if working else "agent-turn-complete"
+        wanted = TabStatus.WORKING if working else TabStatus.IDLE
+        now = self._clock.now()
         for tab in tuple(self._tabs.values()):
-            if tab.agent is AgentKind.CODEX and tab.running and tab.worktree == cwd:
+            if tab.agent is not AgentKind.CODEX or not tab.running or tab.worktree != cwd or tab.status is wanted:
+                continue
+            # The lines Codex writes right after asking must not cancel the wait they belong to.
+            just_asked = working and tab.status in _ATTENTION and (now - tab.since).total_seconds() < _ASK_SETTLE_S
+            if not just_asked:
                 _ = self.apply_hook(tab.id, event)
+
+    def agent_notice(self, tab_id: str, text: str) -> None:
+        """What Codex tells the terminal (OSC 9). Without hooks only these words say that it waits for the user."""
+        tab = self._tabs.get(tab_id)
+        if tab is None or tab.agent is not AgentKind.CODEX:
+            return
+        if text.startswith(_CODEX_ASKS_APPROVAL):
+            _ = self.apply_hook(tab_id, "PermissionRequest")
+        elif text.startswith(_CODEX_ASKS_INPUT):
+            _ = self.apply_hook(tab_id, "Notification")
 
     def claim_sidecar(self, tab_id: str, token: str) -> bool:
         """Accept the one-shot sidecar token of `tab/launchSpec` once. A second use, or any other token, fails."""

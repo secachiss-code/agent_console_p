@@ -309,6 +309,7 @@ class Daemon:
         self._accounts: dict[str, AccountView] = {}
         self._account_sent: dict[str, float] = {}
         self._claude_usage_due: asyncio.Event = asyncio.Event()
+        self._notices: set[asyncio.Task[None]] = set()
         self.tabs.use_accounts(lambda: tuple(self._accounts.values()))
 
     @property
@@ -508,6 +509,11 @@ class Daemon:
         _ = await self._in_worker(lambda: self.tabs.apply_hook(tab_id, event_name))
         if event_name == "Stop":
             self._claude_usage_due.set()
+
+    def _agent_notice(self, tab_id: str, text: str) -> None:
+        task = asyncio.create_task(self._in_worker(lambda: self.tabs.agent_notice(tab_id, text)))
+        self._notices.add(task)
+        task.add_done_callback(self._notices.discard)
 
     async def _watch_codex_turns(self) -> None:
         """Codex hooks are not trusted (ADR-0002), and notify only says that a turn ended."""
@@ -744,6 +750,7 @@ class Daemon:
         connection = Connection(
             self._ring, tabs=self.tabs, approval_hold=self.approvals, setup_service=self.setup_service
         )
+        connection.on_agent_notice = self._agent_notice
         counted = False
         self._writers.add(writer)
         self._connections[connection] = writer

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+from collections.abc import Callable
 from datetime import UTC, datetime
 from importlib import metadata
 from typing import final
@@ -41,6 +42,7 @@ from aconsole.contracts.ipc import (
     Request,
     ResponseErr,
     ResponseOk,
+    SidecarSignal,
 )
 from aconsole.core.application.services.approval_broker import ApprovalHold
 from aconsole.core.application.services.setup import SetupService
@@ -55,6 +57,7 @@ _SERVER_CAPS = frozenset({"events.v1", "approvals.inline", "notifications.deskto
 _HOLD = "core/hold"
 _SNAPSHOT = "app/snapshot"
 _SIDECAR_PREFIX = "sidecar/"
+_SIDECAR_SIGNAL = "sidecar/signal"
 _APP_METHODS = frozenset({"app/quitCheck", "app/stopAgents", "terminal/screenTextReply"})
 OUTBOUND_LIMIT = 1024
 
@@ -91,6 +94,8 @@ class Connection:
         self.paused = False
         self.subscribed = False
         self.role: ClientRole | None = None
+        self.on_agent_notice: Callable[[str, str], None] | None = None
+        self._sidecar_tab: str | None = None
         self.inflight: set[int] = set()
         self._queued = 0
         self._encoder = msgspec.json.Encoder()
@@ -259,6 +264,7 @@ class Connection:
     def _notification(self, note: Notification) -> tuple[bytes, ...]:
         if note.method.startswith(_SIDECAR_PREFIX):
             # Terminal telemetry. Only an authenticated sidecar is heard; the rest is dropped.
+            self._terminal_signal(note)
             return ()
         if note.method != "$/cancelRequest":
             return ()
@@ -270,6 +276,17 @@ class Connection:
             return ()
         self.inflight.discard(params.id)
         return (self._err(params.id, "REQUEST_CANCELLED"),)
+
+    def _terminal_signal(self, note: Notification) -> None:
+        heard = self.on_agent_notice
+        if note.method != _SIDECAR_SIGNAL or self._sidecar_tab is None or heard is None:
+            return
+        try:
+            signal = msgspec.json.decode(note.params, type=SidecarSignal)
+        except msgspec.DecodeError:
+            return
+        if signal.kind == "osc9_notify" and signal.text:
+            heard(self._sidecar_tab, signal.text)
 
     def _initialize(self, request: Request) -> tuple[bytes, ...]:
         if self.ready:
@@ -301,7 +318,10 @@ class Connection:
         tabs = self.tabs
         if tabs is None or params.tab_id is None or params.sidecar_token is None:
             return False
-        return tabs.claim_sidecar(str(params.tab_id), params.sidecar_token)
+        claimed = tabs.claim_sidecar(str(params.tab_id), params.sidecar_token)
+        if claimed:
+            self._sidecar_tab = str(params.tab_id)
+        return claimed
 
     def _subscribe(self, request: Request) -> tuple[bytes, ...]:
         try:

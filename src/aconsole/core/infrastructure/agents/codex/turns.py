@@ -96,7 +96,8 @@ class TurnWatch:
             except OSError:
                 continue
             cwd = self._cwds[path]
-            if cwd is None or state is None or self._states.get(path) is state:
+            # New lines in a running turn are reported too: they end a wait for the user's approval.
+            if cwd is None or state is None or (self._states.get(path) is state and not state):
                 continue
             self._states[path] = state
             found.append((stamp, cwd, state))
