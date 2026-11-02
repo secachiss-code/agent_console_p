@@ -14,6 +14,7 @@ import msgspec
 
 from aconsole.contracts import API_VERSION
 from aconsole.contracts.app import (
+    AgentInfo,
     AppSnapshot,
     CloseTabParams,
     CloseTabResult,
@@ -22,6 +23,9 @@ from aconsole.contracts.app import (
     ExitedParams,
     FocusParams,
     OpenTabParams,
+    ProjectAddParams,
+    ProjectIdParams,
+    ProjectView,
     RenameParams,
     ReorderParams,
     RestartParams,
@@ -33,9 +37,10 @@ from aconsole.contracts.app import (
     TerminalLaunchSpec,
 )
 from aconsole.contracts.common import AgentKind, NodeId, ProjectId, TabId, TabStatus, WorkspaceMode
-from aconsole.contracts.events import TabAdded, TabRemoved, TabUpdated, UiEvent
+from aconsole.contracts.events import ProjectsChanged, TabAdded, TabRemoved, TabUpdated, UiEvent
 from aconsole.contracts.settings import Settings, commit_settings
-from aconsole.core.application.ports.tab_store import StoredTab, TabDirectory, TabStore
+from aconsole.core.application.ports.tab_store import ProjectRecord, ProjectStore, StoredTab, TabDirectory, TabStore
+from aconsole.core.application.services.projects import ProjectCatalog
 from aconsole.core.domain.clock import Clock
 
 _ZERO: Final = 0
@@ -52,6 +57,9 @@ _LOGIN: Final = "AGENT_NOT_LOGGED_IN"
 _METHOD: Final = "METHOD_NOT_FOUND"
 _MODIFIED: Final = "CONTENT_MODIFIED"
 _PROJECT: Final = "PROJECT_NOT_FOUND"
+_NOT_A_REPO: Final = "PROJECT_NOT_A_GIT_REPO"
+_PATH_DENIED: Final = "PATH_NOT_ALLOWED"
+_TAB_CONFLICT: Final = "TAB_STATE_CONFLICT"
 _UNAVAILABLE: Final = "AGENT_UNAVAILABLE"
 _SESSION: Final = "SESSION_NOT_FOUND"
 _SCAN_FAILED: Final = "CONTAINER_START_FAILED"
@@ -133,6 +141,9 @@ TAB_METHODS: Final = frozenset(
         "tab/rename",
         "tab/reorder",
         "tab/focus",
+        "project/add",
+        "project/remove",
+        "project/setActive",
     }
 )
 
@@ -186,9 +197,22 @@ class TabPorts(Protocol):
     def ingest_port(self) -> str: ...
 
 
+class AgentCommands(Protocol):
+    """The argv that wires an agent to this core. Reaching for files keeps it out of the service."""
+
+    def command(
+        self, agent: AgentKind, tab_id: str, token: str, container: str, port: str,
+    ) -> tuple[str, ...] | None: ...
+
+    def release(self, agent: AgentKind, tab_id: str, container: str) -> None: ...
+
+
 @dataclass(frozen=True, kw_only=True)
 class ProjectSeed:
-    """One project the tab book can open. Sessions are ids `tab/open` may resume."""
+    """One project the tab book can open. Sessions are ids `tab/open` may resume.
+
+    An empty `container` means the agent's own one, `agent-<kind>`.
+    """
 
     project_id: str
     root: str
@@ -266,6 +290,9 @@ class TabService:
         self.listener: Callable[[UiEvent], None] | None = listener
         # Filled when `tab/launchSpec` mints an ingest token for a restored tab. The daemon registers it.
         self.on_ingest: Callable[[str, str], None] | None = None
+        self._catalog: ProjectCatalog | None = None
+        self._agents: Callable[[], tuple[AgentInfo, ...]] | None = None
+        self._commands: AgentCommands | None = None
         self._routes: dict[str, Callable[[bytes], msgspec.Struct]] = {
             "tab/open": self._route_open,
             "tab/launchSpec": self._route_launch,
@@ -277,6 +304,9 @@ class TabService:
             "tab/rename": self._route_rename,
             "tab/reorder": self._route_reorder,
             "tab/focus": self._route_focus,
+            "project/add": self._route_project_add,
+            "project/remove": self._route_project_remove,
+            "project/setActive": self._route_project_active,
             "settings/get": self._route_settings_get,
             "settings/update": self._route_settings_update,
         }
@@ -284,6 +314,23 @@ class TabService:
     def add_project(self, seed: ProjectSeed) -> None:
         """Register a project. `project/add` is a later method; tests and the host pass the seed."""
         self._projects[seed.project_id] = seed
+
+    def use_projects(self, catalog: ProjectCatalog, store: ProjectStore | None = None) -> None:
+        """Serve `project/*`. Projects saved in `store` can open tabs at once."""
+        self._catalog = catalog
+        if store is not None:
+            for record in catalog.attach(store):
+                self._seed(record)
+
+    def use_agents(self, source: Callable[[], tuple[AgentInfo, ...]]) -> None:
+        """The agent list for the snapshot. A kind it marks unavailable cannot open a tab."""
+        self._agents = source
+
+    def use_commands(self, commands: AgentCommands) -> None:
+        self._commands = commands
+
+    def _seed(self, record: ProjectRecord) -> None:
+        self.add_project(ProjectSeed(project_id=record.id, root=record.root, container=""))
 
     def use_store(self, store: TabStore) -> None:
         """Persist later changes. Existing in-memory tabs are written by `reload` or the next edit."""
@@ -314,11 +361,12 @@ class TabService:
         """The tabs the core would hand to `app/snapshot`, in display order."""
         ordered = sorted(self._tabs.values(), key=_by_order)
         stored = self._stored_settings()
+        catalog = self._catalog
         return AppSnapshot(
             api_version=API_VERSION,
-            projects=(),
-            active_project=None,
-            agents=(),
+            projects=() if catalog is None else catalog.views(),
+            active_project=None if catalog is None else catalog.active,
+            agents=self._agents() if self._agents is not None else (),
             accounts=(),
             tabs=tuple(self._view(tab) for tab in ordered),
             approvals=(),
@@ -436,7 +484,7 @@ class TabService:
         project = self._projects.get(str(params.project_id))
         if project is None:
             raise TabRequestError(_PROJECT)
-        if not project.available:
+        if not project.available or (not project.container and self._agent_missing(params.agent)):
             raise TabRequestError(_UNAVAILABLE)
         if params.resume_session is not None and params.resume_session not in project.sessions:
             raise TabRequestError(_SESSION)
@@ -463,7 +511,7 @@ class TabService:
             fork=params.fork,
             running=False,
             repo=project.root,
-            container=project.container,
+            container=project.container or f"agent-{params.agent.value}",
             created_here=created,
             created=now,
             mode=params.workspace.value,
@@ -488,6 +536,10 @@ class TabService:
         tab.sidecar = secret
         path = self._ports.container_path(tab.container)
         command = _launch_command(tab.agent, tab.session, fork=tab.fork)
+        wired = self._wired_command(tab)
+        if wired is not None:
+            # The session flags follow the agent's own: `claude --settings f --resume s`, `codex -c x resume s`.
+            command = (*wired, *command[_ONE:])
         # Hooks run inside the container: they need the tab, its ingest token, and the ingest port (INGEST_HTTP §1).
         inner = {
             _ENV_TAB: tab.id,
@@ -504,6 +556,58 @@ class TabService:
         env[_ENV_PORT] = self._ports.ingest_port()
         argv = (self._ports.python_bin(), *_SIDECAR, *podman)
         return TerminalLaunchSpec(argv=argv, env=env, cwd=tab.worktree, scrollback_lines=_SCROLLBACK, title=tab.title)
+
+    def _wired_command(self, tab: _Tab) -> tuple[str, ...] | None:
+        commands = self._commands
+        if commands is None:
+            return None
+        return commands.command(tab.agent, tab.id, tab.ingest, tab.container, self._ports.ingest_port())
+
+    def _agent_missing(self, kind: AgentKind) -> bool:
+        if self._agents is None:
+            return False
+        return any(agent.kind is kind and not agent.available for agent in self._agents())
+
+    def add_project_at(self, params: ProjectAddParams) -> ProjectView:
+        catalog = self._require_catalog()
+        if not params.root.startswith(("/", "~")):
+            raise TabRequestError(_PATH_DENIED)
+        before = catalog.views()
+        record = catalog.add(params.root)
+        if record is None:
+            raise TabRequestError(_NOT_A_REPO)
+        self._seed(record)
+        if catalog.views() != before:
+            self._projects_changed(catalog)
+        return next(view for view in catalog.views() if str(view.id) == record.id)
+
+    def remove_project(self, params: ProjectIdParams) -> EmptyResult:
+        catalog = self._require_catalog()
+        project_id = str(params.project_id)
+        if not catalog.known(project_id):
+            raise TabRequestError(_PROJECT)
+        if any(tab.project_id == project_id for tab in self._tabs.values()):
+            raise TabRequestError(_TAB_CONFLICT)
+        catalog.remove(project_id)
+        del self._projects[project_id]
+        self._projects_changed(catalog)
+        return EmptyResult()
+
+    def set_active_project(self, params: ProjectIdParams) -> EmptyResult:
+        catalog = self._require_catalog()
+        if not catalog.known(str(params.project_id)):
+            raise TabRequestError(_PROJECT)
+        catalog.set_active(str(params.project_id))
+        self._projects_changed(catalog)
+        return EmptyResult()
+
+    def _require_catalog(self) -> ProjectCatalog:
+        if self._catalog is None:
+            raise TabRequestError(_METHOD)
+        return self._catalog
+
+    def _projects_changed(self, catalog: ProjectCatalog) -> None:
+        self._emit(ProjectsChanged(projects=catalog.views(), active_project=catalog.active))
 
     def started(self, params: StartedParams) -> EmptyResult:
         tab = self._require(str(params.tab_id))
@@ -539,6 +643,8 @@ class TabService:
         if summary not in {None, _IGNORED} and params.decision == _REMOVE:
             raise TabRequestError(_DIRTY)
         stopped = self._stop(tab)
+        if self._commands is not None:
+            self._commands.release(tab.agent, tab.id, tab.container)
         # A failed orphan scan may leave processes in the tree: keep it rather than delete files under them.
         decision = params.decision if stopped else _KEEP
         self._finish_tree(tab, decision, discard_ignored=summary == _IGNORED)
@@ -661,6 +767,15 @@ class TabService:
         listener = self.listener
         if listener is not None:
             listener(event)
+
+    def _route_project_add(self, raw: bytes) -> ProjectView:
+        return self.add_project_at(msgspec.json.decode(raw, type=ProjectAddParams))
+
+    def _route_project_remove(self, raw: bytes) -> EmptyResult:
+        return self.remove_project(msgspec.json.decode(raw, type=ProjectIdParams))
+
+    def _route_project_active(self, raw: bytes) -> EmptyResult:
+        return self.set_active_project(msgspec.json.decode(raw, type=ProjectIdParams))
 
     def _route_open(self, raw: bytes) -> TabView:
         return self.open_tab(msgspec.json.decode(raw, type=OpenTabParams))

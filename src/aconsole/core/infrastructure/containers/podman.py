@@ -146,6 +146,14 @@ class Podman:
         argv.extend(request.command)
         return tuple(argv)
 
+    def run_in(self, name: str, user: str, command: tuple[str, ...]) -> str:
+        """Run a short command in the container and return its stdout."""
+        check_container_name(name)
+        if _USER.fullmatch(user) is None:
+            message = "user must be a single token"
+            raise ValueError(message)
+        return self._run(("exec", "--user", user, name, *command))
+
     def orphans(self, name: str, tab_id: str) -> tuple[int, ...]:
         """Pids inside the container whose environ contains `ACONSOLE_TAB=<tab_id>`."""
         check_container_name(name)

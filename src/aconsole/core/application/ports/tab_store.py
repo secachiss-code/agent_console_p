@@ -43,6 +43,35 @@ class TabDirectory:
     approval_hold_seconds: int = 540
 
 
+@dataclass(frozen=True, slots=True, kw_only=True)
+class ProjectRecord:
+    """One project the user added."""
+
+    id: str
+    name: str
+    root: str
+    default_branch: str
+    created_at: datetime
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class StoredProjects:
+    projects: tuple[ProjectRecord, ...]
+    active: str | None
+
+
+class ProjectStore(Protocol):
+    def load_projects(self) -> StoredProjects: ...
+
+    def save_project(self, project: ProjectRecord) -> None: ...
+
+    def remove_project(self, project_id: str) -> None:
+        """Delete the project row. Closed tabs of the project go with it."""
+        ...
+
+    def save_active_project(self, project_id: str | None) -> None: ...
+
+
 class TabStore(Protocol):
     """Writes go through the single persistence writer. Reads of open tabs do too."""
 

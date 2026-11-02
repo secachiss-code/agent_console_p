@@ -8,7 +8,7 @@ from typing import Final, final
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from aconsole.core.application.ports.tab_store import StoredTab, TabDirectory
+from aconsole.core.application.ports.tab_store import ProjectRecord, StoredProjects, StoredTab, TabDirectory
 from aconsole.core.domain.agent import AgentKind
 from aconsole.core.domain.tab_status import TabStatus
 from aconsole.core.domain.workspace import WorkspaceMode
@@ -29,6 +29,7 @@ _ACCOUNT: Final = 64
 _WORKSPACE: Final = 26
 _PLAN: Final = "local"
 _BRANCH: Final = "main"
+_ACTIVE: Final = "active_project"
 _BAD_RESULT: Final = "tab store returned an unexpected value"
 
 
@@ -97,6 +98,46 @@ def write_setup_completed(session: Session, *, completed: bool, rev: int) -> Non
     row.rev = rev
 
 
+def load_projects(session: Session) -> StoredProjects:
+    rows = session.scalars(select(Project).order_by(Project.created_at, Project.id)).all()
+    settings = session.get(Setting, SETTINGS_KEY)
+    active = settings.value.get(_ACTIVE) if settings is not None else None
+    return StoredProjects(
+        projects=tuple(
+            ProjectRecord(
+                id=row.id, name=row.name, root=row.root_path, default_branch=row.default_branch,
+                created_at=row.created_at,
+            )
+            for row in rows
+        ),
+        active=active if isinstance(active, str) else None,
+    )
+
+
+def save_project(session: Session, project: ProjectRecord) -> None:
+    session.add(
+        Project(
+            id=project.id, name=project.name[:_NAME], root_path=project.root, default_branch=project.default_branch,
+            vault_folder=None, languages=[], created_at=project.created_at,
+        )
+    )
+
+
+def remove_project(session: Session, project_id: str) -> None:
+    row = session.get(Project, project_id)
+    if row is not None:
+        session.delete(row)
+
+
+def save_active_project(session: Session, project_id: str | None) -> None:
+    """Part of the settings document, but not a user setting: `rev` stays."""
+    row = session.get(Setting, SETTINGS_KEY)
+    if row is None:
+        session.add(Setting(key=SETTINGS_KEY, value={_ACTIVE: project_id}, rev=0))
+        return
+    row.value = {**row.value, _ACTIVE: project_id}
+
+
 @final
 class TabDatabase:
     """`TabStore` backed by the writer thread. Call it from any thread except that one."""
@@ -106,6 +147,21 @@ class TabDatabase:
 
     def save(self, tab: StoredTab) -> None:
         _ = self._writer.call(lambda session: save_tab(session, tab))
+
+    def load_projects(self) -> StoredProjects:
+        found = self._writer.call(load_projects)
+        if not isinstance(found, StoredProjects):
+            raise TypeError(_BAD_RESULT)
+        return found
+
+    def save_project(self, project: ProjectRecord) -> None:
+        _ = self._writer.call(lambda session: save_project(session, project))
+
+    def remove_project(self, project_id: str) -> None:
+        _ = self._writer.call(lambda session: remove_project(session, project_id))
+
+    def save_active_project(self, project_id: str | None) -> None:
+        _ = self._writer.call(lambda session: save_active_project(session, project_id))
 
     def remove(self, tab_id: str, *, closed_at: datetime, drop_worktree: bool) -> None:
         _ = self._writer.call(lambda session: remove_tab(session, tab_id, closed_at, drop_worktree=drop_worktree))
@@ -162,7 +218,6 @@ def _upsert_project(session: Session, tab: StoredTab) -> None:
         return
     row.name = name
     row.root_path = tab.project_root
-    row.default_branch = branch
 
 
 def _upsert_account(session: Session, tab: StoredTab) -> str | None:

@@ -3,21 +3,32 @@
 from __future__ import annotations
 
 import getpass
+import logging
 import os
 import signal
+import subprocess
 import sys
+import threading
 import time
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Final, final
 
+from aconsole.contracts.app import AgentInfo
+from aconsole.contracts.common import AgentKind
 from aconsole.core.application.services.tabs import TabRequestError, TabService
 from aconsole.core.domain.clock import Clock
 from aconsole.core.infrastructure.containers.distrobox_env import DistroboxEnvCache, DistroboxError
-from aconsole.core.infrastructure.containers.podman import ContainerError, ExecRequest, Podman
+from aconsole.core.infrastructure.containers.podman import ContainerError, ExecRequest, Inspected, Podman
 from aconsole.core.infrastructure.git.worktrees import WorktreeError, WorktreeRequest, Worktrees
 
+_LOG = logging.getLogger(__name__)
 _GIT: Final = Path("/usr/bin/git")
+_GIT_TIMEOUT_S: Final = 10.0
+_DEFAULT_BRANCH: Final = "main"
+_AGENTS_TTL_S: Final = 30.0
+_WAVE_ONE: Final = (AgentKind.CLAUDE, AgentKind.CODEX)
 _PODMAN: Final = Path("/usr/bin/podman")
 _SHELL: Final = Path("/bin/sh")
 # Bash and dash both accept `-lc`. Agents are on PATH only in a login shell: /etc/profile.d in the distrobox image.
@@ -79,6 +90,7 @@ class HostTabs:
             self._env = DistroboxEnvCache(linked.ini, linked.distrobox)
         # Distrobox maps the host user into the container. As root the agent would have the wrong home and no login.
         self._user = getpass.getuser() if user is None else user
+        self._homes: dict[str, Path] = {}
         self._socket = socket_path
         self._port = ingest_port
         self._worktrees = default_worktrees() if worktrees_dir is None else worktrees_dir
@@ -125,6 +137,25 @@ class HostTabs:
             return self._trees.close(Path(repo), path, discard_ignored=discard_ignored).removed
         except WorktreeError as exc:
             raise TabRequestError(_CREATE_FAILED) from exc
+
+    def inspect_container(self, name: str) -> Inspected:
+        return self._podman.inspect(name)
+
+    def agent_home(self, name: str) -> Path | None:
+        """The directory HOME names in the container. Distrobox binds it at the same path here."""
+        cached = self._homes.get(name)
+        if cached is not None:
+            return cached
+        try:
+            text = self._podman.run_in(name, self._user, ("/bin/sh", "-c", 'printf %s "$HOME"'))
+        except (ContainerError, ValueError):
+            _LOG.warning("cannot read HOME of container %s", name, exc_info=True)
+            return None
+        home = Path(text)
+        if not home.is_absolute() or not home.is_dir():
+            return None
+        self._homes[name] = home
+        return home
 
     def ensure_container(self, name: str) -> None:
         try:
@@ -175,6 +206,65 @@ class HostTabs:
     def set_worktrees_dir(self, path: Path) -> None:
         """Use `Settings.worktrees_dir`. A leading `~` is the user's home."""
         self._worktrees = path.expanduser()
+
+
+@final
+class HostRepos:
+    """`RepoInspector` backed by git."""
+
+    def __init__(self, git: Path = _GIT, *, timeout_s: float = _GIT_TIMEOUT_S) -> None:
+        self._git = git
+        self._timeout_s = timeout_s
+
+    def toplevel(self, path: Path) -> tuple[Path, str] | None:
+        top = self._ask(path, "rev-parse", "--show-toplevel")
+        if top is None:
+            return None
+        # A repository without commits has a symbolic HEAD too, so this names the branch it would commit to.
+        return Path(top), self._ask(path, "symbolic-ref", "--short", "HEAD") or _DEFAULT_BRANCH
+
+    def _ask(self, path: Path, *args: str) -> str | None:
+        try:
+            done = subprocess.run(  # noqa: S603 -- argv is a list; the git path is absolute
+                [str(self._git), "-C", str(path), *args],
+                check=False, capture_output=True, text=True, timeout=self._timeout_s,
+            )
+        except (OSError, subprocess.SubprocessError):
+            return None
+        return done.stdout.strip() if done.returncode == 0 else None
+
+
+@final
+class HostAgents:
+    """The agents of wave 1 and their containers. Cached: the snapshot must not wait for podman each time."""
+
+    def __init__(self, inspect: Callable[[str], Inspected], *, ttl_s: float = _AGENTS_TTL_S) -> None:
+        self._inspect = inspect
+        self._ttl_s = ttl_s
+        self._lock = threading.Lock()
+        self._until = 0.0
+        self._cached: tuple[AgentInfo, ...] = ()
+
+    def agents(self) -> tuple[AgentInfo, ...]:
+        with self._lock:
+            now = time.monotonic()
+            if now >= self._until:
+                self._cached = tuple(self._probe(kind) for kind in _WAVE_ONE)
+                self._until = now + self._ttl_s
+            return self._cached
+
+    def _probe(self, kind: AgentKind) -> AgentInfo:
+        container = f"agent-{kind.value}"
+        reason = None
+        try:
+            _ = self._inspect(container)
+        except (ContainerError, ValueError, OSError):
+            reason = f"container {container} not found"
+        # A stopped container still counts: `tab/launchSpec` starts it.
+        return AgentInfo(
+            kind=kind, display_name=kind.value.capitalize(), container=container, available=reason is None,
+            unavailable_reason=reason, logged_in=None, version=None, supported=True, capabilities=frozenset({"hooks"}),
+        )
 
 
 def default_worktrees() -> Path:

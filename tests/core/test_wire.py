@@ -1,0 +1,227 @@
+"""The assembled daemon: a project, a real launch command, and a hook that moves the tab."""
+
+from __future__ import annotations
+
+import asyncio
+import json
+import os
+import stat
+import subprocess
+import urllib.request
+from pathlib import Path
+
+import msgspec
+
+from aconsole.contracts.app import (
+    AppSnapshot,
+    EmptyParams,
+    OpenTabParams,
+    ProjectAddParams,
+    ProjectIdParams,
+    ProjectView,
+    SnapshotResult,
+    TabIdParams,
+    TabView,
+    TerminalLaunchSpec,
+)
+from aconsole.contracts.common import AgentKind, ClientRole, ProjectId, TabStatus, WorkspaceMode
+from aconsole.contracts.errors import error_by_name
+from aconsole.contracts.ipc import InitializeParams, ProtocolVersion, Request, ResponseErr, ResponseOk
+from aconsole.core.bootstrap import Daemon
+from aconsole.core.infrastructure.ipc.framing import decode_envelope, encode_line
+from aconsole.core.infrastructure.tabs import HostBins, HostTabs
+from tests.core.conftest import wait_for_socket
+
+_ENCODER = msgspec.json.Encoder()
+_FAKE_PODMAN = """#!/bin/sh
+case "$1" in
+inspect) printf '[{"Id":"i","Name":"x","State":{"Running":true}}]\\n' ;;
+exec) printf '%s' "$FAKE_HOME" ;;
+esac
+"""
+
+
+def _git_repo(root: Path) -> Path:
+    root.mkdir(parents=True)
+    _ = subprocess.run(["/usr/bin/git", "init", "-q", "-b", "trunk", str(root)], check=True)
+    return root
+
+
+def _daemon(tmp: Path, *, serve_ingest: bool = True) -> Daemon:
+    podman = tmp / "podman"
+    if not podman.exists():
+        _ = podman.write_text(_FAKE_PODMAN, encoding="utf-8")
+        podman.chmod(podman.stat().st_mode | stat.S_IEXEC)
+    socket = Path(os.environ.get("XDG_RUNTIME_DIR") or "/tmp") / f"ac-wire-{tmp.name[-20:]}.sock"  # noqa: S108 -- AF_UNIX limit
+    host = HostTabs(bins=HostBins(podman=podman), socket_path=str(socket), user="sas", worktrees_dir=tmp / "wt")
+    daemon = Daemon(socket, database=tmp / "aconsole.db", host=host, idle_s=30.0)
+    daemon.serve_ingest = serve_ingest
+    return daemon
+
+
+class _Client:
+    def __init__(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter) -> None:
+        self.reader = reader
+        self.writer = writer
+        self.next_id = 1
+
+    async def call[T: msgspec.Struct](self, method: str, params: msgspec.Struct, result: type[T]) -> T:
+        reply = await self.raw(method, params)
+        assert isinstance(reply, ResponseOk), reply
+        return msgspec.json.decode(reply.result, type=result)
+
+    async def error(self, method: str, params: msgspec.Struct) -> str:
+        reply = await self.raw(method, params)
+        assert isinstance(reply, ResponseErr), reply
+        return reply.error.message
+
+    async def raw(self, method: str, params: msgspec.Struct) -> ResponseOk | ResponseErr:
+        self.next_id += 1
+        ident = self.next_id
+        request = Request(id=ident, method=method, params=msgspec.Raw(_ENCODER.encode(params)))
+        self.writer.write(encode_line(_ENCODER, request))
+        await self.writer.drain()
+        while True:
+            envelope = decode_envelope(await self.reader.readline())
+            if isinstance(envelope, (ResponseOk, ResponseErr)) and envelope.id == ident:
+                return envelope
+
+    async def snapshot(self) -> AppSnapshot:
+        return (await self.call("app/snapshot", EmptyParams(), SnapshotResult)).snapshot
+
+
+async def _connect(socket: Path) -> _Client:
+    await wait_for_socket(socket)
+    reader, writer = await asyncio.open_unix_connection(socket)
+    client = _Client(reader, writer)
+    params = InitializeParams(
+        protocol=(ProtocolVersion(major=1, minor=0), ProtocolVersion(major=1, minor=0)),
+        role=ClientRole.UI, client_name="wire", client_version="0", pid=os.getpid(),
+        capabilities=frozenset({"events.v1"}),
+    )
+    writer.write(encode_line(_ENCODER, Request(id=1, method="initialize", params=msgspec.Raw(_ENCODER.encode(params)))))
+    await writer.drain()
+    _ = await reader.readline()
+    return client
+
+
+async def _stop(daemon: Daemon, task: asyncio.Task[int], client: _Client) -> None:
+    client.writer.close()
+    daemon.request_stop()
+    assert await task == 0
+
+
+def _post_hook(port: int, tab_id: str, token: str, event: str) -> int:
+    body = json.dumps({"hook_event_name": event, "session_id": "s", "cwd": "/w"}).encode()
+    request = urllib.request.Request(
+        f"http://127.0.0.1:{port}/v1/tabs/{tab_id}/claude/hook",
+        data=body,
+        headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"},
+    )
+    with urllib.request.urlopen(request, timeout=5) as answer:  # noqa: S310 -- loopback only
+        return int(answer.status)
+
+
+def test_projects_are_added_once_activated_and_survive_a_restart(tmp_path: Path) -> None:
+    repo = _git_repo(tmp_path / "repo")
+
+    async def scenario() -> tuple[ProjectView, ProjectView, AppSnapshot, str, str]:
+        daemon = _daemon(tmp_path, serve_ingest=False)
+        task = asyncio.create_task(daemon.serve())
+        client = await _connect(daemon.socket)
+        first = await client.call("project/add", ProjectAddParams(root=str(repo)), ProjectView)
+        again = await client.call("project/add", ProjectAddParams(root=str(repo)), ProjectView)
+        not_repo = await client.error("project/add", ProjectAddParams(root=str(tmp_path)))
+        relative = await client.error("project/add", ProjectAddParams(root="repo"))
+        await _stop(daemon, task, client)
+        daemon = _daemon(tmp_path, serve_ingest=False)
+        task = asyncio.create_task(daemon.serve())
+        client = await _connect(daemon.socket)
+        restored = await client.snapshot()
+        await _stop(daemon, task, client)
+        return first, again, restored, not_repo, relative
+
+    first, again, restored, not_repo, relative = asyncio.run(scenario())
+    assert first == again
+    assert first.default_branch == "trunk"
+    assert not_repo == error_by_name("PROJECT_NOT_A_GIT_REPO").name
+    assert relative == error_by_name("PATH_NOT_ALLOWED").name
+    assert restored.projects == (first,)
+    assert restored.active_project == first.id
+    assert [agent.kind for agent in restored.agents] == [AgentKind.CLAUDE, AgentKind.CODEX]
+    assert all(agent.available for agent in restored.agents)
+
+
+def test_a_project_with_tabs_cannot_be_removed(tmp_path: Path) -> None:
+    repo = _git_repo(tmp_path / "repo")
+
+    async def scenario() -> tuple[str, str]:
+        daemon = _daemon(tmp_path, serve_ingest=False)
+        task = asyncio.create_task(daemon.serve())
+        client = await _connect(daemon.socket)
+        project = await client.call("project/add", ProjectAddParams(root=str(repo)), ProjectView)
+        _ = await client.call("tab/open", _open(project.id), TabView)
+        refused = await client.error("project/remove", ProjectIdParams(project_id=project.id))
+        missing = await client.error("project/setActive", ProjectIdParams(project_id=ProjectId("nope")))
+        await _stop(daemon, task, client)
+        return refused, missing
+
+    assert asyncio.run(scenario()) == ("TAB_STATE_CONFLICT", "PROJECT_NOT_FOUND")
+
+
+def _open(project: ProjectId) -> OpenTabParams:
+    return OpenTabParams(project_id=project, agent=AgentKind.CLAUDE, workspace=WorkspaceMode.MAIN_CHECKOUT)
+
+
+def test_tab_runs_claude_with_hooks_and_a_hook_moves_it(tmp_path: Path, monkeypatch) -> None:  # noqa: ANN001 -- pytest fixture
+    repo = _git_repo(tmp_path / "repo")
+    home = tmp_path / "home"
+    home.mkdir()
+    monkeypatch.setenv("FAKE_HOME", str(home))
+
+    async def scenario() -> tuple[TerminalLaunchSpec, TabStatus, TerminalLaunchSpec, int]:
+        daemon = _daemon(tmp_path)
+        task = asyncio.create_task(daemon.serve())
+        client = await _connect(daemon.socket)
+        project = await client.call("project/add", ProjectAddParams(root=str(repo)), ProjectView)
+        tab = await client.call("tab/open", _open(project.id), TabView)
+        spec = await client.call("tab/launchSpec", TabIdParams(tab_id=tab.id), TerminalLaunchSpec)
+        port = daemon.ingest_port
+        assert port is not None
+        token = spec.env["ACONSOLE_TAB_TOKEN"]
+        code = await asyncio.to_thread(_post_hook, port, str(tab.id), token, "UserPromptSubmit")
+        assert code == 200
+        status = await _wait_status(client, TabStatus.IDLE)
+        await _stop(daemon, task, client)
+        # A restored tab has no token until launchSpec mints one, and the hooks must then be accepted.
+        daemon = _daemon(tmp_path)
+        task = asyncio.create_task(daemon.serve())
+        client = await _connect(daemon.socket)
+        restored = (await client.snapshot()).tabs[0]
+        again = await client.call("tab/launchSpec", TabIdParams(tab_id=restored.id), TerminalLaunchSpec)
+        port = daemon.ingest_port
+        assert port is not None
+        accepted = await asyncio.to_thread(_post_hook, port, str(restored.id), again.env["ACONSOLE_TAB_TOKEN"], "Stop")
+        await _stop(daemon, task, client)
+        return spec, status, again, accepted
+
+    spec, status, again, accepted = asyncio.run(scenario())
+    agent = spec.argv[spec.argv.index("--", spec.argv.index("exec")) + 1 :]
+    assert spec.argv[spec.argv.index("--user") + 1] == "sas"
+    assert "agent-claude" in spec.argv
+    assert agent[:2] == ("/bin/sh", "-c")
+    settings = Path(agent[agent.index("--settings") + 1])
+    assert settings.is_relative_to(home)
+    assert "/claude/hook" in settings.read_text(encoding="utf-8")
+    assert status is TabStatus.WORKING
+    assert accepted == 200
+    assert again.env["ACONSOLE_TAB_TOKEN"] != spec.env["ACONSOLE_TAB_TOKEN"]
+
+
+async def _wait_status(client: _Client, other_than: TabStatus) -> TabStatus:
+    for _ in range(200):
+        status = (await client.snapshot()).tabs[0].status
+        if status is not other_than:
+            return status
+        await asyncio.sleep(0.02)
+    return other_than

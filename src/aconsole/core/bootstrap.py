@@ -24,10 +24,12 @@ from aconsole.contracts.errors import ErrorData, ErrorObject, MessageTooLargeDet
 from aconsole.contracts.events import Notify, TabAdded, TabRemoved, UiEvent
 from aconsole.contracts.ipc import InitializeParams, Request, ResponseErr
 from aconsole.core.application.services.approval_broker import ApprovalHold
+from aconsole.core.application.services.projects import ProjectCatalog
 from aconsole.core.application.services.setup import SetupService
 from aconsole.core.application.services.tabs import TabService
 from aconsole.core.domain.approvals import Approval, ApprovalBook
 from aconsole.core.domain.clock import Clock
+from aconsole.core.infrastructure.agents.launch import HostAgentCommands
 from aconsole.core.infrastructure.http.app import IngestApp, serve_config
 from aconsole.core.infrastructure.http.approval import handle_permission
 from aconsole.core.infrastructure.http.auth import TokenBook
@@ -54,7 +56,7 @@ from aconsole.core.infrastructure.persistence.repositories.tabs import TabDataba
 from aconsole.core.infrastructure.persistence.startup import prepare_database, sqlite_url
 from aconsole.core.infrastructure.persistence.writer import Writer
 from aconsole.core.infrastructure.setup_checks import HostSetupFixes, HostSetupProbe, SetupTokens
-from aconsole.core.infrastructure.tabs import HostTabs
+from aconsole.core.infrastructure.tabs import HostAgents, HostRepos, HostTabs
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -63,6 +65,7 @@ if TYPE_CHECKING:
     from sqlalchemy.engine import Engine
     from sqlalchemy.orm import Session
 
+    from aconsole.contracts.app import TabView
     from aconsole.contracts.ipc import EventEnvelope
 
 _LOG = logging.getLogger(__name__)
@@ -204,7 +207,7 @@ def _too_large(encoder: msgspec.json.Encoder, limit: int) -> bytes:
 class Daemon:
     """The core process. A second instance refuses the lock. Idle clients shut it down."""
 
-    def __init__(  # noqa: PLR0913 -- daemon configuration and injection points
+    def __init__(  # noqa: PLR0913, PLR0915 -- daemon configuration and injection points
         self,
         socket: Path,
         *,
@@ -213,6 +216,7 @@ class Daemon:
         frame_limit: int = MAX_MESSAGE_BYTES,
         database: Path | None = None,
         setup_service: SetupService | None = None,
+        host: HostTabs | None = None,
     ) -> None:
         if idle_s < 0:
             message = "idle seconds cannot be negative"
@@ -238,8 +242,15 @@ class Daemon:
         self._ring: EventRing = EventRing()
         self.approvals: ApprovalHold = ApprovalHold(ApprovalBook(), publish=self._approval_event,
             notify=self._approval_notify, audit=self._approval_audit, now=lambda: datetime.now(UTC))
-        self._host: HostTabs = HostTabs(socket_path=str(socket))
+        self._host: HostTabs = HostTabs(socket_path=str(socket)) if host is None else host
         self.tabs: TabService = TabService(Clock(), self._host, listener=self._from_worker)
+        self.tabs.on_ingest = self._ingest_minted
+        self._catalog: ProjectCatalog = ProjectCatalog(
+            HostRepos(), new_id=self._host.new_id, now=lambda: datetime.now(UTC),
+        )
+        self.tabs.use_projects(self._catalog)
+        self.tabs.use_agents(HostAgents(self._host.inspect_container).agents)
+        self.tabs.use_commands(HostAgentCommands(self._host.agent_home))
         self.setup_service: SetupService = setup_service or SetupService(
             probe=HostSetupProbe(), fixes=HostSetupFixes(), tokens=SetupTokens()
         )
@@ -338,6 +349,28 @@ class Daemon:
         if loop is not None and not loop.is_closed():
             _ = loop.call_soon_threadsafe(self._publish, event, live, token)
 
+    def _ingest_minted(self, tab_id: str, token: str) -> None:
+        """A restored tab got its token from `tab/launchSpec`, on the worker. The hooks start only after that reply."""
+        view = next((tab for tab in self.tabs.snapshot().tabs if str(tab.id) == tab_id), None)
+        loop = self._loop
+        if view is not None and loop is not None and not loop.is_closed():
+            _ = loop.call_soon_threadsafe(self._register_tab, view, token)
+
+    def _register_tab(self, tab: TabView, token: str) -> None:
+        tab_id = str(tab.id)
+        self._tokens.register(tab_id, token)
+        worktree = tab.worktree_path
+        self._mcp_tokens.register(
+            tab_id,
+            token,
+            TabContext(
+                tab_id=tab_id,
+                project_id=str(tab.project_id),
+                worktree=Path(worktree) if worktree else None,
+                agent=str(tab.agent),
+            ),
+        )
+
     def _approval_event(self, event: UiEvent) -> None:
         self._publish(event, self._live_tabs, None)
 
@@ -381,19 +414,7 @@ class Daemon:
     def _publish(self, event: UiEvent, live: int, token: str | None) -> None:
         """Number the event once, send it to every subscribed connection, and keep tokens and liveness current."""
         if isinstance(event, TabAdded) and token is not None:
-            tab_id = str(event.tab.id)
-            self._tokens.register(tab_id, token)
-            worktree = event.tab.worktree_path
-            self._mcp_tokens.register(
-                tab_id,
-                token,
-                TabContext(
-                    tab_id=tab_id,
-                    project_id=str(event.tab.project_id),
-                    worktree=Path(worktree) if worktree else None,
-                    agent=str(event.tab.agent),
-                ),
-            )
+            self._register_tab(event.tab, token)
         if isinstance(event, TabRemoved):
             self._tokens.drop(str(event.tab_id))
             self._mcp_tokens.drop(str(event.tab_id))
@@ -477,6 +498,7 @@ class Daemon:
             return
         store = TabDatabase(writer)
         self.tabs.use_store(store)
+        self.tabs.use_projects(self._catalog, store)
         found = await asyncio.to_thread(store.settings)
         self.tabs.note_settings(found.rev, setup_completed=found.setup_completed)
         if found.worktrees_dir is not None:
