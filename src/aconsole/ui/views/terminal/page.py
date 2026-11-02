@@ -53,7 +53,9 @@ class TerminalPage(Gtk.Overlay):
         self.error_label.add_css_class("ac-session-error")
         self.error_label.set_visible(False)
         self.add_overlay(self.error_label)
-        self.ended_revealer: Gtk.Revealer = Gtk.Revealer()
+        self.ended_revealer: Gtk.Revealer = Gtk.Revealer(
+            transition_type=Gtk.RevealerTransitionType.CROSSFADE, transition_duration=200,
+        )
         self.ended_revealer.set_halign(Gtk.Align.CENTER)
         self.ended_revealer.set_valign(Gtk.Align.CENTER)
         panel = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
@@ -66,6 +68,7 @@ class TerminalPage(Gtk.Overlay):
             ("terminal.resume", self._resume), ("terminal.new", self._new_session), ("terminal.close", self._close_tab),
         ):
             button = Gtk.Button(label=translate(key))
+            button.add_css_class("suggested-action" if key == "terminal.resume" else "flat")
             _ = button.connect("clicked", callback)
             self.ended_actions.append(button)
         panel.append(self.ended_actions)

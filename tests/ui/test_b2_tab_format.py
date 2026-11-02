@@ -110,7 +110,7 @@ def test_b2_tab_format_attention_comes_from_tab(case: _AttentionCase) -> None:
     assert format_tab(tab, (account,), NOW).attention is case.attention
 
 
-def test_b2_tab_format_groups_by_agent_and_account_and_shows_existing_plan_label() -> None:
+def test_b2_tab_format_groups_by_agent_and_account_without_a_subscription_label() -> None:
     from aconsole.ui.viewmodels.logic.tab_format import format_tab
 
     snapshot = demo_snapshot()
@@ -120,7 +120,7 @@ def test_b2_tab_format_groups_by_agent_and_account_and_shows_existing_plan_label
     presentation = format_tab(tab, (account,), NOW)
 
     assert presentation.section_key == f"{tab.agent.value.lower()}:{tab.account_id}"
-    assert presentation.section_title == f"{tab.agent.value.upper()} · {account.plan_label}"
+    assert presentation.section_title == tab.agent.value.upper()
 
 
 def test_b2_tab_format_missing_account_has_no_invented_tariff() -> None:

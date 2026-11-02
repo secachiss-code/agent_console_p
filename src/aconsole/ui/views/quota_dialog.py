@@ -13,9 +13,15 @@ from aconsole.ui.views.sidebar.messages import _ as translate  # noqa: E402
 from aconsole.ui.views.sidebar.quota_row import QuotaRow  # noqa: E402
 
 
+def _detail(text: str) -> Gtk.Label:
+    label = Gtk.Label(label=text, xalign=0, wrap=True)
+    label.add_css_class("ac-summary-detail")
+    return label
+
+
 class QuotaDialog(Adw.Dialog):
     def __init__(self, accounts: tuple[AccountView, ...], tabs: tuple[TabView, ...], summary: str) -> None:
-        super().__init__(title=translate("quota.title"), content_width=520, content_height=520)
+        super().__init__(title=translate("quota.title"), content_width=460)
         self._accounts: tuple[AccountView, ...] = ()
         self._tab_signature: tuple[tuple[str, str | None, str], ...] = ()
         self._summary: str = ""
@@ -25,7 +31,9 @@ class QuotaDialog(Adw.Dialog):
         toolbar.add_top_bar(Adw.HeaderBar())
         self.content: Gtk.Box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=16)
         self.content.add_css_class("ac-quota-details")
-        self.scroll: Gtk.ScrolledWindow = Gtk.ScrolledWindow(hscrollbar_policy=Gtk.PolicyType.NEVER)
+        self.scroll: Gtk.ScrolledWindow = Gtk.ScrolledWindow(
+            hscrollbar_policy=Gtk.PolicyType.NEVER, propagate_natural_height=True,
+        )
         self.scroll.set_child(self.content)
         toolbar.set_content(self.scroll)
         self.set_child(toolbar)
@@ -56,8 +64,8 @@ class QuotaDialog(Adw.Dialog):
 
     def _account_group(self, account: AccountView, tabs: tuple[TabView, ...]) -> Gtk.Box:
         group = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
-        title = " · ".join(value for value in (account.agent.value.capitalize(), account.plan_label) if value)
-        heading = Gtk.Label(label=title, xalign=0)
+        group.add_css_class("ac-quota-group")
+        heading = Gtk.Label(label=account.agent.value.capitalize(), xalign=0)
         heading.add_css_class("heading")
         group.append(heading)
         for window in account.quota:
@@ -67,14 +75,14 @@ class QuotaDialog(Adw.Dialog):
             if window.resets_at is not None:
                 reset = window.resets_at.astimezone()
                 pattern = "%H:%M" if reset.date() == datetime.now(UTC).astimezone().date() else "%d.%m %H:%M"
-                group.append(Gtk.Label(label=translate("quota.reset").format(time=reset.strftime(pattern)), xalign=0))
+                group.append(_detail(translate("quota.reset").format(time=reset.strftime(pattern))))
             if window.used_pct is None:
-                group.append(Gtk.Label(label=translate("quota.unknown.copy"), xalign=0, wrap=True))
+                group.append(_detail(translate("quota.unknown.copy")))
         if not account.quota:
-            group.append(Gtk.Label(label=translate("quota.unknown.copy"), xalign=0, wrap=True))
+            group.append(_detail(translate("quota.unknown.copy")))
         titles = ", ".join(tab.title for tab in tabs if tab.account_id == account.id)
         if titles:
-            group.append(Gtk.Label(label=f"{translate('quota.tabs')}: {titles}", xalign=0, wrap=True))
+            group.append(_detail(f"{translate('quota.tabs')}: {titles}"))
         return group
 
     def refresh_times(self) -> None:

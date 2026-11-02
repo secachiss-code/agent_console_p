@@ -41,6 +41,7 @@ class TabSidebar(Gtk.Stack):
         self.tabs: TabsViewModel = tabs
         self.pending_reorder: asyncio.Task[None] | None = None
         self.on_error: Callable[[str], None] | None = None
+        self.on_row_pressed: Callable[[], None] | None = None
         self._section_handlers: list[tuple[TabItem, int, int]] = []
         self._header_bindings: dict[Gtk.ListHeader, GObject.Binding] = {}
         self._timer: int | None = None
@@ -117,7 +118,14 @@ class TabSidebar(Gtk.Stack):
         target = Gtk.DropTarget.new(str, Gdk.DragAction.MOVE)
         _ = target.connect("drop", self._drop, row)
         row.add_controller(target)
+        press = Gtk.GestureClick()
+        _ = press.connect("released", self._row_pressed)
+        row.add_controller(press)
         item.set_child(row)
+
+    def _row_pressed(self, _gesture: Gtk.GestureClick, _presses: int, _x: float, _y: float) -> None:
+        if self.on_row_pressed is not None:
+            self.on_row_pressed()
 
     def _row_bind(self, _factory: Gtk.SignalListItemFactory, item: Gtk.ListItem) -> None:
         row, model = item.get_child(), item.get_item()

@@ -11,7 +11,7 @@ _MESSAGES = {
         "Попросите агента спланировать задачу — план появится здесь и в Obsidian",
     ),
     "plan.ready": ("Ready: {nodes}", "Готово к работе: {nodes}"),
-    "plan.open": ("Open plan", "Открыть план"),
+    "plan.back": ("Back to terminal", "К терминалу"),  # noqa: RUF001 -- Russian UI text
     "plan.go_tab": ("Go to tab", "Перейти во вкладку"),
     "plan.select_node": ("Select a step to see its details", "Выберите шаг, чтобы увидеть подробности"),
     "plan.depends": ("Depends on: {nodes}", "Зависит от: {nodes}"),
@@ -24,10 +24,6 @@ _MESSAGES = {
     "plan.status.done": ("Done", "Готово"),
     "plan.status.failed": ("Failed", "Ошибка"),
     "plan.status.cancelled": ("Cancelled", "Отменён"),
-    "plan.page.soon": (
-        "The full plan view comes in a later version",
-        "Полная страница плана появится в следующей версии",
-    ),
     "quota.title": ("Limits", "Лимиты"),
     "quota.unknown": ("No usage data yet", "Данных о лимитах пока нет"),  # noqa: RUF001 -- Russian UI text
     "quota.unknown.copy": (
@@ -39,7 +35,8 @@ _MESSAGES = {
     "quota.week": ("Week", "Неделя"),
     "quota.month": ("Month", "Месяц"),
     "quota.budget": ("Budget", "Бюджет"),
-    "quota.observed": ("As of {time}", "По данным на {time}"),
+    "quota.empty": ("No data yet", "Пока нет данных"),
+    "quota.observed": ("as of {time}", "на {time}"),
     "quota.reset": ("Resets at {time}", "Сброс в {time}"),  # noqa: RUF001 -- Russian UI text
     "quota.tabs": ("Tabs using this account", "Вкладки этого аккаунта"),
     "quota.critical": ("An account has reached 95% of its limit", "Использовано не менее 95 % лимита аккаунта"),

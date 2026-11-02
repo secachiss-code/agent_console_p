@@ -23,6 +23,7 @@ from aconsole.core.infrastructure.fake.scenarios import demo_snapshot  # noqa: E
 from aconsole.ui.bootstrap import run_app, spawn_task  # noqa: E402
 from aconsole.ui.client.core_client import CoreClient  # noqa: E402
 from aconsole.ui.views.app import AConsoleApp  # noqa: E402
+from aconsole.ui.views.sidebar.plan_graph import PlanGraph  # noqa: E402
 
 
 def _demo_plan() -> PlanView:
@@ -146,8 +147,8 @@ def test_b4a_plan_card_demo_shows_plan_and_ready_nodes() -> None:
     _in_gtk_context(check)
 
 
-def test_b4a_plan_card_activation_and_placeholder() -> None:
-    from aconsole.ui.views.sidebar.plan_card import PlanCard, create_plan_placeholder
+def test_b4a_plan_card_activation_and_page() -> None:
+    from aconsole.ui.views.sidebar.plan_card import PlanCard
 
     plan = _demo_plan()
 
@@ -159,12 +160,6 @@ def test_b4a_plan_card_activation_and_placeholder() -> None:
         card.emit("clicked")
 
         assert activated == [plan.id]
-        placeholder = create_plan_placeholder(plan)
-        assert isinstance(placeholder, Adw.StatusPage)
-        assert placeholder.get_title() == plan.title
-        description = placeholder.get_description()
-        assert description is not None
-        assert plan.goal in description
 
     _in_gtk_context(check)
 
@@ -186,40 +181,10 @@ def test_b4a_plan_card_empty_state_explains_missing_plan() -> None:
     _in_gtk_context(check)
 
 
-def test_b4a_plan_graph_preview_shows_hides_and_closes_when_plan_clears() -> None:
-    from aconsole.ui.views.sidebar.plan_card import PlanCard
-
-    plan = _demo_plan()
-
-    def check() -> None:
-        card = PlanCard(on_activate=lambda _plan_id: None)
-        card.set_plan(plan)
-        window = Gtk.Window()
-        window.set_child(card)
-        window.present()
-        try:
-            card.show_graph()
-            assert card.graph is not None
-            assert card.graph_popover.get_visible()
-
-            card.hide_graph()
-            assert not card.graph_popover.get_visible()
-
-            card.show_graph()
-            assert card.graph_popover.get_visible()
-            card.set_plan(None)
-            assert not card.graph_popover.get_visible()
-        finally:
-            window.close()
-
-    _in_gtk_context(check)
-
-
 def test_b4a_plan_graph_caps_nodes_and_emphasizes_hovered_node_neighbors() -> None:
     import msgspec
 
     from aconsole.contracts.common import NodeId
-    from aconsole.ui.views.sidebar.plan_card import PlanCard
 
     plan = _demo_plan()
     template = plan.nodes[0]
@@ -237,20 +202,7 @@ def test_b4a_plan_graph_caps_nodes_and_emphasizes_hovered_node_neighbors() -> No
     large_plan = msgspec.structs.replace(plan, nodes=nodes, total=len(nodes))
 
     def check() -> None:
-        card = PlanCard(on_activate=lambda _plan_id: None)
-        card.set_plan(large_plan)
-        window = Gtk.Window()
-        window.set_child(card)
-        window.present()
-        try:
-            card.show_graph()
-            graph = card.graph
-            assert graph is not None
-            assert len(graph.node_buttons) == 30
-            assert len(graph.node_buttons) <= 30
-        finally:
-            card.hide_graph()
-            window.close()
+        assert len(PlanGraph(large_plan, lambda: None).node_buttons) == 30
 
         neighbor_source = msgspec.structs.replace(
             nodes[0], id=NodeId("neighbor-source"), key="N-source", title="Source",
@@ -267,24 +219,13 @@ def test_b4a_plan_graph_caps_nodes_and_emphasizes_hovered_node_neighbors() -> No
         hover_plan = msgspec.structs.replace(
             plan, nodes=(neighbor_source, connected, unrelated), total=3
         )
-        hover_card = PlanCard(on_activate=lambda _plan_id: None)
-        hover_card.set_plan(hover_plan)
-        hover_window = Gtk.Window()
-        hover_window.set_child(hover_card)
-        hover_window.present()
-        try:
-            hover_card.show_graph()
-            graph = hover_card.graph
-            assert graph is not None
-            graph.set_hovered(connected.id)
-            details = graph.details_label.get_text()
-            assert connected.title in details or connected.key in details
-            assert graph.node_buttons[connected.id].get_opacity() == 1.0
-            assert graph.node_buttons[neighbor_source.id].get_opacity() == 1.0
-            assert graph.node_buttons[unrelated.id].get_opacity() == pytest.approx(0.45, abs=0.01)
-        finally:
-            hover_card.hide_graph()
-            hover_window.close()
+        graph = PlanGraph(hover_plan, lambda: None)
+        graph.set_hovered(connected.id)
+        details = graph.details_label.get_text()
+        assert connected.title in details or connected.key in details
+        assert graph.node_buttons[connected.id].get_opacity() == 1.0
+        assert graph.node_buttons[neighbor_source.id].get_opacity() == 1.0
+        assert graph.node_buttons[unrelated.id].get_opacity() == pytest.approx(0.45, abs=0.01)
 
     _in_gtk_context(check)
 
@@ -293,7 +234,6 @@ def test_b4a_plan_graph_tab_action_targets_hovered_nodes_tab() -> None:
     import msgspec
 
     from aconsole.contracts.common import TabId
-    from aconsole.ui.views.sidebar.plan_card import PlanCard
 
     base = _demo_plan()
     tab_id = TabId("01J9Z5W6FX1M2A3B4C5D6E7F8G")
@@ -302,10 +242,7 @@ def test_b4a_plan_graph_tab_action_targets_hovered_nodes_tab() -> None:
 
     def check() -> None:
         opened: list[TabId] = []
-        card = PlanCard(on_activate=lambda _plan_id: None, on_tab=opened.append)
-        card.set_plan(plan)
-        graph = card.graph
-        assert graph is not None
+        graph = PlanGraph(plan, lambda: None, opened.append)
         graph.set_hovered(node.id)
         assert graph.tab_button.get_sensitive()
         graph.tab_button.emit("clicked")
@@ -329,18 +266,25 @@ def test_b4a_window_plan_card_demo(running_app: str) -> None:
 
 
 def test_b4a_window_plan_card_opens_page(running_app: str) -> None:
-    """Clicking the mounted card opens its plan placeholder in MainWindow."""
+    """Clicking the card puts the plan in place of the terminal; a tab or the back button returns."""
     plan = _demo_plan()
 
     def check(window: MainWindow) -> None:
-        assert window.plan_placeholder is None
+        assert window.plan_page is None
         window.plan_card.emit("clicked")
 
-        page = window.plan_placeholder
-        assert isinstance(page, Adw.StatusPage)
-        assert page.get_title() == plan.title
-        description = page.get_description()
-        assert description is not None
-        assert plan.goal in description
+        page = window.plan_page
+        assert isinstance(page, PlanGraph)
+        assert page.plan.id == plan.id
+        assert window.content_view.get_content() is page
+
+        page.close_button.emit("clicked")
+        assert window.plan_page is None
+        assert window.content_view.get_content() is window.terminal_stack
+
+        window.plan_card.emit("clicked")
+        assert window.content_view.get_content() is window.plan_page
+        window.tabs_sidebar.on_row_pressed()
+        assert window.content_view.get_content() is window.terminal_stack
 
     _run_window_probe(running_app, check)

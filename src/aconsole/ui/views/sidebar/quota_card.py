@@ -23,8 +23,8 @@ class QuotaCard(Gtk.Button):
         self.details_dialog: QuotaDialog | None = None
         self._timer: int | None = None
         self._hover_source: int | None = None
-        self.rows: Gtk.Box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
-        self.summary_label: Gtk.Label = Gtk.Label(xalign=0)
+        self.rows: Gtk.Box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+        self.summary_label: Gtk.Label = Gtk.Label(xalign=1)
         self.summary_label.add_css_class("ac-summary-detail")
         self.set_child(self.rows)
         _ = self.connect("clicked", self._clicked)
@@ -41,33 +41,49 @@ class QuotaCard(Gtk.Button):
             self._sync_details()
             return
         self._accounts = accounts
+        parent = self.summary_label.get_parent()
+        if isinstance(parent, Gtk.Box):
+            parent.remove(self.summary_label)
         while (child := self.rows.get_first_child()) is not None:
             self.rows.remove(child)
         self.window_rows.clear()
-        title = Gtk.Label(label=translate("quota.title").upper(), xalign=0)
+        heading = Gtk.Box(spacing=8)
+        title = Gtk.Label(label=translate("quota.title").upper(), xalign=0, hexpand=True)
         title.add_css_class("caption-heading")
-        self.rows.append(title)
-        for account in accounts:
-            label = Gtk.Label(label=self._account_title(account), xalign=0)
-            label.add_css_class("heading")
-            self.rows.append(label)
-            for window in account.quota:
-                row = QuotaRow(window)
-                self.window_rows.append(row)
-                self.rows.append(row)
-            if not account.quota:
-                self.rows.append(Gtk.Label(label=translate("quota.unknown"), xalign=0))
+        heading.append(title)
+        heading.append(self.summary_label)
+        self.rows.append(heading)
+        grid = Gtk.Grid(column_spacing=16, row_spacing=10, column_homogeneous=True)
+        for index, account in enumerate(accounts):
+            column = self._account_column(account)
+            grid.attach(column, index % 2, index // 2, 2 if len(accounts) == 1 else 1, 1)
+        if accounts:
+            self.rows.append(grid)
+        else:
+            empty = Gtk.Label(label=translate("quota.empty"), xalign=0, wrap=True)
+            empty.add_css_class("ac-summary-detail")
+            self.rows.append(empty)
         observations = [window.observed_at for account in accounts for window in account.quota if window.observed_at]
         self.summary_label.set_label(
             translate("quota.observed").format(time=min(observations).astimezone().strftime("%d.%m %H:%M"))
-            if observations else translate("quota.unknown"),
+            if observations else "",
         )
-        self.rows.append(self.summary_label)
         self._sync_details()
 
-    @staticmethod
-    def _account_title(account: AccountView) -> str:
-        return " · ".join(value for value in (account.agent.value.capitalize(), account.plan_label) if value)
+    def _account_column(self, account: AccountView) -> Gtk.Box:
+        column = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=5)
+        name = Gtk.Label(label=account.agent.value.capitalize(), xalign=0)
+        name.add_css_class("ac-summary-name")
+        column.append(name)
+        for window in account.quota:
+            row = QuotaRow(window, compact=True)
+            self.window_rows.append(row)
+            column.append(row)
+        if not account.quota:
+            missing = Gtk.Label(label=translate("quota.unknown"), xalign=0, wrap=True)
+            missing.add_css_class("ac-summary-detail")
+            column.append(missing)
+        return column
 
     def _clicked(self, _button: Gtk.Button) -> None:
         root = self.get_root()

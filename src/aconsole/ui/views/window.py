@@ -30,7 +30,8 @@ from aconsole.ui.views.setup.preferences import PreferencesDialog  # noqa: E402
 from aconsole.ui.views.setup.wizard import SetupWizard  # noqa: E402
 from aconsole.ui.views.shortcuts import ShortcutManager  # noqa: E402
 from aconsole.ui.views.sidebar.messages import _ as translate  # noqa: E402
-from aconsole.ui.views.sidebar.plan_card import PlanCard, create_plan_placeholder  # noqa: E402
+from aconsole.ui.views.sidebar.plan_card import PlanCard  # noqa: E402
+from aconsole.ui.views.sidebar.plan_graph import PlanGraph  # noqa: E402
 from aconsole.ui.views.sidebar.quota_card import QuotaCard  # noqa: E402
 from aconsole.ui.views.tabs.sidebar import TabSidebar  # noqa: E402
 from aconsole.ui.views.terminal.messages import _ as terminal_text  # noqa: E402
@@ -56,23 +57,19 @@ class MainWindow(Adw.ApplicationWindow):
         )
         self.split.add_css_class("ac-split")
         sidebar = Adw.ToolbarView()
-        side_header = Adw.HeaderBar()
-        side_header.set_show_end_title_buttons(False)
-        _ = self.split.bind_property(
-            "collapsed", side_header, "show-start-title-buttons",
-            GObject.BindingFlags.SYNC_CREATE | GObject.BindingFlags.INVERT_BOOLEAN,
-        )
-        sidebar.add_top_bar(side_header)
+        sidebar.add_top_bar(self._build_side_header())
         self.tabs_sidebar: TabSidebar = TabSidebar(tabs)
         self.selection: Gtk.SingleSelection = self.tabs_sidebar.selection
         self.tab_list: Gtk.ListView = self.tabs_sidebar.tab_list
+        self.tabs_sidebar.on_row_pressed = self._show_selected_terminal
         _ = self.connect("notify::is-active", self._focus_changed)
         sidebar.set_content(self._build_summary())
         self.split.set_sidebar(sidebar)
         content = Adw.ToolbarView()
         self.content_view: Adw.ToolbarView = content
         header = Adw.HeaderBar()
-        self._install_settings_menu(header)
+        self.content_header: Adw.HeaderBar = header
+        header.pack_end(Gtk.MenuButton(icon_name="open-menu-symbolic", menu_model=self._settings_menu))
         self.sidebar_button: Gtk.Button = Gtk.Button(icon_name="sidebar-show-symbolic")
         self.sidebar_button.set_action_name("win.toggle-sidebar")
         header.pack_start(self.sidebar_button)
@@ -80,10 +77,7 @@ class MainWindow(Adw.ApplicationWindow):
             "collapsed", self.sidebar_button, "visible", GObject.BindingFlags.SYNC_CREATE,
         )
         self._install_tab_actions()
-        header.set_show_start_title_buttons(False)
-        _ = self.split.bind_property(
-            "collapsed", header, "show-start-title-buttons", GObject.BindingFlags.SYNC_CREATE,
-        )
+        _ = self.split.bind_property("collapsed", header, "visible", GObject.BindingFlags.SYNC_CREATE)
         content.add_top_bar(header)
         self._install_quota_banner(content)
         self._setup_terminals(content)
@@ -111,15 +105,36 @@ class MainWindow(Adw.ApplicationWindow):
         narrow.add_setter(self.split, "show-sidebar", view == "tabs")
         self.add_breakpoint(narrow)
 
+    def _build_side_header(self) -> Adw.HeaderBar:
+        """The only title bar of a wide window: window buttons in one island, then the application name."""
+        self._settings_menu: Gio.Menu = self._build_settings_menu()
+        header = Adw.HeaderBar(show_start_title_buttons=False, show_end_title_buttons=False)
+        self.window_island: Gtk.Box = Gtk.Box(spacing=2)
+        self.window_island.add_css_class("ac-window-island")
+        self.window_island.append(Gtk.WindowControls(side=Gtk.PackType.START))
+        self.window_island.append(Gtk.WindowControls(side=Gtk.PackType.END))
+        menu = Gtk.MenuButton(icon_name="open-menu-symbolic", menu_model=self._settings_menu)
+        menu.set_tooltip_text(setup_text("prefs.title"))
+        self.window_island.append(menu)
+        _ = self.split.bind_property(
+            "collapsed", self.window_island, "visible",
+            GObject.BindingFlags.SYNC_CREATE | GObject.BindingFlags.INVERT_BOOLEAN,
+        )
+        header.pack_start(self.window_island)
+        title = Gtk.Label(label="AConsole")
+        title.add_css_class("ac-app-title")
+        header.set_title_widget(title)
+        return header
+
     def _build_summary(self) -> Gtk.Box:
         self._summary_vm: SidebarSummaryViewModel = SidebarSummaryViewModel(self.tabs.client)
-        self.plan_placeholder: Adw.StatusPage | None = None
+        self.plan_page: PlanGraph | None = None
         body = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         self.tabs_sidebar.set_vexpand(True)
         body.append(self.tabs_sidebar)
         self.summary_card: Gtk.Box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         self.summary_card.add_css_class("ac-summary-card")
-        self.plan_card: PlanCard = PlanCard(on_activate=self._open_plan, on_tab=self._select_tab)
+        self.plan_card: PlanCard = PlanCard(on_activate=self._open_plan)
         self.quota_card: QuotaCard = QuotaCard()
         self.summary_card.append(self.plan_card)
         self.summary_card.append(Gtk.Separator())
@@ -138,6 +153,9 @@ class MainWindow(Adw.ApplicationWindow):
     def _show_selected_terminal(self, *, show_content: bool = True) -> None:
         if self._terminals_disposed:
             return
+        if show_content and self.content_view.get_content() is not self.terminal_stack:
+            self.plan_page = None
+            self.content_view.set_content(self.terminal_stack)
         selected = self.selection.get_selected_item()
         if not isinstance(selected, TabItem):
             self.terminal_stack.set_visible_child_name("empty")
@@ -151,8 +169,6 @@ class MainWindow(Adw.ApplicationWindow):
             self.terminal_pages[tab_id] = page
             _ = self.terminal_stack.add_named(page, tab_id)
         self.terminal_stack.set_visible_child(page)
-        if show_content and self.content_view.get_content() is not self.terminal_stack:
-            self.content_view.set_content(self.terminal_stack)
         page.start()
 
     def _terminal_new(self) -> None:
@@ -164,6 +180,7 @@ class MainWindow(Adw.ApplicationWindow):
             if isinstance(item, TabItem) and str(item.tab_id) == str(tab_id):
                 self.selection.set_selected(index)
                 break
+        self._show_selected_terminal()
 
     def _terminal_close(self, tab_id: str) -> None:
         if self._close_tab_handler is not None:
@@ -196,7 +213,13 @@ class MainWindow(Adw.ApplicationWindow):
         _ = self.quota_card.open_details(self)
 
     def _update_summary(self) -> None:
-        self.plan_card.set_plan(self._summary_vm.plan)
+        plan = self._summary_vm.plan
+        self.plan_card.set_plan(plan)
+        if self.plan_page is not None and plan != self.plan_page.plan:
+            if plan is not None and plan.id == self.plan_page.plan.id:
+                self._open_plan(plan.id)
+            else:
+                self._show_selected_terminal()
         self.quota_card.tabs = self._summary_vm.tabs
         self.quota_card.set_accounts(self._summary_vm.accounts)
         self.quota_banner.set_revealed(any(
@@ -207,8 +230,11 @@ class MainWindow(Adw.ApplicationWindow):
     def _open_plan(self, plan_id: PlanId) -> None:
         plan = self._summary_vm.plan
         if plan is not None and plan.id == plan_id:
-            self.plan_placeholder = create_plan_placeholder(plan)
-            self.content_view.set_content(self.plan_placeholder)
+            self.plan_page = PlanGraph(plan, self._close_plan, self._select_tab)
+            self.content_view.set_content(self.plan_page)
+
+    def _close_plan(self) -> None:
+        self._show_selected_terminal()
 
     def _install_tab_actions(self) -> None:
         toggle = Gio.SimpleAction.new("toggle-sidebar", None)
@@ -284,7 +310,7 @@ class MainWindow(Adw.ApplicationWindow):
         elif action_id == "settings":
             self._open_preferences()
 
-    def _install_settings_menu(self, header: Adw.HeaderBar) -> None:
+    def _build_settings_menu(self) -> Gio.Menu:
         menu = Gio.Menu()
         for name, label in (
             ("palette", palette_text("palette.title")),
@@ -295,8 +321,7 @@ class MainWindow(Adw.ApplicationWindow):
             _ = action.connect("activate", self._settings_menu_action)
             self.add_action(action)
             menu.append(label, f"win.{name}")
-        button = Gtk.MenuButton(icon_name="open-menu-symbolic", menu_model=menu)
-        header.pack_end(button)
+        return menu
 
     def _settings_menu_action(self, action: Gio.SimpleAction, _parameter: object) -> None:
         if action.get_name() == "setup":

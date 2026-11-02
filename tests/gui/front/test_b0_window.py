@@ -80,16 +80,13 @@ def _assert_header_state(window: MainWindow, *, collapsed: bool) -> None:
     assert window.split.get_collapsed() is collapsed
     headers = _headerbars(window)
     assert len(headers) == 2
-    sidebar_headers = [header for header in headers if not header.get_show_end_title_buttons()]
-    main_headers = [header for header in headers if header.get_show_end_title_buttons()]
-    assert len(sidebar_headers) == 1
-    assert len(main_headers) == 1
-    sidebar_header = sidebar_headers[0]
-    main_header = main_headers[0]
-    assert sidebar_header.get_show_start_title_buttons() is (not collapsed)
+    main_header = window.content_header
+    sidebar_header = next(header for header in headers if header is not main_header)
+    # Wide: the window buttons live in the left column's island and the terminal fills the right one.
+    assert not sidebar_header.get_show_start_title_buttons()
     assert not sidebar_header.get_show_end_title_buttons()
-    assert main_header.get_show_end_title_buttons()
-    assert main_header.get_show_start_title_buttons() is collapsed
+    assert window.window_island.get_visible() is (not collapsed)
+    assert main_header.get_visible() is collapsed
     assert all(header.get_decoration_layout() is None for header in headers)
 
 

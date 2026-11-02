@@ -79,7 +79,7 @@ def _preview_app(client: CoreClient, request: SnapshotRequest | None, scenario: 
                 super()._capture()
                 return
             if snapshot.view == "plan-graph":
-                window.plan_card.show_graph()
+                window.plan_card.emit("clicked")
             elif snapshot.view == "palette":
                 window.app_vm.dispatch("palette")
                 if window.palette_dialog is not None:
@@ -105,7 +105,7 @@ def _preview_app(client: CoreClient, request: SnapshotRequest | None, scenario: 
                 return window.setup_wizard
             if snapshot.view == "prefs":
                 return window.preferences_dialog
-            return window.plan_card.graph_popover
+            return window
 
         def _arm_preview(self) -> bool:
             window = self.window

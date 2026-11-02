@@ -11,6 +11,8 @@ _MESSAGES = {
     "tabs.rename": ("Rename", "Переименовать"),
     "tabs.close": ("Close…", "Закрыть…"),
     "tabs.wait_minutes": ("{minutes} min", "{minutes} мин"),
+    "tabs.wait_hours": ("{hours} h", "{hours} ч"),
+    "tabs.wait_days": ("{days} d", "{days} д"),
     "tabs.reorder_error": (
         "Could not finish reordering. Tab order may have changed",
         "Не удалось завершить перестановку. Порядок вкладок мог измениться",  # noqa: RUF001 -- Russian UI text

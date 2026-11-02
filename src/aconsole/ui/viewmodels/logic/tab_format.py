@@ -31,12 +31,9 @@ class TabPresentation:
     waiting_minutes: int | None
 
 
-def format_tab(tab: TabView, accounts: tuple[AccountView, ...], now: datetime) -> TabPresentation:
+def format_tab(tab: TabView, _accounts: tuple[AccountView, ...], now: datetime) -> TabPresentation:
     """Convert a tab snapshot into the visible row fields."""
-    account = next((item for item in accounts if item.id == tab.account_id), None)
     section_title = tab.agent.value.upper()
-    if account is not None and account.plan_label:
-        section_title = f"{section_title} · {account.plan_label}"
     return TabPresentation(
         section_key=f"{tab.agent.value}:{tab.account_id or ''}",
         section_title=section_title,

@@ -1,4 +1,4 @@
-"""Native plan-node preview with dependency arrows and node details."""
+"""The plan page shown in place of the terminal: nodes, dependency curves and node details."""
 
 from __future__ import annotations
 
@@ -8,10 +8,10 @@ from typing import TYPE_CHECKING
 import gi
 
 gi.require_version("Gtk", "4.0")
-from gi.repository import Gtk, Pango  # noqa: E402
+from gi.repository import GLib, Gtk, Pango  # noqa: E402
 
 from aconsole.contracts.app import PlanNodeView, PlanView  # noqa: E402
-from aconsole.contracts.common import NodeId, PlanId, TabId  # noqa: E402
+from aconsole.contracts.common import NodeId, TabId  # noqa: E402
 from aconsole.ui.viewmodels.logic.plan_layout import PlanNodePosition, layout_plan  # noqa: E402
 from aconsole.ui.views.sidebar.messages import _ as translate  # noqa: E402
 
@@ -19,14 +19,19 @@ if TYPE_CHECKING:
     import cairo
 
 
+_NODE_WIDTH = 128
+_NODE_HEIGHT = 44
+_DETAILS_HEIGHT = 96  # room for every detail line, so hovering a node never moves the graph
+
+
 class PlanGraph(Gtk.Box):
     def __init__(
-        self, plan: PlanView, on_open: Callable[[PlanId], None], on_tab: Callable[[TabId], None] | None = None,
+        self, plan: PlanView, on_close: Callable[[], None], on_tab: Callable[[TabId], None] | None = None,
     ) -> None:
-        super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=12)
-        self.add_css_class("ac-plan-preview")
+        super().__init__(orientation=Gtk.Orientation.VERTICAL)
+        self.add_css_class("ac-plan-page")
         self.plan: PlanView = plan
-        self._on_open: Callable[[PlanId], None] = on_open
+        self._on_close: Callable[[], None] = on_close
         self._on_tab: Callable[[TabId], None] | None = on_tab
         self._hovered: NodeId | None = None
         self._selected: NodeId | None = None
@@ -35,18 +40,32 @@ class PlanGraph(Gtk.Box):
             position.node_id: position for position in layout_plan(tuple(self._nodes.values()))
         }
         self.node_buttons: dict[NodeId, Gtk.Button] = {}
-        heading = Gtk.Label(label=plan.title, xalign=0, ellipsize=Pango.EllipsizeMode.END)
-        heading.add_css_class("heading")
-        self.append(heading)
+        self.append(self._build_heading())
         self._setup_canvas()
-        button = Gtk.Button(label=translate("plan.open"))
-        _ = button.connect("clicked", self._open)
-        self.append(button)
+
+    def _build_heading(self) -> Gtk.Box:
+        heading = Gtk.Box(spacing=12)
+        heading.add_css_class("ac-plan-heading")
+        text = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2, hexpand=True)
+        title = Gtk.Label(label=self.plan.title, xalign=0, ellipsize=Pango.EllipsizeMode.END)
+        title.add_css_class("title-2")
+        text.append(title)
+        progress = translate("plan.card.progress").format(done=self.plan.done, total=self.plan.total)
+        summary = Gtk.Label(label=progress, xalign=0, ellipsize=Pango.EllipsizeMode.END)
+        summary.add_css_class("ac-summary-detail")
+        text.append(summary)
+        heading.append(text)
+        self.close_button: Gtk.Button = Gtk.Button(label=translate("plan.back"), valign=Gtk.Align.CENTER)
+        self.close_button.add_css_class("pill")
+        self.close_button.add_css_class("ac-plan-back")
+        _ = self.close_button.connect("clicked", self._close)
+        heading.append(self.close_button)
+        return heading
 
     def _setup_canvas(self) -> None:
-        width = max((position.x for position in self._positions.values()), default=0) + 144
-        height = max((position.y for position in self._positions.values()), default=0) + 56
-        overlay = Gtk.Overlay()
+        width = max((position.x for position in self._positions.values()), default=0) + _NODE_WIDTH + 16
+        height = max((position.y for position in self._positions.values()), default=0) + _NODE_HEIGHT + 12
+        overlay = Gtk.Overlay(halign=Gtk.Align.CENTER, valign=Gtk.Align.CENTER)
         self.drawing: Gtk.DrawingArea = Gtk.DrawingArea(content_width=width, content_height=height)
         self.drawing.set_draw_func(self._draw)
         overlay.set_child(self.drawing)
@@ -56,7 +75,8 @@ class PlanGraph(Gtk.Box):
             button = Gtk.Button()
             label = Gtk.Label(label=f"{node.key}\n{node.title}", ellipsize=Pango.EllipsizeMode.END, max_width_chars=16)
             button.set_child(label)
-            button.set_size_request(128, 44)
+            button.set_size_request(_NODE_WIDTH, _NODE_HEIGHT)
+            button.add_css_class("ac-plan-node")
             button.add_css_class(f"ac-plan-{node.status.value}")
             if node.ready:
                 button.add_css_class("ac-plan-ready")
@@ -71,27 +91,26 @@ class PlanGraph(Gtk.Box):
             self.node_buttons[node_id] = button
             position = self._positions[node_id]
             fixed.put(button, position.x, position.y)
-        scroll = Gtk.ScrolledWindow(
-            min_content_width=320, max_content_width=440, min_content_height=160, max_content_height=320,
-            propagate_natural_width=True, propagate_natural_height=True,
-        )
+        scroll = Gtk.ScrolledWindow(hexpand=True, vexpand=True)
         scroll.set_child(overlay)
-        body = Gtk.Box(spacing=12)
-        body.append(scroll)
+        self.append(scroll)
         self.details_label: Gtk.Label = Gtk.Label(label=translate("plan.select_node"), xalign=0, yalign=0, wrap=True)
-        self.details_label.set_width_chars(20)
-        self.details_label.set_max_width_chars(24)
-        details = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+        self.details_label.add_css_class("ac-plan-details-text")
+        self.details_label.set_hexpand(True)
+        self.details_label.set_size_request(-1, _DETAILS_HEIGHT)
+        details = Gtk.Box(spacing=16)
+        details.add_css_class("ac-plan-details")
         details.append(self.details_label)
-        self.tab_button: Gtk.Button = Gtk.Button(label=translate("plan.go_tab"))
+        self.tab_button: Gtk.Button = Gtk.Button(label=translate("plan.go_tab"), valign=Gtk.Align.START)
+        self.tab_button.add_css_class("pill")
+        self.tab_button.add_css_class("ac-plan-back")
         self.tab_button.set_sensitive(False)
         _ = self.tab_button.connect("clicked", self._go_tab)
         details.append(self.tab_button)
-        body.append(details)
-        self.append(body)
+        self.append(details)
 
-    def _open(self, _button: Gtk.Button) -> None:
-        self._on_open(self.plan.id)
+    def _close(self, _button: Gtk.Button) -> None:
+        self._on_close()
 
     def _node_clicked(self, _button: Gtk.Button, node_id: NodeId) -> None:
         self.set_hovered(node_id)
@@ -140,11 +159,16 @@ class PlanGraph(Gtk.Box):
                          translate("plan.blocks").format(nodes=children or "—")))
             if node.lease_expires_at is not None:
                 text.append(translate("plan.lease").format(time=node.lease_expires_at.astimezone().strftime("%H:%M")))
-            self.details_label.set_label("\n".join(text))
+            head, *rest = text
+            self.details_label.set_markup("\n".join((f"<b>{GLib.markup_escape_text(head)}</b>",
+                                                     *(GLib.markup_escape_text(line) for line in rest))))
         self.drawing.queue_draw()
 
     def _draw(self, _area: Gtk.DrawingArea, context: cairo.Context[cairo.Surface], _width: int, _height: int) -> None:
-        _found, color = self.get_style_context().lookup_color("accent_bg_color")
+        style = self.get_style_context()
+        _found, line = style.lookup_color("window_fg_color")
+        _found, accent = style.lookup_color("accent_bg_color")
+        middle_y = _NODE_HEIGHT / 2
         for node in self._nodes.values():
             target = self._positions[node.id]
             for parent_id in node.depends_on:
@@ -152,18 +176,14 @@ class PlanGraph(Gtk.Box):
                 if source is None:
                     continue
                 active = self._hovered is not None and self._hovered in (node.id, parent_id)
-                opacity = 1 if self._hovered is None or active else 0.45
-                context.set_source_rgba(color.red, color.green, color.blue, color.alpha * opacity)
-                context.set_line_width(2.5 if active else 1.5)
-                start_x, end_x = source.x + 128, target.x
-                middle = (start_x + end_x) / 2
-                context.move_to(start_x, source.y + 22)
-                context.line_to(middle, source.y + 22)
-                context.line_to(middle, target.y + 22)
-                context.line_to(end_x, target.y + 22)
+                if active:
+                    context.set_source_rgba(accent.red, accent.green, accent.blue, 1)
+                else:
+                    context.set_source_rgba(line.red, line.green, line.blue, 0.08 if self._hovered else 0.22)
+                context.set_line_width(2 if active else 1.25)
+                start_x, end_x = source.x + _NODE_WIDTH, target.x
+                start_y, end_y = source.y + middle_y, target.y + middle_y
+                bend = (end_x - start_x) / 2
+                context.move_to(start_x, start_y)
+                context.curve_to(start_x + bend, start_y, end_x - bend, end_y, end_x, end_y)
                 context.stroke()
-                context.move_to(end_x, target.y + 22)
-                context.line_to(end_x - 6, target.y + 18)
-                context.line_to(end_x - 6, target.y + 26)
-                context.close_path()
-                context.fill()

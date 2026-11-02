@@ -11,6 +11,17 @@ from aconsole.ui.bootstrap import spawn_task  # noqa: E402
 from aconsole.ui.viewmodels.tabs_vm import MAX_TAB_TITLE_LENGTH, TabItem, TabsViewModel  # noqa: E402
 from aconsole.ui.views.tabs.messages import _ as translate  # noqa: E402
 
+_MINUTES_PER_HOUR = 60
+_MINUTES_PER_DAY = 24 * 60
+
+
+def _wait_text(minutes: int) -> str:
+    if minutes >= _MINUTES_PER_DAY:
+        return translate("tabs.wait_days").format(days=minutes // _MINUTES_PER_DAY)
+    if minutes >= _MINUTES_PER_HOUR:
+        return translate("tabs.wait_hours").format(hours=minutes // _MINUTES_PER_HOUR)
+    return translate("tabs.wait_minutes").format(minutes=minutes)
+
 
 class TabRow(Gtk.Box):
     def __init__(self, tabs: TabsViewModel) -> None:
@@ -24,6 +35,7 @@ class TabRow(Gtk.Box):
         self._settings_notify: int | None = None
         self.status_spinner: Gtk.Spinner = Gtk.Spinner()
         self.status_spinner.set_size_request(12, 12)
+        self._status_class: str | None = None
         self.status_label: Gtk.Label = Gtk.Label()
         self.status_label.set_valign(Gtk.Align.CENTER)
         self.status_label.set_size_request(16, 16)
@@ -34,6 +46,7 @@ class TabRow(Gtk.Box):
         text.set_hexpand(True)
         self.title_label: Gtk.EditableLabel = Gtk.EditableLabel()
         self.title_label.set_hexpand(True)
+        self.title_label.add_css_class("ac-tab-name")
         self.title_label.set_editable(False)
         self.title_label.set_tooltip_text(translate("tabs.name"))
         self.title_label.update_property(
@@ -71,6 +84,7 @@ class TabRow(Gtk.Box):
         self.waiting_label: Gtk.Label = Gtk.Label()
         self.waiting_label.add_css_class("numeric")
         self.waiting_label.add_css_class("ac-tab-wait")
+        self.waiting_label.set_halign(Gtk.Align.END)
         trailing = Gtk.Overlay()
         trailing.set_child(self.close_button)
         trailing.add_overlay(self.waiting_label)
@@ -163,10 +177,14 @@ class TabRow(Gtk.Box):
         self.subtitle_label.set_tooltip_text(self.subtitle_label.get_label())
         minutes = int(str(item.waiting_minutes))
         self.waiting_label.set_visible(minutes >= 0)
-        self.waiting_label.set_label(translate("tabs.wait_minutes").format(minutes=minutes) if minutes >= 0 else "")
+        self.waiting_label.set_label(_wait_text(minutes) if minutes >= 0 else "")
         self.close_button.set_tooltip_text(translate("tabs.close"))
         self.status_label.set_label(str(item.status_symbol))
         status = translate(f"tabs.status.{item.status_code or 'unknown'}")
+        if self._status_class is not None:
+            self.status_label.remove_css_class(self._status_class)
+        self._status_class = f"ac-status-{item.status_code or 'unknown'}"
+        self.status_label.add_css_class(self._status_class)
         self.status_label.set_tooltip_text(status)
         self.status_label.update_property(
             [Gtk.AccessibleProperty.LABEL], [GObject.Value(GObject.TYPE_STRING, status)],

@@ -153,7 +153,7 @@ def test_b2_tab_section_and_header_follow_tab_and_account_updates() -> None:
             )
         )
 
-        expected_title = f"{updated.agent.value.upper()} · Team"
+        expected_title = updated.agent.value.upper()
         await asyncio.sleep(0.1)
         header_titles = [
             widget.get_text()
