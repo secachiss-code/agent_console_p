@@ -142,7 +142,6 @@ class Podman:
                 raise ValueError(message)
             argv.extend(("-e", f"{key}={value}"))
         argv.append(request.name)
-        argv.append("--")
         argv.extend(request.command)
         return tuple(argv)
 

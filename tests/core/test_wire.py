@@ -206,7 +206,7 @@ def test_tab_runs_claude_with_hooks_and_a_hook_moves_it(tmp_path: Path, monkeypa
         return spec, status, again, accepted
 
     spec, status, again, accepted = asyncio.run(scenario())
-    agent = spec.argv[spec.argv.index("--", spec.argv.index("exec")) + 1 :]
+    agent = spec.argv[spec.argv.index("agent-claude") + 1 :]
     assert spec.argv[spec.argv.index("--user") + 1] == "sas"
     assert "agent-claude" in spec.argv
     assert agent[:2] == ("/bin/sh", "-c")

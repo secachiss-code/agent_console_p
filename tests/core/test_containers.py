@@ -58,7 +58,7 @@ def test_containers_fake_podman_inspect_start_exec_and_orphans(tmp_path: Path, m
     assert spec[spec.index("--workdir") + 1] == "/home/sas/Projects"
     assert "ACONSOLE_TAB=tab-1" in spec
     assert "PATH=/opt/bin:/usr/bin" in spec
-    assert spec[-5:] == ("agent-claude", "--", "claude", "--session-id", "s1")
+    assert spec[-4:] == ("agent-claude", "claude", "--session-id", "s1")
     pids = podman.orphans("agent-claude", "tab-1")
     assert pids == (42, 7)
     recorded = log.read_text(encoding="utf-8")
