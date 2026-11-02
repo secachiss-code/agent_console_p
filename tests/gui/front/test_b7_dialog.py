@@ -263,8 +263,7 @@ async def _reopen_after_success(
     context: PaletteQuery,
     window: Adw.ApplicationWindow,
 ) -> None:
-    await asyncio.sleep(0.05)
-    assert not dialog.viewmodel.opened
+    await _until(lambda: not dialog.viewmodel.opened)
     dialog.open(context, window)
     assert dialog.stack.get_sensitive()
     assert dialog.back_button.get_sensitive()

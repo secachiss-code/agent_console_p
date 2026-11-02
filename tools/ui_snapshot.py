@@ -35,7 +35,11 @@ def main(argv: list[str]) -> int:
     from aconsole.__main__ import run_ui  # noqa: PLC0415
 
     parser = argparse.ArgumentParser()
-    _ = parser.add_argument("--scenario", required=True, choices=("demo", "empty", "stress", "errors"))
+    _ = parser.add_argument(
+        "--scenario",
+        required=True,
+        choices=("demo", "empty", "stress", "errors", "waiting", "quota-critical", "approval-expired"),
+    )
     _ = parser.add_argument(
         "--view", required=True, choices=("window", "tabs", "plan-graph", "quota-dialog", "palette", "setup", "prefs"),
     )

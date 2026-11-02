@@ -31,7 +31,8 @@ _DEFAULT_TIMEOUT_S = 10.0
 _LONG_TIMEOUT_S = 60.0
 _CANCEL_GRACE_S = 1.0
 _MS_PER_S = 1000
-_READY_DEADLINE_S = 5.0
+# The first start upgrades the database before the socket opens.
+_READY_DEADLINE_S = 20.0
 _CATCH_UP_S = 0.01
 _CATCH_UP_DEADLINE_S = 1.0
 _BACKOFF_S = (0.05, 0.1, 0.2, 0.4, 0.8)
@@ -113,6 +114,7 @@ class CoreClient:
     _reconnect_task: asyncio.Task[None] | None
     _resync_task: asyncio.Task[None] | None
     _process: asyncio.subprocess.Process | None
+    keep_daemon: bool
 
     def __init__(self, path: str, *, timeout_s: float = _DEFAULT_TIMEOUT_S) -> None:
         self.path = path
@@ -131,6 +133,8 @@ class CoreClient:
         self._reconnect_task = None
         self._resync_task = None
         self._process = None
+        # The fake dies with its UI. The real core stays until its idle timer, so a new window finds it.
+        self.keep_daemon = False
 
     @property
     def daemon_pid(self) -> int | None:
@@ -187,7 +191,7 @@ class CoreClient:
             with contextlib.suppress(asyncio.CancelledError, ConnectionError, CoreCallError, CoreTimeoutError, OSError):
                 await task
         self._drain_pending()
-        if self._process is not None and self._process.returncode is None:
+        if self._process is not None and self._process.returncode is None and not self.keep_daemon:
             _ = self._process.terminate()
             _ = await self._process.wait()
 

@@ -17,6 +17,7 @@ if TYPE_CHECKING:
     from aconsole.ui.views.app import AConsoleApp, SnapshotRequest
 
 _IPC_P99_LIMIT_MS = 5.0
+_SCENARIOS = ("demo", "empty", "stress", "errors", "waiting", "quota-critical", "approval-expired")
 
 
 class _UiArguments(argparse.Namespace):
@@ -37,9 +38,6 @@ def main(argv: list[str]) -> int:
             _ = sys.stdout.write("ipc p99 is 5 ms or more\n")
             return 1
         return 0
-    if not argv:
-        _ = sys.stdout.write("usage: python -m aconsole --fake SCENARIO or --socket PATH\n")
-        return 2
     return run_ui(argv)
 
 
@@ -48,13 +46,14 @@ def run_ui(
     *,
     app_factory: Callable[[CoreClient, SnapshotRequest | None, str | None], AConsoleApp] | None = None,
 ) -> int:
-    """Launch a client with an isolated daemon in fake mode."""
+    """No arguments: the real core, started if needed. `--fake` is an isolated daemon, `--socket` a running one."""
     from aconsole.ui.bootstrap import run_app  # noqa: PLC0415
     from aconsole.ui.client.core_client import CoreClient  # noqa: PLC0415
+    from aconsole.ui.client.daemon import core_command, core_socket  # noqa: PLC0415
     from aconsole.ui.views.app import AConsoleApp, SnapshotRequest  # noqa: PLC0415
 
     parser = argparse.ArgumentParser()
-    _ = parser.add_argument("--fake", "--fake-core", choices=("demo", "empty", "stress", "errors"))
+    _ = parser.add_argument("--fake", "--fake-core", choices=_SCENARIOS)
     _ = parser.add_argument("--socket")
     _ = parser.add_argument(
         "--snapshot-view", choices=("window", "tabs", "plan-graph", "quota-dialog", "palette", "setup", "prefs"),
@@ -63,8 +62,6 @@ def run_ui(
     _ = parser.add_argument("--size", default="1280x800")
     _ = parser.add_argument("--out", type=Path)
     args = parser.parse_args(argv, namespace=_UiArguments())
-    if not args.fake and not args.socket:
-        parser.error("provide --fake or --socket")
     try:
         width, height = (int(part) for part in args.size.split("x"))
     except ValueError:
@@ -78,14 +75,22 @@ def run_ui(
         snapshot = SnapshotRequest(
             view=args.snapshot_view, theme=args.theme, width=width, height=height, out=args.out,
         )
+    real = not args.fake and not args.socket
     with tempfile.TemporaryDirectory(prefix="aconsole-ui-") as directory:
-        client = CoreClient(args.socket or str(Path(directory) / "core.sock"))
-        app = AConsoleApp(client, snapshot, scenario=args.fake) if app_factory is None else app_factory(
-            client, snapshot, args.fake,
-        )
+        path = core_socket() if real else args.socket or str(Path(directory) / "core.sock")
+        client = CoreClient(path)
+        if app_factory is not None:
+            app = app_factory(client, snapshot, args.fake)
+        else:
+            command = core_command() if real else None
+            app = AConsoleApp(client, snapshot, scenario=args.fake, core_command=command)
         result = run_app(lambda: app, ["aconsole"])
     return 1 if app.failed else result
 
 
+def console() -> None:
+    raise SystemExit(main(sys.argv[1:]))
+
+
 if __name__ == "__main__":
-    sys.exit(main(sys.argv[1:]))
+    console()

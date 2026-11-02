@@ -37,12 +37,18 @@ class SnapshotRequest:
 
 class AConsoleApp(Adw.Application):
     def __init__(
-        self, client: CoreClient, snapshot: SnapshotRequest | None = None, *, scenario: str | None = None,
+        self,
+        client: CoreClient,
+        snapshot: SnapshotRequest | None = None,
+        *,
+        scenario: str | None = None,
+        core_command: list[str] | None = None,
     ) -> None:
         super().__init__(application_id="io.github.aconsole.AConsole", flags=Gio.ApplicationFlags.NON_UNIQUE)
         self.client: CoreClient = client
         self.snapshot_request: SnapshotRequest | None = snapshot
         self.scenario: str | None = scenario
+        self.core_command: list[str] | None = core_command
         self.window: MainWindow | None = None
         self.failed: bool = False
         self._starting: bool = False
@@ -68,7 +74,11 @@ class AConsoleApp(Adw.Application):
 
     async def _open(self) -> None:
         try:
-            if self.scenario is None:
+            if self.core_command is not None:
+                self.client.keep_daemon = True
+                Path(self.client.path).parent.mkdir(parents=True, exist_ok=True)
+                _ = await self.client.start_daemon(self.core_command, runtime=Path(self.client.path).parents[1])
+            elif self.scenario is None:
                 _ = await self.client.connect()
             else:
                 _ = await self.client.start_daemon([
