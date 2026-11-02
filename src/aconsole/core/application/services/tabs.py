@@ -287,6 +287,7 @@ class TabService:
         self._approvals_mode: str = "inline"
         self._approval_hold_seconds: int = 540
         self._setup_completed = False
+        self._quota_display: str = "used"
         self._failing_checks = 0
         self._warnings = 0
         # Receives tab_added / tab_updated / tab_removed on the thread that changed the tab.
@@ -409,6 +410,13 @@ class TabService:
             return None
         return tab.ingest
 
+    def codex_turn(self, cwd: str, *, working: bool) -> None:
+        """A Codex session in ``cwd`` started or ended a turn. Moves the running Codex tabs of that directory."""
+        event = "UserPromptSubmit" if working else "agent-turn-complete"
+        for tab in tuple(self._tabs.values()):
+            if tab.agent is AgentKind.CODEX and tab.running and tab.worktree == cwd:
+                _ = self.apply_hook(tab.id, event)
+
     def claim_sidecar(self, tab_id: str, token: str) -> bool:
         """Accept the one-shot sidecar token of `tab/launchSpec` once. A second use, or any other token, fails."""
         tab = self._tabs.get(tab_id)
@@ -443,6 +451,7 @@ class TabService:
             setup_completed=found.setup_completed,
             approvals_mode="native" if found.approvals_mode == "native" else "inline",
             approval_hold_seconds=found.approval_hold_seconds,
+            quota_display="remaining" if found.quota_display == "remaining" else "used",
         )
 
     def update_settings(self, params: SettingsUpdateParams) -> Settings:
@@ -457,6 +466,7 @@ class TabService:
         self._setup_completed = nxt.setup_completed
         self._approvals_mode = nxt.approvals_mode
         self._approval_hold_seconds = nxt.approval_hold_seconds
+        self._quota_display = nxt.quota_display
         store = self._store
         if store is not None:
             store.save_setup(completed=nxt.setup_completed, rev=nxt.rev)
@@ -464,13 +474,17 @@ class TabService:
             save_approval = getattr(store, "save_approval_settings", None)
             if callable(save_approval):
                 _ = save_approval(mode=nxt.approvals_mode, hold=nxt.approval_hold_seconds, rev=nxt.rev)
+            save_display = getattr(store, "save_quota_display", None)
+            if callable(save_display):
+                _ = save_display(display=nxt.quota_display, rev=nxt.rev)
         return nxt
 
     def _stored_settings(self) -> TabDirectory:
         store = self._store
         if store is None:
             return TabDirectory(worktrees_dir=None, rev=self._settings_rev, setup_completed=self._setup_completed,
-                approvals_mode=self._approvals_mode, approval_hold_seconds=self._approval_hold_seconds)
+                approvals_mode=self._approvals_mode, approval_hold_seconds=self._approval_hold_seconds,
+                quota_display=self._quota_display)
         return store.settings()
 
     def _route_settings_get(self, raw: bytes) -> Settings:

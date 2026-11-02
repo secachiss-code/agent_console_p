@@ -20,8 +20,12 @@ def _detail(text: str) -> Gtk.Label:
 
 
 class QuotaDialog(Adw.Dialog):
-    def __init__(self, accounts: tuple[AccountView, ...], tabs: tuple[TabView, ...], summary: str) -> None:
-        super().__init__(title=translate("quota.title"), content_width=460)
+    def __init__(
+        self, accounts: tuple[AccountView, ...], tabs: tuple[TabView, ...], summary: str, display: str = "used",
+    ) -> None:
+        title = translate("quota.title_left" if display == "remaining" else "quota.title")
+        super().__init__(title=title, content_width=460)
+        self._display: str = display
         self._accounts: tuple[AccountView, ...] = ()
         self._tab_signature: tuple[tuple[str, str | None, str], ...] = ()
         self._summary: str = ""
@@ -40,6 +44,14 @@ class QuotaDialog(Adw.Dialog):
         _ = self.connect("map", self._mapped)
         _ = self.connect("unmap", self._unmapped)
         self.update_accounts(accounts, tabs, summary)
+
+    def set_display(self, display: str) -> None:
+        """Empty the content: the next `update_accounts` rebuilds it with the new choice."""
+        if display != self._display:
+            self._display = display
+            self.set_title(translate("quota.title_left" if display == "remaining" else "quota.title"))
+            while (child := self.content.get_first_child()) is not None:
+                self.content.remove(child)
 
     def update_accounts(self, accounts: tuple[AccountView, ...], tabs: tuple[TabView, ...], summary: str) -> None:
         signature = tuple(
@@ -69,7 +81,7 @@ class QuotaDialog(Adw.Dialog):
         heading.add_css_class("heading")
         group.append(heading)
         for window in account.quota:
-            row = QuotaRow(window)
+            row = QuotaRow(window, display=self._display)
             self.window_rows.append(row)
             group.append(row)
             if window.resets_at is not None:

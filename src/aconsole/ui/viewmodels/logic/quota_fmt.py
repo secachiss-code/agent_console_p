@@ -12,6 +12,13 @@ def format_percent(value: float | None, *, estimated: bool = False) -> str:
     return f"{prefix}{value:.0f} %"
 
 
+def shown_percent(used: float | None, display: str) -> float | None:
+    """What the user chose to read: the part used, or the part left."""
+    if used is None or display != "remaining":
+        return used
+    return max(0.0, 100.0 - used)
+
+
 def quota_level(value: float | None) -> str:
     """Classify usage using the design's warning and critical thresholds."""
     if value is None:

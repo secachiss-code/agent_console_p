@@ -53,6 +53,13 @@
           "minimum": 0,
           "type": "number"
         },
+        "quota_display": {
+          "default": "used",
+          "enum": [
+            "remaining",
+            "used"
+          ]
+        },
         "quota_warn_pct": {
           "default": 80,
           "maximum": 100,

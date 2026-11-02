@@ -30,6 +30,7 @@ class Settings(msgspec.Struct, frozen=True, kw_only=True):
     keymap_overrides: dict[str, str] = msgspec.field(default_factory=dict)
     codegraph_languages: frozenset[str] = msgspec.field(default_factory=_languages)
     setup_completed: bool = False
+    quota_display: Literal["used", "remaining"] = "used"
 
 
 class SettingsPatch(msgspec.Struct, frozen=True, kw_only=True):
@@ -49,6 +50,7 @@ class SettingsPatch(msgspec.Struct, frozen=True, kw_only=True):
     keymap_overrides: dict[str, str] | UnsetType = UNSET
     codegraph_languages: frozenset[str] | UnsetType = UNSET
     setup_completed: bool | UnsetType = UNSET
+    quota_display: Literal["used", "remaining"] | UnsetType = UNSET
 
 
 def _keep[T](incoming: T | UnsetType, current: T) -> T:
@@ -77,6 +79,7 @@ def commit_settings(current: Settings, patch: SettingsPatch) -> Settings:
         keymap_overrides=_keep(patch.keymap_overrides, current.keymap_overrides),
         codegraph_languages=_keep(patch.codegraph_languages, current.codegraph_languages),
         setup_completed=_keep(patch.setup_completed, current.setup_completed),
+        quota_display=_keep(patch.quota_display, current.quota_display),
     )
     if merged == current:
         return current

@@ -9,7 +9,7 @@ gi.require_version("Gtk", "4.0")
 from gi.repository import Gtk  # noqa: E402
 
 from aconsole.contracts.app import QuotaWindowView  # noqa: E402
-from aconsole.ui.viewmodels.logic.quota_fmt import format_percent, quota_level  # noqa: E402
+from aconsole.ui.viewmodels.logic.quota_fmt import format_percent, quota_level, shown_percent  # noqa: E402
 from aconsole.ui.viewmodels.logic.time_fmt import format_remaining  # noqa: E402
 from aconsole.ui.views.sidebar.messages import _ as translate  # noqa: E402
 
@@ -17,7 +17,7 @@ from aconsole.ui.views.sidebar.messages import _ as translate  # noqa: E402
 class QuotaRow(Gtk.Box):
     """`compact`: name and percent over a thin bar, for a column of the card. Otherwise one line with the countdown."""
 
-    def __init__(self, window: QuotaWindowView, *, compact: bool = False) -> None:
+    def __init__(self, window: QuotaWindowView, *, compact: bool = False, display: str = "used") -> None:
         super().__init__(spacing=3 if compact else 8)
         self.window: QuotaWindowView = window
         self.add_css_class("ac-quota-row")
@@ -25,7 +25,8 @@ class QuotaRow(Gtk.Box):
         self.key_label: Gtk.Label = Gtk.Label(label=translate(f"quota.{window.key}"), xalign=0)
         self.key_label.add_css_class("ac-quota-key")
         self.level_bar: Gtk.LevelBar = Gtk.LevelBar(min_value=0, max_value=1, hexpand=True)
-        self.level_bar.set_value(window.used_pct / 100 if window.used_pct is not None else 0)
+        shown = shown_percent(window.used_pct, display)
+        self.level_bar.set_value(shown / 100 if shown is not None else 0)
         self.level_bar.add_offset_value("low", 0.8)
         self.level_bar.add_offset_value("high", 0.95)
         self.level_bar.set_visible(window.used_pct is not None)
@@ -33,7 +34,7 @@ class QuotaRow(Gtk.Box):
             self.set_tooltip_text(translate("quota.unknown.copy"))
         self.level_bar.set_valign(Gtk.Align.CENTER)
         self.percent_label: Gtk.Label = Gtk.Label(
-            label=format_percent(window.used_pct, estimated=window.estimated), xalign=1,
+            label=format_percent(shown, estimated=window.estimated), xalign=1,
         )
         self.percent_label.add_css_class("numeric")
         self.percent_label.add_css_class("ac-quota-percent")

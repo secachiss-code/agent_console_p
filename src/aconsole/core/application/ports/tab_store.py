@@ -41,6 +41,7 @@ class TabDirectory:
     setup_completed: bool = False
     approvals_mode: str = "inline"
     approval_hold_seconds: int = 540
+    quota_display: str = "used"
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)

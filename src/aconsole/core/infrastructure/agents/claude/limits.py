@@ -41,10 +41,9 @@ _USAGE_WINDOWS: Final = (
         re.compile(r"^Current week \(all models\): (\d{1,3})% used(?: · resets (.+))?$", re.MULTILINE),
     ),
 )
-_RESET: Final = re.compile(
-    r"^(?:(?P<month>[A-Z][a-z]{2}) (?P<day>\d{1,2}), )?"
-    + r"(?P<hour>\d{1,2})(?::(?P<minute>\d{2}))?(?P<half>am|pm) \((?P<zone>[^)]+)\)$",
-)
+_RESET_DATE: Final = r"^(?:(?P<month>[A-Z][a-z]{2}) (?P<day>\d{1,2}), )?"
+_RESET_CLOCK: Final = r"(?P<hour>\d{1,2})(?::(?P<minute>\d{2}))?(?P<half>am|pm) \((?P<zone>[^)]+)\)$"
+_RESET: Final = re.compile(_RESET_DATE + _RESET_CLOCK)
 _MONTHS: Final = ("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
 _HALF_DAY: Final = 12
 

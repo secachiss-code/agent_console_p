@@ -82,7 +82,8 @@ def read_settings(session: Session) -> TabDirectory:
     hold = row.value.get("approval_hold_seconds")
     return TabDirectory(worktrees_dir=directory, rev=row.rev, setup_completed=completed,
         approvals_mode=mode if mode in ("inline", "native") else "inline",
-        approval_hold_seconds=hold if isinstance(hold, int) and 30 <= hold <= 540 else 540)  # noqa: PLR2004
+        approval_hold_seconds=hold if isinstance(hold, int) and 30 <= hold <= 540 else 540,  # noqa: PLR2004
+        quota_display="remaining" if row.value.get("quota_display") == "remaining" else "used")
 
 
 def write_setup_completed(session: Session, *, completed: bool, rev: int) -> None:
@@ -194,6 +195,16 @@ class TabDatabase:
                 ))
             else:
                 row.value = {**row.value, "approvals_mode": mode, "approval_hold_seconds": hold}
+                row.rev = rev
+        _ = self._writer.call(save)
+
+    def save_quota_display(self, *, display: str, rev: int) -> None:
+        def save(session: Session) -> None:
+            row = session.get(Setting, SETTINGS_KEY)
+            if row is None:
+                session.add(Setting(key=SETTINGS_KEY, value={"quota_display": display}, rev=rev))
+            else:
+                row.value = {**row.value, "quota_display": display}
                 row.rev = rev
         _ = self._writer.call(save)
 

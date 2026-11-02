@@ -19,6 +19,7 @@ from aconsole.ui.viewmodels.setup_vm import PreferencesViewModel  # noqa: E402
 from aconsole.ui.views.setup.messages import _ as translate  # noqa: E402
 
 _THEMES: tuple[Literal["system", "light", "dark"], ...] = ("system", "light", "dark")
+_QUOTA_DISPLAYS: tuple[Literal["used", "remaining"], ...] = ("used", "remaining")
 
 
 class PreferencesDialog(Adw.PreferencesDialog):
@@ -46,6 +47,11 @@ class PreferencesDialog(Adw.PreferencesDialog):
             model=Gtk.StringList.new([translate(f"prefs.{theme}") for theme in _THEMES]),
         )
         appearance.add(self.theme)
+        self.quota_display: Adw.ComboRow = Adw.ComboRow(
+            title=translate("prefs.quota_display"),
+            model=Gtk.StringList.new([translate(f"prefs.quota_{display}") for display in _QUOTA_DISPLAYS]),
+        )
+        appearance.add(self.quota_display)
         self.save_button: Gtk.Button = Gtk.Button(label=translate("prefs.apply"))
         self.save_button.add_css_class("suggested-action")
         _ = self.save_button.connect("clicked", self._save_clicked)
@@ -97,6 +103,7 @@ class PreferencesDialog(Adw.PreferencesDialog):
         self.font_size.set_value(settings.terminal_font_size)
         self.scrollback.set_value(settings.scrollback_lines)
         self.theme.set_selected(_THEMES.index(settings.theme))
+        self.quota_display.set_selected(_QUOTA_DISPLAYS.index(settings.quota_display))
 
     def save(self) -> None:
         if self.loading or self._shown is None or (self.worker is not None and not self.worker.done()):
@@ -106,7 +113,9 @@ class PreferencesDialog(Adw.PreferencesDialog):
         size = self.font_size.get_value_as_int()
         scrollback = self.scrollback.get_value_as_int()
         theme = _THEMES[min(self.theme.get_selected(), len(_THEMES) - 1)]
+        display = _QUOTA_DISPLAYS[min(self.quota_display.get_selected(), len(_QUOTA_DISPLAYS) - 1)]
         patch = SettingsPatch(
+            quota_display=display if display != shown.quota_display else msgspec.UNSET,
             terminal_font=font if font != shown.terminal_font else msgspec.UNSET,
             terminal_font_size=size if size != shown.terminal_font_size else msgspec.UNSET,
             scrollback_lines=scrollback if scrollback != shown.scrollback_lines else msgspec.UNSET,

@@ -19,6 +19,7 @@ from aconsole.contracts.app import (
     ProjectAddParams,
     ProjectIdParams,
     ProjectView,
+    SettingsUpdateParams,
     SnapshotResult,
     TabIdParams,
     TabView,
@@ -27,6 +28,7 @@ from aconsole.contracts.app import (
 from aconsole.contracts.common import AgentKind, ClientRole, ProjectId, TabStatus, WorkspaceMode
 from aconsole.contracts.errors import error_by_name
 from aconsole.contracts.ipc import InitializeParams, ProtocolVersion, Request, ResponseErr, ResponseOk
+from aconsole.contracts.settings import Settings, SettingsPatch
 from aconsole.core.bootstrap import Daemon
 from aconsole.core.infrastructure.ipc.framing import decode_envelope, encode_line
 from aconsole.core.infrastructure.tabs import HostBins, HostTabs
@@ -285,3 +287,22 @@ async def _wait_status(client: _Client, other_than: TabStatus) -> TabStatus:
             return status
         await asyncio.sleep(0.02)
     return other_than
+
+
+def test_limits_display_choice_survives_a_restart(tmp_path: Path) -> None:
+    async def scenario() -> tuple[str, str, str]:
+        daemon = _daemon(tmp_path, serve_ingest=False)
+        task = asyncio.create_task(daemon.serve())
+        client = await _connect(daemon.socket)
+        first = await client.call("settings/get", EmptyParams(), Settings)
+        patch = SettingsPatch(quota_display="remaining")
+        changed = await client.call("settings/update", SettingsUpdateParams(patch=patch, rev=first.rev), Settings)
+        await _stop(daemon, task, client)
+        daemon = _daemon(tmp_path, serve_ingest=False)
+        task = asyncio.create_task(daemon.serve())
+        client = await _connect(daemon.socket)
+        restored = await client.call("settings/get", EmptyParams(), Settings)
+        await _stop(daemon, task, client)
+        return first.quota_display, changed.quota_display, restored.quota_display
+
+    assert asyncio.run(scenario()) == ("used", "remaining", "remaining")

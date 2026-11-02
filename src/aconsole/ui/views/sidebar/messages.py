@@ -25,6 +25,7 @@ _MESSAGES = {
     "plan.status.failed": ("Failed", "Ошибка"),
     "plan.status.cancelled": ("Cancelled", "Отменён"),
     "quota.title": ("Limits", "Лимиты"),
+    "quota.title_left": ("Limits left", "Остаток лимитов"),
     "quota.unknown": ("No usage data yet", "Данных о лимитах пока нет"),  # noqa: RUF001 -- Russian UI text
     "quota.unknown.copy": (
         "Usage has not been reported by this agent",
