@@ -621,7 +621,8 @@ class TabService:
         tab = self._require(str(params.tab_id))
         tab.pid = params.pid
         tab.running = True
-        tab.status = TabStatus.WORKING
+        # A started process waits for a prompt. Only the agent's hooks say that the model works.
+        tab.status = TabStatus.IDLE
         tab.since = self._clock.now()
         _ = self._refresh_attention(tab)
         self._remember(tab)

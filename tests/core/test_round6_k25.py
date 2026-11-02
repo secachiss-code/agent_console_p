@@ -345,6 +345,7 @@ def test_round6_k25_restart_stops_the_old_process_and_its_orphans() -> None:
     assert ports.scans[-1] == ("agentbox", str(tab))
     # A failed scan still stops the known pid, but the restart fails: an orphan may still hold the tree.
     _ = service.started(StartedParams(tab_id=tab, pid=_PID + 1))
+    _ = service.apply_hook(str(tab), "UserPromptSubmit")
     ports.orphan_error = TabRequestError("CONTAINER_START_FAILED")
     with pytest.raises(TabRequestError, match="CONTAINER_START_FAILED"):
         _ = service.restart(RestartParams(tab_id=tab, resume=True))

@@ -92,6 +92,7 @@ def test_tabs_restore_dead_process_is_exited_and_launch_mints_tokens() -> None:
         )
     )
     _ = service.started(StartedParams(tab_id=opened.id, pid=5))
+    _ = service.apply_hook(str(opened.id), "UserPromptSubmit")
     secret = service.ingest_token(str(opened.id))
     saved = store.rows[str(opened.id)]
     fresh = TabService(FrozenClock(_WHEN), ports)

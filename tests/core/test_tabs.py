@@ -171,7 +171,7 @@ def test_tabs_started_exited_restart_and_fork_share_the_tree() -> None:
     started = _call(connection, 3, "tab/started", StartedParams(tab_id=TabId("tab-a"), pid=_PID))
     assert isinstance(started, ResponseOk)
     assert bytes(started.result) == b"{}"
-    assert _latest(ports, "tab-a").status is TabStatus.WORKING
+    assert _latest(ports, "tab-a").status is TabStatus.IDLE
     assert _latest(ports, "tab-a").started is True
     exited = _call(connection, 4, "tab/exited", ExitedParams(tab_id=TabId("tab-a"), wait_status=9))
     assert isinstance(exited, ResponseOk)
