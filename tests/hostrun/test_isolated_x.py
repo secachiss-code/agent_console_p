@@ -5,7 +5,10 @@ from __future__ import annotations
 import json
 import os
 import struct
+import shutil
+import socket
 import sys
+import tempfile
 from pathlib import Path
 
 import pytest
@@ -91,3 +94,26 @@ def test_run_refuses_without_a_wayland_session(tmp_path: Path) -> None:
 @pytest.mark.parametrize("argv", [[], ["true"], ["-x", "true"]])
 def test_main_needs_a_double_dash(argv: list[str]) -> None:
     assert isolated_x.main(argv) == 2
+
+
+def _socket(path: Path) -> None:
+    server = socket.socket(socket.AF_UNIX)
+    server.bind(str(path))
+    server.close()
+
+
+def test_wayland_socket_is_found_in_the_runtime_dir(tmp_path: Path) -> None:
+    short = Path(tempfile.mkdtemp(prefix="ax", dir="/tmp"))  # noqa: S108 -- AF_UNIX paths are short
+    try:
+        (short / "wayland-0.lock").touch()
+        _socket(short / "wayland-1")
+        env = isolated_x.wayland_env({"XDG_RUNTIME_DIR": str(short), "HOME": str(tmp_path)})
+        assert env is not None
+        assert env["WAYLAND_DISPLAY"] == "wayland-1"
+        assert env["HOME"] == str(tmp_path)
+    finally:
+        shutil.rmtree(short)
+
+
+def test_no_wayland_socket_is_reported(tmp_path: Path) -> None:
+    assert isolated_x.wayland_env({"XDG_RUNTIME_DIR": str(tmp_path)}) is None

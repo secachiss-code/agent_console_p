@@ -3,7 +3,8 @@
 `isolated_x.py -- <argv>` starts a rootful Xwayland on a free display with its own
 MIT-MAGIC-COOKIE, runs <argv> with DISPLAY, XAUTHORITY and GDK_BACKEND=x11 pointing
 at it, then stops the server. XTest events reach only that server, never the user's
-session. Xwayland itself needs the user's WAYLAND_DISPLAY and XDG_RUNTIME_DIR.
+session. Xwayland itself needs the user's Wayland socket. A systemd --user service often
+starts before the session exports it, so the socket is found in the runtime directory.
 """
 
 from __future__ import annotations
@@ -12,6 +13,7 @@ import os
 import secrets
 import select
 import shutil
+import stat
 import struct
 import subprocess
 import sys
@@ -74,10 +76,29 @@ def _wait_ready(read_fd: int, server: subprocess.Popen[bytes]) -> None:
     raise RuntimeError(message)
 
 
+def wayland_env(base: dict[str, str], runtime_root: Path = Path("/run/user")) -> dict[str, str] | None:
+    """`base` with XDG_RUNTIME_DIR and WAYLAND_DISPLAY filled in. None when no compositor socket exists."""
+    runtime = Path(base.get("XDG_RUNTIME_DIR") or runtime_root / str(os.getuid()))
+    display = base.get("WAYLAND_DISPLAY")
+    if not display:
+        try:
+            sockets = sorted(
+                item.name
+                for item in runtime.glob("wayland-*")
+                if stat.S_ISSOCK(item.stat().st_mode)
+            )
+        except OSError:
+            return None
+        if not sockets:
+            return None
+        display = sockets[0]
+    return {**base, "XDG_RUNTIME_DIR": str(runtime), "WAYLAND_DISPLAY": display}
+
+
 def run(command: list[str], *, xwayland: str = XWAYLAND, env: dict[str, str] | None = None) -> int:
-    base = dict(os.environ if env is None else env)
-    if not base.get("WAYLAND_DISPLAY") or not base.get("XDG_RUNTIME_DIR"):
-        sys.stderr.write("isolated_x: WAYLAND_DISPLAY and XDG_RUNTIME_DIR are required for Xwayland\n")
+    base = wayland_env(dict(os.environ if env is None else env))
+    if base is None:
+        sys.stderr.write("isolated_x: no Wayland socket in XDG_RUNTIME_DIR; Xwayland needs a Wayland session\n")
         return 2
     number = free_display()
     workdir = Path(tempfile.mkdtemp(prefix="aconsole-x-"))
