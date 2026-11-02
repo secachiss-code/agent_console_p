@@ -1,4 +1,6 @@
-"""Claude rate limits: statusline windows become ``quota_updated`` for one account.
+"""Claude rate limits: `claude -p /usage` or statusline windows become ``quota_updated`` for one account.
+
+A statusline repeats the numbers of that tab's last model reply. `/usage` asks the account and costs no model call.
 
 The account comes from ``claude auth status`` through a process port. Credential files
 under ``~/.claude/`` are never opened.
@@ -7,11 +9,13 @@ under ``~/.claude/`` are never opened.
 from __future__ import annotations
 
 import hashlib
+import re
 import subprocess
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from typing import Final, Literal, Protocol, final
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 import msgspec
 
@@ -29,6 +33,20 @@ _HASH: Final = 12
 _PLAN: Final = {"pro": "Pro", "max": "Max", "plus": "Plus", "api": "API"}
 _LABEL: Final = 32
 _TIMEOUT_S: Final = 5.0
+_USAGE_SOURCE: Final = "usage"
+_USAGE_WINDOWS: Final = (
+    (QuotaKey.FIVE_HOUR, re.compile(r"^Current session: (\d{1,3})% used(?: · resets (.+))?$", re.MULTILINE)),
+    (
+        QuotaKey.SEVEN_DAY,
+        re.compile(r"^Current week \(all models\): (\d{1,3})% used(?: · resets (.+))?$", re.MULTILINE),
+    ),
+)
+_RESET: Final = re.compile(
+    r"^(?:(?P<month>[A-Z][a-z]{2}) (?P<day>\d{1,2}), )?"
+    + r"(?P<hour>\d{1,2})(?::(?P<minute>\d{2}))?(?P<half>am|pm) \((?P<zone>[^)]+)\)$",
+)
+_MONTHS: Final = ("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
+_HALF_DAY: Final = 12
 
 
 class ProcessPort(Protocol):
@@ -109,6 +127,67 @@ class ClaudeLimits:
                 quota=_quota(self._aggregator, account.id, now),
             )
         )
+
+    def on_usage(self, text: str) -> QuotaUpdated | None:
+        """Observe the windows `/usage` printed. None when it printed neither or nobody is logged in."""
+        now = self._now()
+        found = read_usage(text, now)
+        if not found:
+            return None
+        account = _account(self._process.run(_AUTH))
+        if account is None:
+            return None
+        for key, used, resets_at in found:
+            _ = self._aggregator.observe(
+                Observation(
+                    account_id=account.id,
+                    key=key,
+                    used_pct=used,
+                    resets_at=resets_at,
+                    observed_at=now,
+                    tab_id=_USAGE_SOURCE,
+                ),
+            )
+        return QuotaUpdated(
+            account=AccountView(
+                id=account.id,
+                agent=AgentKind.CLAUDE,
+                plan_label=account.plan_label,
+                quota=_quota(self._aggregator, account.id, now),
+            )
+        )
+
+
+def read_usage(text: str, now: datetime) -> tuple[tuple[QuotaKey, float, datetime | None], ...]:
+    """The 5h and 7d lines of `/usage`: percent and reset. A line that is not there is left out."""
+    found: list[tuple[QuotaKey, float, datetime | None]] = []
+    for key, pattern in _USAGE_WINDOWS:
+        match = pattern.search(text)
+        if match is not None:
+            found.append((key, float(match.group(1)), _reset_time(match.group(2), now)))
+    return tuple(found)
+
+
+def _reset_time(text: str | None, now: datetime) -> datetime | None:
+    """`Nov 3, 2:40am (Europe/Moscow)` or `2:40am (Europe/Moscow)`. The printed text has no year."""
+    match = _RESET.match(text.strip()) if text is not None else None
+    if match is None:
+        return None
+    try:
+        zone = ZoneInfo(match["zone"])
+        hour = int(match["hour"]) % _HALF_DAY + (_HALF_DAY if match["half"] == "pm" else 0)
+        local = now.astimezone(zone)
+        month = _MONTHS.index(match["month"]) + 1 if match["month"] else local.month
+        day = int(match["day"]) if match["day"] else local.day
+        minute = int(match["minute"] or 0)
+        moment = local.replace(month=month, day=day, hour=hour, minute=minute, second=0, microsecond=0)
+        if moment < local - timedelta(days=1):
+            moment = moment.replace(year=moment.year + 1)
+        elif not match["month"] and moment < local:
+            moment += timedelta(days=1)
+    except (ValueError, ZoneInfoNotFoundError):
+        return None
+    return moment.astimezone(UTC)
 
 
 def _account(raw: bytes) -> _Account | None:

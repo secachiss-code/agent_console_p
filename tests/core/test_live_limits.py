@@ -3,8 +3,11 @@
 from __future__ import annotations
 
 import stat
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
+from aconsole.core.domain.quota import QuotaKey
+from aconsole.core.infrastructure.agents.claude.limits import read_usage
 from aconsole.core.infrastructure.agents.live_limits import CachedAuth, ask_rate_limits
 
 if TYPE_CHECKING:
@@ -42,3 +45,30 @@ def test_silence_and_a_missing_binary_give_nothing(tmp_path: Path) -> None:
     assert ask_rate_limits(_script(tmp_path, "sleep 30"), timeout_s=0.2) == b""
     assert ask_rate_limits(_script(tmp_path, "exit 3")) == b""
     assert ask_rate_limits((str(tmp_path / "missing"),)) == b""
+
+
+_USAGE = """You are currently using your subscription to power your Claude Code usage
+
+Current session: 51% used · resets Nov 3, 2:40am (Europe/Moscow)
+Current week (all models): 19% used · resets Nov 6, 9pm (Europe/Moscow)
+
+What's contributing to your usage?
+"""
+
+
+def test_usage_text_gives_percent_and_reset() -> None:
+    now = datetime(2026, 11, 2, 21, 50, tzinfo=UTC)
+    five, week = read_usage(_USAGE, now)
+    assert five == (QuotaKey.FIVE_HOUR, 51.0, datetime(2026, 11, 2, 23, 40, tzinfo=UTC))
+    assert week == (QuotaKey.SEVEN_DAY, 19.0, datetime(2026, 11, 6, 18, 0, tzinfo=UTC))
+
+
+def test_usage_text_without_a_date_or_a_reset() -> None:
+    now = datetime(2026, 12, 31, 20, 0, tzinfo=UTC)
+    text = "Current session: 3% used · resets 2:40am (Europe/Moscow)\nCurrent week (all models): 0% used\n"
+    five, week = read_usage(text, now)
+    assert five[2] == datetime(2026, 12, 31, 23, 40, tzinfo=UTC)
+    assert week == (QuotaKey.SEVEN_DAY, 0.0, None)
+    assert read_usage("not logged in", now) == ()
+    year_end = read_usage("Current session: 1% used · resets Jan 1, 1am (UTC)", now)
+    assert year_end[0][2] == datetime(2027, 1, 1, 1, 0, tzinfo=UTC)

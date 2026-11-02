@@ -14,12 +14,16 @@ from aconsole.core.infrastructure.http.routes import IngestItem, IngestQueue
 
 _LOG = logging.getLogger(__name__)
 _HOOKS = frozenset({"claude.hook", "codex.hook"})
-_STATUSLINE = "claude.statusline"
+_IDLE_PROMPT = "idle_prompt"
 _CLAUDE = frozenset({"claude.hook", "claude.statusline"})
 
 
 class _HookName(msgspec.Struct, frozen=True, kw_only=True):
     hook_event_name: str
+
+
+class _NotificationType(msgspec.Struct, frozen=True, kw_only=True):
+    notification_type: str | None = None
 
 
 def hook_event(item: IngestItem) -> str | None:
@@ -42,7 +46,6 @@ async def consume(
     queue: IngestQueue,
     ready: asyncio.Event,
     apply: Callable[[str, str], Awaitable[None]],
-    statusline: Callable[[str, bytes], Awaitable[None]] | None = None,
 ) -> None:
     """Apply queued items in order until cancelled. `ready` is set whenever the HTTP side queued something."""
     while True:
@@ -50,8 +53,6 @@ async def consume(
         ready.clear()
         while (item := queue.pop()) is not None:
             try:
-                if statusline is not None and item.kind == _STATUSLINE:
-                    await statusline(item.tab_id, item.body)
                 name = _event_name(item)
                 if name is None:
                     continue
@@ -64,7 +65,17 @@ def _event_name(item: IngestItem) -> str | None:
     """Claude bodies go through telemetry. Codex still uses the event name alone."""
     if item.kind in _CLAUDE:
         signal = read_claude(item.body, kind=item.kind)
-        if signal.status is None:
+        if signal.status is None or _only_idle(signal.event, item.body):
             return None
         return signal.event
     return hook_event(item)
+
+
+def _only_idle(event: str | None, body: bytes) -> bool:
+    """Claude's "still waiting for your prompt" reminder: nothing is asked, the tab just stays idle."""
+    if event != "Notification":
+        return False
+    try:
+        return msgspec.json.decode(body, type=_NotificationType).notification_type == _IDLE_PROMPT
+    except msgspec.DecodeError:
+        return False

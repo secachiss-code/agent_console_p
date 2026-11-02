@@ -154,6 +154,17 @@ class HostTabs:
         start = text.find("{")
         return text[start:].encode() if start >= 0 else b""
 
+    def claude_usage(self, name: str) -> str:
+        """What `/usage` prints in the container's Claude. No model call. Empty when it is stopped or silent."""
+        command = ("claude", "-p", "/usage", "--no-session-persistence")
+        try:
+            if not self._podman.inspect(name).running:
+                return ""
+            return self._podman.run_in(name, self._user, (*_LOGIN_SHELL, *command))
+        except (ContainerError, ValueError):
+            _LOG.warning("claude /usage did not answer in %s", name, exc_info=True)
+            return ""
+
     def codex_rate_limits(self, name: str) -> bytes:
         """The `account/rateLimits/read` reply of the container's Codex. Empty when it is stopped or silent."""
         try:

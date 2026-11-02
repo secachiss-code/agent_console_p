@@ -43,6 +43,7 @@ case "$1" in
 inspect) printf '[{"Id":"i","Name":"x","State":{"Running":true}}]\\n' ;;
 exec)
   case "$*" in
+  *"/usage"*) printf 'Current session: 40%% used · resets Jan 1, 1am (UTC)\\nCurrent week (all models): 12%% used\\n' ;;
   *"auth status"*) printf '{"loggedIn":true,"email":"e@x","subscriptionType":"pro"}' ;;
   *app-server*) printf '@REPLY@\\n' ;;
   *) printf '%s' "$FAKE_HOME" ;;
@@ -137,8 +138,8 @@ def _post_statusline(port: int, tab_id: str, token: str) -> None:
         {
             "session_id": "s",
             "rate_limits": {
-                "five_hour": {"used_percentage": 40, "resets_at": 1900000000},
-                "seven_day": {"used_percentage": 12, "resets_at": 1900000000},
+                "five_hour": {"used_percentage": 99, "resets_at": 1900000000},
+                "seven_day": {"used_percentage": 99, "resets_at": 1900000000},
             },
         },
     ).encode()
@@ -166,6 +167,7 @@ def test_limits_of_both_agents_reach_the_snapshot(tmp_path: Path, monkeypatch) -
         spec = await client.call("tab/launchSpec", TabIdParams(tab_id=tab.id), TerminalLaunchSpec)
         port = daemon.ingest_port
         assert port is not None
+        # A statusline repeats its tab's last reply: it must not move the limits.
         await asyncio.to_thread(_post_statusline, port, str(tab.id), spec.env["ACONSOLE_TAB_TOKEN"])
         found: dict[str, list[float | None]] = {}
         for _ in range(100):

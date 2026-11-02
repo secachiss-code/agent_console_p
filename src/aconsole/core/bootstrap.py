@@ -217,6 +217,7 @@ _CLAUDE_CONTAINER = "agent-claude"
 _CODEX_CONTAINER = "agent-codex"
 _CODEX_POLL = "codex-poll"
 _CODEX_POLL_S = 120.0
+_CLAUDE_POLL_S = 60.0
 _ACCOUNT_RESEND_S = 30.0
 
 
@@ -305,6 +306,7 @@ class Daemon:
         self._codex_limits: CodexLimits = CodexLimits(board, lambda: datetime.now(UTC))
         self._accounts: dict[str, AccountView] = {}
         self._account_sent: dict[str, float] = {}
+        self._claude_usage_due: asyncio.Event = asyncio.Event()
         self.tabs.use_accounts(lambda: tuple(self._accounts.values()))
 
     @property
@@ -491,8 +493,9 @@ class Daemon:
         self._host.set_ingest_port(port)
         self._ingest_tasks = [
             asyncio.create_task(server.serve(sockets=[listener])),
-            asyncio.create_task(consume(self._ingest_queue, ready, self._apply_hook, self._apply_statusline)),
+            asyncio.create_task(consume(self._ingest_queue, ready, self._apply_hook)),
             asyncio.create_task(self._poll_codex_limits()),
+            asyncio.create_task(self._poll_claude_limits()),
         ]
         # uvicorn exposes only a `started` flag, no event to wait on.
         while not server.started and not self._ingest_tasks[0].done():  # noqa: ASYNC110
@@ -500,11 +503,22 @@ class Daemon:
 
     async def _apply_hook(self, tab_id: str, event_name: str) -> None:
         _ = await self._in_worker(lambda: self.tabs.apply_hook(tab_id, event_name))
+        if event_name == "Stop":
+            self._claude_usage_due.set()
 
-    async def _apply_statusline(self, tab_id: str, body: bytes) -> None:
-        event = await self._in_worker(lambda: self._claude_limits.on_statusline(tab_id, body))
-        if event is not None:
-            self._account_observed(event)
+    async def _poll_claude_limits(self) -> None:
+        """`/usage` is what Claude itself shows. A statusline only repeats its tab's last reply, so it is not used."""
+        while True:
+            try:
+                text = await asyncio.to_thread(self._host.claude_usage, _CLAUDE_CONTAINER)
+                event = await asyncio.to_thread(self._claude_limits.on_usage, text)
+                if event is not None:
+                    self._account_observed(event)
+            except Exception:  # noqa: BLE001 -- limits must never stop the core
+                _LOG.exception("cannot read Claude limits")
+            self._claude_usage_due.clear()
+            with contextlib.suppress(TimeoutError):
+                _ = await asyncio.wait_for(self._claude_usage_due.wait(), _CLAUDE_POLL_S)
 
     async def _poll_codex_limits(self) -> None:
         """Codex reports limits only when asked, and answers without any open tab."""
