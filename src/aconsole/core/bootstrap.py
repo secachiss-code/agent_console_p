@@ -33,6 +33,7 @@ from aconsole.core.domain.approvals import Approval, ApprovalBook
 from aconsole.core.domain.clock import Clock
 from aconsole.core.infrastructure.agents.claude.limits import ClaudeLimits
 from aconsole.core.infrastructure.agents.codex.limits import CodexLimits
+from aconsole.core.infrastructure.agents.codex.turns import TurnWatch
 from aconsole.core.infrastructure.agents.launch import HostAgentCommands
 from aconsole.core.infrastructure.agents.live_limits import CachedAuth
 from aconsole.core.infrastructure.http.app import IngestApp, serve_config
@@ -218,6 +219,7 @@ _CODEX_CONTAINER = "agent-codex"
 _CODEX_POLL = "codex-poll"
 _CODEX_POLL_S = 120.0
 _CLAUDE_POLL_S = 60.0
+_CODEX_TURN_POLL_S = 1.0
 _ACCOUNT_RESEND_S = 30.0
 
 
@@ -496,6 +498,7 @@ class Daemon:
             asyncio.create_task(consume(self._ingest_queue, ready, self._apply_hook)),
             asyncio.create_task(self._poll_codex_limits()),
             asyncio.create_task(self._poll_claude_limits()),
+            asyncio.create_task(self._watch_codex_turns()),
         ]
         # uvicorn exposes only a `started` flag, no event to wait on.
         while not server.started and not self._ingest_tasks[0].done():  # noqa: ASYNC110
@@ -505,6 +508,21 @@ class Daemon:
         _ = await self._in_worker(lambda: self.tabs.apply_hook(tab_id, event_name))
         if event_name == "Stop":
             self._claude_usage_due.set()
+
+    async def _watch_codex_turns(self) -> None:
+        """Codex hooks are not trusted (ADR-0002), and notify only says that a turn ended."""
+        home = await asyncio.to_thread(self._host.agent_home, _CODEX_CONTAINER)
+        if home is None:
+            return
+        watch = TurnWatch(home / ".codex" / "sessions")
+        while True:
+            try:
+                now = datetime.now(UTC).astimezone()
+                for cwd, working in await asyncio.to_thread(watch.changes, now):
+                    await self._in_worker(lambda cwd=cwd, working=working: self.tabs.codex_turn(cwd, working=working))
+            except Exception:  # noqa: BLE001 -- the status must never stop the core
+                _LOG.exception("cannot read Codex turns")
+            await asyncio.sleep(_CODEX_TURN_POLL_S)
 
     async def _poll_claude_limits(self) -> None:
         """`/usage` is what Claude itself shows. A statusline only repeats its tab's last reply, so it is not used."""
