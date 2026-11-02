@@ -22,9 +22,18 @@ esac
 printf 'GTK dependencies must be installed by the user; see project documentation.\n'
 if [ "$dry_run" -eq 1 ]; then
     printf 'Would sync %s/.venv-core and %s/.venv-ui from uv.lock.\n' "$ROOT" "$ROOT"
+    printf 'Would add the AConsole launcher under %s/.local/share.\n' "$HOME_DIR"
     exit 0
 fi
 UV=${ACONSOLE_UV:-uv}
 cd "$ROOT"
 UV_PROJECT_ENVIRONMENT="$ROOT/.venv-core" "$UV" sync --locked --no-python-downloads --python 3.15t
 UV_PROJECT_ENVIRONMENT="$ROOT/.venv-ui" "$UV" sync --locked --group ui --no-python-downloads --python 3.15
+ID=io.github.aconsole.AConsole
+if [ -f "$ROOT/packaging/$ID.desktop" ]; then
+    SHARE=${XDG_DATA_HOME:-$HOME_DIR/.local/share}
+    mkdir -p "$SHARE/applications" "$SHARE/icons/hicolor/scalable/apps"
+    cp "$ROOT/packaging/$ID.svg" "$SHARE/icons/hicolor/scalable/apps/$ID.svg"
+    sed "s|^Exec=.*|Exec=$ROOT/.venv-ui/bin/aconsole|" "$ROOT/packaging/$ID.desktop" >"$SHARE/applications/$ID.desktop"
+fi
+printf 'Installed. Open AConsole from the applications menu, or run %s/.venv-ui/bin/aconsole\n' "$ROOT"

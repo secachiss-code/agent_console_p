@@ -11,7 +11,15 @@ from sqlalchemy import Connection, create_engine, event
 from sqlalchemy.engine import Engine
 from sqlalchemy.pool import QueuePool
 
-MIGRATIONS = Path(__file__).resolve().parents[5] / "migrations"
+
+def migrations_dir(module: Path | None = None) -> Path:
+    """`aconsole/_migrations` in an installed package, `migrations/` in a checkout."""
+    resolved = Path(__file__ if module is None else module).resolve()
+    packaged = resolved.parents[3] / "_migrations"
+    return packaged if packaged.is_dir() else resolved.parents[5] / "migrations"
+
+
+MIGRATIONS = migrations_dir()
 _PRAGMAS = (
     "PRAGMA journal_mode=WAL",
     "PRAGMA synchronous=NORMAL",

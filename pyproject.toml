@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "aconsole"
-version = "0.0.0"
+version = "0.1.0"
 description = "Agents Console core and UI."
 requires-python = ">=3.15"
 dependencies = [
@@ -36,10 +36,15 @@ dev = [
 ]
 
 [project.scripts]
+aconsole = "aconsole.__main__:console"
 aconsoled = "aconsole.core.__main__:console"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/aconsole"]
+
+[tool.hatch.build.targets.wheel.force-include]
+# Alembic reads these from disk at startup; an installed package has no repository root.
+"migrations" = "aconsole/_migrations"
 
 [tool.basedpyright]
 typeCheckingMode = "all"

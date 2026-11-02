@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=AConsole
+GenericName=Agents Console
+Comment=Run CLI coding agents side by side
+Comment[ru]=Запуск CLI-агентов рядом друг с другом
+Exec=aconsole
+Icon=io.github.aconsole.AConsole
+Terminal=false
+Categories=Development;
+StartupWMClass=io.github.aconsole.AConsole

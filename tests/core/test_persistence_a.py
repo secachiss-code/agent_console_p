@@ -78,3 +78,15 @@ def test_persistence_a_round_trip_and_pragmas(tmp_path: Path) -> None:
     naive = datetime.now(UTC).replace(tzinfo=None)
     with pytest.raises(ValueError, match="timezone-aware"):
         UtcDateTime().process_bind_param(naive, writer.dialect)
+
+
+def test_migrations_are_found_in_a_package_and_in_a_checkout(tmp_path: Path) -> None:
+    from aconsole.core.infrastructure.persistence.engine import migrations_dir
+
+    module = tmp_path / "site" / "aconsole" / "core" / "infrastructure" / "persistence" / "engine.py"
+    module.parent.mkdir(parents=True)
+    module.touch()
+    assert migrations_dir(module) == tmp_path / "migrations"
+    packaged = tmp_path / "site" / "aconsole" / "_migrations"
+    packaged.mkdir()
+    assert migrations_dir(module) == packaged
