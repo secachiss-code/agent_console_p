@@ -54,12 +54,13 @@ class PlanGraph(Gtk.Box):
         summary = Gtk.Label(label=progress, xalign=0, ellipsize=Pango.EllipsizeMode.END)
         summary.add_css_class("ac-summary-detail")
         text.append(summary)
-        heading.append(text)
+        # On the left: the top right corner may hold the floating window buttons.
         self.close_button: Gtk.Button = Gtk.Button(label=translate("plan.back"), valign=Gtk.Align.CENTER)
         self.close_button.add_css_class("pill")
         self.close_button.add_css_class("ac-plan-back")
         _ = self.close_button.connect("clicked", self._close)
         heading.append(self.close_button)
+        heading.append(text)
         return heading
 
     def _setup_canvas(self) -> None:

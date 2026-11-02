@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 import gi
 
@@ -33,11 +33,16 @@ from aconsole.ui.views.sidebar.messages import _ as translate  # noqa: E402
 from aconsole.ui.views.sidebar.plan_card import PlanCard  # noqa: E402
 from aconsole.ui.views.sidebar.plan_graph import PlanGraph  # noqa: E402
 from aconsole.ui.views.sidebar.quota_card import QuotaCard  # noqa: E402
+from aconsole.ui.views.tabs.messages import _ as tabs_text  # noqa: E402
+from aconsole.ui.views.tabs.new_tab import NewTabDialog  # noqa: E402
 from aconsole.ui.views.tabs.sidebar import TabSidebar  # noqa: E402
 from aconsole.ui.views.terminal.messages import _ as terminal_text  # noqa: E402
 from aconsole.ui.views.terminal.page import TerminalPage  # noqa: E402
 
 _LOG = logging.getLogger(__name__)
+_ISLAND_MARGIN = 8
+_TAB_ARRIVAL_MS = 200
+_BANNER_HEIGHT = 48
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -49,7 +54,7 @@ class MainWindow(Adw.ApplicationWindow):
         self.set_default_size(1280, 800)
         self.set_size_request(360, 360)
         self.tabs: TabsViewModel = tabs
-        self._close_tab_handler: Callable[[str], None] | None = None
+        self._close_tab_handler: Callable[[str], None] | None = self._close_tab
         self._snapshot_mode: bool = getattr(app, "snapshot_request", None) is not None
         self._init_shortcuts(app)
         self.split: Adw.OverlaySplitView = Adw.OverlaySplitView(
@@ -86,7 +91,17 @@ class MainWindow(Adw.ApplicationWindow):
         self.toast_overlay: Adw.ToastOverlay = Adw.ToastOverlay()
         self.toast_overlay.set_child(content)
         self.tabs_sidebar.on_error = self._tab_error
-        self.split.set_content(self.toast_overlay)
+        self.end_island: Gtk.Box = self._build_end_island()
+        frame = Gtk.Overlay(child=self.toast_overlay)
+        frame.add_overlay(self.end_island)
+        self.split.set_content(frame)
+        for source, name in (
+            (self.split, "notify::collapsed"),
+            (self.start_controls, "notify::empty"),
+            (self.end_controls, "notify::empty"),
+        ):
+            _ = source.connect(name, self._sync_islands)
+        self._sync_islands()
         self.set_content(self.split)
         self._summary_vm.on_changed = self._update_summary
         self._update_summary()
@@ -109,22 +124,39 @@ class MainWindow(Adw.ApplicationWindow):
         """The only title bar of a wide window: window buttons in one island, then the application name."""
         self._settings_menu: Gio.Menu = self._build_settings_menu()
         header = Adw.HeaderBar(show_start_title_buttons=False, show_end_title_buttons=False)
-        self.window_island: Gtk.Box = Gtk.Box(spacing=2)
-        self.window_island.add_css_class("ac-window-island")
-        self.window_island.append(Gtk.WindowControls(side=Gtk.PackType.START))
-        self.window_island.append(Gtk.WindowControls(side=Gtk.PackType.END))
+        self.start_controls: Gtk.WindowControls = Gtk.WindowControls(side=Gtk.PackType.START)
+        self.start_island: Gtk.Box = self._island(self.start_controls)
+        header.pack_start(self.start_island)
         menu = Gtk.MenuButton(icon_name="open-menu-symbolic", menu_model=self._settings_menu)
         menu.set_tooltip_text(setup_text("prefs.title"))
-        self.window_island.append(menu)
-        _ = self.split.bind_property(
-            "collapsed", self.window_island, "visible",
-            GObject.BindingFlags.SYNC_CREATE | GObject.BindingFlags.INVERT_BOOLEAN,
-        )
-        header.pack_start(self.window_island)
+        header.pack_end(menu)
         title = Gtk.Label(label="AConsole")
         title.add_css_class("ac-app-title")
         header.set_title_widget(title)
         return header
+
+    @staticmethod
+    def _island(controls: Gtk.WindowControls) -> Gtk.Box:
+        island = Gtk.Box()
+        island.add_css_class("ac-window-island")
+        island.append(controls)
+        return island
+
+    def _build_end_island(self) -> Gtk.Box:
+        """Buttons the system puts after the colon stay at the window's edge, floating over the full-height content."""
+        self.end_controls: Gtk.WindowControls = Gtk.WindowControls(side=Gtk.PackType.END)
+        island = self._island(self.end_controls)
+        island.add_css_class("ac-window-island-floating")
+        island.set_halign(Gtk.Align.END)
+        island.set_valign(Gtk.Align.START)
+        island.set_margin_top(_ISLAND_MARGIN)
+        island.set_margin_end(_ISLAND_MARGIN)
+        return island
+
+    def _sync_islands(self, *_args: object) -> None:
+        wide = not self.split.get_collapsed()
+        self.start_island.set_visible(wide and not self.start_controls.get_empty())
+        self.end_island.set_visible(wide and not self.end_controls.get_empty())
 
     def _build_summary(self) -> Gtk.Box:
         self._summary_vm: SidebarSummaryViewModel = SidebarSummaryViewModel(self.tabs.client)
@@ -132,6 +164,11 @@ class MainWindow(Adw.ApplicationWindow):
         body = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         self.tabs_sidebar.set_vexpand(True)
         body.append(self.tabs_sidebar)
+        new_tab = Gtk.Button(child=Adw.ButtonContent(icon_name="list-add-symbolic", label=tabs_text("tabs.new")))
+        new_tab.add_css_class("flat")
+        new_tab.add_css_class("ac-new-tab")
+        new_tab.set_action_name("win.new-tab")
+        body.append(new_tab)
         self.summary_card: Gtk.Box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         self.summary_card.add_css_class("ac-summary-card")
         self.plan_card: PlanCard = PlanCard(on_activate=self._open_plan)
@@ -222,10 +259,12 @@ class MainWindow(Adw.ApplicationWindow):
                 self._show_selected_terminal()
         self.quota_card.tabs = self._summary_vm.tabs
         self.quota_card.set_accounts(self._summary_vm.accounts)
-        self.quota_banner.set_revealed(any(
+        critical = any(
             quota_level(window.used_pct) == "critical"
             for account in self._summary_vm.accounts for window in account.quota
-        ))
+        )
+        self.quota_banner.set_revealed(critical)
+        self.end_island.set_margin_top(_ISLAND_MARGIN + (_BANNER_HEIGHT if critical else 0))
 
     def _open_plan(self, plan_id: PlanId) -> None:
         plan = self._summary_vm.plan
@@ -244,7 +283,7 @@ class MainWindow(Adw.ApplicationWindow):
         _ = new_tab.connect("activate", self._new_tab)
         self.add_action(new_tab)
         self.close_tab_action: Gio.SimpleAction = Gio.SimpleAction.new("request-close-tab", GLib.VariantType.new("s"))
-        self.close_tab_action.set_enabled(False)
+        self.close_tab_action.set_enabled(True)
         _ = self.close_tab_action.connect("activate", self._request_close_tab)
         self.add_action(self.close_tab_action)
 
@@ -273,6 +312,44 @@ class MainWindow(Adw.ApplicationWindow):
 
     def _new_tab(self, _action: Gio.SimpleAction, _parameter: object) -> None:
         self.app_vm.dispatch("new-tab")
+
+    def _tab_opened(self, tab_id: TabId) -> None:
+        self._select_tab(tab_id)
+        # The tab may reach the store just after the reply.
+        _ = GLib.timeout_add(_TAB_ARRIVAL_MS, self._select_tab_later, tab_id)
+
+    def _select_tab_later(self, tab_id: TabId) -> bool:
+        self._select_tab(tab_id)
+        return GLib.SOURCE_REMOVE
+
+    def _close_tab(self, tab_id: str) -> None:
+        _ = spawn_task(self._close_tab_now(tab_id, None))
+
+    async def _close_tab_now(self, tab_id: str, decision: Literal["keep", "remove"] | None) -> None:
+        try:
+            result = await self.tabs.close(tab_id, decision)
+        except Exception as error:  # noqa: BLE001 -- a refused close stays visible; the tab stays open
+            self._tab_error(tabs_text("tabs.close_error").format(error=error))
+            return
+        if result.needs_decision:
+            dialog = Adw.AlertDialog(
+                heading=tabs_text("tabs.close_heading"),
+                body=result.dirty_summary or tabs_text("tabs.close_body"),
+            )
+            dialog.add_response("cancel", tabs_text("tabs.close_cancel"))
+            dialog.add_response("keep", tabs_text("tabs.close_keep"))
+            dialog.add_response("remove", tabs_text("tabs.close_remove"))
+            dialog.set_response_appearance("remove", Adw.ResponseAppearance.DESTRUCTIVE)
+            dialog.set_default_response("keep")
+            dialog.set_close_response("cancel")
+            _ = dialog.connect("response", self._close_decided, tab_id)
+            dialog.present(self)
+
+    def _close_decided(self, _dialog: Adw.AlertDialog, response: str, tab_id: str) -> None:
+        if response == "keep":
+            _ = spawn_task(self._close_tab_now(tab_id, "keep"))
+        elif response == "remove":
+            _ = spawn_task(self._close_tab_now(tab_id, "remove"))
 
     def _tab_error(self, message: str) -> None:
         self.toast_overlay.add_toast(Adw.Toast.new(message))
@@ -307,6 +384,8 @@ class MainWindow(Adw.ApplicationWindow):
             self.split.set_show_sidebar(not self.split.get_show_sidebar())
         elif action_id == "palette":
             self._open_palette()
+        elif action_id == "new-tab":
+            NewTabDialog(self.tabs, self._tab_opened, self._tab_error).present(self)
         elif action_id == "settings":
             self._open_preferences()
 

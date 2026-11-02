@@ -82,11 +82,14 @@ def _assert_header_state(window: MainWindow, *, collapsed: bool) -> None:
     assert len(headers) == 2
     main_header = window.content_header
     sidebar_header = next(header for header in headers if header is not main_header)
-    # Wide: the window buttons live in the left column's island and the terminal fills the right one.
+    # Wide: the terminal fills the right column; each system button keeps its side, in an island there.
     assert not sidebar_header.get_show_start_title_buttons()
     assert not sidebar_header.get_show_end_title_buttons()
-    assert window.window_island.get_visible() is (not collapsed)
     assert main_header.get_visible() is collapsed
+    assert window.start_controls.get_side() == Gtk.PackType.START
+    assert window.end_controls.get_side() == Gtk.PackType.END
+    assert window.start_island.get_visible() is (not collapsed and not window.start_controls.get_empty())
+    assert window.end_island.get_visible() is (not collapsed and not window.end_controls.get_empty())
     assert all(header.get_decoration_layout() is None for header in headers)
 
 
