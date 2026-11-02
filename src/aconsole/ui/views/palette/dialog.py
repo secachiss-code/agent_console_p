@@ -227,6 +227,8 @@ class PaletteDialog(Adw.Dialog):
             if result is not None and generation == self._generation and self._opened:
                 if result.ok:
                     _ = self.close()
+                    # `closed` fires only when the sheet's animation ends, which needs frames. The command is done now.
+                    self._mark_closed()
                 else:
                     self.status_label.set_label(result.toast or translate("palette.execute_error"))
                 self._on_result(result)
@@ -271,6 +273,11 @@ class PaletteDialog(Adw.Dialog):
         self._render_arguments()
 
     def _closed(self, _dialog: Adw.Dialog) -> None:
+        self._mark_closed()
+
+    def _mark_closed(self) -> None:
+        if not self._opened:
+            return
         self._opened = False
         self._generation += 1
         self.viewmodel.close()
