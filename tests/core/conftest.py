@@ -69,6 +69,9 @@ class FakeTabPorts:
         if gate is not None:
             _ = gate.wait(timeout=_GATE_WAIT_S)
 
+    def stop_in_container(self, _name: str, pid: int) -> None:
+        self.stop_process(pid)
+
     def stop_process(self, pid: int) -> None:
         self.stopped.append(pid)
 

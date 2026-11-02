@@ -170,6 +170,8 @@ class TabPorts(Protocol):
 
     def stop_process(self, pid: int) -> None: ...
 
+    def stop_in_container(self, name: str, pid: int) -> None: ...
+
     def create_worktree(self, repo: str, tab_id: str, slug: str, base: str) -> tuple[str, str]: ...
 
     def worktree_state(self, repo: str, dest: str) -> str: ...
@@ -844,8 +846,9 @@ class TabService:
             found = self._ports.orphans(tab.container, tab.id)
         except TabRequestError:
             return False
+        # These pids belong to the container's namespace: on the host the same numbers are other processes.
         for pid in found:
-            self._ports.stop_process(pid)
+            self._ports.stop_in_container(tab.container, pid)
         return True
 
     def _require(self, tab_id: str) -> _Tab:

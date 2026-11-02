@@ -78,6 +78,9 @@ class _Ports:
     def pause(self, seconds: float) -> None:
         self.pauses.append(seconds)
 
+    def stop_in_container(self, _name: str, pid: int) -> None:
+        self.stop_process(pid)
+
     def stop_process(self, pid: int) -> None:
         self.stopped.append(pid)
 
@@ -690,7 +693,7 @@ def test_host_exec_runs_as_the_host_user_in_a_login_shell() -> None:
     host = HostTabs(bins=HostBins(podman=_PODMAN), user="sas")
     argv = host.exec_argv("agentbox", ("claude", "--resume", "a b"), {"ACONSOLE_TAB": "t"}, "/work")
     assert argv[argv.index("--user") + 1] == "sas"
-    agent = argv[argv.index("--") + 1 :]
+    agent = argv[argv.index("agentbox") + 1 :]
     assert agent[:2] == ("/bin/sh", "-c")
     assert "-lc" in agent[2]
     assert agent[-3:] == ("claude", "--resume", "a b")
@@ -699,7 +702,7 @@ def test_host_exec_runs_as_the_host_user_in_a_login_shell() -> None:
 def test_login_wrapper_keeps_arguments_intact(tmp_path: Path) -> None:
     host = HostTabs(bins=HostBins(podman=_PODMAN), user="sas")
     argv = host.exec_argv("agentbox", ("/usr/bin/printf", "%s|", "a b", "c"), {}, "/work")
-    done = subprocess.run(argv[argv.index("--") + 1 :], capture_output=True, text=True, check=False, cwd=tmp_path)
+    done = subprocess.run(argv[argv.index("agentbox") + 1 :], capture_output=True, text=True, check=False, cwd=tmp_path)
     assert done.stdout.endswith("a b|c|")
 
 
@@ -711,3 +714,21 @@ def test_quit_check_and_stop_agents() -> None:
     assert service.busy_tabs() == (opened.id,)
     service.stop_agents()
     assert 42 in ports.stopped
+
+
+def test_orphans_are_stopped_inside_their_container_not_on_the_host(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Container pids mean other processes on the host: a host kill there could hit anything."""
+    calls: list[tuple[str, ...]] = []
+    host = HostTabs(bins=HostBins(podman=_PODMAN), socket_path="/sock", ingest_port="4", user="sas")
+
+    def run_in(name: str, user: str, command: tuple[str, ...]) -> str:
+        calls.append((name, user, *command))
+        return ""
+
+    def host_kill(_pid: int, _signal: int) -> None:
+        pytest.fail("a container pid reached os.kill")
+
+    monkeypatch.setattr(host._podman, "run_in", run_in)
+    monkeypatch.setattr("os.kill", host_kill)
+    host.stop_in_container("agent-claude", 4242)
+    assert calls == [("agent-claude", "sas", "kill", "-TERM", "4242")]

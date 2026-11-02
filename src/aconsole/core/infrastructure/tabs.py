@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import getpass
 import logging
 import os
@@ -109,6 +110,10 @@ class HostTabs:
             os.kill(pid, signal.SIGTERM)
         except OSError:
             return
+
+    def stop_in_container(self, name: str, pid: int) -> None:
+        with contextlib.suppress(ContainerError, ValueError):
+            _ = self._podman.run_in(name, self._user, ("kill", "-TERM", str(pid)))
 
     def create_worktree(self, repo: str, tab_id: str, slug: str, base: str) -> tuple[str, str]:
         root = Path(repo)

@@ -49,6 +49,9 @@ class _Ports:
     def pause(self, seconds: float) -> None:
         _ = seconds
 
+    def stop_in_container(self, _name: str, pid: int) -> None:
+        self.stop_process(pid)
+
     def stop_process(self, pid: int) -> None:
         _ = pid
 
