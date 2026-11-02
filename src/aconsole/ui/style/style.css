@@ -43,6 +43,7 @@
 .ac-summary-detail { color: @ac_dim_text; font-size: 9pt; }
 .ac-summary-name { font-size: 10pt; font-weight: 600; }
 .ac-summary-card .caption-heading { color: @ac_dim_text; font-size: 8pt; }
+.ac-project-bar { margin: 6px 12px 6px; }
 .ac-quota-key, .ac-quota-percent { font-size: 9pt; }
 .ac-quota-key { color: @ac_dim_text; }
 

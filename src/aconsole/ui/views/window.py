@@ -35,6 +35,7 @@ from aconsole.ui.views.sidebar.plan_graph import PlanGraph  # noqa: E402
 from aconsole.ui.views.sidebar.quota_card import QuotaCard  # noqa: E402
 from aconsole.ui.views.tabs.messages import _ as tabs_text  # noqa: E402
 from aconsole.ui.views.tabs.new_tab import NewTabDialog  # noqa: E402
+from aconsole.ui.views.tabs.project_bar import ProjectBar  # noqa: E402
 from aconsole.ui.views.tabs.sidebar import TabSidebar  # noqa: E402
 from aconsole.ui.views.terminal.messages import _ as terminal_text  # noqa: E402
 from aconsole.ui.views.terminal.page import TerminalPage  # noqa: E402
@@ -162,6 +163,8 @@ class MainWindow(Adw.ApplicationWindow):
         self._summary_vm: SidebarSummaryViewModel = SidebarSummaryViewModel(self.tabs.client)
         self.plan_page: PlanGraph | None = None
         body = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        self.project_bar: ProjectBar = ProjectBar(self.tabs, self.tabs_sidebar)
+        body.append(self.project_bar)
         self.tabs_sidebar.set_vexpand(True)
         body.append(self.tabs_sidebar)
         new_tab = Gtk.Button(child=Adw.ButtonContent(icon_name="list-add-symbolic", label=tabs_text("tabs.new")))
@@ -212,6 +215,10 @@ class MainWindow(Adw.ApplicationWindow):
         self.app_vm.dispatch("new-tab")
 
     def _select_tab(self, tab_id: TabId) -> None:
+        snapshot = self.tabs.client.store.snapshot
+        for tab in snapshot.tabs if snapshot is not None else ():
+            if str(tab.id) == str(tab_id):
+                self.project_bar.show_project(str(tab.project_id))
         for index in range(self.selection.get_n_items()):
             item = self.selection.get_item(index)
             if isinstance(item, TabItem) and str(item.tab_id) == str(tab_id):
@@ -487,6 +494,7 @@ class MainWindow(Adw.ApplicationWindow):
             return
         self._settings_revision = settings.rev
         self._terminal_settings = settings
+        self.quota_card.set_display(settings.quota_display)
         _ = self.app_vm.apply_overrides(settings.keymap_overrides)
         for page in self.terminal_pages.values():
             page.apply_settings(settings)

@@ -48,7 +48,11 @@ class TabSidebar(Gtk.Stack):
         _ = self.connect("map", self._start_clock)
         _ = self.connect("unmap", self._stop_clock)
         self._sorter: Gtk.CustomSorter = Gtk.CustomSorter.new(_section_compare)
-        self._sorted: Gtk.SortListModel = Gtk.SortListModel.new(tabs.model, None)
+        self._project: str | None = None
+        self._query: str = ""
+        self._filter: Gtk.CustomFilter = Gtk.CustomFilter.new(self._matches)
+        self._visible: Gtk.FilterListModel = Gtk.FilterListModel.new(tabs.model, self._filter)
+        self._sorted: Gtk.SortListModel = Gtk.SortListModel.new(self._visible, None)
         self._sorted.set_section_sorter(self._sorter)
         self.selection: Gtk.SingleSelection = Gtk.SingleSelection.new(self._sorted)
         factory = Gtk.SignalListItemFactory()
@@ -103,8 +107,36 @@ class TabSidebar(Gtk.Stack):
             key_handler = item.connect("notify::section-key", self._section_changed)
             title_handler = item.connect("notify::section-title", self._section_changed)
             self._section_handlers.append((item, key_handler, title_handler))
-        self.set_visible_child_name("empty" if self.tabs.store.get_n_items() == 0 else "tabs")
+        self._filter.changed(Gtk.FilterChange.DIFFERENT)
+        self._sync_page()
         self._sorter.changed(Gtk.SorterChange.DIFFERENT)
+
+    def _matches(self, item: object, _data: object = None) -> bool:
+        if not isinstance(item, TabItem):
+            return False
+        if self._project is not None and str(item.project_id) != self._project:
+            return False
+        fields = (item.title, item.subtitle, item.detail, item.section_title)
+        return self._query in " ".join(str(value) for value in fields).casefold()
+
+    def set_project(self, project_id: str | None) -> None:
+        """Show the tabs of one project. None shows every tab."""
+        if project_id != self._project:
+            self._project = project_id
+            self._filter.changed(Gtk.FilterChange.DIFFERENT)
+            self._sync_page()
+
+    def set_query(self, text: str) -> None:
+        """Keep the tabs whose name, branch, last message or agent contain ``text``."""
+        query = text.strip().casefold()
+        if query != self._query:
+            self._query = query
+            self._filter.changed(Gtk.FilterChange.DIFFERENT)
+            self._sync_page()
+
+    def _sync_page(self) -> None:
+        self.empty_page.set_description(translate("tabs.search.none" if self._query else "tabs.empty"))
+        self.set_visible_child_name("empty" if self._visible.get_n_items() == 0 else "tabs")
 
     def _section_changed(self, _item: TabItem, _property: object) -> None:
         self._sorter.changed(Gtk.SorterChange.DIFFERENT)

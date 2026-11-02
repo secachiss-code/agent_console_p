@@ -13,6 +13,7 @@ from aconsole.contracts.app import (
     FocusParams,
     OpenTabParams,
     ProjectAddParams,
+    ProjectIdParams,
     ProjectView,
     RenameParams,
     ReorderParams,
@@ -32,6 +33,7 @@ class TabItem(GObject.Object):
     """A sidebar row shares its title with the typed and GTK models."""
 
     tab_id: object = gproperty(str, "")
+    project_id: object = gproperty(str, "")
     title: object = gproperty(str, "")
     section_key: object = gproperty(str, "")
     section_title: object = gproperty(str, "")
@@ -51,7 +53,7 @@ class TabItem(GObject.Object):
     def apply(self, tab: TabView, accounts: tuple[AccountView, ...]) -> None:
         display = format_tab(tab, accounts, datetime.now(UTC))
         values: tuple[tuple[str, object], ...] = (
-            ("title", display.title), ("section-key", display.section_key),
+            ("title", display.title), ("project-id", str(tab.project_id)), ("section-key", display.section_key),
             ("section-title", display.section_title), ("subtitle", display.subtitle),
             ("detail", display.detail), ("status-symbol", display.status_symbol),
             ("status-code", tab.status.value),
@@ -156,6 +158,9 @@ class TabsViewModel:
             OpenTabParams(project_id=project_id, agent=agent, workspace=WorkspaceMode.NEW_WORKTREE),
             TabView,
         )
+
+    async def set_active_project(self, project_id: ProjectId) -> None:
+        _ = await self.client.request("project/setActive", ProjectIdParams(project_id=project_id), EmptyResult)
 
     async def add_project(self, root: str) -> ProjectView:
         return await self.client.request("project/add", ProjectAddParams(root=root), ProjectView)
