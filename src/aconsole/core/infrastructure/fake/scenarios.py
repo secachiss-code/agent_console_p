@@ -1,5 +1,6 @@
 """Snapshots and event bursts for `--fake demo|empty|stress|errors`."""
 
+import tempfile
 from datetime import UTC, datetime
 
 import msgspec
@@ -152,7 +153,15 @@ def _account(agent: AgentKind, level: QuotaLevel, used: float) -> AccountView:
         observed_at=AT,
         estimated=False,
     )
-    return AccountView(id=AccountId(ident), agent=agent, plan_label="Pro", quota=(window,))
+    weekly = QuotaWindowView(
+        key="7d",
+        used_pct=used / 2,
+        resets_at=AT,
+        level=QuotaLevel.OK if level is not QuotaLevel.UNKNOWN else level,
+        observed_at=AT,
+        estimated=agent is AgentKind.CODEX,
+    )
+    return AccountView(id=AccountId(ident), agent=agent, plan_label="Pro", quota=(window, weekly))
 
 
 def _agent(kind: AgentKind) -> AgentInfo:
@@ -180,6 +189,9 @@ def _nodes() -> tuple[PlanNodeView, ...]:
         NodeStatus.FAILED,
         NodeStatus.CANCELLED,
     )
+    # Layered as in the plan card: a chain, then a fork, then a join.
+    layers = (0, 1, 2, 2, 2, 3, 3, 4)
+    parents = ((), (1,), (2,), (2,), (2,), (3, 4), (5,), (6, 7))
     built: list[PlanNodeView] = []
     for index, status in enumerate(statuses, start=1):
         built.append(
@@ -189,9 +201,9 @@ def _nodes() -> tuple[PlanNodeView, ...]:
                 title=f"Node {index}",
                 status=status,
                 ready=status is NodeStatus.PENDING,
-                layer=index,
+                layer=layers[index - 1],
                 priority=float(index),
-                depends_on=(),
+                depends_on=tuple(NodeId(_ulid(200 + parent)) for parent in parents[index - 1]),
                 owner_agent=None,
                 tab_id=None,
                 lease_expires_at=None,
@@ -398,7 +410,10 @@ def palette_items(count: int = 40) -> tuple[PaletteItem, ...]:
 
 
 def launch_spec() -> TerminalLaunchSpec:
-    return TerminalLaunchSpec(argv=("/bin/sh", "-c", _SPIKE), env={}, cwd="/wt", scrollback_lines=1000, title="spike")
+    # The UI spawns this on the host, so the directory has to exist there.
+    return TerminalLaunchSpec(
+        argv=("/bin/sh", "-c", _SPIKE), env={}, cwd=tempfile.gettempdir(), scrollback_lines=1000, title="spike",
+    )
 
 
 def empty_checks() -> tuple[CheckResult, ...]:
