@@ -338,6 +338,7 @@ class SetupWizard(Adw.Dialog):
         try:
             _ = await self._preferences.update(SettingsPatch(setup_completed=True))
             if self._valid(generation):
+                self.step = _DONE_STEP
                 _ = self.close()
         except Exception:  # noqa: BLE001 -- failed persistence leaves an explicit retry rather than closing silently
             if self._valid(generation):

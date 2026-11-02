@@ -46,7 +46,7 @@ class PaletteDialog(Adw.Dialog):
         box.add_css_class("ac-palette")
         self.search_entry: Gtk.SearchEntry = Gtk.SearchEntry(placeholder_text=translate("palette.search"))
         self.search_entry.set_search_delay(0)
-        _ = self.search_entry.connect("search-changed", self._search_changed)
+        _ = self.search_entry.connect("changed", self._search_changed)
         _ = self.search_entry.connect("activate", self._search_activate)
         box.append(self.search_entry)
         self.stack: Gtk.Stack = Gtk.Stack(vexpand=True)
@@ -140,7 +140,7 @@ class PaletteDialog(Adw.Dialog):
         self._clear(self.results_list)
         self._items = self.viewmodel.items[:100]
         for item in self._items:
-            row = self._row(item.title, item.subtitle, item.shortcut)
+            row = self._row(item.title, item.subtitle if item.enabled else item.disabled_reason, item.shortcut)
             row.set_sensitive(item.enabled)
             row.set_tooltip_text(item.disabled_reason or item.subtitle)
             self.results_list.append(row)

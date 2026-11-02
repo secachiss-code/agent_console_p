@@ -87,7 +87,7 @@ def test_run_starts_the_server_runs_the_command_and_cleans_up(tmp_path: Path) ->
 
 def test_run_refuses_without_a_wayland_session(tmp_path: Path) -> None:
     fake, record = _fake(tmp_path)
-    assert isolated_x.run(["true"], xwayland=str(fake), env={"PATH": os.environ["PATH"]}) == 2
+    assert isolated_x.run(["true"], xwayland=str(fake), env={"PATH": os.environ["PATH"], "XDG_RUNTIME_DIR": str(tmp_path)}) == 2
     assert not record.exists()
 
 

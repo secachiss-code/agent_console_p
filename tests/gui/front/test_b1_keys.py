@@ -12,7 +12,6 @@ from textwrap import dedent
 from typing import TYPE_CHECKING
 
 import gi
-import pytest
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
@@ -27,6 +26,7 @@ from aconsole.ui.views.app import AConsoleApp, SnapshotRequest  # noqa: E402
 from aconsole.ui.views.shortcuts import ShortcutManager  # noqa: E402, F401
 
 if TYPE_CHECKING:
+    import pytest
     from pathlib import Path
 
     import msgspec
@@ -132,6 +132,8 @@ class _KeyboardApp(AConsoleApp):
             window.set_content(terminal)
             assert window.shortcut_manager is not None
             window.app_vm.on_action = self.actions.append
+            # The test checks key routing. A real palette dialog would take the focus from VTE.
+            window.app_vm.action_handler = lambda _action: None
             terminal.connect("commit", self._committed)
             child_code = dedent(
                 f"""
@@ -704,8 +706,6 @@ def _walk(widget: Gtk.Widget) -> list[Gtk.Widget]:
 
 def test_b1_keys_terminal_passthrough(running_app: str, tmp_path: Path) -> None:
     """Ctrl+Shift+P opens the palette; Ctrl+K/T/W/V and Shift+Tab reach focused VTE."""
-    pytest.fail("B1 keyboard test is blocked until hostrun provides an isolated display")
-
     ready_path = tmp_path / "pty-ready"
     result_path = tmp_path / "pty-result"
     app = _KeyboardApp(CoreClient(running_app), ready_path, result_path)

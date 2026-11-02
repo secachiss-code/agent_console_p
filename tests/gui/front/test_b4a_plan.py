@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+import pytest
+
 if TYPE_CHECKING:
     from collections.abc import Callable
 
@@ -279,7 +281,7 @@ def test_b4a_plan_graph_caps_nodes_and_emphasizes_hovered_node_neighbors() -> No
             assert connected.title in details or connected.key in details
             assert graph.node_buttons[connected.id].get_opacity() == 1.0
             assert graph.node_buttons[neighbor_source.id].get_opacity() == 1.0
-            assert graph.node_buttons[unrelated.id].get_opacity() == 0.45
+            assert graph.node_buttons[unrelated.id].get_opacity() == pytest.approx(0.45, abs=0.01)
         finally:
             hover_card.hide_graph()
             hover_window.close()

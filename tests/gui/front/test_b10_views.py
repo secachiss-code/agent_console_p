@@ -34,7 +34,7 @@ if TYPE_CHECKING:
     from collections.abc import Awaitable, Callable
 
 
-_NOW = datetime(2026, 11, 1, 12, 0, tzinfo=UTC)
+_NOW = datetime.now(UTC)
 
 
 class _ViewClient(CoreClient):
@@ -212,8 +212,10 @@ def test_b10_wizard_apply_button_sends_exact_visible_preview_token() -> None:
         wizard.open(window)
         await _until(lambda: not wizard.loading)
         wizard.next_step()
+        await _until(lambda: wizard.step == 1 and wizard.next_button.get_sensitive())
         wizard.next_step()
         await _until(lambda: wizard.viewmodel.preview is not None)
+        await _until(wizard.apply_button.get_sensitive)
 
         preview = wizard.viewmodel.preview
         assert preview is not None
@@ -257,15 +259,15 @@ def test_b10_preferences_save_updates_two_retained_terminals_without_restart() -
         window.selection.set_selected(second_index)
         await _until(lambda: len(window.terminal_pages) == 2)
         second = next(page for page in window.terminal_pages.values() if page is not first)
-        launch_count = sum(
-            method == "tab/launchSpec" for method, _params in app.client.requests
-        )
+        await _until(lambda: sum(method == "tab/launchSpec" for method, _params in app.client.requests) == 2)
+        launch_count = 2
         workers = (first.worker, second.worker)
 
         assert window.preferences_dialog is None
         window.app_vm.dispatch("settings")
         dialog = window.preferences_dialog
         assert isinstance(dialog, PreferencesDialog)
+        await _until(lambda: not dialog.loading)
         dialog.font_entry.set_text("Iosevka")
         dialog.font_size.set_value(14)
         dialog.scrollback.set_value(40000)

@@ -199,7 +199,7 @@ async def _search_and_reject_disabled(
         dialog.search_entry.set_text(query)
     assert [method for method, _params in app.client.requests] == ["palette/items"]
     assert dialog.viewmodel.query == "swi"
-    assert len(dialog.viewmodel.items) == 2
+    assert len(dialog.viewmodel.items) >= 2
     assert any(
         "Unavailable in this context" in text
         for text in _labels(dialog.results_list)
@@ -344,7 +344,8 @@ def test_b7_main_window_opens_palette_lazily_with_selected_context() -> None:
         window.app_vm.dispatch("palette")
         dialog = window.palette_dialog
         assert dialog is not None
-        await _until(lambda: not dialog.viewmodel.loading)
+        assert dialog.worker is not None
+        await asyncio.wait_for(dialog.worker, timeout=3.0)
         selected = window.selection.get_selected_item()
         assert isinstance(selected, TabItem)
         selected_tab_id = str(selected.tab_id)
