@@ -14,6 +14,7 @@ from aconsole.core.infrastructure.http.routes import IngestItem, IngestQueue
 
 _LOG = logging.getLogger(__name__)
 _HOOKS = frozenset({"claude.hook", "codex.hook"})
+_STATUSLINE = "claude.statusline"
 _CLAUDE = frozenset({"claude.hook", "claude.statusline"})
 
 
@@ -37,13 +38,20 @@ def hook_event(item: IngestItem) -> str | None:
     return None
 
 
-async def consume(queue: IngestQueue, ready: asyncio.Event, apply: Callable[[str, str], Awaitable[None]]) -> None:
+async def consume(
+    queue: IngestQueue,
+    ready: asyncio.Event,
+    apply: Callable[[str, str], Awaitable[None]],
+    statusline: Callable[[str, bytes], Awaitable[None]] | None = None,
+) -> None:
     """Apply queued items in order until cancelled. `ready` is set whenever the HTTP side queued something."""
     while True:
         _ = await ready.wait()
         ready.clear()
         while (item := queue.pop()) is not None:
             try:
+                if statusline is not None and item.kind == _STATUSLINE:
+                    await statusline(item.tab_id, item.body)
                 name = _event_name(item)
                 if name is None:
                     continue

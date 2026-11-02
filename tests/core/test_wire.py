@@ -33,12 +33,22 @@ from aconsole.core.infrastructure.tabs import HostBins, HostTabs
 from tests.core.conftest import wait_for_socket
 
 _ENCODER = msgspec.json.Encoder()
+_CODEX_REPLY = (
+    '{"id":2,"result":{"rateLimits":{"planType":"plus",'
+    '"primary":{"usedPercent":7,"windowDurationMins":300,"resetsAt":1900000000},'
+    '"secondary":{"usedPercent":28,"windowDurationMins":10080,"resetsAt":1900000000}}}}'
+)
 _FAKE_PODMAN = """#!/bin/sh
 case "$1" in
 inspect) printf '[{"Id":"i","Name":"x","State":{"Running":true}}]\\n' ;;
-exec) printf '%s' "$FAKE_HOME" ;;
+exec)
+  case "$*" in
+  *"auth status"*) printf '{"loggedIn":true,"email":"e@x","subscriptionType":"pro"}' ;;
+  *app-server*) printf '@REPLY@\\n' ;;
+  *) printf '%s' "$FAKE_HOME" ;;
+  esac ;;
 esac
-"""
+""".replace("@REPLY@", _CODEX_REPLY)
 
 
 def _git_repo(root: Path) -> Path:
@@ -120,6 +130,54 @@ def _post_hook(port: int, tab_id: str, token: str, event: str) -> int:
     )
     with urllib.request.urlopen(request, timeout=5) as answer:  # noqa: S310 -- loopback only
         return int(answer.status)
+
+
+def _post_statusline(port: int, tab_id: str, token: str) -> None:
+    body = json.dumps(
+        {
+            "session_id": "s",
+            "rate_limits": {
+                "five_hour": {"used_percentage": 40, "resets_at": 1900000000},
+                "seven_day": {"used_percentage": 12, "resets_at": 1900000000},
+            },
+        },
+    ).encode()
+    request = urllib.request.Request(
+        f"http://127.0.0.1:{port}/v1/tabs/{tab_id}/claude/statusline",
+        data=body,
+        headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"},
+    )
+    with urllib.request.urlopen(request, timeout=5):  # noqa: S310 -- loopback only
+        pass
+
+
+def test_limits_of_both_agents_reach_the_snapshot(tmp_path: Path, monkeypatch) -> None:  # noqa: ANN001 -- pytest fixture
+    repo = _git_repo(tmp_path / "repo")
+    home = tmp_path / "home"
+    home.mkdir()
+    monkeypatch.setenv("FAKE_HOME", str(home))
+
+    async def scenario() -> dict[str, list[float | None]]:
+        daemon = _daemon(tmp_path)
+        task = asyncio.create_task(daemon.serve())
+        client = await _connect(daemon.socket)
+        project = await client.call("project/add", ProjectAddParams(root=str(repo)), ProjectView)
+        tab = await client.call("tab/open", _open(project.id), TabView)
+        spec = await client.call("tab/launchSpec", TabIdParams(tab_id=tab.id), TerminalLaunchSpec)
+        port = daemon.ingest_port
+        assert port is not None
+        await asyncio.to_thread(_post_statusline, port, str(tab.id), spec.env["ACONSOLE_TAB_TOKEN"])
+        found: dict[str, list[float | None]] = {}
+        for _ in range(100):
+            snapshot = await client.snapshot()
+            found = {item.agent.value: [window.used_pct for window in item.quota] for item in snapshot.accounts}
+            if len(found) == 2:
+                break
+            await asyncio.sleep(0.05)
+        await _stop(daemon, task, client)
+        return found
+
+    assert asyncio.run(scenario()) == {"claude": [40.0, 12.0], "codex": [7.0, 28.0]}
 
 
 def test_projects_are_added_once_activated_and_survive_a_restart(tmp_path: Path) -> None:

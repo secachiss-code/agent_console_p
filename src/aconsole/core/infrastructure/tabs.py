@@ -20,6 +20,7 @@ from aconsole.contracts.app import AgentInfo
 from aconsole.contracts.common import AgentKind
 from aconsole.core.application.services.tabs import TabRequestError, TabService
 from aconsole.core.domain.clock import Clock
+from aconsole.core.infrastructure.agents.live_limits import ask_rate_limits
 from aconsole.core.infrastructure.containers.distrobox_env import DistroboxEnvCache, DistroboxError
 from aconsole.core.infrastructure.containers.podman import ContainerError, ExecRequest, Inspected, Podman
 from aconsole.core.infrastructure.git.worktrees import WorktreeError, WorktreeRequest, Worktrees
@@ -142,6 +143,26 @@ class HostTabs:
             return self._trees.close(Path(repo), path, discard_ignored=discard_ignored).removed
         except WorktreeError as exc:
             raise TabRequestError(_CREATE_FAILED) from exc
+
+    def agent_output(self, name: str, command: tuple[str, ...]) -> bytes:
+        """Stdout of an agent command in a running container, from its first `{`: a login shell may print first."""
+        try:
+            text = self._podman.run_in(name, self._user, (*_LOGIN_SHELL, *command))
+        except (ContainerError, ValueError):
+            _LOG.warning("%s did not answer in %s", command[0], name, exc_info=True)
+            return b""
+        start = text.find("{")
+        return text[start:].encode() if start >= 0 else b""
+
+    def codex_rate_limits(self, name: str) -> bytes:
+        """The `account/rateLimits/read` reply of the container's Codex. Empty when it is stopped or silent."""
+        try:
+            if not self._podman.inspect(name).running:
+                return b""
+            argv = self._podman.pipe_argv(name, self._user, (*_LOGIN_SHELL, "codex", "app-server"))
+        except (ContainerError, ValueError):
+            return b""
+        return ask_rate_limits(argv)
 
     def inspect_container(self, name: str) -> Inspected:
         return self._podman.inspect(name)

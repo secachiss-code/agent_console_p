@@ -14,6 +14,7 @@ import msgspec
 
 from aconsole.contracts import API_VERSION
 from aconsole.contracts.app import (
+    AccountView,
     AgentInfo,
     AppSnapshot,
     CloseTabParams,
@@ -292,6 +293,7 @@ class TabService:
         self.listener: Callable[[UiEvent], None] | None = listener
         # Filled when `tab/launchSpec` mints an ingest token for a restored tab. The daemon registers it.
         self.on_ingest: Callable[[str, str], None] | None = None
+        self._accounts: Callable[[], tuple[AccountView, ...]] | None = None
         self._catalog: ProjectCatalog | None = None
         self._agents: Callable[[], tuple[AgentInfo, ...]] | None = None
         self._commands: AgentCommands | None = None
@@ -327,6 +329,10 @@ class TabService:
     def use_agents(self, source: Callable[[], tuple[AgentInfo, ...]]) -> None:
         """The agent list for the snapshot. A kind it marks unavailable cannot open a tab."""
         self._agents = source
+
+    def use_accounts(self, source: Callable[[], tuple[AccountView, ...]]) -> None:
+        """The accounts and limits for the snapshot."""
+        self._accounts = source
 
     def use_commands(self, commands: AgentCommands) -> None:
         self._commands = commands
@@ -369,7 +375,7 @@ class TabService:
             projects=() if catalog is None else catalog.views(),
             active_project=None if catalog is None else catalog.active,
             agents=self._agents() if self._agents is not None else (),
-            accounts=(),
+            accounts=self._accounts() if self._accounts is not None else (),
             tabs=tuple(self._view(tab) for tab in ordered),
             approvals=(),
             plans=(),

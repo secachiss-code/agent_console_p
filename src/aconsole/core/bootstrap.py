@@ -11,6 +11,7 @@ import signal
 import socket as sockets
 import struct
 import sys
+import time
 from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, datetime
 from pathlib import Path
@@ -21,15 +22,19 @@ import uvicorn
 
 from aconsole.contracts.common import ClientRole, TabId
 from aconsole.contracts.errors import ErrorData, ErrorObject, MessageTooLargeDetails, error_by_name
-from aconsole.contracts.events import Notify, TabAdded, TabRemoved, UiEvent
+from aconsole.contracts.events import Notify, QuotaUpdated, TabAdded, TabRemoved, UiEvent
 from aconsole.contracts.ipc import InitializeParams, Request, ResponseErr
 from aconsole.core.application.services.approval_broker import ApprovalHold
 from aconsole.core.application.services.projects import ProjectCatalog
+from aconsole.core.application.services.quota_aggregator import QuotaAggregator
 from aconsole.core.application.services.setup import SetupService
 from aconsole.core.application.services.tabs import TabService
 from aconsole.core.domain.approvals import Approval, ApprovalBook
 from aconsole.core.domain.clock import Clock
+from aconsole.core.infrastructure.agents.claude.limits import ClaudeLimits
+from aconsole.core.infrastructure.agents.codex.limits import CodexLimits
 from aconsole.core.infrastructure.agents.launch import HostAgentCommands
+from aconsole.core.infrastructure.agents.live_limits import CachedAuth
 from aconsole.core.infrastructure.http.app import IngestApp, serve_config
 from aconsole.core.infrastructure.http.approval import handle_permission
 from aconsole.core.infrastructure.http.auth import TokenBook
@@ -65,7 +70,7 @@ if TYPE_CHECKING:
     from sqlalchemy.engine import Engine
     from sqlalchemy.orm import Session
 
-    from aconsole.contracts.app import TabView
+    from aconsole.contracts.app import AccountView, TabView
     from aconsole.contracts.ipc import EventEnvelope
 
 _LOG = logging.getLogger(__name__)
@@ -204,6 +209,17 @@ def _too_large(encoder: msgspec.json.Encoder, limit: int) -> bytes:
     return encode_line(encoder, ResponseErr(id=None, error=error))
 
 
+def _windows(account: AccountView) -> tuple[tuple[str, float | None, datetime | None], ...]:
+    return tuple((window.key, window.used_pct, window.resets_at) for window in account.quota)
+
+
+_CLAUDE_CONTAINER = "agent-claude"
+_CODEX_CONTAINER = "agent-codex"
+_CODEX_POLL = "codex-poll"
+_CODEX_POLL_S = 120.0
+_ACCOUNT_RESEND_S = 30.0
+
+
 class Daemon:
     """The core process. A second instance refuses the lock. Idle clients shut it down."""
 
@@ -251,6 +267,7 @@ class Daemon:
         self.tabs.use_projects(self._catalog)
         self.tabs.use_agents(HostAgents(self._host.inspect_container).agents)
         self.tabs.use_commands(HostAgentCommands(self._host.agent_home))
+        self._setup_limits()
         self.setup_service: SetupService = setup_service or SetupService(
             probe=HostSetupProbe(), fixes=HostSetupFixes(), tokens=SetupTokens()
         )
@@ -280,6 +297,15 @@ class Daemon:
         self._sweeper: asyncio.Task[None] | None = None
         # Checkpoint refs whose rows the sweep removed. Deleting the git refs belongs to the checkpoint service (A4).
         self.dropped_refs: list[str] = []
+
+    def _setup_limits(self) -> None:
+        board = QuotaAggregator()
+        auth = CachedAuth(lambda argv: self._host.agent_output(_CLAUDE_CONTAINER, argv))
+        self._claude_limits: ClaudeLimits = ClaudeLimits(auth, board, lambda: datetime.now(UTC))
+        self._codex_limits: CodexLimits = CodexLimits(board, lambda: datetime.now(UTC))
+        self._accounts: dict[str, AccountView] = {}
+        self._account_sent: dict[str, float] = {}
+        self.tabs.use_accounts(lambda: tuple(self._accounts.values()))
 
     @property
     def lock_path(self) -> Path:
@@ -465,7 +491,8 @@ class Daemon:
         self._host.set_ingest_port(port)
         self._ingest_tasks = [
             asyncio.create_task(server.serve(sockets=[listener])),
-            asyncio.create_task(consume(self._ingest_queue, ready, self._apply_hook)),
+            asyncio.create_task(consume(self._ingest_queue, ready, self._apply_hook, self._apply_statusline)),
+            asyncio.create_task(self._poll_codex_limits()),
         ]
         # uvicorn exposes only a `started` flag, no event to wait on.
         while not server.started and not self._ingest_tasks[0].done():  # noqa: ASYNC110
@@ -473,6 +500,35 @@ class Daemon:
 
     async def _apply_hook(self, tab_id: str, event_name: str) -> None:
         _ = await self._in_worker(lambda: self.tabs.apply_hook(tab_id, event_name))
+
+    async def _apply_statusline(self, tab_id: str, body: bytes) -> None:
+        event = await self._in_worker(lambda: self._claude_limits.on_statusline(tab_id, body))
+        if event is not None:
+            self._account_observed(event)
+
+    async def _poll_codex_limits(self) -> None:
+        """Codex reports limits only when asked, and answers without any open tab."""
+        while True:
+            try:
+                body = await asyncio.to_thread(self._host.codex_rate_limits, _CODEX_CONTAINER)
+                event = await self._in_worker(lambda body=body: self._codex_limits.on_rate_limits(_CODEX_POLL, body))
+                if event is not None:
+                    self._account_observed(event)
+            except Exception:  # noqa: BLE001 -- limits must never stop the core
+                _LOG.exception("cannot read Codex limits")
+            await asyncio.sleep(_CODEX_POLL_S)
+
+    def _account_observed(self, event: QuotaUpdated) -> None:
+        """The snapshot always holds the newest; subscribers hear of a change, or at most twice a minute without one."""
+        account = event.account
+        key = str(account.id)
+        previous = self._accounts.get(key)
+        now = time.monotonic()
+        changed = previous is None or _windows(previous) != _windows(account)
+        self._accounts = {**self._accounts, key: account}
+        if changed or now - self._account_sent.get(key, 0.0) >= _ACCOUNT_RESEND_S:
+            self._account_sent[key] = now
+            self._publish(event, self._live_tabs, None)
 
     async def _close_ingest(self) -> None:
         server = self._uvicorn

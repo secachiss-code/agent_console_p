@@ -153,6 +153,14 @@ class Podman:
             raise ValueError(message)
         return self._run(("exec", "--user", user, name, *command))
 
+    def pipe_argv(self, name: str, user: str, command: tuple[str, ...]) -> tuple[str, ...]:
+        """Argv of a command in the container that talks over stdin and stdout, with no terminal."""
+        check_container_name(name)
+        if _USER.fullmatch(user) is None:
+            message = "user must be a single token"
+            raise ValueError(message)
+        return (str(self._binary), "exec", "--interactive", "--user", user, name, *command)
+
     def orphans(self, name: str, tab_id: str) -> tuple[int, ...]:
         """Pids inside the container whose environ contains `ACONSOLE_TAB=<tab_id>`."""
         check_container_name(name)
