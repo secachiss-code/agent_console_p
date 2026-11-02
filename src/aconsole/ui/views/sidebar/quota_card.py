@@ -22,7 +22,6 @@ class QuotaCard(Gtk.Button):
         self.window_rows: list[QuotaRow] = []
         self.details_dialog: QuotaDialog | None = None
         self._timer: int | None = None
-        self._hover_source: int | None = None
         self.rows: Gtk.Box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
         self.summary_label: Gtk.Label = Gtk.Label(xalign=1)
         self.summary_label.add_css_class("ac-summary-detail")
@@ -30,10 +29,6 @@ class QuotaCard(Gtk.Button):
         _ = self.connect("clicked", self._clicked)
         _ = self.connect("map", self._mapped)
         _ = self.connect("unmap", self._unmapped)
-        self.hover_motion: Gtk.EventControllerMotion = Gtk.EventControllerMotion()
-        _ = self.hover_motion.connect("enter", self._hover_enter)
-        _ = self.hover_motion.connect("leave", self._hover_leave)
-        self.add_controller(self.hover_motion)
         self.set_accounts(())
 
     def set_accounts(self, accounts: tuple[AccountView, ...]) -> None:
@@ -103,27 +98,11 @@ class QuotaCard(Gtk.Button):
         if self.details_dialog is not None and self.details_dialog.get_visible():
             self.details_dialog.update_accounts(self._accounts, self.tabs, self.summary_label.get_label())
 
-    def _hover_enter(self, _motion: Gtk.EventControllerMotion, _x: float, _y: float) -> None:
-        if self._hover_source is None:
-            self._hover_source = GLib.timeout_add(400, self._open_hovered)
-
-    def _hover_leave(self, _motion: Gtk.EventControllerMotion) -> None:
-        if self._hover_source is not None:
-            _ = GLib.source_remove(self._hover_source)
-            self._hover_source = None
-
-    def _open_hovered(self) -> bool:
-        self._hover_source = None
-        if self.get_mapped():
-            self._clicked(self)
-        return GLib.SOURCE_REMOVE
-
     def _mapped(self, _widget: Gtk.Widget) -> None:
         if self._timer is None:
             self._timer = GLib.timeout_add_seconds(30, self._tick)
 
     def _unmapped(self, _widget: Gtk.Widget) -> None:
-        self._hover_leave(self.hover_motion)
         if self._timer is not None:
             _ = GLib.source_remove(self._timer)
             self._timer = None
