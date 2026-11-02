@@ -683,3 +683,31 @@ def _git(repo: Path, *args: str) -> str:
         text=True,
     )
     return completed.stdout
+
+
+def test_host_exec_runs_as_the_host_user_in_a_login_shell() -> None:
+    """Distrobox puts agents on PATH in /etc/profile.d, and root would have the wrong home."""
+    host = HostTabs(bins=HostBins(podman=_PODMAN), user="sas")
+    argv = host.exec_argv("agentbox", ("claude", "--resume", "a b"), {"ACONSOLE_TAB": "t"}, "/work")
+    assert argv[argv.index("--user") + 1] == "sas"
+    agent = argv[argv.index("--") + 1 :]
+    assert agent[:2] == ("/bin/sh", "-c")
+    assert "-lc" in agent[2]
+    assert agent[-3:] == ("claude", "--resume", "a b")
+
+
+def test_login_wrapper_keeps_arguments_intact(tmp_path: Path) -> None:
+    host = HostTabs(bins=HostBins(podman=_PODMAN), user="sas")
+    argv = host.exec_argv("agentbox", ("/usr/bin/printf", "%s|", "a b", "c"), {}, "/work")
+    done = subprocess.run(argv[argv.index("--") + 1 :], capture_output=True, text=True, check=False, cwd=tmp_path)
+    assert done.stdout.endswith("a b|c|")
+
+
+def test_quit_check_and_stop_agents() -> None:
+    service, ports = _service(_seed())
+    connection = _ready(service)
+    opened = _view(_call(connection, 2, "tab/open", _open()))
+    _ = service.started(StartedParams(tab_id=opened.id, pid=42))
+    assert service.busy_tabs() == (opened.id,)
+    service.stop_agents()
+    assert 42 in ports.stopped

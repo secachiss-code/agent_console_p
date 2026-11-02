@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import os
 from datetime import UTC, datetime
+from importlib import metadata
 from typing import final
 
 import msgspec
@@ -11,8 +13,11 @@ from aconsole.contracts.app import (
     ApplyFixParams,
     DecideParams,
     EmptyParams,
+    EmptyResult,
     FixIdParams,
+    QuitCheckResult,
     ReleaseParams,
+    ScreenTextReplyParams,
     SnapshotResult,
     SubscribeParams,
     SubscribeResult,
@@ -45,11 +50,20 @@ from aconsole.core.infrastructure.ipc.framing import decode_envelope, encode_lin
 from aconsole.core.infrastructure.ipc.ring import EventRing
 
 _SERVER = ProtocolVersion(major=1, minor=0)
-_SERVER_CAPS = frozenset({"events.v1", "diff.v1", "checkpoints.v1", "approvals.inline", "notifications.desktop"})
+# Only what this process serves: `diff.v1` and `checkpoints.v1` come back when their methods are wired.
+_SERVER_CAPS = frozenset({"events.v1", "approvals.inline", "notifications.desktop"})
 _HOLD = "core/hold"
 _SNAPSHOT = "app/snapshot"
 _SIDECAR_PREFIX = "sidecar/"
+_APP_METHODS = frozenset({"app/quitCheck", "app/stopAgents", "terminal/screenTextReply"})
 OUTBOUND_LIMIT = 1024
+
+
+def _server_version() -> str:
+    try:
+        return metadata.version("aconsole")
+    except metadata.PackageNotFoundError:
+        return "0.0.0"
 
 
 @final
@@ -125,7 +139,9 @@ class Connection:
             return (self._err(request.id, "NOT_INITIALIZED"),)
         return self._ready(request)
 
-    def _ready(self, request: Request) -> tuple[bytes, ...]:  # noqa: PLR0911 -- protocol dispatch
+    def _ready(self, request: Request) -> tuple[bytes, ...]:  # noqa: C901, PLR0911 -- protocol dispatch
+        if request.method == "shutdown":
+            return (self._ok(request.id, EmptyResult()),)
         # APP_API §9: a sidecar may call only `sidecar/*`; ui and cli may not call those.
         if (self.role is ClientRole.SIDECAR) != request.method.startswith(_SIDECAR_PREFIX):
             return (self._err(request.id, "ROLE_FORBIDDEN"),)
@@ -133,6 +149,9 @@ class Connection:
             self.paused = False
             self._queued = 0
             return self._subscribe(request)
+        if request.method == "events/unsubscribe":
+            self.subscribed = False
+            return (self._ok(request.id, EmptyResult()),)
         if len(self.inflight) >= self._limits.max_inflight_requests:
             return (self._err(request.id, "SERVER_BUSY"),)
         if request.method == _HOLD:
@@ -144,10 +163,27 @@ class Connection:
             return self._release_to_native(request, self.approval_hold)
         if request.method.startswith("setup/") and self.setup_service is not None:
             return self._setup(request, self.setup_service)
+        if request.method in _APP_METHODS and self.tabs is not None:
+            return self._app(request, self.tabs)
         served = TAB_METHODS | SETTINGS_METHODS
         if request.method == _SNAPSHOT or (self.tabs is not None and request.method in served):
             return self._tab(request)
         return (self._err(request.id, "METHOD_NOT_FOUND"),)
+
+    def _app(self, request: Request, tabs: TabService) -> tuple[bytes, ...]:
+        try:
+            if request.method == "terminal/screenTextReply":
+                # The core asks for screen text only in `/switch`, which has no caller yet.
+                _ = msgspec.json.decode(request.params, type=ScreenTextReplyParams)
+                return (self._ok(request.id, EmptyResult()),)
+            _ = msgspec.json.decode(request.params, type=EmptyParams)
+        except msgspec.DecodeError:
+            return (self._err(request.id, "INVALID_PARAMS"),)
+        if request.method == "app/stopAgents":
+            tabs.stop_agents()
+            return (self._ok(request.id, EmptyResult()),)
+        pending = len(self.approval_hold.pending_views()) if self.approval_hold is not None else 0
+        return (self._ok(request.id, QuitCheckResult(busy_tabs=tabs.busy_tabs(), pending_approvals=pending)),)
 
     def _setup(self, request: Request, service: SetupService) -> tuple[bytes, ...]:
         try:
@@ -226,7 +262,10 @@ class Connection:
             return ()
         if note.method != "$/cancelRequest":
             return ()
-        params = msgspec.json.decode(note.params, type=CancelParams)
+        try:
+            params = msgspec.json.decode(note.params, type=CancelParams)
+        except msgspec.DecodeError:
+            return ()
         if params.id not in self.inflight:
             return ()
         self.inflight.discard(params.id)
@@ -235,7 +274,10 @@ class Connection:
     def _initialize(self, request: Request) -> tuple[bytes, ...]:
         if self.ready:
             return (self._err(request.id, "ALREADY_INITIALIZED"),)
-        params = msgspec.json.decode(request.params, type=InitializeParams)
+        try:
+            params = msgspec.json.decode(request.params, type=InitializeParams)
+        except msgspec.DecodeError:
+            return (self._err(request.id, "INVALID_PARAMS"),)
         chosen = _negotiate(params.protocol[0], params.protocol[1])
         if chosen is None:
             return (self._err(request.id, "PROTOCOL_VERSION_UNSUPPORTED"),)
@@ -246,8 +288,8 @@ class Connection:
         self.capabilities = _SERVER_CAPS & params.capabilities
         result = InitializeResult(
             protocol=chosen,
-            server_version="0.0.0",
-            server_pid=0,
+            server_version=_server_version(),
+            server_pid=os.getpid(),
             session_id=self.session_id,
             capabilities=self.capabilities,
             limits=self._limits,
@@ -262,7 +304,10 @@ class Connection:
         return tabs.claim_sidecar(str(params.tab_id), params.sidecar_token)
 
     def _subscribe(self, request: Request) -> tuple[bytes, ...]:
-        params = msgspec.json.decode(request.params, type=SubscribeParams)
+        try:
+            params = msgspec.json.decode(request.params, type=SubscribeParams)
+        except msgspec.DecodeError:
+            return (self._err(request.id, "INVALID_PARAMS"),)
         replay = self.ring.since(params.after_seq)
         if replay is None:
             return (self._err(request.id, "RESYNC_REQUIRED"),)

@@ -16,7 +16,15 @@ import pytest
 
 from aconsole.contracts.app import OpenTabParams, TabIdParams
 from aconsole.contracts.common import AgentKind, ClientRole, ProjectId, TabId, WorkspaceMode
-from aconsole.contracts.ipc import Envelope, InitializeParams, ProtocolVersion, Request, ResponseErr, ResponseOk
+from aconsole.contracts.ipc import (
+    Envelope,
+    InitializeParams,
+    InitializeResult,
+    ProtocolVersion,
+    Request,
+    ResponseErr,
+    ResponseOk,
+)
 from aconsole.core.__main__ import main
 from aconsole.core.bootstrap import (
     IDLE_EXIT_S,
@@ -28,6 +36,8 @@ from aconsole.core.bootstrap import (
     parse_serve,
 )
 from aconsole.core.infrastructure.ipc.framing import decode_envelope, encode_line
+from aconsole.core.infrastructure.ipc.ring import EventRing
+from aconsole.core.infrastructure.ipc.session import Connection
 from tests.core.conftest import use_fake_tabs, wait_for_socket
 
 if TYPE_CHECKING:
@@ -348,3 +358,28 @@ async def _ping(path: Path) -> ResponseOk:
         message = "initialize failed"
         raise TypeError(message)
     return decoded
+
+
+def test_bad_params_are_reported_instead_of_dropping_the_connection() -> None:
+    connection = Connection(EventRing())
+    bad = connection.receive(_line(Request(id=7, method="initialize", params=msgspec.Raw(b"{}"))))
+    assert _message(bad[0]) == "INVALID_PARAMS"
+    _ = connection.receive(_init(ClientRole.UI))
+    frames = connection.receive(_line(Request(id=9, method="events/subscribe", params=msgspec.Raw(b"{}"))))
+    assert _message(frames[0]) == "INVALID_PARAMS"
+
+
+def _message(frame: bytes) -> str:
+    reply = decode_envelope(frame)
+    assert isinstance(reply, ResponseErr)
+    return reply.error.message
+
+
+def test_server_reports_itself_and_only_what_it_serves() -> None:
+    connection = Connection(EventRing())
+    reply = decode_envelope(connection.receive(_init(ClientRole.UI))[0])
+    assert isinstance(reply, ResponseOk)
+    result = msgspec.json.decode(reply.result, type=InitializeResult)
+    assert result.server_pid == os.getpid()
+    assert "diff.v1" not in result.capabilities
+    assert "checkpoints.v1" not in result.capabilities

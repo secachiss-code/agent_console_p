@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import getpass
 import os
 import signal
 import sys
@@ -19,7 +20,13 @@ from aconsole.core.infrastructure.git.worktrees import WorktreeError, WorktreeRe
 _GIT: Final = Path("/usr/bin/git")
 _PODMAN: Final = Path("/usr/bin/podman")
 _SHELL: Final = Path("/bin/sh")
-_USER: Final = "root"
+# Bash and dash both accept `-lc`. Agents are on PATH only in a login shell: /etc/profile.d in the distrobox image.
+_LOGIN_SHELL: Final = (
+    "/bin/sh",
+    "-c",
+    '''exec "$(getent passwd "$(id -un)" | cut -d: -f7)" -lc 'exec "$@"' aconsole "$@"''',
+    "aconsole",
+)
 _PATH: Final = "/usr/bin"
 _PORT: Final = "0"
 _ID_BYTES: Final = 8
@@ -52,7 +59,7 @@ class HostBox:
 class HostTabs:
     """Worktrees plus podman. `box` is optional so startup does not read a user's distrobox.ini."""
 
-    def __init__(
+    def __init__(  # noqa: PLR0913 -- host paths and injection points
         self,
         *,
         bins: HostBins | None = None,
@@ -60,6 +67,7 @@ class HostTabs:
         socket_path: str = "",
         ingest_port: str = _PORT,
         worktrees_dir: Path | None = None,
+        user: str | None = None,
     ) -> None:
         chosen = HostBins() if bins is None else bins
         linked = HostBox() if box is None else box
@@ -69,6 +77,8 @@ class HostTabs:
             self._env = None
         else:
             self._env = DistroboxEnvCache(linked.ini, linked.distrobox)
+        # Distrobox maps the host user into the container. As root the agent would have the wrong home and no login.
+        self._user = getpass.getuser() if user is None else user
         self._socket = socket_path
         self._port = ingest_port
         self._worktrees = default_worktrees() if worktrees_dir is None else worktrees_dir
@@ -126,7 +136,9 @@ class HostTabs:
 
     def exec_argv(self, name: str, command: tuple[str, ...], env: dict[str, str], workdir: str) -> tuple[str, ...]:
         try:
-            return self._podman.exec_spec(ExecRequest(name=name, command=command, env=env, workdir=workdir, user=_USER))
+            return self._podman.exec_spec(
+                ExecRequest(name=name, command=(*_LOGIN_SHELL, *command), env=env, workdir=workdir, user=self._user),
+            )
         except (ContainerError, ValueError) as exc:
             raise TabRequestError(_START_FAILED) from exc
 

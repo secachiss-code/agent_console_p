@@ -26,10 +26,10 @@ from aconsole.ui.views.app import AConsoleApp, SnapshotRequest  # noqa: E402
 from aconsole.ui.views.shortcuts import ShortcutManager  # noqa: E402, F401
 
 if TYPE_CHECKING:
-    import pytest
     from pathlib import Path
 
     import msgspec
+    import pytest
 
     from aconsole.ui.viewmodels.logic.keymap import BindingSpec
 

@@ -336,6 +336,16 @@ class TabService:
         """Tabs whose process the UI reported started and not yet exited. The core stays up for them."""
         return sum(1 for tab in self._tabs.values() if tab.running)
 
+    def busy_tabs(self) -> tuple[TabId, ...]:
+        """Tabs whose process is still running, for the quit confirmation."""
+        return tuple(TabId(tab.id) for tab in sorted(self._tabs.values(), key=_by_order) if tab.running)
+
+    def stop_agents(self) -> None:
+        """Soft stop for every running tab. Tabs and sessions stay; the UI reports `tab/exited` as each one ends."""
+        for tab in tuple(self._tabs.values()):
+            if tab.running:
+                _ = self._stop(tab)
+
     def ingest_token(self, tab_id: str) -> str | None:
         """The bearer token the tab's hooks present. Empty after a restore, until `tab/launchSpec`."""
         tab = self._tabs.get(tab_id)
