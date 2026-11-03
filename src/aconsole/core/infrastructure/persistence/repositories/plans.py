@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 import logging
+from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import final
 
-from sqlalchemy import delete, select
+from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
@@ -28,6 +29,15 @@ from aconsole.core.infrastructure.persistence.models import (
 from aconsole.core.infrastructure.persistence.writer import Writer
 
 _LOG = logging.getLogger(__name__)
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class _Links:
+    """Every edge, artifact, and lease, read once for the whole load."""
+
+    edges: dict[str, list[PlanEdge]]
+    artifacts: dict[str, list[NodeArtifact]]
+    leases: dict[str, Lease]
 
 
 @final
@@ -71,21 +81,19 @@ def save_plan(session: Session, plan: StoredPlan) -> None:
         _save_node(session, plan, node)
     session.flush()
     ids = {node.key: node.id for node in plan.nodes}
-    for node in plan.nodes:
-        _ = session.execute(delete(PlanEdge).where(PlanEdge.dst_node_id == node.id))
-        _ = session.execute(delete(Lease).where(Lease.node_id == node.id))
-        _ = session.execute(delete(NodeArtifact).where(NodeArtifact.node_id == node.id))
-    session.flush()
-    for node in plan.nodes:
-        _save_links(session, node, ids)
+    node_ids = tuple(ids.values())
+    _sync_edges(session, plan, ids, node_ids)
+    _sync_artifacts(session, plan, node_ids)
+    _sync_leases(session, plan, node_ids)
 
 
 def load_plans(session: Session) -> tuple[StoredPlan, ...]:
     plans: list[StoredPlan] = []
+    links = _links(session)
     for row in session.scalars(select(Plan).order_by(Plan.created_at, Plan.id)).all():
         rows = session.scalars(select(PlanNode).where(PlanNode.plan_id == row.id).order_by(PlanNode.created_at)).all()
         keys = {node.id: node.node_key for node in rows}
-        nodes = tuple(_stored_node(session, node, keys) for node in sorted(rows, key=_insertion))
+        nodes = tuple(_stored_node(links, node, keys) for node in sorted(rows, key=_insertion))
         plans.append(
             StoredPlan(
                 id=row.id,
@@ -130,44 +138,92 @@ def _save_node(session: Session, plan: StoredPlan, node: StoredNode) -> None:
     row.updated_at = plan.updated_at
 
 
-def _save_links(session: Session, node: StoredNode, ids: dict[str, str]) -> None:
-    for blocker in node.depends_on:
-        session.add(PlanEdge(src_node_id=ids[blocker], dst_node_id=node.id, kind=EdgeKind.BLOCKS))
+def _sync_edges(session: Session, plan: StoredPlan, ids: dict[str, str], node_ids: tuple[str, ...]) -> None:
+    """Touch only the edges that changed: most saves move one node's status."""
+    wanted = {edge for node in plan.nodes for edge in _edges_of(node, ids)}
+    held = session.scalars(select(PlanEdge).where(PlanEdge.dst_node_id.in_(node_ids))).all()
+    present = {(row.src_node_id, row.dst_node_id, row.kind) for row in held}
+    for row in held:
+        if (row.src_node_id, row.dst_node_id, row.kind) not in wanted:
+            session.delete(row)
+    for src, dst, kind in wanted - present:
+        session.add(PlanEdge(src_node_id=src, dst_node_id=dst, kind=kind))
+
+
+def _edges_of(node: StoredNode, ids: dict[str, str]) -> tuple[tuple[str, str, EdgeKind], ...]:
+    edges = [(ids[blocker], node.id, EdgeKind.BLOCKS) for blocker in node.depends_on]
     if node.parent is not None and node.parent in ids:
-        session.add(PlanEdge(src_node_id=ids[node.parent], dst_node_id=node.id, kind=EdgeKind.PARENT))
-    for other in node.related:
-        if other in ids:
-            session.add(PlanEdge(src_node_id=ids[other], dst_node_id=node.id, kind=EdgeKind.RELATED))
-    for artifact in node.artifacts:
-        session.add(
-            NodeArtifact(
-                id=artifact.id,
-                node_id=node.id,
-                kind=ArtifactKind(artifact.kind),
-                ref=artifact.ref,
-                title=None,
-                created_at=node.created_at,
-            )
-        )
-    held = node.lease_id is not None and node.lease_expires_at is not None and node.tab_id is not None
-    if held and session.get(Tab, node.tab_id) is not None:
-        session.add(
-            Lease(
-                node_id=node.id,
-                lease_id=node.lease_id,
-                tab_id=node.tab_id,
-                fence=node.fence,
-                acquired_at=node.created_at,
-                renewed_at=node.lease_expires_at,
-                expires_at=node.lease_expires_at,
-            )
-        )
+        edges.append((ids[node.parent], node.id, EdgeKind.PARENT))
+    edges.extend((ids[other], node.id, EdgeKind.RELATED) for other in node.related if other in ids)
+    return tuple(edges)
 
 
-def _stored_node(session: Session, row: PlanNode, keys: dict[str, str]) -> StoredNode:
-    edges = session.scalars(select(PlanEdge).where(PlanEdge.dst_node_id == row.id)).all()
-    lease = session.get(Lease, row.id)
-    artifacts = session.scalars(select(NodeArtifact).where(NodeArtifact.node_id == row.id)).all()
+def _sync_artifacts(session: Session, plan: StoredPlan, node_ids: tuple[str, ...]) -> None:
+    wanted = {artifact.id: (node, artifact) for node in plan.nodes for artifact in node.artifacts}
+    held = session.scalars(select(NodeArtifact).where(NodeArtifact.node_id.in_(node_ids))).all()
+    for row in held:
+        if row.id not in wanted:
+            session.delete(row)
+    present = {row.id for row in held}
+    for artifact_id, (node, artifact) in wanted.items():
+        if artifact_id not in present:
+            session.add(
+                NodeArtifact(
+                    id=artifact_id,
+                    node_id=node.id,
+                    kind=ArtifactKind(artifact.kind),
+                    ref=artifact.ref,
+                    title=None,
+                    created_at=node.created_at,
+                )
+            )
+
+
+def _sync_leases(session: Session, plan: StoredPlan, node_ids: tuple[str, ...]) -> None:
+    held = {row.node_id: row for row in session.scalars(select(Lease).where(Lease.node_id.in_(node_ids))).all()}
+    tabs = {node.tab_id for node in plan.nodes if node.tab_id is not None}
+    known = set(session.scalars(select(Tab.id).where(Tab.id.in_(tabs))).all()) if tabs else set[str]()
+    for node in plan.nodes:
+        row = held.get(node.id)
+        lease_id, tab_id, expires = node.lease_id, node.tab_id, node.lease_expires_at
+        if lease_id is None or tab_id is None or expires is None or tab_id not in known:
+            if row is not None:
+                session.delete(row)
+        elif row is None:
+            session.add(
+                Lease(
+                    node_id=node.id,
+                    lease_id=lease_id,
+                    tab_id=tab_id,
+                    fence=node.fence,
+                    acquired_at=node.created_at,
+                    renewed_at=expires,
+                    expires_at=expires,
+                )
+            )
+        else:
+            row.lease_id = lease_id
+            row.tab_id = tab_id
+            row.fence = node.fence
+            row.renewed_at = expires
+            row.expires_at = expires
+
+
+def _links(session: Session) -> _Links:
+    edges: dict[str, list[PlanEdge]] = {}
+    for edge in session.scalars(select(PlanEdge)).all():
+        edges.setdefault(edge.dst_node_id, []).append(edge)
+    artifacts: dict[str, list[NodeArtifact]] = {}
+    for artifact in session.scalars(select(NodeArtifact)).all():
+        artifacts.setdefault(artifact.node_id, []).append(artifact)
+    leases = {lease.node_id: lease for lease in session.scalars(select(Lease)).all()}
+    return _Links(edges=edges, artifacts=artifacts, leases=leases)
+
+
+def _stored_node(links: _Links, row: PlanNode, keys: dict[str, str]) -> StoredNode:
+    edges = links.edges.get(row.id, ())
+    lease = links.leases.get(row.id)
+    artifacts = links.artifacts.get(row.id, ())
     parent = next((keys[edge.src_node_id] for edge in edges if edge.kind is EdgeKind.PARENT), None)
     return StoredNode(
         id=row.id,
