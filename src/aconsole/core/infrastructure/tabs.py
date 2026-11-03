@@ -22,6 +22,7 @@ from aconsole.core.application.services.tabs import TabRequestError, TabService
 from aconsole.core.domain.agent import CAPABILITIES
 from aconsole.core.domain.agent import AgentKind as DomainAgent
 from aconsole.core.domain.clock import Clock
+from aconsole.core.infrastructure.agents.cursor.limits import access_token, ask_usage
 from aconsole.core.infrastructure.agents.live_limits import ask_rate_limits
 from aconsole.core.infrastructure.containers.distrobox_env import DistroboxEnvCache, DistroboxError
 from aconsole.core.infrastructure.containers.login import LOGIN_SHELL
@@ -172,6 +173,14 @@ class HostTabs:
         except (ContainerError, ValueError):
             return b""
         return ask_rate_limits(argv)
+
+    def cursor_usage(self, name: str) -> tuple[bytes, bytes]:
+        """Cursor's usage and plan replies for the account the container is signed in to. Empty when it cannot ask."""
+        home = self.agent_home(name)
+        token = None if home is None else access_token(home)
+        if token is None:
+            return b"", b""
+        return ask_usage(token)
 
     def inspect_container(self, name: str) -> Inspected:
         return self._podman.inspect(name)

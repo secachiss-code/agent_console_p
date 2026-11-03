@@ -47,7 +47,7 @@ exec)
   case "$*" in
   *"/usage"*) printf 'Current session: 40%% used · resets Jan 1, 1am (UTC)\\nCurrent week (all models): 12%% used\\n' ;;
   *"auth status"*) printf '{"loggedIn":true,"email":"e@x","subscriptionType":"pro"}' ;;
-  *app-server*) printf '@REPLY@\\n' ;;
+  *app-server*) read -r _; printf '@REPLY@\\n' ;;
   *) printf '%s' "$FAKE_HOME" ;;
   esac ;;
 esac

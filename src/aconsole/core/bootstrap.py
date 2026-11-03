@@ -23,7 +23,7 @@ import msgspec
 import uvicorn
 
 from aconsole.contracts.app import AccountView, CloseTabParams, CommandResult, HealthResult
-from aconsole.contracts.common import AccountId, ClientRole, TabId
+from aconsole.contracts.common import AccountId, AgentKind, ClientRole, TabId
 from aconsole.contracts.errors import ErrorData, ErrorObject, MessageTooLargeDetails, error_by_name
 from aconsole.contracts.events import Notify, PlanUpdated, QuotaUpdated, TabAdded, TabRemoved, TabUpdated, UiEvent
 from aconsole.contracts.ipc import InitializeParams, Notification, ProtocolLimits, Request, ResponseErr
@@ -49,6 +49,7 @@ from aconsole.core.domain.errors import DomainError
 from aconsole.core.infrastructure.agents.claude.limits import ClaudeLimits
 from aconsole.core.infrastructure.agents.codex.limits import CodexLimits
 from aconsole.core.infrastructure.agents.codex.turns import TurnWatch
+from aconsole.core.infrastructure.agents.cursor.limits import CursorLimits
 from aconsole.core.infrastructure.agents.launch import HostAgentCommands
 from aconsole.core.infrastructure.agents.live_limits import CachedAuth
 from aconsole.core.infrastructure.codegraph.index import CodeGraphIndex
@@ -326,8 +327,13 @@ _CODEX_POLL_S = 120.0
 _CODEX_RETRY_S = 30.0
 _CODEX_REPLY_LOGGED = 300
 _CLAUDE_POLL_S = 60.0
+_CURSOR_CONTAINER = "agent-cursor"
+# Cursor counts usage per billing cycle, and its numbers move with requests: every two minutes is enough.
+_CURSOR_POLL_S = 120.0
 _CODEX_TURN_POLL_S = 1.0
 _ACCOUNT_RESEND_S = 30.0
+# Agents whose account ids come from their own replies: a placeholder with another id would stay beside the real card.
+_OWN_ACCOUNTS = frozenset({AgentKind.CLAUDE, AgentKind.CODEX})
 
 
 def codex_poll_delay(body: bytes) -> float:
@@ -335,12 +341,18 @@ def codex_poll_delay(body: bytes) -> float:
     return _CODEX_POLL_S if body else _CODEX_RETRY_S
 
 
-def accounts_without_limits(agents: tuple[AgentInfo, ...]) -> tuple[AccountView, ...]:
-    """An agent that reports no limits still gets its card, which says they are unknown."""
+def accounts_without_limits(
+    agents: tuple[AgentInfo, ...], observed: tuple[AccountView, ...] = (),
+) -> tuple[AccountView, ...]:
+    """An agent with no numbers yet, or none at all, still gets its card, which says they are unknown.
+
+    Claude and Codex name their accounts in their replies, so their cards come with their first numbers.
+    """
+    heard = {account.agent for account in observed}
     return tuple(
         AccountView(id=AccountId(f"{agent.kind.value}:local"), agent=agent.kind, plan_label="", quota=())
         for agent in agents
-        if agent.available and "limits" not in agent.capabilities
+        if agent.available and agent.kind not in heard and agent.kind not in _OWN_ACCOUNTS
     )
 
 
@@ -505,12 +517,16 @@ class Daemon:
         auth = CachedAuth(lambda argv: self._host.agent_output(_CLAUDE_CONTAINER, argv))
         self._claude_limits: ClaudeLimits = ClaudeLimits(auth, board, lambda: datetime.now(UTC))
         self._codex_limits: CodexLimits = CodexLimits(board, lambda: datetime.now(UTC))
+        self._cursor_limits: CursorLimits = CursorLimits(lambda: datetime.now(UTC))
         self._accounts: dict[str, AccountView] = {}
         self._account_sent: dict[str, float] = {}
         self._claude_usage_due: asyncio.Event = asyncio.Event()
         self._notices: set[asyncio.Task[None]] = set()
         self.tabs.use_accounts(
-            lambda: (*self._accounts.values(), *accounts_without_limits(self._agents_source())),
+            lambda: (
+                *self._accounts.values(),
+                *accounts_without_limits(self._agents_source(), tuple(self._accounts.values())),
+            ),
         )
 
     @property
@@ -762,6 +778,7 @@ class Daemon:
             ),
             asyncio.create_task(self._poll_codex_limits()),
             asyncio.create_task(self._poll_claude_limits()),
+            asyncio.create_task(self._poll_cursor_limits()),
             asyncio.create_task(self._watch_codex_turns()),
         ]
         # uvicorn exposes only a `started` flag, no event to wait on.
@@ -951,6 +968,22 @@ class Daemon:
                 _LOG.exception("cannot read Codex limits")
                 body = b""
             await asyncio.sleep(codex_poll_delay(body))
+
+    async def _poll_cursor_limits(self) -> None:
+        """Cursor CLI prints no limits; its backend answers them to the CLI's own token."""
+        while True:
+            body = b""
+            try:
+                body, plan = await asyncio.to_thread(self._host.cursor_usage, _CURSOR_CONTAINER)
+                event = self._cursor_limits.on_usage(body, plan)
+                if event is not None:
+                    self._account_observed(event)
+                elif body:
+                    _LOG.warning("Cursor gave no limits: %s", body[:_CODEX_REPLY_LOGGED].decode(errors="replace"))
+            except Exception:  # noqa: BLE001 -- limits must never stop the core
+                _LOG.exception("cannot read Cursor limits")
+            # A stopped container or a missing login gives nothing: ask again soon, as for Codex.
+            await asyncio.sleep(_CURSOR_POLL_S if body else _CODEX_RETRY_S)
 
     def _account_observed(self, event: QuotaUpdated) -> None:
         """The snapshot always holds the newest; subscribers hear of a change, or at most twice a minute without one."""

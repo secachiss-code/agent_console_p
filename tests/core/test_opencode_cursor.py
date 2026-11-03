@@ -10,6 +10,7 @@ import os
 import stat
 import subprocess
 import threading
+from datetime import UTC, datetime
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
@@ -23,6 +24,7 @@ from aconsole.core.domain.agent import CAPABILITIES
 from aconsole.core.domain.agent import AgentKind as DomainAgent
 from aconsole.core.infrastructure.agents.command_files import cursor_rules, opencode_commands
 from aconsole.core.infrastructure.agents.cursor.launcher import CursorLauncher
+from aconsole.core.infrastructure.agents.cursor.limits import CursorLimits, access_token, auth_file
 from aconsole.core.infrastructure.agents.launch import HostAgentCommands
 from aconsole.core.infrastructure.agents.opencode.launcher import OpenCodeLauncher
 from aconsole.core.infrastructure.agents.opencode.sessions import parse_sessions
@@ -50,7 +52,9 @@ def test_capabilities_match_the_plan() -> None:
     for kind in (DomainAgent.OPENCODE, DomainAgent.CURSOR):
         names = CAPABILITIES[kind].names()
         assert {"resume", "mcp_http"} <= names
-        assert not {"fork", "limits", "hooks"} & names
+        assert not {"fork", "hooks"} & names
+    assert "limits" in CAPABILITIES[DomainAgent.CURSOR].names()
+    assert "limits" not in CAPABILITIES[DomainAgent.OPENCODE].names()
 
 
 def test_reader_maps_a_turn_with_an_approval() -> None:
@@ -327,6 +331,48 @@ def test_an_agent_without_limits_gets_a_card_saying_they_are_unknown() -> None:
     found = accounts_without_limits(agents)
     assert [account.agent for account in found] == [AgentKind.CURSOR]
     assert found[0].quota == ()
+
+
+def test_the_cursor_card_gives_way_to_its_numbers() -> None:
+    agents = (_info(AgentKind.CURSOR), _info(AgentKind.OPENCODE))
+    heard = CursorLimits(lambda: datetime(2026, 11, 3, tzinfo=UTC)).on_usage(_CURSOR_USAGE, b"")
+    assert heard is not None
+    found = accounts_without_limits(agents, (heard.account,))
+    assert [account.agent for account in found] == [AgentKind.OPENCODE]
+    # The same id: the UI replaces the card that said "unknown" instead of showing two.
+    assert heard.account.id == accounts_without_limits(agents)[0].id
+
+
+_CURSOR_USAGE = json.dumps({
+    "billingCycleStart": "1793491200000",
+    "billingCycleEnd": "1796083200000",
+    "planUsage": {"totalSpend": 1234, "limit": 2000, "totalPercentUsed": 61.7},
+}).encode()
+
+
+def test_cursor_usage_becomes_a_monthly_window() -> None:
+    now = datetime(2026, 11, 3, tzinfo=UTC)
+    plan = json.dumps({"planInfo": {"planName": "Pro"}}).encode()
+    event = CursorLimits(lambda: now).on_usage(_CURSOR_USAGE, plan)
+    assert event is not None
+    assert (event.account.agent, event.account.plan_label) == (AgentKind.CURSOR, "Pro")
+    (window,) = event.account.quota
+    assert (window.key, window.used_pct, window.observed_at) == ("month", 61.7, now)
+    assert window.resets_at == datetime(2026, 12, 1, tzinfo=UTC)
+
+
+@pytest.mark.parametrize("body", [b"", b"{}", b'{"planUsage": {}}', b"not json", b'{"code":"unauthenticated"}'])
+def test_cursor_reply_without_usage_gives_nothing(body: bytes) -> None:
+    assert CursorLimits(lambda: datetime(2026, 11, 3, tzinfo=UTC)).on_usage(body, b"") is None
+
+
+def test_cursor_token_is_read_from_the_cli_login(tmp_path: Path) -> None:
+    assert access_token(tmp_path) is None
+    auth_file(tmp_path).parent.mkdir(parents=True)
+    _ = auth_file(tmp_path).write_text('{"accessToken": "t", "refreshToken": "r"}')
+    assert access_token(tmp_path) == "t"
+    _ = auth_file(tmp_path).write_text("[]")
+    assert access_token(tmp_path) is None
 
 
 def test_codex_limits_are_asked_again_soon_after_silence() -> None:
