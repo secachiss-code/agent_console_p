@@ -16,6 +16,28 @@
             "$ref": "#/$defs/QuotaWindowView"
           },
           "type": "array"
+        },
+        "refresh_s": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "source": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
         }
       },
       "required": [
@@ -81,6 +103,17 @@
         "level": {
           "$ref": "#/$defs/QuotaLevel"
         },
+        "limit_usd": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
         "observed_at": {
           "anyOf": [
             {
@@ -102,6 +135,17 @@
               "type": "null"
             }
           ]
+        },
+        "spent_usd": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
         },
         "used_pct": {
           "anyOf": [

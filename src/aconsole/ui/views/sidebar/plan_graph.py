@@ -14,6 +14,7 @@ from gi.repository import Gdk, GLib, Gtk, Pango  # noqa: E402
 from aconsole.contracts.app import PlanNodeView, PlanView  # noqa: E402
 from aconsole.contracts.common import NodeId, TabId  # noqa: E402
 from aconsole.ui.viewmodels.logic.plan_layout import PlanNodePosition, layout_plan  # noqa: E402
+from aconsole.ui.viewmodels.logic.quota_fmt import agent_name  # noqa: E402
 from aconsole.ui.views.sidebar.messages import _ as translate  # noqa: E402
 
 _NODE_WIDTH = 128
@@ -160,7 +161,7 @@ class PlanGraph(Gtk.Box):
             children = ", ".join(item.key for item in self._nodes.values() if node.id in item.depends_on)
             text = [f"{node.key} {node.title}", translate(f"plan.status.{node.status.value}")]
             if node.owner_agent is not None:
-                text.append(node.owner_agent.value.capitalize())
+                text.append(agent_name(node.owner_agent.value))
             text.extend((translate("plan.depends").format(nodes=parents or "—"),
                          translate("plan.blocks").format(nodes=children or "—")))
             if node.lease_expires_at is not None:

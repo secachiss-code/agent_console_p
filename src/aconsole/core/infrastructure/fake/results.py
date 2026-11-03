@@ -224,6 +224,7 @@ def _samples() -> dict[str, msgspec.Struct]:
         "settings/get": settings,
         "settings/update": settings,
         "app/quitCheck": QuitCheckResult(busy_tabs=(), pending_approvals=0),
+        "quota/refresh": EmptyResult(),
         "app/health": HealthResult(
             database=True,
             writer_queued=0,

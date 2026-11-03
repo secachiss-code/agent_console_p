@@ -1,5 +1,7 @@
 """Account quota windows in the shared card and the full limits dialog."""
 
+from collections.abc import Awaitable, Callable
+
 import gi
 
 gi.require_version("Gtk", "4.0")
@@ -7,9 +9,12 @@ gi.require_version("Adw", "1")
 from gi.repository import GLib, Gtk  # noqa: E402
 
 from aconsole.contracts.app import AccountView, TabView  # noqa: E402
+from aconsole.ui.viewmodels.logic.quota_fmt import agent_name  # noqa: E402
 from aconsole.ui.views.quota_dialog import QuotaDialog  # noqa: E402
 from aconsole.ui.views.sidebar.messages import _ as translate  # noqa: E402
-from aconsole.ui.views.sidebar.quota_row import QuotaRow  # noqa: E402
+from aconsole.ui.views.sidebar.quota_row import AccountLine, QuotaRow  # noqa: E402
+
+_COLUMNS = 2
 
 
 class QuotaCard(Gtk.Button):
@@ -22,6 +27,9 @@ class QuotaCard(Gtk.Button):
         self._accounts: tuple[AccountView, ...] = ()
         self.tabs: tuple[TabView, ...] = ()
         self.window_rows: list[QuotaRow] = []
+        self.account_lines: list[AccountLine] = []
+        # Set by the window: asks the core for fresh limits. The answers come back through `set_accounts`.
+        self.on_refresh: Callable[[], Awaitable[None]] | None = None
         self.details_dialog: QuotaDialog | None = None
         self._timer: int | None = None
         self._display: str = "used"
@@ -62,12 +70,23 @@ class QuotaCard(Gtk.Button):
             heading.append(title)
             heading.append(self.summary_label)
             self.rows.append(heading)
-        grid = Gtk.Grid(column_spacing=16, row_spacing=10, column_homogeneous=True)
-        for index, account in enumerate(accounts):
-            column = self._account_column(account)
-            grid.attach(column, index % 2, index // 2, 2 if len(accounts) == 1 else 1, 1)
-        if accounts:
+        self.account_lines.clear()
+        if len(accounts) == 1:
+            # One agent has the whole width: each window on a line of its own, with the time to its reset.
+            self.rows.append(self._account_column(accounts[0], wide=True))
+        elif len(accounts) == _COLUMNS:
+            grid = Gtk.Grid(column_spacing=16, row_spacing=10, column_homogeneous=True)
+            for index, account in enumerate(accounts):
+                grid.attach(self._account_column(account), index, 0, 1, 1)
             self.rows.append(grid)
+        elif accounts:
+            # Three agents or more do not fit side by side: a line each, the details are one click away.
+            lines = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+            for account in accounts:
+                line = AccountLine(account, display=self._display)
+                self.account_lines.append(line)
+                lines.append(line)
+            self.rows.append(lines)
         else:
             empty = Gtk.Label(label=translate("quota.empty"), xalign=0, wrap=True)
             empty.add_css_class("ac-summary-detail")
@@ -95,13 +114,13 @@ class QuotaCard(Gtk.Button):
     def _title(self) -> str:
         return translate("quota.title_left" if self._display == "remaining" else "quota.title")
 
-    def _account_column(self, account: AccountView) -> Gtk.Box:
+    def _account_column(self, account: AccountView, *, wide: bool = False) -> Gtk.Box:
         column = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=5)
-        name = Gtk.Label(label=account.agent.value.capitalize(), xalign=0)
+        name = Gtk.Label(label=agent_name(account.agent.value), xalign=0)
         name.add_css_class("ac-summary-name")
         column.append(name)
         for window in account.quota:
-            row = QuotaRow(window, compact=True, display=self._display)
+            row = QuotaRow(window, compact=not wide, display=self._display)
             self.window_rows.append(row)
             column.append(row)
         if not account.quota:
@@ -119,7 +138,9 @@ class QuotaCard(Gtk.Button):
         if self.details_dialog is not None and self.details_dialog.get_visible():
             self.details_dialog.present(parent)
             return self.details_dialog
-        dialog = QuotaDialog(self._accounts, self.tabs, self.summary_label.get_label(), self._display)
+        dialog = QuotaDialog(
+            self._accounts, self.tabs, self.summary_label.get_label(), self._display, on_refresh=self.on_refresh,
+        )
         self.details_dialog = dialog
         dialog.present(parent)
         return dialog

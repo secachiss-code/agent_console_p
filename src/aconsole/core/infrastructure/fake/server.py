@@ -35,6 +35,7 @@ from aconsole.core.application.services.event_router import EventRouter
 from aconsole.core.infrastructure.fake.results import result_for
 from aconsole.core.infrastructure.fake.scenarios import (
     AT,
+    agents_snapshot,
     demo_checkpoints,
     demo_diff,
     demo_events,
@@ -91,6 +92,7 @@ def load_script(name: str) -> Script:
         "errors": empty_snapshot,
         "waiting": waiting_snapshot,
         "quota-critical": quota_critical_snapshot,
+        "agents": agents_snapshot,
     }
     builder = builders.get(name)
     if builder is None:

@@ -294,6 +294,9 @@ class TypedFacade(Facade):
     async def app_health(self, params: EmptyParams) -> HealthResult:
         return await self.typed("app/health", params, HealthResult)
 
+    async def quota_refresh(self, params: EmptyParams) -> EmptyResult:
+        return await self.typed("quota/refresh", params, EmptyResult)
+
     async def app_stop_agents(self, params: EmptyParams) -> EmptyResult:
         return await self.typed("app/stopAgents", params, EmptyResult)
 

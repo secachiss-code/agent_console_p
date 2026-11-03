@@ -17,7 +17,7 @@ if TYPE_CHECKING:
     from aconsole.ui.views.app import AConsoleApp, SnapshotRequest
 
 _IPC_P99_LIMIT_MS = 5.0
-_SCENARIOS = ("demo", "empty", "stress", "errors", "waiting", "quota-critical", "approval-expired")
+_SCENARIOS = ("demo", "empty", "stress", "errors", "waiting", "quota-critical", "approval-expired", "agents")
 
 
 class _UiArguments(argparse.Namespace):

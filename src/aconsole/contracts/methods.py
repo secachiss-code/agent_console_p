@@ -346,6 +346,8 @@ METHODS: tuple[Method, ...] = (
     ),
     Method(name="app/quitCheck", params="EmptyParams", result="QuitCheckResult"),
     Method(name="app/health", params="EmptyParams", result="HealthResult"),
+    # Ask every agent for its limits now instead of at the next poll. The answers arrive as `quota_updated`.
+    Method(name="quota/refresh", params="EmptyParams", result="EmptyResult"),
     Method(name="app/stopAgents", params="EmptyParams", result="EmptyResult", long=True),
     Method(
         name="terminal/screenTextReply",

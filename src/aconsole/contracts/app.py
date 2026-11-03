@@ -36,6 +36,9 @@ class QuotaWindowView(msgspec.Struct, frozen=True, kw_only=True):
     level: QuotaLevel
     observed_at: AwareDatetime | None
     estimated: bool
+    # A window counted in money (Cursor's plan and on-demand pool): what was spent, and the cap. No cap: unlimited.
+    spent_usd: float | None = None
+    limit_usd: float | None = None
 
 
 class AccountView(msgspec.Struct, frozen=True, kw_only=True):
@@ -43,6 +46,9 @@ class AccountView(msgspec.Struct, frozen=True, kw_only=True):
     agent: AgentKind
     plan_label: str
     quota: tuple[QuotaWindowView, ...]
+    # Where the numbers come from (a code the UI names, e.g. "cursor-dashboard") and how often the core asks.
+    source: str | None = None
+    refresh_s: int | None = None
 
 
 class AgentInfo(msgspec.Struct, frozen=True, kw_only=True):

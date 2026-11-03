@@ -2,6 +2,7 @@
 
 import tempfile
 from datetime import UTC, datetime
+from typing import Literal
 
 import msgspec
 
@@ -72,6 +73,8 @@ from aconsole.contracts.events import (
 )
 
 AT = datetime(2026, 10, 24, 12, 0, tzinfo=UTC)
+_WARN_PCT = 80
+type QuotaKeyName = Literal["5h", "7d", "week", "month", "budget"]
 APP_EVENT_TYPES = frozenset(
     {
         "tab_added",
@@ -305,6 +308,39 @@ def demo_snapshot() -> AppSnapshot:
         setup=_setup(completed=True),
         settings_rev=1,
     )
+
+
+def _window(
+    key: QuotaKeyName, used: float | None, *, money: tuple[float, float | None] | None = None,
+) -> QuotaWindowView:
+    level = QuotaLevel.UNKNOWN if used is None else QuotaLevel.WARN if used >= _WARN_PCT else QuotaLevel.OK
+    spent, limit = money if money is not None else (None, None)
+    return QuotaWindowView(
+        key=key, used_pct=used, resets_at=AT, level=level, observed_at=AT, estimated=False,
+        spent_usd=spent, limit_usd=limit,
+    )
+
+
+def agents_snapshot() -> AppSnapshot:
+    """Four agents, each counted its own way: two windows, a month and a pool in dollars, three windows."""
+    base = demo_snapshot()
+    claude, codex = base.accounts
+    accounts = (
+        msgspec.structs.replace(claude, source="claude-usage", refresh_s=60),
+        msgspec.structs.replace(codex, source="codex-app-server", refresh_s=120),
+        AccountView(
+            id=AccountId("cursor:local"), agent=AgentKind.CURSOR, plan_label="Pro", source="cursor-dashboard",
+            refresh_s=120,
+            quota=(_window("month", 62, money=(12.4, 20.0)), _window("budget", 28, money=(14.0, 50.0))),
+        ),
+        AccountView(
+            id=AccountId("opencode:local"), agent=AgentKind.OPENCODE, plan_label="Go", source="opencode-go",
+            refresh_s=120,
+            quota=(_window("5h", 35), _window("week", 52), _window("month", 18)),
+        ),
+    )
+    agents = (*base.agents, _agent(AgentKind.CURSOR), _agent(AgentKind.OPENCODE))
+    return msgspec.structs.replace(base, accounts=accounts, agents=agents)
 
 
 def empty_snapshot() -> AppSnapshot:

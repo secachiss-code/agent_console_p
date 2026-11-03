@@ -16,7 +16,7 @@ from collections.abc import Callable
 from datetime import UTC, datetime
 from http.client import HTTPResponse
 from pathlib import Path
-from typing import Final, final
+from typing import Final, Literal, final
 
 from aconsole.contracts.app import AccountView, QuotaWindowView
 from aconsole.contracts.common import AccountId, AgentKind, QuotaLevel
@@ -82,7 +82,11 @@ def _ask(method: str, token: str) -> bytes:
 
 @final
 class CursorLimits:
-    """Fold one usage reply into the account card. Cursor counts one window: the billing cycle."""
+    """Fold one usage reply into the account card.
+
+    Cursor counts money per billing cycle. The plan's included usage is the monthly window. Spending past it comes
+    from the on-demand pool, a cap in dollars (the user's own, or the team's), which is the budget window.
+    """
 
     _now: Callable[[], datetime]
 
@@ -91,37 +95,72 @@ class CursorLimits:
 
     def on_usage(self, usage: bytes, plan: bytes) -> QuotaUpdated | None:
         """None when the reply holds no plan usage."""
-        window = _window(usage)
-        if window is None:
+        document = _object(usage)
+        if document is None:
             return None
-        used_pct, resets_at = window
+        resets_at = _millis(document.get("billingCycleEnd"))
+        month = _month(document.get("planUsage"))
+        if month is None or resets_at is None:
+            return None
         now = self._now()
-        level = QuotaLevel(quota_level(used_pct=used_pct, resets_at=resets_at, now=now).value)
+        used_pct, spent, limit = month
+        windows = [_view("month", used_pct, resets_at, now, (spent, limit))]
+        pool = _pool(document.get("spendLimitUsage"))
+        if pool is not None:
+            pool_spent, pool_limit = pool
+            pool_pct = min(_MAX_PCT, round(pool_spent / pool_limit * 100, 2)) if pool_limit else None
+            windows.append(_view("budget", pool_pct, resets_at, now, (pool_spent, pool_limit)))
         return QuotaUpdated(
-            account=AccountView(
-                id=ACCOUNT_ID,
-                agent=AgentKind.CURSOR,
-                plan_label=_plan(plan),
-                quota=(
-                    QuotaWindowView(
-                        key="month", used_pct=used_pct, resets_at=resets_at, level=level, observed_at=now,
-                        estimated=False,
-                    ),
-                ),
-            ),
+            account=AccountView(id=ACCOUNT_ID, agent=AgentKind.CURSOR, plan_label=_plan(plan), quota=tuple(windows)),
         )
 
 
-def _window(usage: bytes) -> tuple[float, datetime] | None:
-    document = _object(usage)
-    plan_usage = document.get("planUsage") if document is not None else None
-    if document is None or not isinstance(plan_usage, dict):
+def _view(
+    key: Literal["month", "budget"], used_pct: float | None, resets_at: datetime, now: datetime,
+    money: tuple[float | None, float | None],
+) -> QuotaWindowView:
+    spent, limit = money
+    level = QuotaLevel(quota_level(used_pct=used_pct, resets_at=resets_at, now=now).value)
+    return QuotaWindowView(
+        key=key, used_pct=used_pct, resets_at=resets_at, level=level, observed_at=now, estimated=False,
+        spent_usd=spent, limit_usd=limit,
+    )
+
+
+def _month(raw: object) -> tuple[float, float | None, float | None] | None:
+    """The plan's included usage: the share used, and the dollars behind it when Cursor sends them (in cents)."""
+    if not isinstance(raw, dict):
         return None
-    used = _percent(plan_usage.get("totalPercentUsed"))  # pyright: ignore[reportUnknownMemberType, reportUnknownArgumentType]
-    resets_at = _millis(document.get("billingCycleEnd"))
-    if used is None or resets_at is None:
+    used = _percent(raw.get("totalPercentUsed"))  # pyright: ignore[reportUnknownMemberType, reportUnknownArgumentType]
+    if used is None:
         return None
-    return used, resets_at
+    spent = _cents(raw.get("totalSpend"))  # pyright: ignore[reportUnknownMemberType, reportUnknownArgumentType]
+    limit = _cents(raw.get("limit"))  # pyright: ignore[reportUnknownMemberType, reportUnknownArgumentType]
+    return used, spent, limit or None
+
+
+def _pool(raw: object) -> tuple[float, float | None] | None:
+    """On-demand spending in dollars and its cap: the user's own when set, else the team's pool. No cap: None."""
+    if not isinstance(raw, dict):
+        return None
+    for used_key, limit_key in (("individualUsed", "individualLimit"), ("pooledUsed", "pooledLimit")):
+        limit = _cents(raw.get(limit_key))  # pyright: ignore[reportUnknownMemberType, reportUnknownArgumentType]
+        if limit:
+            return _cents(raw.get(used_key)) or 0.0, limit  # pyright: ignore[reportUnknownMemberType, reportUnknownArgumentType]
+    spent = _cents(raw.get("individualUsed"))  # pyright: ignore[reportUnknownMemberType, reportUnknownArgumentType]
+    return (spent, None) if spent else None
+
+
+def _cents(value: object) -> float | None:
+    """Cents, as a number or as a decimal string (a Business seat sends strings), in dollars."""
+    if isinstance(value, str):
+        try:
+            value = float(value)
+        except ValueError:
+            return None
+    if isinstance(value, bool) or not isinstance(value, int | float) or not math.isfinite(value) or value < 0:
+        return None
+    return round(float(value) / 100, 2)
 
 
 def _plan(plan: bytes) -> str:

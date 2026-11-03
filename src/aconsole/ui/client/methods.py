@@ -178,6 +178,7 @@ def _bindings() -> dict[str, Binding]:
         ("settings/update", SettingsUpdateParams, Settings),
         ("app/quitCheck", EmptyParams, QuitCheckResult),
         ("app/health", EmptyParams, HealthResult),
+        ("quota/refresh", EmptyParams, EmptyResult),
         ("app/stopAgents", EmptyParams, EmptyResult),
         ("terminal/screenTextReply", ScreenTextReplyParams, EmptyResult),
     )

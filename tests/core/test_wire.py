@@ -15,6 +15,7 @@ import msgspec
 from aconsole.contracts.app import (
     AppSnapshot,
     EmptyParams,
+    EmptyResult,
     OpenTabParams,
     ProjectAddParams,
     ProjectIdParams,
@@ -178,6 +179,11 @@ def test_limits_of_both_agents_reach_the_snapshot(tmp_path: Path, monkeypatch) -
             if found.get("claude") and found.get("codex"):
                 break
             await asyncio.sleep(0.05)
+        # Each card says where its numbers come from, and a refresh is answered at once.
+        sources = {item.agent.value: (item.source, item.refresh_s) for item in snapshot.accounts}
+        assert sources["claude"] == ("claude-usage", 60)
+        assert sources["codex"] == ("codex-app-server", 120)
+        assert await client.call("quota/refresh", EmptyParams(), EmptyResult) == EmptyResult()
         await _stop(daemon, task, client)
         return found
 

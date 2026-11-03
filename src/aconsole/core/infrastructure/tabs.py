@@ -24,6 +24,7 @@ from aconsole.core.domain.agent import AgentKind as DomainAgent
 from aconsole.core.domain.clock import Clock
 from aconsole.core.infrastructure.agents.cursor.limits import access_token, ask_usage
 from aconsole.core.infrastructure.agents.live_limits import ask_rate_limits
+from aconsole.core.infrastructure.agents.opencode import limits as opencode_limits
 from aconsole.core.infrastructure.containers.distrobox_env import DistroboxEnvCache, DistroboxError
 from aconsole.core.infrastructure.containers.login import LOGIN_SHELL
 from aconsole.core.infrastructure.containers.podman import ContainerError, ExecRequest, Inspected, Podman
@@ -181,6 +182,14 @@ class HostTabs:
         if token is None:
             return b"", b""
         return ask_usage(token)
+
+    def opencode_usage(self, name: str) -> bytes:
+        """OpenCode Go's usage reply for the container's login. Empty when there is no key to ask with."""
+        home = self.agent_home(name)
+        key = None if home is None else opencode_limits.access_key(home)
+        if key is None:
+            return b""
+        return opencode_limits.ask_usage(key)
 
     def inspect_container(self, name: str) -> Inspected:
         return self._podman.inspect(name)

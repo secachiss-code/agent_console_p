@@ -26,6 +26,17 @@
         "level": {
           "$ref": "#/$defs/QuotaLevel"
         },
+        "limit_usd": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
         "observed_at": {
           "anyOf": [
             {
@@ -47,6 +58,17 @@
               "type": "null"
             }
           ]
+        },
+        "spent_usd": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
         },
         "used_pct": {
           "anyOf": [

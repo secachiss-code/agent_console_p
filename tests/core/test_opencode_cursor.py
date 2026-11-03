@@ -27,6 +27,9 @@ from aconsole.core.infrastructure.agents.cursor.launcher import CursorLauncher
 from aconsole.core.infrastructure.agents.cursor.limits import CursorLimits, access_token, auth_file
 from aconsole.core.infrastructure.agents.launch import HostAgentCommands
 from aconsole.core.infrastructure.agents.opencode.launcher import OpenCodeLauncher
+from aconsole.core.infrastructure.agents.opencode.limits import OpenCodeLimits
+from aconsole.core.infrastructure.agents.opencode.limits import access_key as opencode_key
+from aconsole.core.infrastructure.agents.opencode.limits import auth_file as opencode_auth
 from aconsole.core.infrastructure.agents.opencode.sessions import parse_sessions
 from aconsole.core.infrastructure.agents.opencode.stream import EventReader, EventStream
 from aconsole.core.infrastructure.containers.podman import ContainerError, Inspected
@@ -54,7 +57,6 @@ def test_capabilities_match_the_plan() -> None:
         assert {"resume", "mcp_http"} <= names
         assert not {"fork", "hooks"} & names
     assert "limits" in CAPABILITIES[DomainAgent.CURSOR].names()
-    assert "limits" not in CAPABILITIES[DomainAgent.OPENCODE].names()
 
 
 def test_reader_maps_a_turn_with_an_approval() -> None:
@@ -359,6 +361,78 @@ def test_cursor_usage_becomes_a_monthly_window() -> None:
     (window,) = event.account.quota
     assert (window.key, window.used_pct, window.observed_at) == ("month", 61.7, now)
     assert window.resets_at == datetime(2026, 12, 1, tzinfo=UTC)
+    assert (window.spent_usd, window.limit_usd) == (12.34, 20.0)
+
+
+def test_cursor_on_demand_pool_is_a_budget_in_dollars() -> None:
+    now = datetime(2026, 11, 3, tzinfo=UTC)
+    personal = json.loads(_CURSOR_USAGE)
+    personal["spendLimitUsage"] = {"individualUsed": 1400, "individualLimit": 5000, "limitType": "user"}
+    event = CursorLimits(lambda: now).on_usage(json.dumps(personal).encode(), b"")
+    assert event is not None
+    month, pool = event.account.quota
+    assert (pool.key, pool.used_pct, pool.spent_usd, pool.limit_usd) == ("budget", 28.0, 14.0, 50.0)
+    assert pool.resets_at == month.resets_at
+    # A Business seat sends the team's pool, as decimal strings.
+    team = json.loads(_CURSOR_USAGE)
+    team["spendLimitUsage"] = {"pooledUsed": "2500", "pooledLimit": "10000", "pooledRemaining": "7500"}
+    event = CursorLimits(lambda: now).on_usage(json.dumps(team).encode(), b"")
+    assert event is not None
+    assert event.account.quota[1].spent_usd == 25.0
+    assert event.account.quota[1].used_pct == 25.0
+    # No on-demand cap and nothing spent: no pool window at all.
+    plain = json.loads(_CURSOR_USAGE)
+    plain["spendLimitUsage"] = {"limitType": "user"}
+    event = CursorLimits(lambda: now).on_usage(json.dumps(plain).encode(), b"")
+    assert event is not None
+    assert [window.key for window in event.account.quota] == ["month"]
+
+
+_OPENCODE_NOW = datetime(2026, 11, 3, 12, tzinfo=UTC)
+
+
+def test_opencode_go_counts_five_hours_a_week_and_a_month() -> None:
+    body = json.dumps({
+        "usage": {
+            "rolling": {"percent": 35, "resetsAt": "2026-11-03T15:00:00Z"},
+            "weekly": {"percent": 52.5, "resetsAt": 1_793_491_200_000},
+            "monthly": {"status": "rate-limited", "percent": 99, "resetInSec": 3600},
+        },
+    }).encode()
+    event = OpenCodeLimits(lambda: _OPENCODE_NOW).on_usage(body)
+    assert event is not None
+    assert (event.account.agent, event.account.id, event.account.plan_label) == (
+        AgentKind.OPENCODE, "opencode:local", "Go",
+    )
+    rolling, week, month = event.account.quota
+    assert (rolling.key, rolling.used_pct, rolling.resets_at) == ("5h", 35.0, datetime(2026, 11, 3, 15, tzinfo=UTC))
+    assert (week.key, week.used_pct, week.resets_at) == ("week", 52.5, datetime(2026, 11, 1, tzinfo=UTC))
+    assert (month.key, month.used_pct) == ("month", 100.0), "a rate-limited window is full"
+    assert month.resets_at == datetime(2026, 11, 3, 13, tzinfo=UTC)
+
+
+def test_opencode_early_shape_and_refusals() -> None:
+    early = json.dumps({"rollingUsage": {"usagePercent": 10, "resetInSec": 60}}).encode()
+    event = OpenCodeLimits(lambda: _OPENCODE_NOW).on_usage(early)
+    assert event is not None
+    assert [window.key for window in event.account.quota] == ["5h"]
+    refusal = b'{"error": {"type": "EntitlementError", "message": "OpenCode Go subscription required"}}'
+    for body in (b"", b"not json", refusal, b'{"status": 401}'):
+        assert OpenCodeLimits(lambda: _OPENCODE_NOW).on_usage(body) is None
+
+
+def test_opencode_key_is_read_from_the_cli_login(tmp_path: Path) -> None:
+    assert opencode_key(tmp_path) is None
+    opencode_auth(tmp_path).parent.mkdir(parents=True)
+    _ = opencode_auth(tmp_path).write_text('{"anthropic": {"type": "oauth", "access": "x"}}')
+    assert opencode_key(tmp_path) is None
+    _ = opencode_auth(tmp_path).write_text('{"opencode": {"type": "api", "key": "zen"}, "opencode-go": {"key": "go"}}')
+    assert opencode_key(tmp_path) == "go"
+
+
+def test_opencode_and_cursor_now_report_limits() -> None:
+    assert "limits" in CAPABILITIES[DomainAgent.OPENCODE].names()
+    assert "limits" in CAPABILITIES[DomainAgent.CURSOR].names()
 
 
 @pytest.mark.parametrize("body", [b"", b"{}", b'{"planUsage": {}}', b"not json", b'{"code":"unauthenticated"}'])

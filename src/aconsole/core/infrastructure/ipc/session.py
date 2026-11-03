@@ -122,6 +122,8 @@ class Connection:
         self.on_screen_signal: Callable[[str, str, str | None], None] | None = None
         self.holds_core = False
         self.health: Callable[[], HealthResult] | None = None
+        # `quota/refresh`: wake every limits poll now. Called on the loop; it only sets events.
+        self.quota_refresh: Callable[[], None] | None = None
         self._sidecar_tab: str | None = None
         self.sidecar_claim: tuple[str, str] | None = None
         self.peer_pid: int | None = None
@@ -197,6 +199,9 @@ class Connection:
             return ()
         if request.method == "app/health" and self.health is not None:
             return (self._ok(request.id, self.health()),)
+        if request.method == "quota/refresh" and self.quota_refresh is not None:
+            self.quota_refresh()
+            return (self._ok(request.id, EmptyResult()),)
         if request.method == "approval/decide" and self.approval_hold is not None:
             return self._decide_approval(request, self.approval_hold)
         if request.method == "approval/releaseToNative" and self.approval_hold is not None:

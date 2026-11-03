@@ -52,6 +52,7 @@ from aconsole.core.infrastructure.agents.codex.turns import TurnWatch
 from aconsole.core.infrastructure.agents.cursor.limits import CursorLimits
 from aconsole.core.infrastructure.agents.launch import HostAgentCommands
 from aconsole.core.infrastructure.agents.live_limits import CachedAuth
+from aconsole.core.infrastructure.agents.opencode.limits import OpenCodeLimits
 from aconsole.core.infrastructure.codegraph.index import CodeGraphIndex
 from aconsole.core.infrastructure.codegraph.runner import ExtractorRunner
 from aconsole.core.infrastructure.git.checkpoints import GitCheckpoints
@@ -286,7 +287,8 @@ _MS_PER_S = 1000
 _IMPACT = "knowledge/impact"
 _GIT_PREFIX = "git/"
 _MAX_GIT_READS = 4
-_NOW_METHODS = frozenset({"approval/decide", "approval/releaseToNative", "core/hold", "app/health"})
+# `quota/refresh` only sets asyncio events, which belong to the loop: it is answered there, never in a worker.
+_NOW_METHODS = frozenset({"approval/decide", "approval/releaseToNative", "core/hold", "app/health", "quota/refresh"})
 _CANCEL = "$/cancelRequest"
 _MAX_QUEUED = ProtocolLimits().max_inflight_requests
 _MAX_APART = 4
@@ -330,6 +332,8 @@ _CLAUDE_POLL_S = 60.0
 _CURSOR_CONTAINER = "agent-cursor"
 # Cursor counts usage per billing cycle, and its numbers move with requests: every two minutes is enough.
 _CURSOR_POLL_S = 120.0
+_OPENCODE_CONTAINER = "agent-opencode"
+_OPENCODE_POLL_S = 120.0
 _CODEX_TURN_POLL_S = 1.0
 _ACCOUNT_RESEND_S = 30.0
 # Agents whose account ids come from their own replies: a placeholder with another id would stay beside the real card.
@@ -518,6 +522,8 @@ class Daemon:
         self._claude_limits: ClaudeLimits = ClaudeLimits(auth, board, lambda: datetime.now(UTC))
         self._codex_limits: CodexLimits = CodexLimits(board, lambda: datetime.now(UTC))
         self._cursor_limits: CursorLimits = CursorLimits(lambda: datetime.now(UTC))
+        self._opencode_limits: OpenCodeLimits = OpenCodeLimits(lambda: datetime.now(UTC))
+        self._limits_events: dict[str, asyncio.Event] = {}
         self._accounts: dict[str, AccountView] = {}
         self._account_sent: dict[str, float] = {}
         self._claude_usage_due: asyncio.Event = asyncio.Event()
@@ -779,6 +785,7 @@ class Daemon:
             asyncio.create_task(self._poll_codex_limits()),
             asyncio.create_task(self._poll_claude_limits()),
             asyncio.create_task(self._poll_cursor_limits()),
+            asyncio.create_task(self._poll_opencode_limits()),
             asyncio.create_task(self._watch_codex_turns()),
         ]
         # uvicorn exposes only a `started` flag, no event to wait on.
@@ -943,50 +950,96 @@ class Daemon:
                 text = await asyncio.to_thread(self._host.claude_usage, _CLAUDE_CONTAINER)
                 event = await asyncio.to_thread(self._claude_limits.on_usage, text)
                 if event is not None:
-                    self._account_observed(event)
+                    self._account_observed(event, source="claude-usage", every_s=_CLAUDE_POLL_S)
                 elif text.strip():
                     # The card keeps showing when it last heard: the numbers look stale rather than wrong.
                     _LOG.warning("claude /usage gave no limits: %.200s", text)
             except Exception:  # noqa: BLE001 -- limits must never stop the core
                 _LOG.exception("cannot read Claude limits")
-            self._claude_usage_due.clear()
-            with contextlib.suppress(TimeoutError):
-                _ = await asyncio.wait_for(self._claude_usage_due.wait(), _CLAUDE_POLL_S)
+            await self._limits_wait(self._claude_usage_due, _CLAUDE_POLL_S)
 
     async def _poll_codex_limits(self) -> None:
         """Codex reports limits only when asked, and answers without any open tab."""
+        due = self._limits_due("codex")
         while True:
             try:
                 body = await asyncio.to_thread(self._host.codex_rate_limits, _CODEX_CONTAINER)
                 event = await self._in_worker(lambda body=body: self._codex_limits.on_rate_limits(_CODEX_POLL, body))
                 if event is not None:
-                    self._account_observed(event)
+                    self._account_observed(event, source="codex-app-server", every_s=_CODEX_POLL_S)
                 elif body:
                     # An error reply, such as a lost login. It says why and holds no credentials.
                     _LOG.warning("Codex gave no limits: %s", body[:_CODEX_REPLY_LOGGED].decode(errors="replace"))
             except Exception:  # noqa: BLE001 -- limits must never stop the core
                 _LOG.exception("cannot read Codex limits")
                 body = b""
-            await asyncio.sleep(codex_poll_delay(body))
+            await self._limits_wait(due, codex_poll_delay(body))
 
     async def _poll_cursor_limits(self) -> None:
         """Cursor CLI prints no limits; its backend answers them to the CLI's own token."""
+        due = self._limits_due("cursor")
         while True:
             body = b""
             try:
                 body, plan = await asyncio.to_thread(self._host.cursor_usage, _CURSOR_CONTAINER)
                 event = self._cursor_limits.on_usage(body, plan)
                 if event is not None:
-                    self._account_observed(event)
+                    self._account_observed(event, source="cursor-dashboard", every_s=_CURSOR_POLL_S)
                 elif body:
                     _LOG.warning("Cursor gave no limits: %s", body[:_CODEX_REPLY_LOGGED].decode(errors="replace"))
             except Exception:  # noqa: BLE001 -- limits must never stop the core
                 _LOG.exception("cannot read Cursor limits")
             # A stopped container or a missing login gives nothing: ask again soon, as for Codex.
-            await asyncio.sleep(_CURSOR_POLL_S if body else _CODEX_RETRY_S)
+            await self._limits_wait(due, _CURSOR_POLL_S if body else _CODEX_RETRY_S)
 
-    def _account_observed(self, event: QuotaUpdated) -> None:
+    async def _poll_opencode_limits(self) -> None:
+        """OpenCode Go counts 5 hours, a week and a month. Without a Go subscription there is nothing to count."""
+        due = self._limits_due("opencode")
+        said = b""
+        while True:
+            body = b""
+            try:
+                body = await asyncio.to_thread(self._host.opencode_usage, _OPENCODE_CONTAINER)
+                event = self._opencode_limits.on_usage(body)
+                if event is not None:
+                    self._account_observed(event, source="opencode-go", every_s=_OPENCODE_POLL_S)
+                elif body and body != said:
+                    # Without a Go subscription the refusal comes back every poll: it is logged once.
+                    said = body
+                    _LOG.warning("OpenCode gave no limits: %s", body[:_CODEX_REPLY_LOGGED].decode(errors="replace"))
+            except Exception:  # noqa: BLE001 -- limits must never stop the core
+                _LOG.exception("cannot read OpenCode limits")
+            await self._limits_wait(due, _OPENCODE_POLL_S if body else _CODEX_RETRY_S)
+
+    def _limits_due(self, name: str) -> asyncio.Event:
+        event = asyncio.Event()
+        self._limits_events[name] = event
+        return event
+
+    @staticmethod
+    async def _limits_wait(due: asyncio.Event, delay_s: float) -> None:
+        """Until the next poll, or until someone asks for the limits now."""
+        due.clear()
+        with contextlib.suppress(TimeoutError):
+            _ = await asyncio.wait_for(due.wait(), delay_s)
+
+    def refresh_limits(self) -> None:
+        """`quota/refresh`: every poll asks now, and what it hears is sent even when the numbers did not move."""
+        self._account_sent.clear()
+        self._claude_usage_due.set()
+        for event in self._limits_events.values():
+            event.set()
+
+    def _account_observed(
+        self, event: QuotaUpdated, *, source: str | None = None, every_s: float | None = None,
+    ) -> None:
         """The snapshot always holds the newest; subscribers hear of a change, or at most twice a minute without one."""
+        if source is not None:
+            event = QuotaUpdated(
+                account=msgspec.structs.replace(
+                    event.account, source=source, refresh_s=None if every_s is None else int(every_s),
+                ),
+            )
         account = event.account
         key = str(account.id)
         previous = self._accounts.get(key)
@@ -1307,6 +1360,7 @@ class Daemon:
         connection.on_agent_notice = self._agent_notice
         connection.on_screen_signal = self._screen_signal
         connection.health = self.health
+        connection.quota_refresh = self.refresh_limits
         self._writers.add(writer)
         self._connections[connection] = writer
         turns: asyncio.Queue[bytes | None] = asyncio.Queue(maxsize=_MAX_QUEUED)

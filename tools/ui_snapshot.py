@@ -41,7 +41,7 @@ def main(argv: list[str]) -> int:
     _ = parser.add_argument(
         "--scenario",
         required=True,
-        choices=("demo", "empty", "stress", "errors", "waiting", "quota-critical", "approval-expired"),
+        choices=("demo", "empty", "stress", "errors", "waiting", "quota-critical", "approval-expired", "agents"),
     )
     _ = parser.add_argument(
         "--view",

@@ -12,7 +12,7 @@ gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
 from gi.repository import Adw, Gdk, Gio, GLib, GObject, Gtk  # noqa: E402
 
-from aconsole.contracts.app import CommandResult, EmptyParams, PaletteQuery  # noqa: E402
+from aconsole.contracts.app import CommandResult, EmptyParams, EmptyResult, PaletteQuery  # noqa: E402
 from aconsole.contracts.common import ApprovalDecision, PlanId, ProjectId, TabId  # noqa: E402
 from aconsole.contracts.events import CheckpointCreated, GitStateUpdated, InjectToTerminal, SettingsChanged, UiEvent  # noqa: E402
 from aconsole.contracts.settings import Settings  # noqa: E402
@@ -201,6 +201,7 @@ class MainWindow(Adw.ApplicationWindow):
         self.plan_card: PlanCard = PlanCard(on_activate=self._open_plan, with_heading=False)
         self.quota_card: QuotaCard = QuotaCard(with_heading=False)
         self.git_card: GitCard = GitCard()
+        self.quota_card.on_refresh = self._refresh_limits
         self._git_card_project: ProjectId | None = None
         self._code_font: Gtk.CssProvider | None = None
         self._code_font_css: str = ""
@@ -727,6 +728,9 @@ class MainWindow(Adw.ApplicationWindow):
                 display, self._code_font, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION + 1,
             )
         self._code_font.load_from_string(css)
+
+    async def _refresh_limits(self) -> None:
+        _ = await self.tabs.client.request("quota/refresh", EmptyParams(), EmptyResult)
 
     def _sync_quota_header(self) -> None:
         """Folded, the section still shows the most used window, coloured by how close it is to the limit."""
