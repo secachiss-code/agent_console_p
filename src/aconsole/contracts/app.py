@@ -30,7 +30,7 @@ from aconsole.contracts.settings import SettingsPatch
 
 
 class QuotaWindowView(msgspec.Struct, frozen=True, kw_only=True):
-    key: Literal["5h", "7d", "week", "month", "budget"]
+    key: Literal["5h", "7d", "week", "month", "budget", "auto", "api"]
     used_pct: Percent | None
     resets_at: AwareDatetime | None
     level: QuotaLevel

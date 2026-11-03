@@ -603,6 +603,8 @@
           "enum": [
             "5h",
             "7d",
+            "api",
+            "auto",
             "budget",
             "month",
             "week"

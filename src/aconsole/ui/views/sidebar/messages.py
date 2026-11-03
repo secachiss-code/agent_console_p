@@ -36,6 +36,8 @@ _MESSAGES = {
     "quota.week": ("Week", "Неделя"),
     "quota.month": ("Month", "Месяц"),
     "quota.budget": ("Pool", "Пул"),
+    "quota.auto": ("Auto + Composer", "Auto + Composer"),
+    "quota.api": ("API", "API"),
     "quota.empty": ("No data yet", "Пока нет данных"),
     "quota.observed": ("as of {time}", "на {time}"),
     "quota.reset": ("Resets at {time}", "Сброс в {time}"),  # noqa: RUF001 -- Russian UI text

@@ -14,11 +14,17 @@ from aconsole.ui.viewmodels.logic.quota_fmt import (  # noqa: E402
     format_money,
     format_percent,
     peak_window,
+    pool_size,
     quota_level,
     shown_percent,
 )
 from aconsole.ui.viewmodels.logic.time_fmt import format_remaining  # noqa: E402
 from aconsole.ui.views.sidebar.messages import _ as translate  # noqa: E402
+
+
+def window_name(window: QuotaWindowView) -> str:
+    """What the window is called, with the pool's size when that is all the dollars known: "API $20"."""
+    return " ".join(filter(None, (translate(f"quota.{window.key}"), pool_size(window.spent_usd, window.limit_usd))))
 
 
 class QuotaRow(Gtk.Box):
@@ -29,7 +35,7 @@ class QuotaRow(Gtk.Box):
         self.window: QuotaWindowView = window
         self.add_css_class("ac-quota-row")
         self.add_css_class(f"ac-quota-{quota_level(window.used_pct)}")
-        self.key_label: Gtk.Label = Gtk.Label(label=translate(f"quota.{window.key}"), xalign=0)
+        self.key_label: Gtk.Label = Gtk.Label(label=window_name(window), xalign=0)
         self.key_label.add_css_class("ac-quota-key")
         self.level_bar: Gtk.LevelBar = Gtk.LevelBar(min_value=0, max_value=1, hexpand=True)
         shown = shown_percent(window.used_pct, display)
@@ -115,7 +121,7 @@ class AccountLine(Gtk.Box):
         else:
             shown = shown_percent(peak.used_pct, display)
             self.peak_label.set_label(
-                f"{translate(f'quota.{peak.key}')}  {format_percent(shown, estimated=peak.estimated)}",
+                f"{window_name(peak)}  {format_percent(shown, estimated=peak.estimated)}",
             )
             self.add_css_class(f"ac-quota-{quota_level(peak.used_pct)}")
         self.append(bars)
@@ -128,7 +134,7 @@ def _line_tooltip(account: AccountView, display: str) -> str:
     for window in account.quota:
         text = format_percent(shown_percent(window.used_pct, display), estimated=window.estimated)
         money = format_money(window.spent_usd, window.limit_usd)
-        parts.append(f"{translate(f'quota.{window.key}')}: {text}" + (f" ({money})" if money else ""))
+        parts.append(f"{window_name(window)}: {text}" + (f" ({money})" if money else ""))
     if not account.quota:
         parts.append(translate("quota.unknown"))
     return "\n".join(parts)

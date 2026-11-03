@@ -159,6 +159,11 @@ def test_limits_of_both_agents_reach_the_snapshot(tmp_path: Path, monkeypatch) -
     repo = _git_repo(tmp_path / "repo")
     home = tmp_path / "home"
     home.mkdir()
+    # Only an agent with a login is asked about its limits.
+    for login in (".claude/.credentials.json", ".codex/auth.json", ".config/cursor/auth.json",
+                  ".local/share/opencode/auth.json"):
+        (home / login).parent.mkdir(parents=True)
+        _ = (home / login).write_text("{}", encoding="utf-8")
     monkeypatch.setenv("FAKE_HOME", str(home))
 
     async def scenario() -> dict[str, list[float | None]]:

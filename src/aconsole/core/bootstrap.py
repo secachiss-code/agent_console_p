@@ -345,10 +345,21 @@ def codex_poll_delay(body: bytes) -> float:
     return _CODEX_POLL_S if body else _CODEX_RETRY_S
 
 
+def is_connected(agents: tuple[AgentInfo, ...], kind: AgentKind) -> bool:
+    """The container exists and the CLI in it has a login. Anything else has no limits to ask about or show."""
+    return any(agent.kind is kind and agent.available and agent.logged_in is True for agent in agents)
+
+
+def shown_accounts(agents: tuple[AgentInfo, ...], observed: tuple[AccountView, ...]) -> tuple[AccountView, ...]:
+    """The accounts for the snapshot: only connected agents', even if an earlier login left numbers behind."""
+    connected = tuple(account for account in observed if is_connected(agents, account.agent))
+    return (*connected, *accounts_without_limits(agents, connected))
+
+
 def accounts_without_limits(
     agents: tuple[AgentInfo, ...], observed: tuple[AccountView, ...] = (),
 ) -> tuple[AccountView, ...]:
-    """An agent with no numbers yet, or none at all, still gets its card, which says they are unknown.
+    """A connected agent with no numbers yet, or none at all, still gets its card, which says they are unknown.
 
     Claude and Codex name their accounts in their replies, so their cards come with their first numbers.
     """
@@ -356,7 +367,7 @@ def accounts_without_limits(
     return tuple(
         AccountView(id=AccountId(f"{agent.kind.value}:local"), agent=agent.kind, plan_label="", quota=())
         for agent in agents
-        if agent.available and agent.kind not in heard and agent.kind not in _OWN_ACCOUNTS
+        if is_connected(agents, agent.kind) and agent.kind not in heard and agent.kind not in _OWN_ACCOUNTS
     )
 
 
@@ -422,7 +433,9 @@ class Daemon:
             HostRepos(), new_id=self._host.new_id, now=lambda: datetime.now(UTC),
         )
         self.tabs.use_projects(self._catalog)
-        self._agents_source: Callable[[], tuple[AgentInfo, ...]] = HostAgents(self._host.inspect_container).agents
+        self._agents_source: Callable[[], tuple[AgentInfo, ...]] = HostAgents(
+            self._host.inspect_container, signed_in=self._host.signed_in,
+        ).agents
         self.tabs.use_agents(self._agents_source)
         self._agent_commands: HostAgentCommands = HostAgentCommands(self._host.agent_home, self._opencode_heard)
         self.tabs.use_commands(self._agent_commands)
@@ -528,12 +541,7 @@ class Daemon:
         self._account_sent: dict[str, float] = {}
         self._claude_usage_due: asyncio.Event = asyncio.Event()
         self._notices: set[asyncio.Task[None]] = set()
-        self.tabs.use_accounts(
-            lambda: (
-                *self._accounts.values(),
-                *accounts_without_limits(self._agents_source(), tuple(self._accounts.values())),
-            ),
-        )
+        self.tabs.use_accounts(lambda: shown_accounts(self._agents_source(), tuple(self._accounts.values())))
 
     @property
     def lock_path(self) -> Path:
@@ -954,6 +962,9 @@ class Daemon:
     async def _poll_claude_limits(self) -> None:
         """`/usage` is what Claude itself shows. A statusline only repeats its tab's last reply, so it is not used."""
         while True:
+            if not await self._connected(AgentKind.CLAUDE):
+                await self._limits_wait(self._claude_usage_due, _CODEX_RETRY_S)
+                continue
             try:
                 text = await asyncio.to_thread(self._host.claude_usage, _CLAUDE_CONTAINER)
                 event = await asyncio.to_thread(self._claude_limits.on_usage, text)
@@ -970,6 +981,9 @@ class Daemon:
         """Codex reports limits only when asked, and answers without any open tab."""
         due = self._limits_due("codex")
         while True:
+            if not await self._connected(AgentKind.CODEX):
+                await self._limits_wait(due, _CODEX_RETRY_S)
+                continue
             try:
                 body = await asyncio.to_thread(self._host.codex_rate_limits, _CODEX_CONTAINER)
                 event = await self._in_worker(lambda body=body: self._codex_limits.on_rate_limits(_CODEX_POLL, body))
@@ -987,6 +1001,9 @@ class Daemon:
         """Cursor CLI prints no limits; its backend answers them to the CLI's own token."""
         due = self._limits_due("cursor")
         while True:
+            if not await self._connected(AgentKind.CURSOR):
+                await self._limits_wait(due, _CODEX_RETRY_S)
+                continue
             body = b""
             try:
                 body, plan = await asyncio.to_thread(self._host.cursor_usage, _CURSOR_CONTAINER)
@@ -1005,6 +1022,9 @@ class Daemon:
         due = self._limits_due("opencode")
         said = b""
         while True:
+            if not await self._connected(AgentKind.OPENCODE):
+                await self._limits_wait(due, _CODEX_RETRY_S)
+                continue
             body = b""
             try:
                 body = await asyncio.to_thread(self._host.opencode_usage, _OPENCODE_CONTAINER)
@@ -1018,6 +1038,10 @@ class Daemon:
             except Exception:  # noqa: BLE001 -- limits must never stop the core
                 _LOG.exception("cannot read OpenCode limits")
             await self._limits_wait(due, _OPENCODE_POLL_S if body else _CODEX_RETRY_S)
+
+    async def _connected(self, kind: AgentKind) -> bool:
+        """Asked before each poll. It looks at a file, so an agent logged in later is picked up within a minute."""
+        return is_connected(await asyncio.to_thread(self._agents_source), kind)
 
     def _limits_due(self, name: str) -> asyncio.Event:
         event = asyncio.Event()

@@ -46,10 +46,20 @@ class _State(msgspec.Struct, frozen=True):
     Running: bool
 
 
+class _Config(msgspec.Struct, frozen=True):
+    Env: list[str] | None = None
+
+
 class _Row(msgspec.Struct, frozen=True):
     Id: str
     Name: str
     State: _State
+    Config: _Config | None = None
+
+
+def _home(row: _Row) -> str | None:
+    env = row.Config.Env if row.Config is not None else None
+    return next((item.removeprefix("HOME=") for item in env or () if item.startswith("HOME=")), None)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -59,6 +69,8 @@ class Inspected:
     name: str
     ident: str
     running: bool
+    # HOME from the container's configuration: known even while the container is stopped.
+    home: str | None = None
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -105,7 +117,7 @@ class Podman:
             raise ContainerError(_BAD_INSPECT, detail=text)
         row = rows[0]
         reported = row.Name.removeprefix("/")
-        return Inspected(name=reported, ident=row.Id, running=row.State.Running)
+        return Inspected(name=reported, ident=row.Id, running=row.State.Running, home=_home(row))
 
     def start(self, name: str) -> None:
         """Start a container that inspect reported as stopped."""

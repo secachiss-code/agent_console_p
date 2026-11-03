@@ -19,7 +19,7 @@ import pytest
 
 from aconsole.contracts.app import AgentInfo  # noqa: TC001 -- only a return type, like the other imports here
 from aconsole.contracts.common import AgentKind
-from aconsole.core.bootstrap import accounts_without_limits, codex_poll_delay
+from aconsole.core.bootstrap import accounts_without_limits, codex_poll_delay, is_connected, shown_accounts
 from aconsole.core.domain.agent import CAPABILITIES
 from aconsole.core.domain.agent import AgentKind as DomainAgent
 from aconsole.core.infrastructure.agents.command_files import cursor_rules, opencode_commands
@@ -36,7 +36,7 @@ from aconsole.core.infrastructure.containers.podman import ContainerError, Inspe
 from aconsole.core.infrastructure.http.consumer import OPENCODE_EVENT, hook_event, submitted_prompt
 from aconsole.core.infrastructure.http.routes import IngestItem
 from aconsole.core.infrastructure.setup_checks import _agent_command  # pyright: ignore[reportPrivateUsage]
-from aconsole.core.infrastructure.tabs import HostAgents
+from aconsole.core.infrastructure.tabs import HostAgents, HostTabs
 from aconsole.sidecar.screen import ACTIVE, QUIET, SUBMITTED, ScreenWatch, visible_tail
 
 _TOKEN = "tok" + "-secret"
@@ -315,9 +315,9 @@ def test_command_files_find_commands_and_rules(tmp_path: Path) -> None:
     assert [(item.title, item.subtitle) for item in cursor_rules(project)] == [("style", None)]
 
 
-def _info(kind: AgentKind, *, available: bool = True) -> AgentInfo:
+def _info(kind: AgentKind, *, available: bool = True, logged_in: bool | None = True) -> AgentInfo:
     return next(
-        msgspec.structs.replace(info, available=available)
+        msgspec.structs.replace(info, available=available, logged_in=logged_in)
         for info in HostAgents(lambda name: Inspected(name=name, ident="x", running=True)).agents()
         if info.kind is kind
     )
@@ -333,6 +333,43 @@ def test_an_agent_without_limits_gets_a_card_saying_they_are_unknown() -> None:
     found = accounts_without_limits(agents)
     assert [account.agent for account in found] == [AgentKind.CURSOR]
     assert found[0].quota == ()
+
+
+def test_an_agent_without_a_login_has_no_card() -> None:
+    agents = (_info(AgentKind.CURSOR, logged_in=False), _info(AgentKind.OPENCODE, logged_in=None))
+    assert accounts_without_limits(agents) == ()
+    assert not is_connected(agents, AgentKind.CURSOR)
+    assert not is_connected(agents, AgentKind.OPENCODE)
+
+
+def test_numbers_left_by_an_old_login_are_not_shown() -> None:
+    heard = CursorLimits(lambda: datetime(2026, 11, 3, tzinfo=UTC)).on_usage(_CURSOR_USAGE, b"")
+    assert heard is not None
+    assert shown_accounts((_info(AgentKind.CURSOR),), (heard.account,)) == (heard.account,)
+    assert shown_accounts((_info(AgentKind.CURSOR, logged_in=False),), (heard.account,)) == ()
+
+
+def test_the_login_is_a_file_in_the_containers_home(tmp_path: Path) -> None:
+    tabs = HostTabs()
+    tabs._homes["agent-cursor"] = tmp_path
+    assert tabs.signed_in(AgentKind.CURSOR) is False
+    login = tmp_path / ".config" / "cursor" / "auth.json"
+    login.parent.mkdir(parents=True)
+    login.write_text("{}")
+    assert tabs.signed_in(AgentKind.CURSOR) is True
+
+
+def test_host_agents_ask_about_the_login_only_of_an_existing_container() -> None:
+    def inspect(name: str) -> Inspected:
+        if name == "agent-cursor":
+            raise ContainerError(name)
+        return Inspected(name=name, ident="x", running=False)
+
+    infos = HostAgents(inspect, signed_in=lambda kind: kind is AgentKind.CLAUDE).agents()
+    by_kind = {info.kind: info.logged_in for info in infos}
+    assert by_kind == {
+        AgentKind.CLAUDE: True, AgentKind.CODEX: False, AgentKind.OPENCODE: False, AgentKind.CURSOR: None,
+    }
 
 
 def test_the_cursor_card_gives_way_to_its_numbers() -> None:
@@ -363,6 +400,28 @@ def test_cursor_usage_becomes_a_monthly_window() -> None:
     assert window.resets_at == datetime(2026, 12, 1, tzinfo=UTC)
     # The monthly allowance is a share of the plan, not money.
     assert (window.spent_usd, window.limit_usd) == (None, None)
+
+
+def test_cursor_plan_has_two_pools_and_the_api_pool_size_comes_from_the_reply() -> None:
+    now = datetime(2026, 11, 3, tzinfo=UTC)
+    usage = json.loads(_CURSOR_USAGE)
+    # The shape of a real Pro reply, 2026-11-03.
+    usage["planUsage"] = {
+        "totalSpend": 39822, "includedSpend": 2000, "bonusSpend": 37822, "limit": 2000,
+        "autoPercentUsed": 87.0, "apiPercentUsed": 59.4, "totalPercentUsed": 86.3,
+    }
+    event = CursorLimits(lambda: now).on_usage(json.dumps(usage).encode(), b"")
+    assert event is not None
+    auto, api = event.account.quota
+    assert (auto.key, auto.used_pct, auto.limit_usd) == ("auto", 87.0, None)
+    assert (api.key, api.used_pct, api.spent_usd, api.limit_usd) == ("api", 59.4, None, 20.0)
+    # Another subscription, another size. A pool at zero may be left out of the reply.
+    usage["planUsage"] = {"limit": 7000, "autoPercentUsed": 5.0}
+    event = CursorLimits(lambda: now).on_usage(json.dumps(usage).encode(), b"")
+    assert event is not None
+    assert [(w.key, w.used_pct, w.limit_usd) for w in event.account.quota] == [
+        ("auto", 5.0, None), ("api", 0.0, 70.0),
+    ]
 
 
 def test_cursor_on_demand_pool_is_a_budget_in_dollars() -> None:

@@ -74,7 +74,7 @@ from aconsole.contracts.events import (
 
 AT = datetime(2026, 10, 24, 12, 0, tzinfo=UTC)
 _WARN_PCT = 80
-type QuotaKeyName = Literal["5h", "7d", "week", "month", "budget"]
+type QuotaKeyName = Literal["5h", "7d", "week", "month", "budget", "auto", "api"]
 APP_EVENT_TYPES = frozenset(
     {
         "tab_added",

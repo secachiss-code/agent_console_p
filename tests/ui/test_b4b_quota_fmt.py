@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from aconsole.ui.viewmodels.logic.quota_fmt import format_percent, quota_level
+from aconsole.ui.viewmodels.logic.quota_fmt import format_money, format_percent, pool_size, quota_level
 
 
 @pytest.mark.parametrize(
@@ -38,3 +38,9 @@ def test_b4b_quota_fmt_examples(
 )
 def test_b4b_quota_level_thresholds(value: float | None, expected: str) -> None:
     assert quota_level(value) == expected
+
+
+def test_a_pool_known_only_by_its_size_shows_no_invented_spending() -> None:
+    assert (format_money(None, 20.0), pool_size(None, 20.0)) == ("", "$20")
+    assert (format_money(12.4, 20.0), pool_size(12.4, 20.0)) == ("$12.40 / $20", "")
+    assert (format_money(None, None), pool_size(None, None)) == ("", "")

@@ -38,6 +38,13 @@ _DEFAULT_BRANCH: Final = "main"
 _AGENTS_TTL_S: Final = 30.0
 _AGENTS: Final = (AgentKind.CLAUDE, AgentKind.CODEX, AgentKind.OPENCODE, AgentKind.CURSOR)
 _DISPLAY: Final = {AgentKind.OPENCODE: "OpenCode"}
+# The file each CLI keeps its login in, under the container's home. Only its presence is looked at.
+_LOGIN_FILES: Final = {
+    AgentKind.CLAUDE: Path(".claude/.credentials.json"),
+    AgentKind.CODEX: Path(".codex/auth.json"),
+    AgentKind.CURSOR: Path(".config/cursor/auth.json"),
+    AgentKind.OPENCODE: Path(".local/share/opencode/auth.json"),
+}
 _PODMAN: Final = host_binary("podman")
 _SHELL: Final = Path("/bin/sh")
 _PATH: Final = "/usr/bin"
@@ -200,7 +207,8 @@ class HostTabs:
         if cached is not None:
             return cached
         try:
-            text = self._podman.run_in(name, self._user, ("/bin/sh", "-c", 'printf %s "$HOME"'))
+            inspected = self._podman.inspect(name)
+            text = inspected.home or self._podman.run_in(name, self._user, ("/bin/sh", "-c", 'printf %s "$HOME"'))
         except (ContainerError, ValueError):
             _LOG.warning("cannot read HOME of container %s", name, exc_info=True)
             return None
@@ -209,6 +217,11 @@ class HostTabs:
             return None
         self._homes[name] = home
         return home
+
+    def signed_in(self, kind: AgentKind) -> bool | None:
+        """Whether the agent's CLI has a login in its container. None when the container's home cannot be read."""
+        home = self.agent_home(f"agent-{kind.value}")
+        return None if home is None else (home / _LOGIN_FILES[kind]).is_file()
 
     def ensure_container(self, name: str) -> None:
         try:
@@ -291,8 +304,15 @@ class HostRepos:
 class HostAgents:
     """The agents and their containers. Cached: the snapshot must not wait for podman each time."""
 
-    def __init__(self, inspect: Callable[[str], Inspected], *, ttl_s: float = _AGENTS_TTL_S) -> None:
+    def __init__(
+        self,
+        inspect: Callable[[str], Inspected],
+        *,
+        ttl_s: float = _AGENTS_TTL_S,
+        signed_in: Callable[[AgentKind], bool | None] = lambda _kind: None,
+    ) -> None:
         self._inspect = inspect
+        self._signed_in = signed_in
         self._ttl_s = ttl_s
         self._lock = threading.Lock()
         self._until = 0.0
@@ -316,7 +336,8 @@ class HostAgents:
         # A stopped container still counts: `tab/launchSpec` starts it.
         return AgentInfo(
             kind=kind, display_name=_DISPLAY.get(kind, kind.value.capitalize()), container=container,
-            available=reason is None, unavailable_reason=reason, logged_in=None, version=None, supported=True,
+            available=reason is None, unavailable_reason=reason,
+            logged_in=self._signed_in(kind) if reason is None else None, version=None, supported=True,
             capabilities=CAPABILITIES[DomainAgent(kind.value)].names(),
         )
 

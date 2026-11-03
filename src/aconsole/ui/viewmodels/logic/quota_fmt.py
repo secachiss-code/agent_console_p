@@ -35,10 +35,16 @@ def quota_level(value: float | None) -> str:
 
 def format_money(spent: float | None, limit: float | None) -> str:
     """Dollars spent, over the cap when there is one: "$12.40 / $20", or "$5.20" for an uncapped pool."""
-    if spent is None and limit is None:
+    if spent is None:
+        # A pool whose size is known but whose spending is not has no sum to show here; its name carries the size.
         return ""
     shown = f"${spent or 0:,.2f}"
     return f"{shown} / ${limit:,.0f}" if limit else shown
+
+
+def pool_size(spent: float | None, limit: float | None) -> str:
+    """The size of a pool reported only as a share, "$20". Empty when the dollars spent are known too."""
+    return f"${limit:,.0f}" if spent is None and limit else ""
 
 
 def peak_window[W](windows: tuple[W, ...], used: Callable[[W], float | None]) -> W | None:

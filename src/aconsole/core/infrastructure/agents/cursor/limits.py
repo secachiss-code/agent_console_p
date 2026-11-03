@@ -84,8 +84,9 @@ def _ask(method: str, token: str) -> bytes:
 class CursorLimits:
     """Fold one usage reply into the account card.
 
-    The plan's monthly allowance is a share, shown as a percent. Spending past it is paid from the on-demand pool,
-    a cap in dollars (the user's own, or the team's), which is the budget window.
+    The plan has two pools, each reported as a share: Auto + Composer, and API, whose size in dollars depends on the
+    subscription and comes in the reply. A reply without them gives one monthly share. Spending past the plan is paid
+    from the on-demand pool, a cap in dollars (the user's own, or the team's), which is the budget window.
     """
 
     _now: Callable[[], datetime]
@@ -99,11 +100,13 @@ class CursorLimits:
         if document is None:
             return None
         resets_at = _millis(document.get("billingCycleEnd"))
-        month = _month(document.get("planUsage"))
-        if month is None or resets_at is None:
-            return None
         now = self._now()
-        windows = [_view("month", month, resets_at, now, (None, None))]
+        windows = [
+            _view(key, used, resets_at, now, (None, size))
+            for key, used, size in _plan_pools(document.get("planUsage"))
+        ] if resets_at is not None else []
+        if not windows or resets_at is None:
+            return None
         pool = _pool(document.get("spendLimitUsage"))
         if pool is not None:
             pool_spent, pool_limit = pool
@@ -115,7 +118,7 @@ class CursorLimits:
 
 
 def _view(
-    key: Literal["month", "budget"], used_pct: float | None, resets_at: datetime, now: datetime,
+    key: Literal["auto", "api", "month", "budget"], used_pct: float | None, resets_at: datetime, now: datetime,
     money: tuple[float | None, float | None],
 ) -> QuotaWindowView:
     spent, limit = money
@@ -126,11 +129,20 @@ def _view(
     )
 
 
-def _month(raw: object) -> float | None:
-    """The share of the plan's monthly allowance used. The allowance is the plan's, not a sum of money: no dollars."""
+def _plan_pools(raw: object) -> tuple[tuple[Literal["auto", "api", "month"], float, float | None], ...]:
+    """The shares of the plan's pools. The reply gives no dollars spent per pool, so only the API pool's size is known.
+
+    A pool at zero may be left out of the reply, so one pool present means both exist.
+    """
     if not isinstance(raw, dict):
-        return None
-    return _percent(raw.get("totalPercentUsed"))  # pyright: ignore[reportUnknownMemberType, reportUnknownArgumentType]
+        return ()
+    auto = _percent(raw.get("autoPercentUsed"))  # pyright: ignore[reportUnknownMemberType, reportUnknownArgumentType]
+    api = _percent(raw.get("apiPercentUsed"))  # pyright: ignore[reportUnknownMemberType, reportUnknownArgumentType]
+    if auto is not None or api is not None:
+        size = _cents(raw.get("limit")) or None  # pyright: ignore[reportUnknownMemberType, reportUnknownArgumentType]
+        return (("auto", auto or 0.0, None), ("api", api or 0.0, size))
+    total = _percent(raw.get("totalPercentUsed"))  # pyright: ignore[reportUnknownMemberType, reportUnknownArgumentType]
+    return () if total is None else (("month", total, None),)
 
 
 def _pool(raw: object) -> tuple[float, float | None] | None:
