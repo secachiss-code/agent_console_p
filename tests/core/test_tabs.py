@@ -765,3 +765,13 @@ def test_agents_that_cannot_fork_refuse_it(agent: AgentKind) -> None:
     tab = _opened(service, agent)
     with pytest.raises(TabRequestError):
         _ = service.fork(TabIdParams(tab_id=TabId(tab)))
+
+
+def test_opencode_reports_its_session_and_codex_does_not_use_that_path() -> None:
+    service, _ports = _service(ProjectSeed(project_id="proj", root="/repo", container="box"))
+    opencode = _opened(service, AgentKind.OPENCODE)
+    codex = _opened(service, AgentKind.CODEX)
+    service.reported_session(opencode, "ses_1")
+    service.reported_session(codex, "ses_2")
+    assert service._tabs[opencode].session == "ses_1"
+    assert service._tabs[codex].session is None

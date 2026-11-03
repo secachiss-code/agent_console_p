@@ -61,7 +61,7 @@ from aconsole.core.infrastructure.git.watch import GitWatch
 from aconsole.core.infrastructure.http.app import IngestApp, serve_config
 from aconsole.core.infrastructure.http.approval import handle_permission
 from aconsole.core.infrastructure.http.auth import TokenBook
-from aconsole.core.infrastructure.http.consumer import consume
+from aconsole.core.infrastructure.http.consumer import OPENCODE_EVENT, consume
 from aconsole.core.infrastructure.http.problem import HttpResponse, empty_json, json_response
 from aconsole.core.infrastructure.http.routes import IngestItem, IngestQueue
 from aconsole.core.infrastructure.ipc.framing import (
@@ -391,7 +391,8 @@ class Daemon:
         )
         self.tabs.use_projects(self._catalog)
         self.tabs.use_agents(HostAgents(self._host.inspect_container).agents)
-        self.tabs.use_commands(HostAgentCommands(self._host.agent_home))
+        self._agent_commands: HostAgentCommands = HostAgentCommands(self._host.agent_home, self._opencode_heard)
+        self.tabs.use_commands(self._agent_commands)
         self._setup_limits()
         self.review: ReviewService = ReviewService(
             lambda: self.tabs,
@@ -471,6 +472,7 @@ class Daemon:
         )
         self._ingest_queue: IngestQueue = IngestQueue()
         self._ingest_ready: asyncio.Event | None = None
+        self._ingest_loop: asyncio.AbstractEventLoop | None = None
         self._ingest_tasks: list[asyncio.Task[None]] = []
         self._uvicorn: uvicorn.Server | None = None
         self.database: Path | None = database
@@ -715,6 +717,7 @@ class Daemon:
             return
         ready = asyncio.Event()
         self._ingest_ready = ready
+        self._ingest_loop = asyncio.get_running_loop()
 
         async def wake(item: IngestItem) -> None:
             del item
@@ -736,7 +739,7 @@ class Daemon:
         self._ingest_tasks = [
             asyncio.create_task(server.serve(sockets=[listener])),
             asyncio.create_task(
-                consume(self._ingest_queue, ready, self._apply_hook, self._prompt_sent, self._claude_session)
+                consume(self._ingest_queue, ready, self._apply_hook, self._prompt_sent, self._reported_session)
             ),
             asyncio.create_task(self._poll_codex_limits()),
             asyncio.create_task(self._poll_claude_limits()),
@@ -751,8 +754,22 @@ class Daemon:
         if event_name == "Stop":
             self._claude_usage_due.set()
 
-    async def _claude_session(self, tab_id: str, session: str) -> None:
-        await self._in_worker(lambda: self.tabs.claude_session(tab_id, session))
+    async def _reported_session(self, tab_id: str, session: str) -> None:
+        await self._in_worker(lambda: self.tabs.reported_session(tab_id, session))
+
+    def _opencode_heard(self, tab_id: str, body: bytes) -> None:
+        """From the stream's thread. The queue and its wake-up belong to the loop."""
+        loop = self._ingest_loop
+        ready = self._ingest_ready
+        if loop is None or ready is None:
+            return
+
+        def queue() -> None:
+            self._ingest_queue.push(IngestItem(tab_id=tab_id, kind=OPENCODE_EVENT, body=body))
+            ready.set()
+
+        with contextlib.suppress(RuntimeError):  # the loop has closed: nobody is left to tell
+            _ = loop.call_soon_threadsafe(queue)
 
     async def _prompt_sent(self, tab_id: str, text: str) -> None:
         await self._in_worker(lambda: self.review.on_prompt(tab_id, text))
@@ -923,6 +940,7 @@ class Daemon:
             self._publish(event, self._live_tabs, None)
 
     async def _close_ingest(self) -> None:
+        self._agent_commands.stop_streams()
         server = self._uvicorn
         self._uvicorn = None
         if server is not None:

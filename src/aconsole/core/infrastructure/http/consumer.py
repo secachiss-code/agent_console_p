@@ -16,6 +16,8 @@ _LOG = logging.getLogger(__name__)
 _HOOKS = frozenset({"claude.hook", "codex.hook"})
 _IDLE_PROMPT = "idle_prompt"
 _CLAUDE = frozenset({"claude.hook", "claude.statusline"})
+OPENCODE_EVENT = "opencode.event"
+_NAMES_SESSION = _CLAUDE | {OPENCODE_EVENT}
 
 
 class _HookName(msgspec.Struct, frozen=True, kw_only=True):
@@ -34,11 +36,13 @@ class _NotificationType(msgspec.Struct, frozen=True, kw_only=True):
 def hook_event(item: IngestItem) -> str | None:
     """The event name that drives the tab status: a hook's `hook_event_name`, or a Codex notify `type`.
 
+    OpenCode's stream is read into the same shape. It is not in `_HOOKS`: its "working" carries no prompt.
+
     The statusline carries no status. The body was validated when it was queued; a body that still does not decode
     is skipped.
     """
     try:
-        if item.kind in _HOOKS:
+        if item.kind in _HOOKS or item.kind == OPENCODE_EVENT:
             return msgspec.json.decode(item.body, type=_HookName).hook_event_name
         if item.kind == "codex.notify":
             return msgspec.json.decode(item.body, type=CodexNotify).type
@@ -74,7 +78,7 @@ async def consume(
                 name = _event_name(item)
                 if name is not None:
                     await apply(item.tab_id, name)
-                session = _claude_session_id(item)
+                session = _session_id(item)
                 if session is not None and on_session is not None:
                     await on_session(item.tab_id, session)
                 prompt = submitted_prompt(item)
@@ -88,8 +92,8 @@ class _HasSession(msgspec.Struct, frozen=True):
     session_id: str | None = None
 
 
-def _claude_session_id(item: IngestItem) -> str | None:
-    if item.kind not in _CLAUDE:
+def _session_id(item: IngestItem) -> str | None:
+    if item.kind not in _NAMES_SESSION:
         return None
     try:
         return msgspec.json.decode(item.body, type=_HasSession).session_id

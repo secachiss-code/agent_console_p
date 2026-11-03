@@ -481,10 +481,10 @@ class TabService:
         if len(running) == 1:
             self._note_session(running[0], session)
 
-    def claude_session(self, tab_id: str, session: str) -> None:
-        """What a Claude hook says its session is. A session replaced by `/clear` replaces this one too."""
+    def reported_session(self, tab_id: str, session: str) -> None:
+        """What a Claude hook or OpenCode's stream says the session is. A session replaced by `/clear` replaces this."""
         tab = self._tabs.get(tab_id)
-        if tab is not None and tab.agent is AgentKind.CLAUDE:
+        if tab is not None and tab.agent in {AgentKind.CLAUDE, AgentKind.OPENCODE}:
             self._note_session(tab, session)
 
     def _note_session(self, tab: _Tab, session: str) -> None:
