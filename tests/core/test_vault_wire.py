@@ -83,7 +83,7 @@ def test_an_edited_title_and_status_reach_the_board_and_the_body_stays(tmp_path:
         path = tmp_path / "plans" / plan_id / "N-01.md"
         _edit(path, "title: First", "title: Renamed")
         _edit(path, "status: pending", "status: blocked")
-        _edit(path, "## Заметки", "## Заметки\n\nмоя заметка")
+        _edit(path, "## Заметки", "## Заметки\n\nмоя заметка")  # noqa: RUF001 -- the note's heading
         sync.publish(plan_id)
         view = board.view(plan_id)
         assert view is not None

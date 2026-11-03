@@ -51,7 +51,7 @@ def test_codegraph_protocol_schema_and_unknown_version() -> None:
 
 
 def test_codegraph_protocol_runner_builds_hostrun_devtools_argv(tmp_path: Path) -> None:
-    runner = ExtractorRunner()
+    runner = ExtractorRunner(Path(_HOSTRUN))
     assert runner.argv("python", "src") == (_HOSTRUN, "devtools", "python", "src")
     assert runner.argv("ts", "web") == (_HOSTRUN, "devtools", "ts", "web")
     assert runner.argv("rust-metadata", "crates/app") == (

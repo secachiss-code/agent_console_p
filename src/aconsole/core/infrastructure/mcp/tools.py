@@ -16,7 +16,7 @@ from contextvars import ContextVar
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import ClassVar, Literal, NoReturn
+from typing import ClassVar, Literal, NoReturn, Protocol
 
 from mcp.types import CallToolResult, TextContent
 from pydantic import BaseModel, ConfigDict, Field
@@ -31,7 +31,7 @@ from aconsole.core.domain.vault_sync import Note as VaultNote
 from aconsole.core.domain.vault_sync import Owners, resolve_ref
 from aconsole.core.infrastructure.vault.sync import NodeNote
 
-_VAULT_LOG = logging.getLogger("aconsole.core.vault")
+_LOG = logging.getLogger(__name__)
 _NODE_NOT_FOUND = 4002
 _HUMAN_TAB = "human"
 _SUMMARY = 300
@@ -305,8 +305,14 @@ class _Handover:
     failing_checks: tuple[str, ...]
 
 
+class CodeGraph(Protocol):
+    def resolve(self, project_id: str, target: str) -> str | None: ...
+
+    def dependents(self, project_id: str, kinds: frozenset[str] | None = None) -> dict[str, tuple[str, ...]]: ...
+
+
 class PlanBoard:
-    """In-memory plans, knowledge, and handovers for one core process."""
+    """Plans, knowledge, and handovers for one core process. Plans are also kept in a `PlanStore`."""
 
     def __init__(self, now: Callable[[], datetime] | None = None) -> None:
         self._now: Callable[[], datetime] = now if now is not None else _clock
@@ -318,6 +324,7 @@ class PlanBoard:
         self._store: PlanStore | None = None
         self.on_changed: Callable[[PlanView], None] | None = None
         self.note_ref: Callable[[str, str], str | None] = lambda _plan, _key: None
+        self.code_graph: CodeGraph | None = None
 
     def use_store(self, store: PlanStore) -> None:
         """Take the plans `store` kept. From here on every change is saved there."""
@@ -393,7 +400,7 @@ class PlanBoard:
                 stored.deps[key] = blockers
                 self._move_by_hand(stored, key, note.status)
             except (DomainError, ValueError) as exc:
-                _VAULT_LOG.warning("the note of %s asks for a move the plan refuses: %s", key, exc)
+                _LOG.warning("the note of %s asks for a move the plan refuses: %s", key, exc)
             self._commit(stored)
 
     def _move_by_hand(self, stored: _Stored, key: str, status: str) -> None:
@@ -662,13 +669,33 @@ class PlanBoard:
 
     def impact(self, ctx: TabContext, target: str, hops: int, limit: int, kinds: list[str] | None) -> Impact:
         _require_tab(ctx)
+        # Outside the lock: building a graph can take a minute, and plans must keep moving.
+        code_start, code_edges = self._code(ctx.project_id, target, kinds)
         with self._lock:
-            start = self._target(ctx.project_id, target)
+            start = self._target(ctx.project_id, target) or code_start
+            edges = {**code_edges}
+            for key, linked in self._edges(ctx.project_id, kinds).items():
+                edges[key] = (*edges.get(key, ()), *linked)
             if start is None:
                 _stop("IMPACT_TARGET_UNKNOWN", f"no impact target {target}")
-            layers, truncated = _layers(self._edges(ctx.project_id, kinds), start, hops, limit)
+            layers, truncated = impact_layers(edges, start, hops, limit)
             note = "aconsole://note/impact" if truncated else ""
             return Impact(layers=layers, truncated=truncated, canvas_note=note)
+
+    def _code(
+        self, project_id: str, target: str, kinds: list[str] | None,
+    ) -> tuple[str | None, dict[str, tuple[str, ...]]]:
+        """A failing extractor leaves the facts the board has. The tool's answer is still useful."""
+        graph = self.code_graph
+        if graph is None:
+            return None, {}
+        try:
+            return graph.resolve(project_id, target), graph.dependents(
+                project_id, None if kinds is None else frozenset(kinds),
+            )
+        except DomainError as exc:
+            _LOG.warning("no code graph for project %s: %s", project_id, exc)
+            return None, {}
 
     def handover(  # noqa: PLR0913, PLR0917 -- MCP_TOOLS.md fixes these fields
         self,
@@ -1188,7 +1215,7 @@ def _check_source(ctx: TabContext, source: str) -> None:
         _stop("PATH_NOT_ALLOWED", f"{relative.as_posix()} is not a file in the worktree")
 
 
-def _layers(edges: dict[str, tuple[str, ...]], start: str, hops: int, limit: int) -> tuple[list[list[str]], bool]:
+def impact_layers(edges: dict[str, tuple[str, ...]], start: str, hops: int, limit: int) -> tuple[list[list[str]], bool]:
     seen = {start}
     frontier = [start]
     layers: list[list[str]] = []

@@ -40,6 +40,8 @@ from aconsole.core.infrastructure.agents.codex.limits import CodexLimits
 from aconsole.core.infrastructure.agents.codex.turns import TurnWatch
 from aconsole.core.infrastructure.agents.launch import HostAgentCommands
 from aconsole.core.infrastructure.agents.live_limits import CachedAuth
+from aconsole.core.infrastructure.codegraph.index import CodeGraphIndex
+from aconsole.core.infrastructure.codegraph.runner import ExtractorRunner
 from aconsole.core.infrastructure.git.checkpoints import GitCheckpoints
 from aconsole.core.infrastructure.git.diff import GitDiff
 from aconsole.core.infrastructure.http.app import IngestApp, serve_config
@@ -321,7 +323,9 @@ class Daemon:
         self.vault.on_edit = self._vault_edited
         self._plans.note_ref = self.vault.note_ref
         self.vault_default: Path | None = None
-        self.knowledge: KnowledgeService = KnowledgeService(self._plans, self.vault)
+        code_graph = CodeGraphIndex(ExtractorRunner(), self._project_root)
+        self._plans.code_graph = code_graph
+        self.knowledge: KnowledgeService = KnowledgeService(self._plans, self.vault, code_graph)
         self._mcp_tokens: TabTokens = TabTokens()
         self._mcp: MCPServer = build_server(
             self._plans,
@@ -421,6 +425,10 @@ class Daemon:
             _ = loop.call_soon_threadsafe(self._publish, event, live, token)
         if isinstance(event, TabUpdated):
             self.review.on_event(event)
+
+    def _project_root(self, project_id: str) -> Path | None:
+        found = next((item for item in self._catalog.views() if str(item.id) == project_id), None)
+        return None if found is None else Path(found.root)
 
     def _vault_edited(self, plan_id: str) -> None:
         self._to_vault(self._publish_notes, plan_id)
@@ -840,6 +848,9 @@ class Daemon:
             envelope = decode_envelope(frame)
             if isinstance(envelope, Request) and envelope.method in {"approval/decide", "approval/releaseToNative"}:
                 payloads = connection.receive(frame)
+            elif isinstance(envelope, Request) and envelope.method == "knowledge/impact":
+                # Building a graph can take a minute; the tab worker must keep answering.
+                payloads = await asyncio.to_thread(connection.receive, frame)
             else:
                 payloads = await self._in_worker(lambda: connection.receive(frame))
         except msgspec.DecodeError:

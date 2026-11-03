@@ -6,6 +6,7 @@ This module does not install packages and does not open a network connection of 
 
 from __future__ import annotations
 
+import os
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
@@ -20,7 +21,7 @@ from aconsole.contracts.errors import (
 from aconsole.core.infrastructure.codegraph.protocol import ExtractorGraph, ExtractorProtocolError, decode_graph
 from aconsole.core.infrastructure.codegraph.rust import from_cargo_metadata
 
-_HOSTRUN: Final = Path("/home/sas/.containers/host-bins/hostrun")
+_ENV_HOSTRUN: Final = "ACONSOLE_HOSTRUN"
 _TIMEOUT_S: Final = 60.0
 _TAIL: Final = 400
 _OK: Final = 0
@@ -49,7 +50,9 @@ class ExtractorRunner:
     _hostrun: Path
     _timeout_s: float
 
-    def __init__(self, hostrun: Path = _HOSTRUN, *, timeout_s: float = _TIMEOUT_S) -> None:
+    def __init__(self, hostrun: Path | None = None, *, timeout_s: float = _TIMEOUT_S) -> None:
+        if hostrun is None:
+            hostrun = default_hostrun()
         if not hostrun.is_absolute():
             raise ValueError(_ABS)
         if timeout_s <= 0:
@@ -61,16 +64,18 @@ class ExtractorRunner:
         """`hostrun devtools <language> <path>`."""
         return (str(self._hostrun), "devtools", language, path)
 
-    def run(self, language: str, path: str) -> ExtractorRun:
+    def run(self, language: str, path: str, *, cwd: Path | None = None) -> ExtractorRun:
+        """``path`` is relative to the worktree. ``cwd`` tells `hostrun` which worktree that is."""
         refused = _refuse(language, path)
         if refused is not None:
             return ExtractorRun(graph=None, error=refused)
-        completed = self._spawn(language, path)
+        completed = self._spawn(language, path, cwd)
         if isinstance(completed, ErrorObject):
             return ExtractorRun(graph=None, error=completed)
         return _parse(language, completed)
 
-    def _spawn(self, language: str, path: str) -> subprocess.CompletedProcess[str] | ErrorObject:
+    def _spawn(self, language: str, path: str, cwd: Path | None) -> subprocess.CompletedProcess[str] | ErrorObject:
+        env = None if cwd is None else {**os.environ, "HOSTRUN_CWD": str(cwd)}
         try:
             return subprocess.run(  # noqa: S603 -- argv is a list; the hostrun path is absolute
                 self.argv(language, path),
@@ -79,11 +84,18 @@ class ExtractorRunner:
                 timeout=self._timeout_s,
                 encoding="utf-8",
                 errors="replace",
+                env=env,
             )
         except subprocess.TimeoutExpired:
             return _failure(language, _TIMED_OUT)
         except FileNotFoundError:
             return _failure(language, _MISSING)
+
+
+def default_hostrun() -> Path:
+    """`ACONSOLE_HOSTRUN`, or where the agent containers keep their host tools."""
+    chosen = os.environ.get(_ENV_HOSTRUN, "")
+    return Path(chosen) if chosen else Path.home() / ".containers" / "host-bins" / "hostrun"
 
 
 def _refuse(language: str, path: str) -> ErrorObject | None:
