@@ -244,20 +244,23 @@ CHECKS = (
     check_golden,
     check_compat_matrix,
     check_error_registry,
-    check_app_api_errors,
     check_contracts_types,
     check_both_interpreters,
-    check_generated_markdown,
     check_typed_facade,
     check_mcp_conformance,
 )
+# The documents live in a separate repository and are linked in as docs/. A clean checkout does not have them.
+DOCUMENT_CHECKS = (check_app_api_errors, check_generated_markdown)
 
 
 def main(argv: list[str]) -> int:
     repo = Path(argv[0]) if argv else Path(__file__).resolve().parents[1]
     problems: list[str] = []
-    for check in CHECKS:
+    linked = (repo / "docs" / "contracts").is_dir()
+    for check in CHECKS + DOCUMENT_CHECKS if linked else CHECKS:
         problems.extend(check(repo))
+    if not linked:
+        sys.stdout.write(f"check_contracts: docs/contracts not linked, skipped {len(DOCUMENT_CHECKS)} checks\n")
     if problems:
         for problem in problems:
             sys.stdout.write(problem + "\n")
