@@ -10,7 +10,7 @@ import gi
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
-from gi.repository import Adw, Gio, GLib, GObject, Gtk  # noqa: E402
+from gi.repository import Adw, Gdk, Gio, GLib, GObject, Gtk  # noqa: E402
 
 from aconsole.contracts.app import CommandResult, EmptyParams, PaletteQuery  # noqa: E402
 from aconsole.contracts.common import ApprovalDecision, PlanId, ProjectId, TabId  # noqa: E402
@@ -19,10 +19,12 @@ from aconsole.contracts.settings import Settings  # noqa: E402
 from aconsole.ui.bootstrap import spawn_task  # noqa: E402
 from aconsole.ui.client.core_client import CoreClient  # noqa: E402
 from aconsole.ui.client.store import CoreStore  # noqa: E402
+from aconsole.ui.client.ui_state import UiState  # noqa: E402
 from aconsole.ui.viewmodels.app_vm import AppViewModel  # noqa: E402
 from aconsole.ui.viewmodels.approvals_vm import ApprovalsViewModel  # noqa: E402
-from aconsole.ui.viewmodels.git_vm import GitViewModel  # noqa: E402
+from aconsole.ui.viewmodels.git_vm import GitViewModel, git_summary  # noqa: E402
 from aconsole.ui.viewmodels.health_vm import HealthViewModel  # noqa: E402
+from aconsole.ui.viewmodels.logic.fonts import css_font_family, font_families  # noqa: E402
 from aconsole.ui.viewmodels.logic.quota_fmt import quota_level  # noqa: E402
 from aconsole.ui.viewmodels.review_vm import ReviewViewModel  # noqa: E402
 from aconsole.ui.viewmodels.setup_vm import PreferencesViewModel  # noqa: E402
@@ -39,10 +41,12 @@ from aconsole.ui.views.setup.messages import _ as setup_text  # noqa: E402
 from aconsole.ui.views.setup.preferences import PreferencesDialog  # noqa: E402
 from aconsole.ui.views.setup.wizard import SetupWizard  # noqa: E402
 from aconsole.ui.views.shortcuts import ShortcutManager  # noqa: E402
+from aconsole.ui.views.sidebar.git_card import GitCard  # noqa: E402
 from aconsole.ui.views.sidebar.messages import _ as translate  # noqa: E402
 from aconsole.ui.views.sidebar.plan_card import PlanCard  # noqa: E402
 from aconsole.ui.views.sidebar.plan_graph import PlanGraph  # noqa: E402
 from aconsole.ui.views.sidebar.quota_card import QuotaCard  # noqa: E402
+from aconsole.ui.views.sidebar.section import SummarySection  # noqa: E402
 from aconsole.ui.views.tabs.messages import _ as tabs_text  # noqa: E402
 from aconsole.ui.views.tabs.new_tab import NewTabDialog  # noqa: E402
 from aconsole.ui.views.tabs.project_bar import ProjectBar  # noqa: E402
@@ -143,6 +147,13 @@ class MainWindow(Adw.ApplicationWindow):
         menu = Gtk.MenuButton(icon_name="open-menu-symbolic", menu_model=self._settings_menu)
         menu.set_tooltip_text(setup_text("prefs.title"))
         header.pack_end(menu)
+        # New tab lives beside the menu: the list below it is then only tabs.
+        self.new_tab_button: Gtk.Button = Gtk.Button(icon_name="list-add-symbolic", action_name="win.new-tab")
+        self.new_tab_button.set_tooltip_text(tabs_text("tabs.new"))
+        self.new_tab_button.update_property(
+            [Gtk.AccessibleProperty.LABEL], [GObject.Value(GObject.TYPE_STRING, tabs_text("tabs.new"))],
+        )
+        header.pack_end(self.new_tab_button)
         title = Gtk.Label(label="AConsole")
         title.add_css_class("ac-app-title")
         header.set_title_widget(title)
@@ -184,25 +195,27 @@ class MainWindow(Adw.ApplicationWindow):
         body.append(self.project_bar)
         self.tabs_sidebar.set_vexpand(True)
         body.append(self.tabs_sidebar)
-        new_tab = Gtk.Button(child=Adw.ButtonContent(icon_name="list-add-symbolic", label=tabs_text("tabs.new")))
-        new_tab.add_css_class("flat")
-        new_tab.add_css_class("ac-new-tab")
-        new_tab.set_action_name("win.new-tab")
-        body.append(new_tab)
-        self.git_button: Gtk.Button = Gtk.Button(
-            child=Adw.ButtonContent(icon_name="media-playlist-shuffle-symbolic", label=review_text("git.open")),
-        )
-        self.git_button.add_css_class("flat")
-        self.git_button.add_css_class("ac-new-tab")
-        self.git_button.set_action_name("win.open-git")
-        body.append(self.git_button)
         self.summary_card: Gtk.Box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         self.summary_card.add_css_class("ac-summary-card")
-        self.plan_card: PlanCard = PlanCard(on_activate=self._open_plan)
-        self.quota_card: QuotaCard = QuotaCard()
-        self.summary_card.append(self.plan_card)
+        ui_state = UiState()
+        self.plan_card: PlanCard = PlanCard(on_activate=self._open_plan, with_heading=False)
+        self.quota_card: QuotaCard = QuotaCard(with_heading=False)
+        self.git_card: GitCard = GitCard()
+        self._git_card_project: ProjectId | None = None
+        self._code_font: Gtk.CssProvider | None = None
+        self._code_font_css: str = ""
+        self.plan_section: SummarySection = SummarySection(
+            "plan", translate("plan.card.title"), self.plan_card, ui_state,
+        )
+        self.quota_section: SummarySection = SummarySection(
+            "limits", self.quota_card.title(), self.quota_card, ui_state,
+        )
+        self.git_section: SummarySection = SummarySection("git", translate("git.card.title"), self.git_card, ui_state)
+        self.summary_card.append(self.plan_section)
         self.summary_card.append(Gtk.Separator())
-        self.summary_card.append(self.quota_card)
+        self.summary_card.append(self.quota_section)
+        self.summary_card.append(Gtk.Separator())
+        self.summary_card.append(self.git_section)
         body.append(self.summary_card)
         return body
 
@@ -294,8 +307,11 @@ class MainWindow(Adw.ApplicationWindow):
                 self._open_plan(plan.id)
             else:
                 self._show_selected_terminal()
+        self.plan_section.set_detail(f"{plan.done}/{plan.total}" if plan is not None else "")
         self.quota_card.tabs = self._summary_vm.tabs
         self.quota_card.set_accounts(self._summary_vm.accounts)
+        self._sync_quota_header()
+        self._follow_git_project()
         critical = any(
             quota_level(window.used_pct) == "critical"
             for account in self._summary_vm.accounts for window in account.quota
@@ -676,7 +692,57 @@ class MainWindow(Adw.ApplicationWindow):
 
     async def _load_git_badges(self, project_id: ProjectId) -> None:
         with contextlib.suppress(Exception):  # a hint in the sidebar: the core's own errors show elsewhere
-            self.tabs.apply_git(await GitViewModel(self.tabs.client, project_id).state())
+            state = await GitViewModel(self.tabs.client, project_id).state()
+            self.tabs.apply_git(state)
+            if state.project_id == self._git_card_project:
+                summary = git_summary(state)
+                self.git_card.set_summary(summary)
+                self.git_section.set_detail(summary.base_branch or "", "warning" if summary.conflicted else None)
+
+    def _follow_git_project(self) -> None:
+        """The Git section counts the active project. Changing project asks once; Git events keep it current."""
+        snapshot = self.tabs.client.store.snapshot
+        project = None if snapshot is None else snapshot.active_project
+        if project == self._git_card_project:
+            return
+        self._git_card_project = project
+        self.git_card.set_summary(None)
+        self.git_section.set_detail("")
+        if project is not None:
+            _ = spawn_task(self._load_git_badges(project))
+
+    def _apply_code_font(self, setting: str | None) -> None:
+        """Code in the window (diffs, commands, commit messages) reads in the terminal's fonts, in the same order."""
+        families = font_families(setting)
+        css = f".monospace {{ font-family: {css_font_family(families)}; }}" if families else ""
+        if css == self._code_font_css:
+            return
+        self._code_font_css = css
+        display = Gdk.Display.get_default()
+        if display is None:
+            return
+        if self._code_font is None:
+            self._code_font = Gtk.CssProvider()
+            Gtk.StyleContext.add_provider_for_display(
+                display, self._code_font, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION + 1,
+            )
+        self._code_font.load_from_string(css)
+
+    def _sync_quota_header(self) -> None:
+        """Folded, the section still shows the most used window, coloured by how close it is to the limit."""
+        self.quota_section.set_title(self.quota_card.title())
+        used = [window.used_pct for account in self._summary_vm.accounts for window in account.quota]
+        known = [value for value in used if value is not None]
+        if not known:
+            self.quota_section.set_detail("")
+            return
+        peak = max(known)
+        shown = {"critical": "error", "warn": "warning"}.get(quota_level(peak))
+        if self.quota_card.display == "remaining":
+            text = translate("quota.peak_left").format(pct=round(100 - peak))
+        else:
+            text = translate("quota.peak").format(pct=round(peak))
+        self.quota_section.set_detail(text, shown)
 
     def _snapshot_changed(self, _store: CoreStore) -> None:
         self._sync_terminal_pages(_store)
@@ -697,6 +763,8 @@ class MainWindow(Adw.ApplicationWindow):
         self._settings_revision = settings.rev
         self._terminal_settings = settings
         self.quota_card.set_display(settings.quota_display)
+        self._sync_quota_header()
+        self._apply_code_font(settings.terminal_font)
         _ = self.app_vm.apply_overrides(settings.keymap_overrides)
         for page in self.terminal_pages.values():
             page.apply_settings(settings)

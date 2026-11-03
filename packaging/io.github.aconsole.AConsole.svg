@@ -1,10 +1,39 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
-  <rect x="8" y="16" width="112" height="96" rx="16" fill="#1e2128"/>
-  <rect x="8" y="16" width="34" height="96" rx="16" fill="#2c313a"/>
-  <rect x="26" y="16" width="16" height="96" fill="#2c313a"/>
-  <circle cx="25" cy="40" r="5" fill="#3584e4"/>
-  <circle cx="25" cy="60" r="5" fill="#e5a50a"/>
-  <circle cx="25" cy="80" r="5" fill="#6d7480"/>
-  <path d="M56 46l16 14-16 14" fill="none" stroke="#f6f5f4" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M78 80h24" stroke="#f6f5f4" stroke-width="7" stroke-linecap="round"/>
+  <!-- AConsole: several agents in one console. A prompt on the left; three agent lanes that meet in one commit. -->
+  <defs>
+    <linearGradient id="tile" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#5b6cf0"/>
+      <stop offset="1" stop-color="#3a3fb8"/>
+    </linearGradient>
+    <linearGradient id="screen" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1c1f3d"/>
+      <stop offset="1" stop-color="#121429"/>
+    </linearGradient>
+    <linearGradient id="shine" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.22"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <!-- The tile, with the darker edge GNOME icons stand on. -->
+  <rect x="8" y="12" width="112" height="108" rx="26" fill="#262a86"/>
+  <rect x="8" y="8" width="112" height="106" rx="26" fill="url(#tile)"/>
+  <rect x="8" y="8" width="112" height="53" rx="26" fill="url(#shine)"/>
+  <!-- The console. -->
+  <rect x="20" y="26" width="88" height="70" rx="12" fill="url(#screen)"/>
+  <rect x="20.5" y="26.5" width="87" height="69" rx="11.5" fill="none" stroke="#ffffff" stroke-opacity="0.1"/>
+  <circle cx="30" cy="35" r="2.2" fill="#ffffff" fill-opacity="0.22"/>
+  <circle cx="37" cy="35" r="2.2" fill="#ffffff" fill-opacity="0.22"/>
+  <!-- Prompt. -->
+  <path d="M30 52l10 9-10 9" fill="none" stroke="#7ef0c8" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M30 82h14" stroke="#7ef0c8" stroke-opacity="0.55" stroke-width="5" stroke-linecap="round"/>
+  <!-- Three agents, one result. -->
+  <g fill="none" stroke-width="4" stroke-linecap="round">
+    <path d="M56 48h12c8 0 10 13 20 13" stroke="#6ea8ff"/>
+    <path d="M56 61h32" stroke="#ffc65c"/>
+    <path d="M56 74h12c8 0 10-13 20-13" stroke="#ff7ab8"/>
+  </g>
+  <circle cx="56" cy="48" r="4" fill="#6ea8ff"/>
+  <circle cx="56" cy="61" r="4" fill="#ffc65c"/>
+  <circle cx="56" cy="74" r="4" fill="#ff7ab8"/>
+  <circle cx="92" cy="61" r="7" fill="#121429" stroke="#ffffff" stroke-width="3.5"/>
 </svg>

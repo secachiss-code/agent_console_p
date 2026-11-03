@@ -11,10 +11,11 @@ import msgspec
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
-from gi.repository import Adw, Gtk  # noqa: E402
+from gi.repository import Adw, Gio, GLib, Gtk, Pango  # noqa: E402
 
 from aconsole.contracts.settings import Settings, SettingsPatch  # noqa: E402
 from aconsole.ui.bootstrap import spawn_task  # noqa: E402
+from aconsole.ui.viewmodels.logic.fonts import add_family, font_families  # noqa: E402
 from aconsole.ui.viewmodels.setup_vm import PreferencesViewModel  # noqa: E402
 from aconsole.ui.views.setup.messages import _ as translate  # noqa: E402
 
@@ -36,6 +37,13 @@ class PreferencesDialog(Adw.PreferencesDialog):
         page = Adw.PreferencesPage()
         terminal = Adw.PreferencesGroup(title=translate("prefs.terminal"))
         self.font_entry: Adw.EntryRow = Adw.EntryRow(title=translate("prefs.font"))
+        self.font_entry.set_tooltip_text(translate("prefs.font_tip"))
+        self.font_button: Gtk.Button = Gtk.Button(
+            icon_name="list-add-symbolic", valign=Gtk.Align.CENTER, tooltip_text=translate("prefs.font_add"),
+        )
+        self.font_button.add_css_class("flat")
+        _ = self.font_button.connect("clicked", self._choose_font)
+        self.font_entry.add_suffix(self.font_button)
         terminal.add(self.font_entry)
         self.font_size: Gtk.SpinButton = Gtk.SpinButton.new_with_range(8, 32, 1)
         self.scrollback: Gtk.SpinButton = Gtk.SpinButton.new_with_range(1000, 200000, 1000)
@@ -76,6 +84,22 @@ class PreferencesDialog(Adw.PreferencesDialog):
         self.approval_hold: Gtk.SpinButton = Gtk.SpinButton.new_with_range(30, 540, 30)
         self._add_spin(group, self.approval_hold, "prefs.approval_hold")
         return group
+
+    def _choose_font(self, _button: Gtk.Button) -> None:
+        """Only monospace families are offered; the one chosen joins the end of the list."""
+        dialog = Gtk.FontDialog(title=translate("prefs.font_add"), modal=True)
+        only_mono = Gtk.CustomFilter.new(_is_monospace)
+        dialog.set_filter(only_mono)
+        root = self.get_root()
+        parent = root if isinstance(root, Gtk.Window) else None
+        dialog.choose_family(parent, None, None, self._font_chosen)
+
+    def _font_chosen(self, dialog: Gtk.FontDialog, result: Gio.AsyncResult) -> None:
+        try:
+            family = dialog.choose_family_finish(result)
+        except GLib.Error:
+            return  # cancelled
+        self.font_entry.set_text(add_family(self.font_entry.get_text(), family.get_name()))
 
     @staticmethod
     def _add_spin(group: Adw.PreferencesGroup, spin: Gtk.SpinButton, key: str) -> None:
@@ -126,7 +150,7 @@ class PreferencesDialog(Adw.PreferencesDialog):
         if self.loading or self._shown is None or (self.worker is not None and not self.worker.done()):
             return
         shown = self._shown
-        font = self.font_entry.get_text().strip() or None
+        font = ", ".join(font_families(self.font_entry.get_text())) or None
         size = self.font_size.get_value_as_int()
         scrollback = self.scrollback.get_value_as_int()
         theme = _THEMES[min(self.theme.get_selected(), len(_THEMES) - 1)]
@@ -167,3 +191,7 @@ class PreferencesDialog(Adw.PreferencesDialog):
         if self._unsubscribe is not None:
             self._unsubscribe()
             self._unsubscribe = None
+
+
+def _is_monospace(item: object) -> bool:
+    return isinstance(item, Pango.FontFamily) and item.is_monospace()

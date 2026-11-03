@@ -283,7 +283,8 @@ def test_b10_preferences_save_updates_two_retained_terminals_without_restart() -
         assert window.preferences_vm.settings == app.client.updated_settings
         for page, worker in zip((first, second), workers, strict=True):
             assert page.worker is worker
-            assert page.terminal.get_font().get_family() == "Iosevka"
+            # The generic monospace closes the list, so a glyph Iosevka lacks still comes from a monospace face.
+            assert page.terminal.get_font().get_family() == "Iosevka,monospace"
         assert sum(
             method == "tab/launchSpec" for method, _params in app.client.requests
         ) == launch_count

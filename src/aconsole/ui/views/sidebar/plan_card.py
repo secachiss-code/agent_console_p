@@ -13,7 +13,8 @@ from aconsole.ui.views.sidebar.messages import _ as translate  # noqa: E402
 
 
 class PlanCard(Gtk.Button):
-    def __init__(self, on_activate: Callable[[PlanId], None]) -> None:
+    def __init__(self, on_activate: Callable[[PlanId], None], *, with_heading: bool = True) -> None:
+        """Under a `SummarySection` the section says "Plan", so the card starts with the plan's name."""
         super().__init__()
         self.add_css_class("flat")
         self.add_css_class("ac-summary-section")
@@ -21,14 +22,19 @@ class PlanCard(Gtk.Button):
         self._on_activate: Callable[[PlanId], None] = on_activate
         self._plan: PlanView | None = None
         box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
-        heading = Gtk.Box(spacing=8)
-        label = Gtk.Label(label=translate("plan.card.title").upper(), xalign=0)
-        label.add_css_class("caption-heading")
-        heading.append(label)
-        self.title_label: Gtk.Label = Gtk.Label(xalign=1, hexpand=True, ellipsize=Pango.EllipsizeMode.END)
+        self.title_label: Gtk.Label = Gtk.Label(
+            xalign=1 if with_heading else 0, hexpand=True, ellipsize=Pango.EllipsizeMode.END,
+        )
         self.title_label.add_css_class("ac-summary-name")
-        heading.append(self.title_label)
-        box.append(heading)
+        if with_heading:
+            heading = Gtk.Box(spacing=8)
+            label = Gtk.Label(label=translate("plan.card.title").upper(), xalign=0)
+            label.add_css_class("caption-heading")
+            heading.append(label)
+            heading.append(self.title_label)
+            box.append(heading)
+        else:
+            box.append(self.title_label)
         self.progress_label: Gtk.Label = Gtk.Label(xalign=0)
         self.progress_label.add_css_class("numeric")
         self.progress_label.add_css_class("ac-summary-detail")

@@ -37,8 +37,10 @@ UV_PROJECT_ENVIRONMENT="$ROOT/.venv-ui" "$UV" sync --locked --group ui --no-pyth
 ID=io.github.aconsole.AConsole
 if [ -f "$ROOT/packaging/$ID.desktop" ]; then
     SHARE=${XDG_DATA_HOME:-$HOME_DIR/.local/share}
-    mkdir -p "$SHARE/applications" "$SHARE/icons/hicolor/scalable/apps"
+    mkdir -p "$SHARE/applications" "$SHARE/icons/hicolor/scalable/apps" "$SHARE/icons/hicolor/symbolic/apps"
     cp "$ROOT/packaging/$ID.svg" "$SHARE/icons/hicolor/scalable/apps/$ID.svg"
+    cp "$ROOT/packaging/$ID-symbolic.svg" "$SHARE/icons/hicolor/symbolic/apps/$ID-symbolic.svg"
+    gtk-update-icon-cache -q -t "$SHARE/icons/hicolor" 2>/dev/null || true
     sed "s|^Exec=.*|Exec=$ROOT/.venv-ui/bin/aconsole|" "$ROOT/packaging/$ID.desktop" >"$SHARE/applications/$ID.desktop"
 fi
 printf 'Installed. Open AConsole from the applications menu, or run %s/.venv-ui/bin/aconsole\n' "$ROOT"

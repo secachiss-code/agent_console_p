@@ -362,3 +362,29 @@ def open_operations(state: GitStateResult) -> tuple[GitOperationView, ...]:
 
 def format_size(byte_count: int) -> str:
     return f"{byte_count} B" if byte_count < _KIB else f"{byte_count / _KIB:.1f} KiB"
+
+
+@dataclass(frozen=True, slots=True)
+class GitSummary:
+    """The sidebar's Git section: where the project's worktrees stand, counted."""
+
+    base_branch: str | None
+    worktrees: int
+    changed: int
+    ready: int
+    conflicted: int
+
+
+def git_summary(state: GitStateResult) -> GitSummary:
+    """A worktree with changes has files nobody committed; one that is ready would merge cleanly into the base."""
+    agents = [row for row in state.worktrees if not row.is_main]
+    return GitSummary(
+        base_branch=state.base_branch,
+        worktrees=len(agents),
+        changed=sum(1 for row in state.worktrees if row.dirty),
+        ready=sum(
+            1 for row in agents
+            if row.ahead > 0 and row_flags(row, state.base_branch).can_merge and row.merge.status == "clean"
+        ),
+        conflicted=sum(1 for row in state.worktrees if row_flags(row, state.base_branch).has_conflicts),
+    )

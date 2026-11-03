@@ -50,7 +50,12 @@ _MESSAGES = {
     "setup.applied": ("Changes applied", "Изменения применены"),
     "prefs.title": ("Preferences", "Настройки"),
     "prefs.terminal": ("Terminal", "Терминал"),
-    "prefs.font": ("Font family (blank uses the system font)", "Шрифт (пусто — системный)"),
+    "prefs.font": ("Fonts, in order (blank uses the system font)", "Шрифты по порядку (пусто — системный)"),
+    "prefs.font_tip": (
+        "Several families, separated by commas: a character the first lacks comes from the next",
+        "Несколько шрифтов через запятую: символ, которого нет в первом, берётся из следующего",
+    ),
+    "prefs.font_add": ("Add an installed monospace font", "Добавить установленный моноширинный шрифт"),
     "prefs.font_size": ("Font size", "Размер шрифта"),
     "prefs.scrollback": ("Scrollback lines", "Строк прокрутки"),
     "prefs.appearance": ("Appearance", "Внешний вид"),

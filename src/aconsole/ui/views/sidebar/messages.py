@@ -43,6 +43,20 @@ _MESSAGES = {
     "quota.critical": ("An account has reached 95% of its limit", "Использовано не менее 95 % лимита аккаунта"),
     "quota.details": ("Details", "Подробнее"),
     "quota.source_unknown": ("Usage source unavailable", "Источник данных не указан"),
+    "quota.peak": ("up to {pct} %", "до {pct} %"),
+    "quota.peak_left": ("{pct} % left", "осталось {pct} %"),
+    "section.collapse": ("Fold", "Свернуть"),
+    "section.expand": ("Unfold", "Развернуть"),
+    "git.card.title": ("Git", "Git"),
+    "git.card.open": ("Git & checkpoints", "Git и чекпоинты"),
+    "git.card.unknown": ("Branches, commits and snapshots", "Ветки, коммиты и снимки"),
+    "git.card.worktrees": (
+        "Worktrees: {count} · with changes: {changed}",
+        "Worktree: {count} · с изменениями: {changed}",  # noqa: RUF001 -- Russian UI text
+    ),
+    "git.card.ready": ("Ready to merge: {count}", "Готово к слиянию: {count}"),
+    "git.card.conflicts": ("With conflicts: {count}", "С конфликтами: {count}"),  # noqa: RUF001 -- Russian UI text
+    "git.card.nothing": ("Nothing to merge", "Сливать нечего"),
 }
 
 

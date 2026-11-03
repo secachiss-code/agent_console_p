@@ -15,6 +15,7 @@ from aconsole.contracts.common import TabId  # noqa: E402
 from aconsole.contracts.settings import Settings  # noqa: E402
 from aconsole.ui.bootstrap import spawn_task  # noqa: E402
 from aconsole.ui.client.core_client import CoreClient  # noqa: E402
+from aconsole.ui.viewmodels.logic.fonts import font_families, pango_family  # noqa: E402
 from aconsole.ui.viewmodels.terminal_vm import TerminalViewModel  # noqa: E402
 from aconsole.ui.views.terminal.messages import _ as translate  # noqa: E402
 from aconsole.ui.views.terminal.palette import TerminalPaletteBinding  # noqa: E402
@@ -139,8 +140,13 @@ class TerminalPage(Gtk.Overlay):
         if self._closed:
             return
         self._settings = settings
-        family = settings.terminal_font or self._system_font()
-        description = Pango.FontDescription.from_string(family)
+        families = font_families(settings.terminal_font)
+        if families:
+            # Several families: a glyph the first one lacks comes from the next, then from any monospace face.
+            description = Pango.FontDescription()
+            description.set_family(pango_family(families))
+        else:
+            description = Pango.FontDescription.from_string(self._system_font())
         description.set_size(settings.terminal_font_size * Pango.SCALE)
         self.font_description = description
         self.terminal.set_font(description)

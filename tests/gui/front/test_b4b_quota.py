@@ -182,17 +182,15 @@ def _assert_summary_container(window: MainWindow) -> None:
     summary = window.summary_card
     assert isinstance(summary, Gtk.Box)
     assert summary.get_visible()
-    assert window.plan_card.get_parent() is summary
-    assert window.quota_card.get_parent() is summary
+    sections = (window.plan_section, window.quota_section, window.git_section)
+    assert [section.body for section in sections] == [window.plan_card, window.quota_card, window.git_card]
     children: list[Gtk.Widget] = []
     child = summary.get_first_child()
     while child is not None:
         children.append(child)
         child = child.get_next_sibling()
-    assert len(children) == 3
-    assert children[0] is window.plan_card
-    assert isinstance(children[1], Gtk.Separator)
-    assert children[2] is window.quota_card
+    assert children[0::2] == list(sections)
+    assert all(isinstance(item, Gtk.Separator) for item in children[1::2])
 
 
 def test_b4b_quota_card_shows_normal_unknown_estimated_and_critical_windows() -> None:

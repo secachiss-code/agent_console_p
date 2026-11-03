@@ -13,8 +13,10 @@ from aconsole.ui.views.sidebar.quota_row import QuotaRow  # noqa: E402
 
 
 class QuotaCard(Gtk.Button):
-    def __init__(self) -> None:
+    def __init__(self, *, with_heading: bool = True) -> None:
+        """Under a `SummarySection` the section names the card, and the time of the numbers goes last."""
         super().__init__()
+        self._with_heading: bool = with_heading
         self.add_css_class("flat")
         self.add_css_class("ac-summary-section")
         self._accounts: tuple[AccountView, ...] = ()
@@ -53,12 +55,13 @@ class QuotaCard(Gtk.Button):
         while (child := self.rows.get_first_child()) is not None:
             self.rows.remove(child)
         self.window_rows.clear()
-        heading = Gtk.Box(spacing=8)
-        title = Gtk.Label(label=self._title().upper(), xalign=0, hexpand=True)
-        title.add_css_class("caption-heading")
-        heading.append(title)
-        heading.append(self.summary_label)
-        self.rows.append(heading)
+        if self._with_heading:
+            heading = Gtk.Box(spacing=8)
+            title = Gtk.Label(label=self._title().upper(), xalign=0, hexpand=True)
+            title.add_css_class("caption-heading")
+            heading.append(title)
+            heading.append(self.summary_label)
+            self.rows.append(heading)
         grid = Gtk.Grid(column_spacing=16, row_spacing=10, column_homogeneous=True)
         for index, account in enumerate(accounts):
             column = self._account_column(account)
@@ -69,12 +72,25 @@ class QuotaCard(Gtk.Button):
             empty = Gtk.Label(label=translate("quota.empty"), xalign=0, wrap=True)
             empty.add_css_class("ac-summary-detail")
             self.rows.append(empty)
+        if not self._with_heading:
+            self.summary_label.set_xalign(0)
+            self.rows.append(self.summary_label)
         observations = [window.observed_at for account in accounts for window in account.quota if window.observed_at]
         self.summary_label.set_label(
             translate("quota.observed").format(time=min(observations).astimezone().strftime("%d.%m %H:%M"))
             if observations else "",
         )
+        self.summary_label.set_visible(self._with_heading or bool(self.summary_label.get_label()))
         self._sync_details()
+
+    @property
+    def display(self) -> str:
+        """"used" or "remaining", as the settings chose."""
+        return self._display
+
+    def title(self) -> str:
+        """The card's name for the section header: limits used, or limits left."""
+        return self._title()
 
     def _title(self) -> str:
         return translate("quota.title_left" if self._display == "remaining" else "quota.title")

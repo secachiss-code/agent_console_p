@@ -8,6 +8,7 @@ import pytest
 
 if TYPE_CHECKING:
     from collections.abc import Callable
+    from pathlib import Path
 
     from aconsole.contracts.app import PlanView
     from aconsole.contracts.common import PlanId
@@ -300,3 +301,24 @@ def test_window_actions_reach_the_core(running_app: str) -> None:
         assert dialog.open_button.get_sensitive()
 
     _run_window_probe(running_app, check)
+
+
+def test_a_summary_section_folds_and_remembers_it(tmp_path: Path) -> None:
+    from aconsole.ui.client.ui_state import UiState
+    from aconsole.ui.views.sidebar.plan_card import PlanCard
+    from aconsole.ui.views.sidebar.section import SummarySection
+
+    def check() -> None:
+        path = tmp_path / "ui.json"
+        card = PlanCard(on_activate=lambda _plan_id: None, with_heading=False)
+        section = SummarySection("plan", "Plan", card, UiState(path))
+        assert not section.folded
+        section.header.emit("clicked")
+        assert section.folded
+        assert section.has_css_class("ac-folded")
+        again = SummarySection("plan", "Plan", PlanCard(on_activate=lambda _plan_id: None), UiState(path))
+        assert again.folded
+        again.set_detail("2/8")
+        assert again.detail_label.get_text() == "2/8"
+
+    _in_gtk_context(check)
