@@ -114,6 +114,18 @@ To look around without agents or Podman, use a built-in demo scenario:
 .venv-ui/bin/aconsole --fake demo
 ```
 
+## Package
+
+`./install.sh` runs from the checkout. To install apart from it on a Debian or Ubuntu system, build a package from the
+two environments it made. Nothing is downloaded, and the package carries its own Python under `/opt/aconsole`:
+
+```sh
+python3 packaging/build_deb.py          # writes dist/aconsole_<version>_amd64.deb
+sudo apt install ./dist/aconsole_*.deb
+```
+
+Tabs, projects and settings stay in `~/.local/share/aconsole`, shared with a run from the checkout.
+
 ## Checks
 
 ```sh
