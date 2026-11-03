@@ -71,7 +71,10 @@ progressbar.horizontal > trough, levelbar.horizontal > trough { min-height: 4px;
 .ac-quota-critical levelbar block.filled { background-color: @error_bg_color; }
 
 .ac-quota-details { margin: 4px 16px 16px; }
-.ac-quota-group { background-color: alpha(@window_fg_color, 0.05); border-radius: 12px; padding: 14px; }
+button.ac-quota-group { background-color: alpha(@window_fg_color, 0.05); border-radius: 12px; padding: 14px; font-weight: normal; }
+button.ac-quota-group:hover { background-color: alpha(@window_fg_color, 0.09); }
+button.ac-quota-group-open { background-color: alpha(@accent_bg_color, 0.18); }
+.ac-quota-panel { margin: 4px 16px 16px 0; }
 
 /* The right column: the terminal reaches the window frame. */
 .ac-terminal { padding: 10px 12px; }

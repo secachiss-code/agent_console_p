@@ -13,12 +13,12 @@ import math
 import urllib.error
 import urllib.request
 from collections.abc import Callable
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from http.client import HTTPResponse
 from pathlib import Path
 from typing import Final, Literal, final
 
-from aconsole.contracts.app import AccountView, QuotaWindowView
+from aconsole.contracts.app import AccountView, ModelUsageView, QuotaWindowView
 from aconsole.contracts.common import AccountId, AgentKind, QuotaLevel
 from aconsole.contracts.events import QuotaUpdated
 from aconsole.core.domain.quota import quota_level
@@ -27,6 +27,13 @@ _LOG = logging.getLogger(__name__)
 _API: Final = "https://api2.cursor.sh/aiserver.v1.DashboardService/"
 _USAGE: Final = "GetCurrentPeriodUsage"
 _PLAN: Final = "GetPlanInfo"
+_EVENTS: Final = "GetAggregatedUsageEvents"
+# Which pool a model's spending counts against, as the replies say: the sums per tier give the pools' shares exactly.
+_TIER_AUTO: Final = 2
+_TIER_API: Final = 1
+_MS_PER_S: Final = 1000
+_MODEL_CHARS: Final = 64
+_SECONDS_PER_DAY: Final = 86400
 _TIMEOUT_S: Final = 10.0
 _READ_BYTES: Final = 262144
 _LABEL: Final = 32
@@ -53,15 +60,22 @@ def access_token(agent_home: Path) -> str | None:
     return token if isinstance(token, str) and token else None
 
 
-def ask_usage(token: str) -> tuple[bytes, bytes]:
-    """The usage and plan replies. A reply that failed is empty; the reason is logged without the token."""
-    return _ask(_USAGE, token), _ask(_PLAN, token)
+def ask_usage(token: str) -> tuple[bytes, bytes, bytes]:
+    """The usage, plan and per-model replies. A reply that failed is empty; the reason is logged without the token."""
+    usage = _ask(_USAGE, token)
+    document = _object(usage)
+    start = document.get("billingCycleStart") if document is not None else None
+    events = b""
+    if isinstance(start, str):
+        end = int(datetime.now(UTC).timestamp() * _MS_PER_S)
+        events = _ask(_EVENTS, token, {"teamId": 0, "startDate": start, "endDate": str(end)})
+    return usage, _ask(_PLAN, token), events
 
 
-def _ask(method: str, token: str) -> bytes:
+def _ask(method: str, token: str, body: dict[str, object] | None = None) -> bytes:
     request = urllib.request.Request(  # noqa: S310 -- a fixed https URL
         _API + method,
-        data=b"{}",
+        data=json.dumps(body or {}).encode(),
         method="POST",
         headers={
             "Authorization": f"Bearer {token}",
@@ -84,9 +98,10 @@ def _ask(method: str, token: str) -> bytes:
 class CursorLimits:
     """Fold one usage reply into the account card.
 
-    The plan has two pools, each reported as a share: Auto + Composer, and API, whose size in dollars depends on the
-    subscription and comes in the reply. A reply without them gives one monthly share. Spending past the plan is paid
-    from the on-demand pool, a cap in dollars (the user's own, or the team's), which is the budget window.
+    The plan has two pools, each reported as a share: Auto + Composer, and API. The per-model reply gives the dollars
+    each has spent, and a share and its dollars give the pool's size. A reply without pools gives one monthly share.
+    Spending past the plan is paid from the on-demand pool, a cap in dollars (the user's own, or the team's), which
+    is the budget window.
     """
 
     _now: Callable[[], datetime]
@@ -94,18 +109,23 @@ class CursorLimits:
     def __init__(self, now: Callable[[], datetime]) -> None:
         self._now = now
 
-    def on_usage(self, usage: bytes, plan: bytes) -> QuotaUpdated | None:
+    def on_usage(self, usage: bytes, plan: bytes, events: bytes = b"") -> QuotaUpdated | None:
         """None when the reply holds no plan usage."""
         document = _object(usage)
         if document is None:
             return None
         resets_at = _millis(document.get("billingCycleEnd"))
+        if resets_at is None:
+            return None
         now = self._now()
+        started = _millis(document.get("billingCycleStart"))
+        days = None if started is None else round((resets_at - started).total_seconds() / _SECONDS_PER_DAY)
+        models, spent = _models(events)
         windows = [
-            _view(key, used, resets_at, now, (None, size))
-            for key, used, size in _plan_pools(document.get("planUsage"))
-        ] if resets_at is not None else []
-        if not windows or resets_at is None:
+            _view(key, used, resets_at, now, _share_money(spent.get(tier), used), days)
+            for key, used, tier in _plan_pools(document.get("planUsage"))
+        ]
+        if not windows:
             return None
         pool = _pool(document.get("spendLimitUsage"))
         if pool is not None:
@@ -113,36 +133,83 @@ class CursorLimits:
             pool_pct = min(_MAX_PCT, round(pool_spent / pool_limit * 100, 2)) if pool_limit else None
             windows.append(_view("budget", pool_pct, resets_at, now, (pool_spent, pool_limit)))
         return QuotaUpdated(
-            account=AccountView(id=ACCOUNT_ID, agent=AgentKind.CURSOR, plan_label=_plan(plan), quota=tuple(windows)),
+            account=AccountView(
+                id=ACCOUNT_ID, agent=AgentKind.CURSOR, plan_label=_plan(plan), quota=tuple(windows),
+                plan_price=_price(plan), usage=models,
+                usage_since=started if started is not None else resets_at - timedelta(days=30),
+            ),
         )
 
 
-def _view(
+def _view(  # noqa: PLR0913, PLR0917 -- every field of the window
     key: Literal["auto", "api", "month", "budget"], used_pct: float | None, resets_at: datetime, now: datetime,
-    money: tuple[float | None, float | None],
+    money: tuple[float | None, float | None], period_days: int | None = None,
 ) -> QuotaWindowView:
     spent, limit = money
     level = QuotaLevel(quota_level(used_pct=used_pct, resets_at=resets_at, now=now).value)
     return QuotaWindowView(
         key=key, used_pct=used_pct, resets_at=resets_at, level=level, observed_at=now, estimated=False,
-        spent_usd=spent, limit_usd=limit,
+        spent_usd=spent, limit_usd=limit, period_days=period_days,
     )
 
 
-def _plan_pools(raw: object) -> tuple[tuple[Literal["auto", "api", "month"], float, float | None], ...]:
-    """The shares of the plan's pools. The reply gives no dollars spent per pool, so only the API pool's size is known.
-
-    A pool at zero may be left out of the reply, so one pool present means both exist.
-    """
+def _plan_pools(raw: object) -> tuple[tuple[Literal["auto", "api", "month"], float, int | None], ...]:
+    """Each pool's share and its tier. A pool at zero may be left out of the reply: one present means both exist."""
     if not isinstance(raw, dict):
         return ()
     auto = _percent(raw.get("autoPercentUsed"))  # pyright: ignore[reportUnknownMemberType, reportUnknownArgumentType]
     api = _percent(raw.get("apiPercentUsed"))  # pyright: ignore[reportUnknownMemberType, reportUnknownArgumentType]
     if auto is not None or api is not None:
-        size = _cents(raw.get("limit")) or None  # pyright: ignore[reportUnknownMemberType, reportUnknownArgumentType]
-        return (("auto", auto or 0.0, None), ("api", api or 0.0, size))
+        return (("auto", auto or 0.0, _TIER_AUTO), ("api", api or 0.0, _TIER_API))
     total = _percent(raw.get("totalPercentUsed"))  # pyright: ignore[reportUnknownMemberType, reportUnknownArgumentType]
     return () if total is None else (("month", total, None),)
+
+
+def _share_money(spent: float | None, share: float) -> tuple[float | None, float | None]:
+    """The dollars spent from a pool, and the pool's size that makes them this share. No dollars: no money at all."""
+    if spent is None:
+        return None, None
+    return round(spent, 2), round(spent / share * 100, 2) if spent > 0 and share > 0 else None
+
+
+def _models(events: bytes) -> tuple[tuple[ModelUsageView, ...], dict[int | None, float]]:
+    """Tokens and dollars per model, most expensive first, and the dollars per tier. Empty without a reply."""
+    document = _object(events)
+    rows = document.get("aggregations") if document is not None else None
+    if not isinstance(rows, list):
+        return (), {}
+    models: list[ModelUsageView] = []
+    spent: dict[int | None, float] = {_TIER_AUTO: 0.0, _TIER_API: 0.0}
+    for row in rows:  # pyright: ignore[reportUnknownVariableType]
+        if not isinstance(row, dict) or not isinstance(row.get("modelIntent"), str):  # pyright: ignore[reportUnknownMemberType]
+            continue
+        cost = _number(row.get("totalCents")) / 100  # pyright: ignore[reportUnknownMemberType, reportUnknownArgumentType]
+        tier = row.get("tier")  # pyright: ignore[reportUnknownMemberType, reportUnknownVariableType]
+        if isinstance(tier, int):
+            spent[tier] = spent.get(tier, 0.0) + cost
+        models.append(
+            ModelUsageView(
+                model=str(row["modelIntent"])[:_MODEL_CHARS],  # pyright: ignore[reportUnknownArgumentType]
+                input_tokens=int(_number(row.get("inputTokens"))),  # pyright: ignore[reportUnknownMemberType, reportUnknownArgumentType]
+                output_tokens=int(_number(row.get("outputTokens"))),  # pyright: ignore[reportUnknownMemberType, reportUnknownArgumentType]
+                cache_read_tokens=int(_number(row.get("cacheReadTokens"))),  # pyright: ignore[reportUnknownMemberType, reportUnknownArgumentType]
+                cache_write_tokens=int(_number(row.get("cacheWriteTokens"))),  # pyright: ignore[reportUnknownMemberType, reportUnknownArgumentType]
+                cost_usd=round(cost, 2),
+            ),
+        )
+    return tuple(sorted(models, key=lambda model: -(model.cost_usd or 0.0))), spent
+
+
+def _number(value: object) -> float:
+    """A count the API sends as a number or as a string. Missing means zero: the API leaves zeros out."""
+    if isinstance(value, str):
+        try:
+            value = float(value)
+        except ValueError:
+            return 0.0
+    if isinstance(value, bool) or not isinstance(value, int | float) or not math.isfinite(value) or value < 0:
+        return 0.0
+    return float(value)
 
 
 def _pool(raw: object) -> tuple[float, float | None] | None:
@@ -174,6 +241,13 @@ def _plan(plan: bytes) -> str:
     info = document.get("planInfo") if document is not None else None
     name = info.get("planName") if isinstance(info, dict) else None  # pyright: ignore[reportUnknownMemberType, reportUnknownVariableType]
     return name.strip()[:_LABEL] if isinstance(name, str) else ""
+
+
+def _price(plan: bytes) -> str | None:
+    document = _object(plan)
+    info = document.get("planInfo") if document is not None else None
+    price = info.get("price") if isinstance(info, dict) else None  # pyright: ignore[reportUnknownMemberType, reportUnknownVariableType]
+    return price.strip()[:_LABEL] or None if isinstance(price, str) else None
 
 
 def _object(body: bytes) -> dict[str, object] | None:

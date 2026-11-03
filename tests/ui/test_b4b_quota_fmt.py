@@ -2,7 +2,13 @@ from __future__ import annotations
 
 import pytest
 
-from aconsole.ui.viewmodels.logic.quota_fmt import format_money, format_percent, pool_size, quota_level
+from aconsole.ui.viewmodels.logic.quota_fmt import (
+    format_money,
+    format_percent,
+    format_tokens,
+    format_window_money,
+    quota_level,
+)
 
 
 @pytest.mark.parametrize(
@@ -40,7 +46,16 @@ def test_b4b_quota_level_thresholds(value: float | None, expected: str) -> None:
     assert quota_level(value) == expected
 
 
-def test_a_pool_known_only_by_its_size_shows_no_invented_spending() -> None:
-    assert (format_money(None, 20.0), pool_size(None, 20.0)) == ("", "$20")
-    assert (format_money(12.4, 20.0), pool_size(12.4, 20.0)) == ("$12.40 / $20", "")
-    assert (format_money(None, None), pool_size(None, None)) == ("", "")
+def test_money_is_spent_over_the_cap_or_left_of_it() -> None:
+    assert format_money(None, 20.0) == ""
+    assert format_money(6.68, 11.25) == "$6.68 / $11.25"
+    assert format_money(391.54, 450.0) == "$391.54 / $450"
+    assert format_money(5.2, None) == "$5.20"
+    assert format_window_money(6.68, 11.25, "remaining") == "$4.57 / $11.25"
+    assert format_window_money(5.2, None, "remaining") == "$5.20"
+
+
+def test_tokens_read_at_a_glance() -> None:
+    assert [format_tokens(count) for count in (950, 12_300, 4_500_000, 1_200_000_000)] == [
+        "950", "12.3K", "4.5M", "1.2G",
+    ]

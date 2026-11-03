@@ -14,7 +14,7 @@ import sys
 import time
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from enum import Enum, auto
 from pathlib import Path
 from typing import TYPE_CHECKING, override
@@ -53,6 +53,7 @@ from aconsole.core.infrastructure.agents.cursor.limits import CursorLimits
 from aconsole.core.infrastructure.agents.launch import HostAgentCommands
 from aconsole.core.infrastructure.agents.live_limits import CachedAuth
 from aconsole.core.infrastructure.agents.opencode.limits import OpenCodeLimits
+from aconsole.core.infrastructure.agents.usage_log import UsageLog, claude_events, codex_events
 from aconsole.core.infrastructure.codegraph.index import CodeGraphIndex
 from aconsole.core.infrastructure.codegraph.runner import ExtractorRunner
 from aconsole.core.infrastructure.git.checkpoints import GitCheckpoints
@@ -322,6 +323,9 @@ def _route(envelope: Envelope, *, ready: bool) -> _Route:
 
 
 _CLAUDE_CONTAINER = "agent-claude"
+_CLAUDE_LOGS = ".claude/projects"
+_CODEX_LOGS = ".codex/sessions"
+_TOKEN_DAYS = 7
 _CODEX_CONTAINER = "agent-codex"
 _CODEX_POLL = "codex-poll"
 _CODEX_POLL_S = 120.0
@@ -343,6 +347,12 @@ _OWN_ACCOUNTS = frozenset({AgentKind.CLAUDE, AgentKind.CODEX})
 def codex_poll_delay(body: bytes) -> float:
     """How long until the next question. An answer, even a refusal, will not change soon; silence may."""
     return _CODEX_POLL_S if body else _CODEX_RETRY_S
+
+
+def tokens_since(account: AccountView, now: datetime) -> datetime:
+    """When the account's weekly window began: tokens are counted over the same days as the limit."""
+    resets = [window.resets_at for window in account.quota if window.key in {"7d", "week"} and window.resets_at]
+    return (resets[0] if resets else now) - timedelta(days=_TOKEN_DAYS)
 
 
 def is_connected(agents: tuple[AgentInfo, ...], kind: AgentKind) -> bool:
@@ -536,6 +546,10 @@ class Daemon:
         self._codex_limits: CodexLimits = CodexLimits(board, lambda: datetime.now(UTC))
         self._cursor_limits: CursorLimits = CursorLimits(lambda: datetime.now(UTC))
         self._opencode_limits: OpenCodeLimits = OpenCodeLimits(lambda: datetime.now(UTC))
+        self._claude_tokens: UsageLog = UsageLog(
+            lambda: self._log_folder(_CLAUDE_CONTAINER, _CLAUDE_LOGS), claude_events,
+        )
+        self._codex_tokens: UsageLog = UsageLog(lambda: self._log_folder(_CODEX_CONTAINER, _CODEX_LOGS), codex_events)
         self._limits_events: dict[str, asyncio.Event] = {}
         self._accounts: dict[str, AccountView] = {}
         self._account_sent: dict[str, float] = {}
@@ -969,6 +983,7 @@ class Daemon:
                 text = await asyncio.to_thread(self._host.claude_usage, _CLAUDE_CONTAINER)
                 event = await asyncio.to_thread(self._claude_limits.on_usage, text)
                 if event is not None:
+                    event = await self._with_tokens(event, self._claude_tokens)
                     self._account_observed(event, source="claude-usage", every_s=_CLAUDE_POLL_S)
                 elif text.strip():
                     # The card keeps showing when it last heard: the numbers look stale rather than wrong.
@@ -988,6 +1003,7 @@ class Daemon:
                 body = await asyncio.to_thread(self._host.codex_rate_limits, _CODEX_CONTAINER)
                 event = await self._in_worker(lambda body=body: self._codex_limits.on_rate_limits(_CODEX_POLL, body))
                 if event is not None:
+                    event = await self._with_tokens(event, self._codex_tokens)
                     self._account_observed(event, source="codex-app-server", every_s=_CODEX_POLL_S)
                 elif body:
                     # An error reply, such as a lost login. It says why and holds no credentials.
@@ -1006,8 +1022,8 @@ class Daemon:
                 continue
             body = b""
             try:
-                body, plan = await asyncio.to_thread(self._host.cursor_usage, _CURSOR_CONTAINER)
-                event = self._cursor_limits.on_usage(body, plan)
+                body, plan, models = await asyncio.to_thread(self._host.cursor_usage, _CURSOR_CONTAINER)
+                event = self._cursor_limits.on_usage(body, plan, models)
                 if event is not None:
                     self._account_observed(event, source="cursor-dashboard", every_s=_CURSOR_POLL_S)
                 elif body:
@@ -1038,6 +1054,21 @@ class Daemon:
             except Exception:  # noqa: BLE001 -- limits must never stop the core
                 _LOG.exception("cannot read OpenCode limits")
             await self._limits_wait(due, _OPENCODE_POLL_S if body else _CODEX_RETRY_S)
+
+    def _log_folder(self, container: str, logs: str) -> Path | None:
+        home = self._host.agent_home(container)
+        return None if home is None else home / logs
+
+    @staticmethod
+    async def _with_tokens(event: QuotaUpdated, log: UsageLog) -> QuotaUpdated:
+        """The account with its tokens since the long window began. Without them the limits still count."""
+        since = tokens_since(event.account, datetime.now(UTC))
+        try:
+            models = await asyncio.to_thread(log.models, since)
+        except Exception:  # noqa: BLE001 -- the numbers of the limits must get through
+            _LOG.exception("cannot count tokens")
+            return event
+        return QuotaUpdated(account=msgspec.structs.replace(event.account, usage=models, usage_since=since))
 
     async def _connected(self, kind: AgentKind) -> bool:
         """Asked before each poll. It looks at a file, so an agent logged in later is picked up within a minute."""

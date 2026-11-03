@@ -1,7 +1,6 @@
 """Live account limits, reset times and the tabs using each account."""
 
 from collections.abc import Awaitable, Callable
-from datetime import UTC, datetime
 
 import gi
 
@@ -10,60 +9,19 @@ gi.require_version("Adw", "1")
 from gi.repository import Adw, GLib, Gtk  # noqa: E402
 
 from aconsole.contracts.app import AccountView, TabView  # noqa: E402
+from aconsole.contracts.common import AccountId  # noqa: E402
 from aconsole.ui.bootstrap import spawn_task  # noqa: E402
-from aconsole.ui.viewmodels.logic.quota_fmt import agent_name, format_money  # noqa: E402
+from aconsole.ui.viewmodels.logic.quota_fmt import agent_name  # noqa: E402
+from aconsole.ui.views.quota_account import AccountPanel, ago, detail, source_text  # noqa: E402
 from aconsole.ui.views.sidebar.messages import _ as translate  # noqa: E402
 from aconsole.ui.views.sidebar.quota_row import QuotaRow  # noqa: E402
 
 _REFRESH_WAIT_S = 15
 _SECONDS_PER_MINUTE = 60
-_SECONDS_PER_HOUR = 3600
-_SECONDS_PER_DAY = 86400
-_SOURCES = ("claude-usage", "codex-app-server", "cursor-dashboard", "opencode-go")
-
-
-def source_text(source: str | None) -> str:
-    """Where an account's numbers come from, in words. An unknown code is shown as it is."""
-    if source is None:
-        return translate("quota.source.none")
-    return translate(f"quota.source.{source}") if source in _SOURCES else source
-
-
-def _ago(observed: datetime | None) -> str:
-    """When the numbers were taken: how long ago while it is recent, the date once it is not."""
-    if observed is None:
-        return translate("quota.info.never")
-    local = observed.astimezone()
-    seconds = max(0, int((datetime.now(UTC) - observed).total_seconds()))
-    if seconds < _SECONDS_PER_MINUTE:
-        return translate("quota.info.now").format(time=local.strftime("%H:%M:%S"))
-    if seconds < _SECONDS_PER_HOUR:
-        return translate("quota.info.minutes").format(
-            time=local.strftime("%H:%M"), count=seconds // _SECONDS_PER_MINUTE,
-        )
-    if seconds < _SECONDS_PER_DAY:
-        return translate("quota.info.hours").format(time=local.strftime("%H:%M"), count=seconds // _SECONDS_PER_HOUR)
-    return translate("quota.info.date").format(time=local.strftime("%d.%m %H:%M"))
-
-
-def _money_lines(account: AccountView, tabs: tuple[TabView, ...]) -> list[str]:
-    """Money beside the limits: credits bought past the plan, and the open sessions' cost at API prices."""
-    lines: list[str] = []
-    if account.credits_unlimited:
-        lines.append(translate("quota.credits_unlimited"))
-    elif account.credits_balance is not None:
-        lines.append(translate("quota.credits").format(count=f"{account.credits_balance:,.2f}"))
-    costs = [tab.session_cost_usd for tab in tabs if tab.agent is account.agent and tab.session_cost_usd]
-    if costs:
-        # What this agent's open sessions would have cost at API prices: the money the plan stands in for.
-        lines.append(translate("quota.api_cost").format(money=f"${sum(costs):,.2f}", count=len(costs)))
-    return lines
-
-
-def _detail(text: str) -> Gtk.Label:
-    label = Gtk.Label(label=text, xalign=0, wrap=True)
-    label.add_css_class("ac-summary-detail")
-    return label
+_WIDTH = 460
+_WIDTH_WITH_PANEL = 900
+# Below this a window has no room for both: the panel takes the dialog until it is closed.
+_ROOM_FOR_BOTH = 720
 
 
 class QuotaDialog(Adw.Dialog):
@@ -71,17 +29,18 @@ class QuotaDialog(Adw.Dialog):
         self,
         accounts: tuple[AccountView, ...],
         tabs: tuple[TabView, ...],
-        summary: str,
         display: str = "used",
         *,
         on_refresh: Callable[[], Awaitable[None]] | None = None,
     ) -> None:
         title = translate("quota.title_left" if display == "remaining" else "quota.title")
-        super().__init__(title=title, content_width=460)
+        super().__init__(title=title, content_width=_WIDTH)
         self._display: str = display
         self._accounts: tuple[AccountView, ...] = ()
         self._tab_signature: tuple[tuple[str, str | None, str], ...] = ()
-        self._summary: str = ""
+        self._tabs: tuple[TabView, ...] = ()
+        self.open_account_id: AccountId | None = None
+        self.account_cards: dict[AccountId, Gtk.Button] = {}
         self._timer: int | None = None
         self.window_rows: list[QuotaRow] = []
         self._on_refresh: Callable[[], Awaitable[None]] | None = on_refresh
@@ -91,14 +50,25 @@ class QuotaDialog(Adw.Dialog):
         self.content: Gtk.Box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=16)
         self.content.add_css_class("ac-quota-details")
         self.scroll: Gtk.ScrolledWindow = Gtk.ScrolledWindow(
-            hscrollbar_policy=Gtk.PolicyType.NEVER, propagate_natural_height=True,
+            hscrollbar_policy=Gtk.PolicyType.NEVER, propagate_natural_height=True, hexpand=True,
         )
         self.scroll.set_child(self.content)
-        toolbar.set_content(self.scroll)
+        self.panel: AccountPanel = AccountPanel(self.close_account)
+        panel_scroll = Gtk.ScrolledWindow(
+            hscrollbar_policy=Gtk.PolicyType.NEVER, propagate_natural_height=True, width_request=400,
+        )
+        panel_scroll.set_child(self.panel)
+        self.panel_revealer: Gtk.Revealer = Gtk.Revealer(
+            child=panel_scroll, transition_type=Gtk.RevealerTransitionType.SLIDE_LEFT, reveal_child=False,
+        )
+        sides = Gtk.Box()
+        sides.append(self.scroll)
+        sides.append(self.panel_revealer)
+        toolbar.set_content(sides)
         self.set_child(toolbar)
         _ = self.connect("map", self._mapped)
         _ = self.connect("unmap", self._unmapped)
-        self.update_accounts(accounts, tabs, summary)
+        self.update_accounts(accounts, tabs)
 
     def _build_header(self) -> Adw.HeaderBar:
         header = Adw.HeaderBar()
@@ -162,16 +132,16 @@ class QuotaDialog(Adw.Dialog):
             name = Gtk.Label(label=agent_name(account.agent.value), xalign=0)
             name.add_css_class("ac-summary-name")
             block.append(name)
-            block.append(_detail(source_text(account.source)))
+            block.append(detail(source_text(account.source)))
             observed = [window.observed_at for window in account.quota if window.observed_at is not None]
-            block.append(_detail(_ago(max(observed) if observed else None)))
+            block.append(detail(ago(max(observed) if observed else None)))
             if account.refresh_s:
                 every = max(1, account.refresh_s // _SECONDS_PER_MINUTE)
-                block.append(_detail(translate("quota.info.every").format(minutes=every)))
+                block.append(detail(translate("quota.info.every").format(minutes=every)))
             self.info_box.append(block)
         if not accounts:
-            self.info_box.append(_detail(translate("quota.source.none")))
-        note = _detail(translate("quota.info.note"))
+            self.info_box.append(detail(translate("quota.source.none")))
+        note = detail(translate("quota.info.note"))
         note.set_max_width_chars(42)
         self.info_box.append(note)
 
@@ -183,32 +153,31 @@ class QuotaDialog(Adw.Dialog):
             while (child := self.content.get_first_child()) is not None:
                 self.content.remove(child)
 
-    def update_accounts(self, accounts: tuple[AccountView, ...], tabs: tuple[TabView, ...], summary: str) -> None:
+    def update_accounts(self, accounts: tuple[AccountView, ...], tabs: tuple[TabView, ...]) -> None:
         signature = tuple(
             (str(tab.id), str(tab.account_id) if tab.account_id is not None else None, tab.title) for tab in tabs
         )
         if (
-            (accounts, signature, summary) == (self._accounts, self._tab_signature, self._summary)
+            (accounts, signature) == (self._accounts, self._tab_signature)
             and self.content.get_first_child() is not None
         ):
             return
         if self.refreshing and accounts != self._accounts:
             self._refresh_done()
-        self._accounts, self._tab_signature, self._summary = accounts, signature, summary
+        self._accounts, self._tab_signature, self._tabs = accounts, signature, tabs
         self._fill_info(accounts)
         while (child := self.content.get_first_child()) is not None:
             self.content.remove(child)
         self.window_rows.clear()
+        self.account_cards.clear()
         for account in accounts:
-            self.content.append(self._account_group(account, tabs))
+            self.content.append(self._account_group(account))
         if not accounts:
             self.content.append(Gtk.Label(label=translate("quota.unknown.copy"), xalign=0, wrap=True))
-        if summary:
-            self.content.append(_detail(summary))
+        self._sync_panel()
 
-    def _account_group(self, account: AccountView, tabs: tuple[TabView, ...]) -> Gtk.Box:
+    def _account_group(self, account: AccountView) -> Gtk.Button:
         group = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
-        group.add_css_class("ac-quota-group")
         heading = Gtk.Box(spacing=8)
         name = Gtk.Label(label=agent_name(account.agent.value), xalign=0, hexpand=True)
         name.add_css_class("heading")
@@ -223,27 +192,51 @@ class QuotaDialog(Adw.Dialog):
             row = QuotaRow(window, display=self._display)
             self.window_rows.append(row)
             group.append(row)
-            notes: list[str] = []
-            money = format_money(window.spent_usd, window.limit_usd)
-            if money:
-                # Money lines up under the bar it belongs to, so every bar in the dialog keeps one width.
-                notes.append(translate("quota.spent").format(money=money))
-            if window.resets_at is not None:
-                reset = window.resets_at.astimezone()
-                pattern = "%H:%M" if reset.date() == datetime.now(UTC).astimezone().date() else "%d.%m %H:%M"
-                notes.append(translate("quota.reset").format(time=reset.strftime(pattern)))
-            if notes:
-                group.append(_detail(" · ".join(notes)))
-            if window.used_pct is None:
-                group.append(_detail(translate("quota.unknown.copy")))
+            if window.used_pct is None and window.spent_usd is None:
+                group.append(detail(translate("quota.unknown.copy")))
         if not account.quota:
-            group.append(_detail(translate("quota.unknown.copy")))
-        for line in _money_lines(account, tabs):
-            group.append(_detail(line))
-        titles = ", ".join(tab.title for tab in tabs if tab.account_id == account.id)
-        if titles:
-            group.append(_detail(f"{translate('quota.tabs')}: {titles}"))
-        return group
+            group.append(detail(translate("quota.unknown.copy")))
+        card = Gtk.Button(child=group)
+        card.add_css_class("flat")
+        card.add_css_class("ac-quota-group")
+        if account.id == self.open_account_id:
+            card.add_css_class("ac-quota-group-open")
+        _ = card.connect("clicked", self._card_clicked, account.id)
+        self.account_cards[account.id] = card
+        return card
+
+    def _card_clicked(self, _card: Gtk.Button, account_id: AccountId) -> None:
+        self.open_account(account_id)
+
+    def open_account(self, account_id: AccountId) -> None:
+        """Draw that account's details on the right. Its card clicked again closes them."""
+        if account_id == self.open_account_id:
+            self.close_account()
+            return
+        self.open_account_id = account_id
+        self._rebuild()
+
+    def close_account(self) -> None:
+        self.open_account_id = None
+        self._rebuild()
+
+    def _rebuild(self) -> None:
+        for account_id, card in self.account_cards.items():
+            if account_id == self.open_account_id:
+                card.add_css_class("ac-quota-group-open")
+            else:
+                card.remove_css_class("ac-quota-group-open")
+        self._sync_panel()
+
+    def _sync_panel(self) -> None:
+        account = next((item for item in self._accounts if item.id == self.open_account_id), None)
+        self.panel_revealer.set_reveal_child(account is not None)
+        self.set_content_width(_WIDTH if account is None else _WIDTH_WITH_PANEL)
+        root = self.get_root()
+        narrow = isinstance(root, Gtk.Widget) and 0 < root.get_width() < _ROOM_FOR_BOTH
+        self.scroll.set_visible(account is None or not narrow)
+        if account is not None:
+            self.panel.show_account(account, self._tabs)
 
     def refresh_times(self) -> None:
         for row in self.window_rows:

@@ -36,15 +36,24 @@ def quota_level(value: float | None) -> str:
 def format_money(spent: float | None, limit: float | None) -> str:
     """Dollars spent, over the cap when there is one: "$12.40 / $20", or "$5.20" for an uncapped pool."""
     if spent is None:
-        # A pool whose size is known but whose spending is not has no sum to show here; its name carries the size.
         return ""
-    shown = f"${spent or 0:,.2f}"
-    return f"{shown} / ${limit:,.0f}" if limit else shown
+    shown = f"${spent:,.2f}"
+    return f"{shown} / ${f'{limit:,.2f}'.removesuffix('.00')}" if limit else shown
 
 
-def pool_size(spent: float | None, limit: float | None) -> str:
-    """The size of a pool reported only as a share, "$20". Empty when the dollars spent are known too."""
-    return f"${limit:,.0f}" if spent is None and limit else ""
+def format_window_money(spent: float | None, limit: float | None, display: str = "used") -> str:
+    """The money for the settings' choice: what was spent, or what is left of the cap."""
+    if display == "remaining" and spent is not None and limit:
+        return format_money(max(0.0, limit - spent), limit)
+    return format_money(spent, limit)
+
+
+def format_tokens(count: int) -> str:
+    """A token count at a glance: 950, 12.3K, 4.5M, 1.2G."""
+    for size, unit in ((1_000_000_000, "G"), (1_000_000, "M"), (1_000, "K")):
+        if count >= size:
+            return f"{count / size:.1f}{unit}"
+    return str(count)
 
 
 def peak_window[W](windows: tuple[W, ...], used: Callable[[W], float | None]) -> W | None:

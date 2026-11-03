@@ -37,16 +37,30 @@ _MESSAGES = {
     "quota.month": ("Month", "Месяц"),
     "quota.budget": ("Pool", "Пул"),
     "quota.auto": ("Auto + Composer", "Auto + Composer"),
+    "quota.days": ("{count} d", "{count} д"),
+    "quota.panel.close": ("Close details", "Закрыть подробности"),
+    "quota.panel.plan": ("Plan", "Тариф"),
+    "quota.panel.limits": ("Limits", "Лимиты"),
+    "quota.panel.period": ("A pool for {count} days", "Пул на {count} дн"),
+    "quota.panel.reset": ("Resets on {time}, in {left}", "Сброс {time}, через {left}"),  # noqa: RUF001 -- Russian UI text
+    "quota.panel.tokens": ("Tokens", "Токены"),
+    "quota.panel.tokens_since": ("Tokens since {date}", "Токены с {date}"),  # noqa: RUF001 -- Russian UI text
+    "quota.panel.no_tokens": ("This agent reports no tokens", "Агент не передаёт данные о токенах"),  # noqa: RUF001 -- Russian UI text
+    "quota.panel.total": ("Total", "Всего"),  # noqa: RUF001 -- Russian UI text
+    "quota.panel.input": ("input", "ввод"),
+    "quota.panel.output": ("output", "вывод"),
+    "quota.panel.cache_read": ("cache read", "из кэша"),
+    "quota.panel.cache_write": ("cache write", "в кэш"),
+    "quota.panel.source": ("Source", "Источник"),
     "quota.api": ("API", "API"),
     "quota.empty": ("No data yet", "Пока нет данных"),
     "quota.observed": ("as of {time}", "на {time}"),
-    "quota.reset": ("Resets at {time}", "Сброс в {time}"),  # noqa: RUF001 -- Russian UI text
+    "quota.reset": ("Resets on {time}", "Сброс {time}"),  # noqa: RUF001 -- Russian UI text
     "quota.tabs": ("Tabs using this account", "Вкладки этого аккаунта"),
     "quota.critical": ("An account has reached 95% of its limit", "Использовано не менее 95 % лимита аккаунта"),
     "quota.details": ("Details", "Подробнее"),
     "quota.source_unknown": ("Usage source unavailable", "Источник данных не указан"),
     "quota.peak": ("up to {pct} %", "до {pct} %"),
-    "quota.spent": ("Spent {money}", "Потрачено {money}"),
     "quota.credits": ("Credits left: {count}", "Осталось кредитов: {count}"),
     "quota.credits_unlimited": ("Credits: unlimited", "Кредиты: без ограничений"),
     "quota.api_cost": (

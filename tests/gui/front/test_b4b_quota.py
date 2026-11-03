@@ -124,33 +124,26 @@ def _labels(widget: Gtk.Widget) -> list[str]:
 
 
 def _assert_quota_card_rows(card: QuotaCard) -> None:
-    labels = [row.percent_label.get_text() for row in card.window_rows]
+    # One line per account, with one bar: the window closest to its limit, and the time until it resets.
+    labels = [line.percent_label.get_text() for line in card.account_lines]
     assert any("76" in label for label in labels)
-    assert any("31" in label for label in labels)
     assert any("97" in label and "≈" in label for label in labels)
-    assert all(label not in {"0%", "0 %"} for label in labels)
-    assert any(row.time_label.get_text() for row in card.window_rows)
-    assert any(row.key_label.get_text() in {"5h", "5 h", "5 ч"} for row in card.window_rows)
-    assert any(row.key_label.get_text() in {"7d", "7 d", "7 д"} for row in card.window_rows)
+    assert all(line.time_label.get_text() for line in card.account_lines if line.peak is not None)
+    for line in card.account_lines:
+        assert line.name_label.get_text() not in line.time_label.get_text()
+        assert "5 ч" not in line.time_label.get_text()
+        assert "7 д" not in line.time_label.get_text()
 
-    normal_row = next(row for row in card.window_rows if row.window.used_pct == 76)
-    assert normal_row.level_bar.get_min_value() == 0
-    assert normal_row.level_bar.get_max_value() == 1
-    assert normal_row.level_bar.get_value() == 0.76
-    has_low, low = normal_row.level_bar.get_offset_value("low")
-    has_high, high = normal_row.level_bar.get_offset_value("high")
+    normal_line = next(line for line in card.account_lines if line.peak is not None and line.peak.used_pct == 76)
+    assert normal_line.level_bar.get_min_value() == 0
+    assert normal_line.level_bar.get_max_value() == 1
+    assert normal_line.level_bar.get_value() == 0.76
+    has_low, low = normal_line.level_bar.get_offset_value("low")
+    has_high, high = normal_line.level_bar.get_offset_value("high")
     assert has_low
     assert low == 0.8
     assert has_high
     assert high == 0.95
-
-    unknown_row = next(row for row in card.window_rows if row.window.used_pct is None)
-    assert not unknown_row.level_bar.get_visible()
-    unknown_explanation = unknown_row.get_tooltip_text()
-    assert unknown_explanation is not None
-    assert unknown_explanation.strip()
-    assert "0%" not in unknown_explanation
-    assert "0 %" not in unknown_explanation
 
 
 def _assert_quota_dialog(dialog: QuotaDialog) -> None:
@@ -240,7 +233,7 @@ def test_b4b_summary_card_combines_plan_and_quota_and_tracks_live_updates() -> N
         )
         assert window.plan_card.plan_id == plan.id
         assert window.plan_card.title_label.get_text() == plan.title
-        assert any("76" in row.percent_label.get_text() for row in window.quota_card.window_rows)
+        assert any("76" in line.percent_label.get_text() for line in window.quota_card.account_lines)
 
         dialog = window.quota_card.open_details(window)
         assert isinstance(dialog, QuotaDialog)
@@ -277,11 +270,19 @@ def test_b4b_summary_card_combines_plan_and_quota_and_tracks_live_updates() -> N
 
         assert window.plan_card.title_label.get_text() == "Live Plan Update"
         assert str(changed_plan.done) in window.plan_card.progress_label.get_text()
-        assert any("88" in row.percent_label.get_text() for row in window.quota_card.window_rows)
+        assert any("88" in line.percent_label.get_text() for line in window.quota_card.account_lines)
         assert any("88" in row.percent_label.get_text() for row in dialog.window_rows)
-        dialog_child = dialog.get_child()
-        assert dialog_child is not None
-        assert "Live Tab Update" in " ".join(_labels(dialog_child))
+        # The list stays short; a card opens its account's details on the right, with the tabs using it.
+        assert "Live Tab Update" not in " ".join(_labels(dialog.content))
+        dialog.open_account(account.id)
+        assert dialog.panel_revealer.get_reveal_child()
+        assert dialog.panel.title_label.get_text() == "Claude"
+        panel_labels = " ".join(_labels(dialog.panel))
+        assert "Live Tab Update" in panel_labels
+        assert "Team" in panel_labels
+        assert "на " not in " ".join(_labels(dialog.content))
+        dialog.account_cards[account.id].emit("clicked")
+        assert not dialog.panel_revealer.get_reveal_child()
         dialog.close()
 
     _run_ui(scenario)

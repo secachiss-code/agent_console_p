@@ -39,6 +39,19 @@ class QuotaWindowView(msgspec.Struct, frozen=True, kw_only=True):
     # A window counted in money (Cursor's plan and on-demand pool): what was spent, and the cap. No cap: unlimited.
     spent_usd: float | None = None
     limit_usd: float | None = None
+    # How many days the pool lasts, when the agent's billing period says so.
+    period_days: int | None = None
+
+
+class ModelUsageView(msgspec.Struct, frozen=True, kw_only=True):
+    """Tokens one model used. `cost_usd` only when the agent reports it."""
+
+    model: str
+    input_tokens: int
+    output_tokens: int
+    cache_read_tokens: int
+    cache_write_tokens: int
+    cost_usd: float | None = None
 
 
 class AccountView(msgspec.Struct, frozen=True, kw_only=True):
@@ -52,6 +65,10 @@ class AccountView(msgspec.Struct, frozen=True, kw_only=True):
     # Credits bought past the plan (Codex), counted in credits, not dollars. Unlimited: no balance to show.
     credits_balance: float | None = None
     credits_unlimited: bool = False
+    # The plan's price in the agent's own words ("$20/mo"), and tokens per model since `usage_since`.
+    plan_price: str | None = None
+    usage: tuple[ModelUsageView, ...] = ()
+    usage_since: AwareDatetime | None = None
 
 
 class AgentInfo(msgspec.Struct, frozen=True, kw_only=True):

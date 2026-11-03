@@ -21,6 +21,7 @@ from aconsole.contracts.app import (
     DiffLine,
     DiffSummaryResult,
     EditDetail,
+    ModelUsageView,
     PaletteItem,
     PlanNodeView,
     PlanView,
@@ -312,12 +313,13 @@ def demo_snapshot() -> AppSnapshot:
 
 def _window(
     key: QuotaKeyName, used: float | None, *, money: tuple[float, float | None] | None = None,
+    period_days: int | None = None,
 ) -> QuotaWindowView:
     level = QuotaLevel.UNKNOWN if used is None else QuotaLevel.WARN if used >= _WARN_PCT else QuotaLevel.OK
     spent, limit = money if money is not None else (None, None)
     return QuotaWindowView(
         key=key, used_pct=used, resets_at=AT, level=level, observed_at=AT, estimated=False,
-        spent_usd=spent, limit_usd=limit,
+        spent_usd=spent, limit_usd=limit, period_days=period_days,
     )
 
 
@@ -333,8 +335,22 @@ def agents_snapshot() -> AppSnapshot:
         msgspec.structs.replace(codex, source="codex-app-server", refresh_s=120, credits_balance=412.5),
         AccountView(
             id=AccountId("cursor:local"), agent=AgentKind.CURSOR, plan_label="Pro", source="cursor-dashboard",
-            refresh_s=120,
-            quota=(_window("month", 62), _window("budget", 28, money=(14.0, 50.0))),
+            refresh_s=120, plan_price="$20/mo", usage_since=AT,
+            quota=(
+                _window("auto", 87, money=(391.54, 450.0), period_days=31),
+                _window("api", 59, money=(6.68, 11.25), period_days=31),
+                _window("budget", 28, money=(14.0, 50.0)),
+            ),
+            usage=(
+                ModelUsageView(
+                    model="grok-4.7-high", input_tokens=9_978_525, output_tokens=1_954_087,
+                    cache_read_tokens=442_303_360, cache_write_tokens=0, cost_usd=372.10,
+                ),
+                ModelUsageView(
+                    model="claude-4.5-sonnet", input_tokens=1_086, output_tokens=38_383,
+                    cache_read_tokens=10_577_860, cache_write_tokens=495_745, cost_usd=5.61,
+                ),
+            ),
         ),
         AccountView(
             id=AccountId("opencode:local"), agent=AgentKind.OPENCODE, plan_label="Go", source="opencode-go",

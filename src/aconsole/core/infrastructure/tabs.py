@@ -182,12 +182,12 @@ class HostTabs:
             return b""
         return ask_rate_limits(argv)
 
-    def cursor_usage(self, name: str) -> tuple[bytes, bytes]:
-        """Cursor's usage and plan replies for the account the container is signed in to. Empty when it cannot ask."""
+    def cursor_usage(self, name: str) -> tuple[bytes, bytes, bytes]:
+        """Cursor's usage, plan and per-model replies for the container's account. Empty when it cannot ask."""
         home = self.agent_home(name)
         token = None if home is None else access_token(home)
         if token is None:
-            return b"", b""
+            return b"", b"", b""
         return ask_usage(token)
 
     def opencode_usage(self, name: str) -> bytes:

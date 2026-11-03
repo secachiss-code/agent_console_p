@@ -50,6 +50,17 @@
             }
           ]
         },
+        "period_days": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
         "resets_at": {
           "anyOf": [
             {

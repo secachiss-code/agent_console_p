@@ -17,9 +17,15 @@ from pathlib import Path
 import msgspec
 import pytest
 
-from aconsole.contracts.app import AgentInfo  # noqa: TC001 -- only a return type, like the other imports here
-from aconsole.contracts.common import AgentKind
-from aconsole.core.bootstrap import accounts_without_limits, codex_poll_delay, is_connected, shown_accounts
+from aconsole.contracts.app import AccountView, AgentInfo, QuotaWindowView
+from aconsole.contracts.common import AccountId, AgentKind, QuotaLevel
+from aconsole.core.bootstrap import (
+    accounts_without_limits,
+    codex_poll_delay,
+    is_connected,
+    shown_accounts,
+    tokens_since,
+)
 from aconsole.core.domain.agent import CAPABILITIES
 from aconsole.core.domain.agent import AgentKind as DomainAgent
 from aconsole.core.infrastructure.agents.command_files import cursor_rules, opencode_commands
@@ -32,6 +38,7 @@ from aconsole.core.infrastructure.agents.opencode.limits import access_key as op
 from aconsole.core.infrastructure.agents.opencode.limits import auth_file as opencode_auth
 from aconsole.core.infrastructure.agents.opencode.sessions import parse_sessions
 from aconsole.core.infrastructure.agents.opencode.stream import EventReader, EventStream
+from aconsole.core.infrastructure.agents.usage_log import UsageLog, claude_events, codex_events
 from aconsole.core.infrastructure.containers.podman import ContainerError, Inspected
 from aconsole.core.infrastructure.http.consumer import OPENCODE_EVENT, hook_event, submitted_prompt
 from aconsole.core.infrastructure.http.routes import IngestItem
@@ -402,26 +409,94 @@ def test_cursor_usage_becomes_a_monthly_window() -> None:
     assert (window.spent_usd, window.limit_usd) == (None, None)
 
 
-def test_cursor_plan_has_two_pools_and_the_api_pool_size_comes_from_the_reply() -> None:
+def test_cursor_plan_has_two_pools_with_the_money_each_spent() -> None:
     now = datetime(2026, 11, 3, tzinfo=UTC)
     usage = json.loads(_CURSOR_USAGE)
     # The shape of a real Pro reply, 2026-11-03.
     usage["planUsage"] = {
         "totalSpend": 39822, "includedSpend": 2000, "bonusSpend": 37822, "limit": 2000,
-        "autoPercentUsed": 87.0, "apiPercentUsed": 59.4, "totalPercentUsed": 86.3,
+        "autoPercentUsed": 87.00888888888889, "apiPercentUsed": 59.37777777777777, "totalPercentUsed": 86.33,
     }
-    event = CursorLimits(lambda: now).on_usage(json.dumps(usage).encode(), b"")
+    events = json.dumps({"aggregations": [
+        {"modelIntent": "grok-4.7-high", "inputTokens": "9978525", "outputTokens": "1954087",
+         "cacheReadTokens": "442303360", "totalCents": 39154.0, "tier": 2},
+        {"modelIntent": "claude-4.5-sonnet", "inputTokens": "1086", "outputTokens": "38383",
+         "cacheReadTokens": "10577860", "cacheWriteTokens": "495745", "totalCents": 668.0, "tier": 1},
+    ]}).encode()
+    plan = json.dumps({"planInfo": {"planName": "Pro", "price": "$20/mo"}}).encode()
+    event = CursorLimits(lambda: now).on_usage(json.dumps(usage).encode(), plan, events)
     assert event is not None
     auto, api = event.account.quota
-    assert (auto.key, auto.used_pct, auto.limit_usd) == ("auto", 87.0, None)
-    assert (api.key, api.used_pct, api.spent_usd, api.limit_usd) == ("api", 59.4, None, 20.0)
-    # Another subscription, another size. A pool at zero may be left out of the reply.
+    assert (auto.key, auto.spent_usd, auto.limit_usd, auto.period_days) == ("auto", 391.54, 450.0, 30)
+    assert (api.key, api.spent_usd, api.limit_usd) == ("api", 6.68, 11.25)
+    assert event.account.plan_price == "$20/mo"
+    assert event.account.usage_since == datetime(2026, 11, 1, tzinfo=UTC)
+    grok, sonnet = event.account.usage
+    assert (grok.model, grok.cost_usd, grok.cache_read_tokens) == ("grok-4.7-high", 391.54, 442303360)
+    assert (sonnet.cache_write_tokens, sonnet.cost_usd) == (495745, 6.68)
+
+
+def test_cursor_pools_keep_their_shares_without_the_money() -> None:
+    now = datetime(2026, 11, 3, tzinfo=UTC)
+    usage = json.loads(_CURSOR_USAGE)
+    # A pool at zero may be left out of the reply.
     usage["planUsage"] = {"limit": 7000, "autoPercentUsed": 5.0}
     event = CursorLimits(lambda: now).on_usage(json.dumps(usage).encode(), b"")
     assert event is not None
-    assert [(w.key, w.used_pct, w.limit_usd) for w in event.account.quota] == [
-        ("auto", 5.0, None), ("api", 0.0, 70.0),
+    assert [(w.key, w.used_pct, w.spent_usd, w.limit_usd) for w in event.account.quota] == [
+        ("auto", 5.0, None, None), ("api", 0.0, None, None),
     ]
+    assert event.account.usage == ()
+
+
+def test_claude_log_counts_a_reply_once_and_only_since_the_moment(tmp_path: Path) -> None:
+    def line(message_id: str, at: str, output: int, model: str = "claude-opus-5-5") -> str:
+        usage = {"input_tokens": 2, "output_tokens": output, "cache_read_input_tokens": 10,
+                 "cache_creation_input_tokens": 5}
+        return json.dumps({"type": "assistant", "timestamp": at, "requestId": "r" + message_id,
+                           "message": {"id": message_id, "model": model, "usage": usage}})
+
+    session = tmp_path / "project" / "session.jsonl"
+    session.parent.mkdir()
+    session.write_text("\n".join((
+        line("old", "2020-01-01T00:00:00Z", 999),
+        line("a", "2026-11-03T10:00:00Z", 1),
+        line("a", "2026-11-03T10:00:00Z", 7),
+        line("b", "2026-11-03T10:01:00Z", 3, "<synthetic>"),
+        'not json "usage" "assistant"',
+    )))
+    log = UsageLog(lambda: tmp_path, claude_events)
+    (model,) = log.models(datetime(2021, 1, 1, tzinfo=UTC))
+    assert (model.model, model.input_tokens, model.output_tokens) == ("claude-opus-5-5", 2, 7)
+    assert (model.cache_read_tokens, model.cache_write_tokens, model.cost_usd) == (10, 5, None)
+    # A file older than the moment is not read at all.
+    assert UsageLog(lambda: tmp_path, claude_events).models(datetime(2099, 1, 1, tzinfo=UTC)) == ()
+    assert UsageLog(lambda: None, claude_events).models(datetime(2021, 1, 1, tzinfo=UTC)) == ()
+
+
+def test_codex_log_splits_cached_input_and_skips_a_repeated_total(tmp_path: Path) -> None:
+    last = {"input_tokens": 100, "cached_input_tokens": 60, "output_tokens": 5}
+    count = {"timestamp": "2026-11-03T10:00:00Z", "type": "event_msg", "payload": {
+        "type": "token_count", "info": {"total_token_usage": {"total_tokens": 105}, "last_token_usage": last},
+    }}
+    context = {"timestamp": "2026-11-03T09:59:00Z", "type": "turn_context", "payload": {"model": "gpt-6.1-sol"}}
+    rollout = tmp_path / "rollout-1.jsonl"
+    rollout.write_text("\n".join(json.dumps(item) for item in (context, count, count)))
+    (model,) = UsageLog(lambda: tmp_path, codex_events).models(datetime(2021, 1, 1, tzinfo=UTC))
+    assert (model.model, model.input_tokens, model.cache_read_tokens, model.output_tokens) == (
+        "gpt-6.1-sol", 40, 60, 5,
+    )
+
+
+def test_tokens_are_counted_over_the_weekly_window() -> None:
+    now = datetime(2026, 11, 3, tzinfo=UTC)
+    resets = datetime(2026, 11, 5, tzinfo=UTC)
+    week = QuotaWindowView(
+        key="7d", used_pct=1.0, resets_at=resets, level=QuotaLevel.OK, observed_at=now, estimated=False,
+    )
+    account = AccountView(id=AccountId("claude:x"), agent=AgentKind.CLAUDE, plan_label="", quota=(week,))
+    assert tokens_since(account, now) == datetime(2026, 10, 29, tzinfo=UTC)
+    assert tokens_since(msgspec.structs.replace(account, quota=()), now) == datetime(2026, 10, 27, tzinfo=UTC)
 
 
 def test_cursor_on_demand_pool_is_a_budget_in_dollars() -> None:

@@ -9,12 +9,9 @@ gi.require_version("Adw", "1")
 from gi.repository import GLib, Gtk  # noqa: E402
 
 from aconsole.contracts.app import AccountView, TabView  # noqa: E402
-from aconsole.ui.viewmodels.logic.quota_fmt import agent_name  # noqa: E402
 from aconsole.ui.views.quota_dialog import QuotaDialog  # noqa: E402
 from aconsole.ui.views.sidebar.messages import _ as translate  # noqa: E402
-from aconsole.ui.views.sidebar.quota_row import AccountLine, QuotaRow  # noqa: E402
-
-_COLUMNS = 2
+from aconsole.ui.views.sidebar.quota_row import AccountLine  # noqa: E402
 
 
 class QuotaCard(Gtk.Button):
@@ -26,7 +23,6 @@ class QuotaCard(Gtk.Button):
         self.add_css_class("ac-summary-section")
         self._accounts: tuple[AccountView, ...] = ()
         self.tabs: tuple[TabView, ...] = ()
-        self.window_rows: list[QuotaRow] = []
         self.account_lines: list[AccountLine] = []
         # Set by the window: asks the core for fresh limits. The answers come back through `set_accounts`.
         self.on_refresh: Callable[[], Awaitable[None]] | None = None
@@ -62,7 +58,6 @@ class QuotaCard(Gtk.Button):
             parent.remove(self.summary_label)
         while (child := self.rows.get_first_child()) is not None:
             self.rows.remove(child)
-        self.window_rows.clear()
         if self._with_heading:
             heading = Gtk.Box(spacing=8)
             title = Gtk.Label(label=self._title().upper(), xalign=0, hexpand=True)
@@ -71,16 +66,8 @@ class QuotaCard(Gtk.Button):
             heading.append(self.summary_label)
             self.rows.append(heading)
         self.account_lines.clear()
-        if len(accounts) == 1:
-            # One agent has the whole width: each window on a line of its own, with the time to its reset.
-            self.rows.append(self._account_column(accounts[0], wide=True))
-        elif len(accounts) == _COLUMNS:
-            grid = Gtk.Grid(column_spacing=16, row_spacing=10, column_homogeneous=True)
-            for index, account in enumerate(accounts):
-                grid.attach(self._account_column(account), index, 0, 1, 1)
-            self.rows.append(grid)
-        elif accounts:
-            # Three agents or more do not fit side by side: a line each, the details are one click away.
+        if accounts:
+            # A line each, whatever their number: one bar and the time to its reset. The details are one click away.
             lines = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
             for account in accounts:
                 line = AccountLine(account, display=self._display)
@@ -114,21 +101,6 @@ class QuotaCard(Gtk.Button):
     def _title(self) -> str:
         return translate("quota.title_left" if self._display == "remaining" else "quota.title")
 
-    def _account_column(self, account: AccountView, *, wide: bool = False) -> Gtk.Box:
-        column = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=5)
-        name = Gtk.Label(label=agent_name(account.agent.value), xalign=0)
-        name.add_css_class("ac-summary-name")
-        column.append(name)
-        for window in account.quota:
-            row = QuotaRow(window, compact=not wide, display=self._display)
-            self.window_rows.append(row)
-            column.append(row)
-        if not account.quota:
-            missing = Gtk.Label(label=translate("quota.unknown"), xalign=0, wrap=True)
-            missing.add_css_class("ac-summary-detail")
-            column.append(missing)
-        return column
-
     def _clicked(self, _button: Gtk.Button) -> None:
         root = self.get_root()
         if isinstance(root, Gtk.Widget):
@@ -139,7 +111,7 @@ class QuotaCard(Gtk.Button):
             self.details_dialog.present(parent)
             return self.details_dialog
         dialog = QuotaDialog(
-            self._accounts, self.tabs, self.summary_label.get_label(), self._display, on_refresh=self.on_refresh,
+            self._accounts, self.tabs, self._display, on_refresh=self.on_refresh,
         )
         self.details_dialog = dialog
         dialog.present(parent)
@@ -148,7 +120,7 @@ class QuotaCard(Gtk.Button):
     def _sync_details(self) -> None:
         if self.details_dialog is not None and self.details_dialog.get_visible():
             self.details_dialog.set_display(self._display)
-            self.details_dialog.update_accounts(self._accounts, self.tabs, self.summary_label.get_label())
+            self.details_dialog.update_accounts(self._accounts, self.tabs)
 
     def _mapped(self, _widget: Gtk.Widget) -> None:
         if self._timer is None:
@@ -160,6 +132,6 @@ class QuotaCard(Gtk.Button):
             self._timer = None
 
     def _tick(self) -> bool:
-        for row in self.window_rows:
-            row.refresh_time()
+        for line in self.account_lines:
+            line.refresh_time()
         return GLib.SOURCE_CONTINUE

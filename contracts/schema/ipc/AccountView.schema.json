@@ -26,6 +26,17 @@
         "plan_label": {
           "type": "string"
         },
+        "plan_price": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
         "quota": {
           "items": {
             "$ref": "#/$defs/QuotaWindowView"
@@ -53,6 +64,25 @@
             }
           ],
           "default": null
+        },
+        "usage": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/ModelUsageView"
+          },
+          "type": "array"
+        },
+        "usage_since": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
         }
       },
       "required": [
@@ -73,6 +103,46 @@
         "opencode"
       ],
       "title": "AgentKind"
+    },
+    "ModelUsageView": {
+      "description": "Tokens one model used. `cost_usd` only when the agent reports it.",
+      "properties": {
+        "cache_read_tokens": {
+          "type": "integer"
+        },
+        "cache_write_tokens": {
+          "type": "integer"
+        },
+        "cost_usd": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "input_tokens": {
+          "type": "integer"
+        },
+        "model": {
+          "type": "string"
+        },
+        "output_tokens": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "model",
+        "input_tokens",
+        "output_tokens",
+        "cache_read_tokens",
+        "cache_write_tokens"
+      ],
+      "title": "ModelUsageView",
+      "type": "object"
     },
     "QuotaLevel": {
       "enum": [
@@ -123,6 +193,17 @@
               "type": "null"
             }
           ]
+        },
+        "period_days": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
         },
         "resets_at": {
           "anyOf": [
