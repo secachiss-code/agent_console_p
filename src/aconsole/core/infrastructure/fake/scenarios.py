@@ -331,7 +331,7 @@ def agents_snapshot() -> AppSnapshot:
         AccountView(
             id=AccountId("cursor:local"), agent=AgentKind.CURSOR, plan_label="Pro", source="cursor-dashboard",
             refresh_s=120,
-            quota=(_window("month", 62, money=(12.4, 20.0)), _window("budget", 28, money=(14.0, 50.0))),
+            quota=(_window("month", 62), _window("budget", 28, money=(14.0, 50.0))),
         ),
         AccountView(
             id=AccountId("opencode:local"), agent=AgentKind.OPENCODE, plan_label="Go", source="opencode-go",

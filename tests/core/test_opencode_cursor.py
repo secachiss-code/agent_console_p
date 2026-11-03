@@ -361,7 +361,8 @@ def test_cursor_usage_becomes_a_monthly_window() -> None:
     (window,) = event.account.quota
     assert (window.key, window.used_pct, window.observed_at) == ("month", 61.7, now)
     assert window.resets_at == datetime(2026, 12, 1, tzinfo=UTC)
-    assert (window.spent_usd, window.limit_usd) == (12.34, 20.0)
+    # The monthly allowance is a share of the plan, not money.
+    assert (window.spent_usd, window.limit_usd) == (None, None)
 
 
 def test_cursor_on_demand_pool_is_a_budget_in_dollars() -> None:

@@ -84,8 +84,8 @@ def _ask(method: str, token: str) -> bytes:
 class CursorLimits:
     """Fold one usage reply into the account card.
 
-    Cursor counts money per billing cycle. The plan's included usage is the monthly window. Spending past it comes
-    from the on-demand pool, a cap in dollars (the user's own, or the team's), which is the budget window.
+    The plan's monthly allowance is a share, shown as a percent. Spending past it is paid from the on-demand pool,
+    a cap in dollars (the user's own, or the team's), which is the budget window.
     """
 
     _now: Callable[[], datetime]
@@ -103,8 +103,7 @@ class CursorLimits:
         if month is None or resets_at is None:
             return None
         now = self._now()
-        used_pct, spent, limit = month
-        windows = [_view("month", used_pct, resets_at, now, (spent, limit))]
+        windows = [_view("month", month, resets_at, now, (None, None))]
         pool = _pool(document.get("spendLimitUsage"))
         if pool is not None:
             pool_spent, pool_limit = pool
@@ -127,16 +126,11 @@ def _view(
     )
 
 
-def _month(raw: object) -> tuple[float, float | None, float | None] | None:
-    """The plan's included usage: the share used, and the dollars behind it when Cursor sends them (in cents)."""
+def _month(raw: object) -> float | None:
+    """The share of the plan's monthly allowance used. The allowance is the plan's, not a sum of money: no dollars."""
     if not isinstance(raw, dict):
         return None
-    used = _percent(raw.get("totalPercentUsed"))  # pyright: ignore[reportUnknownMemberType, reportUnknownArgumentType]
-    if used is None:
-        return None
-    spent = _cents(raw.get("totalSpend"))  # pyright: ignore[reportUnknownMemberType, reportUnknownArgumentType]
-    limit = _cents(raw.get("limit"))  # pyright: ignore[reportUnknownMemberType, reportUnknownArgumentType]
-    return used, spent, limit or None
+    return _percent(raw.get("totalPercentUsed"))  # pyright: ignore[reportUnknownMemberType, reportUnknownArgumentType]
 
 
 def _pool(raw: object) -> tuple[float, float | None] | None:
