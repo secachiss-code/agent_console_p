@@ -32,6 +32,9 @@ class Runner(Protocol):
 class _Cached:
     graph: ExtractorGraph
     until: float
+    ids: dict[str, str]
+    names: dict[str, tuple[str, ...]]
+    users: dict[frozenset[str] | None, dict[str, tuple[str, ...]]]
 
 
 @final
@@ -52,36 +55,52 @@ class CodeGraphIndex:
         self._ttl_s: float = ttl_s
         self._cache: dict[Path, _Cached] = {}
         self._lock: threading.Lock = threading.Lock()
+        self._builds: dict[Path, threading.Lock] = {}
 
     def graph(self, project_id: str) -> ExtractorGraph:
+        return self._cached(project_id).graph
+
+    def _cached(self, project_id: str) -> _Cached:
         root = self._root_of(project_id)
         if root is None:
             raise DomainError(code=_UNKNOWN_PROJECT, name="IMPACT_TARGET_UNKNOWN", retryable=False)
         with self._lock:
-            found = self._cache.get(root)
-            if found is not None and self._clock() < found.until:
-                return found.graph
-        built = self._build(root)
-        with self._lock:
-            self._cache[root] = _Cached(built, self._clock() + self._ttl_s)
-        return built
+            building = self._builds.setdefault(root, threading.Lock())
+        # Callers that ask while a graph is being built wait for it instead of building their own.
+        with building:
+            with self._lock:
+                found = self._cache.get(root)
+                if found is not None and self._clock() < found.until:
+                    return found
+            built = _indexed(self._build(root), self._clock() + self._ttl_s)
+            with self._lock:
+                self._cache[root] = built
+            return built
 
     def resolve(self, project_id: str, target: str) -> str | None:
         """A node id from an id, a path, or a name only one module has."""
-        graph = self.graph(project_id)
-        for node in graph.nodes:
-            if target in {node.id, node.path}:
-                return node.id
-        named = [node.id for node in graph.nodes if node.name == target]
+        cached = self._cached(project_id)
+        found = cached.ids.get(target)
+        if found is not None:
+            return found
+        named = cached.names.get(target, ())
         return named[0] if len(named) == 1 else None
 
     def dependents(self, project_id: str, kinds: frozenset[str] | None = None) -> dict[str, tuple[str, ...]]:
         """For each node, the nodes that use it: a change spreads against the import arrows."""
+        cached = self._cached(project_id)
+        with self._lock:
+            found = cached.users.get(kinds)
+        if found is not None:
+            return found
         users: dict[str, list[str]] = {}
-        for edge in self.graph(project_id).edges:
+        for edge in cached.graph.edges:
             if kinds is None or edge.kind in kinds:
                 users.setdefault(edge.target, []).append(edge.source)
-        return {key: tuple(sorted(values)) for key, values in users.items()}
+        reversed_edges = {key: tuple(sorted(values)) for key, values in users.items()}
+        with self._lock:
+            cached.users[kinds] = reversed_edges
+        return reversed_edges
 
     def _build(self, root: Path) -> ExtractorGraph:
         # A Python project with a `package.json` for its docs is still a Python project.
@@ -94,6 +113,23 @@ class CodeGraphIndex:
         if run.graph is not None:
             return run.graph
         raise _failed(run.error)
+
+
+def _indexed(graph: ExtractorGraph, until: float) -> _Cached:
+    ids: dict[str, str] = {}
+    names: dict[str, list[str]] = {}
+    for node in graph.nodes:
+        # An id wins over a path that happens to spell the same text, as the scan in node order did.
+        _ = ids.setdefault(node.id, node.id)
+        _ = ids.setdefault(node.path, node.id)
+        names.setdefault(node.name, []).append(node.id)
+    return _Cached(
+        graph=graph,
+        until=until,
+        ids=ids,
+        names={name: tuple(found) for name, found in names.items()},
+        users={},
+    )
 
 
 def _failed(error: ErrorObject | None) -> DomainError:
