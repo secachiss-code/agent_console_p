@@ -81,8 +81,9 @@ class CoreTimeoutError(Exception):
         super().__init__(method)
 
 
-class _KindOnly(msgspec.Struct, frozen=True, kw_only=True):
-    kind: str
+# The four envelopes are tagged by `kind`, so one pass picks the type and decodes it.
+_ENVELOPE: msgspec.json.Decoder[Envelope] = msgspec.json.Decoder(Envelope)
+_EVENT = msgspec.json.Decoder(EventEnvelope)
 
 
 def core_paths(runtime_dir: Path) -> tuple[Path, Path]:
@@ -108,17 +109,7 @@ def lock_held(path: Path) -> bool:
 
 
 def _decode_line(line: bytes) -> Envelope:
-    kind = msgspec.json.decode(line, type=_KindOnly).kind
-    if kind == "request":
-        return msgspec.json.decode(line, type=Request)
-    if kind == "notification":
-        return msgspec.json.decode(line, type=Notification)
-    if kind == "result":
-        return msgspec.json.decode(line, type=ResponseOk)
-    if kind == "error":
-        return msgspec.json.decode(line, type=ResponseErr)
-    message = "core sent an unknown envelope"
-    raise ConnectionError(message)
+    return _ENVELOPE.decode(line)
 
 
 class CoreClient:
@@ -379,7 +370,7 @@ class CoreClient:
             self._finish(envelope.id, envelope)
             return
         if isinstance(envelope, Notification) and envelope.method == "$/event":
-            event = msgspec.json.decode(envelope.params, type=EventEnvelope)
+            event = _EVENT.decode(envelope.params)
             if not self.store.apply(event) and self.resyncs == 0:
                 self.resyncs = 1
                 self._resync_task = asyncio.create_task(self._resync())

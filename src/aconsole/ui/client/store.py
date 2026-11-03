@@ -26,12 +26,9 @@ from aconsole.contracts.ipc import EventEnvelope
 CONNECTING_BANNER = "Подключение к ядру…"
 
 
-class _EventKind(msgspec.Struct, frozen=True, kw_only=True):
-    kind: str = msgspec.field(name="type")
-
-
 def event_name(event: UiEvent) -> str:
-    return msgspec.json.decode(msgspec.json.encode(event), type=_EventKind).kind
+    """The event's ``type`` tag, read from its struct rather than by encoding it."""
+    return str(type(event).__struct_config__.tag)
 
 
 @final
