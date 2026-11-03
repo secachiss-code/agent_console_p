@@ -14,7 +14,7 @@ from aconsole.ui.bootstrap import spawn_task  # noqa: E402
 from aconsole.ui.viewmodels.logic.quota_fmt import agent_name  # noqa: E402
 from aconsole.ui.views.quota_account import AccountPanel, ago, detail, source_text  # noqa: E402
 from aconsole.ui.views.sidebar.messages import _ as translate  # noqa: E402
-from aconsole.ui.views.sidebar.quota_row import QuotaRow  # noqa: E402
+from aconsole.ui.views.sidebar.quota_row import QuotaRow, no_numbers_copy  # noqa: E402
 
 _REFRESH_WAIT_S = 15
 _SECONDS_PER_MINUTE = 60
@@ -203,7 +203,7 @@ class QuotaDialog(Adw.Dialog):
             if window.used_pct is None and window.spent_usd is None:
                 group.append(detail(translate("quota.unknown.copy")))
         if not account.quota:
-            group.append(detail(translate("quota.unknown.copy")))
+            group.append(detail(no_numbers_copy(account)))
         card = Gtk.Button(child=group)
         card.add_css_class("flat")
         card.add_css_class("ac-quota-group")

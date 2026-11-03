@@ -35,6 +35,14 @@ _MESSAGES = {
     "quota.7d": ("7 d", "7 д"),
     "quota.week": ("Week", "Неделя"),
     "quota.month": ("Month", "Месяц"),
+    "quota.week.short": ("Wk", "Нед"),
+    "quota.month.short": ("Mo", "Мес"),  # noqa: RUF001 -- Russian text
+    "quota.auto.short": ("Auto", "Auto"),
+    "quota.no_go": ("No Go subscription", "Нет подписки Go"),
+    "quota.no_go.copy": (
+        "OpenCode counts 5 hours, a week and a month only for its Go subscription. This login pays as it goes.",
+        "OpenCode считает 5 часов, неделю и месяц только для подписки Go. Этот логин платит по факту.",
+    ),
     "quota.budget": ("Pool", "Пул"),
     "quota.auto": ("Auto + Composer", "Auto + Composer"),
     "quota.days": ("{count} d", "{count} д"),

@@ -9,11 +9,11 @@ gi.require_version("Gtk", "4.0")
 from gi.repository import Gtk, Pango  # noqa: E402
 
 from aconsole.contracts.app import AccountView, QuotaWindowView  # noqa: E402
+from aconsole.contracts.common import AgentKind  # noqa: E402
 from aconsole.ui.viewmodels.logic.quota_fmt import (  # noqa: E402
     agent_name,
     format_percent,
     format_window_money,
-    peak_window,
     quota_level,
     shown_percent,
 )
@@ -85,24 +85,48 @@ class QuotaRow(Gtk.Box):
             self.set_tooltip_text(tooltip)
 
 
-class AccountLine(Gtk.Box):
-    """One account on one line: its name, one bar for the window closest to its limit, the time until that resets."""
+# The shortest window runs out first, so it comes first.
+_ORDER = {"5h": 0, "7d": 1, "week": 2, "auto": 3, "month": 4, "api": 5, "budget": 6}
+_SHORT = {"week": "quota.week.short", "month": "quota.month.short"}
 
-    def __init__(self, account: AccountView, *, display: str = "used") -> None:
-        super().__init__(spacing=8)
-        self.account: AccountView = account
-        self.add_css_class("ac-account-line")
-        self.name_label: Gtk.Label = Gtk.Label(label=agent_name(account.agent.value), xalign=0)
-        self.name_label.set_width_chars(8)
-        self.name_label.add_css_class("ac-summary-name")
-        self.append(self.name_label)
-        self.peak: QuotaWindowView | None = peak_window(account.quota, lambda window: window.used_pct)
-        self.level_bar: Gtk.LevelBar = Gtk.LevelBar(
-            min_value=0, max_value=1, hexpand=True, valign=Gtk.Align.CENTER,
-        )
+
+def line_windows(quota: tuple[QuotaWindowView, ...]) -> tuple[QuotaWindowView, ...]:
+    """What the sidebar shows, shortest first. A pool for overspending is for the details, unless it is all."""
+    plan = [window for window in quota if window.key != "budget"] or list(quota)
+    worst: dict[str, QuotaWindowView] = {}
+    for window in plan:
+        known = worst.get(window.key)
+        if known is None or (window.used_pct or 0.0) > (known.used_pct or 0.0):
+            worst[window.key] = window
+    return tuple(sorted(worst.values(), key=lambda window: _ORDER[window.key]))
+
+
+def _short_name(window: QuotaWindowView) -> str:
+    if window.key == "auto" and window.period_days is None:
+        return translate("quota.auto.short")
+    return translate(_SHORT[window.key]) if window.key in _SHORT else window_name(window)
+
+
+class WindowLine(Gtk.Box):
+    """One window in the sidebar: what it is, a bar, its percent, and the time until it resets."""
+
+    def __init__(self, window: QuotaWindowView, *, display: str = "used") -> None:
+        super().__init__(spacing=6)
+        self.window: QuotaWindowView = window
+        level = quota_level(window.used_pct)
+        self.add_css_class(f"ac-quota-{level}")
+        shown = shown_percent(window.used_pct, display) or 0.0
+        self.key_label: Gtk.Label = Gtk.Label(label=_short_name(window), xalign=0)
+        self.key_label.set_width_chars(4)
+        self.key_label.add_css_class("ac-quota-key")
+        self.level_bar: Gtk.LevelBar = Gtk.LevelBar(min_value=0, max_value=1, hexpand=True, valign=Gtk.Align.CENTER)
         self.level_bar.add_offset_value("low", 0.8)
         self.level_bar.add_offset_value("high", 0.95)
-        self.percent_label: Gtk.Label = Gtk.Label(xalign=1)
+        self.level_bar.set_value(shown / 100)
+        self.level_bar.add_css_class(f"ac-quota-{level}")
+        self.percent_label: Gtk.Label = Gtk.Label(
+            label=format_percent(shown, estimated=window.estimated), xalign=1,
+        )
         self.percent_label.set_width_chars(5)
         self.percent_label.add_css_class("numeric")
         self.percent_label.add_css_class("ac-quota-percent")
@@ -110,27 +134,59 @@ class AccountLine(Gtk.Box):
         self.time_label.set_width_chars(5)
         self.time_label.add_css_class("numeric")
         self.time_label.add_css_class("ac-quota-key")
-        if self.peak is None:
-            empty = Gtk.Label(
-                label=translate("quota.unknown"), xalign=0, hexpand=True, ellipsize=Pango.EllipsizeMode.END,
-            )
-            empty.add_css_class("ac-summary-detail")
-            self.append(empty)
-        else:
-            shown = shown_percent(self.peak.used_pct, display) or 0.0
-            self.level_bar.set_value(shown / 100)
-            self.level_bar.add_css_class(f"ac-quota-{quota_level(self.peak.used_pct)}")
-            self.add_css_class(f"ac-quota-{quota_level(self.peak.used_pct)}")
-            self.percent_label.set_label(format_percent(shown, estimated=self.peak.estimated))
-            self.append(self.level_bar)
-            self.append(self.percent_label)
-            self.append(self.time_label)
-        self.set_tooltip_text(_line_tooltip(account, display))
+        for child in (self.key_label, self.level_bar, self.percent_label, self.time_label):
+            self.append(child)
         self.refresh_time()
 
     def refresh_time(self) -> None:
-        if self.peak is not None:
-            self.time_label.set_label(_remaining(self.peak))
+        self.time_label.set_label(_remaining(self.window))
+
+
+class AccountLine(Gtk.Box):
+    """One account: its name beside a line for each of its windows. The details are one click away."""
+
+    def __init__(self, account: AccountView, *, display: str = "used") -> None:
+        super().__init__(spacing=6)
+        self.account: AccountView = account
+        self.add_css_class("ac-account-line")
+        self.name_label: Gtk.Label = Gtk.Label(
+            label=agent_name(account.agent.value), xalign=0, valign=Gtk.Align.START,
+        )
+        self.name_label.set_width_chars(9)
+        self.name_label.add_css_class("ac-summary-name")
+        self.append(self.name_label)
+        self.windows: list[WindowLine] = []
+        shown = line_windows(account.quota)
+        if shown:
+            rows = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2, hexpand=True)
+            for window in shown:
+                line = WindowLine(window, display=display)
+                self.windows.append(line)
+                rows.append(line)
+            self.append(rows)
+        else:
+            empty = Gtk.Label(label=_no_numbers(account), xalign=0, hexpand=True, ellipsize=Pango.EllipsizeMode.END)
+            empty.add_css_class("ac-summary-detail")
+            self.append(empty)
+        self.set_tooltip_text(_line_tooltip(account, display))
+
+    def refresh_time(self) -> None:
+        for line in self.windows:
+            line.refresh_time()
+
+
+def _no_go(account: AccountView) -> bool:
+    """OpenCode without its Go subscription: the plan is known, and it has no windows at all."""
+    return account.agent is AgentKind.OPENCODE and bool(account.plan_label) and not account.quota
+
+
+def _no_numbers(account: AccountView) -> str:
+    return translate("quota.no_go" if _no_go(account) else "quota.unknown")
+
+
+def no_numbers_copy(account: AccountView) -> str:
+    """Why an account has no numbers, in a sentence."""
+    return translate("quota.no_go.copy" if _no_go(account) else "quota.unknown.copy")
 
 
 def _line_tooltip(account: AccountView, display: str) -> str:
@@ -140,5 +196,5 @@ def _line_tooltip(account: AccountView, display: str) -> str:
         money = format_window_money(window.spent_usd, window.limit_usd, display)
         parts.append(f"{window_name(window)}: {text}" + (f" ({money})" if money else ""))
     if not account.quota:
-        parts.append(translate("quota.unknown"))
+        parts.append(translate("quota.no_go.copy") if _no_go(account) else translate("quota.unknown"))
     return "\n".join(parts)

@@ -20,6 +20,7 @@ from aconsole.ui.viewmodels.logic.quota_fmt import (  # noqa: E402
 )
 from aconsole.ui.viewmodels.logic.time_fmt import format_remaining  # noqa: E402
 from aconsole.ui.views.sidebar.messages import _ as translate  # noqa: E402
+from aconsole.ui.views.sidebar.quota_row import no_numbers_copy  # noqa: E402
 
 _SECONDS_PER_MINUTE = 60
 _SECONDS_PER_HOUR = 3600
@@ -188,7 +189,7 @@ class AccountPanel(Gtk.Box):
     def _limits(account: AccountView, tabs: tuple[TabView, ...]) -> list[Gtk.Widget]:
         lines: list[Gtk.Widget] = [_limit_block(window) for window in account.quota]
         if not account.quota:
-            lines.append(detail(translate("quota.unknown.copy")))
+            lines.append(detail(no_numbers_copy(account)))
         lines.extend(detail(line) for line in money_lines(account, tabs))
         return lines
 

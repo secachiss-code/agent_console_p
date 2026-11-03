@@ -8,19 +8,22 @@ from typing import TYPE_CHECKING, Literal, override
 
 import gi
 import msgspec
+import pytest
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
 from gi.repository import Adw, Gio, Gtk  # noqa: E402
 
 from aconsole.contracts.app import AccountView, QuotaWindowView  # noqa: E402
-from aconsole.contracts.common import AgentKind, QuotaLevel  # noqa: E402
+from aconsole.contracts.common import AccountId, AgentKind, QuotaLevel  # noqa: E402
 from aconsole.contracts.events import PlanUpdated, QuotaUpdated, TabUpdated  # noqa: E402
 from aconsole.contracts.ipc import EventEnvelope  # noqa: E402
 from aconsole.core.infrastructure.fake.scenarios import demo_snapshot  # noqa: E402
 from aconsole.ui.bootstrap import run_app, spawn_task  # noqa: E402
 from aconsole.ui.client.core_client import CoreClient  # noqa: E402
 from aconsole.ui.viewmodels.tabs_vm import TabsViewModel  # noqa: E402
+from aconsole.ui.views.sidebar.messages import _ as translate  # noqa: E402
+from aconsole.ui.views.sidebar.quota_row import AccountLine  # noqa: E402
 from aconsole.ui.views.window import MainWindow  # noqa: E402
 
 if TYPE_CHECKING:
@@ -142,18 +145,60 @@ def test_the_cursor_card_counts_its_main_pool_in_percent_and_api_in_dollars() ->
     assert QuotaRow(api).percent_label.get_text() == "$6.68 / $11.25"
 
 
+def _percents(card: QuotaCard) -> str:
+    return " ".join(line.percent_label.get_text() for account in card.account_lines for line in account.windows)
+
+
+def _sidebar_window(key: str, used: float, *, period_days: int | None = None) -> QuotaWindowView:
+    return QuotaWindowView(
+        key=key, used_pct=used, resets_at=None, level=QuotaLevel.OK, observed_at=None, estimated=False,  # pyright: ignore[reportArgumentType]
+        period_days=period_days,
+    )
+
+
+@pytest.mark.parametrize(
+    ("agent", "windows", "expected"),
+    [
+        (AgentKind.CLAUDE, ("7d", "5h", "budget"), ["5 ч", "7 д"]),
+        (AgentKind.CODEX, ("5h", "7d"), ["5 ч", "7 д"]),
+        (AgentKind.CURSOR, ("auto", "api", "budget"), ["31 д", "API"]),
+        (AgentKind.OPENCODE, ("month", "5h", "week"), ["5 ч", "Нед", "Мес"]),  # noqa: RUF001 -- Russian text
+    ],
+)
+def test_the_sidebar_shows_every_window_of_an_account_shortest_first(
+    agent: AgentKind, windows: tuple[str, ...], expected: list[str],
+) -> None:
+    quota = tuple(_sidebar_window(key, 10.0, period_days=31 if key in {"auto", "api"} else None) for key in windows)
+    account = AccountView(id=AccountId("a"), agent=agent, plan_label="Pro", quota=quota)
+    line = AccountLine(account)
+    assert [window.key_label.get_text() for window in line.windows] == expected
+
+
+def test_opencode_without_go_says_so_instead_of_waiting_for_numbers() -> None:
+    account = AccountView(id=AccountId("a"), agent=AgentKind.OPENCODE, plan_label="Zen", quota=())
+    line = AccountLine(account)
+    assert line.windows == []
+    assert "Go" in (line.get_tooltip_text() or "")
+    labels = []
+    child = line.get_first_child()
+    while child is not None:
+        labels.append(child.get_label() if isinstance(child, Gtk.Label) else "")
+        child = child.get_next_sibling()
+    assert translate("quota.no_go") in labels
+
+
 def _assert_quota_card_rows(card: QuotaCard) -> None:
-    # One line per account, with one bar: the window closest to its limit, and the time until it resets.
-    labels = [line.percent_label.get_text() for line in card.account_lines]
+    # One name per account, and a line for each window: its bar, its percent, and the time until it resets.
+    lines = [line for account in card.account_lines for line in account.windows]
+    labels = [line.percent_label.get_text() for line in lines]
     assert any("76" in label for label in labels)
     assert any("97" in label and "≈" in label for label in labels)
-    assert all(line.time_label.get_text() for line in card.account_lines if line.peak is not None)
-    for line in card.account_lines:
-        assert line.name_label.get_text() not in line.time_label.get_text()
+    assert all(line.time_label.get_text() for line in lines)
+    for line in lines:
         assert "5 ч" not in line.time_label.get_text()
         assert "7 д" not in line.time_label.get_text()
 
-    normal_line = next(line for line in card.account_lines if line.peak is not None and line.peak.used_pct == 76)
+    normal_line = next(line for line in lines if line.window.used_pct == 76)
     assert normal_line.level_bar.get_min_value() == 0
     assert normal_line.level_bar.get_max_value() == 1
     assert normal_line.level_bar.get_value() == 0.76
@@ -252,7 +297,7 @@ def test_b4b_summary_card_combines_plan_and_quota_and_tracks_live_updates() -> N
         )
         assert window.plan_card.plan_id == plan.id
         assert window.plan_card.title_label.get_text() == plan.title
-        assert any("76" in line.percent_label.get_text() for line in window.quota_card.account_lines)
+        assert "76" in _percents(window.quota_card)
 
         dialog = window.quota_card.open_details(window)
         assert isinstance(dialog, QuotaDialog)
@@ -289,7 +334,7 @@ def test_b4b_summary_card_combines_plan_and_quota_and_tracks_live_updates() -> N
 
         assert window.plan_card.title_label.get_text() == "Live Plan Update"
         assert str(changed_plan.done) in window.plan_card.progress_label.get_text()
-        assert any("88" in line.percent_label.get_text() for line in window.quota_card.account_lines)
+        assert "88" in _percents(window.quota_card)
         assert any("88" in row.percent_label.get_text() for row in dialog.window_rows)
         # The list stays short; a card opens its account's details on the right, with the tabs using it.
         assert "Live Tab Update" not in " ".join(_labels(dialog.content))

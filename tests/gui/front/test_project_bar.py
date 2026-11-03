@@ -29,9 +29,9 @@ def test_limits_show_the_part_used_or_the_part_left() -> None:
     assert shown_percent(None, "remaining") is None
     card = QuotaCard()
     card.set_accounts((_account(),))
-    assert "30" in card.account_lines[0].percent_label.get_text()
+    assert "30" in card.account_lines[0].windows[0].percent_label.get_text()
     card.set_display("remaining")
-    assert "70" in card.account_lines[0].percent_label.get_text()
+    assert "70" in card.account_lines[0].windows[0].percent_label.get_text()
 
 
 def test_switcher_and_search_filter_the_tab_list() -> None:
