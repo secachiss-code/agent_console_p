@@ -22,7 +22,7 @@ import uvicorn
 
 from aconsole.contracts.common import ClientRole, TabId
 from aconsole.contracts.errors import ErrorData, ErrorObject, MessageTooLargeDetails, error_by_name
-from aconsole.contracts.events import Notify, QuotaUpdated, TabAdded, TabRemoved, TabUpdated, UiEvent
+from aconsole.contracts.events import Notify, PlanUpdated, QuotaUpdated, TabAdded, TabRemoved, TabUpdated, UiEvent
 from aconsole.contracts.ipc import InitializeParams, Request, ResponseErr
 from aconsole.core.application.ports.events import EventSink
 from aconsole.core.application.services.approval_broker import ApprovalHold
@@ -58,6 +58,7 @@ from aconsole.core.infrastructure.ipc.framing import (
 from aconsole.core.infrastructure.ipc.ring import EventRing
 from aconsole.core.infrastructure.ipc.server import allow_peer, peer_uid
 from aconsole.core.infrastructure.ipc.session import Connection
+from aconsole.core.infrastructure.knowledge import KnowledgeService
 from aconsole.core.infrastructure.mcp.server import TabTokens, beside_ingest, build_server, http_app
 from aconsole.core.infrastructure.mcp.tools import PlanBoard, TabContext
 from aconsole.core.infrastructure.persistence.cleanup import sweep
@@ -65,6 +66,7 @@ from aconsole.core.infrastructure.persistence.engine import write_engine
 from aconsole.core.infrastructure.persistence.models import ApprovalStatus
 from aconsole.core.infrastructure.persistence.repositories.catalog import ApprovalRecord, ApprovalRepository
 from aconsole.core.infrastructure.persistence.repositories.checkpoints import CheckpointDatabase
+from aconsole.core.infrastructure.persistence.repositories.plans import PlanDatabase
 from aconsole.core.infrastructure.persistence.repositories.tabs import TabDatabase
 from aconsole.core.infrastructure.persistence.startup import prepare_database, sqlite_url
 from aconsole.core.infrastructure.persistence.writer import Writer
@@ -78,7 +80,7 @@ if TYPE_CHECKING:
     from sqlalchemy.engine import Engine
     from sqlalchemy.orm import Session
 
-    from aconsole.contracts.app import AccountView, TabView
+    from aconsole.contracts.app import AccountView, PlanView, TabView
     from aconsole.contracts.ipc import EventEnvelope
 
 _LOG = logging.getLogger(__name__)
@@ -309,6 +311,8 @@ class Daemon:
         self.ingest_port: int | None = None
         self._tokens: TokenBook = TokenBook()
         self._plans: PlanBoard = PlanBoard()
+        self._plans.on_changed = self._plan_changed
+        self.knowledge: KnowledgeService = KnowledgeService(self._plans)
         self._mcp_tokens: TabTokens = TabTokens()
         self._mcp: MCPServer = build_server(
             self._plans,
@@ -406,6 +410,12 @@ class Daemon:
             _ = loop.call_soon_threadsafe(self._publish, event, live, token)
         if isinstance(event, TabUpdated):
             self.review.on_event(event)
+
+    def _plan_changed(self, plan: PlanView) -> None:
+        """Any thread: MCP tools run on the loop, `plan/setNodeStatus` on the worker."""
+        loop = self._loop
+        if loop is not None and not loop.is_closed():
+            _ = loop.call_soon_threadsafe(self._publish, PlanUpdated(plan=plan), self._live_tabs, None)
 
     def _ingest_minted(self, tab_id: str, token: str) -> None:
         """A restored tab got its token from `tab/launchSpec`, on the worker. The hooks start only after that reply."""
@@ -634,6 +644,7 @@ class Daemon:
             return
         store = TabDatabase(writer)
         self.review.checkpoints.use_journal(CheckpointDatabase(writer))
+        await asyncio.to_thread(self._plans.use_store, PlanDatabase(writer))
         self.tabs.use_store(store)
         self.tabs.use_projects(self._catalog, store)
         found = await asyncio.to_thread(store.settings)
@@ -799,7 +810,7 @@ class Daemon:
             return
         connection = Connection(
             self._ring, tabs=self.tabs, approval_hold=self.approvals, setup_service=self.setup_service,
-            review=self.review,
+            review=self.review, knowledge=self.knowledge,
         )
         connection.on_agent_notice = self._agent_notice
         counted = False

@@ -186,6 +186,9 @@ class PlanNode(Base):
     fence_seq: Mapped[int] = mapped_column()
     created_at: Mapped[datetime] = mapped_column()
     updated_at: Mapped[datetime] = mapped_column()
+    boundaries: Mapped[str | None] = mapped_column(Text)
+    output_format: Mapped[str | None] = mapped_column(Text)
+    agent_note: Mapped[str | None] = mapped_column(Text)
 
 
 @final

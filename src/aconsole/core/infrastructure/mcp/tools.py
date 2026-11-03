@@ -20,9 +20,15 @@ from typing import ClassVar, Literal, NoReturn
 from mcp.types import CallToolResult, TextContent
 from pydantic import BaseModel, ConfigDict, Field
 
+from aconsole.contracts.app import PlanNodeView, PlanView
+from aconsole.contracts.common import AgentKind, NodeId, NoteRef, PlanId, ProjectId, TabId
+from aconsole.contracts.common import NodeStatus as NodeStatusView
+from aconsole.core.application.ports.plan_store import PlanStore, StoredArtifact, StoredNode, StoredPlan
 from aconsole.core.domain.errors import DomainError
-from aconsole.core.domain.plan import Move, NodeSpec, NodeStatus, Plan, Role
+from aconsole.core.domain.plan import Move, Node, NodeSpec, NodeStatus, Plan, Role
 
+_NODE_NOT_FOUND = 4002
+_HUMAN_TAB = "human"
 _SUMMARY = 300
 _DIFF = 4000
 _LINE = re.compile(r"^(.+)#L(\d+)-(\d+)$")
@@ -266,6 +272,7 @@ class _Stored:
     meta: dict[str, _Meta]
     deps: dict[str, tuple[str, ...]]
     updated_at: datetime
+    created_at: datetime
 
 
 @dataclass
@@ -303,6 +310,121 @@ class PlanBoard:
         self._plans: dict[str, _Stored] = {}
         self._facts: dict[str, _Fact] = {}
         self._handovers: dict[str, _Handover] = {}
+        self._store: PlanStore | None = None
+        self.on_changed: Callable[[PlanView], None] | None = None
+        self.note_ref: Callable[[str, str], str | None] = lambda _plan, _key: None
+
+    def use_store(self, store: PlanStore) -> None:
+        """Take the plans `store` kept. From here on every change is saved there."""
+        with self._lock:
+            self._store = store
+            for saved in store.load():
+                self._plans[saved.id] = _restored(saved)
+                self._seq = max(self._seq, _number(saved.id), *(_number(node.id) for node in saved.nodes))
+
+    def views(self, project_id: str | None = None, *, active_only: bool = False) -> tuple[PlanView, ...]:
+        """Plans for `app/snapshot` and `plan/list`."""
+        with self._lock:
+            found = tuple(
+                self._view(stored)
+                for stored in self._plans.values()
+                if project_id is None or stored.project_id == project_id
+            )
+        return tuple(view for view in found if view.status == "active") if active_only else found
+
+    def view(self, plan_id: str) -> PlanView | None:
+        with self._lock:
+            stored = self._plans.get(plan_id)
+            return None if stored is None else self._view(stored)
+
+    def set_node_status(self, node_id: str, status: str, note: str | None) -> PlanNodeView:
+        """The user moves a node. A human holds no fence, so the node's own fence is used. A note serves as evidence."""
+        with self._lock:
+            stored, meta = self._find_node(node_id)
+            now = self._now()
+            target = NodeStatus(status)
+            _ = stored.dag.transition(
+                Move(
+                    key=meta.key,
+                    to=target,
+                    role=Role.HUMAN,
+                    at=now,
+                    tab_id=_HUMAN_TAB if target is NodeStatus.IN_PROGRESS else None,
+                    fence=stored.dag.get(meta.key).fence if stored.dag.get(meta.key).lease_expires_at else None,
+                    evidence=note,
+                    note=note,
+                )
+            )
+            self._commit(stored)
+            view = self._view(stored)
+            return next(item for item in view.nodes if str(item.id) == node_id)
+
+    def _find_node(self, node_id: str) -> tuple[_Stored, _Meta]:
+        for stored in self._plans.values():
+            for meta in stored.meta.values():
+                if meta.node_id == node_id:
+                    return stored, meta
+        raise DomainError(code=_NODE_NOT_FOUND, name="NODE_NOT_FOUND", retryable=False, extra=(node_id,))
+
+    def _commit(self, stored: _Stored) -> None:
+        """Every change goes through here: the store, then whoever shows plans."""
+        stored.updated_at = self._now()
+        if self._store is not None:
+            self._store.save(self._state(stored))
+        if self.on_changed is not None:
+            self.on_changed(self._view(stored))
+
+    def _state(self, stored: _Stored) -> StoredPlan:
+        layers = {key: layer for key, layer, _position in stored.dag.layout()}
+        return StoredPlan(
+            id=stored.plan_id,
+            project_id=stored.project_id,
+            title=stored.title,
+            goal=stored.goal,
+            status=_plan_status(stored),
+            created_at=stored.created_at,
+            updated_at=stored.updated_at,
+            nodes=tuple(
+                _stored_node(stored, item, layers.get(item.key, 0), self._now()) for item in stored.meta.values()
+            ),
+        )
+
+    def _view(self, stored: _Stored) -> PlanView:
+        layers = {key: layer for key, layer, _position in stored.dag.layout()}
+        now = self._now()
+        nodes = tuple(self._node_view(stored, meta, layers.get(meta.key, 0), now) for meta in stored.meta.values())
+        done = sum(node.status is NodeStatusView.DONE for node in nodes)
+        return PlanView(
+            id=PlanId(stored.plan_id),
+            project_id=ProjectId(stored.project_id),
+            title=stored.title,
+            goal=stored.goal,
+            status=_plan_status(stored),
+            nodes=nodes,
+            done=done,
+            total=len(nodes),
+            canvas=None,
+            updated_at=stored.updated_at,
+        )
+
+    def _node_view(self, stored: _Stored, meta: _Meta, layer: int, now: datetime) -> PlanNodeView:
+        node = stored.dag.get(meta.key)
+        by_key = {item.key: item.node_id for item in stored.meta.values()}
+        note = self.note_ref(stored.plan_id, meta.key)
+        return PlanNodeView(
+            id=NodeId(meta.node_id),
+            key=meta.key,
+            title=meta.title,
+            status=NodeStatusView(node.status.value),
+            ready=stored.dag.ready(meta.key),
+            layer=layer,
+            priority=stored.dag.priority(meta.key, now),
+            depends_on=tuple(NodeId(by_key[key]) for key in stored.deps.get(meta.key, ()) if key in by_key),
+            owner_agent=None if meta.owner is None else AgentKind(meta.owner),
+            tab_id=None if node.tab_id is None or node.tab_id == _HUMAN_TAB else TabId(node.tab_id),
+            lease_expires_at=node.lease_expires_at,
+            note=None if note is None else NoteRef(note),
+        )
 
     def create(self, ctx: TabContext, title: str, goal: str, nodes: list[NodeIn]) -> PlanCreated:
         """Create a plan, or return the one this project already has under ``title``."""
@@ -313,11 +435,13 @@ class PlanBoard:
             if stored is None:
                 stored = self._new_plan(ctx.project_id, title, goal)
             try:
-                _ = self._insert(stored, nodes)
+                added = self._insert(stored, nodes)
             except _ToolError:
                 if created:
                     del self._plans[stored.plan_id]
                 raise
+            if created or added:
+                self._commit(stored)
             return PlanCreated(plan_id=stored.plan_id, nodes=_refs(stored), canvas_note=_canvas(stored.plan_id))
 
     def add_nodes(self, ctx: TabContext, plan_id: str, nodes: list[NodeIn]) -> Added:
@@ -326,6 +450,8 @@ class PlanBoard:
         with self._lock:
             stored = self._owned(ctx, plan_id)
             added = self._insert(stored, nodes)
+            if added:
+                self._commit(stored)
             fresh_keys = {ref.key for ref in added}
             unchanged = [item.key for item in nodes if item.key not in fresh_keys]
             return Added(added=added, unchanged=unchanged)
@@ -372,7 +498,7 @@ class PlanBoard:
                 node = stored.dag.claim(meta.key, tab_id=ctx.tab_id, at=self._now())
             except DomainError as exc:
                 _domain(exc)
-            stored.updated_at = self._now()
+            self._commit(stored)
             return Claimed(
                 lease_id=node.lease_id or "",
                 fence=node.fence,
@@ -420,7 +546,7 @@ class PlanBoard:
                 _domain(exc)
             except ValueError:
                 _stop("NODE_TRANSITION_INVALID", f"{status} is not a node status")
-            stored.updated_at = now
+            self._commit(stored)
             return Updated(status=node.status.value, expires_at=_optional_stamp(node.lease_expires_at))
 
     def attach(  # noqa: PLR0913, PLR0917 -- kind and ref identify the artifact
@@ -439,7 +565,7 @@ class PlanBoard:
                 artifact_id = self._id("art")
                 meta.artifacts[key] = artifact_id
             _ = title
-            stored.updated_at = self._now()
+            self._commit(stored)
             return Attached(artifact_id=artifact_id)
 
     def ctx(self, ctx: TabContext, node_id: str | None, query: str | None, max_items: int) -> CtxResult:
@@ -690,6 +816,7 @@ class PlanBoard:
             meta={},
             deps={},
             updated_at=self._now(),
+            created_at=self._now(),
         )
         self._plans[plan_id] = stored
         return stored
@@ -723,6 +850,110 @@ class PlanBoard:
 
 def _clock() -> datetime:
     return datetime.now(UTC)
+
+
+def _number(identifier: str) -> int:
+    """`node-12` gives 12. Ids count up across a restart from the largest one kept."""
+    digits = identifier.rpartition("-")[2]
+    return int(digits) if digits.isdigit() else 0
+
+
+def _plan_status(stored: _Stored) -> Literal["active", "completed"]:
+    finished = {NodeStatus.DONE, NodeStatus.CANCELLED}
+    every = [stored.dag.get(key).status for key in stored.meta]
+    return "completed" if every and all(status in finished for status in every) else "active"
+
+
+def _stored_node(stored: _Stored, meta: _Meta, layer: int, now: datetime) -> StoredNode:
+    node = stored.dag.get(meta.key)
+    return StoredNode(
+        id=meta.node_id,
+        key=meta.key,
+        title=meta.title,
+        objective=meta.objective,
+        status=node.status.value,
+        owner=meta.owner,
+        paths=meta.paths,
+        acceptance=meta.acceptance,
+        review_required=node.review_required,
+        boundaries=meta.boundaries,
+        output_format=meta.output_format,
+        evidence=node.evidence,
+        note=node.note,
+        fence=node.fence,
+        tab_id=node.tab_id,
+        lease_id=node.lease_id,
+        lease_expires_at=node.lease_expires_at,
+        layer=layer,
+        priority=stored.dag.priority(meta.key, now),
+        unmet_blockers=len(stored.dag.unmet_blockers(meta.key)),
+        created_at=node.created_at,
+        depends_on=stored.deps.get(meta.key, ()),
+        parent=meta.parent,
+        related=meta.related,
+        artifacts=tuple(
+            StoredArtifact(id=artifact_id, kind=kind, ref=ref) for (kind, ref), artifact_id in meta.artifacts.items()
+        ),
+    )
+
+
+def _after_restart(item: StoredNode) -> NodeStatus:
+    """A held node whose lease row is gone ends as an expired lease does: it can be claimed again."""
+    status = NodeStatus(item.status)
+    if status in {NodeStatus.IN_PROGRESS, NodeStatus.VERIFYING} and item.lease_expires_at is None:
+        return NodeStatus.PENDING
+    return status
+
+
+def _restored(saved: StoredPlan) -> _Stored:
+    dag = Plan()
+    meta: dict[str, _Meta] = {}
+    deps: dict[str, tuple[str, ...]] = {}
+    for item in saved.nodes:
+        dag.restore(
+            Node(
+                key=item.key,
+                created_at=item.created_at,
+                status=_after_restart(item),
+                paths=item.paths,
+                review_required=item.review_required,
+                tab_id=item.tab_id,
+                lease_id=item.lease_id,
+                fence=item.fence,
+                lease_expires_at=item.lease_expires_at,
+                evidence=item.evidence,
+                note=item.note,
+            ),
+            depends_on=item.depends_on,
+            parent=item.parent,
+            related=item.related,
+        )
+        deps[item.key] = item.depends_on
+        meta[item.key] = _Meta(
+            node_id=item.id,
+            key=item.key,
+            title=item.title,
+            objective=item.objective,
+            acceptance=item.acceptance,
+            paths=item.paths,
+            owner=item.owner,
+            boundaries=item.boundaries,
+            output_format=item.output_format,
+            parent=item.parent,
+            related=item.related,
+            artifacts={(artifact.kind, artifact.ref): artifact.id for artifact in item.artifacts},
+        )
+    return _Stored(
+        plan_id=saved.id,
+        project_id=saved.project_id,
+        title=saved.title,
+        goal=saved.goal,
+        dag=dag,
+        meta=meta,
+        deps=deps,
+        updated_at=saved.updated_at,
+        created_at=saved.created_at,
+    )
 
 
 def _require_tab(ctx: TabContext) -> None:

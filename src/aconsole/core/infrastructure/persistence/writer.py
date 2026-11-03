@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 import queue
 import threading
 import time
@@ -16,6 +17,9 @@ from sqlalchemy.orm import Session
 _BATCH = 500
 _WINDOW_S = 0.05
 _WAIT_S = 5.0
+
+
+_LOG = logging.getLogger(__name__)
 
 
 @dataclass
@@ -70,6 +74,10 @@ class Writer:
         if job.error is not None:
             raise job.error
         return job.result
+
+    def post(self, work: Callable[[Session], object]) -> None:
+        """Queue ``work`` and return at once. Order is kept; a failure is logged, and nobody waits for it."""
+        self._queue.put(_Job(work=work, loop=None, future=None, done=None))
 
     def _loop(self) -> None:
         session = Session(self._engine)
@@ -128,6 +136,8 @@ class Writer:
         job.error = exc
         if job.done is not None:
             job.done.set()
+        else:
+            _LOG.error("a queued write failed: %s", exc)
 
 
 def _resolve(future: asyncio.Future[object], result: object, error: BaseException | None) -> None:

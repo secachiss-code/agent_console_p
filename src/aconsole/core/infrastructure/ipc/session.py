@@ -52,6 +52,7 @@ from aconsole.core.application.services.tabs import SETTINGS_METHODS, TAB_METHOD
 from aconsole.core.domain.errors import DomainError
 from aconsole.core.infrastructure.ipc.framing import decode_envelope, encode_line
 from aconsole.core.infrastructure.ipc.ring import EventRing
+from aconsole.core.infrastructure.knowledge import KNOWLEDGE_METHODS, KnowledgeService
 
 _LOG = logging.getLogger(__name__)
 _SERVER = ProtocolVersion(major=1, minor=0)
@@ -88,6 +89,7 @@ class Connection:
         approval_hold: ApprovalHold | None = None,
         setup_service: SetupService | None = None,
         review: ReviewService | None = None,
+        knowledge: KnowledgeService | None = None,
     ) -> None:
         self.ring = ring
         self.outbound_limit = outbound_limit
@@ -96,6 +98,7 @@ class Connection:
         self.approval_hold = approval_hold
         self.setup_service = setup_service
         self.review = review
+        self.knowledge = knowledge
         self.capabilities: frozenset[str] = frozenset()
         self.ready = False
         self.paused = False
@@ -152,7 +155,7 @@ class Connection:
             return (self._err(request.id, "NOT_INITIALIZED"),)
         return self._ready(request)
 
-    def _ready(self, request: Request) -> tuple[bytes, ...]:  # noqa: C901, PLR0911 -- protocol dispatch
+    def _ready(self, request: Request) -> tuple[bytes, ...]:  # noqa: C901, PLR0911, PLR0912 -- protocol dispatch
         if request.method == "shutdown":
             return (self._ok(request.id, EmptyResult()),)
         # APP_API §9: a sidecar may call only `sidecar/*`; ui and cli may not call those.
@@ -179,15 +182,17 @@ class Connection:
         if request.method in _APP_METHODS and self.tabs is not None:
             return self._app(request, self.tabs)
         if request.method in REVIEW_METHODS and self.review is not None:
-            return self._review(request, self.review)
+            return self._service(request, self.review.dispatch)
+        if request.method in KNOWLEDGE_METHODS and self.knowledge is not None:
+            return self._service(request, self.knowledge.dispatch)
         served = TAB_METHODS | SETTINGS_METHODS
         if request.method == _SNAPSHOT or (self.tabs is not None and request.method in served):
             return self._tab(request)
         return (self._err(request.id, "METHOD_NOT_FOUND"),)
 
-    def _review(self, request: Request, review: ReviewService) -> tuple[bytes, ...]:
+    def _service(self, request: Request, dispatch: Callable[[str, bytes], msgspec.Struct]) -> tuple[bytes, ...]:
         try:
-            result = review.dispatch(request.method, bytes(request.params))
+            result = dispatch(request.method, bytes(request.params))
         except msgspec.DecodeError:
             return (self._err(request.id, "INVALID_PARAMS"),)
         except TabRequestError as exc:
@@ -285,6 +290,10 @@ class Connection:
         snapshot = tabs.snapshot()
         if self.approval_hold is not None and "approvals.inline" in self.capabilities:
             snapshot = msgspec.structs.replace(snapshot, approvals=self.approval_hold.pending_views())
+        if self.knowledge is not None:
+            snapshot = msgspec.structs.replace(
+                snapshot, plans=self.knowledge.board.views(), vault_ok=self.knowledge.vault_ok(),
+            )
         result = SnapshotResult(snapshot=snapshot, seq=self.ring.current_seq)
         return (self._ok(request.id, result),)
 

@@ -328,6 +328,15 @@ class Plan:
             raise _fail(_CYCLE, "PLAN_CYCLE", cycle)
         return self._nodes[spec.key]
 
+    def restore(
+        self, node: Node, *, depends_on: tuple[str, ...], parent: str | None, related: tuple[str, ...],
+    ) -> None:
+        """A node as a store kept it. The caller adds a plan's nodes in full: this checks nothing."""
+        self._nodes[node.key] = node
+        self._blockers[node.key] = depends_on
+        self._parents[node.key] = parent
+        self._related[node.key] = related
+
     def depend(self, key: str, on: str) -> None:
         _ = self.get(key)
         _ = self.get(on)
