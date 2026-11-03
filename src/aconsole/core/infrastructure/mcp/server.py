@@ -6,7 +6,7 @@ A bearer that is not a live tab token is rejected. A known token selects that ta
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from typing import Annotated, Literal, Protocol, override
 
 from mcp.server.mcpserver import MCPServer
@@ -123,10 +123,15 @@ def _lean_any(value: object) -> object:
     return value
 
 
-def build_server(board: PlanBoard, context: TabContext) -> MCPServer:
-    """An in-process server. ``context`` serves a request with no bearer: it can list tools and call none."""
+def build_server(
+    board: PlanBoard, context: TabContext, sent: Callable[[str, int], None] | None = None
+) -> MCPServer:
+    """An in-process server. ``context`` serves a request with no bearer: it can list tools and call none.
+
+    ``sent`` hears, per tab, the bytes of text each answer puts in that tab's agent's context.
+    """
     server = _LeanServer(name="aconsole", instructions="Plan, claim, and record knowledge for the current tab.")
-    _register(server, board, context)
+    _register(server, board, context, sent)
     return server
 
 
@@ -179,7 +184,9 @@ class _Beside:
             reset()
 
 
-def _register(server: MCPServer, board: PlanBoard, context: TabContext) -> None:  # noqa: C901 -- one nested function per MCP tool
+def _register(  # noqa: C901 -- one nested function per MCP tool
+    server: MCPServer, board: PlanBoard, context: TabContext, sent: Callable[[str, int], None] | None
+) -> None:
     def plan_create(title: str, goal: str, nodes: list[NodeIn] | None = None) -> PlanCreated:
         """Create a plan for this project. The same title returns the same plan."""
         return board.create(active(context), title, goal, [] if nodes is None else nodes)
@@ -296,9 +303,14 @@ def _register(server: MCPServer, board: PlanBoard, context: TabContext) -> None:
         (handover, "Write or read a handover", _WRITE),
         (plan_list, "List plans", _READ),
     )
+    def counted(size: int) -> None:
+        tab = active(context).tab_id
+        if sent is not None and tab:
+            sent(tab, size)
+
     for fn, description, marks in specs:
         _ = server.tool(name=fn.__name__, description=description, annotations=marks, structured_output=False)(
-            publish(fn)
+            publish(fn, counted)
         )
 
 

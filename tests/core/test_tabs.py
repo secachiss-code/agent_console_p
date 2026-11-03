@@ -817,3 +817,18 @@ def test_a_session_cost_reaches_the_tab_once_it_moves_a_cent() -> None:
     service.session_cost(tab, 0.42)
     assert service.snapshot().tabs[0].session_cost_usd == 0.42
     service.session_cost("missing", 1.0)
+
+
+def test_mcp_sent_counts_and_tells_the_ui_every_4_kb() -> None:
+    service, ports = _service(ProjectSeed(project_id="proj", root="/repo", container="box"))
+    tab = _opened(service, AgentKind.CLAUDE)
+    events = len(ports.events)
+    service.mcp_sent(tab, 1000)
+    assert len(ports.events) == events + 1, "the first answer is news"
+    service.mcp_sent(tab, 1000)
+    assert len(ports.events) == events + 1, "a kilobyte more is not"
+    service.mcp_sent(tab, 4000)
+    assert len(ports.events) == events + 2
+    view = service.snapshot().tabs[0]
+    assert (view.mcp_bytes, view.mcp_calls) == (6000, 3)
+    service.mcp_sent("missing", 10)

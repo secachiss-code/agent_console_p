@@ -392,3 +392,22 @@ def _nodes(body: dict[str, object]) -> list[dict[str, object]]:
     found = body["nodes"]
     assert isinstance(found, list)
     return [item for item in found if isinstance(item, dict)]
+
+
+def test_mcp_counts_what_each_answer_sends() -> None:
+    asyncio.run(_counted())
+
+
+async def _counted() -> None:
+    clock = _Clock()
+    heard: list[tuple[str, int]] = []
+    board = PlanBoard(now=clock)
+    context = TabContext(tab_id="tab-a", project_id="proj", worktree=None, agent="claude")
+    server = build_server(board, context, lambda tab, size: heard.append((tab, size)))
+    async with Client(server) as client:
+        created = await client.call_tool("plan_create", {"title": "Plan", "goal": "Ship", "nodes": [_node("A-1")]})
+        failed = await client.call_tool("node_update", {"node_id": "node-404", "fence": 0})
+    assert heard == [
+        ("tab-a", len(_text(created).encode())),
+        ("tab-a", len(_text(failed).encode())),
+    ]

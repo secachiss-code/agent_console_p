@@ -241,16 +241,23 @@ def active(bound: TabContext) -> TabContext:
     return bound if found is None else found
 
 
-def publish(fn: Callable[..., object]) -> Callable[..., object]:
-    """Keep the success return type as the tool schema, and surface ``_ToolError`` as the result."""
+def publish(fn: Callable[..., object], sent: Callable[[int], None] | None = None) -> Callable[..., object]:
+    """Keep the success return type as the tool schema, and surface ``_ToolError`` as the result.
+
+    ``sent`` hears the bytes of text each answer puts in the agent's context.
+    """
     signature = inspect.signature(fn, eval_str=True)
 
     def wrapped(*args: object, **kwargs: object) -> object:
         try:
-            result = fn(*args, **kwargs)
+            raw = fn(*args, **kwargs)
+            # A CallToolResult is a pydantic model too, and already what the agent reads.
+            result = compact(raw) if isinstance(raw, BaseModel) and not isinstance(raw, CallToolResult) else raw
         except _ToolError as exc:
-            return exc.result
-        return compact(result) if isinstance(result, BaseModel) else result
+            result = exc.result
+        if sent is not None and isinstance(result, CallToolResult):
+            sent(len(_result_text(result).encode()))
+        return result
 
     wrapped.__name__ = fn.__name__
     wrapped.__doc__ = fn.__doc__

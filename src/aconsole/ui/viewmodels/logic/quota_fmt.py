@@ -5,6 +5,11 @@ from collections.abc import Callable
 _NAMES = {"opencode": "OpenCode", "grok": "Grok"}
 _WARNING_PERCENT = 80
 _CRITICAL_PERCENT = 95
+_KB = 1024
+_MB = 1024 * 1024
+# A token is about four bytes of English or JSON. The count is an estimate, and the dialog says so.
+_BYTES_PER_TOKEN = 4
+_THOUSAND = 1000
 
 
 def format_percent(value: float | None, *, estimated: bool = False) -> str:
@@ -45,6 +50,21 @@ def format_money(spent: float | None, limit: float | None) -> str:
 def pool_size(spent: float | None, limit: float | None) -> str:
     """The size of a pool reported only as a share, "$20". Empty when the dollars spent are known too."""
     return f"${limit:,.0f}" if spent is None and limit else ""
+
+
+def format_bytes(size: int) -> str:
+    """Bytes as the dialog shows them: "820 B", "48 KB", "1.4 MB"."""
+    if size < _KB:
+        return f"{size} B"
+    if size < _MB:
+        return f"{size / _KB:.0f} KB"
+    return f"{size / _MB:.1f} MB"
+
+
+def approx_tokens(size: int) -> str:
+    """About how many tokens ``size`` bytes of text are: "≈900", "≈12k"."""
+    tokens = size // _BYTES_PER_TOKEN
+    return f"≈{tokens}" if tokens < _THOUSAND else f"≈{tokens / _THOUSAND:.0f}k"
 
 
 def peak_window[W](windows: tuple[W, ...], used: Callable[[W], float | None]) -> W | None:

@@ -102,6 +102,9 @@ class TabView(msgspec.Struct, frozen=True, kw_only=True):
     pending_approvals: int
     checkpoints: int
     started: bool
+    # What AConsole's MCP tools answered this tab's agent: bytes of text in its context, and the calls.
+    mcp_bytes: int | None = None
+    mcp_calls: int | None = None
 
 
 class CommandDetail(msgspec.Struct, frozen=True, kw_only=True, tag="command", tag_field="type"):

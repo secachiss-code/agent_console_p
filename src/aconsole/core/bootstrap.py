@@ -515,6 +515,7 @@ class Daemon:
             self._plans,
             # No tab: a request without a token may list the tools, and every tool refuses it.
             TabContext(tab_id="", project_id="", worktree=None, agent="claude"),
+            self._mcp_sent,
         )
         self._ingest_queue: IngestQueue = IngestQueue()
         self._ingest_ready: asyncio.Event | None = None
@@ -809,6 +810,17 @@ class Daemon:
         _ = await self._in_worker(lambda: self.tabs.apply_hook(tab_id, event_name))
         if event_name == "Stop":
             self._claude_usage_due.set()
+
+    def _mcp_sent(self, tab_id: str, size: int) -> None:
+        """From an MCP tool call. Tabs change on the worker."""
+        worker = self._worker
+        if worker is None:
+            self.tabs.mcp_sent(tab_id, size)
+            return
+        try:
+            _ = worker.submit(self.tabs.mcp_sent, tab_id, size)
+        except RuntimeError:
+            return  # the worker is shutting down with the core
 
     async def _session_cost(self, tab_id: str, usd: float) -> None:
         await self._in_worker(lambda: self.tabs.session_cost(tab_id, usd))

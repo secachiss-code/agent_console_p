@@ -44,3 +44,13 @@ def test_a_pool_known_only_by_its_size_shows_no_invented_spending() -> None:
     assert (format_money(None, 20.0), pool_size(None, 20.0)) == ("", "$20")
     assert (format_money(12.4, 20.0), pool_size(12.4, 20.0)) == ("$12.40 / $20", "")
     assert (format_money(None, None), pool_size(None, None)) == ("", "")
+
+
+def test_traffic_formats() -> None:
+    from aconsole.ui.viewmodels.logic.quota_fmt import approx_tokens, format_bytes
+
+    assert format_bytes(820) == "820 B"
+    assert format_bytes(48_200) == "47 KB"
+    assert format_bytes(1_500_000) == "1.4 MB"
+    assert approx_tokens(3_600) == "≈900"
+    assert approx_tokens(48_200) == "≈12k"

@@ -11,7 +11,7 @@ from gi.repository import Adw, GLib, Gtk  # noqa: E402
 
 from aconsole.contracts.app import AccountView, TabView  # noqa: E402
 from aconsole.ui.bootstrap import spawn_task  # noqa: E402
-from aconsole.ui.viewmodels.logic.quota_fmt import agent_name, format_money  # noqa: E402
+from aconsole.ui.viewmodels.logic.quota_fmt import agent_name, approx_tokens, format_bytes, format_money  # noqa: E402
 from aconsole.ui.views.sidebar.messages import _ as translate  # noqa: E402
 from aconsole.ui.views.sidebar.quota_row import QuotaRow  # noqa: E402
 
@@ -57,6 +57,12 @@ def _money_lines(account: AccountView, tabs: tuple[TabView, ...]) -> list[str]:
     if costs:
         # What this agent's open sessions would have cost at API prices: the money the plan stands in for.
         lines.append(translate("quota.api_cost").format(money=f"${sum(costs):,.2f}", count=len(costs)))
+    mine = [tab for tab in tabs if tab.agent is account.agent and tab.mcp_bytes]
+    if mine:
+        # What AConsole's own tools put in this agent's context: the console's share of the tokens.
+        size = sum(tab.mcp_bytes or 0 for tab in mine)
+        calls = sum(tab.mcp_calls or 0 for tab in mine)
+        lines.append(translate("quota.mcp").format(size=format_bytes(size), tokens=approx_tokens(size), calls=calls))
     return lines
 
 
@@ -80,7 +86,7 @@ class QuotaDialog(Adw.Dialog):
         super().__init__(title=title, content_width=460)
         self._display: str = display
         self._accounts: tuple[AccountView, ...] = ()
-        self._tab_signature: tuple[tuple[str, str | None, str], ...] = ()
+        self._tab_signature: tuple[tuple[str, str | None, str, float | None, int | None], ...] = ()
         self._summary: str = ""
         self._timer: int | None = None
         self.window_rows: list[QuotaRow] = []
@@ -171,7 +177,7 @@ class QuotaDialog(Adw.Dialog):
             self.info_box.append(block)
         if not accounts:
             self.info_box.append(_detail(translate("quota.source.none")))
-        note = _detail(translate("quota.info.note"))
+        note = _detail(translate("quota.info.note") + " " + translate("quota.info.mcp"))
         note.set_max_width_chars(42)
         self.info_box.append(note)
 
@@ -185,7 +191,14 @@ class QuotaDialog(Adw.Dialog):
 
     def update_accounts(self, accounts: tuple[AccountView, ...], tabs: tuple[TabView, ...], summary: str) -> None:
         signature = tuple(
-            (str(tab.id), str(tab.account_id) if tab.account_id is not None else None, tab.title) for tab in tabs
+            (
+                str(tab.id),
+                str(tab.account_id) if tab.account_id is not None else None,
+                tab.title,
+                tab.session_cost_usd,
+                tab.mcp_bytes,
+            )
+            for tab in tabs
         )
         if (
             (accounts, signature, summary) == (self._accounts, self._tab_signature, self._summary)
