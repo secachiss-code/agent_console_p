@@ -11,7 +11,10 @@ __pycache__/
 .coverage.*
 htmlcov/
 .aconsole-dev/
-/docs
+/docs/*
+!/docs/ui/
+/docs/ui/*
+!/docs/ui/GIT/
 
 # Local agent configuration and instructions
 .agents/
