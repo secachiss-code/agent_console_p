@@ -75,6 +75,22 @@ class HostAgentCommands:
         except (OSError, ValueError):
             _LOG.warning("cannot remove hooks for tab %s", tab_id, exc_info=True)
 
+    def session_exists(self, agent: AgentKind, session: str, container: str) -> bool:
+        """False only when Claude has no transcript of it: it writes one at the first message, not at the start.
+
+        Looked for under every project, so an unusual path never loses a real conversation. The core checks the id
+        before keeping it, so it is one plain path word. Other agents, and a home that cannot be read, get the benefit
+        of the doubt.
+        """
+        home = self._home_of(container)
+        if home is None or agent is not AgentKind.CLAUDE:
+            return True
+        try:
+            return any((home / ".claude" / "projects").glob(f"*/{session}.jsonl"))
+        except OSError:
+            _LOG.warning("cannot look for session %s", session, exc_info=True)
+            return True
+
     def stop_streams(self) -> None:
         for tab_id in tuple(self._streams):
             self._stop_stream(tab_id)

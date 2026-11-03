@@ -760,6 +760,43 @@ def test_new_agents_resume_with_their_own_flags(agent: AgentKind, expected: tupl
     assert ("ACONSOLE_SCREEN_WATCH" in spec.env) is (agent is AgentKind.CURSOR)
 
 
+class _Transcripts:
+    """The agent's own files, as far as a tab's start cares."""
+
+    def __init__(self, *, written: bool) -> None:
+        self.written = written
+
+    def command(self, _agent: AgentKind, _tab: str, _token: str, _container: str, _port: str) -> None:
+        return None
+
+    def release(self, _agent: AgentKind, _tab: str, _container: str) -> None:
+        return None
+
+    def session_exists(self, _agent: AgentKind, _session: str, _container: str) -> bool:
+        return self.written
+
+
+def test_a_session_claude_never_wrote_starts_anew_and_is_forgotten() -> None:
+    seed = ProjectSeed(project_id="proj", root="/repo", container="box", sessions=frozenset({"s1"}))
+    service, _ports = _service(seed)
+    service.use_commands(_Transcripts(written=False))
+    tab = _opened(service, AgentKind.CLAUDE, session="s1")
+    spec = service.launch_spec(TabIdParams(tab_id=TabId(tab)))
+    assert spec.argv[-1] == "claude"
+    assert "--resume" not in spec.argv
+    assert service._tabs[tab].session is None
+
+
+def test_a_session_claude_wrote_is_resumed() -> None:
+    seed = ProjectSeed(project_id="proj", root="/repo", container="box", sessions=frozenset({"s1"}))
+    service, _ports = _service(seed)
+    service.use_commands(_Transcripts(written=True))
+    tab = _opened(service, AgentKind.CLAUDE, session="s1")
+    spec = service.launch_spec(TabIdParams(tab_id=TabId(tab)))
+    assert spec.argv[-2:] == ("--resume", "s1")
+    assert service._tabs[tab].session == "s1"
+
+
 @pytest.mark.parametrize("agent", [AgentKind.OPENCODE, AgentKind.CURSOR])
 def test_agents_that_cannot_fork_refuse_it(agent: AgentKind) -> None:
     service, _ports = _service(ProjectSeed(project_id="proj", root="/repo", container="box"))

@@ -244,6 +244,8 @@ class AgentCommands(Protocol):
 
     def release(self, agent: AgentKind, tab_id: str, container: str) -> None: ...
 
+    def session_exists(self, agent: AgentKind, session: str, container: str) -> bool: ...
+
 
 @dataclass(frozen=True, kw_only=True)
 class ProjectSeed:
@@ -763,6 +765,7 @@ class TabService:
         secret = self._ports.new_secret()
         tab.sidecar = secret
         path = self._ports.container_path(tab.container)
+        self._forget_unwritten_session(tab)
         command = _launch_command(tab.agent, tab.session, fork=tab.fork)
         wired = self._wired_command(tab)
         if wired is not None:
@@ -786,6 +789,16 @@ class TabService:
             env[_ENV_SCREEN] = "1"
         argv = (self._ports.python_bin(), *_SIDECAR, *podman)
         return TerminalLaunchSpec(argv=argv, env=env, cwd=tab.worktree, scrollback_lines=_SCROLLBACK, title=tab.title)
+
+    def _forget_unwritten_session(self, tab: _Tab) -> None:
+        """Claude names a session before it has written anything. Resuming that one is an error that ends the tab."""
+        commands = self._commands
+        if commands is None or tab.session is None or commands.session_exists(tab.agent, tab.session, tab.container):
+            return
+        tab.session = None
+        tab.fork = False
+        self._remember(tab)
+        _ = self._updated(tab, {"agent_session_id"})
 
     def _wired_command(self, tab: _Tab) -> tuple[str, ...] | None:
         commands = self._commands

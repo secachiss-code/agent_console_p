@@ -242,6 +242,19 @@ def test_cursor_leaves_a_file_it_cannot_read_alone(tmp_path: Path) -> None:
     assert path.read_text(encoding="utf-8") == "{ not json"
 
 
+def test_only_a_claude_transcript_counts_as_a_session_to_resume(tmp_path: Path) -> None:
+    commands = HostAgentCommands(lambda _name: tmp_path)
+    assert not commands.session_exists(AgentKind.CLAUDE, "s1", "agent-claude"), "no projects folder yet"
+    project = tmp_path / ".claude" / "projects" / "-some-project"
+    project.mkdir(parents=True)
+    assert not commands.session_exists(AgentKind.CLAUDE, "s1", "agent-claude")
+    (project / "s1.jsonl").write_text("{}\n", encoding="utf-8")
+    assert commands.session_exists(AgentKind.CLAUDE, "s1", "agent-claude")
+    assert commands.session_exists(AgentKind.OPENCODE, "s2", "agent-opencode"), "OpenCode creates what it cannot find"
+    unknown_home = HostAgentCommands(lambda _name: None)
+    assert unknown_home.session_exists(AgentKind.CLAUDE, "s1", "agent-claude"), "never lose a session on a doubt"
+
+
 def test_commands_start_and_stop_one_stream_per_tab() -> None:
     commands = HostAgentCommands(lambda _name: None, lambda _tab, _body: None)
     first = commands.command(AgentKind.OPENCODE, "t1", _TOKEN, "agent-opencode", "8765")
