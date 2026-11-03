@@ -42,8 +42,12 @@ _WANTED: Final = frozenset(
         "session.error",
         "permission.asked",
         "permission.replied",
+        "message.updated",
     },
 )
+# Not a status: the tab's running total of what its model calls cost, in dollars, priced by OpenCode itself.
+COST_EVENT: Final = "cost"
+_COST_STEP: Final = 0.0005
 
 
 class _Head(msgspec.Struct, frozen=True):
@@ -57,6 +61,8 @@ class _Status(msgspec.Struct, frozen=True):
 class _Info(msgspec.Struct, frozen=True):
     id: str = ""
     parentID: str | None = None  # noqa: N815 -- OpenCode's own name
+    role: str | None = None
+    cost: float | None = None
 
 
 class _Properties(msgspec.Struct, frozen=True):
@@ -77,6 +83,7 @@ class _Signal(msgspec.Struct, frozen=True, omit_defaults=True):
 
     hook_event_name: str
     session_id: str | None = None
+    cost_usd: float | None = None
 
 
 @final
@@ -91,6 +98,9 @@ class EventReader:
         self._children: set[str] = set()
         self._open: set[str] = set()
         self._last: str | None = None
+        # Each assistant message's cost, latest seen: a message is updated while it streams.
+        self._costs: dict[str, float] = {}
+        self._said_cost: float = 0.0
 
     def read(self, data: bytes) -> bytes | None:
         """The ingest body for one event's JSON, or None when nothing changes."""
@@ -100,6 +110,8 @@ class EventReader:
             event = msgspec.json.decode(data, type=_Event)
         except msgspec.DecodeError:
             return None
+        if event.type == "message.updated":
+            return self._cost(event.properties.info)
         name = self._meaning(event)
         if name is None or name == self._last:
             return None
@@ -107,6 +119,17 @@ class EventReader:
         session = event.properties.sessionID
         root = session if name == _WORKING else None
         return msgspec.json.encode(_Signal(hook_event_name=name, session_id=root))
+
+    def _cost(self, info: _Info | None) -> bytes | None:
+        """The tab's total, subagents included: they spend on its behalf. Said again only when it moved."""
+        if info is None or info.role != "assistant" or info.cost is None or info.cost < 0:
+            return None
+        self._costs[info.id] = info.cost
+        total = round(sum(self._costs.values()), 4)
+        if abs(total - self._said_cost) < _COST_STEP:
+            return None
+        self._said_cost = total
+        return msgspec.json.encode(_Signal(hook_event_name=COST_EVENT, cost_usd=total))
 
     def _meaning(self, event: _Event) -> str | None:
         props = event.properties

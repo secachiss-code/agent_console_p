@@ -99,6 +99,8 @@ _SCREEN_ACTIVE: Final = "screen_active"
 _ENV_SCREEN: Final = "ACONSOLE_SCREEN_WATCH"
 _ASK_SETTLE_S: Final = 2.0
 _CODEX_ID: Final = re.compile(r"^[A-Za-z0-9_-]{1,128}$")
+# Changes under a cent are not worth a UI update: a statusline comes after every reply.
+_COST_STEP_USD: Final = 0.01
 
 
 def _launch_command(agent: AgentKind, session: str | None, *, fork: bool) -> tuple[str, ...]:
@@ -285,6 +287,8 @@ class _Tab:
     sidecar: str
     pid: int | None
     live_sidecar: str = ""
+    # What the session has cost at API prices, as the agent reports it. Not kept: the agent says it again.
+    cost_usd: float | None = None
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -502,6 +506,16 @@ class TabService:
         tab.session = session
         self._remember(tab)
         _ = self._updated(tab, {"agent_session_id"})
+
+    def session_cost(self, tab_id: str, usd: float) -> None:
+        """The agent's own running total for this tab's session. A cent's change or more is worth telling the UI."""
+        tab = self._tabs.get(tab_id)
+        if tab is None or usd < 0:
+            return
+        if tab.cost_usd is not None and abs(tab.cost_usd - usd) < _COST_STEP_USD:
+            return
+        tab.cost_usd = round(usd, 4)
+        _ = self._updated(tab, {"session_cost_usd"})
 
     def agent_notice(self, tab_id: str, text: str) -> None:
         """What Codex tells the terminal (OSC 9). Without hooks only these words say that it waits for the user."""
@@ -1170,7 +1184,7 @@ class TabService:
             plan_node=None if tab.plan_node is None else NodeId(tab.plan_node),
             plan_node_title=None,
             context_used_pct=None,
-            session_cost_usd=None,
+            session_cost_usd=tab.cost_usd,
             agent_session_id=tab.session,
             pending_approvals=0,
             checkpoints=0,

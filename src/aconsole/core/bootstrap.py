@@ -63,7 +63,7 @@ from aconsole.core.infrastructure.git.watch import GitWatch
 from aconsole.core.infrastructure.http.app import IngestApp, serve_config
 from aconsole.core.infrastructure.http.approval import handle_permission
 from aconsole.core.infrastructure.http.auth import TokenBook
-from aconsole.core.infrastructure.http.consumer import OPENCODE_EVENT, consume
+from aconsole.core.infrastructure.http.consumer import OPENCODE_EVENT, IngestHandlers, consume
 from aconsole.core.infrastructure.http.problem import HttpResponse, empty_json, json_response
 from aconsole.core.infrastructure.http.routes import IngestItem, IngestQueue
 from aconsole.core.infrastructure.ipc.framing import (
@@ -780,7 +780,12 @@ class Daemon:
         self._ingest_tasks = [
             asyncio.create_task(server.serve(sockets=[listener])),
             asyncio.create_task(
-                consume(self._ingest_queue, ready, self._apply_hook, self._prompt_sent, self._reported_session)
+                consume(
+                    self._ingest_queue, ready, self._apply_hook,
+                    IngestHandlers(
+                        on_prompt=self._prompt_sent, on_session=self._reported_session, on_cost=self._session_cost,
+                    ),
+                ),
             ),
             asyncio.create_task(self._poll_codex_limits()),
             asyncio.create_task(self._poll_claude_limits()),
@@ -796,6 +801,9 @@ class Daemon:
         _ = await self._in_worker(lambda: self.tabs.apply_hook(tab_id, event_name))
         if event_name == "Stop":
             self._claude_usage_due.set()
+
+    async def _session_cost(self, tab_id: str, usd: float) -> None:
+        await self._in_worker(lambda: self.tabs.session_cost(tab_id, usd))
 
     async def _reported_session(self, tab_id: str, session: str) -> None:
         await self._in_worker(lambda: self.tabs.reported_session(tab_id, session))

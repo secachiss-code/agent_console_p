@@ -5,11 +5,13 @@ from __future__ import annotations
 import asyncio
 import logging
 from collections.abc import Awaitable, Callable
+from dataclasses import dataclass
 
 import msgspec
 
 from aconsole.contracts.ingest import CodexNotify
 from aconsole.core.infrastructure.agents.claude.telemetry import read_claude
+from aconsole.core.infrastructure.agents.opencode.stream import COST_EVENT
 from aconsole.core.infrastructure.http.routes import IngestItem, IngestQueue
 
 _LOG = logging.getLogger(__name__)
@@ -22,6 +24,19 @@ _NAMES_SESSION = _CLAUDE | {OPENCODE_EVENT}
 
 class _HookName(msgspec.Struct, frozen=True, kw_only=True):
     hook_event_name: str
+
+
+class _StatusCost(msgspec.Struct, frozen=True):
+    total_cost_usd: float | None = None
+
+
+class _Statusline(msgspec.Struct, frozen=True):
+    cost: _StatusCost | None = None
+
+
+class _StreamCost(msgspec.Struct, frozen=True):
+    hook_event_name: str = ""
+    cost_usd: float | None = None
 
 
 class _Prompt(msgspec.Struct, frozen=True, kw_only=True):
@@ -43,9 +58,27 @@ def hook_event(item: IngestItem) -> str | None:
     """
     try:
         if item.kind in _HOOKS or item.kind == OPENCODE_EVENT:
-            return msgspec.json.decode(item.body, type=_HookName).hook_event_name
+            name = msgspec.json.decode(item.body, type=_HookName).hook_event_name
+            return None if name == COST_EVENT else name
         if item.kind == "codex.notify":
             return msgspec.json.decode(item.body, type=CodexNotify).type
+    except msgspec.DecodeError:
+        return None
+    return None
+
+
+def session_cost(item: IngestItem) -> float | None:
+    """What the tab's session has cost so far, in dollars at API prices, when the item says it.
+
+    Claude's statusline carries the session's running total; OpenCode's stream, read by `EventReader`, the tab's.
+    """
+    try:
+        if item.kind == "claude.statusline":
+            line = msgspec.json.decode(item.body, type=_Statusline)
+            return None if line.cost is None else line.cost.total_cost_usd
+        if item.kind == OPENCODE_EVENT:
+            said = msgspec.json.decode(item.body, type=_StreamCost)
+            return said.cost_usd if said.hook_event_name == COST_EVENT else None
     except msgspec.DecodeError:
         return None
     return None
@@ -62,14 +95,24 @@ def submitted_prompt(item: IngestItem) -> str | None:
     return hook.prompt if hook.hook_event_name == "UserPromptSubmit" else None
 
 
+@dataclass(frozen=True, slots=True, kw_only=True)
+class IngestHandlers:
+    """What the consumer hands each item's meaning to. Only `apply` is required."""
+
+    on_prompt: Callable[[str, str], Awaitable[None]] | None = None
+    on_session: Callable[[str, str], Awaitable[None]] | None = None
+    on_cost: Callable[[str, float], Awaitable[None]] | None = None
+
+
 async def consume(
     queue: IngestQueue,
     ready: asyncio.Event,
     apply: Callable[[str, str], Awaitable[None]],
-    on_prompt: Callable[[str, str], Awaitable[None]] | None = None,
-    on_session: Callable[[str, str], Awaitable[None]] | None = None,
+    handlers: IngestHandlers | None = None,
 ) -> None:
     """Apply queued items in order until cancelled. `ready` is set whenever the HTTP side queued something."""
+    found = handlers or IngestHandlers()
+    on_prompt, on_session, on_cost = found.on_prompt, found.on_session, found.on_cost
     while True:
         _ = await ready.wait()
         ready.clear()
@@ -81,6 +124,9 @@ async def consume(
                 session = _session_id(item)
                 if session is not None and on_session is not None:
                     await on_session(item.tab_id, session)
+                cost = session_cost(item)
+                if cost is not None and on_cost is not None:
+                    await on_cost(item.tab_id, cost)
                 prompt = submitted_prompt(item)
                 if prompt is not None and on_prompt is not None:
                     await on_prompt(item.tab_id, prompt)

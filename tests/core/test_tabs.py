@@ -804,3 +804,16 @@ def test_opencode_reports_its_session_and_codex_does_not_use_that_path() -> None
     service.reported_session(codex, "ses_2")
     assert service._tabs[opencode].session == "ses_1"
     assert service._tabs[codex].session is None
+
+
+def test_a_session_cost_reaches_the_tab_once_it_moves_a_cent() -> None:
+    service, ports = _service(ProjectSeed(project_id="proj", root="/repo", container="box"))
+    tab = _opened(service, AgentKind.CLAUDE)
+    service.session_cost(tab, 0.4)
+    assert service._tabs[tab].cost_usd == 0.4
+    events = len(ports.events)
+    service.session_cost(tab, 0.405)
+    assert len(ports.events) == events, "half a cent is not news"
+    service.session_cost(tab, 0.42)
+    assert service.snapshot().tabs[0].session_cost_usd == 0.42
+    service.session_cost("missing", 1.0)
