@@ -42,6 +42,11 @@ if TYPE_CHECKING:
     from collections.abc import Callable
 
 _PANE_POSITION: Final = 620
+_STACK_BELOW: Final = "max-width: 900sp"
+_STACKED_POSITION: Final = 200
+_STACKED_FIXED_HEIGHT: Final = 64
+_BODY_MIN_WIDTH: Final = 360
+_BODY_MIN_HEIGHT: Final = 300
 _FILES_HEIGHT: Final = 170
 _KEEP_WATCHED_S: Final = 15
 _NEAR_END: Final = 2.0
@@ -160,6 +165,10 @@ class GitPane(Gtk.Box):
         self.append(self._build_toolbar())
         self.append(self._build_body())
         self.git_actions: GitActions = GitActions(self, self.actions, self.commit_slot, self.facts_banner)
+        # Stacked, the inspector has half the height: the fixed parts give way so the commit button and diff still show.
+        short = GObject.Value(GObject.TYPE_INT, _STACKED_FIXED_HEIGHT)
+        self.narrow.add_setter(self.files_scroller, "min-content-height", short)
+        self.narrow.add_setter(self.git_actions.message_scroller, "min-content-height", short)
         self._keep_watch: int | None = None
         _ = self.connect("map", self._mapped)
         _ = self.connect("unmap", self._unmapped)
@@ -205,7 +214,7 @@ class GitPane(Gtk.Box):
     def _refresh_clicked(self, _button: Gtk.Button) -> None:
         self.reload()
 
-    def _build_body(self) -> Gtk.Paned:
+    def _build_body(self) -> Adw.BreakpointBin:
         self.selection: Gtk.SingleSelection = Gtk.SingleSelection(model=self.store, autoselect=False, can_unselect=True)
         _ = self.selection.connect("notify::selected", self._row_selected)
         factory = Gtk.SignalListItemFactory()
@@ -215,9 +224,17 @@ class GitPane(Gtk.Box):
         self.list_view.add_css_class("ac-git-list")
         self.scroller: Gtk.ScrolledWindow = Gtk.ScrolledWindow(child=self.list_view, hexpand=True, vexpand=True)
         _ = self.scroller.get_vadjustment().connect("value-changed", self._scrolled)
-        return Gtk.Paned(
+        self.body: Gtk.Paned = Gtk.Paned(
             start_child=self.scroller, end_child=self._build_inspector(), position=_PANE_POSITION, vexpand=True,
         )
+        # A graph row and the inspector cannot share less than this: one above the other, both stay usable.
+        self.narrow: Adw.Breakpoint = Adw.Breakpoint.new(Adw.BreakpointCondition.parse(_STACK_BELOW))
+        stacked = GObject.Value(GObject.type_from_name("GtkOrientation"), Gtk.Orientation.VERTICAL)
+        self.narrow.add_setter(self.body, "orientation", stacked)
+        self.narrow.add_setter(self.body, "position", GObject.Value(GObject.TYPE_INT, _STACKED_POSITION))
+        fit = Adw.BreakpointBin(child=self.body, width_request=_BODY_MIN_WIDTH, height_request=_BODY_MIN_HEIGHT)
+        fit.add_breakpoint(self.narrow)
+        return fit
 
     def _build_inspector(self) -> Gtk.Box:
         box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, hexpand=True)
@@ -250,9 +267,11 @@ class GitPane(Gtk.Box):
         self.file_list: Gtk.ListBox = Gtk.ListBox(selection_mode=Gtk.SelectionMode.SINGLE)
         self.file_list.add_css_class("navigation-sidebar")
         _ = self.file_list.connect("row-selected", self._file_selected)
-        files = Gtk.ScrolledWindow(child=self.file_list, hscrollbar_policy=Gtk.PolicyType.NEVER)
-        files.set_min_content_height(_FILES_HEIGHT)
-        box.append(files)
+        self.files_scroller: Gtk.ScrolledWindow = Gtk.ScrolledWindow(
+            child=self.file_list, hscrollbar_policy=Gtk.PolicyType.NEVER,
+        )
+        self.files_scroller.set_min_content_height(_FILES_HEIGHT)
+        box.append(self.files_scroller)
         self.commit_slot: Gtk.Box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
         box.append(self.commit_slot)
         box.append(Gtk.Separator())

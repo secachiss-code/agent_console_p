@@ -150,7 +150,10 @@ class GitActions:
         self._commit_slot: Gtk.Box = commit_slot
         commit_slot.add_css_class("ac-git-commit")
         commit_slot.append(self.commit_counts)
-        commit_slot.append(Gtk.ScrolledWindow(child=self.message_view, min_content_height=_MESSAGE_HEIGHT))
+        self.message_scroller: Gtk.ScrolledWindow = Gtk.ScrolledWindow(
+            child=self.message_view, min_content_height=_MESSAGE_HEIGHT,
+        )
+        commit_slot.append(self.message_scroller)
         commit_slot.append(self.commit_button)
         commit_slot.set_visible(False)
 

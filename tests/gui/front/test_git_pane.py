@@ -98,7 +98,7 @@ def _on_pane(
         async def _run(self) -> None:
             client = CoreClient(str(socket))
             try:
-                for _ in range(200):
+                for _ in range(600):
                     if socket.exists():
                         break
                     await asyncio.sleep(0.05)
