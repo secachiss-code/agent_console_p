@@ -189,7 +189,7 @@ esac""",
     assert server["headers"]["Authorization"] == f"Bearer {_TOKEN}"
     pid = int((tmp_path / "server").read_text(encoding="utf-8"))
     for _ in range(50):
-        if not Path(f"/proc/{pid}").exists() or "Z" in Path(f"/proc/{pid}/stat").read_text(encoding="utf-8").split()[2]:
+        if _gone(pid):
             break
         _ = subprocess.run(("sleep", "0.1"), check=True)
     else:
@@ -452,3 +452,11 @@ def test_cursor_token_is_read_from_the_cli_login(tmp_path: Path) -> None:
 
 def test_codex_limits_are_asked_again_soon_after_silence() -> None:
     assert codex_poll_delay(b"") < codex_poll_delay(b'{"id":2}')
+
+
+def _gone(pid: int) -> bool:
+    """Exited or a zombie. The process may vanish between two looks at /proc: that is gone too."""
+    try:
+        return "Z" in Path(f"/proc/{pid}/stat").read_text(encoding="utf-8").split()[2]
+    except FileNotFoundError:
+        return True
