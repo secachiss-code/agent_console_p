@@ -78,4 +78,5 @@ class SummarySection(Gtk.Box):
             [Gtk.AccessibleProperty.LABEL],
             [GObject.Value(GObject.TYPE_STRING, f"{self.title_label.get_label().capitalize()}: {action}")],
         )
-        self.header.update_state([Gtk.AccessibleState.EXPANDED], [GObject.Value(GObject.TYPE_BOOLEAN, not folded)])
+        # GTK keeps "expanded" as a tristate, an int: a boolean value trips an assertion.
+        self.header.update_state([Gtk.AccessibleState.EXPANDED], [GObject.Value(GObject.TYPE_INT, int(not folded))])
