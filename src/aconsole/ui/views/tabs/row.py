@@ -13,6 +13,9 @@ from aconsole.ui.views.review.messages import _ as review_text  # noqa: E402
 from aconsole.ui.views.tabs.messages import _ as translate  # noqa: E402
 
 _MINUTES_PER_HOUR = 60
+_MARK = 10
+# The mark sits in the 16 px slot the spinner and the old symbol used.
+_MARK_INSET = 3
 _MINUTES_PER_DAY = 24 * 60
 
 
@@ -34,6 +37,16 @@ def _git_label() -> Gtk.Label:
     return label
 
 
+def _status_mark() -> Gtk.Label:
+    """A drawn mark, not a font glyph: the symbols differed in size and weight from font to font."""
+    mark = Gtk.Label(valign=Gtk.Align.CENTER, halign=Gtk.Align.CENTER)
+    mark.set_size_request(_MARK, _MARK)
+    mark.set_margin_start(_MARK_INSET)
+    mark.set_margin_end(_MARK_INSET)
+    mark.add_css_class("ac-tab-status")
+    return mark
+
+
 class TabRow(Gtk.Box):
     def __init__(self, tabs: TabsViewModel) -> None:
         super().__init__(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
@@ -47,10 +60,7 @@ class TabRow(Gtk.Box):
         self.status_spinner: Gtk.Spinner = Gtk.Spinner()
         self.status_spinner.set_size_request(12, 12)
         self._status_class: str | None = None
-        self.status_label: Gtk.Label = Gtk.Label()
-        self.status_label.set_valign(Gtk.Align.CENTER)
-        self.status_label.set_size_request(16, 16)
-        self.status_label.add_css_class("ac-tab-status")
+        self.status_label: Gtk.Label = _status_mark()
         self.append(self.status_spinner)
         self.append(self.status_label)
         text = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
@@ -203,7 +213,7 @@ class TabRow(Gtk.Box):
         self.waiting_label.set_visible(minutes >= 0)
         self.waiting_label.set_label(_wait_text(minutes) if minutes >= 0 else "")
         self.close_button.set_tooltip_text(translate("tabs.close"))
-        self.status_label.set_label(str(item.status_symbol))
+        self.status_label.set_label("")
         status = translate(f"tabs.status.{item.status_code or 'unknown'}")
         if self._status_class is not None:
             self.status_label.remove_css_class(self._status_class)

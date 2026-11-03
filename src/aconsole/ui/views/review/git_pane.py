@@ -131,7 +131,8 @@ def _badge_text(badge: Badge) -> str:
 
 
 def _pill(text: str, kind: str, css: str | None = None) -> Gtk.Label:
-    label = Gtk.Label(label=text)
+    # Centred, not stretched: the row is taller than a pill, and a stretched one reads as a tile.
+    label = Gtk.Label(label=text, valign=Gtk.Align.CENTER)
     label.add_css_class("ac-git-pill")
     label.add_css_class(_BADGE_CLASS.get(kind, "dim-label"))
     if css is not None:

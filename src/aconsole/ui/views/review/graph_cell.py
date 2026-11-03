@@ -18,6 +18,8 @@ ROW_HEIGHT: Final = 36
 _MARGIN: Final = 10
 _DOT: Final = 4.0
 _DIAMOND: Final = 5.0
+# A ring in the background colour around each node, so the lane line stops at the dot instead of running through it.
+_HALO: Final = 2.0
 _LINE: Final = 1.6
 _DASH: Final = (3.0, 3.0)
 _MAX_LANES: Final = 24
@@ -105,6 +107,9 @@ class GraphCell(Gtk.Widget):
         else:
             builder.add_circle(Graphene.Point().init(x, middle), _DOT)
         path = builder.to_path()
+        _found, background = self.get_style_context().lookup_color("view_bg_color")
+        if _found:
+            snapshot.append_stroke(path, Gsk.Stroke.new(_HALO * 2), background)
         if self.uncommitted:
             snapshot.append_stroke(path, Gsk.Stroke.new(_LINE), color)
         else:

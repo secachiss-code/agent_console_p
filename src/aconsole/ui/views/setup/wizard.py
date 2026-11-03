@@ -59,7 +59,9 @@ class SetupWizard(Adw.Dialog):
         box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
         box.add_css_class("ac-setup")
         self.stack: Gtk.Stack = Gtk.Stack(vexpand=True)
-        self.stack.set_transition_type(Gtk.StackTransitionType.NONE)
+        # A step that slides in reads as a step; GTK skips it when the system turns animations off.
+        self.stack.set_transition_type(Gtk.StackTransitionType.SLIDE_LEFT_RIGHT)
+        self.stack.set_transition_duration(200)
         self.checks_box: Gtk.Box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
         found = self._page("setup.found", "setup.checking")
         found.append(self.checks_box)

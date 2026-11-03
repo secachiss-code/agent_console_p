@@ -23,11 +23,16 @@
 .ac-tab-row:hover .ac-tab-wait, .ac-tab-row:focus-within .ac-tab-wait { opacity: 0; }
 .ac-tab-menu-anchor, .ac-tab-menu-anchor > button { min-width: 0; min-height: 0; padding: 0; margin: 0; opacity: 0; }
 .ac-tab-section { padding: 10px 18px 2px; font-size: 9pt; font-weight: 600; color: @ac_dim_text; }
-.ac-tab-status { font-size: 11pt; color: @ac_dim_text; }
-.ac-status-waiting_approval, .ac-status-waiting_input { color: @accent_color; }
-.ac-status-error { color: @error_color; }
-.ac-status-idle { color: @success_color; }
-.ac-attention-ring { border-radius: 999px; box-shadow: 0 0 0 3px alpha(@accent_bg_color, 0.28); }
+/* The status mark is drawn here: a ring when the agent waits on nobody, a filled dot when it needs someone. */
+.ac-tab-status { min-width: 10px; min-height: 10px; padding: 0; border-radius: 999px; font-size: 0; transition: background-color 200ms ease-out, box-shadow 200ms ease-out; }
+.ac-status-starting { box-shadow: inset 0 0 0 2px alpha(@accent_color, 0.55); }
+.ac-status-working { box-shadow: inset 0 0 0 2px @accent_color; }
+.ac-status-idle { box-shadow: inset 0 0 0 2px @success_color; }
+.ac-status-waiting_approval, .ac-status-waiting_input { background-color: @accent_bg_color; box-shadow: 0 0 0 3px alpha(@accent_bg_color, 0.22); }
+.ac-status-error { background-color: @error_bg_color; box-shadow: 0 0 0 3px alpha(@error_bg_color, 0.2); }
+.ac-status-exited { box-shadow: inset 0 0 0 2px alpha(@window_fg_color, 0.3); }
+.ac-status-unknown { background-color: alpha(@window_fg_color, 0.25); }
+.ac-attention-ring { border-radius: 999px; box-shadow: 0 0 0 4px alpha(@accent_bg_color, 0.35); }
 @keyframes ac-attention-pulse { from { opacity: 1; } to { opacity: 0.35; } }
 .ac-attention-animated { animation: ac-attention-pulse 1.6s ease-in-out infinite alternate; }
 
@@ -69,12 +74,13 @@ progressbar.horizontal > trough, levelbar.horizontal > trough { min-height: 4px;
 .ac-plan-back { padding: 4px 14px; min-height: 24px; }
 .ac-plan-details { padding: 14px 24px; background-color: alpha(@window_fg_color, 0.03); box-shadow: inset 0 1px alpha(@window_fg_color, 0.07); }
 .ac-plan-details-text { font-size: 10pt; }
-.ac-plan-node { padding: 2px 8px; border-radius: 10px; font-size: 9pt; font-weight: normal; background-color: alpha(@window_fg_color, 0.06); box-shadow: inset 0 0 0 1px alpha(@window_fg_color, 0.09); transition: background-color 120ms ease-out, opacity 150ms ease-out; }
-.ac-plan-node:hover { background-color: alpha(@window_fg_color, 0.11); }
-.ac-plan-done { color: @success_color; background-color: alpha(@success_color, 0.1); box-shadow: inset 0 0 0 1px alpha(@success_color, 0.22); }
-.ac-plan-in_progress, .ac-plan-verifying { color: @warning_color; background-color: alpha(@warning_color, 0.1); box-shadow: inset 0 0 0 1px alpha(@warning_color, 0.28); }
-.ac-plan-failed { color: @error_color; background-color: alpha(@error_color, 0.1); box-shadow: inset 0 0 0 1px alpha(@error_color, 0.28); }
-.ac-plan-ready { color: @accent_color; box-shadow: none; border: 1px dashed alpha(@accent_color, 0.65); }
+.ac-plan-node { padding: 2px 8px; border-radius: 10px; font-size: 9pt; font-weight: normal; line-height: 1.15; background-color: @view_bg_color; background-image: linear-gradient(alpha(@window_fg_color, 0.05), alpha(@window_fg_color, 0.05)); box-shadow: inset 0 0 0 1px alpha(@window_fg_color, 0.12), 0 1px 2px alpha(black, 0.06); transition: background-image 150ms ease-out, box-shadow 150ms ease-out, opacity 150ms ease-out; }
+.ac-plan-node:hover { background-image: linear-gradient(alpha(@window_fg_color, 0.09), alpha(@window_fg_color, 0.09)); box-shadow: inset 0 0 0 1px alpha(@window_fg_color, 0.18), 0 3px 8px alpha(black, 0.10); }
+.ac-plan-node:focus-visible { outline: 2px solid alpha(@accent_color, 0.7); outline-offset: 1px; }
+.ac-plan-done { color: @success_color; background-image: linear-gradient(alpha(@success_color, 0.12), alpha(@success_color, 0.12)); box-shadow: inset 0 0 0 1px alpha(@success_color, 0.3), 0 1px 2px alpha(black, 0.06); }
+.ac-plan-in_progress, .ac-plan-verifying { color: @warning_color; background-image: linear-gradient(alpha(@warning_color, 0.12), alpha(@warning_color, 0.12)); box-shadow: inset 0 0 0 1px alpha(@warning_color, 0.36), 0 1px 2px alpha(black, 0.06); }
+.ac-plan-failed { color: @error_color; background-image: linear-gradient(alpha(@error_color, 0.12), alpha(@error_color, 0.12)); box-shadow: inset 0 0 0 1px alpha(@error_color, 0.36), 0 1px 2px alpha(black, 0.06); }
+.ac-plan-ready { color: @accent_color; box-shadow: 0 1px 2px alpha(black, 0.06); border: 1px dashed alpha(@accent_color, 0.65); }
 
 .ac-palette { margin: 12px; }
 .ac-palette-row { padding: 8px 12px; }
@@ -98,14 +104,25 @@ progressbar.horizontal > trough, levelbar.horizontal > trough { min-height: 4px;
 .ac-git-row { padding: 0 8px 0 0; min-height: 36px; }
 .ac-git-list > row { padding: 0; min-height: 36px; }
 .ac-git-when { font-size: 9pt; }
-.ac-git-pill { padding: 0 7px; border-radius: 9px; font-size: 8pt; background-color: alpha(currentColor, 0.12); }
+.ac-git-pill { padding: 1px 8px; border-radius: 999px; font-size: 8pt; font-weight: 600; background-color: alpha(currentColor, 0.12); }
 .ac-git-ref-base { font-weight: 700; }
 .ac-git-inspector-head { padding: 6px 10px; }
 
-.ac-approval-panel { background-color: @window_bg_color; border-top: 1px solid alpha(@window_fg_color, 0.12); }
-.ac-approval-count { padding: 8px 16px 4px; }
-.ac-approval-body { padding: 10px 16px 12px; }
-.ac-approval-command { padding: 6px 8px; border-radius: 6px; background-color: alpha(@window_fg_color, 0.06); }
-.ac-approval-risk { padding: 1px 8px; border-radius: 99px; color: @error_color; background-color: alpha(@error_color, 0.14); }
+.ac-approval-panel { background-color: @window_bg_color; border-top: 1px solid alpha(@window_fg_color, 0.12); box-shadow: 0 -2px 8px alpha(black, 0.06); }
+.ac-approval-count { padding: 10px 18px 6px; }
+/* Each request is a card of its own, so two of them never read as one. */
+.ac-approval-panel list > row.ac-attention-card { margin: 0 12px 10px; border-radius: 12px; background-color: alpha(@window_fg_color, 0.035); box-shadow: inset 0 0 0 1px alpha(@window_fg_color, 0.09); }
+.ac-approval-panel list > row.ac-attention-card:hover { background-color: alpha(@window_fg_color, 0.035); }
+.ac-approval-body { padding: 12px 14px; }
+.ac-approval-body button { border-radius: 8px; padding-left: 14px; padding-right: 14px; }
+.ac-approval-command { padding: 7px 10px; border-radius: 8px; font-size: 10pt; background-color: alpha(@window_fg_color, 0.06); box-shadow: inset 0 0 0 1px alpha(@window_fg_color, 0.05); }
+.ac-approval-risk { padding: 1px 9px; border-radius: 99px; font-weight: 600; color: @error_color; background-color: alpha(@error_color, 0.14); }
 .ac-approval-busy { opacity: 0.55; }
 .ac-attention-card:focus-visible { outline: 2px solid @accent_color; outline-offset: -2px; }
+
+/* Motion. GTK runs none of it when the system turns animations off. */
+@keyframes ac-page-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@keyframes ac-card-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+.ac-plan-page { animation: ac-page-in 180ms ease-out; }
+.ac-approval-panel list > row.ac-attention-card { animation: ac-card-in 200ms ease-out; }
+.ac-session-ended { animation: ac-page-in 220ms ease-out; }

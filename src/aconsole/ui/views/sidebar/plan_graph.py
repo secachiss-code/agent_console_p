@@ -2,25 +2,25 @@
 
 from __future__ import annotations
 
+import math
 from collections.abc import Callable
-from typing import TYPE_CHECKING
 
+import cairo
 import gi
 
 gi.require_version("Gtk", "4.0")
-from gi.repository import GLib, Gtk, Pango  # noqa: E402
+from gi.repository import Gdk, GLib, Gtk, Pango  # noqa: E402
 
 from aconsole.contracts.app import PlanNodeView, PlanView  # noqa: E402
 from aconsole.contracts.common import NodeId, TabId  # noqa: E402
 from aconsole.ui.viewmodels.logic.plan_layout import PlanNodePosition, layout_plan  # noqa: E402
 from aconsole.ui.views.sidebar.messages import _ as translate  # noqa: E402
 
-if TYPE_CHECKING:
-    import cairo
-
-
 _NODE_WIDTH = 128
 _NODE_HEIGHT = 44
+_MIN_BEND = 12.0
+_PORT_RADIUS = 2.5
+_FULL_TURN = 2 * math.pi
 _DETAILS_HEIGHT = 96  # room for every detail line, so hovering a node never moves the graph
 
 
@@ -74,7 +74,12 @@ class PlanGraph(Gtk.Box):
         overlay.add_overlay(fixed)
         for node_id, node in self._nodes.items():
             button = Gtk.Button()
-            label = Gtk.Label(label=f"{node.key}\n{node.title}", ellipsize=Pango.EllipsizeMode.END, max_width_chars=16)
+            label = Gtk.Label(ellipsize=Pango.EllipsizeMode.END, max_width_chars=16, justify=Gtk.Justification.CENTER)
+            # The key is a reference, the title is what is read: the title carries the weight.
+            key = f'<span size="small" fgalpha="72%">{GLib.markup_escape_text(node.key)}</span>'
+            name = f'<span weight="600">{GLib.markup_escape_text(node.title)}</span>'
+            label.set_markup(f"{key}\n{name}")
+            label.set_tooltip_text(f"{node.key} {node.title}")
             button.set_child(label)
             button.set_size_request(_NODE_WIDTH, _NODE_HEIGHT)
             button.add_css_class("ac-plan-node")
@@ -169,22 +174,38 @@ class PlanGraph(Gtk.Box):
         style = self.get_style_context()
         _found, line = style.lookup_color("window_fg_color")
         _found, accent = style.lookup_color("accent_bg_color")
+        _found, done = style.lookup_color("success_color")
         middle_y = _NODE_HEIGHT / 2
+        context.set_line_cap(cairo.LineCap.ROUND)
+        context.set_line_join(cairo.LineJoin.ROUND)
+        ports: list[tuple[float, float, Gdk.RGBA, float]] = []
         for node in self._nodes.values():
             target = self._positions[node.id]
             for parent_id in node.depends_on:
                 source = self._positions.get(parent_id)
-                if source is None:
+                parent = self._nodes.get(parent_id)
+                if source is None or parent is None:
                     continue
                 active = self._hovered is not None and self._hovered in (node.id, parent_id)
+                # A finished dependency no longer holds anything up: its edge takes the done colour.
+                color = accent if active else done if parent.status.value == "done" else line
                 if active:
-                    context.set_source_rgba(accent.red, accent.green, accent.blue, 1)
+                    alpha = 1.0
+                elif self._hovered:
+                    alpha = 0.08
                 else:
-                    context.set_source_rgba(line.red, line.green, line.blue, 0.08 if self._hovered else 0.22)
-                context.set_line_width(2 if active else 1.25)
+                    alpha = 0.45 if color is done else 0.28
+                context.set_source_rgba(color.red, color.green, color.blue, alpha)
+                context.set_line_width(2.25 if active else 1.5)
                 start_x, end_x = source.x + _NODE_WIDTH, target.x
                 start_y, end_y = source.y + middle_y, target.y + middle_y
-                bend = (end_x - start_x) / 2
+                bend = max((end_x - start_x) / 2, _MIN_BEND)
                 context.move_to(start_x, start_y)
                 context.curve_to(start_x + bend, start_y, end_x - bend, end_y, end_x, end_y)
                 context.stroke()
+                ports.append((end_x, end_y, color, alpha))
+        # A small dot where an edge enters a node says which way the dependency runs.
+        for x, y, color, alpha in ports:
+            context.set_source_rgba(color.red, color.green, color.blue, min(1.0, alpha * 1.6))
+            context.arc(x, y, _PORT_RADIUS, 0, _FULL_TURN)
+            context.fill()
