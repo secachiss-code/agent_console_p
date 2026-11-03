@@ -276,6 +276,7 @@ class _Route(Enum):
 
     NOW = auto()  # At once on the loop: quick, and a person or an agent is waiting on it.
     APART = auto()  # Beside everything else: slow, and nothing depends on its order.
+    GIT = auto()  # Beside everything else too, waiting for one of the slots git runs in.
     TURN = auto()  # After the frames before it, so that tab changes stay in order.
 
 
@@ -310,8 +311,10 @@ def _route(envelope: Envelope, *, ready: bool) -> _Route:
         return _Route.NOW if envelope.method == _CANCEL else _Route.TURN
     if isinstance(envelope, Request) and envelope.method in _NOW_METHODS:
         return _Route.NOW
-    if isinstance(envelope, Request) and (envelope.method == _IMPACT or envelope.method.startswith(_GIT_PREFIX)):
+    if isinstance(envelope, Request) and envelope.method == _IMPACT:
         return _Route.APART
+    if isinstance(envelope, Request) and envelope.method.startswith(_GIT_PREFIX):
+        return _Route.GIT
     return _Route.TURN
 
 
@@ -1174,7 +1177,8 @@ class Daemon:
             _ = await self._answer(connection, writer, frame)
             return
         request_id = envelope.id if isinstance(envelope, Request) else None
-        if route is _Route.APART and len(apart) < _MAX_APART:
+        # A page's reads may fill the git slots at any moment. A merge pressed then waits its turn, it is not refused.
+        if (route is _Route.APART and len(apart) < _MAX_APART) or (route is _Route.GIT and len(apart) < _MAX_QUEUED):
             task = asyncio.create_task(self._answer_apart(connection, writer, frame))
             apart.add(task)
             task.add_done_callback(apart.discard)

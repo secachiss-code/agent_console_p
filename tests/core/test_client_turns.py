@@ -112,6 +112,23 @@ def test_more_impacts_than_the_daemon_runs_are_refused(tmp_path: Path, monkeypat
     asyncio.run(run())
 
 
+def test_git_requests_past_the_slots_wait_and_are_not_refused(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    async def run() -> None:
+        daemon = _daemon(tmp_path, serve_ingest=False)
+        task = asyncio.create_task(daemon.serve())
+        client = await _connect(daemon.socket)
+        _slow(daemon.git, monkeypatch, "git/state")
+        waiting = _MAX_APART + 2
+        for offset in range(waiting):
+            await _send(client, 100 + offset, "git/state")
+        answers = [await _reply(client) for _ in range(waiting)]
+        assert sorted(item.id for item in answers) == [100 + offset for offset in range(waiting)]
+        assert not [item for item in answers if isinstance(item, ResponseErr) and item.error.message == "SERVER_BUSY"]
+        await _stop(daemon, task, client)
+
+    asyncio.run(run())
+
+
 def test_health_is_answered_while_the_worker_is_busy(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     async def run() -> None:
         daemon = _daemon(tmp_path, serve_ingest=False)
