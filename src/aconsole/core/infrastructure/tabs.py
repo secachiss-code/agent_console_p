@@ -40,6 +40,14 @@ _LOGIN_SHELL: Final = (
     '''exec "$(getent passwd "$(id -un)" | cut -d: -f7)" -lc 'exec "$@"' aconsole "$@"''',
     "aconsole",
 )
+# The same login shell for a command that reads requests from stdin. Distrobox's profile runs `host-spawn`
+# when `podman exec` brings no XAUTHORITY, and that swallows stdin: the profile gets /dev/null instead.
+LOGIN_SHELL_KEEPING_STDIN: Final = (
+    "/bin/sh",
+    "-c",
+    '''exec 3<&0 </dev/null; exec "$(getent passwd "$(id -un)" | cut -d: -f7)" -lc 'exec "$@" <&3 3<&-' ac "$@"''',
+    "aconsole",
+)
 _PATH: Final = "/usr/bin"
 _PORT: Final = "0"
 _ID_BYTES: Final = 8
@@ -170,7 +178,7 @@ class HostTabs:
         try:
             if not self._podman.inspect(name).running:
                 return b""
-            argv = self._podman.pipe_argv(name, self._user, (*_LOGIN_SHELL, "codex", "app-server"))
+            argv = self._podman.pipe_argv(name, self._user, (*LOGIN_SHELL_KEEPING_STDIN, "codex", "app-server"))
         except (ContainerError, ValueError):
             return b""
         return ask_rate_limits(argv)

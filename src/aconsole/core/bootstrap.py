@@ -232,6 +232,7 @@ _CLAUDE_CONTAINER = "agent-claude"
 _CODEX_CONTAINER = "agent-codex"
 _CODEX_POLL = "codex-poll"
 _CODEX_POLL_S = 120.0
+_CODEX_REPLY_LOGGED = 300
 _CLAUDE_POLL_S = 60.0
 _CODEX_TURN_POLL_S = 1.0
 _ACCOUNT_RESEND_S = 30.0
@@ -657,6 +658,9 @@ class Daemon:
                 event = await self._in_worker(lambda body=body: self._codex_limits.on_rate_limits(_CODEX_POLL, body))
                 if event is not None:
                     self._account_observed(event)
+                elif body:
+                    # An error reply, such as a lost login. It says why and holds no credentials.
+                    _LOG.warning("Codex gave no limits: %s", body[:_CODEX_REPLY_LOGGED].decode(errors="replace"))
             except Exception:  # noqa: BLE001 -- limits must never stop the core
                 _LOG.exception("cannot read Codex limits")
             await asyncio.sleep(_CODEX_POLL_S)

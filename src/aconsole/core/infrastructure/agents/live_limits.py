@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import contextlib
+import logging
 import os
 import select
 import signal
@@ -13,6 +14,7 @@ from typing import Final, final
 
 import msgspec
 
+_LOG = logging.getLogger(__name__)
 _AUTH_TTL_S: Final = 300.0
 _ASK_TIMEOUT_S: Final = 10.0
 _READ_BYTES: Final = 65536
@@ -67,11 +69,15 @@ def ask_rate_limits(argv: tuple[str, ...], *, timeout_s: float = _ASK_TIMEOUT_S)
             start_new_session=True,
         )
     except OSError:
+        _LOG.warning("cannot start the Codex app server", exc_info=True)
         return b""
     try:
-        return _exchange(process, timeout_s)
+        body = _exchange(process, timeout_s)
     finally:
         _stop(process)
+    if not body:
+        _LOG.warning("the Codex app server gave no limits within %s s", timeout_s)
+    return body
 
 
 def _exchange(process: subprocess.Popen[bytes], timeout_s: float) -> bytes:

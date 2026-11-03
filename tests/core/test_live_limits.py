@@ -9,9 +9,12 @@ from typing import TYPE_CHECKING
 from aconsole.core.domain.quota import QuotaKey
 from aconsole.core.infrastructure.agents.claude.limits import read_usage
 from aconsole.core.infrastructure.agents.live_limits import CachedAuth, ask_rate_limits
+from aconsole.core.infrastructure.tabs import LOGIN_SHELL_KEEPING_STDIN
 
 if TYPE_CHECKING:
     from pathlib import Path
+
+    import pytest
 
 
 def _script(tmp_path: Path, text: str) -> tuple[str, ...]:
@@ -72,3 +75,16 @@ def test_usage_text_without_a_date_or_a_reset() -> None:
     assert read_usage("not logged in", now) == ()
     year_end = read_usage("Current session: 1% used · resets Jan 1, 1am (UTC)", now)
     assert year_end[0][2] == datetime(2027, 1, 1, 1, 0, tzinfo=UTC)
+
+
+def test_a_profile_that_swallows_stdin_leaves_the_request_to_the_command(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Distrobox's profile runs `host-spawn`, which reads stdin, when `podman exec` brings no XAUTHORITY."""
+    for profile in (".profile", ".bash_profile", ".zprofile"):
+        _ = (tmp_path / profile).write_text("cat > /dev/null\n", encoding="utf-8")
+    monkeypatch.setenv("HOME", str(tmp_path))
+    reply = '{"id":2,"result":{}}'
+    answer = f"read -r first; read -r second; read -r third; case \"$third\" in *rateLimits*) echo '{reply}';; esac"
+    argv = (*LOGIN_SHELL_KEEPING_STDIN, "sh", "-c", answer)
+    assert ask_rate_limits(argv) == reply.encode()
