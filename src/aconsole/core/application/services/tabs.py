@@ -48,6 +48,7 @@ from aconsole.core.application.ports.tab_store import (
     TabDirectory,
     TabStore,
 )
+from aconsole.core.application.services.git_state import GitProject, GitTab
 from aconsole.core.application.services.projects import ProjectCatalog
 from aconsole.core.domain.clock import Clock
 
@@ -538,6 +539,33 @@ class TabService:
         if tab is None:
             return None
         return ReviewTarget(worktree=tab.worktree, status=tab.status, base_branch=tab.base)
+
+    def git_project(self, project_id: str) -> GitProject | None:
+        """Any thread: a read of what this book holds."""
+        seed = self._projects.get(project_id)
+        if seed is None:
+            return None
+        catalog = self._catalog
+        views = () if catalog is None else catalog.views()
+        branch = next((view.default_branch for view in views if str(view.id) == project_id), None)
+        return GitProject(project_id=project_id, root=seed.root, default_branch=branch)
+
+    def git_tabs(self, project_id: str) -> tuple[GitTab, ...]:
+        """Any thread. `list` copies the book at once, so a tab opening meanwhile cannot break this."""
+        return tuple(
+            GitTab(
+                tab_id=tab.id,
+                title=tab.title,
+                agent=tab.agent,
+                status=tab.status,
+                worktree=tab.worktree,
+                branch=tab.branch,
+                plan_id=None,
+                plan_node=tab.plan_node,
+            )
+            for tab in list(self._tabs.values())
+            if tab.project_id == project_id
+        )
 
     def tab_ids(self) -> tuple[str, ...]:
         return tuple(self._tabs)

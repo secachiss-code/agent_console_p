@@ -31,6 +31,8 @@ from aconsole.core.application.ports.events import EventSink
 from aconsole.core.application.services.approval_broker import ApprovalHold
 from aconsole.core.application.services.checkpoints import CheckpointService
 from aconsole.core.application.services.diff import DiffService
+from aconsole.core.application.services.git import GitService
+from aconsole.core.application.services.git_state import GitStateService
 from aconsole.core.application.services.projects import ProjectCatalog
 from aconsole.core.application.services.quota_aggregator import QuotaAggregator
 from aconsole.core.application.services.review import ReviewService
@@ -47,6 +49,7 @@ from aconsole.core.infrastructure.codegraph.index import CodeGraphIndex
 from aconsole.core.infrastructure.codegraph.runner import ExtractorRunner
 from aconsole.core.infrastructure.git.checkpoints import GitCheckpoints
 from aconsole.core.infrastructure.git.diff import GitDiff
+from aconsole.core.infrastructure.git.history import GitHistory
 from aconsole.core.infrastructure.http.app import IngestApp, serve_config
 from aconsole.core.infrastructure.http.approval import handle_permission
 from aconsole.core.infrastructure.http.auth import TokenBook
@@ -267,6 +270,10 @@ class _Route(Enum):
 _HEALTH_EVERY_S = 60.0
 _MS_PER_S = 1000
 _IMPACT = "knowledge/impact"
+_GIT_PREFIX = "git/"
+_MAX_GIT_READS = 4
+_GIT_CHECK_S = 3.0
+_GIT_NUDGE_S = 0.3
 _NOW_METHODS = frozenset({"approval/decide", "approval/releaseToNative", "core/hold", "app/health"})
 _CANCEL = "$/cancelRequest"
 _MAX_QUEUED = ProtocolLimits().max_inflight_requests
@@ -293,7 +300,7 @@ def _route(envelope: Envelope, *, ready: bool) -> _Route:
         return _Route.NOW if envelope.method == _CANCEL else _Route.TURN
     if isinstance(envelope, Request) and envelope.method in _NOW_METHODS:
         return _Route.NOW
-    if isinstance(envelope, Request) and envelope.method == _IMPACT:
+    if isinstance(envelope, Request) and (envelope.method == _IMPACT or envelope.method.startswith(_GIT_PREFIX)):
         return _Route.APART
     return _Route.TURN
 
@@ -348,6 +355,8 @@ class Daemon:
         self._live_tabs: int = live_tabs
         self._frame_limit: int = frame_limit
         self._impacts: asyncio.Semaphore = asyncio.Semaphore(_MAX_IMPACTS)
+        # Git can take seconds on a big tree. It runs beside the tab worker, so approvals and tab calls never wait.
+        self._git_slots: asyncio.Semaphore = asyncio.Semaphore(_MAX_GIT_READS)
         self._ipc: _IpcTimes = _IpcTimes()
         self._health: asyncio.Task[None] | None = None
         self._holders: int = 0
@@ -377,6 +386,7 @@ class Daemon:
             DiffService(GitDiff(), _PublishedEvents(self._from_worker)),
             emit=self._from_worker,
         )
+        self.git: GitService = GitService(GitStateService(GitHistory(), lambda: self.tabs), emit=self._from_worker)
         self.setup_service: SetupService = setup_service or SetupService(
             probe=HostSetupProbe(), fixes=HostSetupFixes(), tokens=SetupTokens()
         )
@@ -466,16 +476,22 @@ class Daemon:
         self._loop = asyncio.get_running_loop()
         self._worker = ThreadPoolExecutor(max_workers=1, thread_name_prefix="aconsole-tabs")
         self._vault_thread = ThreadPoolExecutor(max_workers=1, thread_name_prefix="aconsole-vault")
+        git_watch: asyncio.Task[None] | None = None
         try:
             await self._open_database()
             await self._restore_tabs()
             await self._open_ingest()
             await self._listen()
             self._listening = True
+            git_watch = asyncio.create_task(self._watch_git())
             if self._quiet() and not self._stopped.is_set():
                 self._arm_idle()
             _ = await self._stopped.wait()
         finally:
+            if git_watch is not None:
+                _ = git_watch.cancel()
+                with contextlib.suppress(asyncio.CancelledError):
+                    await git_watch
             self._closing = True
             self._listening = False
             self._cancel_idle()
@@ -500,6 +516,7 @@ class Daemon:
             _ = loop.call_soon_threadsafe(self._publish, event, live, token)
         if isinstance(event, TabUpdated):
             self.review.on_event(event)
+        self.git.on_event(event)
 
     def _project_root(self, project_id: str) -> Path | None:
         found = next((item for item in self._catalog.views() if str(item.id) == project_id), None)
@@ -710,6 +727,20 @@ class Daemon:
         task = asyncio.create_task(self._in_worker(lambda: self.tabs.agent_notice(tab_id, text)))
         self._notices.add(task)
         task.add_done_callback(self._notices.discard)
+
+    async def _watch_git(self) -> None:
+        """Look at projects a client has open. One pass at a time; a turn's end brings the next one forward."""
+        waited = 0.0
+        while True:
+            await asyncio.sleep(_GIT_NUDGE_S)
+            waited += _GIT_NUDGE_S
+            if waited < _GIT_CHECK_S and not self.git.nudged():
+                continue
+            waited = 0.0
+            try:
+                _ = await asyncio.to_thread(self.git.check)
+            except Exception:  # noqa: BLE001 -- logged; the next pass may well work
+                _LOG.exception("git check failed")
 
     async def _watch_codex_turns(self) -> None:
         """Codex hooks are not trusted (ADR-0002), and notify only says that a turn ended."""
@@ -986,6 +1017,9 @@ class Daemon:
                 # Building a graph can take a minute; the tab worker must keep answering.
                 async with self._impacts:
                     payloads = await asyncio.to_thread(connection.receive, frame)
+            elif isinstance(envelope, Request) and envelope.method.startswith(_GIT_PREFIX):
+                async with self._git_slots:
+                    payloads = await asyncio.to_thread(connection.receive, frame)
             else:
                 payloads = await self._in_worker(lambda: connection.receive(frame))
         except msgspec.DecodeError:
@@ -1072,7 +1106,7 @@ class Daemon:
             return
         connection = Connection(
             self._ring, tabs=self.tabs, approval_hold=self.approvals, setup_service=self.setup_service,
-            review=self.review, knowledge=self.knowledge,
+            review=self.review, knowledge=self.knowledge, git=self.git,
         )
         connection.on_agent_notice = self._agent_notice
         connection.health = self.health

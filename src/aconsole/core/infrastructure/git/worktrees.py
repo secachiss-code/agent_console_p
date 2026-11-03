@@ -174,6 +174,15 @@ def _read_meta(path: Path) -> tuple[str, str, Path]:
     return lines[0], lines[1], Path(lines[2])
 
 
+def recorded_start(git_dir: Path, dest: Path) -> str | None:
+    """The commit `create` recorded for this worktree. None for one this core did not create."""
+    try:
+        _branch, base, recorded = _read_meta(_meta_path(git_dir, dest))
+    except (WorktreeError, OSError):
+        return None
+    return base if recorded == dest else None
+
+
 @final
 class Worktrees:
     """Create, lock, and remove worktrees with one git binary."""

@@ -24,6 +24,7 @@ from aconsole.core.application.ports.diff_reader import (
     DiffSummary,
     DiffWordLine,
 )
+from aconsole.core.application.ports.git_repo import DiffSpec
 from aconsole.core.infrastructure.host_bins import host_binary
 
 _TIMEOUT_S: Final = 30.0
@@ -115,6 +116,39 @@ class GitDiff:
         if _is_binary_diff(text):
             return DiffFileText(hunks=(), truncated=False)
         return _parse_porcelain(text, max_lines)
+
+    def compare_summary(self, repo: Path, spec: DiffSpec) -> DiffSummary:
+        """Any two sides. New files count only when `spec` compares with the worktree."""
+        sides = _sides(spec)
+        status = self._stdout(repo, ("--name-status", "-z", "-M", *sides))
+        numbers = self._stdout(repo, ("--numstat", "-z", "-M", *sides))
+        files = _join(_parse_status(status), _parse_numstat(numbers))
+        fresh: tuple[DiffFileStat, ...] = ()
+        if spec.untracked:
+            known = {item.path for item in files}
+            paths = tuple(path for path in self._untracked(repo) if path not in known)
+            fresh = self._untracked_stats(repo, paths)
+        return DiffSummary(
+            base=spec.left or _HEAD,
+            head=spec.right or _WORKTREE,
+            files=(*files, *fresh),
+        )
+
+    def compare_file(self, repo: Path, spec: DiffSpec, path: str, max_lines: int) -> DiffFileText:
+        if spec.untracked and path in self._untracked(repo):
+            return self._untracked_text(repo, path, max_lines)
+        text = self._stdout(repo, ("-M", "--word-diff=porcelain", "-U3", *_sides(spec), "--", path))
+        if _is_binary_diff(text):
+            return DiffFileText(hunks=(), truncated=False)
+        return _parse_porcelain(text, max_lines)
+
+    def compare_text(self, repo: Path, spec: DiffSpec, max_bytes: int) -> str:
+        """The plain patch, for a person or an agent to read."""
+        text = self._stdout(repo, ("-M", "-U3", *_sides(spec)))
+        size = len(text.encode("utf-8"))
+        if size > max_bytes:
+            raise DiffReadError(_TOO_LARGE, too_large=True, files=_AT_LEAST_ONE, byte_count=size)
+        return text
 
     def _stdout(self, repo: Path, extra: tuple[str, ...]) -> str:
         argv = ("diff", _NO_EXT, _NO_TEXT, *extra)
@@ -216,6 +250,14 @@ def _base(base: str | None) -> str:
     if base is None or base == "":
         return _HEAD
     return base
+
+
+def _sides(spec: DiffSpec) -> tuple[str, ...]:
+    """The revisions of one `git diff`. They are full object ids, checked by the service."""
+    cached = ("--cached",) if spec.cached else ()
+    left = () if spec.left is None else (spec.left,)
+    right = () if spec.right is None else (spec.right,)
+    return (*cached, *left, *right)
 
 
 def _absolute_repo(repo: Path) -> None:

@@ -46,7 +46,9 @@ from aconsole.contracts.ipc import (
     ResponseOk,
     SidecarSignal,
 )
+from aconsole.core.application.ports.git_repo import GitCommandError
 from aconsole.core.application.services.approval_broker import ApprovalHold
+from aconsole.core.application.services.git import GIT_READ_METHODS, GitService
 from aconsole.core.application.services.review import REVIEW_METHODS, ReviewService
 from aconsole.core.application.services.setup import SetupService
 from aconsole.core.application.services.tabs import SETTINGS_METHODS, TAB_METHODS, TabRequestError, TabService
@@ -59,7 +61,15 @@ _LOG = logging.getLogger(__name__)
 _SERVER = ProtocolVersion(major=1, minor=0)
 # Only what this process serves.
 _SERVER_CAPS = frozenset(
-    {"events.v1", "approvals.inline", "notifications.desktop", "diff.v1", "checkpoints.v1", "terminal.inject"},
+    {
+        "events.v1",
+        "approvals.inline",
+        "notifications.desktop",
+        "diff.v1",
+        "checkpoints.v1",
+        "git.v1",
+        "terminal.inject",
+    },
 )
 _HOLD = "core/hold"
 _SNAPSHOT = "app/snapshot"
@@ -91,6 +101,7 @@ class Connection:
         setup_service: SetupService | None = None,
         review: ReviewService | None = None,
         knowledge: KnowledgeService | None = None,
+        git: GitService | None = None,
     ) -> None:
         self.ring = ring
         self.outbound_limit = outbound_limit
@@ -100,6 +111,7 @@ class Connection:
         self.setup_service = setup_service
         self.review = review
         self.knowledge = knowledge
+        self.git = git
         self.capabilities: frozenset[str] = frozenset()
         self.ready = False
         self.paused = False
@@ -193,6 +205,8 @@ class Connection:
             return self._app(request, self.tabs)
         if request.method in REVIEW_METHODS and self.review is not None:
             return self._service(request, self.review.dispatch)
+        if request.method in GIT_READ_METHODS and self.git is not None:
+            return self._service(request, self.git.dispatch)
         if request.method in KNOWLEDGE_METHODS and self.knowledge is not None:
             return self._service(request, self.knowledge.dispatch)
         served = TAB_METHODS | SETTINGS_METHODS
@@ -200,7 +214,9 @@ class Connection:
             return self._tab(request)
         return (self._err(request.id, "METHOD_NOT_FOUND"),)
 
-    def _service(self, request: Request, dispatch: Callable[[str, bytes], msgspec.Struct]) -> tuple[bytes, ...]:
+    def _service(  # noqa: PLR0911 -- one answer per kind of refusal
+        self, request: Request, dispatch: Callable[[str, bytes], msgspec.Struct],
+    ) -> tuple[bytes, ...]:
         try:
             result = dispatch(request.method, bytes(request.params))
         except msgspec.DecodeError:
@@ -209,6 +225,9 @@ class Connection:
             return (self._err(request.id, exc.name),)
         except DomainError as exc:
             return (self._err(request.id, exc.name),)
+        except GitCommandError as exc:
+            _LOG.warning("%s: %s: %s", request.method, exc, exc.detail)
+            return (self._err(request.id, "GIT_COMMAND_FAILED"),)
         except ValueError:
             return (self._err(request.id, "INVALID_PARAMS"),)
         except Exception:  # noqa: BLE001 -- answer the request; the connection serves the next one
