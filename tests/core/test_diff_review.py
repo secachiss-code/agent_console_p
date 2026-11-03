@@ -152,3 +152,50 @@ def _repo(tmp: Path) -> tuple[Path, Path]:
 
 def _git(repo: Path, *args: str) -> None:
     subprocess.run((_GIT, "-C", str(repo), *args), check=True, capture_output=True)
+
+
+def _new_repo(tmp_path: Path) -> Path:
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    for argv in (
+        ("init", "-q"),
+        ("config", "user.email", "t@example.com"),
+        ("config", "user.name", "t"),
+        ("commit", "-q", "--allow-empty", "-m", "start"),
+    ):
+        _ = subprocess.run(("git", "-C", str(repo), *argv), check=True)
+    return repo
+
+
+def test_a_file_the_agent_created_shows_before_git_add(tmp_path: Path) -> None:
+    repo = _new_repo(tmp_path)
+    _ = (repo / ".gitignore").write_text("ignored.txt\n")
+    _ = (repo / "new.py").write_text("one\ntwo\n")
+    _ = (repo / "ignored.txt").write_text("skip\n")
+    _ = (repo / "blob.bin").write_bytes(b"\0\1\2")
+    (repo / "link").symlink_to("/etc/passwd")
+    diff = GitDiff()
+
+    rows = {item.path: item for item in diff.summary(repo, None).files}
+    assert "ignored.txt" not in rows
+    assert (rows["new.py"].change, rows["new.py"].insertions) == ("added", 2)
+    assert rows["blob.bin"].change == "binary"
+    assert rows["link"].change == "binary"
+
+    text = diff.file(repo, "new.py", None, 100)
+    assert [line.text for line in text.hunks[0].lines] == ["one", "two"]
+    assert [line.new_no for line in text.hunks[0].lines] == [1, 2]
+    assert all(line.kind == "add" for line in text.hunks[0].lines)
+    assert diff.file(repo, "blob.bin", None, 100).hunks == ()
+    assert diff.file(repo, "link", None, 100).hunks == ()
+
+
+def test_a_new_file_is_cut_at_the_line_limit_and_refused_over_the_byte_cap(tmp_path: Path) -> None:
+    repo = _new_repo(tmp_path)
+    _ = (repo / "long.txt").write_text("x\n" * 50)
+    assert GitDiff().file(repo, "long.txt", None, 10).truncated
+    small = GitDiff(max_bytes=20)
+    with pytest.raises(DiffReadError) as caught:
+        _ = small.file(repo, "long.txt", None, 10)
+    assert caught.value.too_large
+    assert next(item for item in small.summary(repo, None).files if item.path == "long.txt").insertions == 0

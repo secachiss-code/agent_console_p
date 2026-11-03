@@ -1,13 +1,14 @@
 """Worktree diffs. Every `git diff` argv carries `--no-ext-diff` and `--no-textconv`.
 
 Those two flags are placed before `--`, so a `.gitattributes` diff driver does not run.
-This module does not invoke any other git subcommand.
+`git diff` never shows a file nobody added yet, so `git ls-files` names those and they are read here.
 """
 
 from __future__ import annotations
 
 import os
 import re
+import stat
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
@@ -48,6 +49,7 @@ _STATUS_ONE: Final = frozenset({"A", "M", "D", "T", "U"})
 _PAIR: Final = 2
 _NUMSTAT_FIELDS: Final = 3
 _AT_LEAST_ONE: Final = 1
+_SNIFF_BYTES: Final = 8192
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -99,9 +101,13 @@ class GitDiff:
         status = self._stdout(repo, ("--name-status", "-z", "-M", spec))
         numbers = self._stdout(repo, ("--numstat", "-z", "-M", spec))
         files = _join(_parse_status(status), _parse_numstat(numbers))
-        return DiffSummary(base=spec, head=_WORKTREE, files=files)
+        known = {item.path for item in files}
+        fresh = tuple(path for path in self._untracked(repo) if path not in known)
+        return DiffSummary(base=spec, head=_WORKTREE, files=(*files, *self._untracked_stats(repo, fresh)))
 
     def file(self, repo: Path, path: str, base: str | None, max_lines: int) -> DiffFileText:
+        if path in self._untracked(repo):
+            return self._untracked_text(repo, path, max_lines)
         text = self._stdout(
             repo,
             ("-M", "--word-diff=porcelain", "-U3", _base(base), "--", path),
@@ -111,9 +117,57 @@ class GitDiff:
         return _parse_porcelain(text, max_lines)
 
     def _stdout(self, repo: Path, extra: tuple[str, ...]) -> str:
-        _absolute_repo(repo)
         argv = ("diff", _NO_EXT, _NO_TEXT, *extra)
         _require_flags(argv)
+        return self._git_stdout(repo, argv)
+
+    def _untracked(self, repo: Path) -> tuple[str, ...]:
+        raw = self._git_stdout(repo, ("ls-files", "--others", "--exclude-standard", "-z"))
+        return tuple(path for path in raw.split("\0") if path)
+
+    def _untracked_stats(self, repo: Path, paths: tuple[str, ...]) -> tuple[DiffFileStat, ...]:
+        """One row per new file. Lines are counted until the byte cap is spent, so a big tree stays cheap."""
+        budget = self._max_bytes
+        stats: list[DiffFileStat] = []
+        for path in paths:
+            data = _read_regular(repo / path, budget)
+            if data is None or b"\0" in data[:_SNIFF_BYTES]:
+                stats.append(DiffFileStat(path=path, old_path=None, change="binary", insertions=0, deletions=0))
+                continue
+            whole = len(data) <= budget
+            budget = max(0, budget - len(data))
+            lines = len(_text_lines(data)) if whole else 0
+            stats.append(DiffFileStat(path=path, old_path=None, change="added", insertions=lines, deletions=0))
+        return tuple(stats)
+
+    def _untracked_text(self, repo: Path, path: str, max_lines: int) -> DiffFileText:
+        """A new file as one hunk of added lines. ``path`` came from git, so it stays inside the worktree."""
+        data = _read_regular(repo / path, self._max_bytes)
+        if data is None or b"\0" in data[:_SNIFF_BYTES]:
+            return DiffFileText(hunks=(), truncated=False)
+        if len(data) > self._max_bytes:
+            raise DiffReadError(_TOO_LARGE, too_large=True, files=_AT_LEAST_ONE, byte_count=len(data))
+        lines = _text_lines(data)
+        if not lines:
+            return DiffFileText(hunks=(), truncated=False)
+        taken = lines[:max_lines]
+        header = f"@@ -0,0 +1,{len(lines)} @@"
+        hunk = DiffHunkView(
+            id=header,
+            header=header,
+            old_start=0,
+            old_lines=0,
+            new_start=1,
+            new_lines=len(lines),
+            lines=tuple(
+                DiffWordLine(kind="add", old_no=None, new_no=number, text=line, word_spans=())
+                for number, line in enumerate(taken, start=1)
+            ),
+        )
+        return DiffFileText(hunks=(hunk,), truncated=len(lines) > len(taken))
+
+    def _git_stdout(self, repo: Path, argv: tuple[str, ...]) -> str:
+        _absolute_repo(repo)
         try:
             completed = subprocess.run(  # noqa: S603 -- argv is a list; the git path is absolute
                 (str(self._git), "-C", str(repo), *argv),
@@ -140,6 +194,22 @@ class GitDiff:
                 byte_count=size,
             )
         return raw
+
+
+def _read_regular(path: Path, limit: int) -> bytes | None:
+    """Up to ``limit`` + 1 bytes of a regular file. None for a link or anything else with no text to show."""
+    try:
+        descriptor = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+    except OSError:
+        return None
+    with os.fdopen(descriptor, "rb") as stream:
+        if not stat.S_ISREG(os.fstat(stream.fileno()).st_mode):
+            return None
+        return stream.read(limit + 1)
+
+
+def _text_lines(data: bytes) -> list[str]:
+    return data.decode("utf-8", errors="replace").splitlines()
 
 
 def _base(base: str | None) -> str:
