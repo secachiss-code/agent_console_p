@@ -2,6 +2,7 @@
 a GPU. What the page itself costs in memory and main-loop stalls does carry over.
 
 Memory is held as growth: an empty libadwaita window takes 177 MB of RSS here, so an absolute 150 MB cannot hold.
+Before this stops being a prototype, measure on a real GPU and choose an absolute limit from that.
 """
 
 from __future__ import annotations
