@@ -14,6 +14,7 @@ import sys
 import time
 from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, datetime
+from enum import Enum, auto
 from pathlib import Path
 from typing import TYPE_CHECKING, override
 
@@ -23,7 +24,7 @@ import uvicorn
 from aconsole.contracts.common import ClientRole, TabId
 from aconsole.contracts.errors import ErrorData, ErrorObject, MessageTooLargeDetails, error_by_name
 from aconsole.contracts.events import Notify, PlanUpdated, QuotaUpdated, TabAdded, TabRemoved, TabUpdated, UiEvent
-from aconsole.contracts.ipc import InitializeParams, Request, ResponseErr
+from aconsole.contracts.ipc import InitializeParams, Notification, ProtocolLimits, Request, ResponseErr
 from aconsole.core.application.ports.events import EventSink
 from aconsole.core.application.services.approval_broker import ApprovalHold
 from aconsole.core.application.services.checkpoints import CheckpointService
@@ -229,6 +230,34 @@ def _windows(account: AccountView) -> tuple[tuple[str, float | None, datetime | 
     return tuple((window.key, window.used_pct, window.resets_at) for window in account.quota)
 
 
+class _Route(Enum):
+    """How a frame runs relative to the ones read before it."""
+
+    NOW = auto()  # At once on the loop: quick, and a person or an agent is waiting on it.
+    APART = auto()  # Beside everything else: slow, and nothing depends on its order.
+    TURN = auto()  # After the frames before it, so that tab changes stay in order.
+
+
+_IMPACT = "knowledge/impact"
+_NOW_METHODS = frozenset({"approval/decide", "approval/releaseToNative", "core/hold"})
+_CANCEL = "$/cancelRequest"
+_MAX_QUEUED = ProtocolLimits().max_inflight_requests
+_MAX_APART = 4
+_MAX_IMPACTS = 2
+
+
+def _route(envelope: Envelope, *, ready: bool) -> _Route:
+    if not ready:
+        return _Route.TURN
+    if isinstance(envelope, Notification):
+        return _Route.NOW if envelope.method == _CANCEL else _Route.TURN
+    if isinstance(envelope, Request) and envelope.method in _NOW_METHODS:
+        return _Route.NOW
+    if isinstance(envelope, Request) and envelope.method == _IMPACT:
+        return _Route.APART
+    return _Route.TURN
+
+
 _CLAUDE_CONTAINER = "agent-claude"
 _CODEX_CONTAINER = "agent-codex"
 _CODEX_POLL = "codex-poll"
@@ -278,6 +307,7 @@ class Daemon:
         self.idle_s: float = idle_s
         self._live_tabs: int = live_tabs
         self._frame_limit: int = frame_limit
+        self._impacts: asyncio.Semaphore = asyncio.Semaphore(_MAX_IMPACTS)
         self._holders: int = 0
         self._listening: bool = False
         self._closing: bool = False
@@ -856,11 +886,12 @@ class Daemon:
         """Handle one frame on the worker and write the replies. False when the frame cannot be decoded."""
         try:
             envelope = decode_envelope(frame)
-            if isinstance(envelope, Request) and envelope.method in {"approval/decide", "approval/releaseToNative"}:
+            if _route(envelope, ready=connection.ready) is _Route.NOW:
                 payloads = connection.receive(frame)
-            elif isinstance(envelope, Request) and envelope.method == "knowledge/impact":
+            elif isinstance(envelope, Request) and envelope.method == _IMPACT:
                 # Building a graph can take a minute; the tab worker must keep answering.
-                payloads = await asyncio.to_thread(connection.receive, frame)
+                async with self._impacts:
+                    payloads = await asyncio.to_thread(connection.receive, frame)
             else:
                 payloads = await self._in_worker(lambda: connection.receive(frame))
         except msgspec.DecodeError:
@@ -879,6 +910,65 @@ class Daemon:
         _LOG.warning("reply to %s is %d bytes, over the limit", getattr(envelope, "method", "?"), len(payload))
         return _too_large(self._encoder, self._frame_limit, request_id)
 
+    async def _admit(
+        self,
+        connection: Connection,
+        writer: asyncio.StreamWriter,
+        frame: bytes,
+        turns: asyncio.Queue[bytes | None],
+        apart: set[asyncio.Task[None]],
+    ) -> None:
+        """Start one frame without waiting for the work before it, unless it must follow that work."""
+        try:
+            envelope = decode_envelope(frame)
+        except msgspec.DecodeError:
+            await turns.put(frame)  # Its turn closes the connection, after what was read before it.
+            return
+        route = _route(envelope, ready=connection.ready)
+        if route is _Route.NOW:
+            _ = await self._answer(connection, writer, frame)
+            return
+        request_id = envelope.id if isinstance(envelope, Request) else None
+        if route is _Route.APART and len(apart) < _MAX_APART:
+            task = asyncio.create_task(self._answer_apart(connection, writer, frame))
+            apart.add(task)
+            task.add_done_callback(apart.discard)
+            return
+        if route is _Route.TURN and not turns.full():
+            turns.put_nowait(frame)
+            return
+        if request_id is None:
+            await turns.put(frame)
+            return
+        writer.write(connection.busy(request_id))
+        await writer.drain()
+
+    async def _answer_apart(self, connection: Connection, writer: asyncio.StreamWriter, frame: bytes) -> None:
+        try:
+            _ = await self._answer(connection, writer, frame)
+        except (ConnectionError, OSError) as exc:
+            _LOG.debug("client left before its answer: %s", exc)
+
+    async def _take_turns(
+        self,
+        connection: Connection,
+        writer: asyncio.StreamWriter,
+        turns: asyncio.Queue[bytes | None],
+    ) -> None:
+        """Run a connection's ordinary frames one by one, in the order they came."""
+        while (frame := await turns.get()) is not None:
+            was_ready = connection.ready
+            role = initialize_role(frame)
+            try:
+                if not await self._answer(connection, writer, frame):
+                    writer.close()
+                    continue
+            except (ConnectionError, OSError) as exc:
+                _LOG.debug("client left before its answer: %s", exc)
+            if not connection.holds_core and not was_ready and role in _HOLDS and connection.ready:
+                connection.holds_core = True
+                self._gain_holder()
+
     async def _client(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter) -> None:
         raw = writer.get_extra_info("socket")  # pyright: ignore[reportAny] -- asyncio types this as Any
         if not allow_peer(credentials_uid(raw)):  # pyright: ignore[reportAny] -- asyncio types this as Any
@@ -890,9 +980,11 @@ class Daemon:
             review=self.review, knowledge=self.knowledge,
         )
         connection.on_agent_notice = self._agent_notice
-        counted = False
         self._writers.add(writer)
         self._connections[connection] = writer
+        turns: asyncio.Queue[bytes | None] = asyncio.Queue(maxsize=_MAX_QUEUED)
+        runner = asyncio.create_task(self._take_turns(connection, writer, turns))
+        apart: set[asyncio.Task[None]] = set()
         try:
             while True:
                 try:
@@ -903,22 +995,20 @@ class Daemon:
                     break
                 if frame is None:
                     break
-                was_ready = connection.ready
-                role = initialize_role(frame)
-                if not await self._answer(connection, writer, frame):
-                    break
-                if counted or was_ready or role not in _HOLDS or not connection.ready:
-                    continue
-                counted = True
-                self._gain_holder()
+                await self._admit(connection, writer, frame, turns, apart)
+        except (ConnectionError, OSError) as exc:
+            _LOG.debug("client connection failed: %s", exc)
         finally:
+            # What was already read still runs: a sidecar reports its exit and closes straight after.
+            await turns.put(None)
+            _ = await asyncio.gather(runner, *apart, return_exceptions=True)
             self._writers.discard(writer)
             _ = self._connections.pop(connection, None)
             self._sidecar_left(connection)
             if (connection.ready and connection.role is ClientRole.UI and
                 "approvals.inline" in connection.capabilities and not self._has_approval_ui()):
                 self.approvals.release_pending()
-            if counted:
+            if connection.holds_core:
                 self._lose_holder()
             if not writer.is_closing():
                 writer.close()

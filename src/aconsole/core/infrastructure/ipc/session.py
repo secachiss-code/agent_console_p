@@ -105,6 +105,7 @@ class Connection:
         self.subscribed = False
         self.role: ClientRole | None = None
         self.on_agent_notice: Callable[[str, str], None] | None = None
+        self.holds_core = False
         self._sidecar_tab: str | None = None
         self.sidecar_claim: tuple[str, str] | None = None
         self.inflight: set[int] = set()
@@ -143,6 +144,10 @@ class Connection:
             return (self._event(resync),)
         self._queued += 1
         return (self._event(item),)
+
+    def busy(self, request_id: int) -> bytes:
+        """The refusal for a request the daemon has no room to run."""
+        return self._err(request_id, "SERVER_BUSY")
 
     def drained(self) -> None:
         """The transport wrote out everything handed to it: queued events no longer count toward the limit."""
