@@ -22,32 +22,19 @@ from aconsole.core.application.services.tabs import TabRequestError, TabService
 from aconsole.core.domain.clock import Clock
 from aconsole.core.infrastructure.agents.live_limits import ask_rate_limits
 from aconsole.core.infrastructure.containers.distrobox_env import DistroboxEnvCache, DistroboxError
+from aconsole.core.infrastructure.containers.login import LOGIN_SHELL
 from aconsole.core.infrastructure.containers.podman import ContainerError, ExecRequest, Inspected, Podman
 from aconsole.core.infrastructure.git.worktrees import WorktreeError, WorktreeRequest, Worktrees
+from aconsole.core.infrastructure.host_bins import host_binary
 
 _LOG = logging.getLogger(__name__)
-_GIT: Final = Path("/usr/bin/git")
+_GIT: Final = host_binary("git")
 _GIT_TIMEOUT_S: Final = 10.0
 _DEFAULT_BRANCH: Final = "main"
 _AGENTS_TTL_S: Final = 30.0
 _WAVE_ONE: Final = (AgentKind.CLAUDE, AgentKind.CODEX)
-_PODMAN: Final = Path("/usr/bin/podman")
+_PODMAN: Final = host_binary("podman")
 _SHELL: Final = Path("/bin/sh")
-# Bash and dash both accept `-lc`. Agents are on PATH only in a login shell: /etc/profile.d in the distrobox image.
-_LOGIN_SHELL: Final = (
-    "/bin/sh",
-    "-c",
-    '''exec "$(getent passwd "$(id -un)" | cut -d: -f7)" -lc 'exec "$@"' aconsole "$@"''',
-    "aconsole",
-)
-# The same login shell for a command that reads requests from stdin. Distrobox's profile runs `host-spawn`
-# when `podman exec` brings no XAUTHORITY, and that swallows stdin: the profile gets /dev/null instead.
-LOGIN_SHELL_KEEPING_STDIN: Final = (
-    "/bin/sh",
-    "-c",
-    '''exec 3<&0 </dev/null; exec "$(getent passwd "$(id -un)" | cut -d: -f7)" -lc 'exec "$@" <&3 3<&-' ac "$@"''',
-    "aconsole",
-)
 _PATH: Final = "/usr/bin"
 _PORT: Final = "0"
 _ID_BYTES: Final = 8
@@ -155,7 +142,7 @@ class HostTabs:
     def agent_output(self, name: str, command: tuple[str, ...]) -> bytes:
         """Stdout of an agent command in a running container, from its first `{`: a login shell may print first."""
         try:
-            text = self._podman.run_in(name, self._user, (*_LOGIN_SHELL, *command))
+            text = self._podman.run_in(name, self._user, (*LOGIN_SHELL, *command))
         except (ContainerError, ValueError):
             _LOG.warning("%s did not answer in %s", command[0], name, exc_info=True)
             return b""
@@ -168,7 +155,7 @@ class HostTabs:
         try:
             if not self._podman.inspect(name).running:
                 return ""
-            return self._podman.run_in(name, self._user, (*_LOGIN_SHELL, *command))
+            return self._podman.run_in(name, self._user, (*LOGIN_SHELL, *command))
         except (ContainerError, ValueError):
             _LOG.warning("claude /usage did not answer in %s", name, exc_info=True)
             return ""
@@ -178,7 +165,7 @@ class HostTabs:
         try:
             if not self._podman.inspect(name).running:
                 return b""
-            argv = self._podman.pipe_argv(name, self._user, (*LOGIN_SHELL_KEEPING_STDIN, "codex", "app-server"))
+            argv = self._podman.pipe_argv(name, self._user, (*LOGIN_SHELL, "codex", "app-server"))
         except (ContainerError, ValueError):
             return b""
         return ask_rate_limits(argv)
@@ -213,7 +200,7 @@ class HostTabs:
     def exec_argv(self, name: str, command: tuple[str, ...], env: dict[str, str], workdir: str) -> tuple[str, ...]:
         try:
             return self._podman.exec_spec(
-                ExecRequest(name=name, command=(*_LOGIN_SHELL, *command), env=env, workdir=workdir, user=self._user),
+                ExecRequest(name=name, command=(*LOGIN_SHELL, *command), env=env, workdir=workdir, user=self._user),
             )
         except (ContainerError, ValueError) as exc:
             raise TabRequestError(_START_FAILED) from exc

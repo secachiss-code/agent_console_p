@@ -23,11 +23,12 @@ from aconsole.core.application.ports.diff_reader import (
     DiffSummary,
     DiffWordLine,
 )
+from aconsole.core.infrastructure.host_bins import host_binary
 
 _TIMEOUT_S: Final = 30.0
 _MAX_BYTES: Final = 2_000_000
 _OK: Final = 0
-_GIT: Final = Path("/usr/bin/git")
+_GIT: Final = host_binary("git")
 _HEAD: Final = "HEAD"
 _WORKTREE: Final = "WORKTREE"
 _NO_EXT: Final = "--no-ext-diff"

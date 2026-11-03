@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import contextlib
+import getpass
 import hashlib
 import os
 import re
@@ -16,6 +17,7 @@ import msgspec
 
 from aconsole.contracts.app import CheckResult
 from aconsole.core.application.ports.setup import SetupFixExecutionError, SetupFixPlan
+from aconsole.core.infrastructure.containers.login import LOGIN_SHELL
 
 
 class SetupEnvironment(Protocol):
@@ -24,6 +26,8 @@ class SetupEnvironment(Protocol):
     def which(self, name: str) -> str | None: ...
     def run(self, argv: tuple[str, ...]) -> tuple[bool, str]: ...
     def is_dir(self, path: Path) -> bool: ...
+    @property
+    def user(self) -> str: ...
     def environ(self, name: str) -> str | None: ...
 
 
@@ -31,6 +35,10 @@ class SystemSetupEnvironment:
     @property
     def home(self) -> Path:
         return Path.home()
+
+    @property
+    def user(self) -> str:
+        return getpass.getuser()
 
     def which(self, name: str) -> str | None:
         return shutil.which(name)
@@ -60,24 +68,24 @@ class HostSetupProbe:
     def run_checks(self) -> tuple[CheckResult, ...]:
         env = self._env
         home = env.home
-        dependencies = all(env.which(tool) is not None for tool in ("podman", "distrobox", "g-ir-inspect"))
+        dependencies = all(env.which(tool) is not None for tool in ("podman", "distrobox"))
         listed, container_detail = env.run(("podman", "ps", "-a", "--format", "{{.Names}}"))
         names = tuple(line for line in container_detail.splitlines() if line.startswith("agent-")) if listed else ()
         agents = tuple((name, _agent_command(name)) for name in names)
         known = bool(agents) and all(command is not None for _, command in agents)
-        versions = known and all(_version(env.run(("podman", "exec", name, command, "--version")))
+        versions = known and all(_version(env.run(_in_container(env, name, command, "--version")))
             for name, command in agents if command is not None)
-        login = known and all(_claude_login(env.run(("podman", "exec", name, command, "auth", "status")))
+        login = known and all(_claude_login(env.run(_in_container(env, name, command, "auth", "status")))
             for name, command in agents if command == "claude") and all(command == "claude" for _, command in agents)
         vault = home / "Obsidian" / "AConsole"
         worktrees = home / ".local" / "share" / "aconsole" / "worktrees"
-        mounts = bool(names) and all(env.run(("podman", "exec", name, "test", "-d", str(path)))[0]
+        mounts = bool(names) and all(env.run(_in_container(env, name, "test", "-d", str(path)))[0]
             for name in names for path in (worktrees, vault))
-        graph = all(env.run(("podman", "exec", "devtools", tool, "--version"))[0]
+        graph = all(env.run(_in_container(env, "devtools", tool, "--version"))[0]
             for tool in ("python3", "cargo", "dotnet", "node"))
         notifications = env.which("notify-send") is not None and bool(env.environ("DBUS_SESSION_BUS_ADDRESS"))
         return (
-            _check("host_dependencies", dependencies, "podman, distrobox and GI inspection tools"),
+            _check("host_dependencies", dependencies, "podman and distrobox"),
             _check("agent_containers", bool(names), "Agent containers found" if names else "No agent containers found"),
             _check("agent_login", login, "Agent authentication status; unsupported agents require manual verification"),
             _check("agent_versions", versions, "Agent version commands in agent containers"),
@@ -87,6 +95,11 @@ class HostSetupProbe:
             _check("devtools_graph_tools", graph, "Python, Cargo, .NET and Node in devtools"),
             _check("notifications", notifications, "notify-send and session D-Bus"),
         )
+
+
+def _in_container(env: SetupEnvironment, name: str, *command: str) -> tuple[str, ...]:
+    """The same user and login as a tab, so a check sees what an agent will see."""
+    return ("podman", "exec", "--user", env.user, name, *LOGIN_SHELL, *command)
 
 
 def _agent_command(name: str) -> str | None:

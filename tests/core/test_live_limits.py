@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING
 from aconsole.core.domain.quota import QuotaKey
 from aconsole.core.infrastructure.agents.claude.limits import read_usage
 from aconsole.core.infrastructure.agents.live_limits import CachedAuth, ask_rate_limits
-from aconsole.core.infrastructure.tabs import LOGIN_SHELL_KEEPING_STDIN
+from aconsole.core.infrastructure.containers.login import LOGIN_SHELL
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -86,5 +86,5 @@ def test_a_profile_that_swallows_stdin_leaves_the_request_to_the_command(
     monkeypatch.setenv("HOME", str(tmp_path))
     reply = '{"id":2,"result":{}}'
     answer = f"read -r first; read -r second; read -r third; case \"$third\" in *rateLimits*) echo '{reply}';; esac"
-    argv = (*LOGIN_SHELL_KEEPING_STDIN, "sh", "-c", answer)
+    argv = (*LOGIN_SHELL, "sh", "-c", answer)
     assert ask_rate_limits(argv) == reply.encode()

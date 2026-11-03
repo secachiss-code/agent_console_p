@@ -48,6 +48,7 @@ from aconsole.core.application.ports.setup import (
 from aconsole.core.application.services.setup import SetupService
 from aconsole.core.bootstrap import Daemon
 from aconsole.core.domain.errors import DomainError
+from aconsole.core.infrastructure.containers.login import LOGIN_SHELL
 from aconsole.core.infrastructure.ipc.framing import decode_envelope, encode_line
 from aconsole.core.infrastructure.setup_checks import HostSetupProbe, SetupEnvironment
 from tests.core.conftest import wait_for_socket
@@ -68,6 +69,18 @@ _ROOT = Path(__file__).resolve().parents[2]
 _INSTALLER = _ROOT / "install.sh"
 
 
+_USER = "someone"
+
+
+def _without_login(argv: tuple[str, ...]) -> tuple[str, ...]:
+    """A check's call as the plain command it stands for."""
+    prefix = ("podman", "exec", "--user", _USER)
+    if argv[: len(prefix)] != prefix:
+        return argv
+    name = argv[len(prefix)]
+    return ("podman", "exec", name, *argv[len(prefix) + 1 + len(LOGIN_SHELL) :])
+
+
 class _Probe(SetupProbe):
     def __init__(self, checks: tuple[CheckResult, ...]) -> None:
         self.checks = checks
@@ -81,7 +94,8 @@ class _Probe(SetupProbe):
 class _FakeSetupEnvironment(SetupEnvironment):
     def __init__(self, home: Path) -> None:
         self._home = home
-        self.available = {"podman", "distrobox", "g-ir-inspect", "notify-send"}
+        self.available = {"podman", "distrobox", "notify-send"}
+        self.raw_calls: list[tuple[str, ...]] = []
         self.directories = {home / "Obsidian" / "AConsole"}
         self.variables = {"DBUS_SESSION_BUS_ADDRESS": "unix:path=/tmp/fake-bus"}
         self.containers = ("agent-claude",)
@@ -96,7 +110,13 @@ class _FakeSetupEnvironment(SetupEnvironment):
     def which(self, name: str) -> str | None:
         return f"/fake/bin/{name}" if name in self.available else None
 
+    @property
+    def user(self) -> str:
+        return _USER
+
     def run(self, argv: tuple[str, ...]) -> tuple[bool, str]:
+        self.raw_calls.append(argv)
+        argv = _without_login(argv)
         self.calls.append(argv)
         if argv == ("podman", "ps", "-a", "--format", "{{.Names}}"):
             return self.list_succeeds, "\n".join(self.containers)
@@ -227,10 +247,14 @@ def test_host_setup_probe_reports_all_eight_categories_from_fake_environment(tmp
 
     assert tuple(check.id for check in checks) == _CHECK_IDS
     assert all(check.ok and check.severity == "info" for check in checks)
-    assert by_id["host_dependencies"].detail == "podman, distrobox and GI inspection tools"
+    assert by_id["host_dependencies"].detail == "podman and distrobox"
     assert by_id["agent_login"].detail == "Agent authentication status; unsupported agents require manual verification"
     assert by_id["storage"].detail == str(tmp_path / "Obsidian" / "AConsole")
     assert ("podman", "exec", "agent-claude", "claude", "auth", "status") in environment.calls
+    # A check sees what a tab will see: the same user, the same way of finding the agent.
+    assert ("podman", "exec", "--user", _USER, "agent-claude", *LOGIN_SHELL, "claude", "--version") in (
+        environment.raw_calls
+    )
     assert (
         "podman",
         "exec",

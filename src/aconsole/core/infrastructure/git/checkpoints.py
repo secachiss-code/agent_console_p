@@ -14,10 +14,11 @@ from pathlib import Path
 from typing import Final, final
 
 from aconsole.core.application.ports.checkpoint_store import TreeCapture
+from aconsole.core.infrastructure.host_bins import host_binary
 
 _TIMEOUT_S: Final = 30.0
 _OK: Final = 0
-_GIT: Final = Path("/usr/bin/git")
+_GIT: Final = host_binary("git")
 _FAILED: Final = "git command failed"
 _TIMED_OUT: Final = "git timed out"
 _MISSING: Final = "git binary missing"
