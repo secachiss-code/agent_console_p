@@ -322,12 +322,15 @@ def _window(
 
 
 def agents_snapshot() -> AppSnapshot:
-    """Four agents, each counted its own way: two windows, a month and a pool in dollars, three windows."""
+    """Four agents, each counted its own way, with the money past their plans and their sessions' API cost."""
     base = demo_snapshot()
     claude, codex = base.accounts
     accounts = (
-        msgspec.structs.replace(claude, source="claude-usage", refresh_s=60),
-        msgspec.structs.replace(codex, source="codex-app-server", refresh_s=120),
+        msgspec.structs.replace(
+            claude, source="claude-usage", refresh_s=60,
+            quota=(*claude.quota, _window("budget", 77, money=(15.4, 20.0))),
+        ),
+        msgspec.structs.replace(codex, source="codex-app-server", refresh_s=120, credits_balance=412.5),
         AccountView(
             id=AccountId("cursor:local"), agent=AgentKind.CURSOR, plan_label="Pro", source="cursor-dashboard",
             refresh_s=120,
@@ -340,7 +343,13 @@ def agents_snapshot() -> AppSnapshot:
         ),
     )
     agents = (*base.agents, _agent(AgentKind.CURSOR), _agent(AgentKind.OPENCODE))
-    return msgspec.structs.replace(base, accounts=accounts, agents=agents)
+    # Claude's statusline reports what each session has cost at API prices.
+    costs = (1.84, 0.37, 4.12)
+    tabs = tuple(
+        msgspec.structs.replace(tab, session_cost_usd=costs[index]) if index < len(costs) else tab
+        for index, tab in enumerate(base.tabs)
+    )
+    return msgspec.structs.replace(base, accounts=accounts, agents=agents, tabs=tabs)
 
 
 def empty_snapshot() -> AppSnapshot:

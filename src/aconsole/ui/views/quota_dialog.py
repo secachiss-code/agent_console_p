@@ -46,6 +46,20 @@ def _ago(observed: datetime | None) -> str:
     return translate("quota.info.date").format(time=local.strftime("%d.%m %H:%M"))
 
 
+def _money_lines(account: AccountView, tabs: tuple[TabView, ...]) -> list[str]:
+    """Money beside the limits: credits bought past the plan, and the open sessions' cost at API prices."""
+    lines: list[str] = []
+    if account.credits_unlimited:
+        lines.append(translate("quota.credits_unlimited"))
+    elif account.credits_balance is not None:
+        lines.append(translate("quota.credits").format(count=f"{account.credits_balance:,.2f}"))
+    costs = [tab.session_cost_usd for tab in tabs if tab.agent is account.agent and tab.session_cost_usd]
+    if costs:
+        # What this agent's open sessions would have cost at API prices: the money the plan stands in for.
+        lines.append(translate("quota.api_cost").format(money=f"${sum(costs):,.2f}", count=len(costs)))
+    return lines
+
+
 def _detail(text: str) -> Gtk.Label:
     label = Gtk.Label(label=text, xalign=0, wrap=True)
     label.add_css_class("ac-summary-detail")
@@ -224,6 +238,8 @@ class QuotaDialog(Adw.Dialog):
                 group.append(_detail(translate("quota.unknown.copy")))
         if not account.quota:
             group.append(_detail(translate("quota.unknown.copy")))
+        for line in _money_lines(account, tabs):
+            group.append(_detail(line))
         titles = ", ".join(tab.title for tab in tabs if tab.account_id == account.id)
         if titles:
             group.append(_detail(f"{translate('quota.tabs')}: {titles}"))

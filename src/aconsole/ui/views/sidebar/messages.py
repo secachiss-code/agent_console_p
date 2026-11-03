@@ -45,6 +45,12 @@ _MESSAGES = {
     "quota.source_unknown": ("Usage source unavailable", "Источник данных не указан"),
     "quota.peak": ("up to {pct} %", "до {pct} %"),
     "quota.spent": ("Spent {money}", "Потрачено {money}"),
+    "quota.credits": ("Credits left: {count}", "Осталось кредитов: {count}"),
+    "quota.credits_unlimited": ("Credits: unlimited", "Кредиты: без ограничений"),
+    "quota.api_cost": (
+        "Open sessions at API prices: {money} ({count})",
+        "Открытые сессии по ценам API: {money} ({count})",
+    ),
     "quota.peak_left": ("{pct} % left", "осталось {pct} %"),
     "quota.refresh": ("Ask every agent for its limits now", "Запросить лимиты у всех агентов сейчас"),  # noqa: RUF001 -- Russian UI text
     "quota.info": ("Where the limits come from", "Откуда берутся лимиты"),

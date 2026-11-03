@@ -6,6 +6,7 @@ from datetime import datetime
 from aconsole.contracts.app import AccountView, TabView
 from aconsole.contracts.common import TabStatus
 
+_CENT = 0.01
 _SYMBOLS = {
     TabStatus.STARTING: "⟳",
     TabStatus.WORKING: "⟳",
@@ -31,6 +32,12 @@ class TabPresentation:
     waiting_minutes: int | None
 
 
+def session_cost(tab: TabView) -> str:
+    """What the session has cost at API prices, as the agent counts it. Nothing below a cent, nothing unknown."""
+    cost = tab.session_cost_usd
+    return f"${cost:,.2f}" if cost is not None and cost >= _CENT else ""
+
+
 def format_tab(tab: TabView, _accounts: tuple[AccountView, ...], now: datetime) -> TabPresentation:
     """Convert a tab snapshot into the visible row fields."""
     section_title = tab.agent.value.upper()
@@ -38,7 +45,7 @@ def format_tab(tab: TabView, _accounts: tuple[AccountView, ...], now: datetime) 
         section_key=f"{tab.agent.value}:{tab.account_id or ''}",
         section_title=section_title,
         title=tab.title,
-        subtitle=" · ".join(value for value in (tab.branch, tab.plan_node_title) if value),
+        subtitle=" · ".join(value for value in (tab.branch, tab.plan_node_title, session_cost(tab)) if value),
         detail=tab.last_message or "",
         status_symbol=_SYMBOLS[tab.status],
         spinning=tab.status is TabStatus.WORKING,

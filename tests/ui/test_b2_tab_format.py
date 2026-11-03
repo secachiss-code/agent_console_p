@@ -216,3 +216,14 @@ def test_b2_tab_format_unknown_account_does_not_use_another_accounts_plan() -> N
 
     assert presentation.section_key == "claude:claude:missing"
     assert presentation.section_title == "CLAUDE"
+
+
+def test_a_session_cost_joins_the_subtitle_from_a_cent() -> None:
+    from aconsole.ui.viewmodels.logic.tab_format import format_tab, session_cost
+
+    tab = demo_snapshot().tabs[0]
+    assert session_cost(msgspec.structs.replace(tab, session_cost_usd=None)) == ""
+    assert session_cost(msgspec.structs.replace(tab, session_cost_usd=0.004)) == ""
+    assert session_cost(msgspec.structs.replace(tab, session_cost_usd=1234.5)) == "$1,234.50"
+    shown = format_tab(msgspec.structs.replace(tab, session_cost_usd=0.42), (), NOW)
+    assert shown.subtitle.endswith("$0.42")
