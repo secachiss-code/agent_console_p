@@ -26,6 +26,7 @@ from aconsole.contracts.git import (
 from aconsole.core.domain.errors import DomainError
 from aconsole.core.domain.git_state import blocks_writes, require_fresh
 from aconsole.core.domain.tab_status import TabStatus as DomainStatus
+from aconsole.core.infrastructure.git.operations import GitMutations
 from tests.core.git_helpers import commit, git, new_repo
 from tests.core.test_wire import _Client, _connect, _daemon, _open, _stop
 
@@ -331,3 +332,10 @@ def test_domain_rules() -> None:
     assert not blocks_writes(None)
     with pytest.raises(DomainError, match="GIT_STATE_STALE"):
         require_fresh(expected_head="a", head="b", expected_index="i", index="i")
+
+
+@pytest.mark.parametrize("message", ["fix the parser", "fix the parser\n"])
+def test_trailers_go_below_a_one_line_message(tmp_path: Path, message: str) -> None:
+    repo = new_repo(tmp_path / "repo")
+    text = GitMutations().with_trailers(repo, message, (("AConsole-Node", "nd-1"), ("AConsole-Tab", "t1")))
+    assert text == "fix the parser\n\nAConsole-Node: nd-1\nAConsole-Tab: t1\n"

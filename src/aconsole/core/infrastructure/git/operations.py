@@ -93,7 +93,9 @@ class GitMutations:
         if not trailers:
             return message
         named = [part for key, value in trailers for part in ("--trailer", f"{key}: {value}")]
-        return self._git.read(worktree, "interpret-trailers", *named, stdin=message.encode()).text
+        # Without its last newline a one-line message gets the trailers glued to the subject, where nobody finds them.
+        text = message if message.endswith("\n") else message + "\n"
+        return self._git.read(worktree, "interpret-trailers", *named, stdin=text.encode()).text
 
     def merge_hooks(self, root: Path, tree: str, message: str, *, squash: bool) -> GitDone:
         """A throwaway index holds the merged tree, as a hook looking at it would expect. The checked-out files in
