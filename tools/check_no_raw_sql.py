@@ -7,8 +7,8 @@ import sys
 from pathlib import Path
 
 PATTERNS = (
-    # `text(` imported bare, or `sa.text(` / `sqlalchemy.text(`; not `st.text(` from hypothesis.
-    re.compile(r"(?<![\w.])text\s*\("),
+    # `text(` imported bare, or `sa.text(` / `sqlalchemy.text(`; not `st.text(` from hypothesis, nor `def text(`.
+    re.compile(r"(?<![\w.])(?<!def )text\s*\("),
     re.compile(r"\b(?:sa|sqlalchemy)\.text\s*\("),
     re.compile(r"\bexec_driver_sql\s*\("),
     re.compile(r"""\.execute\(\s*['"]"""),
