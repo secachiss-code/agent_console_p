@@ -165,6 +165,12 @@ class GitStateService:
                 return root, row
         raise DomainError(code=_WORKTREE_UNKNOWN, name="GIT_WORKTREE_UNKNOWN", retryable=False)
 
+    def base_name(self, project_id: str) -> str | None:
+        """The branch this project's work lands on, if it can be told."""
+        project = self.project(project_id)
+        root = Path(project.root)
+        return self._base_name(project, self._reader.refs(root), root)
+
     def tab_at(self, project_id: str, worktree: str) -> GitTab | None:
         for tab in self._catalog().git_tabs(project_id):
             if _same_path(tab.worktree, worktree):

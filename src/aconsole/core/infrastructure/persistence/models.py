@@ -318,6 +318,33 @@ class Checkpoint(Base):
 
 
 @final
+class GitOperationRow(Base):
+    """Outlives its project and tab on purpose: it says what happened to a branch. Nothing here cascades."""
+
+    __tablename__ = "git_operations"
+    __table_args__ = _table_args(Index("ix_git_operations_open", "status"))
+
+    id: Mapped[str] = mapped_column(String(32), primary_key=True)
+    project_id: Mapped[str] = mapped_column(String(64))
+    kind: Mapped[str] = mapped_column(String(24))
+    status: Mapped[str] = mapped_column(String(24))
+    mode: Mapped[str | None] = mapped_column(String(24))
+    source: Mapped[str] = mapped_column(String(512))
+    target: Mapped[str] = mapped_column(String(512))
+    source_oid: Mapped[str] = mapped_column(String(64))
+    target_oid: Mapped[str] = mapped_column(String(64))
+    result_oid: Mapped[str | None] = mapped_column(String(64))
+    expected_tree: Mapped[str | None] = mapped_column(String(64))
+    worktree: Mapped[str | None] = mapped_column(Text)
+    tab_id: Mapped[str | None] = mapped_column(String(64))
+    plan_node: Mapped[str | None] = mapped_column(String(64))
+    message: Mapped[str | None] = mapped_column(Text)
+    follow_up_pending: Mapped[bool] = mapped_column()
+    created_at: Mapped[datetime] = mapped_column()
+    updated_at: Mapped[datetime] = mapped_column()
+
+
+@final
 class PlanEdge(Base):
     __tablename__ = "plan_edges"
     __table_args__ = _table_args(Index("ix_edges_dst", "dst_node_id", "kind"))

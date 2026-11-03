@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Protocol, final
 
 from aconsole.core.application.ports.diff_reader import DiffFileText, DiffSummary
+from aconsole.core.domain.git_operation import GitOperationRecord
 
 
 @final
@@ -135,6 +136,7 @@ class GitDone:
 
     ok: bool
     said: str
+    oid: str | None = None
 
 
 class GitWriter(Protocol):
@@ -163,3 +165,27 @@ class GitWriter(Protocol):
     def safety_ref(self, worktree: Path, ref: str, label: str) -> None:
         """Keep the worktree's files on a side ref before something replaces them."""
         ...
+
+    def merge(self, worktree: Path, oid: str, mode: str, message: str) -> GitDone:
+        """Merge into the branch checked out here. A refusal leaves the worktree as it was."""
+        ...
+
+    def tree_of(self, root: Path, oid: str) -> str | None: ...
+
+    def commit_tree(self, root: Path, tree: str, parents: tuple[str, ...], message: str) -> GitDone:
+        """A new commit no branch points at yet. `oid` is its id."""
+        ...
+
+    def move_ref(self, root: Path, ref: str, new: str, old: str) -> GitDone:
+        """Only if `ref` is still at `old`."""
+        ...
+
+
+class GitOperationJournal(Protocol):
+    def save(self, record: GitOperationRecord) -> bool:
+        """False when the row was not written. The caller keeps the record and writes it again."""
+        ...
+
+    def find(self, operation_id: str) -> GitOperationRecord | None: ...
+
+    def unfinished(self) -> tuple[GitOperationRecord, ...]: ...

@@ -18,12 +18,16 @@ from aconsole.contracts.git import (
     GitDiffFileParams,
     GitDiffParams,
     GitGraphParams,
+    GitOperationParams,
     GitPathsParams,
     GitStateParams,
     GitStateResult,
+    MergePreviewParams,
+    MergeWorktreeParams,
     RestoreFileParams,
     RestoreFilePreviewParams,
 )
+from aconsole.core.application.services.git_merge import GitMergeService
 from aconsole.core.application.services.git_ops import GitOperationService
 from aconsole.core.application.services.git_state import GitStateService
 
@@ -38,9 +42,13 @@ GIT_METHODS: Final = frozenset(
         "git/commit",
         "git/restoreFilePreview",
         "git/restoreFile",
+        "git/mergePreview",
+        "git/mergeWorktree",
+        "git/operation",
     }
 )
 _READS: Final = frozenset({"git/state", "git/graph", "git/diffSummary", "git/diffFile"})
+_MERGING: Final = frozenset({"git/mergePreview", "git/mergeWorktree", "git/operation"})
 _WATCH_S: Final = 30.0
 
 
@@ -55,6 +63,7 @@ class GitService:
     ) -> None:
         self.state: GitStateService = state
         self.operations: GitOperationService | None = None
+        self.merges: GitMergeService | None = None
         self._emit: Callable[[UiEvent], None] = emit
         self._monotonic: Callable[[], float] = monotonic
         self._lock: threading.Lock = threading.Lock()
@@ -63,6 +72,8 @@ class GitService:
         self._nudged: set[str] = set()
 
     def dispatch(self, method: str, raw: bytes) -> msgspec.Struct:
+        if method in _MERGING and self.merges is not None:
+            return self._merge(self.merges, method, raw)
         if method not in _READS and self.operations is not None:
             return self._write(self.operations, method, raw)
         if method == "git/state":
@@ -74,6 +85,13 @@ class GitService:
             return self.state.diff_summary(str(summary.project_id), summary.source)
         detail = msgspec.json.decode(raw, type=GitDiffFileParams)
         return self.state.diff_file(str(detail.project_id), detail.source, detail.path, detail.max_lines)
+
+    def _merge(self, merges: GitMergeService, method: str, raw: bytes) -> msgspec.Struct:
+        if method == "git/mergePreview":
+            return merges.preview(msgspec.json.decode(raw, type=MergePreviewParams))
+        if method == "git/mergeWorktree":
+            return merges.merge(msgspec.json.decode(raw, type=MergeWorktreeParams))
+        return merges.operation(msgspec.json.decode(raw, type=GitOperationParams))
 
     def _write(self, operations: GitOperationService, method: str, raw: bytes) -> msgspec.Struct:
         if method == "git/stage":
@@ -96,6 +114,8 @@ class GitService:
 
     def check(self) -> tuple[str, ...]:
         """One pass over the projects a client looked at lately. Off the loop: it runs git."""
+        if self.merges is not None:
+            self.merges.retry()
         now = self._monotonic()
         with self._lock:
             self._asked = {key: at for key, at in self._asked.items() if now - at < _WATCH_S}

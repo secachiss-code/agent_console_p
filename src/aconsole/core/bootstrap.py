@@ -33,6 +33,7 @@ from aconsole.core.application.services.approval_broker import ApprovalHold
 from aconsole.core.application.services.checkpoints import CheckpointService
 from aconsole.core.application.services.diff import DiffService
 from aconsole.core.application.services.git import GitService
+from aconsole.core.application.services.git_merge import GitMergeService
 from aconsole.core.application.services.git_ops import GitOperationService
 from aconsole.core.application.services.git_state import GitStateService
 from aconsole.core.application.services.projects import ProjectCatalog
@@ -78,6 +79,7 @@ from aconsole.core.infrastructure.persistence.engine import write_engine
 from aconsole.core.infrastructure.persistence.models import ApprovalStatus
 from aconsole.core.infrastructure.persistence.repositories.catalog import ApprovalRecord, ApprovalRepository
 from aconsole.core.infrastructure.persistence.repositories.checkpoints import CheckpointDatabase
+from aconsole.core.infrastructure.persistence.repositories.git_operations import GitOperationDatabase
 from aconsole.core.infrastructure.persistence.repositories.knowledge import KnowledgeDatabase
 from aconsole.core.infrastructure.persistence.repositories.plans import PlanDatabase
 from aconsole.core.infrastructure.persistence.repositories.tabs import TabDatabase
@@ -391,12 +393,20 @@ class Daemon:
             emit=self._from_worker,
         )
         history = GitHistory()
+        mutations = GitMutations()
         self.git: GitService = GitService(GitStateService(history, lambda: self.tabs), emit=self._from_worker)
         self.git.operations = GitOperationService(
             self.git.state,
-            GitMutations(),
+            mutations,
             now=lambda: datetime.now(UTC),
             tab_safety=self._keep_before_change,
+            changed=self._git_changed,
+        )
+        self.git.merges = GitMergeService(
+            self.git.state,
+            self.git.operations,
+            mutations,
+            now=lambda: datetime.now(UTC),
             changed=self._git_changed,
         )
         self.setup_service: SetupService = setup_service or SetupService(
@@ -878,6 +888,9 @@ class Daemon:
             self._publish(event, live, None)
         self.tabs.on_settings_changed = self._use_vault
         self._use_vault(await self._in_worker(self.tabs.current_settings))
+        merges = self.git.merges
+        if merges is not None:
+            await asyncio.to_thread(merges.use_journal, GitOperationDatabase(writer))
 
     async def _open_database(self) -> None:
         """DATA_MODEL §5: backup and upgrade before the pool opens, then the writer and the sweep loop."""
