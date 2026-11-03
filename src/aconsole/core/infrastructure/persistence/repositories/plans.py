@@ -7,9 +7,10 @@ from datetime import UTC, datetime
 from typing import final
 
 from sqlalchemy import delete, select
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
-from aconsole.core.application.ports.plan_store import StoredArtifact, StoredNode, StoredPlan
+from aconsole.core.application.ports.plan_store import StoredArtifact, StoredNode, StoredPlan, StoreWriteError
 from aconsole.core.domain.agent import AgentKind
 from aconsole.core.domain.plan import NodeStatus
 from aconsole.core.infrastructure.persistence.models import (
@@ -46,7 +47,11 @@ class PlanDatabase:
         return tuple(found)
 
     def save(self, plan: StoredPlan) -> None:
-        self._writer.post(lambda session: save_plan(session, plan))
+        try:
+            _ = self._writer.call(lambda session: save_plan(session, plan))
+        except (SQLAlchemyError, TimeoutError) as exc:
+            message = f"plan {plan.id} was not saved: {exc}"
+            raise StoreWriteError(message) from exc
 
 
 def save_plan(session: Session, plan: StoredPlan) -> None:

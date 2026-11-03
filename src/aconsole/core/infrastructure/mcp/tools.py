@@ -24,7 +24,13 @@ from pydantic import BaseModel, ConfigDict, Field
 from aconsole.contracts.app import PlanNodeView, PlanView
 from aconsole.contracts.common import AgentKind, NodeId, NoteRef, PlanId, ProjectId, TabId
 from aconsole.contracts.common import NodeStatus as NodeStatusView
-from aconsole.core.application.ports.plan_store import PlanStore, StoredArtifact, StoredNode, StoredPlan
+from aconsole.core.application.ports.plan_store import (
+    PlanStore,
+    StoredArtifact,
+    StoredNode,
+    StoredPlan,
+    StoreWriteError,
+)
 from aconsole.core.domain.errors import DomainError
 from aconsole.core.domain.plan import Move, Node, NodeSpec, NodeStatus, Plan, Role
 from aconsole.core.domain.vault_sync import Note as VaultNote
@@ -322,6 +328,7 @@ class PlanBoard:
         self._facts: dict[str, _Fact] = {}
         self._handovers: dict[str, _Handover] = {}
         self._store: PlanStore | None = None
+        self._saved: dict[str, StoredPlan] = {}
         self.on_changed: Callable[[PlanView], None] | None = None
         self.note_ref: Callable[[str, str], str | None] = lambda _plan, _key: None
         self.code_graph: CodeGraph | None = None
@@ -332,6 +339,7 @@ class PlanBoard:
             self._store = store
             for saved in store.load():
                 self._plans[saved.id] = _restored(saved)
+                self._saved[saved.id] = saved
                 self._seq = max(self._seq, _number(saved.id), *(_number(node.id) for node in saved.nodes))
 
     def views(self, project_id: str | None = None, *, active_only: bool = False) -> tuple[PlanView, ...]:
@@ -430,9 +438,23 @@ class PlanBoard:
         """Every change goes through here: the store, then whoever shows plans."""
         stored.updated_at = self._now()
         if self._store is not None:
-            self._store.save(self._state(stored))
+            state = self._state(stored)
+            try:
+                self._store.save(state)
+            except StoreWriteError as exc:
+                self._forget_unsaved(stored.plan_id)
+                _stop("INTERNAL_ERROR", str(exc))
+            self._saved[state.id] = state
         if self.on_changed is not None:
             self.on_changed(self._view(stored))
+
+    def _forget_unsaved(self, plan_id: str) -> None:
+        """Back to what the store holds, so that memory never promises more than a restart would keep."""
+        saved = self._saved.get(plan_id)
+        if saved is None:
+            _ = self._plans.pop(plan_id, None)
+        else:
+            self._plans[plan_id] = _restored(saved)
 
     def _state(self, stored: _Stored) -> StoredPlan:
         layers = {key: layer for key, layer, _position in stored.dag.layout()}
@@ -1281,6 +1303,7 @@ def _git(worktree: Path | None, *args: str) -> str:
 
 
 _CODES: dict[str, int] = {
+    "INTERNAL_ERROR": -32603,
     "INGEST_UNAUTHORIZED": 1001,
     "PATH_NOT_ALLOWED": 2011,
     "PLAN_NOT_FOUND": 4001,
@@ -1298,6 +1321,7 @@ _CODES: dict[str, int] = {
 }
 
 _HINTS: dict[str, str] = {
+    "INTERNAL_ERROR": "nothing was saved; retry, and read the core log if it keeps failing",
     "INGEST_UNAUTHORIZED": "open a tab and pass Authorization: Bearer <tab token>",
     "PATH_NOT_ALLOWED": "call kb_add with source path#Lx-Ly that exists in the worktree, or an https URL",
     "PLAN_NOT_FOUND": "call plan_list to see plans for this project",

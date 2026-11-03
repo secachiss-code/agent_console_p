@@ -5,6 +5,10 @@ from datetime import datetime
 from typing import Protocol
 
 
+class StoreWriteError(Exception):
+    """The store did not commit a write, so the caller must not act as if it had."""
+
+
 @dataclass(frozen=True, slots=True, kw_only=True)
 class StoredArtifact:
     id: str
@@ -61,5 +65,5 @@ class PlanStore(Protocol):
         ...
 
     def save(self, plan: StoredPlan) -> None:
-        """Queue the plan's new state. Saves apply in the order they were made."""
+        """Commit the plan's new state, or raise `StoreWriteError`."""
         ...

@@ -100,7 +100,8 @@ class Writer:
                 if not pending:
                     deadline = time.monotonic() + _WINDOW_S
                 pending.append(item)
-                if len(pending) >= _BATCH or time.monotonic() >= deadline:
+                # Somebody is blocked on this job; the window would only make them wait.
+                if item.done is not None or len(pending) >= _BATCH or time.monotonic() >= deadline:
                     self._flush(session, pending)
                     pending = []
         finally:
@@ -113,8 +114,12 @@ class Writer:
             session.commit()
         except Exception as exc:  # noqa: BLE001
             session.rollback()
-            for job in jobs:
-                self._fail(job, exc)
+            if len(jobs) > 1:
+                # One bad job must not take the rest of the batch with it.
+                for job in jobs:
+                    self._flush(session, [job])
+            else:
+                self._fail(jobs[0], exc)
             self.last_tick_s = time.perf_counter() - started
             return
         self.last_tick_s = time.perf_counter() - started
