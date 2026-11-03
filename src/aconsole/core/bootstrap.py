@@ -246,6 +246,18 @@ _MAX_APART = 4
 _MAX_IMPACTS = 2
 
 
+_SIDECAR_GRACE_S = 1.0
+
+
+def _process_alive(pid: int) -> bool:
+    """Not gone and not a zombie waiting for its parent."""
+    try:
+        stat = Path(f"/proc/{pid}/stat").read_text(encoding="ascii", errors="replace")
+    except OSError:
+        return False
+    return stat.rpartition(")")[2].split()[0] not in {"Z", "X"}
+
+
 def _route(envelope: Envelope, *, ready: bool) -> _Route:
     if not ready:
         return _Route.TURN
@@ -622,7 +634,9 @@ class Daemon:
         self._host.set_ingest_port(port)
         self._ingest_tasks = [
             asyncio.create_task(server.serve(sockets=[listener])),
-            asyncio.create_task(consume(self._ingest_queue, ready, self._apply_hook, self._prompt_sent)),
+            asyncio.create_task(
+                consume(self._ingest_queue, ready, self._apply_hook, self._prompt_sent, self._claude_session)
+            ),
             asyncio.create_task(self._poll_codex_limits()),
             asyncio.create_task(self._poll_claude_limits()),
             asyncio.create_task(self._watch_codex_turns()),
@@ -636,6 +650,9 @@ class Daemon:
         if event_name == "Stop":
             self._claude_usage_due.set()
 
+    async def _claude_session(self, tab_id: str, session: str) -> None:
+        await self._in_worker(lambda: self.tabs.claude_session(tab_id, session))
+
     async def _prompt_sent(self, tab_id: str, text: str) -> None:
         await self._in_worker(lambda: self.review.on_prompt(tab_id, text))
 
@@ -644,9 +661,20 @@ class Daemon:
         claim = connection.sidecar_claim
         if claim is None or self._closing:
             return
-        task = asyncio.create_task(self._in_worker(lambda: self.tabs.sidecar_gone(*claim)))
+        task = asyncio.create_task(self._sidecar_gone(claim, connection.peer_pid))
         self._notices.add(task)
         task.add_done_callback(self._notices.discard)
+
+    async def _sidecar_gone(self, claim: tuple[str, str], pid: int | None) -> None:
+        """A sidecar still running lost only its socket: its terminal and agent are alive, so leave them."""
+        await asyncio.sleep(_SIDECAR_GRACE_S)
+        if self._closing:
+            return
+        if pid is not None and pid != os.getpid() and _process_alive(pid):
+            _LOG.warning("tab %s: sidecar %d lost its connection but runs on; its agent is left alone", claim[0], pid)
+            return
+        _LOG.info("tab %s: sidecar is gone", claim[0])
+        await self._in_worker(lambda: self.tabs.sidecar_gone(*claim))
 
     def _agent_notice(self, tab_id: str, text: str) -> None:
         task = asyncio.create_task(self._in_worker(lambda: self.tabs.agent_notice(tab_id, text)))
@@ -664,9 +692,14 @@ class Daemon:
                 now = datetime.now(UTC).astimezone()
                 for cwd, working in await asyncio.to_thread(watch.changes, now):
                     await self._in_worker(lambda cwd=cwd, working=working: self.tabs.codex_turn(cwd, working=working))
+                    await self._note_codex_session(cwd, watch.session_in(cwd))
             except Exception:  # noqa: BLE001 -- the status must never stop the core
                 _LOG.exception("cannot read Codex turns")
             await asyncio.sleep(_CODEX_TURN_POLL_S)
+
+    async def _note_codex_session(self, cwd: str, session: str | None) -> None:
+        if session is not None:
+            await self._in_worker(lambda: self.tabs.codex_session(cwd, session))
 
     async def _poll_claude_limits(self) -> None:
         """`/usage` is what Claude itself shows. A statusline only repeats its tab's last reply, so it is not used."""

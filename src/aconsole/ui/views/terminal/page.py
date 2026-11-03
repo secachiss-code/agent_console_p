@@ -87,9 +87,9 @@ class TerminalPage(Gtk.Overlay):
         self.ended_revealer.set_valign(Gtk.Align.CENTER)
         panel = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
         panel.add_css_class("ac-session-ended")
-        title = Gtk.Label(label=translate("terminal.ended"))
-        title.add_css_class("title-4")
-        panel.append(title)
+        self.ended_title: Gtk.Label = Gtk.Label(label=translate("terminal.ended"))
+        self.ended_title.add_css_class("title-4")
+        panel.append(self.ended_title)
         self.ended_actions: Gtk.Box = Gtk.Box(spacing=8)
         for key, callback in (
             ("terminal.resume", self._resume), ("terminal.new", self._new_session), ("terminal.close", self._close_tab),
@@ -121,6 +121,9 @@ class TerminalPage(Gtk.Overlay):
                 return
             if exited_error is not None:
                 self._show_error(translate("terminal.report_error"))
+            code = session.exit_code
+            ended = translate("terminal.ended")
+            self.ended_title.set_label(translate("terminal.ended_code").format(code=code) if code else ended)
             self.ended_revealer.set_reveal_child(True)
         except asyncio.CancelledError:
             raise

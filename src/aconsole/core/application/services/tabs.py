@@ -459,6 +459,28 @@ class TabService:
             if not just_asked:
                 _ = self.apply_hook(tab.id, event)
 
+    def codex_session(self, cwd: str, session: str) -> None:
+        """Remember which Codex session runs in ``cwd``. Two Codex tabs there cannot be told apart: neither is set."""
+        running = [
+            tab for tab in self._tabs.values() if tab.agent is AgentKind.CODEX and tab.running and tab.worktree == cwd
+        ]
+        if len(running) == 1:
+            self._note_session(running[0], session)
+
+    def claude_session(self, tab_id: str, session: str) -> None:
+        """What a Claude hook says its session is. A session replaced by `/clear` replaces this one too."""
+        tab = self._tabs.get(tab_id)
+        if tab is not None and tab.agent is AgentKind.CLAUDE:
+            self._note_session(tab, session)
+
+    def _note_session(self, tab: _Tab, session: str) -> None:
+        # It becomes a word of the command line that resumes the agent.
+        if tab.session == session or _CODEX_ID.fullmatch(session) is None:
+            return
+        tab.session = session
+        self._remember(tab)
+        _ = self._updated(tab, {"agent_session_id"})
+
     def agent_notice(self, tab_id: str, text: str) -> None:
         """What Codex tells the terminal (OSC 9). Without hooks only these words say that it waits for the user."""
         tab = self._tabs.get(tab_id)

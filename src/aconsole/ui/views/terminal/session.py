@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import os
 from typing import TYPE_CHECKING
 
 import gi
@@ -29,6 +30,7 @@ class TerminalSession:
         self._started: asyncio.Future[Exception | None] | None = None
         self._finished: asyncio.Future[tuple[Exception | None, Exception | None]] | None = None
         self._cancellable: Gio.Cancellable | None = None
+        self.exit_code: int | None = None
 
     async def start(self) -> int:
         if self._worker is None:
@@ -117,6 +119,7 @@ class TerminalSession:
         spawn_result: asyncio.Future[int],
     ) -> None:
         def child_exited(_terminal: Vte.Terminal, status: int) -> None:
+            self.exit_code = os.waitstatus_to_exitcode(status) if status >= 0 else None
             if not exit_status.done():
                 exit_status.set_result(status)
 

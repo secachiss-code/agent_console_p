@@ -108,6 +108,7 @@ class Connection:
         self.holds_core = False
         self._sidecar_tab: str | None = None
         self.sidecar_claim: tuple[str, str] | None = None
+        self.peer_pid: int | None = None
         self.inflight: set[int] = set()
         self._queued = 0
         self._encoder = msgspec.json.Encoder()
@@ -363,6 +364,7 @@ class Connection:
         if claimed:
             self._sidecar_tab = str(params.tab_id)
             self.sidecar_claim = (str(params.tab_id), params.sidecar_token)
+            self.peer_pid = params.pid
         return claimed
 
     def _subscribe(self, request: Request) -> tuple[bytes, ...]:

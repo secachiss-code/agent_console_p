@@ -4,6 +4,7 @@ import locale
 
 _MESSAGES = {
     "terminal.ended": ("Session ended", "Сессия завершена"),
+    "terminal.ended_code": ("Session ended with code {code}", "Сессия завершена с кодом {code}"),  # noqa: RUF001 -- Russian
     "terminal.resume": ("Resume", "Возобновить"),
     "terminal.new": ("New", "Новая"),
     "terminal.close": ("Close", "Закрыть"),

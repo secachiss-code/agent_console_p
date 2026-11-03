@@ -18,6 +18,7 @@ _ENDED: Final = frozenset({"task_complete", "turn_complete", "turn_aborted"})
 class _Payload(msgspec.Struct, frozen=True):
     type: str | None = None
     cwd: str | None = None
+    id: str | None = None
 
 
 class _Line(msgspec.Struct, frozen=True):
@@ -32,12 +33,12 @@ def _decode(line: bytes) -> _Line | None:
         return None
 
 
-def _session_cwd(path: Path) -> str | None:
+def _session_meta(path: Path) -> _Payload:
     with path.open("rb") as file:
         found = _decode(file.readline())
     if found is None or found.type != "session_meta" or found.payload is None:
-        return None
-    return found.payload.cwd
+        return _Payload()
+    return found.payload
 
 
 def _last_turn_state(path: Path) -> bool | None:
@@ -64,13 +65,17 @@ class TurnWatch:
 
     _root: Path
     _stamps: dict[Path, int]
-    _cwds: dict[Path, str | None]
+    _metas: dict[Path, _Payload]
+    _sessions: dict[str, str]
+    _newest: dict[str, int]
     _states: dict[Path, bool]
 
     def __init__(self, root: Path) -> None:
         self._root = root
         self._stamps = {}
-        self._cwds = {}
+        self._metas = {}
+        self._sessions = {}
+        self._newest = {}
         self._states = {}
 
     def changes(self, now: datetime) -> tuple[tuple[str, bool], ...]:
@@ -82,6 +87,10 @@ class TurnWatch:
                 found.extend(self._scan(folder))
         return tuple((cwd, working) for _stamp, cwd, working in sorted(found))
 
+    def session_in(self, cwd: str) -> str | None:
+        """The session that last wrote a turn in ``cwd``: what `codex resume` must be given."""
+        return self._sessions.get(cwd)
+
     def _scan(self, folder: Path) -> list[tuple[int, str, bool]]:
         found: list[tuple[int, str, bool]] = []
         for path in folder.glob("rollout-*.jsonl"):
@@ -90,15 +99,19 @@ class TurnWatch:
                 if self._stamps.get(path) == stamp:
                     continue
                 self._stamps[path] = stamp
-                if path not in self._cwds:
-                    self._cwds[path] = _session_cwd(path)
+                if path not in self._metas:
+                    self._metas[path] = _session_meta(path)
                 state = _last_turn_state(path)
             except OSError:
                 continue
-            cwd = self._cwds[path]
+            cwd = self._metas[path].cwd
             # New lines in a running turn are reported too: they end a wait for the user's approval.
             if cwd is None or state is None or (self._states.get(path) is state and not state):
                 continue
             self._states[path] = state
+            session = self._metas[path].id
+            if session is not None and stamp >= self._newest.get(cwd, 0):
+                self._newest[cwd] = stamp
+                self._sessions[cwd] = session
             found.append((stamp, cwd, state))
         return found

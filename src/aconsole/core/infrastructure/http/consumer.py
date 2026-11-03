@@ -63,6 +63,7 @@ async def consume(
     ready: asyncio.Event,
     apply: Callable[[str, str], Awaitable[None]],
     on_prompt: Callable[[str, str], Awaitable[None]] | None = None,
+    on_session: Callable[[str, str], Awaitable[None]] | None = None,
 ) -> None:
     """Apply queued items in order until cancelled. `ready` is set whenever the HTTP side queued something."""
     while True:
@@ -73,11 +74,27 @@ async def consume(
                 name = _event_name(item)
                 if name is not None:
                     await apply(item.tab_id, name)
+                session = _claude_session_id(item)
+                if session is not None and on_session is not None:
+                    await on_session(item.tab_id, session)
                 prompt = submitted_prompt(item)
                 if prompt is not None and on_prompt is not None:
                     await on_prompt(item.tab_id, prompt)
             except Exception:  # noqa: BLE001 -- one bad item must not stop the consumer
                 _LOG.exception("ingest item for %s failed", item.tab_id)
+
+
+class _HasSession(msgspec.Struct, frozen=True):
+    session_id: str | None = None
+
+
+def _claude_session_id(item: IngestItem) -> str | None:
+    if item.kind not in _CLAUDE:
+        return None
+    try:
+        return msgspec.json.decode(item.body, type=_HasSession).session_id
+    except msgspec.DecodeError:
+        return None
 
 
 def _event_name(item: IngestItem) -> str | None:
