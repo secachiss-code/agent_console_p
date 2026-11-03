@@ -14,15 +14,33 @@ import msgspec
 from aconsole.contracts.common import ProjectId
 from aconsole.contracts.events import CheckpointCreated, GitStateUpdated, TabUpdated, UiEvent
 from aconsole.contracts.git import (
+    GitCommitParams,
     GitDiffFileParams,
     GitDiffParams,
     GitGraphParams,
+    GitPathsParams,
     GitStateParams,
     GitStateResult,
+    RestoreFileParams,
+    RestoreFilePreviewParams,
 )
+from aconsole.core.application.services.git_ops import GitOperationService
 from aconsole.core.application.services.git_state import GitStateService
 
-GIT_READ_METHODS: Final = frozenset({"git/state", "git/graph", "git/diffSummary", "git/diffFile"})
+GIT_METHODS: Final = frozenset(
+    {
+        "git/state",
+        "git/graph",
+        "git/diffSummary",
+        "git/diffFile",
+        "git/stage",
+        "git/unstage",
+        "git/commit",
+        "git/restoreFilePreview",
+        "git/restoreFile",
+    }
+)
+_READS: Final = frozenset({"git/state", "git/graph", "git/diffSummary", "git/diffFile"})
 _WATCH_S: Final = 30.0
 
 
@@ -36,6 +54,7 @@ class GitService:
         monotonic: Callable[[], float] = time.monotonic,
     ) -> None:
         self.state: GitStateService = state
+        self.operations: GitOperationService | None = None
         self._emit: Callable[[UiEvent], None] = emit
         self._monotonic: Callable[[], float] = monotonic
         self._lock: threading.Lock = threading.Lock()
@@ -44,6 +63,8 @@ class GitService:
         self._nudged: set[str] = set()
 
     def dispatch(self, method: str, raw: bytes) -> msgspec.Struct:
+        if method not in _READS and self.operations is not None:
+            return self._write(self.operations, method, raw)
         if method == "git/state":
             return self._state(str(msgspec.json.decode(raw, type=GitStateParams).project_id))
         if method == "git/graph":
@@ -53,6 +74,17 @@ class GitService:
             return self.state.diff_summary(str(summary.project_id), summary.source)
         detail = msgspec.json.decode(raw, type=GitDiffFileParams)
         return self.state.diff_file(str(detail.project_id), detail.source, detail.path, detail.max_lines)
+
+    def _write(self, operations: GitOperationService, method: str, raw: bytes) -> msgspec.Struct:
+        if method == "git/stage":
+            return operations.stage(msgspec.json.decode(raw, type=GitPathsParams))
+        if method == "git/unstage":
+            return operations.unstage(msgspec.json.decode(raw, type=GitPathsParams))
+        if method == "git/commit":
+            return operations.commit(msgspec.json.decode(raw, type=GitCommitParams))
+        if method == "git/restoreFilePreview":
+            return operations.restore_preview(msgspec.json.decode(raw, type=RestoreFilePreviewParams))
+        return operations.restore_file(msgspec.json.decode(raw, type=RestoreFileParams))
 
     def on_event(self, event: UiEvent) -> None:
         """A turn ended or a checkpoint was taken: the next check should not wait."""

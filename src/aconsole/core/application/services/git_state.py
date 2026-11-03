@@ -125,6 +125,7 @@ def _same_path(left: str, right: str) -> bool:
 @final
 class GitStateService:
     def __init__(self, reader: GitReader, catalog: Callable[[], GitCatalog]) -> None:
+        self.reader: GitReader = reader
         self._reader: GitReader = reader
         self._catalog: Callable[[], GitCatalog] = catalog
         self._probes: _Lru[tuple[str, str, str], MergeProbeView] = _Lru()

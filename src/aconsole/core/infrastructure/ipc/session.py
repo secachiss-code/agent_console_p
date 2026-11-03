@@ -48,7 +48,7 @@ from aconsole.contracts.ipc import (
 )
 from aconsole.core.application.ports.git_repo import GitCommandError
 from aconsole.core.application.services.approval_broker import ApprovalHold
-from aconsole.core.application.services.git import GIT_READ_METHODS, GitService
+from aconsole.core.application.services.git import GIT_METHODS, GitService
 from aconsole.core.application.services.review import REVIEW_METHODS, ReviewService
 from aconsole.core.application.services.setup import SetupService
 from aconsole.core.application.services.tabs import SETTINGS_METHODS, TAB_METHODS, TabRequestError, TabService
@@ -205,7 +205,7 @@ class Connection:
             return self._app(request, self.tabs)
         if request.method in REVIEW_METHODS and self.review is not None:
             return self._service(request, self.review.dispatch)
-        if request.method in GIT_READ_METHODS and self.git is not None:
+        if request.method in GIT_METHODS and self.git is not None:
             return self._service(request, self.git.dispatch)
         if request.method in KNOWLEDGE_METHODS and self.knowledge is not None:
             return self._service(request, self.knowledge.dispatch)

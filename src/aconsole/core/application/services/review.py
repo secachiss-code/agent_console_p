@@ -88,6 +88,12 @@ class ReviewService:
         created = self.checkpoints.on_user_prompt(Path(target.worktree), tab_id, text, datetime.now(UTC))
         self._emit(CheckpointCreated(checkpoint=_view(created)))
 
+    def keep_before_change(self, tab_id: str, label: str) -> None:
+        """A checkpoint for what is about to be replaced. Taken even with checkpoints off: the user can go back."""
+        target = self._target(tab_id)
+        created = self.checkpoints.on_user_prompt(Path(target.worktree), tab_id, label, datetime.now(UTC))
+        self._emit(CheckpointCreated(checkpoint=_view(created)))
+
     def on_event(self, event: UiEvent) -> None:
         """Comments that waited for the agent go out when its tab turns idle."""
         if not isinstance(event, TabUpdated) or "status" not in event.changed:

@@ -127,3 +127,39 @@ class GitReader(Protocol):
     def diff_text(self, worktree: Path, spec: DiffSpec, max_bytes: int) -> str:
         """The plain patch. Files nobody added are not in it."""
         ...
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class GitDone:
+    """Git ran. `ok` false means it refused, and `said` is why: a hook, signing, or a conflict."""
+
+    ok: bool
+    said: str
+
+
+class GitWriter(Protocol):
+    """Changes to one worktree. The caller has checked the worktree and holds its lock."""
+
+    def stage(self, worktree: Path, paths: tuple[str, ...]) -> GitDone: ...
+
+    def unstage(self, worktree: Path, paths: tuple[str, ...], *, has_head: bool) -> GitDone: ...
+
+    def commit(self, worktree: Path, message: str) -> GitDone:
+        """Commit the index, hooks and signing included."""
+        ...
+
+    def head(self, worktree: Path) -> str | None: ...
+
+    def in_source(self, worktree: Path, oid: str, path: str) -> bool: ...
+
+    def file_counts(self, worktree: Path, oid: str, path: str) -> tuple[int, int]:
+        """Lines a restore would add and remove."""
+        ...
+
+    def restore_file(self, worktree: Path, oid: str, path: str) -> GitDone:
+        """Make this one file match `oid`. A file `oid` does not hold is removed. The index stays."""
+        ...
+
+    def safety_ref(self, worktree: Path, ref: str, label: str) -> None:
+        """Keep the worktree's files on a side ref before something replaces them."""
+        ...

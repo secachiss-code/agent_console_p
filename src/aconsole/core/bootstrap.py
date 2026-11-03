@@ -28,10 +28,12 @@ from aconsole.contracts.errors import ErrorData, ErrorObject, MessageTooLargeDet
 from aconsole.contracts.events import Notify, PlanUpdated, QuotaUpdated, TabAdded, TabRemoved, TabUpdated, UiEvent
 from aconsole.contracts.ipc import InitializeParams, Notification, ProtocolLimits, Request, ResponseErr
 from aconsole.core.application.ports.events import EventSink
+from aconsole.core.application.ports.git_repo import GitCommandError
 from aconsole.core.application.services.approval_broker import ApprovalHold
 from aconsole.core.application.services.checkpoints import CheckpointService
 from aconsole.core.application.services.diff import DiffService
 from aconsole.core.application.services.git import GitService
+from aconsole.core.application.services.git_ops import GitOperationService
 from aconsole.core.application.services.git_state import GitStateService
 from aconsole.core.application.services.projects import ProjectCatalog
 from aconsole.core.application.services.quota_aggregator import QuotaAggregator
@@ -40,6 +42,7 @@ from aconsole.core.application.services.setup import SetupService
 from aconsole.core.application.services.tabs import TabService
 from aconsole.core.domain.approvals import Approval, ApprovalBook
 from aconsole.core.domain.clock import Clock
+from aconsole.core.domain.errors import DomainError
 from aconsole.core.infrastructure.agents.claude.limits import ClaudeLimits
 from aconsole.core.infrastructure.agents.codex.limits import CodexLimits
 from aconsole.core.infrastructure.agents.codex.turns import TurnWatch
@@ -50,6 +53,7 @@ from aconsole.core.infrastructure.codegraph.runner import ExtractorRunner
 from aconsole.core.infrastructure.git.checkpoints import GitCheckpoints
 from aconsole.core.infrastructure.git.diff import GitDiff
 from aconsole.core.infrastructure.git.history import GitHistory
+from aconsole.core.infrastructure.git.operations import GitMutations
 from aconsole.core.infrastructure.http.app import IngestApp, serve_config
 from aconsole.core.infrastructure.http.approval import handle_permission
 from aconsole.core.infrastructure.http.auth import TokenBook
@@ -386,7 +390,15 @@ class Daemon:
             DiffService(GitDiff(), _PublishedEvents(self._from_worker)),
             emit=self._from_worker,
         )
-        self.git: GitService = GitService(GitStateService(GitHistory(), lambda: self.tabs), emit=self._from_worker)
+        history = GitHistory()
+        self.git: GitService = GitService(GitStateService(history, lambda: self.tabs), emit=self._from_worker)
+        self.git.operations = GitOperationService(
+            self.git.state,
+            GitMutations(),
+            now=lambda: datetime.now(UTC),
+            tab_safety=self._keep_before_change,
+            changed=self._git_changed,
+        )
         self.setup_service: SetupService = setup_service or SetupService(
             probe=HostSetupProbe(), fixes=HostSetupFixes(), tokens=SetupTokens()
         )
@@ -727,6 +739,21 @@ class Daemon:
         task = asyncio.create_task(self._in_worker(lambda: self.tabs.agent_notice(tab_id, text)))
         self._notices.add(task)
         task.add_done_callback(self._notices.discard)
+
+    def _keep_before_change(self, tab_id: str, label: str) -> None:
+        """Off the loop. The tab's checkpoint list belongs to the tab worker, so it is written there."""
+        worker = self._worker
+        if worker is None:
+            self.review.keep_before_change(tab_id, label)
+            return
+        worker.submit(self.review.keep_before_change, tab_id, label).result()
+
+    def _git_changed(self, project_id: str) -> None:
+        """A write just finished. The answer should not wait for this, and a failed look changes nothing."""
+        try:
+            _ = self.git.announce(project_id)
+        except (GitCommandError, DomainError) as exc:
+            _LOG.warning("git look after a change failed: %s", exc)
 
     async def _watch_git(self) -> None:
         """Look at projects a client has open. One pass at a time; a turn's end brings the next one forward."""
