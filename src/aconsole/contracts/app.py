@@ -49,6 +49,9 @@ class AccountView(msgspec.Struct, frozen=True, kw_only=True):
     # Where the numbers come from (a code the UI names, e.g. "cursor-dashboard") and how often the core asks.
     source: str | None = None
     refresh_s: int | None = None
+    # Credits bought past the plan (Codex), counted in credits, not dollars. Unlimited: no balance to show.
+    credits_balance: float | None = None
+    credits_unlimited: bool = False
 
 
 class AgentInfo(msgspec.Struct, frozen=True, kw_only=True):

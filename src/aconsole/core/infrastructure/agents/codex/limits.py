@@ -27,6 +27,7 @@ _MINUTES_7D: Final = 10080
 _WINDOWS: Final = {_MINUTES_5H: QuotaKey.FIVE_HOUR, _MINUTES_7D: QuotaKey.SEVEN_DAY}
 _PLAN: Final = {"plus": "Plus", "pro": "Pro", "team": "Team", "business": "Business", "free": "Free"}
 _IDENTITY: Final = ("email", "accountId", "account_id")
+_MS: Final = 10_000_000_000
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -56,14 +57,71 @@ class CodexLimits:
         now = self._now()
         for window in windows:
             _ = self._aggregator.observe(_observation(account_id, tab_id, window, now))
+        spend = _spend_limit(body, now)
+        balance, unlimited = _credits(body)
         return QuotaUpdated(
             account=AccountView(
                 id=account_id,
                 agent=AgentKind.CODEX,
                 plan_label=_plan(body),
-                quota=_quota(self._aggregator, account_id, now),
+                quota=(*_quota(self._aggregator, account_id, now), *(() if spend is None else (spend,))),
+                credits_balance=balance,
+                credits_unlimited=unlimited,
             )
         )
+
+
+def _credits(body: bytes) -> tuple[float | None, bool]:
+    """Credits bought past the plan: the balance, and whether there is no end to them."""
+    limits = _rate_limits(body)
+    raw = None if limits is None else limits.get("credits")
+    bought = None if raw is None else _object(bytes(raw))
+    if bought is None:
+        return None, False
+    unlimited = _bool(bought.get("unlimited"))
+    has = _bool(bought.get("hasCredits"))
+    balance = _decimal(bought.get("balance"))
+    return (balance if has or balance else None), unlimited
+
+
+def _spend_limit(body: bytes, now: datetime) -> QuotaWindowView | None:
+    """A workspace's monthly spend cap for this member: the share used. Its units are not stated, so no sums."""
+    limits = _rate_limits(body)
+    raw = None if limits is None else limits.get("individualLimit")
+    spend = None if raw is None else _object(bytes(raw))
+    if spend is None:
+        return None
+    left = _number(spend.get("remainingPercent"))
+    resets = _int(spend.get("resetsAt"))
+    if left is None:
+        return None
+    used = min(100.0, max(0.0, 100.0 - left))
+    resets_at = None if resets is None else datetime.fromtimestamp(resets / 1000 if resets > _MS else resets, tz=UTC)
+    level = QuotaLevel(quota_level(used_pct=used, resets_at=resets_at, now=now).value)
+    return QuotaWindowView(
+        key="budget", used_pct=used, resets_at=resets_at, level=level, observed_at=now, estimated=False,
+    )
+
+
+def _bool(raw: msgspec.Raw | None) -> bool:
+    if raw is None:
+        return False
+    try:
+        return msgspec.json.decode(raw, type=bool)
+    except msgspec.DecodeError:
+        return False
+
+
+def _decimal(raw: msgspec.Raw | None) -> float | None:
+    """A number Codex sends as a string ("12.5"), or as a number."""
+    text = _text(raw)
+    if text is not None:
+        try:
+            value = float(text)
+        except ValueError:
+            return None
+        return value if value >= 0 else None
+    return _number(raw)
 
 
 def _observation(account_id: str, tab_id: str, window: _Window, now: datetime) -> Observation:

@@ -5,6 +5,21 @@
         "agent": {
           "$ref": "#/$defs/AgentKind"
         },
+        "credits_balance": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "credits_unlimited": {
+          "default": false,
+          "type": "boolean"
+        },
         "id": {
           "type": "string"
         },
