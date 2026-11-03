@@ -75,6 +75,7 @@ _HOLD = "core/hold"
 _SNAPSHOT = "app/snapshot"
 _SIDECAR_PREFIX = "sidecar/"
 _SIDECAR_SIGNAL = "sidecar/signal"
+_SCREEN_SIGNALS = frozenset({"input_submitted", "screen_quiet", "screen_active"})
 _APP_METHODS = frozenset({"app/quitCheck", "app/stopAgents", "terminal/screenTextReply"})
 OUTBOUND_LIMIT = 1024
 
@@ -118,6 +119,7 @@ class Connection:
         self.subscribed = False
         self.role: ClientRole | None = None
         self.on_agent_notice: Callable[[str, str], None] | None = None
+        self.on_screen_signal: Callable[[str, str, str | None], None] | None = None
         self.holds_core = False
         self.health: Callable[[], HealthResult] | None = None
         self._sidecar_tab: str | None = None
@@ -352,6 +354,8 @@ class Connection:
             return
         if signal.kind == "osc9_notify" and signal.text:
             heard(self._sidecar_tab, signal.text)
+        elif signal.kind in _SCREEN_SIGNALS and self.on_screen_signal is not None:
+            self.on_screen_signal(self._sidecar_tab, signal.kind, signal.text)
 
     def _initialize(self, request: Request) -> tuple[bytes, ...]:
         if self.ready:

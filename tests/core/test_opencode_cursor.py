@@ -28,6 +28,7 @@ from aconsole.core.infrastructure.http.consumer import OPENCODE_EVENT, hook_even
 from aconsole.core.infrastructure.http.routes import IngestItem
 from aconsole.core.infrastructure.setup_checks import _agent_command  # pyright: ignore[reportPrivateUsage]
 from aconsole.core.infrastructure.tabs import HostAgents
+from aconsole.sidecar.screen import ACTIVE, QUIET, SUBMITTED, ScreenWatch, visible_tail
 
 _TOKEN = "tok" + "-secret"
 
@@ -247,3 +248,30 @@ def test_host_agents_lists_all_four() -> None:
 def test_setup_check_asks_the_right_binary() -> None:
     assert _agent_command("agent-opencode") == "opencode"
     assert _agent_command("agent-cursor") == "agent"
+
+
+def test_screen_watch_reports_quiet_once_and_activity_after() -> None:
+    watch = ScreenWatch()
+    assert watch.tick(0.0) is None
+    assert watch.output(b"\x1b[2KRun command? [y/n]\r\n", 1.0) is None
+    assert watch.tick(1.5) is None
+    said = watch.tick(2.0)
+    assert said == (QUIET, "Run command? [y/n]")
+    assert watch.tick(5.0) is None
+    assert watch.output(b"more", 6.0) == (ACTIVE, None)
+
+
+def test_screen_watch_forgets_what_was_answered() -> None:
+    watch = ScreenWatch()
+    _ = watch.output(b"Allow? [y/n]", 0.0)
+    assert watch.input(b"y") is None
+    assert watch.input(b"text\r") == (SUBMITTED, None)
+    _ = watch.output(b"done", 1.0)
+    assert watch.tick(2.0) == (QUIET, "done")
+
+
+def test_visible_tail_removes_controls_and_keeps_the_last_lines() -> None:
+    raw = b"".join(b"line %d\r\n" % number for number in range(30)) + b"\x1b]0;title\x07\x1b[31mred\x1b[0m\x07"
+    tail = visible_tail(raw).splitlines()
+    assert tail[-1] == "red"
+    assert len(tail) == 12

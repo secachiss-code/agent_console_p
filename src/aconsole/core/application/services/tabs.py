@@ -89,6 +89,14 @@ _SIDECAR: Final = ("-I", "-m", "aconsole.sidecar", "--")
 _ATTENTION: Final = frozenset({TabStatus.WAITING_APPROVAL, TabStatus.WAITING_INPUT, TabStatus.ERROR})
 _CODEX_ASKS_APPROVAL: Final = ("Approval requested", "Codex wants to edit")
 _CODEX_ASKS_INPUT: Final = ("Plan mode prompt", "Question:")
+# Cursor has no hook for this. Read from the screen when it goes quiet; a line must start with the word.
+_CURSOR_ASKS_APPROVAL: Final = re.compile(
+    r"\[y/n\]|\(y/n\)|Run command\?|^\W*(?:Allow|Approve)\b", re.IGNORECASE | re.MULTILINE,
+)
+_SCREEN_SUBMITTED: Final = "input_submitted"
+_SCREEN_QUIET: Final = "screen_quiet"
+_SCREEN_ACTIVE: Final = "screen_active"
+_ENV_SCREEN: Final = "ACONSOLE_SCREEN_WATCH"
 _ASK_SETTLE_S: Final = 2.0
 _CODEX_ID: Final = re.compile(r"^[A-Za-z0-9_-]{1,128}$")
 
@@ -505,6 +513,23 @@ class TabService:
         elif text.startswith(_CODEX_ASKS_INPUT):
             _ = self.apply_hook(tab_id, "Notification")
 
+    def screen_signal(self, tab_id: str, kind: str, text: str | None) -> None:
+        """The sidecar's view of a Cursor tab. Silence after work is the end of a turn, unless the screen asks."""
+        tab = self._tabs.get(tab_id)
+        if tab is None or tab.agent is not AgentKind.CURSOR or not tab.running:
+            return
+        if kind == _SCREEN_SUBMITTED:
+            _ = self.apply_hook(tab_id, "UserPromptSubmit")
+        elif kind == _SCREEN_ACTIVE:
+            if tab.status is TabStatus.WAITING_APPROVAL:
+                _ = self.apply_hook(tab_id, "PreToolUse")
+        elif kind == _SCREEN_QUIET:
+            if _CURSOR_ASKS_APPROVAL.search(text or "") is not None:
+                if tab.status is not TabStatus.WAITING_APPROVAL:
+                    _ = self.apply_hook(tab_id, "PermissionRequest")
+            elif tab.status in {TabStatus.WORKING, TabStatus.WAITING_APPROVAL}:
+                _ = self.apply_hook(tab_id, "agent-turn-complete")
+
     def claim_sidecar(self, tab_id: str, token: str) -> bool:
         """Accept the one-shot sidecar token of `tab/launchSpec` once. A second use, or any other token, fails."""
         tab = self._tabs.get(tab_id)
@@ -726,6 +751,8 @@ class TabService:
         env[_ENV_SIDECAR] = secret
         env[_ENV_SOCKET] = self._ports.socket_path()
         env[_ENV_PORT] = self._ports.ingest_port()
+        if tab.agent is AgentKind.CURSOR:
+            env[_ENV_SCREEN] = "1"
         argv = (self._ports.python_bin(), *_SIDECAR, *podman)
         return TerminalLaunchSpec(argv=argv, env=env, cwd=tab.worktree, scrollback_lines=_SCROLLBACK, title=tab.title)
 

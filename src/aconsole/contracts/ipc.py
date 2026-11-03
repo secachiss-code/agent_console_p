@@ -90,7 +90,16 @@ class SidecarStarted(msgspec.Struct, frozen=True, kw_only=True):
 
 
 class SidecarSignal(msgspec.Struct, frozen=True, kw_only=True):
-    kind: Literal["bell", "osc_title", "osc9_notify", "osc777_notify", "osc9_4_progress"]
+    kind: Literal[
+        "bell",
+        "osc_title",
+        "osc9_notify",
+        "osc777_notify",
+        "osc9_4_progress",
+        "input_submitted",
+        "screen_quiet",
+        "screen_active",
+    ]
     text: str | None = None
     progress: Annotated[int, Meta(ge=0, le=100)] | None = None
 

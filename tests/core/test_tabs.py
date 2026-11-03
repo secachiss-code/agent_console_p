@@ -757,6 +757,7 @@ def test_new_agents_resume_with_their_own_flags(agent: AgentKind, expected: tupl
     tab = _opened(service, agent, session="s1")
     spec = service.launch_spec(TabIdParams(tab_id=TabId(tab)))
     assert spec.argv[-len(expected) :] == expected
+    assert ("ACONSOLE_SCREEN_WATCH" in spec.env) is (agent is AgentKind.CURSOR)
 
 
 @pytest.mark.parametrize("agent", [AgentKind.OPENCODE, AgentKind.CURSOR])
@@ -765,6 +766,34 @@ def test_agents_that_cannot_fork_refuse_it(agent: AgentKind) -> None:
     tab = _opened(service, agent)
     with pytest.raises(TabRequestError):
         _ = service.fork(TabIdParams(tab_id=TabId(tab)))
+
+
+def test_cursor_status_follows_the_screen() -> None:
+    service, _ports = _service(ProjectSeed(project_id="proj", root="/repo", container="box"))
+    tab = _opened(service, AgentKind.CURSOR)
+    service._tabs[tab].running = True
+
+    def status() -> TabStatus:
+        return service._tabs[tab].status
+
+    service.screen_signal(tab, "screen_quiet", "welcome")
+    assert status() is TabStatus.IDLE
+    service.screen_signal(tab, "input_submitted", None)
+    assert status() is TabStatus.WORKING
+    service.screen_signal(tab, "screen_quiet", "Run command? [y/n]")
+    assert status() is TabStatus.WAITING_APPROVAL
+    service.screen_signal(tab, "screen_active", None)
+    assert status() is TabStatus.WORKING
+    service.screen_signal(tab, "screen_quiet", "All allowed, and the answer is done.")
+    assert status() is TabStatus.IDLE
+
+
+def test_screen_signals_do_not_touch_other_agents() -> None:
+    service, _ports = _service(ProjectSeed(project_id="proj", root="/repo", container="box"))
+    tab = _opened(service, AgentKind.CLAUDE)
+    service._tabs[tab].running = True
+    service.screen_signal(tab, "input_submitted", None)
+    assert service._tabs[tab].status is TabStatus.IDLE
 
 
 def test_opencode_reports_its_session_and_codex_does_not_use_that_path() -> None:

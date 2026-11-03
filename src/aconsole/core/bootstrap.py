@@ -799,6 +799,11 @@ class Daemon:
         self._notices.add(task)
         task.add_done_callback(self._notices.discard)
 
+    def _screen_signal(self, tab_id: str, kind: str, text: str | None) -> None:
+        task = asyncio.create_task(self._in_worker(lambda: self.tabs.screen_signal(tab_id, kind, text)))
+        self._notices.add(task)
+        task.add_done_callback(self._notices.discard)
+
     def _send_to_tab(self, tab_id: str, message: str) -> CommandResult:
         worker = self._worker
         if worker is None:
@@ -1247,6 +1252,7 @@ class Daemon:
             review=self.review, knowledge=self.knowledge, git=self.git,
         )
         connection.on_agent_notice = self._agent_notice
+        connection.on_screen_signal = self._screen_signal
         connection.health = self.health
         self._writers.add(writer)
         self._connections[connection] = writer

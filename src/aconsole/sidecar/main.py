@@ -32,6 +32,7 @@ from typing import TYPE_CHECKING, Final, final
 from aconsole.sidecar.framer import FLUSH_S, Framer
 from aconsole.sidecar.ipc import exited, initialize, started, stats
 from aconsole.sidecar.ipc import signal as encode_signal
+from aconsole.sidecar.screen import NoWatch, ScreenWatch
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Mapping
@@ -43,6 +44,7 @@ _USAGE: Final = "usage: python -m aconsole.sidecar -- COMMAND [ARG...]\n"
 _SOCKET: Final = "ACONSOLE_SOCKET"
 _TAB: Final = "ACONSOLE_TAB"
 _PROOF_ENV: Final = "ACONSOLE_SIDECAR_TOKEN"
+_SCREEN_ENV: Final = "ACONSOLE_SCREEN_WATCH"
 _LFLAG: Final = 3
 _CC: Final = 6
 _VMIN_VALUE: Final = 1
@@ -71,7 +73,7 @@ def main(argv: list[str], environ: Mapping[str, str] | None = None) -> int:
             os.execvpe(command[0], command, dict(env))  # noqa: S606 -- replace this process with the child command
         except OSError:
             os._exit(_FAILED_EXEC)
-    return _pump(pid, fd, link)
+    return _pump(pid, fd, link, ScreenWatch() if env.get(_SCREEN_ENV) else NoWatch())
 
 
 def exchange(argv: list[str], payload: bytes, *, timeout_s: float = 1.0) -> bytes:
@@ -172,7 +174,7 @@ class CoreLink:
             sock.close()
 
 
-def _pump(pid: int, fd: int, link: CoreLink) -> int:
+def _pump(pid: int, fd: int, link: CoreLink, watch: ScreenWatch | NoWatch) -> int:
     started_at = time.strftime("%Y-%m-%dT%H:%M:%S+00:00", time.gmtime())
     link.send(started(pid, started_at))
     framer = Framer()
@@ -187,6 +189,10 @@ def _pump(pid: int, fd: int, link: CoreLink) -> int:
     pty_open = True
     stdin_open = stdin_fd is not None
     hangup = _Hangup(pid)
+
+    def typed(data: bytes) -> None:
+        _say(link, watch.input(data))
+
     try:
         while exit_code is None and signal_number is None:
             now = time.monotonic()
@@ -195,12 +201,14 @@ def _pump(pid: int, fd: int, link: CoreLink) -> int:
                 chunk = _read(fd)
                 if chunk:
                     _emit(framer.feed(chunk, now), framer, link)
+                    _say(link, watch.output(chunk, now))
                 else:
                     pty_open = False
                     hangup.start(now)
             if stdin_open and stdin_fd is not None and stdin_fd in readable:
-                stdin_open = _forward(stdin_fd, fd, pid, hang_up=stdin_tty)
+                stdin_open = _forward(stdin_fd, fd, pid, hang_up=stdin_tty, typed=typed)
             hangup.tick(now)
+            _say(link, watch.tick(now))
             _emit(framer.flush_due(now), framer, link)
             if now - last_stats >= _STATS_S:
                 link.send(stats(framer.bytes_out, framer.frames, framer.frames_timed_out, framer.max_frame_bytes))
@@ -222,18 +230,24 @@ def _pump(pid: int, fd: int, link: CoreLink) -> int:
     return exit_code
 
 
-def _forward(stdin_fd: int, fd: int, pid: int, *, hang_up: bool) -> bool:
+def _forward(stdin_fd: int, fd: int, pid: int, *, hang_up: bool, typed: Callable[[bytes], None]) -> bool:
     """Copy one read of stdin to the pty. False at EOF; then a terminal stdin hangs up the child.
 
     `hang_up` is decided at start: a hung-up tty no longer reports itself as one.
     """
-    typed = _read(stdin_fd)
-    if typed:
-        _ = os.write(fd, typed)
+    data = _read(stdin_fd)
+    if data:
+        _ = os.write(fd, data)
+        typed(data)
         return True
     if hang_up:
         _hang_up(pid)
     return False
+
+
+def _say(link: CoreLink, said: tuple[str, str | None] | None) -> None:
+    if said is not None:
+        link.send(encode_signal(said[0], said[1], None))
 
 
 def _emit(data: bytes, framer: Framer, link: CoreLink) -> None:

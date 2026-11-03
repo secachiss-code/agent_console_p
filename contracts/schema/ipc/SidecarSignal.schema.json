@@ -5,10 +5,13 @@
         "kind": {
           "enum": [
             "bell",
+            "input_submitted",
             "osc777_notify",
             "osc9_4_progress",
             "osc9_notify",
-            "osc_title"
+            "osc_title",
+            "screen_active",
+            "screen_quiet"
           ]
         },
         "progress": {
