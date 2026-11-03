@@ -14,6 +14,7 @@ import msgspec
 from aconsole.contracts.common import ProjectId
 from aconsole.contracts.events import CheckpointCreated, GitStateUpdated, TabUpdated, UiEvent
 from aconsole.contracts.git import (
+    CherryPickParams,
     CleanupWorktreeParams,
     GitCommitParams,
     GitDiffFileParams,
@@ -25,12 +26,17 @@ from aconsole.contracts.git import (
     GitStateResult,
     MergePreviewParams,
     MergeWorktreeParams,
+    RebaseParams,
     RestoreFileParams,
     RestoreFilePreviewParams,
+    SendDiffParams,
+    SendDiffPreviewParams,
+    WorktreeOperationParams,
 )
 from aconsole.core.application.services.git_cleanup import GitCleanupService
 from aconsole.core.application.services.git_merge import GitMergeService
 from aconsole.core.application.services.git_ops import GitOperationService
+from aconsole.core.application.services.git_rewrite import GitRewriteService
 from aconsole.core.application.services.git_state import GitStateService
 
 GIT_METHODS: Final = frozenset(
@@ -49,11 +55,20 @@ GIT_METHODS: Final = frozenset(
         "git/operation",
         "git/cleanupWorktree",
         "git/factsToReview",
+        "git/rebase",
+        "git/cherryPick",
+        "git/continue",
+        "git/abort",
+        "git/sendDiffPreview",
+        "git/sendDiff",
     }
 )
 _READS: Final = frozenset({"git/state", "git/graph", "git/diffSummary", "git/diffFile"})
 _MERGING: Final = frozenset({"git/mergePreview", "git/mergeWorktree", "git/operation"})
 _CLEANING: Final = frozenset({"git/cleanupWorktree", "git/factsToReview"})
+_REWRITING: Final = frozenset(
+    {"git/rebase", "git/cherryPick", "git/continue", "git/abort", "git/sendDiffPreview", "git/sendDiff"}
+)
 _WATCH_S: Final = 30.0
 
 
@@ -70,6 +85,7 @@ class GitService:
         self.operations: GitOperationService | None = None
         self.merges: GitMergeService | None = None
         self.cleanup: GitCleanupService | None = None
+        self.rewrite: GitRewriteService | None = None
         self._emit: Callable[[UiEvent], None] = emit
         self._monotonic: Callable[[], float] = monotonic
         self._lock: threading.Lock = threading.Lock()
@@ -78,6 +94,8 @@ class GitService:
         self._nudged: set[str] = set()
 
     def dispatch(self, method: str, raw: bytes) -> msgspec.Struct:
+        if method in _REWRITING and self.rewrite is not None:
+            return self._redo(self.rewrite, method, raw)
         if method in _CLEANING and self.cleanup is not None:
             return self._clean(self.cleanup, method, raw)
         if method in _MERGING and self.merges is not None:
@@ -96,6 +114,19 @@ class GitService:
             return self.state.diff_summary(str(summary.project_id), summary.source)
         detail = msgspec.json.decode(raw, type=GitDiffFileParams)
         return self.state.diff_file(str(detail.project_id), detail.source, detail.path, detail.max_lines)
+
+    def _redo(self, rewrite: GitRewriteService, method: str, raw: bytes) -> msgspec.Struct:
+        if method == "git/rebase":
+            return rewrite.rebase(msgspec.json.decode(raw, type=RebaseParams))
+        if method == "git/cherryPick":
+            return rewrite.cherry_pick(msgspec.json.decode(raw, type=CherryPickParams))
+        if method == "git/continue":
+            return rewrite.resume(msgspec.json.decode(raw, type=WorktreeOperationParams))
+        if method == "git/abort":
+            return rewrite.abort(msgspec.json.decode(raw, type=WorktreeOperationParams))
+        if method == "git/sendDiffPreview":
+            return rewrite.send_preview(msgspec.json.decode(raw, type=SendDiffPreviewParams))
+        return rewrite.send(msgspec.json.decode(raw, type=SendDiffParams))
 
     def _clean(self, cleanup: GitCleanupService, method: str, raw: bytes) -> msgspec.Struct:
         if method == "git/cleanupWorktree":

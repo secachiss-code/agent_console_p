@@ -171,6 +171,9 @@ class GitStateService:
         root = Path(project.root)
         return self._base_name(project, self._reader.refs(root), root)
 
+    def tabs(self, project_id: str) -> tuple[GitTab, ...]:
+        return self._catalog().git_tabs(project_id)
+
     def tab_at(self, project_id: str, worktree: str) -> GitTab | None:
         for tab in self._catalog().git_tabs(project_id):
             if _same_path(tab.worktree, worktree):

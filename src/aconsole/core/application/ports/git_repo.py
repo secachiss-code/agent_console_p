@@ -181,6 +181,18 @@ class GitWriter(Protocol):
         ...
 
 
+    def rebase(self, worktree: Path, onto: str) -> GitDone:
+        """May stop on a conflict, and the worktree stays that way for a person."""
+        ...
+
+    def cherry_pick(self, worktree: Path, oid: str) -> GitDone:
+        """May stop on a conflict, and the worktree stays that way for a person."""
+        ...
+
+    def step(self, worktree: Path, kind: str, action: str) -> GitDone:
+        """`action` (`continue` or `abort`) on the merge, rebase, or cherry-pick stopped here."""
+        ...
+
     def has_ignored(self, worktree: Path) -> bool:
         """Files only the worktree holds that git would delete with it."""
         ...

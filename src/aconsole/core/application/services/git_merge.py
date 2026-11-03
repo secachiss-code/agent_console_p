@@ -135,6 +135,7 @@ class GitMergeService:
         self._unsaved: set[str] = set()
         self._guard: threading.Lock = threading.Lock()
         self.follow_up: FollowUp | None = None
+        self.settle_rewrite: FollowUp | None = None
         state.operations = self.of_project
 
     def use_journal(self, journal: GitOperationJournal) -> None:
@@ -247,17 +248,29 @@ class GitMergeService:
                 return item
         return None if self._journal is None else self._journal.landed_from(project_id, source, oid)
 
+    def open_at(self, project_id: str, worktree: str) -> GitOperationRecord | None:
+        with self._guard:
+            records = tuple(self._records.values())
+        for item in records:
+            if item.project_id == project_id and item.worktree == worktree and item.status in {"started", "conflicted"}:
+                return item
+        return None
+
     def retry(self) -> None:
         """Follow-ups a failure left behind, and journal rows that did not get written. Off the loop."""
         with self._guard:
             waiting = tuple(
                 item for item in self._records.values() if item.follow_up_pending or item.status == "merged"
             )
+            rewrites = tuple(item for item in self._records.values() if item.kind != "merge" and item.open)
             unsaved = tuple(self._records[key] for key in self._unsaved if key in self._records)
         for record in unsaved:
-            self._store(record)
+            self.store(record)
         for record in waiting:
             _ = self._follow(record)
+        if self.settle_rewrite is not None:
+            for record in rewrites:
+                self.settle_rewrite(record)
 
     def _blockers(  # noqa: PLR0913 -- one judgement, each word its own fact
         self,
@@ -324,7 +337,7 @@ class GitMergeService:
             created_at=at,
             updated_at=at,
         )
-        self._store(record)
+        self.store(record)
         return record
 
     def _run(self, root: Path, record: GitOperationRecord, row: WorktreeRow | None, tree: str | None) -> GitDone:
@@ -349,11 +362,11 @@ class GitMergeService:
         at = self._now()
         if not done.ok:
             failed = record.moved(at, "failed", message=done.said or record.message)
-            self._store(failed)
+            self.store(failed)
             return failed
         result = done.oid or _oid_of(self._state.reader.refs(root), record.target)
         merged = record.moved(at, "merged", result_oid=result, follow_up_pending=True)
-        self._store(merged)
+        self.store(merged)
         return self._follow(merged)
 
     def _follow(self, record: GitOperationRecord) -> GitOperationRecord:
@@ -365,7 +378,7 @@ class GitMergeService:
                 _LOG.warning("after merge %s: %s", record.id, exc)
                 return record
         finished = record.moved(self._now(), "finished", follow_up_pending=False)
-        self._store(finished)
+        self.store(finished)
         return finished
 
     def _settle(self, record: GitOperationRecord) -> None:
@@ -375,19 +388,19 @@ class GitMergeService:
             reader = self._state.reader
             head = _oid_of(reader.refs(root), record.target)
         except (DomainError, GitCommandError) as exc:
-            self._store(record.moved(self._now(), "failed", message=f"{INTERRUPTED}: {exc}"))
+            self.store(record.moved(self._now(), "failed", message=f"{INTERRUPTED}: {exc}"))
             return
         if head == record.target_oid:
-            self._store(record.moved(self._now(), "failed", message=INTERRUPTED))
+            self.store(record.moved(self._now(), "failed", message=INTERRUPTED))
             return
         rows = reader.log(root, (head,), 0, 1)
         parents = rows[0].parents if rows else ()
         if landed(record, head=head, parents=parents, tree=self._writer.tree_of(root, head)):
-            self._store(record.moved(self._now(), "merged", result_oid=head, follow_up_pending=True))
+            self.store(record.moved(self._now(), "merged", result_oid=head, follow_up_pending=True))
             return
-        self._store(record.moved(self._now(), "failed", message=TARGET_MOVED))
+        self.store(record.moved(self._now(), "failed", message=TARGET_MOVED))
 
-    def _store(self, record: GitOperationRecord) -> None:
+    def store(self, record: GitOperationRecord) -> None:
         with self._guard:
             self._records[record.id] = record
         saved = self._journal is None or self._journal.save(record)

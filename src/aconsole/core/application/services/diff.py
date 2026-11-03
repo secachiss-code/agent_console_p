@@ -96,8 +96,11 @@ class DiffService:
 
     def send_comment(self, tab_id: str, path: str, hunk_id: str, text: str) -> CommandResult:
         """Inject the comment when the tab is idle. Otherwise keep it and say so."""
+        return self.send_text(tab_id, f"Комментарий к `{path}` {hunk_id}: {text}\n")
+
+    def send_text(self, tab_id: str, message: str) -> CommandResult:
+        """Inject when the tab is idle. Otherwise keep it, in order, and say so."""
         tab = self._require(tab_id)
-        message = f"Комментарий к `{path}` {hunk_id}: {text}\n"
         if tab.status is not TabStatus.IDLE:
             self._queued.setdefault(tab_id, []).append(message)
             return CommandResult(ok=True, toast=_QUEUED)

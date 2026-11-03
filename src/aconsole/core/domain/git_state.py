@@ -13,6 +13,7 @@ from aconsole.core.domain.workspace import path_segment
 _STATE_STALE = 3024
 _BUSY = 3025
 _IN_PROGRESS = 3026
+_CONTROL = re.compile(r"[\x00-\x08\x0b-\x1f\x7f-\x9f]")
 _OID = re.compile(r"[0-9a-f]{40,64}")
 _CHECKPOINT = re.compile(r"refs/aconsole/checkpoints/([^/]+)/([1-9][0-9]*)")
 # The agent may touch files in these. Waiting for input means its turn ended.
@@ -78,6 +79,15 @@ def touched_refs(refs: tuple[str, ...], changed: tuple[str, ...]) -> tuple[str, 
     """Changed files that a ref names, or that lie under a directory it names."""
     wanted = tuple(path for path in (ref_path(ref) for ref in refs) if path)
     return tuple(path for path in changed if any(path == item or path.startswith(f"{item}/") for item in wanted))
+
+
+def clean_for_terminal(text: str) -> str:
+    """Text bound for a terminal. An escape in a diff must not end the paste or move the cursor."""
+    return _CONTROL.sub("", text)
+
+
+def count_patch_files(patch: str) -> int:
+    return sum(1 for line in patch.splitlines() if line.startswith("diff --git "))
 
 
 def choose_base(default_branch: str | None, branches: frozenset[str], remote_head: str | None) -> str | None:

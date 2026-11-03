@@ -98,6 +98,15 @@ class GitMutations:
     def move_ref(self, root: Path, ref: str, new: str, old: str) -> GitDone:
         return _done(self._git.write(root, "update-ref", ref, new, old))
 
+    def rebase(self, worktree: Path, onto: str) -> GitDone:
+        return _done(self._git.write(worktree, "rebase", "--no-autostash", onto, timeout_s=_HOOK_TIMEOUT_S))
+
+    def cherry_pick(self, worktree: Path, oid: str) -> GitDone:
+        return _done(self._git.write(worktree, "cherry-pick", oid, timeout_s=_HOOK_TIMEOUT_S))
+
+    def step(self, worktree: Path, kind: str, action: str) -> GitDone:
+        return _done(self._git.write(worktree, kind, f"--{action}", timeout_s=_HOOK_TIMEOUT_S))
+
     def has_ignored(self, worktree: Path) -> bool:
         return has_ignored_files(
             self._git.read(worktree, "status", "--porcelain", "--untracked-files=all", "--ignored=matching").text

@@ -22,7 +22,7 @@ from typing import TYPE_CHECKING, override
 import msgspec
 import uvicorn
 
-from aconsole.contracts.app import CloseTabParams, HealthResult
+from aconsole.contracts.app import CloseTabParams, CommandResult, HealthResult
 from aconsole.contracts.common import ClientRole, TabId
 from aconsole.contracts.errors import ErrorData, ErrorObject, MessageTooLargeDetails, error_by_name
 from aconsole.contracts.events import Notify, PlanUpdated, QuotaUpdated, TabAdded, TabRemoved, TabUpdated, UiEvent
@@ -36,6 +36,7 @@ from aconsole.core.application.services.git import GitService
 from aconsole.core.application.services.git_cleanup import GitCleanupService
 from aconsole.core.application.services.git_merge import GitMergeService
 from aconsole.core.application.services.git_ops import GitOperationService
+from aconsole.core.application.services.git_rewrite import GitRewriteService
 from aconsole.core.application.services.git_state import GitStateService
 from aconsole.core.application.services.projects import ProjectCatalog
 from aconsole.core.application.services.quota_aggregator import QuotaAggregator
@@ -422,6 +423,15 @@ class Daemon:
             close_tab=self._close_for_cleanup,
             changed=self._git_changed,
         )
+        self.git.rewrite = GitRewriteService(
+            self.git.state,
+            self.git.operations,
+            self.git.merges,
+            mutations,
+            now=lambda: datetime.now(UTC),
+            deliver=self._send_to_tab,
+            changed=self._git_changed,
+        )
         self.setup_service: SetupService = setup_service or SetupService(
             probe=HostSetupProbe(), fixes=HostSetupFixes(), tokens=SetupTokens()
         )
@@ -762,6 +772,12 @@ class Daemon:
         task = asyncio.create_task(self._in_worker(lambda: self.tabs.agent_notice(tab_id, text)))
         self._notices.add(task)
         task.add_done_callback(self._notices.discard)
+
+    def _send_to_tab(self, tab_id: str, message: str) -> CommandResult:
+        worker = self._worker
+        if worker is None:
+            return self.review.send_text(tab_id, message)
+        return worker.submit(self.review.send_text, tab_id, message).result()
 
     def _facts_to_check(self, project_id: str) -> tuple[StoredFact, ...]:
         return self._plans.facts_to_check(project_id)
