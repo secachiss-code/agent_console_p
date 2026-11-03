@@ -1,0 +1,18 @@
+{
+  "$defs": {
+    "GitOperationParams": {
+      "properties": {
+        "operation_id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "operation_id"
+      ],
+      "title": "GitOperationParams",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/GitOperationParams",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

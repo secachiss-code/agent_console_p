@@ -1,0 +1,29 @@
+{
+  "$defs": {
+    "GitStateUpdated": {
+      "description": "Something in this project's Git moved. The revision says what to compare; `git/state` says what changed.",
+      "properties": {
+        "project_id": {
+          "type": "string"
+        },
+        "revision": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "git_state_updated"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "project_id",
+        "revision"
+      ],
+      "title": "GitStateUpdated",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/GitStateUpdated",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

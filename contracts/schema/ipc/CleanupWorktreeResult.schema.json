@@ -1,0 +1,33 @@
+{
+  "$defs": {
+    "CleanupWorktreeResult": {
+      "properties": {
+        "branch_deleted": {
+          "type": "boolean"
+        },
+        "kept_ref": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "removed": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "removed",
+        "branch_deleted",
+        "kept_ref"
+      ],
+      "title": "CleanupWorktreeResult",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/CleanupWorktreeResult",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

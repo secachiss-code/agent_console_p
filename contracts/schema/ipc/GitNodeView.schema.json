@@ -1,0 +1,140 @@
+{
+  "$defs": {
+    "GitNodeView": {
+      "properties": {
+        "at": {
+          "type": "string"
+        },
+        "author": {
+          "type": "string"
+        },
+        "checkpoint_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "kind": {
+          "enum": [
+            "checkpoint",
+            "commit"
+          ]
+        },
+        "oid": {
+          "type": "string"
+        },
+        "parents": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "plan_node": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "previous_snapshot": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "refs": {
+          "items": {
+            "$ref": "#/$defs/GitRefView"
+          },
+          "type": "array"
+        },
+        "subject": {
+          "type": "string"
+        },
+        "tab_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "turn": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "oid",
+        "kind",
+        "parents",
+        "refs",
+        "subject",
+        "author",
+        "at",
+        "tab_id",
+        "plan_node"
+      ],
+      "title": "GitNodeView",
+      "type": "object"
+    },
+    "GitRefView": {
+      "properties": {
+        "kind": {
+          "enum": [
+            "base",
+            "branch",
+            "checkpoint",
+            "head",
+            "remote",
+            "tag"
+          ]
+        },
+        "name": {
+          "type": "string"
+        },
+        "tab_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "name",
+        "kind"
+      ],
+      "title": "GitRefView",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/GitNodeView",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

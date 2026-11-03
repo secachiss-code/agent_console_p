@@ -1,0 +1,41 @@
+{
+  "$defs": {
+    "GitChangeResult": {
+      "description": "`ok` false is a refusal from Git itself: a hook or commit signing. `detail` is what Git said.",
+      "properties": {
+        "detail": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "head_oid": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "ok": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "ok",
+        "head_oid",
+        "detail"
+      ],
+      "title": "GitChangeResult",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/GitChangeResult",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

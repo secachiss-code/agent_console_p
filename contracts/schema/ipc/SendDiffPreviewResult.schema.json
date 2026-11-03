@@ -1,0 +1,35 @@
+{
+  "$defs": {
+    "SendDiffPreviewResult": {
+      "description": "Who gets the text and how much of it. The token is good for this text only.",
+      "properties": {
+        "byte_count": {
+          "type": "integer"
+        },
+        "confirm_token": {
+          "type": "string"
+        },
+        "files": {
+          "type": "integer"
+        },
+        "to_tab": {
+          "type": "string"
+        },
+        "to_title": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "to_tab",
+        "to_title",
+        "files",
+        "byte_count",
+        "confirm_token"
+      ],
+      "title": "SendDiffPreviewResult",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/SendDiffPreviewResult",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

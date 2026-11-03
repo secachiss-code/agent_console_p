@@ -1,0 +1,260 @@
+{
+  "$defs": {
+    "AgentKind": {
+      "enum": [
+        "claude",
+        "codex",
+        "cursor",
+        "grok",
+        "opencode"
+      ],
+      "title": "AgentKind"
+    },
+    "MergeProbeView": {
+      "description": "`git merge-tree` of exactly these two commits. Files nobody committed are not in it.",
+      "properties": {
+        "conflicts": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "deletions": {
+          "default": 0,
+          "type": "integer"
+        },
+        "insertions": {
+          "default": 0,
+          "type": "integer"
+        },
+        "source_oid": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "status": {
+          "enum": [
+            "clean",
+            "conflict",
+            "not_applicable",
+            "unknown"
+          ]
+        },
+        "target_oid": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "status",
+        "source_oid",
+        "target_oid"
+      ],
+      "title": "MergeProbeView",
+      "type": "object"
+    },
+    "TabStatus": {
+      "enum": [
+        "error",
+        "exited",
+        "idle",
+        "starting",
+        "unknown",
+        "waiting_approval",
+        "waiting_input",
+        "working"
+      ],
+      "title": "TabStatus"
+    },
+    "WorktreeGitState": {
+      "properties": {
+        "agent": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AgentKind"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "ahead": {
+          "type": "integer"
+        },
+        "behind": {
+          "type": "integer"
+        },
+        "branch": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "busy": {
+          "type": "boolean"
+        },
+        "conflicted": {
+          "type": "integer"
+        },
+        "detached": {
+          "type": "boolean"
+        },
+        "dirty": {
+          "type": "boolean"
+        },
+        "head_oid": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "in_progress": {
+          "anyOf": [
+            {
+              "enum": [
+                "bisect",
+                "cherry-pick",
+                "merge",
+                "rebase",
+                "revert"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "index_digest": {
+          "type": "string"
+        },
+        "is_main": {
+          "type": "boolean"
+        },
+        "merge": {
+          "$ref": "#/$defs/MergeProbeView"
+        },
+        "path": {
+          "type": "string"
+        },
+        "plan_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "plan_node": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "staged": {
+          "type": "integer"
+        },
+        "start_oid": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "tab_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "tab_status": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TabStatus"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "tab_title": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "unstaged": {
+          "type": "integer"
+        },
+        "untracked": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "path",
+        "is_main",
+        "branch",
+        "head_oid",
+        "detached",
+        "tab_id",
+        "tab_title",
+        "agent",
+        "tab_status",
+        "busy",
+        "plan_id",
+        "plan_node",
+        "start_oid",
+        "ahead",
+        "behind",
+        "staged",
+        "unstaged",
+        "untracked",
+        "conflicted",
+        "dirty",
+        "index_digest",
+        "in_progress",
+        "merge"
+      ],
+      "title": "WorktreeGitState",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/WorktreeGitState",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

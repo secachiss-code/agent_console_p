@@ -63,6 +63,34 @@ from aconsole.contracts.app import (
     TabView,
     TerminalLaunchSpec,
 )
+from aconsole.contracts.git import (
+    CherryPickParams,
+    CleanupWorktreeParams,
+    CleanupWorktreeResult,
+    FactsToReviewResult,
+    GitChangeResult,
+    GitCommitParams,
+    GitDiffFileParams,
+    GitDiffParams,
+    GitGraphParams,
+    GitGraphResult,
+    GitOperationParams,
+    GitOperationResult,
+    GitPathsParams,
+    GitStateParams,
+    GitStateResult,
+    MergePreviewParams,
+    MergePreviewResult,
+    MergeWorktreeParams,
+    RebaseParams,
+    RestoreFileParams,
+    RestoreFilePreviewParams,
+    RestoreFilePreviewResult,
+    SendDiffParams,
+    SendDiffPreviewParams,
+    SendDiffPreviewResult,
+    WorktreeOperationParams,
+)
 from aconsole.contracts.ipc import (
     InitializeParams,
     InitializeResult,
@@ -180,6 +208,66 @@ class TypedFacade(Facade):
 
     async def diff_send_comment(self, params: SendCommentParams) -> CommandResult:
         return await self.typed("diff/sendComment", params, CommandResult)
+
+    async def git_state(self, params: GitStateParams) -> GitStateResult:
+        return await self.typed("git/state", params, GitStateResult)
+
+    async def git_graph(self, params: GitGraphParams) -> GitGraphResult:
+        return await self.typed("git/graph", params, GitGraphResult)
+
+    async def git_diff_summary(self, params: GitDiffParams) -> DiffSummaryResult:
+        return await self.typed("git/diffSummary", params, DiffSummaryResult)
+
+    async def git_diff_file(self, params: GitDiffFileParams) -> DiffFileResult:
+        return await self.typed("git/diffFile", params, DiffFileResult)
+
+    async def git_stage(self, params: GitPathsParams) -> GitChangeResult:
+        return await self.typed("git/stage", params, GitChangeResult)
+
+    async def git_unstage(self, params: GitPathsParams) -> GitChangeResult:
+        return await self.typed("git/unstage", params, GitChangeResult)
+
+    async def git_commit(self, params: GitCommitParams) -> GitChangeResult:
+        return await self.typed("git/commit", params, GitChangeResult)
+
+    async def git_restore_file_preview(self, params: RestoreFilePreviewParams) -> RestoreFilePreviewResult:
+        return await self.typed("git/restoreFilePreview", params, RestoreFilePreviewResult)
+
+    async def git_restore_file(self, params: RestoreFileParams) -> GitChangeResult:
+        return await self.typed("git/restoreFile", params, GitChangeResult)
+
+    async def git_merge_preview(self, params: MergePreviewParams) -> MergePreviewResult:
+        return await self.typed("git/mergePreview", params, MergePreviewResult)
+
+    async def git_merge_worktree(self, params: MergeWorktreeParams) -> GitOperationResult:
+        return await self.typed("git/mergeWorktree", params, GitOperationResult)
+
+    async def git_operation(self, params: GitOperationParams) -> GitOperationResult:
+        return await self.typed("git/operation", params, GitOperationResult)
+
+    async def git_cleanup_worktree(self, params: CleanupWorktreeParams) -> CleanupWorktreeResult:
+        return await self.typed("git/cleanupWorktree", params, CleanupWorktreeResult)
+
+    async def git_facts_to_review(self, params: GitStateParams) -> FactsToReviewResult:
+        return await self.typed("git/factsToReview", params, FactsToReviewResult)
+
+    async def git_rebase(self, params: RebaseParams) -> GitOperationResult:
+        return await self.typed("git/rebase", params, GitOperationResult)
+
+    async def git_cherry_pick(self, params: CherryPickParams) -> GitOperationResult:
+        return await self.typed("git/cherryPick", params, GitOperationResult)
+
+    async def git_continue(self, params: WorktreeOperationParams) -> GitChangeResult:
+        return await self.typed("git/continue", params, GitChangeResult)
+
+    async def git_abort(self, params: WorktreeOperationParams) -> GitChangeResult:
+        return await self.typed("git/abort", params, GitChangeResult)
+
+    async def git_send_diff_preview(self, params: SendDiffPreviewParams) -> SendDiffPreviewResult:
+        return await self.typed("git/sendDiffPreview", params, SendDiffPreviewResult)
+
+    async def git_send_diff(self, params: SendDiffParams) -> CommandResult:
+        return await self.typed("git/sendDiff", params, CommandResult)
 
     async def setup_checks(self, params: EmptyParams) -> ChecksResult:
         return await self.typed("setup/checks", params, ChecksResult)

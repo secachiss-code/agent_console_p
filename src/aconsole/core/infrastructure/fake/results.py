@@ -25,6 +25,19 @@ from aconsole.contracts.app import (
     SubscribeResult,
 )
 from aconsole.contracts.common import TabId
+from aconsole.contracts.git import (
+    CleanupWorktreeResult,
+    FactsToReviewResult,
+    GitChangeResult,
+    GitGraphResult,
+    GitOperationResult,
+    GitOperationView,
+    GitStateResult,
+    MergePreviewResult,
+    MergeProbeView,
+    RestoreFilePreviewResult,
+    SendDiffPreviewResult,
+)
 from aconsole.contracts.ipc import InitializeResult, ProtocolLimits, ProtocolVersion
 from aconsole.contracts.methods import METHODS
 from aconsole.contracts.settings import Settings
@@ -74,6 +87,26 @@ def _samples() -> dict[str, msgspec.Struct]:
         fix_id=None,
         requires_confirmation=False,
     )
+    change = GitChangeResult(ok=True, head_oid="0" * 40, detail=None)
+    operation = GitOperationResult(
+        operation=GitOperationView(
+            id="op",
+            kind="merge",
+            status="finished",
+            mode="merge",
+            source="ac/demo-1",
+            target="main",
+            source_oid="1" * 40,
+            target_oid="0" * 40,
+            result_oid="2" * 40,
+            tab_id=tab.id,
+            plan_node=None,
+            message=None,
+            follow_up_pending=False,
+            created_at=AT,
+            updated_at=AT,
+        ),
+    )
     return {
         "initialize": InitializeResult(
             protocol=ProtocolVersion(major=1, minor=0),
@@ -122,6 +155,60 @@ def _samples() -> dict[str, msgspec.Struct]:
         "diff/summary": demo_diff(),
         "diff/file": demo_diff_file(),
         "diff/sendComment": command,
+        "git/state": GitStateResult(
+            project_id=project.id,
+            revision="0",
+            root=project.root,
+            empty=False,
+            base_branch=project.default_branch,
+            base_oid="0" * 40,
+            worktrees=(),
+            branches=(),
+            operations=(),
+        ),
+        "git/graph": GitGraphResult(version="0", nodes=(), next_cursor=None),
+        "git/diffSummary": demo_diff(),
+        "git/diffFile": demo_diff_file(),
+        "git/stage": change,
+        "git/unstage": change,
+        "git/commit": change,
+        "git/restoreFilePreview": RestoreFilePreviewResult(
+            path="a.py",
+            source_oid="0" * 40,
+            insertions=0,
+            deletions=0,
+            exists_in_source=True,
+            confirm_token="yes",  # noqa: S106
+        ),
+        "git/restoreFile": change,
+        "git/mergePreview": MergePreviewResult(
+            source="ac/demo-1",
+            target="main",
+            source_oid="1" * 40,
+            target_oid="0" * 40,
+            probe=MergeProbeView(status="clean", source_oid="1" * 40, target_oid="0" * 40),
+            modes=("merge",),
+            source_dirty=False,
+            target_worktree=None,
+            blockers=(),
+            confirm_token="yes",  # noqa: S106
+        ),
+        "git/mergeWorktree": operation,
+        "git/operation": operation,
+        "git/cleanupWorktree": CleanupWorktreeResult(removed=True, branch_deleted=True, kept_ref=None),
+        "git/factsToReview": FactsToReviewResult(head_oid="0" * 40, facts=()),
+        "git/rebase": operation,
+        "git/cherryPick": operation,
+        "git/continue": change,
+        "git/abort": change,
+        "git/sendDiffPreview": SendDiffPreviewResult(
+            to_tab=tab.id,
+            to_title="tab",
+            files=1,
+            byte_count=1,
+            confirm_token="yes",  # noqa: S106
+        ),
+        "git/sendDiff": command,
         "setup/checks": ChecksResult(checks=empty_checks()),
         "setup/previewFix": FixPreview(
             fix_id="git",

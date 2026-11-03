@@ -1,0 +1,30 @@
+{
+  "$defs": {
+    "RestoreFilePreviewParams": {
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "project_id": {
+          "type": "string"
+        },
+        "source_oid": {
+          "type": "string"
+        },
+        "worktree": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "project_id",
+        "worktree",
+        "path",
+        "source_oid"
+      ],
+      "title": "RestoreFilePreviewParams",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/RestoreFilePreviewParams",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

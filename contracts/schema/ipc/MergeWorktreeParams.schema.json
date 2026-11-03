@@ -1,0 +1,57 @@
+{
+  "$defs": {
+    "MergeWorktreeParams": {
+      "properties": {
+        "confirm_token": {
+          "type": "string"
+        },
+        "message": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "mode": {
+          "enum": [
+            "fast_forward",
+            "merge",
+            "squash"
+          ]
+        },
+        "project_id": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string"
+        },
+        "source_oid": {
+          "type": "string"
+        },
+        "target": {
+          "type": "string"
+        },
+        "target_oid": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "project_id",
+        "source",
+        "target",
+        "source_oid",
+        "target_oid",
+        "mode",
+        "confirm_token"
+      ],
+      "title": "MergeWorktreeParams",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/MergeWorktreeParams",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

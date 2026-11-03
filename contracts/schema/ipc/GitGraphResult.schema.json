@@ -1,0 +1,171 @@
+{
+  "$defs": {
+    "GitGraphResult": {
+      "description": "One page, newest first. `next_cursor` is None on the last page. A parent may lie on a later page.",
+      "properties": {
+        "next_cursor": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "nodes": {
+          "items": {
+            "$ref": "#/$defs/GitNodeView"
+          },
+          "type": "array"
+        },
+        "version": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "version",
+        "nodes",
+        "next_cursor"
+      ],
+      "title": "GitGraphResult",
+      "type": "object"
+    },
+    "GitNodeView": {
+      "properties": {
+        "at": {
+          "type": "string"
+        },
+        "author": {
+          "type": "string"
+        },
+        "checkpoint_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "kind": {
+          "enum": [
+            "checkpoint",
+            "commit"
+          ]
+        },
+        "oid": {
+          "type": "string"
+        },
+        "parents": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "plan_node": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "previous_snapshot": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "refs": {
+          "items": {
+            "$ref": "#/$defs/GitRefView"
+          },
+          "type": "array"
+        },
+        "subject": {
+          "type": "string"
+        },
+        "tab_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "turn": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "oid",
+        "kind",
+        "parents",
+        "refs",
+        "subject",
+        "author",
+        "at",
+        "tab_id",
+        "plan_node"
+      ],
+      "title": "GitNodeView",
+      "type": "object"
+    },
+    "GitRefView": {
+      "properties": {
+        "kind": {
+          "enum": [
+            "base",
+            "branch",
+            "checkpoint",
+            "head",
+            "remote",
+            "tag"
+          ]
+        },
+        "name": {
+          "type": "string"
+        },
+        "tab_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "name",
+        "kind"
+      ],
+      "title": "GitRefView",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/GitGraphResult",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

@@ -1,0 +1,40 @@
+{
+  "$defs": {
+    "GitRefView": {
+      "properties": {
+        "kind": {
+          "enum": [
+            "base",
+            "branch",
+            "checkpoint",
+            "head",
+            "remote",
+            "tag"
+          ]
+        },
+        "name": {
+          "type": "string"
+        },
+        "tab_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "name",
+        "kind"
+      ],
+      "title": "GitRefView",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/GitRefView",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

@@ -1,0 +1,42 @@
+{
+  "$defs": {
+    "GitCommitParams": {
+      "properties": {
+        "expect_head": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "expect_index": {
+          "type": "string"
+        },
+        "message": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "project_id": {
+          "type": "string"
+        },
+        "worktree": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "project_id",
+        "worktree",
+        "message",
+        "expect_head",
+        "expect_index"
+      ],
+      "title": "GitCommitParams",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/GitCommitParams",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

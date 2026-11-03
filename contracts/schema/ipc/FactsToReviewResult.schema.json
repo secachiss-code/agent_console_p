@@ -1,0 +1,60 @@
+{
+  "$defs": {
+    "FactReviewView": {
+      "description": "A fact whose code moved since it was verified. It needs a look; it is not thereby wrong.",
+      "properties": {
+        "changed_paths": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "id": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "verified_commit": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "verified_commit",
+        "changed_paths"
+      ],
+      "title": "FactReviewView",
+      "type": "object"
+    },
+    "FactsToReviewResult": {
+      "properties": {
+        "facts": {
+          "items": {
+            "$ref": "#/$defs/FactReviewView"
+          },
+          "type": "array"
+        },
+        "head_oid": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "head_oid",
+        "facts"
+      ],
+      "title": "FactsToReviewResult",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/FactsToReviewResult",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

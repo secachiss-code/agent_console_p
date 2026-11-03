@@ -1,0 +1,34 @@
+{
+  "$defs": {
+    "RestoreFileParams": {
+      "properties": {
+        "confirm_token": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "project_id": {
+          "type": "string"
+        },
+        "source_oid": {
+          "type": "string"
+        },
+        "worktree": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "project_id",
+        "worktree",
+        "path",
+        "source_oid",
+        "confirm_token"
+      ],
+      "title": "RestoreFileParams",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/RestoreFileParams",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

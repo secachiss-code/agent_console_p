@@ -1,0 +1,22 @@
+{
+  "$defs": {
+    "CleanupWorktreeParams": {
+      "properties": {
+        "project_id": {
+          "type": "string"
+        },
+        "worktree": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "project_id",
+        "worktree"
+      ],
+      "title": "CleanupWorktreeParams",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/CleanupWorktreeParams",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

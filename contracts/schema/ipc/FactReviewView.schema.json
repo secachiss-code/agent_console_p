@@ -1,0 +1,34 @@
+{
+  "$defs": {
+    "FactReviewView": {
+      "description": "A fact whose code moved since it was verified. It needs a look; it is not thereby wrong.",
+      "properties": {
+        "changed_paths": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "id": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "verified_commit": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "verified_commit",
+        "changed_paths"
+      ],
+      "title": "FactReviewView",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/FactReviewView",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

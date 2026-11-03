@@ -1,0 +1,78 @@
+{
+  "$defs": {
+    "DiffSource": {
+      "description": "What to compare. `base` and `worktree` read a tab's or checkout's files, the others only commits.",
+      "properties": {
+        "against": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "kind": {
+          "enum": [
+            "base",
+            "between",
+            "commit",
+            "index",
+            "worktree"
+          ]
+        },
+        "oid": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "worktree": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "kind"
+      ],
+      "title": "DiffSource",
+      "type": "object"
+    },
+    "SendDiffPreviewParams": {
+      "properties": {
+        "project_id": {
+          "type": "string"
+        },
+        "source": {
+          "$ref": "#/$defs/DiffSource"
+        },
+        "to_tab": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "project_id",
+        "source",
+        "to_tab"
+      ],
+      "title": "SendDiffPreviewParams",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/SendDiffPreviewParams",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

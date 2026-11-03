@@ -1,0 +1,30 @@
+{
+  "$defs": {
+    "CherryPickParams": {
+      "properties": {
+        "expect_head": {
+          "type": "string"
+        },
+        "oid": {
+          "type": "string"
+        },
+        "project_id": {
+          "type": "string"
+        },
+        "worktree": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "project_id",
+        "worktree",
+        "oid",
+        "expect_head"
+      ],
+      "title": "CherryPickParams",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/CherryPickParams",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

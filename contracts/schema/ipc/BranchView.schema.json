@@ -1,0 +1,41 @@
+{
+  "$defs": {
+    "BranchView": {
+      "properties": {
+        "ahead": {
+          "type": "integer"
+        },
+        "behind": {
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        },
+        "oid": {
+          "type": "string"
+        },
+        "worktree": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "name",
+        "oid",
+        "worktree",
+        "ahead",
+        "behind"
+      ],
+      "title": "BranchView",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/BranchView",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

@@ -1,0 +1,127 @@
+{
+  "$defs": {
+    "MergePreviewResult": {
+      "description": "Valid for exactly `source_oid` into `target_oid`. `modes` is what can be done with them now.",
+      "properties": {
+        "blockers": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "confirm_token": {
+          "type": "string"
+        },
+        "modes": {
+          "items": {
+            "enum": [
+              "fast_forward",
+              "merge",
+              "squash"
+            ]
+          },
+          "type": "array"
+        },
+        "probe": {
+          "$ref": "#/$defs/MergeProbeView"
+        },
+        "source": {
+          "type": "string"
+        },
+        "source_dirty": {
+          "type": "boolean"
+        },
+        "source_oid": {
+          "type": "string"
+        },
+        "target": {
+          "type": "string"
+        },
+        "target_oid": {
+          "type": "string"
+        },
+        "target_worktree": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "source",
+        "target",
+        "source_oid",
+        "target_oid",
+        "probe",
+        "modes",
+        "source_dirty",
+        "target_worktree",
+        "blockers",
+        "confirm_token"
+      ],
+      "title": "MergePreviewResult",
+      "type": "object"
+    },
+    "MergeProbeView": {
+      "description": "`git merge-tree` of exactly these two commits. Files nobody committed are not in it.",
+      "properties": {
+        "conflicts": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "deletions": {
+          "default": 0,
+          "type": "integer"
+        },
+        "insertions": {
+          "default": 0,
+          "type": "integer"
+        },
+        "source_oid": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "status": {
+          "enum": [
+            "clean",
+            "conflict",
+            "not_applicable",
+            "unknown"
+          ]
+        },
+        "target_oid": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "status",
+        "source_oid",
+        "target_oid"
+      ],
+      "title": "MergeProbeView",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/MergePreviewResult",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

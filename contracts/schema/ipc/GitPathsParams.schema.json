@@ -1,0 +1,45 @@
+{
+  "$defs": {
+    "GitPathsParams": {
+      "description": "Stage or unstage whole files. `expect_*` are what the user was shown.",
+      "properties": {
+        "expect_head": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "expect_index": {
+          "type": "string"
+        },
+        "paths": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "project_id": {
+          "type": "string"
+        },
+        "worktree": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "project_id",
+        "worktree",
+        "paths",
+        "expect_head",
+        "expect_index"
+      ],
+      "title": "GitPathsParams",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/GitPathsParams",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

@@ -1,0 +1,61 @@
+{
+  "$defs": {
+    "MergeProbeView": {
+      "description": "`git merge-tree` of exactly these two commits. Files nobody committed are not in it.",
+      "properties": {
+        "conflicts": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "deletions": {
+          "default": 0,
+          "type": "integer"
+        },
+        "insertions": {
+          "default": 0,
+          "type": "integer"
+        },
+        "source_oid": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "status": {
+          "enum": [
+            "clean",
+            "conflict",
+            "not_applicable",
+            "unknown"
+          ]
+        },
+        "target_oid": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "status",
+        "source_oid",
+        "target_oid"
+      ],
+      "title": "MergeProbeView",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/MergeProbeView",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

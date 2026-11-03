@@ -1,0 +1,38 @@
+{
+  "$defs": {
+    "RestoreFilePreviewResult": {
+      "properties": {
+        "confirm_token": {
+          "type": "string"
+        },
+        "deletions": {
+          "type": "integer"
+        },
+        "exists_in_source": {
+          "type": "boolean"
+        },
+        "insertions": {
+          "type": "integer"
+        },
+        "path": {
+          "type": "string"
+        },
+        "source_oid": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "path",
+        "source_oid",
+        "insertions",
+        "deletions",
+        "exists_in_source",
+        "confirm_token"
+      ],
+      "title": "RestoreFilePreviewResult",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/RestoreFilePreviewResult",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

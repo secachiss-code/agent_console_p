@@ -1,0 +1,33 @@
+{
+  "$defs": {
+    "MergePreviewParams": {
+      "properties": {
+        "project_id": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string"
+        },
+        "target": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "project_id",
+        "source"
+      ],
+      "title": "MergePreviewParams",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/MergePreviewParams",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

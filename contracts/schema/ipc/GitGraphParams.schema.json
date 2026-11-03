@@ -1,0 +1,46 @@
+{
+  "$defs": {
+    "GitGraphParams": {
+      "properties": {
+        "cursor": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "limit": {
+          "default": 200,
+          "maximum": 1000,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "project_id": {
+          "type": "string"
+        },
+        "tab_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "project_id"
+      ],
+      "title": "GitGraphParams",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/GitGraphParams",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

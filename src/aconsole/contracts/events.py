@@ -99,6 +99,13 @@ class CheckpointCreated(msgspec.Struct, frozen=True, kw_only=True, tag="checkpoi
     checkpoint: CheckpointView
 
 
+class GitStateUpdated(msgspec.Struct, frozen=True, kw_only=True, tag="git_state_updated", tag_field="type"):
+    """Something in this project's Git moved. The revision says what to compare; `git/state` says what changed."""
+
+    project_id: ProjectId
+    revision: str
+
+
 class OperationProgress(msgspec.Struct, frozen=True, kw_only=True, tag="operation_progress", tag_field="type"):
     operation_id: str
     title: str
@@ -144,6 +151,7 @@ UiEvent = (
     | Banner
     | InjectToTerminal
     | CheckpointCreated
+    | GitStateUpdated
     | OperationProgress
     | VaultEditRejected
     | ScreenTextRequested

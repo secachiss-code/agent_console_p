@@ -1,0 +1,23 @@
+{
+  "$defs": {
+    "WorktreeOperationParams": {
+      "description": "Continue or abort what is in progress in this worktree.",
+      "properties": {
+        "project_id": {
+          "type": "string"
+        },
+        "worktree": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "project_id",
+        "worktree"
+      ],
+      "title": "WorktreeOperationParams",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/WorktreeOperationParams",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

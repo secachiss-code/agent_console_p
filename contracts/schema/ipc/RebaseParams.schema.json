@@ -1,0 +1,30 @@
+{
+  "$defs": {
+    "RebaseParams": {
+      "properties": {
+        "expect_head": {
+          "type": "string"
+        },
+        "onto_oid": {
+          "type": "string"
+        },
+        "project_id": {
+          "type": "string"
+        },
+        "worktree": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "project_id",
+        "worktree",
+        "onto_oid",
+        "expect_head"
+      ],
+      "title": "RebaseParams",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/RebaseParams",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

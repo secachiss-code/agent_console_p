@@ -1,0 +1,124 @@
+{
+  "$defs": {
+    "GitOperationView": {
+      "properties": {
+        "created_at": {
+          "type": "string"
+        },
+        "follow_up_pending": {
+          "type": "boolean"
+        },
+        "id": {
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "cherry-pick",
+            "merge",
+            "rebase"
+          ]
+        },
+        "message": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "mode": {
+          "anyOf": [
+            {
+              "enum": [
+                "fast_forward",
+                "merge",
+                "squash"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "plan_node": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "result_oid": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "source": {
+          "type": "string"
+        },
+        "source_oid": {
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "aborted",
+            "conflicted",
+            "failed",
+            "finished",
+            "merged",
+            "started"
+          ]
+        },
+        "tab_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "target": {
+          "type": "string"
+        },
+        "target_oid": {
+          "type": "string"
+        },
+        "updated_at": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "status",
+        "mode",
+        "source",
+        "target",
+        "source_oid",
+        "target_oid",
+        "result_oid",
+        "tab_id",
+        "plan_node",
+        "message",
+        "follow_up_pending",
+        "created_at",
+        "updated_at"
+      ],
+      "title": "GitOperationView",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/GitOperationView",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

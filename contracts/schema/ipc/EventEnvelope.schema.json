@@ -1001,6 +1001,9 @@
               "$ref": "#/$defs/CheckpointCreated"
             },
             {
+              "$ref": "#/$defs/GitStateUpdated"
+            },
+            {
               "$ref": "#/$defs/OperationProgress"
             },
             {
@@ -1023,6 +1026,7 @@
               "approval_resolved": "#/$defs/ApprovalResolved",
               "banner": "#/$defs/Banner",
               "checkpoint_created": "#/$defs/CheckpointCreated",
+              "git_state_updated": "#/$defs/GitStateUpdated",
               "inject_to_terminal": "#/$defs/InjectToTerminal",
               "notify": "#/$defs/Notify",
               "operation_progress": "#/$defs/OperationProgress",
@@ -1072,6 +1076,29 @@
         "json_preview"
       ],
       "title": "GenericDetail",
+      "type": "object"
+    },
+    "GitStateUpdated": {
+      "description": "Something in this project's Git moved. The revision says what to compare; `git/state` says what changed.",
+      "properties": {
+        "project_id": {
+          "type": "string"
+        },
+        "revision": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "git_state_updated"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "project_id",
+        "revision"
+      ],
+      "title": "GitStateUpdated",
       "type": "object"
     },
     "ImpactTargetUnknownDetails": {
