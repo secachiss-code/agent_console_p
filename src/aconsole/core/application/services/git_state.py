@@ -9,6 +9,7 @@ import itertools
 import threading
 from collections import OrderedDict
 from collections.abc import Callable
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Final, NoReturn, Protocol, final
@@ -117,6 +118,9 @@ class _Lru[Key, Value]:
 
 def _hash(*parts: str) -> str:
     return hashlib.sha256("\0".join(parts).encode()).hexdigest()[:32]
+
+
+_STATUS_WORKERS: Final = 4
 
 
 def _same_path(left: str, right: str) -> bool:
@@ -319,6 +323,12 @@ class GitStateService:
         kept.extend(row.head for row in worktrees if row.head is not None and _same_path(row.path, tab.worktree))
         return tuple(dict.fromkeys(kept))
 
+    def _statuses(self, worktrees: tuple[WorktreeRow, ...]) -> dict[str, StatusRow]:
+        """Side by side: this is most of a look's cost, and each one waits on its own disk scan."""
+        with ThreadPoolExecutor(max_workers=_STATUS_WORKERS) as pool:
+            found = pool.map(self._reader.status, [Path(row.path) for row in worktrees])
+            return {row.path: status for row, status in zip(worktrees, found, strict=True)}
+
     def _build(self, project: GitProject) -> GitStateResult:
         root = Path(project.root)
         refs = self._reader.refs(root)
@@ -329,7 +339,7 @@ class GitStateService:
             base = worktrees[0].branch
         base_oid = None if base is None else heads.get(base)
         tabs = self._catalog().git_tabs(project.project_id)
-        statuses = {row.path: self._reader.status(Path(row.path)) for row in worktrees}
+        statuses = self._statuses(worktrees)
         views = tuple(self._worktree(root, row, statuses[row.path], tabs, base, base_oid) for row in worktrees)
         placed = {row.branch: row.path for row in worktrees if row.branch is not None}
         branches = tuple(
