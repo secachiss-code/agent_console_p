@@ -10,12 +10,15 @@ import os
 import stat
 import subprocess
 import threading
+import urllib.error
+import urllib.request
 from datetime import UTC, datetime
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
 import msgspec
 import pytest
+from sqlalchemy import Column, Integer, MetaData, String, Table, create_engine, insert
 
 from aconsole.contracts.app import AccountView, AgentInfo, QuotaWindowView
 from aconsole.contracts.common import AccountId, AgentKind, QuotaLevel
@@ -35,7 +38,9 @@ from aconsole.core.infrastructure.agents.launch import HostAgentCommands
 from aconsole.core.infrastructure.agents.opencode.launcher import OpenCodeLauncher
 from aconsole.core.infrastructure.agents.opencode.limits import OpenCodeLimits
 from aconsole.core.infrastructure.agents.opencode.limits import access_key as opencode_key
+from aconsole.core.infrastructure.agents.opencode.limits import ask_usage as ask_opencode_usage
 from aconsole.core.infrastructure.agents.opencode.limits import auth_file as opencode_auth
+from aconsole.core.infrastructure.agents.opencode.limits import signed_in as opencode_signed_in
 from aconsole.core.infrastructure.agents.opencode.sessions import parse_sessions
 from aconsole.core.infrastructure.agents.opencode.stream import EventReader, EventStream
 from aconsole.core.infrastructure.agents.usage_log import UsageLog, claude_events, codex_events
@@ -568,9 +573,75 @@ def test_opencode_early_shape_and_refusals() -> None:
     event = OpenCodeLimits(lambda: _OPENCODE_NOW).on_usage(early)
     assert event is not None
     assert [window.key for window in event.account.quota] == ["5h"]
-    refusal = b'{"error": {"type": "EntitlementError", "message": "OpenCode Go subscription required"}}'
-    for body in (b"", b"not json", refusal, b'{"status": 401}'):
+    for body in (b"", b"not json", b'{"status": 401}'):
         assert OpenCodeLimits(lambda: _OPENCODE_NOW).on_usage(body) is None
+
+
+def _opencode_database(home: Path, *rows: tuple[str, str, int]) -> None:
+    """As OpenCode 2 keeps its logins."""
+    path = opencode_auth(home).with_name("opencode.db")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    engine = create_engine(f"sqlite:///{path}")
+    metadata = MetaData()
+    table = Table(
+        "credential", metadata, Column("id", String), Column("integration_id", String),
+        Column("value", String), Column("active", Integer),
+    )
+    metadata.create_all(engine)
+    with engine.begin() as connection:
+        for provider, value, active in rows:
+            _ = connection.execute(insert(table).values(id="c", integration_id=provider, value=value, active=active))
+    engine.dispose()
+
+
+def test_opencode_2_login_is_read_from_its_database(tmp_path: Path) -> None:
+    assert not opencode_signed_in(tmp_path)
+    oauth = json.dumps({"type": "oauth", "access": "token", "refresh": "r"})
+    _opencode_database(tmp_path, ("opencode", oauth, 1), ("opencode-go", '{"type": "api", "key": "old"}', 0))
+    assert opencode_signed_in(tmp_path)
+    assert opencode_key(tmp_path) == "token", "a login that is not active is not asked with"
+
+
+def test_opencode_login_to_another_provider_connects_it_but_cannot_ask_usage(tmp_path: Path) -> None:
+    _opencode_database(tmp_path, ("anthropic", '{"type": "oauth", "access": "x"}', 1))
+    assert opencode_signed_in(tmp_path)
+    assert opencode_key(tmp_path) is None
+
+
+def test_a_database_without_logins_is_no_login(tmp_path: Path) -> None:
+    path = opencode_auth(tmp_path).with_name("opencode.db")
+    path.parent.mkdir(parents=True)
+    engine = create_engine(f"sqlite:///{path}")
+    metadata = MetaData()
+    _ = Table("other", metadata, Column("id", String))
+    metadata.create_all(engine)
+    engine.dispose()
+    assert not opencode_signed_in(tmp_path)
+    assert opencode_key(tmp_path) is None
+
+
+def test_opencode_usage_is_not_asked_under_pythons_default_name(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The site's firewall refuses `Python-urllib` with error 1010, so the question would never arrive."""
+    asked: list[urllib.request.Request] = []
+
+    def urlopen(request: urllib.request.Request, timeout: float) -> object:
+        _ = timeout
+        asked.append(request)
+        reason = "offline"
+        raise urllib.error.URLError(reason)
+
+    monkeypatch.setattr(urllib.request, "urlopen", urlopen)
+    assert ask_opencode_usage("k") == b""
+    assert asked[0].get_header("User-agent") == "aconsole"
+
+
+def test_opencode_refusal_for_no_subscription_becomes_a_plan_without_windows() -> None:
+    limits = OpenCodeLimits(lambda: datetime(2026, 11, 3, tzinfo=UTC))
+    body = b'{"type":"error","error":{"type":"EntitlementError","message":"OpenCode Go subscription required."}}'
+    event = limits.on_usage(body)
+    assert event is not None
+    assert (event.account.plan_label, event.account.quota) == ("Zen", ())
+    assert limits.on_usage(b'{"type":"error","error":{"type":"AuthError"}}') is None
 
 
 def test_opencode_key_is_read_from_the_cli_login(tmp_path: Path) -> None:

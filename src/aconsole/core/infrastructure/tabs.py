@@ -38,12 +38,12 @@ _DEFAULT_BRANCH: Final = "main"
 _AGENTS_TTL_S: Final = 30.0
 _AGENTS: Final = (AgentKind.CLAUDE, AgentKind.CODEX, AgentKind.OPENCODE, AgentKind.CURSOR)
 _DISPLAY: Final = {AgentKind.OPENCODE: "OpenCode"}
-# The file each CLI keeps its login in, under the container's home. Only its presence is looked at.
+# The file each CLI keeps its login in, under the container's home. Only its presence is looked at. OpenCode keeps its
+# logins in a database, and `opencode.limits` knows it.
 _LOGIN_FILES: Final = {
     AgentKind.CLAUDE: Path(".claude/.credentials.json"),
     AgentKind.CODEX: Path(".codex/auth.json"),
     AgentKind.CURSOR: Path(".config/cursor/auth.json"),
-    AgentKind.OPENCODE: Path(".local/share/opencode/auth.json"),
 }
 _PODMAN: Final = host_binary("podman")
 _SHELL: Final = Path("/bin/sh")
@@ -221,7 +221,11 @@ class HostTabs:
     def signed_in(self, kind: AgentKind) -> bool | None:
         """Whether the agent's CLI has a login in its container. None when the container's home cannot be read."""
         home = self.agent_home(f"agent-{kind.value}")
-        return None if home is None else (home / _LOGIN_FILES[kind]).is_file()
+        if home is None:
+            return None
+        if kind is AgentKind.OPENCODE:
+            return opencode_limits.signed_in(home)
+        return (home / _LOGIN_FILES[kind]).is_file()
 
     def ensure_container(self, name: str) -> None:
         try:
