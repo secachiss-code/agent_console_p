@@ -175,13 +175,18 @@ def test_limits_of_both_agents_reach_the_snapshot(tmp_path: Path, monkeypatch) -
         for _ in range(100):
             snapshot = await client.snapshot()
             found = {item.agent.value: [window.used_pct for window in item.quota] for item in snapshot.accounts}
-            if len(found) == 2:
+            if found.get("claude") and found.get("codex"):
                 break
             await asyncio.sleep(0.05)
         await _stop(daemon, task, client)
         return found
 
-    assert asyncio.run(scenario()) == {"claude": [40.0, 12.0], "codex": [7.0, 28.0]}
+    assert asyncio.run(scenario()) == {
+        "claude": [40.0, 12.0],
+        "codex": [7.0, 28.0],
+        "opencode": [],
+        "cursor": [],
+    }
 
 
 def test_projects_are_added_once_activated_and_survive_a_restart(tmp_path: Path) -> None:

@@ -22,8 +22,8 @@ from typing import TYPE_CHECKING, override
 import msgspec
 import uvicorn
 
-from aconsole.contracts.app import CloseTabParams, CommandResult, HealthResult
-from aconsole.contracts.common import ClientRole, TabId
+from aconsole.contracts.app import AccountView, CloseTabParams, CommandResult, HealthResult
+from aconsole.contracts.common import AccountId, ClientRole, TabId
 from aconsole.contracts.errors import ErrorData, ErrorObject, MessageTooLargeDetails, error_by_name
 from aconsole.contracts.events import Notify, PlanUpdated, QuotaUpdated, TabAdded, TabRemoved, TabUpdated, UiEvent
 from aconsole.contracts.ipc import InitializeParams, Notification, ProtocolLimits, Request, ResponseErr
@@ -103,7 +103,7 @@ if TYPE_CHECKING:
     from sqlalchemy.engine import Engine
     from sqlalchemy.orm import Session
 
-    from aconsole.contracts.app import AccountView, PlanView, TabView
+    from aconsole.contracts.app import AgentInfo, PlanView, TabView
     from aconsole.contracts.ipc import Envelope, EventEnvelope
     from aconsole.contracts.settings import Settings
 
@@ -322,10 +322,26 @@ _CLAUDE_CONTAINER = "agent-claude"
 _CODEX_CONTAINER = "agent-codex"
 _CODEX_POLL = "codex-poll"
 _CODEX_POLL_S = 120.0
+# A stopped container gives nothing, and opening a tab starts it: the limits should not wait two minutes after that.
+_CODEX_RETRY_S = 30.0
 _CODEX_REPLY_LOGGED = 300
 _CLAUDE_POLL_S = 60.0
 _CODEX_TURN_POLL_S = 1.0
 _ACCOUNT_RESEND_S = 30.0
+
+
+def codex_poll_delay(body: bytes) -> float:
+    """How long until the next question. An answer, even a refusal, will not change soon; silence may."""
+    return _CODEX_POLL_S if body else _CODEX_RETRY_S
+
+
+def accounts_without_limits(agents: tuple[AgentInfo, ...]) -> tuple[AccountView, ...]:
+    """An agent that reports no limits still gets its card, which says they are unknown."""
+    return tuple(
+        AccountView(id=AccountId(f"{agent.kind.value}:local"), agent=agent.kind, plan_label="", quota=())
+        for agent in agents
+        if agent.available and "limits" not in agent.capabilities
+    )
 
 
 class _PublishedEvents(EventSink):
@@ -390,7 +406,8 @@ class Daemon:
             HostRepos(), new_id=self._host.new_id, now=lambda: datetime.now(UTC),
         )
         self.tabs.use_projects(self._catalog)
-        self.tabs.use_agents(HostAgents(self._host.inspect_container).agents)
+        self._agents_source: Callable[[], tuple[AgentInfo, ...]] = HostAgents(self._host.inspect_container).agents
+        self.tabs.use_agents(self._agents_source)
         self._agent_commands: HostAgentCommands = HostAgentCommands(self._host.agent_home, self._opencode_heard)
         self.tabs.use_commands(self._agent_commands)
         self._setup_limits()
@@ -492,7 +509,9 @@ class Daemon:
         self._account_sent: dict[str, float] = {}
         self._claude_usage_due: asyncio.Event = asyncio.Event()
         self._notices: set[asyncio.Task[None]] = set()
-        self.tabs.use_accounts(lambda: tuple(self._accounts.values()))
+        self.tabs.use_accounts(
+            lambda: (*self._accounts.values(), *accounts_without_limits(self._agents_source())),
+        )
 
     @property
     def lock_path(self) -> Path:
@@ -930,7 +949,8 @@ class Daemon:
                     _LOG.warning("Codex gave no limits: %s", body[:_CODEX_REPLY_LOGGED].decode(errors="replace"))
             except Exception:  # noqa: BLE001 -- limits must never stop the core
                 _LOG.exception("cannot read Codex limits")
-            await asyncio.sleep(_CODEX_POLL_S)
+                body = b""
+            await asyncio.sleep(codex_poll_delay(body))
 
     def _account_observed(self, event: QuotaUpdated) -> None:
         """The snapshot always holds the newest; subscribers hear of a change, or at most twice a minute without one."""

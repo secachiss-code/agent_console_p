@@ -16,7 +16,9 @@ from pathlib import Path
 import msgspec
 import pytest
 
+from aconsole.contracts.app import AgentInfo  # noqa: TC001 -- only a return type, like the other imports here
 from aconsole.contracts.common import AgentKind
+from aconsole.core.bootstrap import accounts_without_limits, codex_poll_delay
 from aconsole.core.domain.agent import CAPABILITIES
 from aconsole.core.domain.agent import AgentKind as DomainAgent
 from aconsole.core.infrastructure.agents.command_files import cursor_rules, opencode_commands
@@ -305,3 +307,27 @@ def test_command_files_find_commands_and_rules(tmp_path: Path) -> None:
     commands = opencode_commands(home, project)
     assert [(item.title, item.subtitle) for item in commands] == [("ship", "Ship it")]
     assert [(item.title, item.subtitle) for item in cursor_rules(project)] == [("style", None)]
+
+
+def _info(kind: AgentKind, *, available: bool = True) -> AgentInfo:
+    return next(
+        msgspec.structs.replace(info, available=available)
+        for info in HostAgents(lambda name: Inspected(name=name, ident="x", running=True)).agents()
+        if info.kind is kind
+    )
+
+
+def test_an_agent_without_limits_gets_a_card_saying_they_are_unknown() -> None:
+    agents = (
+        _info(AgentKind.CLAUDE),
+        _info(AgentKind.CODEX),
+        _info(AgentKind.CURSOR),
+        _info(AgentKind.OPENCODE, available=False),
+    )
+    found = accounts_without_limits(agents)
+    assert [account.agent for account in found] == [AgentKind.CURSOR]
+    assert found[0].quota == ()
+
+
+def test_codex_limits_are_asked_again_soon_after_silence() -> None:
+    assert codex_poll_delay(b"") < codex_poll_delay(b'{"id":2}')
