@@ -1,6 +1,6 @@
 """OpenCode's server-sent events become the hook events the tab book already knows.
 
-One thread per tab reads `/event`. It uses `http.client` because the stream may be chunked. The thread ends by itself
+One thread per tab reads `/api/event`. It uses `http.client` because the stream may be chunked. The thread ends by itself
 once the server has been gone for a while, which is what happens when the agent exits.
 """
 
@@ -32,17 +32,19 @@ _ASKED: Final = "PermissionRequest"
 _ANSWERED: Final = "PreToolUse"
 _IDLE: Final = "agent-turn-complete"
 _FAILED: Final = "StopFailure"
-_BUSY: Final = frozenset({"busy", "retry"})
+_USAGE: Final = "session.usage.updated"
+_STARTED: Final = "session.execution.started"
+_FINISHED: Final = frozenset({"session.execution.succeeded", "session.execution.interrupted"})
+_BROKE: Final = "session.execution.failed"
 _WANTED: Final = frozenset(
     {
         "session.created",
-        "session.updated",
-        "session.status",
-        "session.idle",
-        "session.error",
+        _STARTED,
+        *_FINISHED,
+        _BROKE,
+        _USAGE,
         "permission.asked",
         "permission.replied",
-        "message.updated",
     },
 )
 # Not a status: the tab's running total of what its model calls cost, in dollars, priced by OpenCode itself.
@@ -54,28 +56,17 @@ class _Head(msgspec.Struct, frozen=True):
     type: str = ""
 
 
-class _Status(msgspec.Struct, frozen=True):
-    type: str = ""
-
-
-class _Info(msgspec.Struct, frozen=True):
-    id: str = ""
-    parentID: str | None = None  # noqa: N815 -- OpenCode's own name
-    role: str | None = None
-    cost: float | None = None
-
-
-class _Properties(msgspec.Struct, frozen=True):
+class _Data(msgspec.Struct, frozen=True):
     sessionID: str | None = None  # noqa: N815 -- OpenCode's own name
+    parentID: str | None = None  # noqa: N815 -- OpenCode's own name
     requestID: str | None = None  # noqa: N815 -- OpenCode's own name
     id: str | None = None
-    status: _Status | None = None
-    info: _Info | None = None
+    cost: float | None = None
 
 
 class _Event(msgspec.Struct, frozen=True):
     type: str = ""
-    properties: _Properties = _Properties()
+    data: _Data = _Data()
 
 
 class _Signal(msgspec.Struct, frozen=True, omit_defaults=True):
@@ -91,14 +82,14 @@ class EventReader:
     """Turn one tab's events into ingest bodies. Only a change of meaning produces one.
 
     A subagent runs in a child session: its idle must not end the tab's turn, but its permission request still needs
-    the user. While a request is open, the session stays "busy", and that must not hide the wait.
+    the user. A turn that starts while a request is open must not hide the wait.
     """
 
     def __init__(self) -> None:
         self._children: set[str] = set()
         self._open: set[str] = set()
         self._last: str | None = None
-        # Each assistant message's cost, latest seen: a message is updated while it streams.
+        # Each session's running total, latest seen.
         self._costs: dict[str, float] = {}
         self._said_cost: float = 0.0
 
@@ -110,21 +101,20 @@ class EventReader:
             event = msgspec.json.decode(data, type=_Event)
         except msgspec.DecodeError:
             return None
-        if event.type == "message.updated":
-            return self._cost(event.properties.info)
+        if event.type == _USAGE:
+            return self._cost(event.data)
         name = self._meaning(event)
         if name is None or name == self._last:
             return None
         self._last = name
-        session = event.properties.sessionID
-        root = session if name == _WORKING else None
+        root = event.data.sessionID if name == _WORKING else None
         return msgspec.json.encode(_Signal(hook_event_name=name, session_id=root))
 
-    def _cost(self, info: _Info | None) -> bytes | None:
+    def _cost(self, data: _Data) -> bytes | None:
         """The tab's total, subagents included: they spend on its behalf. Said again only when it moved."""
-        if info is None or info.role != "assistant" or info.cost is None or info.cost < 0:
+        if data.sessionID is None or data.cost is None or data.cost < 0:
             return None
-        self._costs[info.id] = info.cost
+        self._costs[data.sessionID] = data.cost
         total = round(sum(self._costs.values()), 4)
         if abs(total - self._said_cost) < _COST_STEP:
             return None
@@ -132,32 +122,28 @@ class EventReader:
         return msgspec.json.encode(_Signal(hook_event_name=COST_EVENT, cost_usd=total))
 
     def _meaning(self, event: _Event) -> str | None:
-        props = event.properties
+        data = event.data
         kind = event.type
-        if kind in {"session.created", "session.updated"}:
-            if props.info is not None and props.info.parentID:
-                self._children.add(props.info.id)
+        if kind == "session.created":
+            if data.parentID and data.sessionID:
+                self._children.add(data.sessionID)
             return None
         if kind == "permission.asked":
-            self._open.add(props.id or props.requestID or "")
+            self._open.add(data.id or "")
             return _ASKED
         if kind == "permission.replied":
-            self._open.discard(props.requestID or props.id or "")
+            self._open.discard(data.requestID or "")
             return None if self._open else _ANSWERED
-        return None if props.sessionID in self._children else self._root_meaning(event)
+        return None if data.sessionID in self._children else self._root_meaning(kind)
 
-    def _root_meaning(self, event: _Event) -> str | None:
-        props = event.properties
-        kind = event.type
-        if kind == "session.error":
+    def _root_meaning(self, kind: str) -> str | None:
+        if kind == _BROKE:
             self._open.clear()
             return _FAILED
-        if kind == "session.idle" or (props.status is not None and props.status.type == "idle"):
+        if kind in _FINISHED:
             self._open.clear()
             return _IDLE
-        if props.status is not None and props.status.type in _BUSY and not self._open:
-            return _WORKING
-        return None
+        return _WORKING if kind == _STARTED and not self._open else None
 
 
 def data_lines(lines: Callable[[], bytes]) -> list[bytes]:
@@ -221,7 +207,7 @@ class EventStream:
             # A quiet stream is normal, and `stop` wakes the read.
             live.settimeout(None)
             headers = {"Accept": "text/event-stream", "Authorization": f"Basic {self._auth}"}
-            connection.request("GET", "/event", headers=headers)
+            connection.request("GET", "/api/event", headers=headers)
             response = connection.getresponse()
             if response.status != _OK:
                 _LOG.warning("OpenCode events on port %d: HTTP %d", self._port, response.status)

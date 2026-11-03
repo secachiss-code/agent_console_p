@@ -1,4 +1,4 @@
-"""OpenCode runs as `opencode serve` plus `opencode attach`, so the core can read the server's event stream.
+"""OpenCode runs as `opencode serve` plus `opencode --server`, so the core can read the server's event stream.
 
 Nothing is written to the agent's home: the MCP entry travels in `OPENCODE_CONFIG_CONTENT`. The tab token is put
 into that value inside the container, so it never appears on a command line. The same token is the server password.
@@ -13,7 +13,7 @@ from typing import Final, final
 
 _HOST: Final = "127.0.0.1"
 _MARK: Final = "@ACONSOLE_TOKEN@"
-# `$1` config, `$2` server port, the rest goes to `opencode attach`: `-s <session>`.
+# `$1` config, `$2` server port, the rest goes to the terminal client: `-s <session>`.
 # The server dies with the terminal: `podman exec` would leave it running, and nothing else knows its port.
 _SCRIPT: Final = r"""
 config=$1
@@ -38,7 +38,7 @@ while [ "$tries" -lt 100 ] && ! curl -s -o /dev/null -m 1 "$url/"; do
     sleep 0.1
     tries=$((tries + 1))
 done
-opencode attach "$url" "$@"
+opencode --server "$url" "$@"
 """
 
 

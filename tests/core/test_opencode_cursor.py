@@ -49,8 +49,9 @@ from aconsole.sidecar.screen import ACTIVE, QUIET, SUBMITTED, ScreenWatch, visib
 _TOKEN = "tok" + "-secret"
 
 
-def _event(kind: str, **properties: object) -> bytes:
-    return json.dumps({"type": kind, "properties": properties}).encode()
+def _event(kind: str, **data: object) -> bytes:
+    """As OpenCode 2.1.2 sends it on `/api/event`."""
+    return json.dumps({"id": "evt_1", "created": 1, "type": kind, "data": data}).encode()
 
 
 def _names(reader: EventReader, *events: bytes) -> list[str]:
@@ -70,13 +71,13 @@ def test_reader_maps_a_turn_with_an_approval() -> None:
     names = _names(
         EventReader(),
         _event("server.connected"),
-        _event("session.status", sessionID="s1", status={"type": "busy"}),
-        _event("session.status", sessionID="s1", status={"type": "busy"}),
+        _event("session.execution.started", sessionID="s1"),
+        _event("session.execution.started", sessionID="s1"),
         _event("permission.asked", id="p1", sessionID="s1"),
-        _event("session.status", sessionID="s1", status={"type": "busy"}),
+        _event("session.execution.started", sessionID="s1"),
         _event("permission.replied", requestID="p1", sessionID="s1", reply="once"),
-        _event("session.idle", sessionID="s1"),
-        _event("session.error", sessionID="s1"),
+        _event("session.execution.succeeded", sessionID="s1"),
+        _event("session.execution.failed", sessionID="s1"),
     )
     assert names == ["UserPromptSubmit", "PermissionRequest", "PreToolUse", "agent-turn-complete", "StopFailure"]
 
@@ -85,9 +86,9 @@ def test_reader_ignores_a_subagent_finishing_but_not_its_question() -> None:
     reader = EventReader()
     names = _names(
         reader,
-        _event("session.status", sessionID="root", status={"type": "busy"}),
-        _event("session.created", info={"id": "kid", "parentID": "root"}),
-        _event("session.idle", sessionID="kid"),
+        _event("session.execution.started", sessionID="root"),
+        _event("session.created", sessionID="kid", parentID="root"),
+        _event("session.execution.succeeded", sessionID="kid"),
         _event("permission.asked", id="p", sessionID="kid"),
     )
     assert names == ["UserPromptSubmit", "PermissionRequest"]
@@ -95,14 +96,14 @@ def test_reader_ignores_a_subagent_finishing_but_not_its_question() -> None:
 
 def test_reader_names_the_session_only_of_the_root() -> None:
     reader = EventReader()
-    _ = reader.read(_event("session.created", info={"id": "kid", "parentID": "root"}))
-    assert reader.read(_event("session.status", sessionID="kid", status={"type": "busy"})) is None
-    body = reader.read(_event("session.status", sessionID="root", status={"type": "busy"}))
+    _ = reader.read(_event("session.created", sessionID="kid", parentID="root"))
+    assert reader.read(_event("session.execution.started", sessionID="kid")) is None
+    body = reader.read(_event("session.execution.started", sessionID="root"))
     assert body is not None
     assert json.loads(body)["session_id"] == "root"
 
 
-@pytest.mark.parametrize("junk", [b"", b"not json", b"[]", b'{"type":"session.status","properties":{"status":7}}'])
+@pytest.mark.parametrize("junk", [b"", b"not json", b"[]", b'{"type":"session.usage.updated","data":{"cost":"x"}}'])
 def test_reader_survives_what_it_cannot_read(junk: bytes) -> None:
     assert EventReader().read(junk) is None
 
@@ -123,11 +124,13 @@ def test_stream_reads_events_with_basic_auth_until_stopped() -> None:
 
         def do_GET(self) -> None:
             seen.append(self.headers.get("Authorization", ""))
+            # Anything else gets the web app's page with a 200, so a wrong path looks like a quiet stream.
+            assert self.path == "/api/event"
             self.send_response(200)
             self.send_header("Content-Type", "text/event-stream")
             self.send_header("Transfer-Encoding", "chunked")
             self.end_headers()
-            for payload in (_event("server.connected"), _event("session.idle", sessionID="s")):
+            for payload in (_event("server.connected"), _event("session.execution.succeeded", sessionID="s")):
                 frame = b"data: " + payload + b"\n\n"
                 self.wfile.write(f"{len(frame):x}\r\n".encode() + frame + b"\r\n")
                 self.wfile.flush()
@@ -165,7 +168,7 @@ def _fake_bin(folder: Path, name: str, body: str) -> None:
     path.chmod(path.stat().st_mode | stat.S_IXUSR)
 
 
-def test_opencode_script_starts_the_server_attaches_and_stops_it(tmp_path: Path) -> None:
+def test_opencode_script_starts_the_server_connects_and_stops_it(tmp_path: Path) -> None:
     log = tmp_path / "log"
     bin_dir = tmp_path / "bin"
     bin_dir.mkdir()
@@ -176,8 +179,9 @@ def test_opencode_script_starts_the_server_attaches_and_stops_it(tmp_path: Path)
         f"""case "$1" in
 serve) echo "serve $* pw=$OPENCODE_SERVER_PASSWORD" >> {log}; printf %s "$OPENCODE_CONFIG_CONTENT" > {tmp_path}/config
        echo $$ > {tmp_path}/server; exec sleep 30 ;;
-attach) i=0; while [ ! -s {tmp_path}/server ] && [ $i -lt 100 ]; do sleep 0.05; i=$((i+1)); done
-        echo "attach $*" >> {log} ;;
+--server) i=0; while [ ! -s {tmp_path}/server ] && [ $i -lt 100 ]; do sleep 0.05; i=$((i+1)); done
+        echo "client $*" >> {log} ;;
+*) exit 1 ;;
 esac""",
     )
     launch = OpenCodeLauncher().launch(8765)
@@ -188,7 +192,7 @@ esac""",
     lines = log.read_text(encoding="utf-8").splitlines()
     port = launch.server_port
     assert f"serve serve --hostname 127.0.0.1 --port {port} pw={_TOKEN}" in lines
-    assert f"attach attach http://127.0.0.1:{port} -s ses_1" in lines
+    assert f"client --server http://127.0.0.1:{port} -s ses_1" in lines
     config = json.loads((tmp_path / "config").read_text(encoding="utf-8"))
     server = config["mcp"]["aconsole"]
     assert server["url"] == "http://127.0.0.1:8765/mcp"
