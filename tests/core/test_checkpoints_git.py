@@ -95,3 +95,17 @@ def _git(repo: Path, args: tuple[str, ...]) -> str:
         text=True,
     )
     return completed.stdout
+
+
+def test_a_checkpoint_needs_no_user_name(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    repo = tmp_path / "repo"
+    _commit_base(repo)
+    _ = _git(repo, ("config", "--unset", "user.name"))
+    _ = _git(repo, ("config", "--unset", "user.email"))
+    empty = tmp_path / "empty-gitconfig"
+    _ = empty.write_text("", encoding="utf-8")
+    monkeypatch.setenv("GIT_CONFIG_GLOBAL", str(empty))
+    (repo / "a.txt").write_text("changed\n", encoding="utf-8")
+    made = CheckpointService(GitCheckpoints()).on_user_prompt(repo, "tab-1", "work", _AT)
+    assert _show(repo, made.ref, "a.txt") == "changed\n"
+    assert _git(repo, ("log", "-1", "--format=%an", made.ref)).strip() == "AConsole"

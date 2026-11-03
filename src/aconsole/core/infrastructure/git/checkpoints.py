@@ -26,6 +26,14 @@ _ABS_GIT: Final = "git binary path must be absolute"
 _ABS_REPO: Final = "repository path must be absolute"
 _NO_HEAD: Final = "repository has no commits"
 _BAD_NUMSTAT: Final = "git numstat line was unreadable"
+# A checkpoint is the core's own ref, not the user's commit: it needs no `user.name`, and a machine without one
+# would otherwise get no checkpoints at all.
+_AUTHOR: Final = {
+    "GIT_AUTHOR_NAME": "AConsole",
+    "GIT_AUTHOR_EMAIL": "aconsole@localhost",
+    "GIT_COMMITTER_NAME": "AConsole",
+    "GIT_COMMITTER_EMAIL": "aconsole@localhost",
+}
 
 
 @final
@@ -64,7 +72,7 @@ class GitCheckpoints:
             _ = self._stdout(repo, ("read-tree", "HEAD"), index=index.name)
             _ = self._stdout(repo, ("add", "-A", "--", "."), index=index.name)
             tree = self._stdout(repo, ("write-tree",), index=index.name).strip()
-        commit = self._stdout(repo, ("commit-tree", tree, "-p", parent, "-m", message)).strip()
+        commit = self._stdout(repo, ("commit-tree", tree, "-p", parent, "-m", message), author=True).strip()
         _ = self._stdout(repo, ("update-ref", ref, commit))
         return _capture(self._numstat(repo, parent, commit), self._paths(repo, commit), tree)
 
@@ -110,8 +118,10 @@ class GitCheckpoints:
             return ()
         return tuple(piece for piece in raw.split("\0") if piece)
 
-    def _stdout(self, repo: Path, args: tuple[str, ...], *, index: str | None = None) -> str:
+    def _stdout(self, repo: Path, args: tuple[str, ...], *, index: str | None = None, author: bool = False) -> str:
         env = os.environ.copy()
+        if author:
+            env.update(_AUTHOR)
         if index is not None:
             env["GIT_INDEX_FILE"] = index
         try:
