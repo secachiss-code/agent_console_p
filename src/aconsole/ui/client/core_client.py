@@ -37,7 +37,8 @@ _READY_DEADLINE_S = 20.0
 _CATCH_UP_S = 0.01
 _CATCH_UP_DEADLINE_S = 1.0
 _BACKOFF_S = (0.05, 0.1, 0.2, 0.4, 0.8)
-_UI_CAPABILITIES = frozenset({"events.v1", "terminal.inject", "approvals.inline", "notifications.desktop"})
+# No `approvals.inline` until a window can answer: the core then leaves every request to the agent's own prompt.
+_UI_CAPABILITIES = frozenset({"events.v1", "terminal.inject", "notifications.desktop"})
 
 
 class CoreCallError(Exception):
