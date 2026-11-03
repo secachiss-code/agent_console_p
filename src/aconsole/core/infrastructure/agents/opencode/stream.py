@@ -1,7 +1,7 @@
 """OpenCode's server-sent events become the hook events the tab book already knows.
 
-One thread per tab reads `/api/event`. It uses `http.client` because the stream may be chunked. The thread ends by itself
-once the server has been gone for a while, which is what happens when the agent exits.
+One thread per tab reads `/api/event`. It uses `http.client` because the stream may be chunked. The thread ends by
+itself once the server has been gone for a while, which is what happens when the agent exits.
 """
 
 from __future__ import annotations
