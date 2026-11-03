@@ -2,6 +2,17 @@
   "$defs": {
     "GitNodeView": {
       "properties": {
+        "agent": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
         "at": {
           "type": "string"
         },

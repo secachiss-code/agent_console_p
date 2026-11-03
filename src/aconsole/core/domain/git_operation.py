@@ -6,7 +6,7 @@ from dataclasses import dataclass, replace
 from datetime import datetime
 from typing import Literal
 
-type OperationKind = Literal["merge", "rebase", "cherry-pick"]
+type OperationKind = Literal["merge", "rebase", "cherry-pick", "cleanup"]
 type OperationStatus = Literal["started", "conflicted", "merged", "finished", "failed", "aborted"]
 type MergeMode = Literal["fast_forward", "merge", "squash"]
 
@@ -58,6 +58,12 @@ class GitOperationRecord:
             message=message or self.message,
             follow_up_pending=follow_up_pending,
         )
+
+
+def commit_trailers(*, node: str | None, agent: str | None, tab: str | None) -> tuple[tuple[str, str], ...]:
+    """What ties a commit to its work once the tab and the branch are gone."""
+    named = (("AConsole-Node", node), ("AConsole-Agent", agent), ("AConsole-Tab", tab))
+    return tuple((key, value) for key, value in named if value)
 
 
 def merge_modes(*, clean: bool, already_merged: bool, can_fast_forward: bool) -> tuple[MergeMode, ...]:

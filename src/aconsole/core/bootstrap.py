@@ -400,6 +400,7 @@ class Daemon:
         mutations = GitMutations()
         self.git: GitService = GitService(GitStateService(history, lambda: self.tabs), emit=self._from_worker)
         self.git.watcher = self._git_watch
+        self.git.state.node_held_by = self._node_held_by
         self.git.operations = GitOperationService(
             self.git.state,
             mutations,
@@ -420,6 +421,7 @@ class Daemon:
             self.git.operations,
             self.git.merges,
             mutations,
+            now=lambda: datetime.now(UTC),
             facts=self._facts_to_check,
             close_tab=self._close_for_cleanup,
             changed=self._git_changed,
@@ -780,6 +782,9 @@ class Daemon:
         if worker is None:
             return self.review.send_text(tab_id, message)
         return worker.submit(self.review.send_text, tab_id, message).result()
+
+    def _node_held_by(self, tab_id: str) -> str | None:
+        return self._plans.node_held_by(tab_id)
 
     def _git_heard(self, project_id: str) -> None:
         self.git.heard(project_id)

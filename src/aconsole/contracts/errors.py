@@ -363,6 +363,7 @@ ERRORS: tuple[ErrorSpec, ...] = (
     _spec(3029, "MERGE_CONFLICT", retryable=False),
     _spec(3030, "MERGE_MODE_UNAVAILABLE", retryable=False),
     _spec(3031, "WORKTREE_NOT_REMOVABLE", retryable=False),
+    _spec(3032, "DATABASE_TRANSACTION_FAILED", retryable=True),
     _spec(4001, "PLAN_NOT_FOUND", retryable=False),
     _spec(4002, "NODE_NOT_FOUND", retryable=False),
     _spec(4003, "PLAN_CYCLE", retryable=False),

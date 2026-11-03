@@ -55,6 +55,8 @@ class CommitRow:
     author: str
     at: datetime
     subject: str
+    node: str | None = None
+    agent: str | None = None
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -119,8 +121,10 @@ class GitReader(Protocol):
         """The commit this core recorded when it created the worktree."""
         ...
 
-    def log(self, root: Path, tips: tuple[str, ...], skip: int, limit: int) -> tuple[CommitRow, ...]:
-        """Commits reachable from `tips`, children before parents."""
+    def log(
+        self, root: Path, tips: tuple[str, ...], skip: int, limit: int, *, node: str | None = None
+    ) -> tuple[CommitRow, ...]:
+        """Commits reachable from `tips`, children before parents. With `node`, only those its trailer names."""
         ...
 
     def changed_paths(self, root: Path, left: str, right: str) -> tuple[str, ...]: ...
@@ -147,6 +151,7 @@ class GitDone:
     ok: bool
     said: str
     oid: str | None = None
+    text: str | None = None
 
 
 class GitWriter(Protocol):
@@ -178,6 +183,12 @@ class GitWriter(Protocol):
 
     def merge(self, worktree: Path, oid: str, mode: str, message: str) -> GitDone:
         """Merge into the branch checked out here. A refusal leaves the worktree as it was."""
+        ...
+
+    def with_trailers(self, worktree: Path, message: str, trailers: tuple[tuple[str, str], ...]) -> str: ...
+
+    def merge_hooks(self, root: Path, tree: str, message: str, *, squash: bool) -> GitDone:
+        """The hooks a merge with no worktree would otherwise skip, run against `tree`. `text` is the final message."""
         ...
 
     def tree_of(self, root: Path, oid: str) -> str | None: ...

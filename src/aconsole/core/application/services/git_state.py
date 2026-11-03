@@ -39,6 +39,7 @@ from aconsole.core.application.ports.git_repo import (
     WorktreeRow,
 )
 from aconsole.core.domain.errors import DomainError
+from aconsole.core.domain.git_operation import commit_trailers
 from aconsole.core.domain.git_state import (
     blocks_writes,
     checkpoint_ref_name,
@@ -135,6 +136,7 @@ class GitStateService:
         self._locks: dict[str, threading.Lock] = {}
         self._built: dict[str, _Built] = {}
         self.operations: Callable[[str], tuple[GitOperationView, ...]] = lambda _project: ()
+        self.node_held_by: Callable[[str], str | None] = lambda _tab: None
 
     def project(self, project_id: str) -> GitProject:
         found = self._catalog().git_project(project_id)
@@ -171,6 +173,14 @@ class GitStateService:
         root = Path(project.root)
         return self._base_name(project, self._reader.refs(root), root)
 
+    def trailers_at(self, project_id: str, worktree: str) -> tuple[tuple[str, str], ...]:
+        """What a commit made in this worktree should say about its work."""
+        tab = self.tab_at(project_id, worktree)
+        if tab is None:
+            return ()
+        node = tab.plan_node or self.node_held_by(tab.tab_id)
+        return commit_trailers(node=node, agent=tab.agent.value, tab=tab.tab_id)
+
     def tabs(self, project_id: str) -> tuple[GitTab, ...]:
         return self._catalog().git_tabs(project_id)
 
@@ -190,7 +200,7 @@ class GitStateService:
         tips = self._tips(params, refs, worktrees, tabs, base)
         version = _hash(*sorted(tips))
         skip = _skip(params.cursor, version)
-        rows = self._reader.log(root, tips, skip, params.limit + 1)
+        rows = self._reader.log(root, tips, skip, params.limit + 1, node=params.plan_node)
         page = rows[: params.limit]
         decorate = _Decorations(refs, worktrees, tabs, base)
         nodes = tuple(decorate.node(row) for row in page)
@@ -495,11 +505,18 @@ class _Decorations:
             author=row.author,
             at=row.at,
             tab_id=None if tab is None else TabId(tab.tab_id),
-            plan_node=None if tab is None or tab.plan_node is None else NodeId(tab.plan_node),
+            plan_node=_node_of(row, tab),
+            agent=row.agent,
             checkpoint_id=None if point is None else f"{point[0]}-{point[1]}",
             turn=None if point is None else point[1],
             previous_snapshot=None if point is None else point[2],
         )
+
+
+def _node_of(row: CommitRow, tab: GitTab | None) -> NodeId | None:
+    """The commit's own word first: it outlives the tab."""
+    named = row.node or (None if tab is None else tab.plan_node)
+    return None if named is None else NodeId(named)
 
 
 def _skip(cursor: str | None, version: str) -> int:

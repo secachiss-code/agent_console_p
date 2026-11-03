@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import re
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Final, final
@@ -21,7 +22,13 @@ from aconsole.core.infrastructure.git.diff import GitDiff
 from aconsole.core.infrastructure.git.runner import GitRunner
 from aconsole.core.infrastructure.git.worktrees import recorded_start
 
-_COMMIT_FIELDS: Final = 5
+_COMMIT_FIELDS: Final = 7
+_LOG_FORMAT: Final = (
+    "--format=%H%x00%P%x00%an%x00%at%x00%s%x00"
+     "%(trailers:key=AConsole-Node,valueonly,separator=%x20)%x00"
+     "%(trailers:key=AConsole-Agent,valueonly,separator=%x20)"
+)
+_NODE_FILTER: Final = re.compile(r"[A-Za-z0-9_.:-]{1,64}")
 _REF_ROOTS: Final = ("refs/heads", "refs/tags", "refs/remotes", "refs/aconsole/checkpoints")
 _REMOTE_HEAD: Final = "refs/remotes/origin/HEAD"
 _BRANCH_PREFIX: Final = "refs/heads/"
@@ -135,9 +142,17 @@ class GitHistory:
     def common_dir(self, root: Path) -> Path:
         return Path(self._git.read(root, "rev-parse", "--path-format=absolute", "--git-common-dir").text.strip())
 
-    def log(self, root: Path, tips: tuple[str, ...], skip: int, limit: int) -> tuple[CommitRow, ...]:
+    def log(
+        self, root: Path, tips: tuple[str, ...], skip: int, limit: int, *, node: str | None = None
+    ) -> tuple[CommitRow, ...]:
         if not tips:
             return ()
+        only: tuple[str, ...] = ()
+        if node is not None:
+            if _NODE_FILTER.fullmatch(node) is None:
+                message = "not a plan node id"
+                raise ValueError(message)
+            only = (f"--grep=^AConsole-Node: {re.escape(node)}$", "--extended-regexp")
         raw = self._git.read(
             root,
             "log",
@@ -146,7 +161,8 @@ class GitHistory:
             "-z",
             f"--skip={skip}",
             f"--max-count={limit}",
-            "--format=%H%x00%P%x00%an%x00%at%x00%s",
+            *only,
+            _LOG_FORMAT,
             stdin="".join(f"{tip}\n" for tip in tips).encode(),
         ).text
         pieces = raw.split("\0")
@@ -205,6 +221,8 @@ def _commit(fields: list[str]) -> CommitRow:
         author=fields[2],
         at=datetime.fromtimestamp(int(fields[3]), UTC),
         subject=fields[4],
+        node=fields[5].strip() or None,
+        agent=fields[6].strip() or None,
     )
 
 

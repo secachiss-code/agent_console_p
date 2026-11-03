@@ -7,7 +7,9 @@ side ref. Only branches this core made (`ac/`) are deleted; a branch the user na
 
 import logging
 from collections.abc import Callable
+from datetime import datetime
 from pathlib import Path
+from secrets import token_hex
 from typing import Final, final
 
 from aconsole.contracts.git import (
@@ -22,6 +24,7 @@ from aconsole.core.application.services.git_merge import GitMergeService
 from aconsole.core.application.services.git_ops import GitOperationService
 from aconsole.core.application.services.git_state import GitStateService
 from aconsole.core.domain.errors import DomainError
+from aconsole.core.domain.git_operation import GitOperationRecord
 from aconsole.core.domain.git_state import require_nothing_in_progress, touched_refs
 
 _LOG: Final = logging.getLogger(__name__)
@@ -30,6 +33,7 @@ _OUR_BRANCHES: Final = "ac/"
 _EXITED: Final = "exited"
 _HEADS: Final = "refs/heads/"
 _CACHE: Final = 256
+_ID_BYTES: Final = 16
 
 REASON_MAIN: Final = "main_checkout"
 REASON_AGENT: Final = "agent_running"
@@ -52,6 +56,7 @@ class GitCleanupService:
         merges: GitMergeService,
         writer: GitWriter,
         *,
+        now: Callable[[], datetime],
         facts: Callable[[str], tuple[StoredFact, ...]],
         close_tab: Callable[[str], None],
         changed: Callable[[str], None],
@@ -60,6 +65,7 @@ class GitCleanupService:
         self._operations: GitOperationService = operations
         self._merges: GitMergeService = merges
         self._writer: GitWriter = writer
+        self._now: Callable[[], datetime] = now
         self._facts: Callable[[str], tuple[StoredFact, ...]] = facts
         self._close_tab: Callable[[str], None] = close_tab
         self._changed: Callable[[str], None] = changed
@@ -70,13 +76,16 @@ class GitCleanupService:
         root, row = self._state.worktree_row(project_id, params.worktree)
         with self._operations.lock_of(str(root)), self._operations.lock_of(row.path):
             kept = self._check(project_id, root, row, discard_ignored=params.discard_ignored)
+            record = self._journalled(project_id, row)
             tab = self._state.tab_at(project_id, row.path)
             if tab is not None:
                 self._close_tab(tab.tab_id)
             removed = self._writer.remove_worktree(root, Path(row.path), discard_ignored=params.discard_ignored)
             if not removed.ok:
+                self._merges.store(record.moved(self._now(), "failed", message=removed.said))
                 message = "worktree was not removed"
                 raise GitCommandError(message, detail=removed.said)
+            self._merges.store(record.moved(self._now(), "finished"))
             deleted = False
             if row.branch is not None and row.branch.startswith(_OUR_BRANCHES):
                 deleted = self._writer.delete_branch(root, row.branch).ok
@@ -105,6 +114,32 @@ class GitCleanupService:
                 view = FactReviewView(id=fact.id, title=fact.title, verified_commit=commit, changed_paths=touched)
                 found.append(view)
         return FactsToReviewResult(head_oid=head, facts=tuple(found))
+
+    def _journalled(self, project_id: str, row: WorktreeRow) -> GitOperationRecord:
+        at = self._now()
+        tab = self._state.tab_at(project_id, row.path)
+        record = GitOperationRecord(
+            id=token_hex(_ID_BYTES),
+            project_id=project_id,
+            kind="cleanup",
+            status="started",
+            mode=None,
+            source=row.branch or "",
+            target=row.path,
+            source_oid=row.head or "",
+            target_oid=row.head or "",
+            result_oid=None,
+            expected_tree=None,
+            worktree=row.path,
+            tab_id=None if tab is None else tab.tab_id,
+            plan_node=None if tab is None else tab.plan_node,
+            message=None,
+            follow_up_pending=False,
+            created_at=at,
+            updated_at=at,
+        )
+        self._merges.begin(record)
+        return record
 
     def _check(self, project_id: str, root: Path, row: WorktreeRow, *, discard_ignored: bool) -> str | None:
         """Raise unless this worktree may go. The name of the side ref its commits were kept on, if any."""

@@ -59,6 +59,7 @@
         "kind": {
           "enum": [
             "cherry-pick",
+            "cleanup",
             "merge",
             "rebase"
           ]

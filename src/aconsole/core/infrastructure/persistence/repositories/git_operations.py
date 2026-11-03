@@ -18,7 +18,12 @@ _LOG: Final = logging.getLogger(__name__)
 _OPEN: Final = ("started", "conflicted", "merged")
 
 
-_KINDS: Final[dict[str, OperationKind]] = {"merge": "merge", "rebase": "rebase", "cherry-pick": "cherry-pick"}
+_KINDS: Final[dict[str, OperationKind]] = {
+    "merge": "merge",
+    "rebase": "rebase",
+    "cherry-pick": "cherry-pick",
+    "cleanup": "cleanup",
+}
 _STATUSES: Final[dict[str, OperationStatus]] = {
     "started": "started",
     "conflicted": "conflicted",

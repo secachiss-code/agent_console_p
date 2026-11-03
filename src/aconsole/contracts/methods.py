@@ -7,6 +7,7 @@ ALL_ROLES = ("ui", "cli", "sidecar")
 _GIT = "git.v1"
 _GIT_READ = ("PROJECT_NOT_FOUND", "GIT_COMMAND_FAILED")
 _GIT_WRITE = (*_GIT_READ, "GIT_WORKTREE_UNKNOWN", "GIT_STATE_STALE", "WORKTREE_BUSY", "GIT_OPERATION_IN_PROGRESS")
+_GIT_JOURNALLED = (*_GIT_WRITE, "DATABASE_TRANSACTION_FAILED")
 
 
 class Method(msgspec.Struct, frozen=True, kw_only=True):
@@ -248,6 +249,7 @@ METHODS: tuple[Method, ...] = (
             "MERGE_CONFLICT",
             "MERGE_MODE_UNAVAILABLE",
             "CONFIRM_TOKEN_INVALID",
+            "DATABASE_TRANSACTION_FAILED",
         ),
         long=True,
         capability=_GIT,
@@ -263,7 +265,13 @@ METHODS: tuple[Method, ...] = (
         name="git/cleanupWorktree",
         params="CleanupWorktreeParams",
         result="CleanupWorktreeResult",
-        errors=(*_GIT_READ, "GIT_WORKTREE_UNKNOWN", "WORKTREE_BUSY", "WORKTREE_NOT_REMOVABLE"),
+        errors=(
+            *_GIT_READ,
+            "GIT_WORKTREE_UNKNOWN",
+            "WORKTREE_BUSY",
+            "WORKTREE_NOT_REMOVABLE",
+            "DATABASE_TRANSACTION_FAILED",
+        ),
         long=True,
         capability=_GIT,
     ),
@@ -278,7 +286,7 @@ METHODS: tuple[Method, ...] = (
         name="git/rebase",
         params="RebaseParams",
         result="GitOperationResult",
-        errors=_GIT_WRITE,
+        errors=_GIT_JOURNALLED,
         long=True,
         capability=_GIT,
     ),
@@ -286,7 +294,7 @@ METHODS: tuple[Method, ...] = (
         name="git/cherryPick",
         params="CherryPickParams",
         result="GitOperationResult",
-        errors=_GIT_WRITE,
+        errors=_GIT_JOURNALLED,
         long=True,
         capability=_GIT,
     ),

@@ -19,6 +19,17 @@
           "minimum": 1,
           "type": "integer"
         },
+        "plan_node": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
         "project_id": {
           "type": "string"
         },

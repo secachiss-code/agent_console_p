@@ -455,6 +455,11 @@ class PlanBoard:
             except _ToolError as exc:
                 raise StoreWriteError(str(exc)) from exc
 
+    def node_held_by(self, tab_id: str) -> str | None:
+        with self._lock:
+            found = self._merged_node(None, tab_id)
+            return None if found is None else found[1].node_id
+
     def facts_to_check(self, project_id: str) -> tuple[StoredFact, ...]:
         """Live facts that name code and say which commit they were true at."""
         now = self._now()

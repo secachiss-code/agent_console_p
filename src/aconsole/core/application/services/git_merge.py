@@ -56,6 +56,8 @@ _CONFLICT: Final = 3029
 _MODE: Final = 3030
 _BUSY: Final = 3025
 _IN_PROGRESS: Final = 3026
+_NO_JOURNAL: Final = 3032
+_REWRITES: Final = frozenset({"rebase", "cherry-pick"})
 
 BLOCK_CONFLICT: Final = "conflict"
 BLOCK_MERGED: Final = "already_merged"
@@ -146,6 +148,9 @@ class GitMergeService:
                 self._records[record.id] = record
             if record.status == "started" and record.kind == "merge":
                 self._settle(record)
+            elif record.status == "started" and record.kind == "cleanup":
+                gone = record.worktree is None or not Path(record.worktree).exists()
+                self.store(record.moved(self._now(), "finished" if gone else "failed", message=INTERRUPTED))
         self.retry()
 
     def of_project(self, project_id: str) -> tuple[GitOperationView, ...]:
@@ -267,7 +272,7 @@ class GitMergeService:
             waiting = tuple(
                 item for item in self._records.values() if item.follow_up_pending or item.status == "merged"
             )
-            rewrites = tuple(item for item in self._records.values() if item.kind != "merge" and item.open)
+            rewrites = tuple(item for item in self._records.values() if item.kind in _REWRITES and item.open)
             unsaved = tuple(self._records[key] for key in self._unsaved if key in self._records)
         for record in unsaved:
             self.store(record)
@@ -337,13 +342,28 @@ class GitMergeService:
             worktree=None if target_row is None else target_row.path,
             tab_id=None if tab is None else tab.tab_id,
             plan_node=None if tab is None else tab.plan_node,
-            message=params.message or _default_message(params.mode, params.source, params.target),
+            message=self._message(params, target_row, source_row),
             follow_up_pending=False,
             created_at=at,
             updated_at=at,
         )
-        self.store(record)
+        self.begin(record)
         return record
+
+    def _message(self, params: MergeWorktreeParams, target: WorktreeRow | None, source: WorktreeRow | None) -> str:
+        """A squash or merge commit is what stays on the base, so it says whose work this was."""
+        text = params.message or _default_message(params.mode, params.source, params.target)
+        if source is None or params.mode == "fast_forward":
+            return text
+        repo = Path(self._state.project(str(params.project_id)).root if target is None else target.path)
+        return self._writer.with_trailers(repo, text, self._state.trailers_at(str(params.project_id), source.path))
+
+    def begin(self, record: GitOperationRecord) -> None:
+        """The row is on disk before Git is touched, or Git is not touched."""
+        if self._journal is None or not self._journal.save(record):
+            raise DomainError(code=_NO_JOURNAL, name="DATABASE_TRANSACTION_FAILED", retryable=True)
+        with self._guard:
+            self._records[record.id] = record
 
     def _run(self, root: Path, record: GitOperationRecord, row: WorktreeRow | None, tree: str | None) -> GitDone:
         """Through the worktree that has the branch out, or straight on the ref when none does."""
@@ -357,7 +377,10 @@ class GitMergeService:
             done = self._writer.move_ref(root, ref, record.source_oid, record.target_oid)
             return GitDone(ok=done.ok, said=done.said, oid=record.source_oid if done.ok else None)
         parents = (record.target_oid, record.source_oid) if mode == "merge" else (record.target_oid,)
-        made = self._writer.commit_tree(root, tree or "", parents, message)
+        checked = self._writer.merge_hooks(root, tree or "", message, squash=mode == "squash")
+        if not checked.ok:
+            return checked
+        made = self._writer.commit_tree(root, tree or "", parents, checked.text or message)
         if not made.ok or made.oid is None:
             return made
         moved = self._writer.move_ref(root, ref, made.oid, record.target_oid)

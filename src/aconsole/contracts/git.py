@@ -10,6 +10,9 @@ The words these contracts keep apart:
 - A checkpoint's Git parent is the HEAD it was taken on, so snapshots of one tab are usually siblings. Their order
   in time is `GitNodeView.previous_snapshot`, which is not a Git edge.
 
+A commit made here carries `AConsole-Node`, `AConsole-Agent` and `AConsole-Tab` trailers, so it stays tied to its plan
+node after its tab and branch are gone. `GitGraphParams.plan_node` finds those commits.
+
 A worktree with no open tab is a closed tab's kept worktree. A branch with no worktree is a kept branch.
 `head_oid` is None and `empty` is true in a repository with no commits; `branch` is None on a detached HEAD.
 """
@@ -27,7 +30,7 @@ MergeStatus = Literal["clean", "conflict", "unknown", "not_applicable"]
 InProgress = Literal["merge", "rebase", "cherry-pick", "revert", "bisect"]
 MergeMode = Literal["fast_forward", "merge", "squash"]
 DiffSourceKind = Literal["base", "commit", "index", "worktree", "between"]
-OperationKind = Literal["merge", "rebase", "cherry-pick"]
+OperationKind = Literal["merge", "rebase", "cherry-pick", "cleanup"]
 OperationStatus = Literal["started", "conflicted", "merged", "finished", "failed", "aborted"]
 Limit = Annotated[int, Meta(ge=1, le=1000)]
 
@@ -122,6 +125,7 @@ class GitGraphParams(msgspec.Struct, frozen=True, kw_only=True):
     tab_id: TabId | None = None
     limit: Limit = 200
     cursor: str | None = None
+    plan_node: str | None = None
 
 
 class GitRefView(msgspec.Struct, frozen=True, kw_only=True):
@@ -140,6 +144,7 @@ class GitNodeView(msgspec.Struct, frozen=True, kw_only=True):
     at: datetime
     tab_id: TabId | None
     plan_node: NodeId | None
+    agent: str | None = None
     checkpoint_id: str | None = None
     turn: int | None = None
     previous_snapshot: str | None = None

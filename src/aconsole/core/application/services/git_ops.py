@@ -111,7 +111,12 @@ class GitOperationService:
         )
 
     def commit(self, params: GitCommitParams) -> GitChangeResult:
-        return self._change(params, lambda repo: self._writer.commit(repo, params.message))
+        trailers = self._state.trailers_at(str(params.project_id), params.worktree)
+
+        def commit(repo: Path) -> GitDone:
+            return self._writer.commit(repo, self._writer.with_trailers(repo, params.message, trailers))
+
+        return self._change(params, commit)
 
     def restore_preview(self, params: RestoreFilePreviewParams) -> RestoreFilePreviewResult:
         path = require_paths((params.path,))[0]

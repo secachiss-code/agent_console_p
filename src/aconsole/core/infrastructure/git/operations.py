@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import os
+import subprocess
+import tempfile
 from pathlib import Path
 from typing import Final, final
 
@@ -85,6 +88,52 @@ class GitMutations:
         if not done.ok:
             _ = self._git.write(worktree, "reset", "--merge")
         return done
+
+    def with_trailers(self, worktree: Path, message: str, trailers: tuple[tuple[str, str], ...]) -> str:
+        if not trailers:
+            return message
+        named = [part for key, value in trailers for part in ("--trailer", f"{key}: {value}")]
+        return self._git.read(worktree, "interpret-trailers", *named, stdin=message.encode()).text
+
+    def merge_hooks(self, root: Path, tree: str, message: str, *, squash: bool) -> GitDone:
+        """A throwaway index holds the merged tree, as a hook looking at it would expect. The checked-out files in
+        `root` belong to another branch, so a hook that reads files instead of the index sees those."""
+        before = self._hook(root, "pre-commit" if squash else "pre-merge-commit")
+        after = self._hook(root, "commit-msg")
+        if before is None and after is None:
+            return GitDone(ok=True, said="", text=message)
+        with tempfile.TemporaryDirectory(prefix="aconsole-hook-") as folder:
+            environment = {**os.environ, "GIT_INDEX_FILE": str(Path(folder) / "index")}
+            for name in ("GIT_DIR", "GIT_WORK_TREE"):
+                _ = environment.pop(name, None)
+            loaded = self._run_hook(("git", "read-tree", tree), root, environment)
+            if not loaded.ok:
+                return loaded
+            if before is not None:
+                done = self._run_hook((str(before),), root, environment)
+                if not done.ok:
+                    return done
+            text_file = Path(folder) / "COMMIT_EDITMSG"
+            _ = text_file.write_text(message, encoding="utf-8")
+            if after is not None:
+                done = self._run_hook((str(after), str(text_file)), root, environment)
+                if not done.ok:
+                    return done
+            return GitDone(ok=True, said="", text=text_file.read_text(encoding="utf-8"))
+
+    def _hook(self, root: Path, name: str) -> Path | None:
+        relative = self._git.read(root, "rev-parse", "--git-path", f"hooks/{name}").text.strip()
+        path = root / relative
+        return path if path.is_file() and os.access(path, os.X_OK) else None
+
+    def _run_hook(self, argv: tuple[str, ...], root: Path, environment: dict[str, str]) -> GitDone:
+        try:
+            done = subprocess.run(  # noqa: S603 -- the repository's own hook, as git itself would run it
+                argv, cwd=root, env=environment, capture_output=True, text=True, check=False, timeout=_HOOK_TIMEOUT_S
+            )
+        except (OSError, subprocess.TimeoutExpired) as exc:
+            return GitDone(ok=False, said=str(exc))
+        return GitDone(ok=done.returncode == 0, said=(done.stdout + done.stderr).strip())
 
     def tree_of(self, root: Path, oid: str) -> str | None:
         found = self._git.read(root, "rev-parse", "--verify", "--quiet", f"{oid}^{{tree}}", codes=frozenset({0, 1}))

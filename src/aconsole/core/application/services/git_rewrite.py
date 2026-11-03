@@ -189,7 +189,7 @@ class GitRewriteService:
             created_at=at,
             updated_at=at,
         )
-        self._merges.store(record)
+        self._merges.begin(record)
         return record
 
     def _keep_head(self, root: Path, record: GitOperationRecord) -> None:
