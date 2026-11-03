@@ -1,6 +1,6 @@
 # AConsole
 
-A desktop console for working with coding agents. It runs Claude and Codex in containers, one tab per
+A desktop console for working with coding agents. It runs Claude, Codex, OpenCode and Cursor CLI in containers, one tab per
 agent and worktree, and adds approvals, plans, checkpoints, and a Git page for reviewing and merging what
 they did.
 
