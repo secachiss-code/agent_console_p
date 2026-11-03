@@ -6,7 +6,7 @@ import asyncio
 import signal
 import sys
 import threading
-from typing import TYPE_CHECKING
+from pathlib import Path
 
 from aconsole.core.bootstrap import (
     EXIT_REFUSED,
@@ -21,9 +21,6 @@ from aconsole.core.bootstrap import (
 )
 from aconsole.core.infrastructure.fake.server import FakeCore
 from aconsole.core.infrastructure.persistence.startup import default_database
-
-if TYPE_CHECKING:
-    from pathlib import Path
 
 _SCENARIO_ONLY = 2
 _WITH_SOCKET = 4
@@ -51,6 +48,7 @@ def serve_daemon(socket: Path) -> Daemon:
     """The daemon `__main__` serves. Its tab host uses this same socket path."""
     daemon = Daemon(socket, database=default_database())
     daemon.serve_ingest = True
+    daemon.vault_default = Path.home() / "Obsidian" / "AConsole"
     return daemon
 
 

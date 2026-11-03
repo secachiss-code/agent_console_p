@@ -68,10 +68,12 @@ from aconsole.core.infrastructure.persistence.repositories.catalog import Approv
 from aconsole.core.infrastructure.persistence.repositories.checkpoints import CheckpointDatabase
 from aconsole.core.infrastructure.persistence.repositories.plans import PlanDatabase
 from aconsole.core.infrastructure.persistence.repositories.tabs import TabDatabase
+from aconsole.core.infrastructure.persistence.repositories.vault_files import VaultFileDatabase
 from aconsole.core.infrastructure.persistence.startup import prepare_database, sqlite_url
 from aconsole.core.infrastructure.persistence.writer import Writer
 from aconsole.core.infrastructure.setup_checks import HostSetupFixes, HostSetupProbe, SetupTokens
 from aconsole.core.infrastructure.tabs import HostAgents, HostRepos, HostTabs
+from aconsole.core.infrastructure.vault.sync import VaultSync
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -82,6 +84,7 @@ if TYPE_CHECKING:
 
     from aconsole.contracts.app import AccountView, PlanView, TabView
     from aconsole.contracts.ipc import EventEnvelope
+    from aconsole.contracts.settings import Settings
 
 _LOG = logging.getLogger(__name__)
 IDLE_EXIT_S = 15.0
@@ -312,7 +315,13 @@ class Daemon:
         self._tokens: TokenBook = TokenBook()
         self._plans: PlanBoard = PlanBoard()
         self._plans.on_changed = self._plan_changed
-        self.knowledge: KnowledgeService = KnowledgeService(self._plans)
+        # Off the loop and off the tab worker: files can be slow, and an edit must not wait for a tab call.
+        self._vault_thread: ThreadPoolExecutor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="aconsole-vault")
+        self.vault: VaultSync = VaultSync(self._plans)
+        self.vault.on_edit = self._vault_edited
+        self._plans.note_ref = self.vault.note_ref
+        self.vault_default: Path | None = None
+        self.knowledge: KnowledgeService = KnowledgeService(self._plans, self.vault)
         self._mcp_tokens: TabTokens = TabTokens()
         self._mcp: MCPServer = build_server(
             self._plans,
@@ -377,6 +386,7 @@ class Daemon:
             return EXIT_REFUSED
         self._loop = asyncio.get_running_loop()
         self._worker = ThreadPoolExecutor(max_workers=1, thread_name_prefix="aconsole-tabs")
+        self._vault_thread = ThreadPoolExecutor(max_workers=1, thread_name_prefix="aconsole-vault")
         try:
             await self._open_database()
             await self._restore_tabs()
@@ -394,6 +404,7 @@ class Daemon:
             try:
                 await self._close_server()
                 await self._close_ingest()
+                await asyncio.to_thread(self._stop_vault)
                 await self._close_database()
             finally:
                 self._worker.shutdown(wait=False, cancel_futures=True)
@@ -411,8 +422,42 @@ class Daemon:
         if isinstance(event, TabUpdated):
             self.review.on_event(event)
 
+    def _vault_edited(self, plan_id: str) -> None:
+        self._to_vault(self._publish_notes, plan_id)
+
+    def _to_vault[T](self, work: Callable[[T], None], argument: T) -> None:
+        """A change after the core began to stop is in the database already; its note follows on the next start."""
+        with contextlib.suppress(RuntimeError):
+            _ = self._vault_thread.submit(work, argument)
+
+    def _publish_notes(self, plan_id: str) -> None:
+        """One failed note must not stop the thread that writes the rest."""
+        try:
+            self.vault.publish(plan_id)
+        except Exception:  # noqa: BLE001 -- logged; the thread keeps serving other plans
+            _LOG.exception("the notes of plan %s could not be synced", plan_id)
+
+    def _vault_root(self, settings: Settings) -> Path | None:
+        return Path(settings.vault_path) if settings.vault_path else self.vault_default
+
+    def _use_vault(self, settings: Settings) -> None:
+        self._to_vault(self._switch_vault, self._vault_root(settings))
+
+    def _stop_vault(self) -> None:
+        """Queued notes finish before the writer stops: their synced state goes through it."""
+        self.vault.stop()
+        self._vault_thread.shutdown(wait=True)
+
+    def _switch_vault(self, root: Path | None) -> None:
+        try:
+            self.vault.use_root(root)
+            self.vault.publish_all()
+        except Exception:  # noqa: BLE001 -- logged; the core runs without a vault
+            _LOG.exception("the vault at %s could not be used", root)
+
     def _plan_changed(self, plan: PlanView) -> None:
         """Any thread: MCP tools run on the loop, `plan/setNodeStatus` on the worker."""
+        self._to_vault(self._publish_notes, str(plan.id))
         loop = self._loop
         if loop is not None and not loop.is_closed():
             _ = loop.call_soon_threadsafe(self._publish, PlanUpdated(plan=plan), self._live_tabs, None)
@@ -645,6 +690,7 @@ class Daemon:
         store = TabDatabase(writer)
         self.review.checkpoints.use_journal(CheckpointDatabase(writer))
         await asyncio.to_thread(self._plans.use_store, PlanDatabase(writer))
+        await asyncio.to_thread(self.vault.use_bases, VaultFileDatabase(writer))
         self.tabs.use_store(store)
         self.tabs.use_projects(self._catalog, store)
         found = await asyncio.to_thread(store.settings)
@@ -661,6 +707,8 @@ class Daemon:
         live = self.tabs.running_count()
         for event in caught:
             self._publish(event, live, None)
+        self.tabs.on_settings_changed = self._use_vault
+        self._use_vault(await self._in_worker(self.tabs.current_settings))
 
     async def _open_database(self) -> None:
         """DATA_MODEL §5: backup and upgrade before the pool opens, then the writer and the sweep loop."""

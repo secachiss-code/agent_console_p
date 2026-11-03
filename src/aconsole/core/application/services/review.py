@@ -83,7 +83,7 @@ class ReviewService:
     def on_prompt(self, tab_id: str, text: str) -> None:
         """The user sent a prompt: keep the worktree before the agent answers. A gone tab has nothing to keep."""
         target = self._tabs().review_target(tab_id)
-        if target is None:
+        if target is None or not self._tabs().current_settings().checkpoints_enabled:
             return
         created = self.checkpoints.on_user_prompt(Path(target.worktree), tab_id, text, datetime.now(UTC))
         self._emit(CheckpointCreated(checkpoint=_view(created)))

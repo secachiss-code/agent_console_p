@@ -17,17 +17,20 @@ from aconsole.contracts.app import (
     DiffFileResult,
     DiffSummaryParams,
     DiffSummaryResult,
+    EmptyParams,
     ProjectAddParams,
     ProjectView,
     RestoreParams,
     RestorePreviewResult,
     RestoreResult,
     SendCommentParams,
+    SettingsUpdateParams,
     TabIdParams,
     TabView,
     TerminalLaunchSpec,
 )
 from aconsole.contracts.events import CheckpointCreated, InjectToTerminal, UiEvent
+from aconsole.contracts.settings import Settings, SettingsPatch
 from tests.core.test_wire import _connect, _daemon, _git_repo, _open, _stop
 
 if TYPE_CHECKING:
@@ -209,3 +212,26 @@ def test_comment_waits_for_a_working_tab_and_reaches_its_terminal(tmp_path: Path
 
     asyncio.run(scenario())
 
+
+
+def test_no_checkpoint_when_they_are_turned_off(tmp_path: Path) -> None:
+    async def scenario() -> None:
+        repo = _git_repo(tmp_path / "repo")
+        _commit(repo)
+        daemon = _daemon(tmp_path, serve_ingest=False)
+        task = asyncio.create_task(daemon.serve())
+        client = await _connect(daemon.socket)
+        project = await client.call("project/add", ProjectAddParams(root=str(repo)), ProjectView)
+        tab = await client.call("tab/open", _open(project.id), TabView)
+        current = await client.call("settings/get", EmptyParams(), Settings)
+        _ = await client.call(
+            "settings/update",
+            SettingsUpdateParams(patch=SettingsPatch(checkpoints_enabled=False), rev=current.rev),
+            Settings,
+        )
+        await daemon._in_worker(lambda: daemon.review.on_prompt(str(tab.id), "hello"))
+        listed = await client.call("checkpoint/list", CheckpointListParams(tab_id=tab.id), CheckpointListResult)
+        assert listed.checkpoints == ()
+        await _stop(daemon, task, client)
+
+    asyncio.run(scenario())

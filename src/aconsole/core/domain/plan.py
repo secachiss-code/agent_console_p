@@ -337,6 +337,21 @@ class Plan:
         self._parents[node.key] = parent
         self._related[node.key] = related
 
+    def set_blockers(self, key: str, blockers: tuple[str, ...]) -> None:
+        """Replace a node's blocking edges. A cycle leaves them as they were."""
+        _ = self.get(key)
+        self._require_known(blockers)
+        current = self._blockers[key]
+        self._blockers[key] = blockers
+        cycle = self.cycle_path()
+        if cycle is not None:
+            self._blockers[key] = current
+            raise _fail(_CYCLE, "PLAN_CYCLE", cycle)
+
+    def edit(self, key: str, *, paths: tuple[str, ...], review_required: bool) -> None:
+        """Fields a person may change without moving the node."""
+        self._nodes[key] = replace(self.get(key), paths=paths, review_required=review_required)
+
     def depend(self, key: str, on: str) -> None:
         _ = self.get(key)
         _ = self.get(on)

@@ -7,7 +7,7 @@ is never replaced. App lines are inserted under their heading.
 from __future__ import annotations
 
 import hashlib
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from io import StringIO
@@ -15,6 +15,7 @@ from pathlib import Path
 from typing import Protocol
 
 from ruamel.yaml import YAML
+from ruamel.yaml.error import YAMLError
 
 _USER_SECTIONS = frozenset({"Цель"})
 _TTL = timedelta(seconds=10)
@@ -67,6 +68,24 @@ def render(text: str) -> str:
 def _bare_yaml(text: str) -> bool:
     first = text.split("\n", 1)[0]
     return ":" in first and not first.startswith(("#", "{"))
+
+
+def dump_front(values: dict[str, object]) -> str:
+    """YAML for a note's frontmatter, without its fences."""
+    return _dump(_engine(), values)
+
+
+def load_front(text: str) -> dict[str, object] | None:
+    """Frontmatter as a mapping. None when it is not a YAML mapping."""
+    try:
+        loaded = _load(_engine(), text)
+    except YAMLError:
+        return None
+    if loaded is None:
+        return {}
+    if not isinstance(loaded, Mapping):
+        return None
+    return {str(key): value for key, value in loaded.items()}  # pyright: ignore[reportUnknownVariableType, reportUnknownArgumentType] -- YAML is untyped
 
 
 def split_note(text: str) -> tuple[str, str]:
@@ -143,6 +162,10 @@ class VaultWriter:
     def __init__(self, echo: EchoBook | None = None, now: Callable[[], datetime] | None = None) -> None:
         self.echo: EchoBook = EchoBook() if echo is None else echo
         self._now: Callable[[], datetime] = _clock if now is None else now
+
+    def is_echo(self, path: Path, text: str) -> bool:
+        """Whether ``text`` is what this writer just put at ``path``."""
+        return self.echo.is_echo(path, text, self._now())
 
     def write(self, path: Path, text: str) -> bool:
         """Replace ``path`` when the bytes differ. Return whether the file changed."""

@@ -7,6 +7,7 @@ A repeated ``plan_create`` for the same project and title returns the same plan.
 from __future__ import annotations
 
 import inspect
+import logging
 import re
 import subprocess
 import threading
@@ -26,7 +27,11 @@ from aconsole.contracts.common import NodeStatus as NodeStatusView
 from aconsole.core.application.ports.plan_store import PlanStore, StoredArtifact, StoredNode, StoredPlan
 from aconsole.core.domain.errors import DomainError
 from aconsole.core.domain.plan import Move, Node, NodeSpec, NodeStatus, Plan, Role
+from aconsole.core.domain.vault_sync import Note as VaultNote
+from aconsole.core.domain.vault_sync import Owners, resolve_ref
+from aconsole.core.infrastructure.vault.sync import NodeNote
 
+_VAULT_LOG = logging.getLogger("aconsole.core.vault")
 _NODE_NOT_FOUND = 4002
 _HUMAN_TAB = "human"
 _SUMMARY = 300
@@ -358,6 +363,54 @@ class PlanBoard:
             self._commit(stored)
             view = self._view(stored)
             return next(item for item in view.nodes if str(item.id) == node_id)
+
+    def plan_ids(self) -> tuple[str, ...]:
+        with self._lock:
+            return tuple(self._plans)
+
+    def node_notes(self, plan_id: str) -> tuple[NodeNote, ...]:
+        """What the vault should hold for one plan."""
+        with self._lock:
+            stored = self._plans.get(plan_id)
+            return () if stored is None else tuple(_node_note(stored, meta) for meta in stored.meta.values())
+
+    def apply_note(self, plan_id: str, key: str, note: VaultNote) -> None:
+        """A person's edit the merge accepted. A status the rules refuse stays as it was, and the note follows."""
+        with self._lock:
+            stored = self._plans.get(plan_id)
+            meta = None if stored is None else stored.meta.get(key)
+            if stored is None or meta is None:
+                return
+            meta.title = note.title
+            meta.objective = note.objective
+            meta.acceptance = note.acceptance
+            meta.owner = note.owner_agent or None
+            meta.paths = note.paths
+            stored.dag.edit(key, paths=note.paths, review_required=note.review_required)
+            try:
+                blockers = tuple(item for item in (resolve_ref(raw) for raw in note.depends_on) if item is not None)
+                stored.dag.set_blockers(key, blockers)
+                stored.deps[key] = blockers
+                self._move_by_hand(stored, key, note.status)
+            except (DomainError, ValueError) as exc:
+                _VAULT_LOG.warning("the note of %s asks for a move the plan refuses: %s", key, exc)
+            self._commit(stored)
+
+    def _move_by_hand(self, stored: _Stored, key: str, status: str) -> None:
+        current = stored.dag.get(key)
+        if current.status.value == status:
+            return
+        target = NodeStatus(status)
+        _ = stored.dag.transition(
+            Move(
+                key=key,
+                to=target,
+                role=Role.HUMAN,
+                at=self._now(),
+                tab_id=_HUMAN_TAB if target is NodeStatus.IN_PROGRESS else None,
+                fence=current.fence if current.lease_expires_at else None,
+            )
+        )
 
     def _find_node(self, node_id: str) -> tuple[_Stored, _Meta]:
         for stored in self._plans.values():
@@ -895,6 +948,31 @@ def _stored_node(stored: _Stored, meta: _Meta, layer: int, now: datetime) -> Sto
             StoredArtifact(id=artifact_id, kind=kind, ref=ref) for (kind, ref), artifact_id in meta.artifacts.items()
         ),
     )
+
+
+def _node_note(stored: _Stored, meta: _Meta) -> NodeNote:
+    node = stored.dag.get(meta.key)
+    note = VaultNote(
+        status=node.status.value,
+        owner_agent=meta.owner or "",
+        depends_on=stored.deps.get(meta.key, ()),
+        paths=meta.paths,
+        acceptance=meta.acceptance,
+        review_required=node.review_required,
+        tags=("aconsole/plan",),
+        lease="" if node.lease_expires_at is None else node.lease_expires_at.isoformat(),
+        updated=stored.updated_at.isoformat(),
+        title=meta.title,
+        objective=meta.objective,
+    )
+    owners = Owners(
+        node_key=meta.key,
+        known_keys=frozenset(stored.meta),
+        edges=tuple((key, blocker) for key, blockers in stored.deps.items() for blocker in blockers),
+        blocker_status=tuple((key, stored.dag.get(key).status.value) for key in stored.meta),
+        leased_by_other=node.lease_expires_at is not None,
+    )
+    return NodeNote(key=meta.key, note=note, owners=owners)
 
 
 def _after_restart(item: StoredNode) -> NodeStatus:

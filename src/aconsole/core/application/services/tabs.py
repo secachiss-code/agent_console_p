@@ -319,6 +319,7 @@ class TabService:
         self._focused: str | None = None
         self._store: TabStore | None = None
         self._settings_rev = 0
+        self.on_settings_changed: Callable[[Settings], None] | None = None
         self._approvals_mode: str = "inline"
         self._approval_hold_seconds: int = 540
         self._setup_completed = False
@@ -556,6 +557,8 @@ class TabService:
             save_preferences = getattr(store, "save_preferences", None)
             if callable(save_preferences):
                 _ = save_preferences(values=_preferences_of(nxt), rev=nxt.rev)
+        if self.on_settings_changed is not None:
+            self.on_settings_changed(nxt)
         return nxt
 
     def _stored_settings(self) -> TabDirectory:

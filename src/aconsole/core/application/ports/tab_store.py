@@ -18,6 +18,7 @@ PREFERENCE_KEYS: Final = (
     "quota_display",
     "checkpoints_enabled",
     "checkpoints_keep",
+    "vault_path",
     "keymap_overrides",
 )
 
