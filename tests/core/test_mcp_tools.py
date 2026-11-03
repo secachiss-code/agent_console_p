@@ -7,6 +7,7 @@ from datetime import UTC, datetime, timedelta
 from typing import TYPE_CHECKING
 
 from mcp import Client
+from mcp.types import TextContent
 
 from aconsole.core.infrastructure.mcp.server import build_server
 from aconsole.core.infrastructure.mcp.tools import PlanBoard, TabContext
@@ -331,3 +332,27 @@ async def _cycle() -> None:
         assert error["hint"] == "call plan_get and drop the depends_on edge that closes the cycle"
         listed = await _call(client, "plan_list", {"status": "all"})
         assert listed["plans"] == []
+
+
+def test_mcp_text_is_compact() -> None:
+    asyncio.run(_compact())
+
+
+async def _compact() -> None:
+    clock = _Clock()
+    _plans, server = _server(clock, "tab-a")
+    async with Client(server) as client:
+        created = await _call(client, "plan_create", {"title": "Plan", "goal": "Ship", "nodes": [_node("A-1")]})
+        result = await client.call_tool("plan_get", {"plan_id": created["plan_id"]})
+        text = _text(result)
+        assert "\n" not in text
+        assert ": " not in text
+        assert "null" not in text
+        assert "[]" not in text
+        failed = await client.call_tool("node_update", {"node_id": "node-404", "fence": 0})
+        assert failed.is_error is True
+        assert "Next: " in _text(failed)
+
+
+def _text(result: CallToolResult) -> str:
+    return "".join(block.text for block in result.content if isinstance(block, TextContent))

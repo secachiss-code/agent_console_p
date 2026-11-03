@@ -18,6 +18,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import ClassVar, Literal, NoReturn, Protocol
 
+import pydantic_core
 from mcp.types import CallToolResult, TextContent
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -238,15 +239,29 @@ def publish(fn: Callable[..., object]) -> Callable[..., object]:
 
     def wrapped(*args: object, **kwargs: object) -> object:
         try:
-            return fn(*args, **kwargs)
+            result = fn(*args, **kwargs)
         except _ToolError as exc:
             return exc.result
+        return compact(result) if isinstance(result, BaseModel) else result
 
     wrapped.__name__ = fn.__name__
     wrapped.__doc__ = fn.__doc__
     wrapped.__annotations__ = dict(fn.__annotations__)
     wrapped.__signature__ = signature
     return wrapped
+
+
+def compact(result: BaseModel) -> CallToolResult:
+    """The answer as the agent reads it: JSON without indentation, and without fields left empty or at their default.
+
+    Every byte here is a token in the agent's context, on every call. The structured copy keeps every field, so a
+    client that validates it against the tool's output schema still can.
+    """
+    lean = result.model_dump(mode="json", exclude_defaults=True, exclude_none=True)
+    return CallToolResult(
+        content=[TextContent(type="text", text=pydantic_core.to_json(lean).decode())],
+        structured_content=result.model_dump(mode="json"),
+    )
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -1255,7 +1270,7 @@ def _stop(name: str, message: str) -> NoReturn:
     hint = _HINTS.get(name, "call plan_get and retry the last legal step")
     text = f"{name}: {message}"
     result = CallToolResult(
-        content=[TextContent(type="text", text=text)],
+        content=[TextContent(type="text", text=f"{text}. Next: {hint}")],
         is_error=True,
         structured_content={"error": {"code": _CODES[name], "reason": name, "message": text, "hint": hint}},
     )
