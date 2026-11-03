@@ -57,7 +57,8 @@ def _core_log() -> int:
     path = core_log_path()
     try:
         path.parent.mkdir(parents=True, exist_ok=True)
-        if path.exists():
+        # An empty log is left in place: a start that came to nothing must not push the last real log out.
+        if path.exists() and path.stat().st_size > 0:
             _ = path.replace(path.with_suffix(".log.1"))
         return os.open(path, os.O_WRONLY | os.O_CREAT | os.O_APPEND | os.O_CLOEXEC, 0o600)
     except OSError:

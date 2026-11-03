@@ -234,6 +234,19 @@ def test_core_log_keeps_this_run_and_the_one_before(tmp_path: Path, monkeypatch:
     assert log.with_suffix(".log.1").read_bytes() == b"second"
 
 
+def test_a_start_that_wrote_nothing_keeps_the_last_real_log(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("XDG_STATE_HOME", str(tmp_path))
+    log = core_log_path()
+    fd = _core_log()
+    _ = os.write(fd, b"real")
+    os.close(fd)
+    os.close(_core_log())
+    os.close(_core_log())
+    os.close(_core_log())
+    assert log.with_suffix(".log.1").read_bytes() == b"real"
+    assert log.read_bytes() == b""
+
+
 def test_core_starts_without_a_log_it_cannot_write(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     blocked = tmp_path / "file"
     blocked.write_text("not a directory", encoding="utf-8")
