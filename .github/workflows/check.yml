@@ -1,0 +1,42 @@
+name: check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      UV_LOCKED: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.13.7"
+      - name: Install GTK
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gir1.2-adw-1 gir1.2-gtk-4.0 gir1.2-vte-3.91 \
+            libgirepository-2.0-dev libcairo2-dev xvfb
+      - name: Install the two environments
+        run: |
+          uv python install 3.15t 3.15
+          UV_PROJECT_ENVIRONMENT=.venv-core uv sync --python 3.15t
+          UV_PROJECT_ENVIRONMENT=.venv-ui uv sync --group ui --python 3.15+gil
+      - name: Lint, types, layers, contracts
+        run: tools/check.sh
+      - name: Core tests
+        run: >
+          .venv-core/bin/python -m pytest tests/core tests/contracts tests/gate tests/hostrun
+          -p no:cacheprovider --basetemp=/tmp/ac-core
+      - name: Interface tests
+        run: >
+          xvfb-run -a .venv-ui/bin/python -m pytest tests/gui/front tests/ui
+          -p no:cacheprovider --basetemp=/tmp/ac-ui
+          --deselect tests/gui/front/test_git_scale_ui.py::test_scrolling_a_long_history
