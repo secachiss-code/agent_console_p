@@ -13,13 +13,14 @@ from gi.repository import Adw, Gio, GLib, GObject, Gtk  # noqa: E402
 
 from aconsole.contracts.app import CommandResult, EmptyParams, PaletteQuery  # noqa: E402
 from aconsole.contracts.common import ApprovalDecision, PlanId, TabId  # noqa: E402
-from aconsole.contracts.events import CheckpointCreated, InjectToTerminal, SettingsChanged, UiEvent  # noqa: E402
+from aconsole.contracts.events import CheckpointCreated, GitStateUpdated, InjectToTerminal, SettingsChanged, UiEvent  # noqa: E402
 from aconsole.contracts.settings import Settings  # noqa: E402
 from aconsole.ui.bootstrap import spawn_task  # noqa: E402
 from aconsole.ui.client.core_client import CoreClient  # noqa: E402
 from aconsole.ui.client.store import CoreStore  # noqa: E402
 from aconsole.ui.viewmodels.app_vm import AppViewModel  # noqa: E402
 from aconsole.ui.viewmodels.approvals_vm import ApprovalsViewModel  # noqa: E402
+from aconsole.ui.viewmodels.git_vm import GitViewModel  # noqa: E402
 from aconsole.ui.viewmodels.health_vm import HealthViewModel  # noqa: E402
 from aconsole.ui.viewmodels.logic.quota_fmt import quota_level  # noqa: E402
 from aconsole.ui.viewmodels.review_vm import ReviewViewModel  # noqa: E402
@@ -30,6 +31,7 @@ from aconsole.ui.views.approvals.panel import ApprovalPanel  # noqa: E402
 from aconsole.ui.views.health_dialog import HealthDialog  # noqa: E402
 from aconsole.ui.views.palette.dialog import PaletteDialog  # noqa: E402
 from aconsole.ui.views.palette.messages import _ as palette_text  # noqa: E402
+from aconsole.ui.views.review.git_pane import GitPane  # noqa: E402
 from aconsole.ui.views.review.messages import _ as review_text  # noqa: E402
 from aconsole.ui.views.review.page import ReviewPage  # noqa: E402
 from aconsole.ui.views.setup.messages import _ as setup_text  # noqa: E402
@@ -171,6 +173,7 @@ class MainWindow(Adw.ApplicationWindow):
         self._summary_vm: SidebarSummaryViewModel = SidebarSummaryViewModel(self.tabs.client)
         self.plan_page: PlanGraph | None = None
         self.review_page: ReviewPage | None = None
+        self.git_pane: GitPane | None = None
         body = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         self.project_bar: ProjectBar = ProjectBar(self.tabs, self.tabs_sidebar)
         body.append(self.project_bar)
@@ -181,6 +184,13 @@ class MainWindow(Adw.ApplicationWindow):
         new_tab.add_css_class("ac-new-tab")
         new_tab.set_action_name("win.new-tab")
         body.append(new_tab)
+        self.git_button: Gtk.Button = Gtk.Button(
+            child=Adw.ButtonContent(icon_name="media-playlist-shuffle-symbolic", label=review_text("git.open")),
+        )
+        self.git_button.add_css_class("flat")
+        self.git_button.add_css_class("ac-new-tab")
+        self.git_button.set_action_name("win.open-git")
+        body.append(self.git_button)
         self.summary_card: Gtk.Box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         self.summary_card.add_css_class("ac-summary-card")
         self.plan_card: PlanCard = PlanCard(on_activate=self._open_plan)
@@ -205,6 +215,7 @@ class MainWindow(Adw.ApplicationWindow):
         if show_content and self.content_view.get_content() is not self.terminal_stack:
             self.plan_page = None
             self.review_page = None
+            self.git_pane = None
             self.content_view.set_content(self.terminal_stack)
         selected = self.selection.get_selected_item()
         if not isinstance(selected, TabItem):
@@ -311,10 +322,45 @@ class MainWindow(Adw.ApplicationWindow):
             (tab.title for tab in (snapshot.tabs if snapshot is not None else ()) if str(tab.id) == tab_id), "",
         )
         self.plan_page = None
+        self.git_pane = None
         self.review_page = ReviewPage(
             ReviewViewModel(self.tabs.client, TabId(tab_id)), title, self._show_selected_terminal, self._tab_error,
         )
         self.content_view.set_content(self.review_page)
+
+    def _open_git(self) -> None:
+        """The active project's graph. With a tab selected it sits beside that tab's changes and checkpoints."""
+        snapshot = self.tabs.client.store.snapshot
+        project = snapshot.active_project if snapshot is not None else None
+        selected = self.selection.get_selected_item()
+        tab = next(
+            (
+                item
+                for item in (snapshot.tabs if snapshot is not None else ())
+                if isinstance(selected, TabItem) and str(item.id) == str(selected.tab_id)
+            ),
+            None,
+        )
+        project = tab.project_id if tab is not None else project
+        if project is None:
+            self._tab_error(review_text("git.no_project"))
+            return
+        pane = GitPane(GitViewModel(self.tabs.client, project), self._tab_error)
+        self.git_pane = pane
+        self.plan_page = None
+        if tab is None:
+            self.review_page = None
+            self.content_view.set_content(_git_alone(pane, self._show_selected_terminal))
+            return
+        self.review_page = ReviewPage(
+            ReviewViewModel(self.tabs.client, tab.id), tab.title, self._show_selected_terminal, self._tab_error,
+            git_pane=pane,
+        )
+        self.review_page.stack.set_visible_child_name("git")
+        self.content_view.set_content(self.review_page)
+
+    def _request_git(self, _action: Gio.SimpleAction, _parameter: GLib.Variant | None) -> None:
+        self._open_git()
 
     def _request_review(self, _action: Gio.SimpleAction, parameter: GLib.Variant | None) -> None:
         if parameter is not None:
@@ -334,6 +380,9 @@ class MainWindow(Adw.ApplicationWindow):
         review = Gio.SimpleAction.new("open-review", GLib.VariantType.new("s"))
         _ = review.connect("activate", self._request_review)
         self.add_action(review)
+        git = Gio.SimpleAction.new("open-git", None)
+        _ = git.connect("activate", self._request_git)
+        self.add_action(git)
 
     def _init_shortcuts(self, app: Adw.Application) -> None:
         self.palette_dialog: PaletteDialog | None = None
@@ -439,6 +488,8 @@ class MainWindow(Adw.ApplicationWindow):
             self._open_preferences()
         elif action_id == "diff":
             self._open_review()
+        elif action_id == "git":
+            self._open_git()
         else:
             self._handle_attention(action_id)
 
@@ -590,6 +641,10 @@ class MainWindow(Adw.ApplicationWindow):
             page = self.review_page
             if page is not None and page.viewmodel.tab_id == event.checkpoint.tab_id:
                 _ = spawn_task(page.load_checkpoints())
+        elif isinstance(event, GitStateUpdated):
+            pane = self.git_pane
+            if pane is not None and pane.viewmodel.project_id == event.project_id:
+                pane.reload()
 
     def _snapshot_changed(self, _store: CoreStore) -> None:
         self._sync_terminal_pages(_store)
@@ -617,3 +672,26 @@ class MainWindow(Adw.ApplicationWindow):
             schemes = {"system": Adw.ColorScheme.DEFAULT, "light": Adw.ColorScheme.FORCE_LIGHT,
                        "dark": Adw.ColorScheme.FORCE_DARK}
             Adw.StyleManager.get_default().set_color_scheme(schemes[settings.theme])
+
+
+def _git_alone(pane: GitPane, on_close: Callable[[], None]) -> Gtk.Box:
+    """No tab is selected: the project's graph on its own."""
+    page = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+    page.add_css_class("ac-plan-page")
+    heading = Gtk.Box(spacing=12)
+    heading.add_css_class("ac-plan-heading")
+    back = Gtk.Button(label=review_text("git.back"))
+    back.add_css_class("ac-plan-back")
+
+
+    def closed(_button: Gtk.Button) -> None:
+        on_close()
+
+    _ = back.connect("clicked", closed)
+    heading.append(back)
+    title = Gtk.Label(label=review_text("git.title"), xalign=0, hexpand=True)
+    title.add_css_class("title-4")
+    heading.append(title)
+    page.append(heading)
+    page.append(pane)
+    return page

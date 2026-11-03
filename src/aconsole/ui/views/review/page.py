@@ -13,17 +13,13 @@ from gi.repository import Adw, Gtk, Pango  # noqa: E402
 from aconsole.contracts.app import CheckpointView, DiffFileResult, DiffFileView, DiffHunk  # noqa: E402
 from aconsole.ui.bootstrap import spawn_task  # noqa: E402
 from aconsole.ui.client.core_client import CoreCallError  # noqa: E402
-from aconsole.ui.viewmodels.review_vm import ReviewViewModel, files_preview, gutter  # noqa: E402
+from aconsole.ui.viewmodels.review_vm import ReviewViewModel, files_preview  # noqa: E402
+from aconsole.ui.views.review.diff_widgets import file_row, hunk_text  # noqa: E402
 from aconsole.ui.views.review.messages import _ as translate  # noqa: E402
 
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-_LINE_TAGS = {"add": "ac-add", "del": "ac-del", "meta": "ac-meta"}
-_ADD = "rgba(46, 160, 67, 0.20)"
-_DEL = "rgba(248, 81, 73, 0.20)"
-_WORD_ADD = "rgba(46, 160, 67, 0.45)"
-_WORD_DEL = "rgba(248, 81, 73, 0.45)"
 _PANE_POSITION = 280
 _ISLAND_CLEARANCE = 72
 
@@ -35,6 +31,7 @@ class ReviewPage(Gtk.Box):
         title: str,
         on_close: Callable[[], None],
         on_toast: Callable[[str], None],
+        git_pane: Gtk.Widget | None = None,
     ) -> None:
         super().__init__(orientation=Gtk.Orientation.VERTICAL)
         self.add_css_class("ac-plan-page")
@@ -48,6 +45,10 @@ class ReviewPage(Gtk.Box):
         self.stack: Adw.ViewStack = Adw.ViewStack(vexpand=True)
         self.append(self._build_heading(title))
         self.append(self.stack)
+        if git_pane is not None:
+            _ = self.stack.add_titled_with_icon(
+                git_pane, "git", translate("git.title"), "media-playlist-shuffle-symbolic",
+            )
         _ = self.stack.add_titled_with_icon(
             self._build_changes(), "changes", translate("review.changes"), "document-edit-symbolic",
         )
@@ -124,7 +125,7 @@ class ReviewPage(Gtk.Box):
             self._set_diff_message(translate("review.no_changes"))
             return
         for item in files:
-            self.file_list.append(_file_row(item))
+            self.file_list.append(file_row(item))
         index = self._file_paths.index(previous) if previous in self._file_paths else 0
         self.file_list.select_row(self.file_list.get_row_at_index(index))
 
@@ -188,7 +189,7 @@ class ReviewPage(Gtk.Box):
         _ = comment.connect("clicked", self._ask_comment, path, hunk.id)
         top.append(comment)
         box.append(top)
-        box.append(_hunk_text(hunk))
+        box.append(hunk_text(hunk))
         return box
 
     def _ask_comment(self, _button: Gtk.Button, path: str, hunk_id: str) -> None:
@@ -313,44 +314,3 @@ def _restore_refusal(error: CoreCallError) -> str:
 def _markup_safe(text: str) -> str:
     """`Adw.PreferencesRow` titles are Pango markup by default; a prompt is free text."""
     return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
-
-
-def _file_row(item: DiffFileView) -> Gtk.ListBoxRow:
-    box = Gtk.Box(spacing=8)
-    box.add_css_class("ac-review-file")
-    name = Gtk.Label(label=item.path, xalign=0, hexpand=True, ellipsize=Pango.EllipsizeMode.START)
-    name.set_tooltip_text(item.path if item.old_path is None else f"{item.old_path} → {item.path}")
-    box.append(name)
-    counts = Gtk.Label(label=f"+{item.insertions} −{item.deletions}")  # noqa: RUF001 -- the minus sign
-    counts.add_css_class("dim-label")
-    counts.add_css_class("numeric")
-    box.append(counts)
-    return Gtk.ListBoxRow(child=box)
-
-
-def _hunk_text(hunk: DiffHunk) -> Gtk.TextView:
-    """One text view per hunk: a label per line would not hold 2000 lines."""
-    buffer = Gtk.TextBuffer()
-    _ = buffer.create_tag("ac-add", paragraph_background=_ADD)
-    _ = buffer.create_tag("ac-del", paragraph_background=_DEL)
-    _ = buffer.create_tag("ac-meta", style=Pango.Style.ITALIC)
-    _ = buffer.create_tag("ac-word-add", background=_WORD_ADD)
-    _ = buffer.create_tag("ac-word-del", background=_WORD_DEL)
-    for number, line in enumerate(hunk.lines):
-        prefix = gutter(line.old_no, line.new_no, line.kind)
-        tail = "" if number == len(hunk.lines) - 1 else "\n"
-        start = buffer.get_end_iter().get_offset()
-        buffer.insert(buffer.get_end_iter(), f"{prefix}{line.text}{tail}")
-        tag = _LINE_TAGS.get(line.kind)
-        if tag is not None:
-            buffer.apply_tag_by_name(tag, buffer.get_iter_at_offset(start), buffer.get_end_iter())
-        if line.kind in ("add", "del"):
-            word = "ac-word-add" if line.kind == "add" else "ac-word-del"
-            text_start = start + len(prefix)
-            for begin, end in line.word_spans:
-                buffer.apply_tag_by_name(
-                    word, buffer.get_iter_at_offset(text_start + begin), buffer.get_iter_at_offset(text_start + end),
-                )
-    view = Gtk.TextView(buffer=buffer, editable=False, cursor_visible=False, monospace=True, hexpand=True)
-    view.add_css_class("ac-review-text")
-    return view

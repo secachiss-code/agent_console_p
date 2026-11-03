@@ -89,6 +89,15 @@ progressbar.horizontal > trough, levelbar.horizontal > trough { min-height: 4px;
 .ac-review-file { padding: 4px 6px; }
 .ac-review-checkpoints { margin: 12px 16px; }
 
+/* Git & checkpoints. Pills are plain CSS: libadwaita 1.5 has no tag widget. */
+.ac-git-toolbar { padding: 6px 16px; }
+.ac-git-row { padding: 0 8px 0 0; min-height: 36px; }
+.ac-git-list > row { padding: 0; min-height: 36px; }
+.ac-git-when { font-size: 9pt; }
+.ac-git-pill { padding: 0 7px; border-radius: 9px; font-size: 8pt; background-color: alpha(currentColor, 0.12); }
+.ac-git-ref-base { font-weight: 700; }
+.ac-git-inspector-head { padding: 6px 10px; }
+
 .ac-approval-panel { background-color: @window_bg_color; border-top: 1px solid alpha(@window_fg_color, 0.12); }
 .ac-approval-count { padding: 8px 16px 4px; }
 .ac-approval-body { padding: 10px 16px 12px; }

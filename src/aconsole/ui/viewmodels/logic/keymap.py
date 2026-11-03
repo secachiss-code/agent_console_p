@@ -28,6 +28,7 @@ DEFAULT_BINDINGS: tuple[BindingSpec, ...] = (
     BindingSpec("attention-open", ("Return",), "attention"),
     BindingSpec("handover", ("<Control><Shift>h",)),
     BindingSpec("diff", ("<Control><Shift>d",)),
+    BindingSpec("git", ("<Control><Shift>g",)),
     BindingSpec("terminal-search", ("<Control><Shift>f",)),
     BindingSpec("copy", ("<Control><Shift>c",)),
     BindingSpec("paste", ("<Control><Shift>v",)),

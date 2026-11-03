@@ -22,7 +22,7 @@ class _SnapshotArguments(argparse.Namespace):
     out: Path = Path("docs/ui/B0/window.png")
 
 
-_PREVIEWS = frozenset({"plan-graph", "review", "quota-dialog", "palette", "setup", "prefs"})
+_PREVIEWS = frozenset({"plan-graph", "review", "git", "quota-dialog", "palette", "setup", "prefs"})
 
 
 def main(argv: list[str]) -> int:
@@ -46,7 +46,7 @@ def main(argv: list[str]) -> int:
     _ = parser.add_argument(
         "--view",
         required=True,
-        choices=("window", "tabs", "plan-graph", "review", "quota-dialog", "palette", "setup", "prefs"),
+        choices=("window", "tabs", "plan-graph", "review", "git", "quota-dialog", "palette", "setup", "prefs"),
     )
     _ = parser.add_argument("--theme", required=True, choices=("light", "dark"))
     _ = parser.add_argument("--size", required=True)
@@ -87,6 +87,8 @@ def _preview_app(client: CoreClient, request: SnapshotRequest | None, scenario: 
                 window.plan_card.emit("clicked")
             elif snapshot.view == "review":
                 window.app_vm.dispatch("diff")
+            elif snapshot.view == "git":
+                window.app_vm.dispatch("git")
             elif snapshot.view == "palette":
                 window.app_vm.dispatch("palette")
                 if window.palette_dialog is not None:

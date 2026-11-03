@@ -57,7 +57,7 @@ def run_ui(
     _ = parser.add_argument("--socket")
     _ = parser.add_argument(
         "--snapshot-view",
-        choices=("window", "tabs", "plan-graph", "review", "quota-dialog", "palette", "setup", "prefs"),
+        choices=("window", "tabs", "plan-graph", "review", "git", "quota-dialog", "palette", "setup", "prefs"),
     )
     _ = parser.add_argument("--theme", choices=("light", "dark"), default="light")
     _ = parser.add_argument("--size", default="1280x800")
