@@ -34,8 +34,9 @@ To look around without agents or Podman, use a built-in demo scenario:
 
 ```sh
 tools/check.sh                                  # lint, types, layer rules, contracts
-.venv-core/bin/python -m pytest tests/core tests/contracts tests/unit tests/gate tests/hostrun
-xvfb-run -a .venv-ui/bin/python -m pytest tests/gui/front tests/ui
+.venv-core/bin/python -m pytest tests/core tests/contracts tests/unit tests/gate tests/hostrun tests/smoke \
+  tests/test_package.py tests/test_contrast.py
+xvfb-run -a .venv-ui/bin/python -m pytest tests/gui tests/ui tests/smoke
 ```
 
 `tests/unit` and the scrolling test in `tests/gui/front/test_git_scale_ui.py` hold time limits measured on

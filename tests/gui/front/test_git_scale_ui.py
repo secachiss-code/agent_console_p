@@ -67,8 +67,8 @@ def test_a_narrow_page_puts_the_inspector_under_the_graph(tmp_path: Path, monkey
         await _settled(lambda: pane.body.get_orientation() == Gtk.Orientation.VERTICAL)
         inspector = pane.body.get_end_child()
         assert inspector is not None
-        await _settled(lambda: inspector.get_width() > 0)
-        assert inspector.get_width() >= pane.get_width() - _SEAM
+        # The orientation flips first; the widths follow on a later frame.
+        await _settled(lambda: inspector.get_width() >= pane.get_width() - _SEAM)
         pane.selection.set_selected(0)
         button = pane.git_actions.commit_button
         await _settled(lambda: button.get_mapped() and button.get_height() > 0)

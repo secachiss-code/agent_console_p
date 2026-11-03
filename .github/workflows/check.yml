@@ -33,10 +33,13 @@ jobs:
         run: tools/check.sh
       - name: Core tests
         run: >
-          .venv-core/bin/python -m pytest tests/core tests/contracts tests/gate tests/hostrun
+          .venv-core/bin/python -m pytest tests/core tests/contracts tests/gate tests/hostrun tests/smoke
+          tests/test_package.py tests/test_contrast.py
           -p no:cacheprovider --basetemp=/tmp/ac-core
       - name: Interface tests
+        # Runs after failed core tests too, so one red run shows both halves.
+        if: ${{ !cancelled() }}
         run: >
-          xvfb-run -a .venv-ui/bin/python -m pytest tests/gui/front tests/ui
+          xvfb-run -a .venv-ui/bin/python -m pytest tests/gui tests/ui tests/smoke
           -p no:cacheprovider --basetemp=/tmp/ac-ui
           --deselect tests/gui/front/test_git_scale_ui.py::test_scrolling_a_long_history
