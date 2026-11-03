@@ -11,6 +11,7 @@ from aconsole.contracts.common import AgentKind
 from aconsole.core.infrastructure.agents.claude.launcher import ClaudeLauncher, ClaudeTab
 from aconsole.core.infrastructure.agents.codex.launcher import CodexLauncher, CodexTab
 from aconsole.core.infrastructure.agents.codex.trust import HookTrustCache
+from aconsole.core.infrastructure.agents.cursor.launcher import CursorLauncher
 from aconsole.core.infrastructure.agents.opencode.launcher import OpenCodeLauncher
 from aconsole.core.infrastructure.agents.opencode.stream import EventStream
 
@@ -33,6 +34,7 @@ class HostAgentCommands:
         self._home_of = home_of
         self._claude = ClaudeLauncher()
         self._codex = CodexLauncher()
+        self._cursor = CursorLauncher()
         self._opencode = OpenCodeLauncher()
         self._opencode_heard = opencode_heard
         self._streams: dict[str, EventStream] = {}
@@ -40,7 +42,7 @@ class HostAgentCommands:
     def command(self, agent: AgentKind, tab_id: str, token: str, container: str, port: str) -> tuple[str, ...] | None:
         """`claude --settings …`, `codex -c …`, or the OpenCode server script. None means run the plain command."""
         number = int(port) if port.isdecimal() else _NO_PORT
-        if number == _NO_PORT or agent not in {AgentKind.CLAUDE, AgentKind.CODEX, AgentKind.OPENCODE}:
+        if number == _NO_PORT or agent not in {AgentKind.CLAUDE, AgentKind.CODEX, AgentKind.OPENCODE, AgentKind.CURSOR}:
             return None
         if agent is AgentKind.OPENCODE:
             return self._open_opencode(tab_id, token, number)
@@ -49,13 +51,15 @@ class HostAgentCommands:
             return None
         try:
             return self._write_files(agent, home, tab_id, token, number)
-        except (OSError, ValueError):
+        except (OSError, ValueError):  # json.JSONDecodeError is a ValueError
             _LOG.warning("cannot write hooks for tab %s; starting the agent without them", tab_id, exc_info=True)
             return None
 
     def _write_files(self, agent: AgentKind, home: Path, tab_id: str, token: str, port: int) -> tuple[str, ...]:
         if agent is AgentKind.CLAUDE:
             return self._claude.launch(ClaudeTab(agent_home=home, tab_id=tab_id, port=port, token=token)).argv
+        if agent is AgentKind.CURSOR:
+            return self._cursor.launch(home)
         # No hook is trusted yet (ADR-0002): notify and MCP are still configured.
         codex = CodexTab(agent_home=home, tab_id=tab_id, port=port, token=token)
         return self._codex.launch(codex, HookTrustCache()).argv

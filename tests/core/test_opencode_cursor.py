@@ -19,6 +19,7 @@ import pytest
 from aconsole.contracts.common import AgentKind
 from aconsole.core.domain.agent import CAPABILITIES
 from aconsole.core.domain.agent import AgentKind as DomainAgent
+from aconsole.core.infrastructure.agents.cursor.launcher import CursorLauncher
 from aconsole.core.infrastructure.agents.launch import HostAgentCommands
 from aconsole.core.infrastructure.agents.opencode.launcher import OpenCodeLauncher
 from aconsole.core.infrastructure.agents.opencode.stream import EventReader, EventStream
@@ -191,6 +192,32 @@ def test_opencode_script_says_when_it_is_not_installed(tmp_path: Path) -> None:
     done = subprocess.run(launch.argv, env=env, check=False, capture_output=True, timeout=10)
     assert done.returncode == 127
     assert b"opencode is not installed" in done.stderr
+
+
+def test_cursor_entry_keeps_other_servers_and_holds_no_secret(tmp_path: Path) -> None:
+    folder = tmp_path / ".cursor"
+    folder.mkdir()
+    path = folder / "mcp.json"
+    path.write_text(json.dumps({"mcpServers": {"mine": {"url": "http://x"}}, "other": 1}), encoding="utf-8")
+    assert CursorLauncher().launch(tmp_path) == ("agent",)
+    document = json.loads(path.read_text(encoding="utf-8"))
+    assert document["other"] == 1
+    assert document["mcpServers"]["mine"] == {"url": "http://x"}
+    entry = document["mcpServers"]["aconsole"]
+    assert entry["url"] == "http://127.0.0.1:${env:ACONSOLE_PORT}/mcp"
+    assert entry["headers"]["Authorization"] == "Bearer ${env:ACONSOLE_TAB_TOKEN}"
+    assert _TOKEN not in path.read_text(encoding="utf-8")
+    assert stat.S_IMODE(path.stat().st_mode) == 0o600
+
+
+def test_cursor_leaves_a_file_it_cannot_read_alone(tmp_path: Path) -> None:
+    folder = tmp_path / ".cursor"
+    folder.mkdir()
+    path = folder / "mcp.json"
+    path.write_text("{ not json", encoding="utf-8")
+    commands = HostAgentCommands(lambda _name: tmp_path)
+    assert commands.command(AgentKind.CURSOR, "t1", _TOKEN, "agent-cursor", "8765") is None
+    assert path.read_text(encoding="utf-8") == "{ not json"
 
 
 def test_commands_start_and_stop_one_stream_per_tab() -> None:
