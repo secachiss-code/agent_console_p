@@ -224,7 +224,7 @@ class Connection:
         except TabRequestError as exc:
             return (self._err(request.id, exc.name),)
         except DomainError as exc:
-            return (self._err(request.id, exc.name),)
+            return (self._err(request.id, exc.name, exc.extra),)
         except GitCommandError as exc:
             _LOG.warning("%s: %s: %s", request.method, exc, exc.detail)
             return (self._err(request.id, "GIT_COMMAND_FAILED"),)
@@ -413,7 +413,7 @@ class Connection:
         body = ResponseOk(id=request_id, result=msgspec.Raw(self._encoder.encode(result)))
         return encode_line(self._encoder, body)
 
-    def _err(self, request_id: int | None, name: str) -> bytes:
+    def _err(self, request_id: int | None, name: str, extra: tuple[str, ...] = ()) -> bytes:
         spec = error_by_name(name)
         details = None
         if name == "PROTOCOL_VERSION_UNSUPPORTED":
@@ -426,6 +426,7 @@ class Connection:
                 domain="aconsole.ipc",
                 retryable=spec.retryable,
                 user_message_key=f"error.{spec.name.lower()}",
+                user_message_args={"reason": extra[0]} if extra else {},
                 details=details,
             ),
         )

@@ -1,7 +1,7 @@
 """Git & checkpoints: one project's graph, and what a selected row changed.
 
 The list is virtual and its rows are recycled, so a long history costs only the rows on screen. A refresh keeps the
-selection and the scroll position. Commit, merge, and other changes are added by `git_actions`.
+selection and the scroll position. Commit, merge, and other changes are in `git_actions`.
 """
 
 from __future__ import annotations
@@ -32,6 +32,7 @@ from aconsole.ui.viewmodels.git_vm import (  # noqa: E402
     worktree_source,
 )
 from aconsole.ui.views.review.diff_widgets import file_row, hunk_text  # noqa: E402
+from aconsole.ui.views.review.git_actions import GitActions  # noqa: E402
 from aconsole.ui.views.review.graph_cell import ROW_HEIGHT, GraphCell  # noqa: E402
 from aconsole.ui.views.review.messages import _ as translate  # noqa: E402
 
@@ -135,7 +136,7 @@ class GitPane(Gtk.Box):
     def __init__(self, viewmodel: GitViewModel, on_toast: Callable[[str], None], tab: TabId | None = None) -> None:
         super().__init__(orientation=Gtk.Orientation.VERTICAL)
         self.viewmodel: GitViewModel = viewmodel
-        self._toast: Callable[[str], None] = on_toast
+        self.toast: Callable[[str], None] = on_toast
         self.state: GitStateResult | None = None
         self.scope: TabId | None = None
         self._scope_tabs: tuple[TabId | None, ...] = (None,)
@@ -154,6 +155,7 @@ class GitPane(Gtk.Box):
         self.store: Gio.ListStore = Gio.ListStore.new(RowItem)
         self.append(self._build_toolbar())
         self.append(self._build_body())
+        self.git_actions: GitActions = GitActions(self, self.actions)
         self._keep_watch: int | None = None
         _ = self.connect("map", self._mapped)
         _ = self.connect("unmap", self._unmapped)
@@ -186,7 +188,15 @@ class GitPane(Gtk.Box):
         self.base_label.add_css_class("dim-label")
         bar.append(self.base_label)
         self.actions: Gtk.Box = Gtk.Box(spacing=6)
-        bar.append(self.actions)
+        # Six buttons must not set how narrow the window may get.
+        bar.append(
+            Gtk.ScrolledWindow(
+                child=self.actions,
+                hscrollbar_policy=Gtk.PolicyType.EXTERNAL,
+                vscrollbar_policy=Gtk.PolicyType.NEVER,
+                propagate_natural_width=True,
+            )
+        )
         return bar
 
     def _build_body(self) -> Gtk.Paned:
@@ -268,6 +278,7 @@ class GitPane(Gtk.Box):
         self._replace_rows(state, first.nodes, first.version, first.next_cursor)
 
     def _show_state(self, state: GitStateResult) -> None:
+        self.git_actions.show_state(state)
         self.base_label.set_text(state.base_branch or translate("git.empty"))
         self._syncing = True
         tabs = tuple(row for row in state.worktrees if row.tab_id is not None)
@@ -328,14 +339,14 @@ class GitPane(Gtk.Box):
             page = await self.viewmodel.graph(self.scope, cursor)
         except CoreCallError as error:
             if error.error.message == "GIT_SNAPSHOT_STALE":
-                self._toast(translate("git.stale"))
+                self.toast(translate("git.stale"))
                 self._version = None
                 self.reload()
             else:
-                self._toast(translate("review.load_error").format(error=error))
+                self.toast(translate("review.load_error").format(error=error))
             return
         except Exception as error:  # noqa: BLE001 -- a lost core shows here, not in a crash
-            self._toast(translate("review.load_error").format(error=error))
+            self.toast(translate("review.load_error").format(error=error))
             return
         finally:
             self._loading = False
@@ -351,16 +362,17 @@ class GitPane(Gtk.Box):
         self._version = None
         self.reload()
 
-    def _selected_row(self) -> GraphRow | None:
+    def selected_row(self) -> GraphRow | None:
         item = self.selection.get_selected_item()
         return item.row if isinstance(item, RowItem) else None
 
     def _row_selected(self, _selection: Gtk.SingleSelection, _param: GObject.ParamSpec) -> None:
         if self._syncing:
             return
-        row = self._selected_row()
+        row = self.selected_row()
         self.selected_key = None if row is None else row.key
         self.selected_path = None
+        self.git_actions.refresh()
         self._reload_inspector()
 
     def _mode_changed(self, _choice: Gtk.DropDown, _param: GObject.ParamSpec) -> None:
@@ -375,7 +387,7 @@ class GitPane(Gtk.Box):
         return None
 
     def _reload_inspector(self) -> None:
-        row = self._selected_row()
+        row = self.selected_row()
         if row is None:
             self._clear_inspector()
             return
@@ -413,6 +425,7 @@ class GitPane(Gtk.Box):
         self._file_paths = [item.path for item in files]
         if not files:
             self.selected_path = None
+            self.git_actions.refresh()
             self._show_message(translate("review.no_changes"))
             return
         for item in files:
@@ -425,6 +438,7 @@ class GitPane(Gtk.Box):
         if row is None or source is None or row.get_index() >= len(self._file_paths):
             return
         self.selected_path = self._file_paths[row.get_index()]
+        self.git_actions.refresh()
         _ = spawn_task(self._load_file(source, self.selected_path))
 
     async def _load_file(self, source: DiffSource, path: str) -> None:
