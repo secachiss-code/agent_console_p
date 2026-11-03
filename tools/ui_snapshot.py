@@ -22,6 +22,9 @@ class _SnapshotArguments(argparse.Namespace):
     out: Path = Path("docs/ui/B0/window.png")
 
 
+_PREVIEWS = frozenset({"plan-graph", "review", "quota-dialog", "palette", "setup", "prefs"})
+
+
 def main(argv: list[str]) -> int:
     if argv == ["--spike"]:
         destination = Path("docs/ui/spike.png")
@@ -41,7 +44,9 @@ def main(argv: list[str]) -> int:
         choices=("demo", "empty", "stress", "errors", "waiting", "quota-critical", "approval-expired"),
     )
     _ = parser.add_argument(
-        "--view", required=True, choices=("window", "tabs", "plan-graph", "quota-dialog", "palette", "setup", "prefs"),
+        "--view",
+        required=True,
+        choices=("window", "tabs", "plan-graph", "review", "quota-dialog", "palette", "setup", "prefs"),
     )
     _ = parser.add_argument("--theme", required=True, choices=("light", "dark"))
     _ = parser.add_argument("--size", required=True)
@@ -50,7 +55,7 @@ def main(argv: list[str]) -> int:
     result = run_ui([
         "--fake", args.scenario, "--snapshot-view", args.view, "--theme", args.theme,
         "--size", args.size, "--out", str(args.out),
-    ], app_factory=_preview_app if args.view in {"plan-graph", "quota-dialog", "palette", "setup", "prefs"} else None)
+    ], app_factory=_preview_app if args.view in _PREVIEWS else None)
     if result or not args.out.is_file() or args.out.stat().st_size == 0:
         _ = sys.stderr.write("snapshot missing or application failed\n")
         return result or 1
@@ -80,6 +85,8 @@ def _preview_app(client: CoreClient, request: SnapshotRequest | None, scenario: 
                 return
             if snapshot.view == "plan-graph":
                 window.plan_card.emit("clicked")
+            elif snapshot.view == "review":
+                window.app_vm.dispatch("diff")
             elif snapshot.view == "palette":
                 window.app_vm.dispatch("palette")
                 if window.palette_dialog is not None:

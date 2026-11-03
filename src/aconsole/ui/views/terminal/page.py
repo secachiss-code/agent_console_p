@@ -182,6 +182,14 @@ class TerminalPage(Gtk.Overlay):
             if not self._closed:
                 self.ended_actions.set_sensitive(True)
 
+    def inject(self, text: str, *, submit: bool) -> None:
+        """Text the core sends to the agent: a bracketed paste, so its lines do not run as separate prompts."""
+        if self._closed:
+            return
+        self.terminal.paste_text(text.rstrip("\n"))
+        if submit:
+            self.terminal.feed_child(b"\r")
+
     def _close_tab(self, _button: Gtk.Button) -> None:
         if not self._closed:
             self._on_close(str(self.tab_id))

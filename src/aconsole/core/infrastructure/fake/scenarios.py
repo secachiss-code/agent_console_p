@@ -14,7 +14,10 @@ from aconsole.contracts.app import (
     CheckpointView,
     CheckResult,
     CommandDetail,
+    DiffFileResult,
     DiffFileView,
+    DiffHunk,
+    DiffLine,
     DiffSummaryResult,
     EditDetail,
     PaletteItem,
@@ -446,6 +449,19 @@ def demo_diff() -> DiffSummaryResult:
         DiffFileView(path="c.py", old_path="d.py", change="renamed", insertions=0, deletions=1),
     )
     return DiffSummaryResult(base="main", head="ac/demo-1", files=files, insertions=3, deletions=1)
+
+
+def demo_diff_file() -> DiffFileResult:
+    lines = (
+        DiffLine(kind="context", old_no=1, new_no=1, text="def total(items):"),
+        DiffLine(kind="del", old_no=2, new_no=None, text="    return sum(items)", word_spans=((11, 14),)),
+        DiffLine(kind="add", old_no=None, new_no=2, text="    return fsum(items)", word_spans=((11, 15),)),
+        DiffLine(kind="context", old_no=3, new_no=3, text=""),
+    )
+    hunk = DiffHunk(
+        id="h1", header="@@ -1,3 +1,3 @@ def total", old_start=1, old_lines=3, new_start=1, new_lines=3, lines=lines,
+    )
+    return DiffFileResult(hunks=(hunk,), truncated=False)
 
 
 def demo_checkpoints(tab_id: TabId) -> tuple[CheckpointView, ...]:

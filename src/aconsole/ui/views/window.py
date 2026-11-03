@@ -13,18 +13,21 @@ from gi.repository import Adw, Gio, GLib, GObject, Gtk  # noqa: E402
 
 from aconsole.contracts.app import CommandResult, EmptyParams, PaletteQuery  # noqa: E402
 from aconsole.contracts.common import PlanId, TabId  # noqa: E402
-from aconsole.contracts.events import SettingsChanged, UiEvent  # noqa: E402
+from aconsole.contracts.events import CheckpointCreated, InjectToTerminal, SettingsChanged, UiEvent  # noqa: E402
 from aconsole.contracts.settings import Settings  # noqa: E402
 from aconsole.ui.bootstrap import spawn_task  # noqa: E402
 from aconsole.ui.client.core_client import CoreClient  # noqa: E402
 from aconsole.ui.client.store import CoreStore  # noqa: E402
 from aconsole.ui.viewmodels.app_vm import AppViewModel  # noqa: E402
 from aconsole.ui.viewmodels.logic.quota_fmt import quota_level  # noqa: E402
+from aconsole.ui.viewmodels.review_vm import ReviewViewModel  # noqa: E402
 from aconsole.ui.viewmodels.setup_vm import PreferencesViewModel  # noqa: E402
 from aconsole.ui.viewmodels.sidebar_vm import SidebarSummaryViewModel  # noqa: E402
 from aconsole.ui.viewmodels.tabs_vm import TabItem, TabsViewModel  # noqa: E402
 from aconsole.ui.views.palette.dialog import PaletteDialog  # noqa: E402
 from aconsole.ui.views.palette.messages import _ as palette_text  # noqa: E402
+from aconsole.ui.views.review.messages import _ as review_text  # noqa: E402
+from aconsole.ui.views.review.page import ReviewPage  # noqa: E402
 from aconsole.ui.views.setup.messages import _ as setup_text  # noqa: E402
 from aconsole.ui.views.setup.preferences import PreferencesDialog  # noqa: E402
 from aconsole.ui.views.setup.wizard import SetupWizard  # noqa: E402
@@ -162,6 +165,7 @@ class MainWindow(Adw.ApplicationWindow):
     def _build_summary(self) -> Gtk.Box:
         self._summary_vm: SidebarSummaryViewModel = SidebarSummaryViewModel(self.tabs.client)
         self.plan_page: PlanGraph | None = None
+        self.review_page: ReviewPage | None = None
         body = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         self.project_bar: ProjectBar = ProjectBar(self.tabs, self.tabs_sidebar)
         body.append(self.project_bar)
@@ -195,12 +199,17 @@ class MainWindow(Adw.ApplicationWindow):
             return
         if show_content and self.content_view.get_content() is not self.terminal_stack:
             self.plan_page = None
+            self.review_page = None
             self.content_view.set_content(self.terminal_stack)
         selected = self.selection.get_selected_item()
         if not isinstance(selected, TabItem):
             self.terminal_stack.set_visible_child_name("empty")
             return
-        tab_id = str(selected.tab_id)
+        page = self._terminal_page(str(selected.tab_id))
+        self.terminal_stack.set_visible_child(page)
+        page.start()
+
+    def _terminal_page(self, tab_id: str) -> TerminalPage:
         page = self.terminal_pages.get(tab_id)
         if page is None:
             page = TerminalPage(self.tabs.client, TabId(tab_id), self._terminal_new, self._terminal_close)
@@ -208,8 +217,7 @@ class MainWindow(Adw.ApplicationWindow):
                 page.apply_settings(self._terminal_settings)
             self.terminal_pages[tab_id] = page
             _ = self.terminal_stack.add_named(page, tab_id)
-        self.terminal_stack.set_visible_child(page)
-        page.start()
+        return page
 
     def _terminal_new(self) -> None:
         self.app_vm.dispatch("new-tab")
@@ -282,6 +290,30 @@ class MainWindow(Adw.ApplicationWindow):
     def _close_plan(self) -> None:
         self._show_selected_terminal()
 
+    def _open_review(self, tab_id: str | None = None) -> None:
+        """The chosen tab's changes and checkpoints. Without a tab: the selected one."""
+        if tab_id is None:
+            selected = self.selection.get_selected_item()
+            if not isinstance(selected, TabItem):
+                self._tab_error(review_text("review.no_tab"))
+                return
+            tab_id = str(selected.tab_id)
+        else:
+            self._select_tab(TabId(tab_id))
+        snapshot = self.tabs.client.store.snapshot
+        title = next(
+            (tab.title for tab in (snapshot.tabs if snapshot is not None else ()) if str(tab.id) == tab_id), "",
+        )
+        self.plan_page = None
+        self.review_page = ReviewPage(
+            ReviewViewModel(self.tabs.client, TabId(tab_id)), title, self._show_selected_terminal, self._tab_error,
+        )
+        self.content_view.set_content(self.review_page)
+
+    def _request_review(self, _action: Gio.SimpleAction, parameter: GLib.Variant | None) -> None:
+        if parameter is not None:
+            self._open_review(parameter.get_string())
+
     def _install_tab_actions(self) -> None:
         toggle = Gio.SimpleAction.new("toggle-sidebar", None)
         _ = toggle.connect("activate", self._toggle_sidebar)
@@ -293,6 +325,9 @@ class MainWindow(Adw.ApplicationWindow):
         self.close_tab_action.set_enabled(True)
         _ = self.close_tab_action.connect("activate", self._request_close_tab)
         self.add_action(self.close_tab_action)
+        review = Gio.SimpleAction.new("open-review", GLib.VariantType.new("s"))
+        _ = review.connect("activate", self._request_review)
+        self.add_action(review)
 
     def _init_shortcuts(self, app: Adw.Application) -> None:
         self.palette_dialog: PaletteDialog | None = None
@@ -395,6 +430,8 @@ class MainWindow(Adw.ApplicationWindow):
             NewTabDialog(self.tabs, self._tab_opened, self._tab_error).present(self)
         elif action_id == "settings":
             self._open_preferences()
+        elif action_id == "diff":
+            self._open_review()
 
     def _build_settings_menu(self) -> Gio.Menu:
         menu = Gio.Menu()
@@ -476,6 +513,12 @@ class MainWindow(Adw.ApplicationWindow):
         self._sync_terminal_pages(_store)
         if isinstance(event, SettingsChanged):
             _ = spawn_task(self._refresh_settings())
+        elif isinstance(event, InjectToTerminal):
+            self._terminal_page(str(event.tab_id)).inject(event.text, submit=event.submit)
+        elif isinstance(event, CheckpointCreated):
+            page = self.review_page
+            if page is not None and page.viewmodel.tab_id == event.checkpoint.tab_id:
+                _ = spawn_task(page.load_checkpoints())
 
     def _snapshot_changed(self, _store: CoreStore) -> None:
         self._sync_terminal_pages(_store)

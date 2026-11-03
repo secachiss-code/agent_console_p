@@ -9,6 +9,7 @@ from gi.repository import Gdk, Gio, GLib, GObject, Gtk, Pango  # noqa: E402
 
 from aconsole.ui.bootstrap import spawn_task  # noqa: E402
 from aconsole.ui.viewmodels.tabs_vm import MAX_TAB_TITLE_LENGTH, TabItem, TabsViewModel  # noqa: E402
+from aconsole.ui.views.review.messages import _ as review_text  # noqa: E402
 from aconsole.ui.views.tabs.messages import _ as translate  # noqa: E402
 
 _MINUTES_PER_HOUR = 60
@@ -111,6 +112,9 @@ class TabRow(Gtk.Box):
         self.close_button.set_action_name("win.request-close-tab")
         menu = Gio.Menu()
         menu.append(translate("tabs.rename"), "tab-row.rename")
+        review = Gio.MenuItem.new(review_text("review.open"), None)
+        review.set_action_and_target_value("win.open-review", GLib.Variant("s", self.tab_id))
+        menu.append_item(review)
         close = Gio.MenuItem.new(translate("tabs.close"), None)
         close.set_action_and_target_value("win.request-close-tab", GLib.Variant("s", self.tab_id))
         menu.append_item(close)
