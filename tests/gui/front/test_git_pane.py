@@ -98,11 +98,7 @@ def _on_pane(
         async def _run(self) -> None:
             client = CoreClient(str(socket))
             try:
-                for _ in range(600):
-                    if socket.exists():
-                        break
-                    await asyncio.sleep(0.05)
-                _ = await client.connect()
+                await _connected(client)
                 _ = await client.pull_snapshot()
                 project = await client.request("project/add", ProjectAddParams(root=str(repo)), ProjectView)
                 toasts: list[str] = []
@@ -124,6 +120,18 @@ def _on_pane(
         _ = daemon.wait(timeout=10)
     if failures:
         raise failures[0]
+
+
+async def _connected(client: CoreClient) -> None:
+    """Until the core listens. Its socket file appears at bind, just before: no file and a refusal both mean wait."""
+    for _ in range(600):
+        try:
+            _ = await client.connect()
+        except (FileNotFoundError, ConnectionRefusedError):
+            await asyncio.sleep(0.05)
+        else:
+            return
+    _ = await client.connect()
 
 
 async def _settled(check: Callable[[], bool]) -> None:
