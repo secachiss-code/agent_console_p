@@ -265,6 +265,15 @@ class _Tab:
     live_sidecar: str = ""
 
 
+@dataclass(frozen=True, slots=True, kw_only=True)
+class ReviewTarget:
+    """What checkpoint and diff calls read from one tab."""
+
+    worktree: str
+    status: TabStatus
+    base_branch: str | None
+
+
 def _preferences_of(settings: Settings) -> dict[str, object]:
     """The keys the store keeps as they are, in JSON types."""
     plain: dict[str, object] = msgspec.to_builtins(settings)  # pyright: ignore[reportAny] -- a struct gives a dict
@@ -499,6 +508,16 @@ class TabService:
             changed.add("attention")
         self._remember(tab)
         return self._updated(tab, changed)
+
+    def review_target(self, tab_id: str) -> ReviewTarget | None:
+        """Where a tab's checkpoints and diff live. None for a tab this core does not hold."""
+        tab = self._tabs.get(tab_id)
+        if tab is None:
+            return None
+        return ReviewTarget(worktree=tab.worktree, status=tab.status, base_branch=tab.base)
+
+    def tab_ids(self) -> tuple[str, ...]:
+        return tuple(self._tabs)
 
     def current_settings(self) -> Settings:
         """The settings document. Unset strings stay empty until a patch writes them."""

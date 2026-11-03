@@ -23,8 +23,9 @@ _EVENTS_PER_TAB = 2000
 _QUOTA_DAYS = 30
 _APPROVAL_DAYS = 90
 _CLOSED_TAB_DAYS = 30
-_DEFAULT_KEEP = 5
+_DEFAULT_KEEP = 100
 _KEEP_KEY = "checkpoints_keep"
+_APP_KEY = "app"
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -66,12 +67,13 @@ def sweep(session: Session, *, now: datetime, drop_ref: Callable[[str], None]) -
 
 def _keep(session: Session) -> int:
     row = session.get(Setting, _KEEP_KEY)
-    if row is None:
-        return _DEFAULT_KEEP
-    raw = row.value.get("keep")
-    if not isinstance(raw, int):
-        return _DEFAULT_KEEP
-    return check_keep(raw)
+    if row is not None:
+        raw = row.value.get("keep")
+        return check_keep(raw) if isinstance(raw, int) else _DEFAULT_KEEP
+    # The Settings document holds what the user chose.
+    app = session.get(Setting, _APP_KEY)
+    chosen = app.value.get(_KEEP_KEY) if app is not None else None
+    return check_keep(chosen) if isinstance(chosen, int) else _DEFAULT_KEEP
 
 
 def _trim_events(session: Session) -> int:

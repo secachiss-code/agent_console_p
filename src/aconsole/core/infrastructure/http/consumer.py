@@ -22,6 +22,11 @@ class _HookName(msgspec.Struct, frozen=True, kw_only=True):
     hook_event_name: str
 
 
+class _Prompt(msgspec.Struct, frozen=True, kw_only=True):
+    hook_event_name: str
+    prompt: str = ""
+
+
 class _NotificationType(msgspec.Struct, frozen=True, kw_only=True):
     notification_type: str | None = None
 
@@ -42,10 +47,22 @@ def hook_event(item: IngestItem) -> str | None:
     return None
 
 
+def submitted_prompt(item: IngestItem) -> str | None:
+    """The text of a `UserPromptSubmit` hook, or None for any other item."""
+    if item.kind not in _HOOKS:
+        return None
+    try:
+        hook = msgspec.json.decode(item.body, type=_Prompt)
+    except msgspec.DecodeError:
+        return None
+    return hook.prompt if hook.hook_event_name == "UserPromptSubmit" else None
+
+
 async def consume(
     queue: IngestQueue,
     ready: asyncio.Event,
     apply: Callable[[str, str], Awaitable[None]],
+    on_prompt: Callable[[str, str], Awaitable[None]] | None = None,
 ) -> None:
     """Apply queued items in order until cancelled. `ready` is set whenever the HTTP side queued something."""
     while True:
@@ -54,9 +71,11 @@ async def consume(
         while (item := queue.pop()) is not None:
             try:
                 name = _event_name(item)
-                if name is None:
-                    continue
-                await apply(item.tab_id, name)
+                if name is not None:
+                    await apply(item.tab_id, name)
+                prompt = submitted_prompt(item)
+                if prompt is not None and on_prompt is not None:
+                    await on_prompt(item.tab_id, prompt)
             except Exception:  # noqa: BLE001 -- one bad item must not stop the consumer
                 _LOG.exception("ingest item for %s failed", item.tab_id)
 

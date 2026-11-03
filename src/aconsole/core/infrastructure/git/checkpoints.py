@@ -65,7 +65,7 @@ class GitCheckpoints:
             tree = self._stdout(repo, ("write-tree",), index=index.name).strip()
         commit = self._stdout(repo, ("commit-tree", tree, "-p", parent, "-m", message)).strip()
         _ = self._stdout(repo, ("update-ref", ref, commit))
-        return _capture(self._numstat(repo, parent, commit), self._paths(repo, commit))
+        return _capture(self._numstat(repo, parent, commit), self._paths(repo, commit), tree)
 
     def materialize(self, repo: Path, ref: str) -> None:
         _absolute_repo(repo)
@@ -81,6 +81,10 @@ class GitCheckpoints:
     def delete(self, repo: Path, ref: str) -> None:
         _absolute_repo(repo)
         _ = self._stdout(repo, ("update-ref", "-d", ref))
+
+    def paths(self, repo: Path, ref: str) -> tuple[str, ...]:
+        _absolute_repo(repo)
+        return self._paths(repo, ref)
 
     def _paths(self, repo: Path, ref: str) -> tuple[str, ...]:
         return self._z(repo, ("ls-tree", "-r", "-z", "--name-only", ref))
@@ -141,7 +145,7 @@ def _count(field: str) -> int:
     return int(field)
 
 
-def _capture(rows: tuple[tuple[int, int], ...], files: tuple[str, ...]) -> TreeCapture:
+def _capture(rows: tuple[tuple[int, int], ...], files: tuple[str, ...], tree: str) -> TreeCapture:
     insertions = sum(row[0] for row in rows)
     deletions = sum(row[1] for row in rows)
     return TreeCapture(
@@ -149,4 +153,5 @@ def _capture(rows: tuple[tuple[int, int], ...], files: tuple[str, ...]) -> TreeC
         insertions=insertions,
         deletions=deletions,
         files=files,
+        tree=tree,
     )

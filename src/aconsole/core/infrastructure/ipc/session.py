@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import os
 from collections.abc import Callable
 from datetime import UTC, datetime
@@ -45,15 +46,19 @@ from aconsole.contracts.ipc import (
     SidecarSignal,
 )
 from aconsole.core.application.services.approval_broker import ApprovalHold
+from aconsole.core.application.services.review import REVIEW_METHODS, ReviewService
 from aconsole.core.application.services.setup import SetupService
 from aconsole.core.application.services.tabs import SETTINGS_METHODS, TAB_METHODS, TabRequestError, TabService
 from aconsole.core.domain.errors import DomainError
 from aconsole.core.infrastructure.ipc.framing import decode_envelope, encode_line
 from aconsole.core.infrastructure.ipc.ring import EventRing
 
+_LOG = logging.getLogger(__name__)
 _SERVER = ProtocolVersion(major=1, minor=0)
-# Only what this process serves: `diff.v1` and `checkpoints.v1` come back when their methods are wired.
-_SERVER_CAPS = frozenset({"events.v1", "approvals.inline", "notifications.desktop"})
+# Only what this process serves.
+_SERVER_CAPS = frozenset(
+    {"events.v1", "approvals.inline", "notifications.desktop", "diff.v1", "checkpoints.v1", "terminal.inject"},
+)
 _HOLD = "core/hold"
 _SNAPSHOT = "app/snapshot"
 _SIDECAR_PREFIX = "sidecar/"
@@ -82,6 +87,7 @@ class Connection:
         tabs: TabService | None = None,
         approval_hold: ApprovalHold | None = None,
         setup_service: SetupService | None = None,
+        review: ReviewService | None = None,
     ) -> None:
         self.ring = ring
         self.outbound_limit = outbound_limit
@@ -89,6 +95,7 @@ class Connection:
         self.tabs = tabs
         self.approval_hold = approval_hold
         self.setup_service = setup_service
+        self.review = review
         self.capabilities: frozenset[str] = frozenset()
         self.ready = False
         self.paused = False
@@ -171,10 +178,29 @@ class Connection:
             return self._setup(request, self.setup_service)
         if request.method in _APP_METHODS and self.tabs is not None:
             return self._app(request, self.tabs)
+        if request.method in REVIEW_METHODS and self.review is not None:
+            return self._review(request, self.review)
         served = TAB_METHODS | SETTINGS_METHODS
         if request.method == _SNAPSHOT or (self.tabs is not None and request.method in served):
             return self._tab(request)
         return (self._err(request.id, "METHOD_NOT_FOUND"),)
+
+    def _review(self, request: Request, review: ReviewService) -> tuple[bytes, ...]:
+        try:
+            result = review.dispatch(request.method, bytes(request.params))
+        except msgspec.DecodeError:
+            return (self._err(request.id, "INVALID_PARAMS"),)
+        except TabRequestError as exc:
+            return (self._err(request.id, exc.name),)
+        except DomainError as exc:
+            return (self._err(request.id, exc.name),)
+        except ValueError:
+            return (self._err(request.id, "INVALID_PARAMS"),)
+        except Exception:  # noqa: BLE001 -- answer the request; the connection serves the next one
+            # A git failure must answer the request; the connection stays up for the next one.
+            _LOG.exception("%s failed", request.method)
+            return (self._err(request.id, "INTERNAL_ERROR"),)
+        return (self._ok(request.id, result),)
 
     def _app(self, request: Request, tabs: TabService) -> tuple[bytes, ...]:
         try:

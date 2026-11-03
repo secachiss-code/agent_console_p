@@ -15,18 +15,22 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 import msgspec
 import uvicorn
 
 from aconsole.contracts.common import ClientRole, TabId
 from aconsole.contracts.errors import ErrorData, ErrorObject, MessageTooLargeDetails, error_by_name
-from aconsole.contracts.events import Notify, QuotaUpdated, TabAdded, TabRemoved, UiEvent
+from aconsole.contracts.events import Notify, QuotaUpdated, TabAdded, TabRemoved, TabUpdated, UiEvent
 from aconsole.contracts.ipc import InitializeParams, Request, ResponseErr
+from aconsole.core.application.ports.events import EventSink
 from aconsole.core.application.services.approval_broker import ApprovalHold
+from aconsole.core.application.services.checkpoints import CheckpointService
+from aconsole.core.application.services.diff import DiffService
 from aconsole.core.application.services.projects import ProjectCatalog
 from aconsole.core.application.services.quota_aggregator import QuotaAggregator
+from aconsole.core.application.services.review import ReviewService
 from aconsole.core.application.services.setup import SetupService
 from aconsole.core.application.services.tabs import TabService
 from aconsole.core.domain.approvals import Approval, ApprovalBook
@@ -36,6 +40,8 @@ from aconsole.core.infrastructure.agents.codex.limits import CodexLimits
 from aconsole.core.infrastructure.agents.codex.turns import TurnWatch
 from aconsole.core.infrastructure.agents.launch import HostAgentCommands
 from aconsole.core.infrastructure.agents.live_limits import CachedAuth
+from aconsole.core.infrastructure.git.checkpoints import GitCheckpoints
+from aconsole.core.infrastructure.git.diff import GitDiff
 from aconsole.core.infrastructure.http.app import IngestApp, serve_config
 from aconsole.core.infrastructure.http.approval import handle_permission
 from aconsole.core.infrastructure.http.auth import TokenBook
@@ -58,6 +64,7 @@ from aconsole.core.infrastructure.persistence.cleanup import sweep
 from aconsole.core.infrastructure.persistence.engine import write_engine
 from aconsole.core.infrastructure.persistence.models import ApprovalStatus
 from aconsole.core.infrastructure.persistence.repositories.catalog import ApprovalRecord, ApprovalRepository
+from aconsole.core.infrastructure.persistence.repositories.checkpoints import CheckpointDatabase
 from aconsole.core.infrastructure.persistence.repositories.tabs import TabDatabase
 from aconsole.core.infrastructure.persistence.startup import prepare_database, sqlite_url
 from aconsole.core.infrastructure.persistence.writer import Writer
@@ -223,6 +230,18 @@ _CODEX_TURN_POLL_S = 1.0
 _ACCOUNT_RESEND_S = 30.0
 
 
+class _PublishedEvents(EventSink):
+    """The diff service's events go where the tab book's go."""
+
+    def __init__(self, publish: Callable[[UiEvent], None]) -> None:
+        super().__init__()
+        self._publish: Callable[[UiEvent], None] = publish
+
+    @override
+    def emit(self, event: UiEvent) -> None:
+        self._publish(event)
+
+
 class Daemon:
     """The core process. A second instance refuses the lock. Idle clients shut it down."""
 
@@ -271,6 +290,12 @@ class Daemon:
         self.tabs.use_agents(HostAgents(self._host.inspect_container).agents)
         self.tabs.use_commands(HostAgentCommands(self._host.agent_home))
         self._setup_limits()
+        self.review: ReviewService = ReviewService(
+            lambda: self.tabs,
+            CheckpointService(GitCheckpoints()),
+            DiffService(GitDiff(), _PublishedEvents(self._from_worker)),
+            emit=self._from_worker,
+        )
         self.setup_service: SetupService = setup_service or SetupService(
             probe=HostSetupProbe(), fixes=HostSetupFixes(), tokens=SetupTokens()
         )
@@ -379,6 +404,8 @@ class Daemon:
         loop = self._loop
         if loop is not None and not loop.is_closed():
             _ = loop.call_soon_threadsafe(self._publish, event, live, token)
+        if isinstance(event, TabUpdated):
+            self.review.on_event(event)
 
     def _ingest_minted(self, tab_id: str, token: str) -> None:
         """A restored tab got its token from `tab/launchSpec`, on the worker. The hooks start only after that reply."""
@@ -496,7 +523,7 @@ class Daemon:
         self._host.set_ingest_port(port)
         self._ingest_tasks = [
             asyncio.create_task(server.serve(sockets=[listener])),
-            asyncio.create_task(consume(self._ingest_queue, ready, self._apply_hook)),
+            asyncio.create_task(consume(self._ingest_queue, ready, self._apply_hook, self._prompt_sent)),
             asyncio.create_task(self._poll_codex_limits()),
             asyncio.create_task(self._poll_claude_limits()),
             asyncio.create_task(self._watch_codex_turns()),
@@ -509,6 +536,9 @@ class Daemon:
         _ = await self._in_worker(lambda: self.tabs.apply_hook(tab_id, event_name))
         if event_name == "Stop":
             self._claude_usage_due.set()
+
+    async def _prompt_sent(self, tab_id: str, text: str) -> None:
+        await self._in_worker(lambda: self.review.on_prompt(tab_id, text))
 
     def _sidecar_left(self, connection: Connection) -> None:
         """Not while this core stops: agents outlive a core restart, and the next core restores their tabs."""
@@ -603,6 +633,7 @@ class Daemon:
         if writer is None:
             return
         store = TabDatabase(writer)
+        self.review.checkpoints.use_journal(CheckpointDatabase(writer))
         self.tabs.use_store(store)
         self.tabs.use_projects(self._catalog, store)
         found = await asyncio.to_thread(store.settings)
@@ -637,9 +668,16 @@ class Daemon:
         while True:
             try:
                 _ = await writer.submit(self._sweep_once)
+                await self._drop_swept_refs()
             except Exception:  # noqa: BLE001 -- a failed sweep is retried next period; the core keeps serving
                 _LOG.exception("retention sweep failed")
             await asyncio.sleep(self.sweep_every_s)
+
+    async def _drop_swept_refs(self) -> None:
+        """Refs of rows the sweep removed. A closed tab's refs stay listed: its worktree may be gone."""
+        refs = tuple(self.dropped_refs)
+        if refs:
+            self.dropped_refs[:] = await self._in_worker(lambda: self.review.forget_refs(refs))
 
     def _sweep_once(self, session: Session) -> object:
         return sweep(session, now=datetime.now(UTC), drop_ref=self.dropped_refs.append)
@@ -760,7 +798,8 @@ class Daemon:
             await writer.wait_closed()
             return
         connection = Connection(
-            self._ring, tabs=self.tabs, approval_hold=self.approvals, setup_service=self.setup_service
+            self._ring, tabs=self.tabs, approval_hold=self.approvals, setup_service=self.setup_service,
+            review=self.review,
         )
         connection.on_agent_notice = self._agent_notice
         counted = False

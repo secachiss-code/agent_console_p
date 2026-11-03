@@ -1,6 +1,6 @@
 """Checkpoint refs, retention, and restore. The git commands live in infrastructure."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import datetime, timedelta
 
 from aconsole.core.domain.errors import DomainError
@@ -96,6 +96,21 @@ class CheckpointLog:
         self.keep = check_keep(keep)
         self._items: list[Checkpoint] = []
         self._tokens: dict[str, tuple[str, datetime]] = {}
+
+    def adopt(self, items: tuple[Checkpoint, ...]) -> None:
+        """The list a journal kept, after a core restart. Numbering continues from it."""
+        self._items = sorted(items, key=lambda item: item.number)
+
+    def forget(self, numbers: frozenset[int]) -> None:
+        """Retention removed these rows while the core ran."""
+        self._items = [item for item in self._items if item.number not in numbers]
+
+    def with_files(self, checkpoint_id: str, files: tuple[str, ...]) -> Checkpoint:
+        """Fill in the file list a journal does not keep."""
+        found = self.get(checkpoint_id)
+        filled = replace(found, files=files)
+        self._items[self._items.index(found)] = filled
+        return filled
 
     def next_number(self) -> int:
         if not self._items:

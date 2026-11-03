@@ -4,6 +4,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Protocol
 
+from aconsole.core.domain.checkpoints import Checkpoint
+
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class TreeCapture:
@@ -13,6 +15,7 @@ class TreeCapture:
     insertions: int
     deletions: int
     files: tuple[str, ...]
+    tree: str = ""
 
 
 class CheckpointStore(Protocol):
@@ -28,4 +31,24 @@ class CheckpointStore(Protocol):
 
     def delete(self, repo: Path, ref: str) -> None:
         """Remove `ref`. Missing refs are already gone."""
+        ...
+
+    def paths(self, repo: Path, ref: str) -> tuple[str, ...]:
+        """The files `ref` holds. The journal keeps only their count."""
+        ...
+
+
+class CheckpointJournal(Protocol):
+    """Checkpoint rows, so the list outlives the core. The refs stay in git."""
+
+    def load(self, tab_id: str) -> tuple[Checkpoint, ...]:
+        """The tab's checkpoints, oldest first. Their `files` stay empty."""
+        ...
+
+    def save(self, checkpoint: Checkpoint, tree: str) -> None:
+        """Add one row."""
+        ...
+
+    def delete(self, tab_id: str, numbers: tuple[int, ...]) -> None:
+        """Remove the rows retention dropped."""
         ...
