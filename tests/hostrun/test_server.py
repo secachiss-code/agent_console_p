@@ -149,7 +149,7 @@ def test_policy_rejects_a_container_without_worktree(tmp_path: Path) -> None:
     broken = (
         head
         + "[containers.agent-codex]"
-        + tail.replace('worktree = "/home/sas/Projects/sp_aconsole_prototype"\n', "", 1)
+        + tail.replace('worktree = "@REPO@"\n', "", 1)
     )
     assert broken != source
     path = tmp_path / "policy.toml"
@@ -185,10 +185,19 @@ def test_default_paths_stay_inside_the_suite(tmp_path: Path) -> None:
 def test_example_policy_loads() -> None:
     policy = server.load_policy(ROOT / "tools" / "hostrun" / "policy.example.toml")
     assert "check" in policy.containers["agent-cursor"].actions
-    assert policy.containers["agent-cursor"].worktree== "/home/sas/Projects/sp_aconsole_prototype"
+    assert policy.containers["agent-cursor"].worktree== str(ROOT)
     assert "gate" in policy.containers["agent-claude"].actions
     assert "gate" not in policy.containers["agent-codex"].actions
     assert "core-run" not in policy.containers["agent-codex"].actions
+
+
+def test_example_policy_names_no_machine() -> None:
+    source = (ROOT / "tools" / "hostrun" / "policy.example.toml").read_text(encoding="utf-8")
+    assert "/home/" not in source
+    policy = server.load_policy(ROOT / "tools" / "hostrun" / "policy.example.toml")
+    assert policy.repo == str(ROOT)
+    assert policy.projects_root == str(ROOT.parent)
+    assert policy.socket_path == str(Path.home() / ".containers" / "hostrun" / "hostrun.sock")
 
 
 def test_example_policy_binds_every_container_to_the_main_checkout() -> None:
@@ -197,7 +206,7 @@ def test_example_policy_binds_every_container_to_the_main_checkout() -> None:
     for name, container in policy.containers.items():
         assert container.worktree.startswith("/"), name
     for name in ("agent-grok", "agent-cursor", "agent-codex", "agent-claude"):
-        assert policy.containers[name].worktree == "/home/sas/Projects/sp_aconsole_prototype", name
+        assert policy.containers[name].worktree == str(ROOT), name
     assert "gate" in policy.containers["agent-grok"].actions
 
 
@@ -532,7 +541,7 @@ def test_deps_sync_interpreters(tmp_path: Path) -> None:
     core = actions.build_plan("deps-sync", ["core"], repo, str(repo), 30)
     ui = actions.build_plan("deps-sync", ["ui"], repo, str(repo), 30)
     assert core.steps[0].argv == (
-        "/home/sas/.containers/containers/devtools/.cargo/bin/uv",
+        actions._UV,
         "venv",
         "--no-project",
         "--no-python-downloads",
@@ -541,12 +550,12 @@ def test_deps_sync_interpreters(tmp_path: Path) -> None:
         "--allow-existing",
         str(repo / ".venv-core"),
     )
-    assert ui.steps[0].argv[5] == "3.15"
+    assert ui.steps[0].argv[5] == "3.15+gil"
     assert "3.15t" not in ui.steps[0].argv
     _ = (repo / "pyproject.toml").write_text("[project]\nname='x'\nversion='0'\n", encoding="utf-8")
     synced = actions.build_plan("deps-sync", ["core"], repo, str(repo), 30)
     assert synced.steps[1].argv == (
-        "/home/sas/.containers/containers/devtools/.cargo/bin/uv",
+        actions._UV,
         "sync",
         "--locked",
         "--no-python-downloads",
@@ -556,14 +565,14 @@ def test_deps_sync_interpreters(tmp_path: Path) -> None:
     assert ("UV_PROJECT_ENVIRONMENT", str(repo / ".venv-core")) in synced.steps[1].env
     synced_ui = actions.build_plan("deps-sync", ["ui"], repo, str(repo), 30)
     assert synced_ui.steps[1].argv == (
-        "/home/sas/.containers/containers/devtools/.cargo/bin/uv",
+        actions._UV,
         "sync",
         "--locked",
         "--group",
         "ui",
         "--no-python-downloads",
         "--python",
-        "3.15",
+        "3.15+gil",
     )
     assert ("UV_PROJECT_ENVIRONMENT", str(repo / ".venv-ui")) in synced_ui.steps[1].env
     assert ("PYTHON_GIL", "0") in actions.build_plan("test", ["core", "-k", "smoke"], repo, str(repo), 30).steps[0].env

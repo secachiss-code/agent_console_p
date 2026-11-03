@@ -1,11 +1,12 @@
 # Copy to ~/.config/aconsole-hostrun/policy.toml
 # Named actions only. The server never accepts a raw command line.
+# Paths: ~ is this user's home, @REPO@ this checkout, @REPO_PARENT@ the directory holding it.
 
-socket_path = "/home/sas/.containers/hostrun/hostrun.sock"
-audit_path = "/home/sas/.local/state/aconsole-hostrun/audit.jsonl"
-state_dir = "/home/sas/.local/state/aconsole-hostrun"
-projects_root = "/home/sas/Projects"
-repo = "/home/sas/Projects/sp_aconsole_prototype"
+socket_path = "~/.containers/hostrun/hostrun.sock"
+audit_path = "~/.local/state/aconsole-hostrun/audit.jsonl"
+state_dir = "~/.local/state/aconsole-hostrun"
+projects_root = "@REPO_PARENT@"
+repo = "@REPO@"
 output_limit_bytes = 5242880
 default_timeout_s = 120
 
@@ -28,7 +29,7 @@ devtools = 600
 # free-threaded venv .venv-core via `uv venv --python 3.15t`, plus the UI venv and gate.
 # All agents work in the main checkout (user decision 2026-10-30); worktree is the default cwd.
 [containers.agent-grok]
-worktree = "/home/sas/Projects/sp_aconsole_prototype"
+worktree = "@REPO@"
 actions = [
   "check",
   "deps-sync",
@@ -46,7 +47,7 @@ actions = [
 ]
 
 [containers.agent-cursor]
-worktree = "/home/sas/Projects/sp_aconsole_prototype"
+worktree = "@REPO@"
 actions = [
   "check",
   "deps-sync",
@@ -64,7 +65,7 @@ actions = [
 ]
 
 [containers.agent-claude]
-worktree = "/home/sas/Projects/sp_aconsole_prototype"
+worktree = "@REPO@"
 actions = [
   "check",
   "deps-sync",
@@ -84,7 +85,7 @@ actions = [
 
 # Frontend executor. No gate, core-run, distrobox-dry-run, conformance, or devtools.
 [containers.agent-codex]
-worktree = "/home/sas/Projects/sp_aconsole_prototype"
+worktree = "@REPO@"
 actions = [
   "check",
   "deps-sync",

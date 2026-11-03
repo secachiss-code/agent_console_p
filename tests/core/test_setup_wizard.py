@@ -729,6 +729,30 @@ def test_installer_explicit_outside_home_flag_uses_only_fake_uv(
     assert log.read_text(encoding="utf-8")
 
 
+def test_installer_stops_on_a_wrong_python_build(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """`--python 3.15` could pick the free-threaded build, and the window then fails much later."""
+    home = tmp_path / "home"
+    checkout = home / "Projects" / "repo"
+    checkout.mkdir(parents=True)
+    script = checkout / "install.sh"
+    _ = shutil.copyfile(_INSTALLER, script)
+    fake_uv, _fake_sudo = _fake_tools(home)
+    log = home / ".test" / "uv.log"
+    log.parent.mkdir()
+    _ = log.write_text("", encoding="utf-8")
+    monkeypatch.setenv("HOME", str(home))
+    monkeypatch.setenv("ACONSOLE_UV", str(fake_uv))
+    monkeypatch.setenv("ACONSOLE_TEST_UV_LOG", str(log))
+    monkeypatch.setenv("ACONSOLE_TEST_WRONG_PYTHON", "1")
+    monkeypatch.setenv("PATH", f"{fake_uv.parent}:/usr/bin:/bin")
+    completed = subprocess.run(
+        ("/bin/sh", str(script)), capture_output=True, text=True, check=False, timeout=30,
+    )
+    assert completed.returncode != 0
+    assert "not a GIL build" in completed.stderr
+    assert "--python 3.15+gil" in log.read_text(encoding="utf-8")
+
+
 def _fake_tools(home: Path) -> tuple[Path, Path]:
     fake_bin = home / ".test-bin"
     fake_bin.mkdir(parents=True, exist_ok=True)
@@ -745,6 +769,9 @@ def _fake_tools(home: Path) -> tuple[Path, Path]:
             [ "${ACONSOLE_TEST_ALLOW_OUTSIDE-0}" = 1 ] || exit 91
             mkdir -p "$target" ;;
           esac
+          mkdir -p "$target/bin"
+          printf '#!/bin/sh\nexit %s\n' "${ACONSOLE_TEST_WRONG_PYTHON-0}" > "$target/bin/python"
+          chmod +x "$target/bin/python"
         fi
         """
     )

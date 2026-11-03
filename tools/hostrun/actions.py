@@ -31,7 +31,8 @@ KNOWN_ACTIONS: frozenset[str] = frozenset(
 )
 
 # Real uv binary. ~/.local/bin/uv is a distrobox-enter wrapper and must not run here.
-_UV = "/home/sas/.containers/containers/devtools/.cargo/bin/uv"
+_DEVTOOLS_HOME = str(Path.home() / ".containers" / "containers" / "devtools")
+_UV = f"{_DEVTOOLS_HOME}/.cargo/bin/uv"
 
 _SCENARIO = re.compile(r"[A-Za-z0-9_-]{1,64}\Z")
 # H1, R0b, A0.0r, I0 and frontend ids. One trailing letter is a part (A1.1b); a reopened task adds r (A2.1br).
@@ -74,7 +75,7 @@ dotnet=$(command -v dotnet || :)
 if [ -z "$dotnet" ]; then
     for candidate in "${DOTNET_ROOT:-}/dotnet" "${HOME:-}/.dotnet/dotnet" \\
         /usr/share/dotnet/dotnet /usr/lib/dotnet/dotnet \\
-        /home/sas/.containers/containers/devtools/.dotnet/dotnet; do
+        @DEVTOOLS@/.dotnet/dotnet; do
         if [ -x "$candidate" ]; then dotnet=$candidate; break; fi
     done
 fi
@@ -107,14 +108,14 @@ printf '%s\\n' "$sdks" | while IFS= read -r line; do
         done
     done
 done
-'''
+'''.replace("@DEVTOOLS@", _DEVTOOLS_HOME)
 
 # Fixed script: the manifest is supplied only as a positional argument.
 _RUST_METADATA_SCRIPT = '''
 toolchain=stable-x86_64-unknown-linux-gnu/bin
 bin="${RUSTUP_HOME:-${HOME}/.rustup}/toolchains/$toolchain"
 if [ ! -x "$bin/cargo" ] || [ ! -x "$bin/rustc" ]; then
-    bin="/home/sas/.containers/containers/devtools/.rustup/toolchains/$toolchain"
+    bin="@DEVTOOLS@/.rustup/toolchains/$toolchain"
 fi
 if [ ! -x "$bin/cargo" ] || [ ! -x "$bin/rustc" ]; then
     echo "Rust stable toolchain is unavailable" >&2
@@ -123,7 +124,7 @@ fi
 PATH="$bin:$PATH"
 export PATH
 exec "$bin/cargo" metadata --offline --format-version 1 --no-deps --manifest-path "$1"
-'''
+'''.replace("@DEVTOOLS@", _DEVTOOLS_HOME)
 
 
 class ActionError(Exception):
@@ -273,7 +274,7 @@ def _deps_sync(args: list[str], repo: str) -> tuple[Step, ...]:
     """Create the venv with the interpreter profile, then sync if a project exists.
 
     Multithreaded core: `uv venv --python 3.15t` → `.venv-core`.
-    UI and ordinary apps: `uv venv --python 3.15` → `.venv-ui`.
+    UI and ordinary apps: `uv venv --python 3.15+gil` → `.venv-ui`.
     """
     if len(args) != 1 or args[0] not in {"core", "ui"}:
         raise ActionError(400, "deps-sync expects core or ui")
@@ -281,7 +282,7 @@ def _deps_sync(args: list[str], repo: str) -> tuple[Step, ...]:
         spec = "3.15t"
         venv = f"{repo}/.venv-core"
     else:
-        spec = "3.15"
+        spec = "3.15+gil"
         venv = f"{repo}/.venv-ui"
     create = Step(
         argv=(

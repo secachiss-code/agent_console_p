@@ -116,7 +116,7 @@ def test_rust_metadata_script_uses_installed_toolchain_offline_and_passes_manife
     assert str(manifest.resolve()) not in script
     assert "--offline" in script
     assert "$1" in script
-    assert "/home/sas/.containers/containers/devtools/.rustup" in script
+    assert f"{Path.home()}/.containers/containers/devtools/.rustup" in script
     assert "rustup toolchain install" not in script.lower()
     assert "cargo install" not in script.lower()
     assert argv[-1] == str(manifest.resolve())

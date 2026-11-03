@@ -28,7 +28,12 @@ fi
 UV=${ACONSOLE_UV:-uv}
 cd "$ROOT"
 UV_PROJECT_ENVIRONMENT="$ROOT/.venv-core" "$UV" sync --locked --no-python-downloads --python 3.15t
-UV_PROJECT_ENVIRONMENT="$ROOT/.venv-ui" "$UV" sync --locked --group ui --no-python-downloads --python 3.15
+UV_PROJECT_ENVIRONMENT="$ROOT/.venv-ui" "$UV" sync --locked --group ui --no-python-downloads --python 3.15+gil
+# GTK cannot load under free threading, and the core refuses to run with the GIL. A wrong build must stop here.
+"$ROOT/.venv-ui/bin/python" -c 'import sys; sys.exit(not sys._is_gil_enabled())' || {
+    printf '.venv-ui is not a GIL build of Python.\n' >&2; exit 1; }
+"$ROOT/.venv-core/bin/python" -c 'import sys; sys.exit(sys._is_gil_enabled())' || {
+    printf '.venv-core is not a free-threaded build of Python.\n' >&2; exit 1; }
 ID=io.github.aconsole.AConsole
 if [ -f "$ROOT/packaging/$ID.desktop" ]; then
     SHARE=${XDG_DATA_HOME:-$HOME_DIR/.local/share}

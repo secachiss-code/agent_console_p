@@ -3,7 +3,8 @@
 # the trailer code. The server, not this script, decides the argv.
 set -eu
 
-SOCK="${HOSTRUN_SOCK:-/home/sas/.containers/hostrun/hostrun.sock}"
+# Installed in ~/.containers/host-bins, which every container mounts at the same path.
+SOCK="${HOSTRUN_SOCK:-$(dirname "$0")/../hostrun/hostrun.sock}"
 
 if [ "$#" -lt 1 ]; then
   echo "usage: hostrun ACTION [ARG...]" >&2

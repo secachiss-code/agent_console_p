@@ -6,6 +6,7 @@ never starts a shell. Callers are identified with SO_PEERCRED.
 
 from __future__ import annotations
 
+import getpass
 import fcntl
 import base64
 import hashlib
@@ -50,9 +51,10 @@ _ENV_ALLOW = frozenset(
         "XDG_RUNTIME_DIR",
     }
 )
-_FIXED_PATH = "/home/sas/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+_FIXED_PATH = f"{Path.home()}/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 _EXAMPLE = Path(__file__).with_name("policy.example.toml")
-_USER_POLICY = Path("/home/sas/.config/aconsole-hostrun/policy.toml")
+_USER_POLICY = Path.home() / ".config" / "aconsole-hostrun" / "policy.toml"
+_REPO = Path(__file__).resolve().parents[2]
 
 
 def _review_git(repo: str, *args: str) -> bytes:
@@ -362,11 +364,17 @@ def _positive_float(table: dict[str, object], key: str) -> float:
     return float(value)
 
 
+def _place(path: str) -> str:
+    """Policy paths may name this checkout and this user's home, so one file serves every machine."""
+    named = path.replace("@REPO_PARENT@", str(_REPO.parent)).replace("@REPO@", str(_REPO))
+    return str(Path(named).expanduser())
+
+
 def load_policy(path: Path) -> Policy:
     raw = _plain(read_toml(path))
     root = _table(raw, "policy")
-    projects_root = _text(root, "projects_root")
-    repo = _text(root, "repo")
+    projects_root = _place(_text(root, "projects_root"))
+    repo = _place(_text(root, "repo"))
     if ".." in Path(repo).parts or not Path(repo).resolve().is_relative_to(Path(projects_root).resolve()):
         raise PolicyError("repo must stay inside projects_root")
     timeouts_raw = _table(root.get("timeouts"), "timeouts")
@@ -394,13 +402,13 @@ def load_policy(path: Path) -> Policy:
         worktree = table.get("worktree")
         if not isinstance(worktree, str) or worktree == "" or ".." in Path(worktree).parts:
             raise PolicyError(f"{name} needs worktree")
-        containers[name] = ContainerPolicy(actions=frozenset(names), worktree=worktree)
+        containers[name] = ContainerPolicy(actions=frozenset(names), worktree=_place(worktree))
     return Policy(
         projects_root=projects_root,
         repo=repo,
-        socket_path=_text(root, "socket_path"),
-        audit_path=_text(root, "audit_path"),
-        state_dir=_text(root, "state_dir"),
+        socket_path=_place(_text(root, "socket_path")),
+        audit_path=_place(_text(root, "audit_path")),
+        state_dir=_place(_text(root, "state_dir")),
         output_limit_bytes=_positive_int(root, "output_limit_bytes"),
         default_timeout_s=_positive_float(root, "default_timeout_s"),
         timeouts=timeouts,
@@ -615,9 +623,9 @@ def parse_request(raw: bytes) -> Request:
 def base_env() -> dict[str, str]:
     env: dict[str, str] = {
         "PATH": _FIXED_PATH,
-        "HOME": "/home/sas",
-        "USER": "sas",
-        "LOGNAME": "sas",
+        "HOME": str(Path.home()),
+        "USER": getpass.getuser(),
+        "LOGNAME": getpass.getuser(),
     }
     for key in _ENV_ALLOW:
         value = os.environ.get(key)
