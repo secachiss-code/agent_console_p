@@ -6,11 +6,11 @@ A bearer that is not a live tab token is rejected. A known token selects that ta
 
 from __future__ import annotations
 
-from collections.abc import Mapping
-from typing import Annotated, Literal, Protocol
+from collections.abc import Callable, Mapping
+from typing import Annotated, Literal, Protocol, override
 
 from mcp.server.mcpserver import MCPServer
-from mcp.types import ToolAnnotations
+from mcp.types import Tool, ToolAnnotations
 from pydantic import Field
 
 from aconsole.core.infrastructure.http.auth import bearer_token
@@ -83,10 +83,55 @@ class TabTokens:
         return None if token is None else self._by_token.get(token)
 
 
-def build_server(board: PlanBoard, context: TabContext) -> MCPServer:
-    """An in-process server. ``context`` serves a request with no bearer: it can list tools and call none."""
-    server = MCPServer(name="aconsole", instructions="Plan, claim, and record knowledge for the current tab.")
-    _register(server, board, context)
+class _LeanServer(MCPServer):
+    """Lists the tools with argument schemas an agent needs and nothing else.
+
+    The tool list is read into the agent's context at the start of every session. Pydantic's generated titles
+    ("Depends On" for ``depends_on``), ``null`` alternatives and ``null`` defaults say nothing an agent can use.
+    """
+
+    @override
+    async def list_tools(self) -> list[Tool]:
+        listed = await super().list_tools()
+        return [tool.model_copy(update={"input_schema": lean_schema(tool.input_schema)}) for tool in listed]
+
+
+def lean_schema(schema: dict[str, object]) -> dict[str, object]:
+    """``schema`` without generated titles, ``null`` alternatives of optional fields, or ``null`` defaults."""
+    lean: dict[str, object] = {}
+    for key, value in schema.items():
+        if (key == "title" and isinstance(value, str)) or (key == "default" and value is None):
+            continue
+        if key in {"properties", "$defs"} and isinstance(value, dict):
+            lean[key] = {name: _lean_any(item) for name, item in value.items()}  # pyright: ignore[reportUnknownVariableType, reportUnknownArgumentType] -- JSON schema
+        elif key in {"anyOf", "oneOf"} and isinstance(value, list):
+            kept = [_lean_any(item) for item in value if item != {"type": "null"}]  # pyright: ignore[reportUnknownVariableType, reportUnknownArgumentType] -- JSON schema
+            if len(kept) == 1 and isinstance(kept[0], dict):
+                lean.update(kept[0])  # pyright: ignore[reportUnknownArgumentType]
+            else:
+                lean[key] = kept
+        else:
+            lean[key] = _lean_any(value)
+    return lean
+
+
+def _lean_any(value: object) -> object:
+    if isinstance(value, dict):
+        return lean_schema(value)  # pyright: ignore[reportUnknownArgumentType]
+    if isinstance(value, list):
+        return [_lean_any(item) for item in value]  # pyright: ignore[reportUnknownVariableType, reportUnknownArgumentType] -- JSON schema
+    return value
+
+
+def build_server(
+    board: PlanBoard, context: TabContext, sent: Callable[[str, int], None] | None = None
+) -> MCPServer:
+    """An in-process server. ``context`` serves a request with no bearer: it can list tools and call none.
+
+    ``sent`` hears, per tab, the bytes of text each answer puts in that tab's agent's context.
+    """
+    server = _LeanServer(name="aconsole", instructions="Plan, claim, and record knowledge for the current tab.")
+    _register(server, board, context, sent)
     return server
 
 
@@ -139,7 +184,9 @@ class _Beside:
             reset()
 
 
-def _register(server: MCPServer, board: PlanBoard, context: TabContext) -> None:  # noqa: C901 -- one nested function per MCP tool
+def _register(  # noqa: C901 -- one nested function per MCP tool
+    server: MCPServer, board: PlanBoard, context: TabContext, sent: Callable[[str, int], None] | None
+) -> None:
     def plan_create(title: str, goal: str, nodes: list[NodeIn] | None = None) -> PlanCreated:
         """Create a plan for this project. The same title returns the same plan."""
         return board.create(active(context), title, goal, [] if nodes is None else nodes)
@@ -148,9 +195,14 @@ def _register(server: MCPServer, board: PlanBoard, context: TabContext) -> None:
         """Add nodes. An existing key is left unchanged. A cycle adds nothing."""
         return board.add_nodes(active(context), plan_id, nodes)
 
-    def plan_get(plan_id: str, response_format: Literal["concise", "detailed"] = "concise") -> PlanGot:
-        """Read one plan. Detailed adds objective, acceptance, paths, and the lease."""
-        return board.get(active(context), plan_id, detailed=response_format == "detailed")
+    def plan_get(
+        plan_id: str, response_format: Literal["concise", "detailed"] = "concise", since: str | None = None
+    ) -> PlanGot:
+        """Read one plan. Detailed adds objective, acceptance, paths, and the lease.
+
+        Pass the revision of your last read as since to get only the nodes that changed (changed_only is true).
+        """
+        return board.get(active(context), plan_id, detailed=response_format == "detailed", since=since)
 
     def plan_ready(plan_id: str | None = None, limit: Annotated[int, Field(ge=1, le=20)] = 5) -> PlanReady:
         """Claimable nodes, highest priority first."""
@@ -240,7 +292,7 @@ def _register(server: MCPServer, board: PlanBoard, context: TabContext) -> None:
     specs = (
         (plan_create, "Create a plan", _IDEMPOTENT),
         (plan_add_nodes, "Add plan nodes", _IDEMPOTENT),
-        (plan_get, "Read a plan", _READ),
+        (plan_get, "Read a plan. since=<revision> returns only the nodes changed after that read", _READ),
         (plan_ready, "List claimable nodes", _READ),
         (node_claim, "Claim a node", _WRITE),
         (node_update, "Update a node or extend its lease", _WRITE),
@@ -251,9 +303,14 @@ def _register(server: MCPServer, board: PlanBoard, context: TabContext) -> None:
         (handover, "Write or read a handover", _WRITE),
         (plan_list, "List plans", _READ),
     )
+    def counted(size: int) -> None:
+        tab = active(context).tab_id
+        if sent is not None and tab:
+            sent(tab, size)
+
     for fn, description, marks in specs:
-        _ = server.tool(name=fn.__name__, description=description, annotations=marks, structured_output=True)(
-            publish(fn)
+        _ = server.tool(name=fn.__name__, description=description, annotations=marks, structured_output=False)(
+            publish(fn, counted)
         )
 
 

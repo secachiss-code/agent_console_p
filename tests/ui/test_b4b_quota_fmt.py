@@ -59,3 +59,13 @@ def test_tokens_read_at_a_glance() -> None:
     assert [format_tokens(count) for count in (950, 12_300, 4_500_000, 1_200_000_000)] == [
         "950", "12.3K", "4.5M", "1.2G",
     ]
+
+
+def test_traffic_formats() -> None:
+    from aconsole.ui.viewmodels.logic.quota_fmt import approx_tokens, format_bytes
+
+    assert format_bytes(820) == "820 B"
+    assert format_bytes(48_200) == "47 KB"
+    assert format_bytes(1_500_000) == "1.4 MB"
+    assert approx_tokens(3_600) == "≈900"
+    assert approx_tokens(48_200) == "≈12k"

@@ -67,6 +67,14 @@ _MESSAGES = {
         "Open sessions at API prices: {money} ({count})",
         "Открытые сессии по ценам API: {money} ({count})",
     ),
+    "quota.mcp": (
+        "AConsole tools sent the agent {size}, {tokens} tokens, in {calls} calls",
+        "Инструменты AConsole передали агенту {size}, {tokens} токенов, вызовов: {calls}",
+    ),
+    "quota.info.mcp": (
+        "Tokens for AConsole's tools are estimated as bytes / 4.",
+        "Токены инструментов AConsole оценены как байты / 4.",
+    ),
     "quota.peak_left": ("{pct} % left", "осталось {pct} %"),
     "quota.refresh": ("Ask every agent for its limits now", "Запросить лимиты у всех агентов сейчас"),  # noqa: RUF001 -- Russian UI text
     "quota.info": ("Where the limits come from", "Откуда берутся лимиты"),

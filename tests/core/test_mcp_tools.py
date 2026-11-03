@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 import asyncio
+import json
 from datetime import UTC, datetime, timedelta
 from typing import TYPE_CHECKING
 
 from mcp import Client
+from mcp.types import TextContent
 
 from aconsole.core.infrastructure.mcp.server import build_server
 from aconsole.core.infrastructure.mcp.tools import PlanBoard, TabContext
@@ -20,20 +22,20 @@ if TYPE_CHECKING:
 _HINT = "open a tab and pass Authorization: Bearer <tab token>"
 _READ = frozenset({"plan_get", "plan_ready", "ctx_get", "kb_impact", "plan_list"})
 _IDEMPOTENT = frozenset({"plan_create", "plan_add_nodes", "node_attach"})
-_FIELDS = {
-    "plan_create": {"plan_id", "nodes", "canvas_note"},
-    "plan_add_nodes": {"added", "unchanged"},
-    "plan_get": {"title", "goal", "counts", "nodes"},
-    "plan_ready": {"nodes"},
-    "node_claim": {"lease_id", "fence", "expires_at", "brief", "context"},
-    "node_update": {"status", "expires_at"},
-    "node_attach": {"artifact_id"},
-    "ctx_get": {"items", "truncated", "verified_commit"},
-    "kb_add": {"kb_id", "note_ref"},
-    "kb_impact": {"layers", "truncated", "canvas_note"},
-    "handover": {"handover_id", "note_ref", "goal", "diff_stat", "nodes"},
-    "plan_list": {"plans"},
-}
+_TOOLS = frozenset({
+    "plan_create",
+    "plan_add_nodes",
+    "plan_get",
+    "plan_ready",
+    "node_claim",
+    "node_update",
+    "node_attach",
+    "ctx_get",
+    "kb_add",
+    "kb_impact",
+    "handover",
+    "plan_list",
+})
 _ERROR_ARGS: dict[str, dict[str, object]] = {
     "plan_create": {"title": "Plan", "goal": "Ship"},
     "plan_add_nodes": {"plan_id": "plan-1", "nodes": []},
@@ -82,7 +84,7 @@ def _server(
 
 
 def _body(result: CallToolResult) -> dict[str, object]:
-    raw = result.structured_content
+    raw: object = result.structured_content if result.is_error else json.loads(_text(result))
     assert isinstance(raw, dict)
     body: dict[str, object] = {}
     for key, value in raw.items():
@@ -101,12 +103,10 @@ def _error(result: CallToolResult) -> dict[str, object]:
     return error
 
 
-def _properties(tool: Tool) -> set[str]:
-    schema = tool.output_schema
-    assert isinstance(schema, dict)
-    props = schema.get("properties")
-    assert isinstance(props, dict)
-    return {key for key in props if isinstance(key, str)}
+def _lean(tool: Tool) -> bool:
+    """No output schema, and no generated title or ``null`` alternative in the argument schema."""
+    schema = json.dumps(tool.input_schema)
+    return tool.output_schema is None and '"title": "' not in schema and '{"type": "null"}' not in schema
 
 
 def _node_id(body: dict[str, object], key: str) -> str:
@@ -156,7 +156,7 @@ async def _each_tool(worktree: Path) -> None:
     async with Client(server) as client, Client(denied) as blocked:
         listed = await client.list_tools()
         tools = {tool.name: tool for tool in listed.tools}
-        assert set(tools) == set(_FIELDS)
+        assert set(tools) == _TOOLS
         for name, tool in tools.items():
             _check_tool(name, tool)
             failed = await blocked.call_tool(name, _ERROR_ARGS[name])
@@ -174,7 +174,7 @@ def _check_tool(name: str, tool: Tool) -> None:
     assert marks.open_world_hint is False
     assert marks.read_only_hint is (name in _READ)
     assert marks.idempotent_hint is (name in _READ or name in _IDEMPOTENT)
-    assert _FIELDS[name] <= _properties(tool)
+    assert _lean(tool)
 
 
 async def _success(client: Client, worktree: Path) -> None:
@@ -331,3 +331,83 @@ async def _cycle() -> None:
         assert error["hint"] == "call plan_get and drop the depends_on edge that closes the cycle"
         listed = await _call(client, "plan_list", {"status": "all"})
         assert listed["plans"] == []
+
+
+def test_mcp_text_is_compact() -> None:
+    asyncio.run(_compact())
+
+
+async def _compact() -> None:
+    clock = _Clock()
+    _plans, server = _server(clock, "tab-a")
+    async with Client(server) as client:
+        created = await _call(client, "plan_create", {"title": "Plan", "goal": "Ship", "nodes": [_node("A-1")]})
+        result = await client.call_tool("plan_get", {"plan_id": created["plan_id"]})
+        text = _text(result)
+        assert "\n" not in text
+        assert ": " not in text
+        assert "null" not in text
+        assert "[]" not in text
+        failed = await client.call_tool("node_update", {"node_id": "node-404", "fence": 0})
+        assert failed.is_error is True
+        assert "Next: " in _text(failed)
+
+
+def _text(result: CallToolResult) -> str:
+    return "".join(block.text for block in result.content if isinstance(block, TextContent))
+
+
+def test_mcp_plan_get_since() -> None:
+    asyncio.run(_since())
+
+
+async def _since() -> None:
+    clock = _Clock()
+    _plans, server = _server(clock, "tab-a")
+    async with Client(server) as client:
+        nodes = [_node("A-1"), _node("B-1", depends_on=["A-1"]), _node("C-1")]
+        created = await _call(client, "plan_create", {"title": "Plan", "goal": "Ship", "nodes": nodes})
+        plan_id = created["plan_id"]
+        first = await _call(client, "plan_get", {"plan_id": plan_id})
+        revision = first["revision"]
+        same = await _call(client, "plan_get", {"plan_id": plan_id, "since": revision})
+        assert same["changed_only"] is True
+        assert same["nodes"] == []
+        assert same["revision"] == revision
+        _ = await _call(client, "node_claim", {"node_id": _node_id(created, "A-1")})
+        delta = await _call(client, "plan_get", {"plan_id": plan_id, "since": revision})
+        assert delta["changed_only"] is True
+        assert delta["revision"] != revision
+        assert [item["key"] for item in _nodes(delta)] == ["A-1"]
+        unknown = await _call(client, "plan_get", {"plan_id": plan_id, "since": "gone.1"})
+        assert "changed_only" not in unknown
+        assert len(_nodes(unknown)) == len(nodes)
+        detailed = await _call(
+            client, "plan_get", {"plan_id": plan_id, "since": revision, "response_format": "detailed"}
+        )
+        assert len(_nodes(detailed)) == len(nodes)
+
+
+def _nodes(body: dict[str, object]) -> list[dict[str, object]]:
+    found = body["nodes"]
+    assert isinstance(found, list)
+    return [item for item in found if isinstance(item, dict)]
+
+
+def test_mcp_counts_what_each_answer_sends() -> None:
+    asyncio.run(_counted())
+
+
+async def _counted() -> None:
+    clock = _Clock()
+    heard: list[tuple[str, int]] = []
+    board = PlanBoard(now=clock)
+    context = TabContext(tab_id="tab-a", project_id="proj", worktree=None, agent="claude")
+    server = build_server(board, context, lambda tab, size: heard.append((tab, size)))
+    async with Client(server) as client:
+        created = await client.call_tool("plan_create", {"title": "Plan", "goal": "Ship", "nodes": [_node("A-1")]})
+        failed = await client.call_tool("node_update", {"node_id": "node-404", "fence": 0})
+    assert heard == [
+        ("tab-a", len(_text(created).encode())),
+        ("tab-a", len(_text(failed).encode())),
+    ]

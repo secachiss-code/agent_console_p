@@ -361,8 +361,14 @@ def agents_snapshot() -> AppSnapshot:
     agents = (*base.agents, _agent(AgentKind.CURSOR), _agent(AgentKind.OPENCODE))
     # Claude's statusline reports what each session has cost at API prices.
     costs = (1.84, 0.37, 4.12)
+    # What AConsole's MCP tools sent each agent: bytes of text and calls.
+    traffic = ((48_200, 37), (6_100, 9), (21_400, 18))
     tabs = tuple(
-        msgspec.structs.replace(tab, session_cost_usd=costs[index]) if index < len(costs) else tab
+        msgspec.structs.replace(
+            tab, session_cost_usd=costs[index], mcp_bytes=traffic[index][0], mcp_calls=traffic[index][1]
+        )
+        if index < len(costs)
+        else tab
         for index, tab in enumerate(base.tabs)
     )
     return msgspec.structs.replace(base, accounts=accounts, agents=agents, tabs=tabs)

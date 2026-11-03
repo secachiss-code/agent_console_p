@@ -101,6 +101,7 @@ _ASK_SETTLE_S: Final = 2.0
 _CODEX_ID: Final = re.compile(r"^[A-Za-z0-9_-]{1,128}$")
 # Changes under a cent are not worth a UI update: a statusline comes after every reply.
 _COST_STEP_USD: Final = 0.01
+_MCP_STEP_BYTES: Final = 4096
 
 
 def _launch_command(agent: AgentKind, session: str | None, *, fork: bool) -> tuple[str, ...]:
@@ -289,6 +290,10 @@ class _Tab:
     live_sidecar: str = ""
     # What the session has cost at API prices, as the agent reports it. Not kept: the agent says it again.
     cost_usd: float | None = None
+    # What AConsole's MCP tools sent the agent this run, and how much of it the UI has heard of.
+    mcp_bytes: int = 0
+    mcp_calls: int = 0
+    mcp_told: int = 0
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -516,6 +521,18 @@ class TabService:
             return
         tab.cost_usd = round(usd, 4)
         _ = self._updated(tab, {"session_cost_usd"})
+
+    def mcp_sent(self, tab_id: str, size: int) -> None:
+        """One MCP answer of ``size`` bytes went to this tab's agent. The UI hears of the first, then of every 4 KB."""
+        tab = self._tabs.get(tab_id)
+        if tab is None or size < 0:
+            return
+        tab.mcp_bytes += size
+        tab.mcp_calls += 1
+        if tab.mcp_told and tab.mcp_bytes - tab.mcp_told < _MCP_STEP_BYTES:
+            return
+        tab.mcp_told = tab.mcp_bytes
+        _ = self._updated(tab, {"mcp_bytes", "mcp_calls"})
 
     def agent_notice(self, tab_id: str, text: str) -> None:
         """What Codex tells the terminal (OSC 9). Without hooks only these words say that it waits for the user."""
@@ -1189,4 +1206,6 @@ class TabService:
             pending_approvals=0,
             checkpoints=0,
             started=tab.running,
+            mcp_bytes=tab.mcp_bytes or None,
+            mcp_calls=tab.mcp_calls or None,
         )

@@ -9,8 +9,10 @@ from __future__ import annotations
 import inspect
 import logging
 import re
+import secrets
 import subprocess
 import threading
+from collections import OrderedDict
 from collections.abc import Callable
 from contextvars import ContextVar
 from dataclasses import dataclass, field
@@ -18,6 +20,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import ClassVar, Literal, NoReturn, Protocol
 
+import pydantic_core
 from mcp.types import CallToolResult, TextContent
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -43,6 +46,10 @@ _NODE_NOT_FOUND = 4002
 _HUMAN_TAB = "human"
 _HELD = frozenset({NodeStatus.IN_PROGRESS, NodeStatus.VERIFYING})
 _SUMMARY = 300
+# Revisions of one plan kept to answer `since`: enough for several tabs reading it in turn.
+_REVISIONS = 16
+# What one `plan_get` showed: whether it was detailed, and each node as it read.
+type _Shown = tuple[bool, dict[str, str]]
 _DIFF = 4000
 _LINE = re.compile(r"^(.+)#L(\d+)-(\d+)$")
 _URL = re.compile(r"^https?://\S+$")
@@ -106,6 +113,8 @@ class PlanGot(_Frozen):
     goal: str
     counts: dict[str, int]
     nodes: list[NodeBrief]
+    revision: str
+    changed_only: bool = False
 
 
 class ReadyNode(_Frozen):
@@ -232,21 +241,39 @@ def active(bound: TabContext) -> TabContext:
     return bound if found is None else found
 
 
-def publish(fn: Callable[..., object]) -> Callable[..., object]:
-    """Keep the success return type as the tool schema, and surface ``_ToolError`` as the result."""
+def publish(fn: Callable[..., object], sent: Callable[[int], None] | None = None) -> Callable[..., object]:
+    """Keep the success return type as the tool schema, and surface ``_ToolError`` as the result.
+
+    ``sent`` hears the bytes of text each answer puts in the agent's context.
+    """
     signature = inspect.signature(fn, eval_str=True)
 
     def wrapped(*args: object, **kwargs: object) -> object:
         try:
-            return fn(*args, **kwargs)
+            raw = fn(*args, **kwargs)
+            # A CallToolResult is a pydantic model too, and already what the agent reads.
+            result = compact(raw) if isinstance(raw, BaseModel) and not isinstance(raw, CallToolResult) else raw
         except _ToolError as exc:
-            return exc.result
+            result = exc.result
+        if sent is not None and isinstance(result, CallToolResult):
+            sent(len(_result_text(result).encode()))
+        return result
 
     wrapped.__name__ = fn.__name__
     wrapped.__doc__ = fn.__doc__
     wrapped.__annotations__ = dict(fn.__annotations__)
     wrapped.__signature__ = signature
     return wrapped
+
+
+def compact(result: BaseModel) -> CallToolResult:
+    """The answer as the agent reads it: JSON without indentation, and without fields left empty or at their default.
+
+    Every byte here is a token in the agent's context, on every call. Agents read the text, so no structured copy of
+    the same answer goes beside it, and the tools publish no output schema.
+    """
+    lean = result.model_dump(mode="json", exclude_defaults=True, exclude_none=True)
+    return CallToolResult(content=[TextContent(type="text", text=pydantic_core.to_json(lean).decode())])
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -336,6 +363,9 @@ class PlanBoard:
         self.on_changed: Callable[[PlanView], None] | None = None
         self.note_ref: Callable[[str, str], str | None] = lambda _plan, _key: None
         self.code_graph: CodeGraph | None = None
+        self._epoch: str = secrets.token_hex(3)
+        self._shown: int = 0
+        self._seen: dict[str, OrderedDict[str, _Shown]] = {}
 
     def use_store(self, store: PlanStore) -> None:
         """Take the plans `store` kept. From here on every change is saved there."""
@@ -652,16 +682,45 @@ class PlanBoard:
             unchanged = [item.key for item in nodes if item.key not in fresh_keys]
             return Added(added=added, unchanged=unchanged)
 
-    def get(self, ctx: TabContext, plan_id: str, *, detailed: bool) -> PlanGot:
+    def get(self, ctx: TabContext, plan_id: str, *, detailed: bool, since: str | None = None) -> PlanGot:
+        """The plan. With ``since``, a revision an earlier answer gave, only the nodes that read differently now.
+
+        A revision names what one answer showed, so a node counts as changed for any reason: its own move, a
+        dependency finishing that made it ready, or a lease running out. A revision this core no longer remembers
+        (an older process, or one pushed out by newer ones) gets the whole plan.
+        """
         _require_tab(ctx)
         with self._lock:
             stored = self._owned(ctx, plan_id)
+            briefs = [_brief(stored, meta, detailed=detailed) for meta in stored.meta.values()]
+            marks = {brief.node_id: brief.model_dump_json() for brief in briefs}
+            seen = self._seen.setdefault(plan_id, OrderedDict())
+            revision = self._revision(seen, (detailed, marks))
+            base = seen.get(since) if since is not None else None
+            changed = base is not None and base[0] == detailed
+            if base is not None and changed:
+                briefs = [brief for brief in briefs if base[1].get(brief.node_id) != marks[brief.node_id]]
             return PlanGot(
                 title=stored.title,
                 goal=stored.goal,
                 counts=_counts(stored),
-                nodes=[_brief(stored, meta, detailed=detailed) for meta in stored.meta.values()],
+                nodes=briefs,
+                revision=revision,
+                changed_only=changed,
             )
+
+    def _revision(self, seen: OrderedDict[str, _Shown], shown: _Shown) -> str:
+        """The revision for what ``shown`` holds: the last one that showed the same, else a new one."""
+        for revision, earlier in reversed(seen.items()):
+            if earlier == shown:
+                seen.move_to_end(revision)
+                return revision
+        self._shown += 1
+        revision = f"{self._epoch}.{self._shown}"
+        seen[revision] = shown
+        while len(seen) > _REVISIONS:
+            _ = seen.popitem(last=False)
+        return revision
 
     def ready(self, ctx: TabContext, plan_id: str | None, limit: int) -> PlanReady:
         _require_tab(ctx)
@@ -1255,7 +1314,7 @@ def _stop(name: str, message: str) -> NoReturn:
     hint = _HINTS.get(name, "call plan_get and retry the last legal step")
     text = f"{name}: {message}"
     result = CallToolResult(
-        content=[TextContent(type="text", text=text)],
+        content=[TextContent(type="text", text=f"{text}. Next: {hint}")],
         is_error=True,
         structured_content={"error": {"code": _CODES[name], "reason": name, "message": text, "hint": hint}},
     )

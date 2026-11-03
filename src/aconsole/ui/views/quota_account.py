@@ -12,6 +12,8 @@ from gi.repository import Gtk  # noqa: E402
 from aconsole.contracts.app import AccountView, ModelUsageView, QuotaWindowView, TabView  # noqa: E402
 from aconsole.ui.viewmodels.logic.quota_fmt import (  # noqa: E402
     agent_name,
+    approx_tokens,
+    format_bytes,
     format_money,
     format_percent,
     format_tokens,
@@ -60,6 +62,12 @@ def money_lines(account: AccountView, tabs: tuple[TabView, ...]) -> list[str]:
     if costs:
         # What this agent's open sessions would have cost at API prices: the money the plan stands in for.
         lines.append(translate("quota.api_cost").format(money=f"${sum(costs):,.2f}", count=len(costs)))
+    mine = [tab for tab in tabs if tab.agent is account.agent and tab.mcp_bytes]
+    if mine:
+        # What AConsole's own tools put in this agent's context: the console's share of the tokens.
+        size = sum(tab.mcp_bytes or 0 for tab in mine)
+        calls = sum(tab.mcp_calls or 0 for tab in mine)
+        lines.append(translate("quota.mcp").format(size=format_bytes(size), tokens=approx_tokens(size), calls=calls))
     return lines
 
 

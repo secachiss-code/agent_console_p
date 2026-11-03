@@ -37,7 +37,7 @@ class QuotaDialog(Adw.Dialog):
         super().__init__(title=title, content_width=_WIDTH)
         self._display: str = display
         self._accounts: tuple[AccountView, ...] = ()
-        self._tab_signature: tuple[tuple[str, str | None, str], ...] = ()
+        self._tab_signature: tuple[tuple[str, str | None, str, float | None, int | None], ...] = ()
         self._tabs: tuple[TabView, ...] = ()
         self.open_account_id: AccountId | None = None
         self.account_cards: dict[AccountId, Gtk.Button] = {}
@@ -141,7 +141,7 @@ class QuotaDialog(Adw.Dialog):
             self.info_box.append(block)
         if not accounts:
             self.info_box.append(detail(translate("quota.source.none")))
-        note = detail(translate("quota.info.note"))
+        note = detail(translate("quota.info.note") + " " + translate("quota.info.mcp"))
         note.set_max_width_chars(42)
         self.info_box.append(note)
 
@@ -155,7 +155,14 @@ class QuotaDialog(Adw.Dialog):
 
     def update_accounts(self, accounts: tuple[AccountView, ...], tabs: tuple[TabView, ...]) -> None:
         signature = tuple(
-            (str(tab.id), str(tab.account_id) if tab.account_id is not None else None, tab.title) for tab in tabs
+            (
+                str(tab.id),
+                str(tab.account_id) if tab.account_id is not None else None,
+                tab.title,
+                tab.session_cost_usd,
+                tab.mcp_bytes,
+            )
+            for tab in tabs
         )
         if (
             (accounts, signature) == (self._accounts, self._tab_signature)
