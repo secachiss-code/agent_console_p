@@ -58,8 +58,9 @@ class QuotaRow(Gtk.Box):
         if window.used_pct is None:
             self.set_tooltip_text(translate("quota.unknown.copy"))
         self.level_bar.set_valign(Gtk.Align.CENTER)
-        # Dollars, when they are known, say more than a share of them.
-        money = format_window_money(window.spent_usd, window.limit_usd, display)
+        # Dollars, when they are known, say more than a share of them. Not for Auto + Composer: its pool is not a sum
+        # anyone buys, so its dollars stay in the account's details.
+        money = "" if window.key == "auto" else format_window_money(window.spent_usd, window.limit_usd, display)
         self.percent_label: Gtk.Label = Gtk.Label(
             label=money or format_percent(shown, estimated=window.estimated), xalign=1,
         )

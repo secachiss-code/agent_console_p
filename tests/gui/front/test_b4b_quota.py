@@ -132,6 +132,16 @@ def test_the_main_pool_is_named_by_its_days_and_api_stays_api() -> None:
     assert window_name(api) == "API"
 
 
+def test_the_cursor_card_counts_its_main_pool_in_percent_and_api_in_dollars() -> None:
+    from aconsole.ui.views.sidebar.quota_row import QuotaRow
+
+    auto = msgspec.structs.replace(_quota("5h", 87, QuotaLevel.WARN), key="auto", spent_usd=391.54, limit_usd=450.0)
+    api = msgspec.structs.replace(_quota("5h", 59, QuotaLevel.OK), key="api", spent_usd=6.68, limit_usd=11.25)
+    assert "87" in QuotaRow(auto).percent_label.get_text()
+    assert "$" not in QuotaRow(auto).percent_label.get_text()
+    assert QuotaRow(api).percent_label.get_text() == "$6.68 / $11.25"
+
+
 def _assert_quota_card_rows(card: QuotaCard) -> None:
     # One line per account, with one bar: the window closest to its limit, and the time until it resets.
     labels = [line.percent_label.get_text() for line in card.account_lines]
