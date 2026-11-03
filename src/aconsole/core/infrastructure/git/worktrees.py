@@ -137,6 +137,11 @@ def _copy_included(repo: Path, dest: Path, patterns: tuple[str, ...]) -> tuple[s
     return tuple(sorted(copied))
 
 
+def has_ignored_files(status: str) -> bool:
+    """`status --ignored` lists files that removing the worktree would delete, the tab lock aside."""
+    return _status_ignored(status)
+
+
 def _status_ignored(text: str) -> bool:
     """True when `status --ignored` lists an ignored entry other than the tab lock."""
     for line in text.splitlines():
@@ -181,6 +186,11 @@ def recorded_start(git_dir: Path, dest: Path) -> str | None:
     except (WorktreeError, OSError):
         return None
     return base if recorded == dest else None
+
+
+def forget_record(git_dir: Path, dest: Path) -> None:
+    """Drop what `create` wrote about a worktree that is gone."""
+    _meta_path(git_dir, dest).unlink(missing_ok=True)
 
 
 @final

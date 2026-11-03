@@ -259,8 +259,11 @@ class GitOperationParams(msgspec.Struct, frozen=True, kw_only=True):
 
 
 class CleanupWorktreeParams(msgspec.Struct, frozen=True, kw_only=True):
+    """Removing a worktree also deletes its ignored files, so that takes `discard_ignored`."""
+
     project_id: ProjectId
     worktree: str
+    discard_ignored: bool = False
 
 
 class CleanupWorktreeResult(msgspec.Struct, frozen=True, kw_only=True):

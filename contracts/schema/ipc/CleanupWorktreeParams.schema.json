@@ -1,7 +1,12 @@
 {
   "$defs": {
     "CleanupWorktreeParams": {
+      "description": "Removing a worktree also deletes its ignored files, so that takes `discard_ignored`.",
       "properties": {
+        "discard_ignored": {
+          "default": false,
+          "type": "boolean"
+        },
         "project_id": {
           "type": "string"
         },

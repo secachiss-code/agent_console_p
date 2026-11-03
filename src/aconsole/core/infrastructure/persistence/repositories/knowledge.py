@@ -71,6 +71,7 @@ def save_fact(session: Session, fact: StoredFact, supersedes: str | None) -> Non
             source=fact.source,
             body=fact.body,
             is_stale=fact.stale,
+            verified_commit=fact.verified_commit,
             updated_at=fact.updated_at,
         )
     )
@@ -124,6 +125,7 @@ def load_facts(session: Session) -> tuple[StoredFact, ...]:
             stale=row.is_stale,
             note_ref=row.note_ref or "",
             updated_at=_aware(row.updated_at),
+            verified_commit=row.verified_commit,
         )
         for row in sorted(facts, key=lambda row: _number(row.id))
     )

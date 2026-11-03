@@ -17,6 +17,7 @@ class StoredFact:
     stale: bool
     note_ref: str
     updated_at: datetime
+    verified_commit: str | None = None
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)

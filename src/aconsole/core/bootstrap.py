@@ -22,7 +22,7 @@ from typing import TYPE_CHECKING, override
 import msgspec
 import uvicorn
 
-from aconsole.contracts.app import HealthResult
+from aconsole.contracts.app import CloseTabParams, HealthResult
 from aconsole.contracts.common import ClientRole, TabId
 from aconsole.contracts.errors import ErrorData, ErrorObject, MessageTooLargeDetails, error_by_name
 from aconsole.contracts.events import Notify, PlanUpdated, QuotaUpdated, TabAdded, TabRemoved, TabUpdated, UiEvent
@@ -33,6 +33,7 @@ from aconsole.core.application.services.approval_broker import ApprovalHold
 from aconsole.core.application.services.checkpoints import CheckpointService
 from aconsole.core.application.services.diff import DiffService
 from aconsole.core.application.services.git import GitService
+from aconsole.core.application.services.git_cleanup import GitCleanupService
 from aconsole.core.application.services.git_merge import GitMergeService
 from aconsole.core.application.services.git_ops import GitOperationService
 from aconsole.core.application.services.git_state import GitStateService
@@ -89,6 +90,8 @@ from aconsole.core.infrastructure.persistence.writer import Writer
 from aconsole.core.infrastructure.setup_checks import HostSetupFixes, HostSetupProbe, SetupTokens
 from aconsole.core.infrastructure.tabs import HostAgents, HostRepos, HostTabs
 from aconsole.core.infrastructure.vault.sync import VaultSync
+lazy from aconsole.core.application.ports.knowledge_store import StoredFact
+lazy from aconsole.core.domain.git_operation import GitOperationRecord
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -407,6 +410,16 @@ class Daemon:
             self.git.operations,
             mutations,
             now=lambda: datetime.now(UTC),
+            changed=self._git_changed,
+        )
+        self.git.merges.follow_up = self._after_merge
+        self.git.cleanup = GitCleanupService(
+            self.git.state,
+            self.git.operations,
+            self.git.merges,
+            mutations,
+            facts=self._facts_to_check,
+            close_tab=self._close_for_cleanup,
             changed=self._git_changed,
         )
         self.setup_service: SetupService = setup_service or SetupService(
@@ -749,6 +762,22 @@ class Daemon:
         task = asyncio.create_task(self._in_worker(lambda: self.tabs.agent_notice(tab_id, text)))
         self._notices.add(task)
         task.add_done_callback(self._notices.discard)
+
+    def _facts_to_check(self, project_id: str) -> tuple[StoredFact, ...]:
+        return self._plans.facts_to_check(project_id)
+
+    def _after_merge(self, record: GitOperationRecord) -> None:
+        if record.result_oid is not None:
+            self._plans.record_merge(node_id=record.plan_node, tab_id=record.tab_id, oid=record.result_oid)
+
+    def _close_for_cleanup(self, tab_id: str) -> None:
+        """A tab whose agent exited. The tabs belong to the tab worker, and its worktree goes separately."""
+        params = CloseTabParams(tab_id=TabId(tab_id), decision="keep")
+        worker = self._worker
+        if worker is None:
+            _ = self.tabs.close_tab(params)
+            return
+        _ = worker.submit(self.tabs.close_tab, params).result()
 
     def _keep_before_change(self, tab_id: str, label: str) -> None:
         """Off the loop. The tab's checkpoint list belongs to the tab worker, so it is written there."""

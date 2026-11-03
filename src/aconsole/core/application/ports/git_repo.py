@@ -181,6 +181,19 @@ class GitWriter(Protocol):
         ...
 
 
+    def has_ignored(self, worktree: Path) -> bool:
+        """Files only the worktree holds that git would delete with it."""
+        ...
+
+    def remove_worktree(self, root: Path, worktree: Path, *, discard_ignored: bool) -> GitDone: ...
+
+    def delete_branch(self, root: Path, branch: str) -> GitDone: ...
+
+    def keep_ref(self, root: Path, ref: str, oid: str) -> GitDone:
+        """So a commit no branch holds any more is not lost to `git gc`."""
+        ...
+
+
 class GitOperationJournal(Protocol):
     def save(self, record: GitOperationRecord) -> bool:
         """False when the row was not written. The caller keeps the record and writes it again."""
@@ -189,3 +202,7 @@ class GitOperationJournal(Protocol):
     def find(self, operation_id: str) -> GitOperationRecord | None: ...
 
     def unfinished(self) -> tuple[GitOperationRecord, ...]: ...
+
+    def landed_from(self, project_id: str, source: str, oid: str) -> GitOperationRecord | None:
+        """The merge that took exactly this commit of this branch, if one did."""
+        ...

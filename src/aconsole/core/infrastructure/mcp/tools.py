@@ -33,7 +33,7 @@ from aconsole.core.application.ports.plan_store import (
     StoreWriteError,
 )
 from aconsole.core.domain.errors import DomainError
-from aconsole.core.domain.plan import Move, Node, NodeSpec, NodeStatus, Plan, Role
+from aconsole.core.domain.plan import Move, Node, NodeSpec, NodeStatus, Plan, Role, after_merge
 from aconsole.core.domain.vault_sync import Note as VaultNote
 from aconsole.core.domain.vault_sync import Owners, resolve_ref
 from aconsole.core.infrastructure.vault.sync import NodeNote
@@ -41,6 +41,7 @@ from aconsole.core.infrastructure.vault.sync import NodeNote
 _LOG = logging.getLogger(__name__)
 _NODE_NOT_FOUND = 4002
 _HUMAN_TAB = "human"
+_HELD = frozenset({NodeStatus.IN_PROGRESS, NodeStatus.VERIFYING})
 _SUMMARY = 300
 _DIFF = 4000
 _LINE = re.compile(r"^(.+)#L(\d+)-(\d+)$")
@@ -298,6 +299,7 @@ class _Fact:
     code_refs: tuple[str, ...]
     stale: bool
     note_ref: str
+    verified_commit: str | None = None
 
 
 @dataclass
@@ -360,6 +362,7 @@ class PlanBoard:
                     code_refs=fact.code_refs,
                     stale=fact.stale,
                     note_ref=fact.note_ref,
+                    verified_commit=fact.verified_commit,
                 )
                 self._seq = max(self._seq, _number(fact.id))
             for packet in handovers:
@@ -413,6 +416,77 @@ class PlanBoard:
             self._commit(stored)
             view = self._view(stored)
             return next(item for item in view.nodes if str(item.id) == node_id)
+
+    def record_merge(self, *, node_id: str | None, tab_id: str | None, oid: str) -> None:
+        """Keep the merged commit on its node, and move the node only as far as its own rules allow.
+
+        Safe to run twice: a commit is attached once, and a node already past its step stays there. A node that is
+        gone has nothing to record. A store that refuses raises `StoreWriteError`, and the caller tries again.
+        """
+        with self._lock:
+            found = self._merged_node(node_id, tab_id)
+            if found is None:
+                return
+            stored, meta = found
+            if ("commit", oid) not in meta.artifacts:
+                meta.artifacts["commit", oid] = self._id("art")
+            node = stored.dag.get(meta.key)
+            target = after_merge(node.status, review_required=node.review_required)
+            evidence = f"merged as {oid}"
+            try:
+                if target is not None:
+                    _ = stored.dag.transition(
+                        Move(
+                            key=meta.key,
+                            to=target,
+                            role=Role.HUMAN,
+                            at=self._now(),
+                            tab_id=None,
+                            fence=node.fence if node.lease_expires_at else None,
+                            evidence=evidence,
+                            note=evidence,
+                        )
+                    )
+            except DomainError as exc:
+                # The lease ran out or the node moved. The commit is still recorded; a person takes the node on.
+                _LOG.info("plan node %s stays where it is after the merge: %s", meta.node_id, exc)
+            try:
+                self._commit(stored)
+            except _ToolError as exc:
+                raise StoreWriteError(str(exc)) from exc
+
+    def facts_to_check(self, project_id: str) -> tuple[StoredFact, ...]:
+        """Live facts that name code and say which commit they were true at."""
+        now = self._now()
+        with self._lock:
+            return tuple(
+                StoredFact(
+                    id=fact.kb_id,
+                    project_id=fact.project_id,
+                    kind=fact.kind,
+                    title=fact.title,
+                    body=fact.body,
+                    source=fact.source,
+                    code_refs=fact.code_refs,
+                    stale=fact.stale,
+                    note_ref=fact.note_ref,
+                    updated_at=now,
+                    verified_commit=fact.verified_commit,
+                )
+                for fact in self._facts.values()
+                if fact.project_id == project_id and not fact.stale and fact.verified_commit and fact.code_refs
+            )
+
+    def _merged_node(self, node_id: str | None, tab_id: str | None) -> tuple[_Stored, _Meta] | None:
+        """The node the tab was opened for, or else the one it holds a lease on."""
+        for stored in self._plans.values():
+            for meta in stored.meta.values():
+                if node_id is not None and meta.node_id == node_id:
+                    return stored, meta
+                node = stored.dag.get(meta.key)
+                if node_id is None and tab_id is not None and node.tab_id == tab_id and node.status in _HELD:
+                    return stored, meta
+        return None
 
     def plan_ids(self) -> tuple[str, ...]:
         with self._lock:
@@ -720,6 +794,7 @@ class PlanBoard:
                 code_refs=tuple(code_refs),
                 stale=False,
                 note_ref=note_ref,
+                verified_commit=_verified(ctx.worktree),
             )
             self._keep_fact(fact, supersedes)
             if supersedes is not None:
@@ -741,6 +816,7 @@ class PlanBoard:
             stale=fact.stale,
             note_ref=fact.note_ref,
             updated_at=self._now(),
+            verified_commit=fact.verified_commit,
         )
         try:
             self._knowledge.save_fact(record, supersedes)

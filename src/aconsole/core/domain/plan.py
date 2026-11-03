@@ -75,6 +75,15 @@ def human_transition_issue(source: NodeStatus, target: NodeStatus, *, review_req
     return None
 
 
+def after_merge(source: NodeStatus, *, review_required: bool) -> NodeStatus | None:
+    """Where a merged node goes by itself. A human's review is never skipped, and None leaves the node be."""
+    if source is NodeStatus.IN_PROGRESS:
+        return NodeStatus.VERIFYING if review_required else NodeStatus.DONE
+    if source is NodeStatus.VERIFYING and not review_required:
+        return NodeStatus.DONE
+    return None
+
+
 # Missing pairs are illegal. The diagonal is illegal too.
 _RULES: dict[tuple[NodeStatus, NodeStatus], _Rule] = {
     (NodeStatus.PENDING, NodeStatus.IN_PROGRESS): _both(claim=True),

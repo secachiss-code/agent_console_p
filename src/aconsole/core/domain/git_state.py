@@ -69,6 +69,17 @@ def require_fresh(*, expected_head: str | None, head: str | None, expected_index
         raise DomainError(code=_STATE_STALE, name="GIT_STATE_STALE", retryable=True)
 
 
+def ref_path(ref: str) -> str:
+    """The file in a fact's code ref: `src/a.py:10` and `src/a.py#name` both mean `src/a.py`."""
+    return ref.partition("#")[0].partition(":")[0].removeprefix("./").rstrip("/")
+
+
+def touched_refs(refs: tuple[str, ...], changed: tuple[str, ...]) -> tuple[str, ...]:
+    """Changed files that a ref names, or that lie under a directory it names."""
+    wanted = tuple(path for path in (ref_path(ref) for ref in refs) if path)
+    return tuple(path for path in changed if any(path == item or path.startswith(f"{item}/") for item in wanted))
+
+
 def choose_base(default_branch: str | None, branches: frozenset[str], remote_head: str | None) -> str | None:
     """The project's own default branch when it exists, then what the remote says. Nothing is assumed to be `main`."""
     for name in (default_branch, remote_head):

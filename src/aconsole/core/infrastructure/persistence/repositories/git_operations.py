@@ -107,6 +107,24 @@ class GitOperationDatabase:
         _ = self._writer.call(read)
         return found[0] if found else None
 
+    def landed_from(self, project_id: str, source: str, oid: str) -> GitOperationRecord | None:
+        found: list[GitOperationRecord] = []
+
+        def read(session: Session) -> None:
+            row = session.scalars(
+                select(Row).where(
+                    Row.project_id == project_id,
+                    Row.source == source,
+                    Row.source_oid == oid,
+                    Row.status.in_(("merged", "finished")),
+                )
+            ).first()
+            if row is not None:
+                found.append(_record(row))
+
+        _ = self._writer.call(read)
+        return found[0] if found else None
+
     def unfinished(self) -> tuple[GitOperationRecord, ...]:
         found: list[GitOperationRecord] = []
 

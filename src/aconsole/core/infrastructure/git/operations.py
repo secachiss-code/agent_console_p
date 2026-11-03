@@ -8,6 +8,7 @@ from typing import Final, final
 from aconsole.core.application.ports.git_repo import GitDone
 from aconsole.core.infrastructure.git.checkpoints import GitCheckpoints
 from aconsole.core.infrastructure.git.runner import GitOutput, GitRunner
+from aconsole.core.infrastructure.git.worktrees import forget_record, has_ignored_files
 
 _HOOK_TIMEOUT_S: Final = 300.0
 _LITERAL: Final = "--literal-pathspecs"
@@ -96,6 +97,25 @@ class GitMutations:
 
     def move_ref(self, root: Path, ref: str, new: str, old: str) -> GitDone:
         return _done(self._git.write(root, "update-ref", ref, new, old))
+
+    def has_ignored(self, worktree: Path) -> bool:
+        return has_ignored_files(
+            self._git.read(worktree, "status", "--porcelain", "--untracked-files=all", "--ignored=matching").text
+        )
+
+    def remove_worktree(self, root: Path, worktree: Path, *, discard_ignored: bool) -> GitDone:
+        forced = ("--force",) if discard_ignored else ()
+        done = _done(self._git.write(root, "worktree", "remove", *forced, str(worktree)))
+        if done.ok:
+            common = self._git.read(root, "rev-parse", "--path-format=absolute", "--git-common-dir").text.strip()
+            forget_record(Path(common), worktree)
+        return done
+
+    def delete_branch(self, root: Path, branch: str) -> GitDone:
+        return _done(self._git.write(root, "branch", "-D", "--", branch))
+
+    def keep_ref(self, root: Path, ref: str, oid: str) -> GitDone:
+        return _done(self._git.write(root, "update-ref", ref, oid))
 
     def safety_ref(self, worktree: Path, ref: str, label: str) -> None:
         _ = self._checkpoints.capture(worktree, ref, label)

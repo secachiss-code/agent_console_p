@@ -31,6 +31,7 @@ from aconsole.core.application.ports.git_repo import (
     RefRow,
     WorktreeRow,
 )
+from aconsole.core.application.ports.plan_store import StoreWriteError
 from aconsole.core.application.services.git_ops import GitOperationService, Tokens
 from aconsole.core.application.services.git_state import GitStateService
 from aconsole.core.domain.errors import DomainError
@@ -238,6 +239,14 @@ class GitMergeService:
         self._changed(project_id)
         return GitOperationResult(operation=view_of(record))
 
+    def landed_from(self, project_id: str, source: str, oid: str) -> GitOperationRecord | None:
+        with self._guard:
+            records = tuple(self._records.values())
+        for item in records:
+            if (item.project_id, item.source, item.source_oid) == (project_id, source, oid) and item.result_oid:
+                return item
+        return None if self._journal is None else self._journal.landed_from(project_id, source, oid)
+
     def retry(self) -> None:
         """Follow-ups a failure left behind, and journal rows that did not get written. Off the loop."""
         with self._guard:
@@ -352,7 +361,7 @@ class GitMergeService:
         if follow is not None:
             try:
                 follow(record)
-            except (DomainError, GitCommandError, OSError, TimeoutError) as exc:
+            except (DomainError, GitCommandError, StoreWriteError, OSError, TimeoutError) as exc:
                 _LOG.warning("after merge %s: %s", record.id, exc)
                 return record
         finished = record.moved(self._now(), "finished", follow_up_pending=False)
@@ -387,7 +396,7 @@ class GitMergeService:
                 self._unsaved.discard(record.id)
             else:
                 self._unsaved.add(record.id)
-            if saved and not record.open:
+            if saved and not record.open and self._journal is not None:
                 _ = self._records.pop(record.id, None)
 
 
