@@ -85,7 +85,7 @@ if TYPE_CHECKING:
     from sqlalchemy.orm import Session
 
     from aconsole.contracts.app import AccountView, PlanView, TabView
-    from aconsole.contracts.ipc import EventEnvelope
+    from aconsole.contracts.ipc import Envelope, EventEnvelope
     from aconsole.contracts.settings import Settings
 
 _LOG = logging.getLogger(__name__)
@@ -208,7 +208,7 @@ def initialize_role(frame: bytes) -> ClientRole | None:
     return params.role
 
 
-def _too_large(encoder: msgspec.json.Encoder, limit: int) -> bytes:
+def _too_large(encoder: msgspec.json.Encoder, limit: int, request_id: int | None = None) -> bytes:
     spec = error_by_name("MESSAGE_TOO_LARGE")
     error = ErrorObject(
         code=spec.code,
@@ -221,7 +221,7 @@ def _too_large(encoder: msgspec.json.Encoder, limit: int) -> bytes:
             details=MessageTooLargeDetails(limit=limit),
         ),
     )
-    return encode_line(encoder, ResponseErr(id=None, error=error))
+    return encode_line(encoder, ResponseErr(id=request_id, error=error))
 
 
 def _windows(account: AccountView) -> tuple[tuple[str, float | None, datetime | None], ...]:
@@ -547,11 +547,14 @@ class Daemon:
         if self._listening:
             self.set_live_tabs(live)
 
-    @staticmethod
-    def _deliver(connection: Connection, writer: asyncio.StreamWriter, item: EventEnvelope) -> None:
+    def _deliver(self, connection: Connection, writer: asyncio.StreamWriter, item: EventEnvelope) -> None:
         if writer.is_closing():
             return
         for frame in connection.deliver(item):
+            if len(frame) > self._frame_limit + 1:
+                # The client sees a seq gap and pulls a snapshot instead of losing its connection.
+                _LOG.warning("event %d is %d bytes, over the limit; not sent", item.seq, len(frame))
+                continue
             writer.write(frame)
         if writer.transport.get_write_buffer_size() == 0:
             connection.drained()
@@ -861,10 +864,18 @@ class Daemon:
         except msgspec.DecodeError:
             return False
         for payload in payloads:
-            writer.write(payload)
+            writer.write(self._within_limit(payload, envelope))
             await writer.drain()
         connection.drained()
         return True
+
+    def _within_limit(self, payload: bytes, envelope: Envelope) -> bytes:
+        """The reply itself, or a typed refusal when the client could not read it."""
+        if len(payload) <= self._frame_limit + 1:
+            return payload
+        request_id = envelope.id if isinstance(envelope, Request) else None
+        _LOG.warning("reply to %s is %d bytes, over the limit", getattr(envelope, "method", "?"), len(payload))
+        return _too_large(self._encoder, self._frame_limit, request_id)
 
     async def _client(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter) -> None:
         raw = writer.get_extra_info("socket")  # pyright: ignore[reportAny] -- asyncio types this as Any

@@ -383,3 +383,23 @@ def test_server_reports_itself_and_only_what_it_serves() -> None:
     assert result.server_pid == os.getpid()
     assert "diff.v1" not in result.capabilities
     assert "checkpoints.v1" not in result.capabilities
+
+
+async def _reply_over_limit(tmp_path: Path) -> tuple[int | None, str]:
+    sock = tmp_path / "core.sock"
+    daemon = Daemon(sock, idle_s=30, frame_limit=600)
+    task = asyncio.create_task(daemon.serve())
+    await wait_for_socket(sock)
+    reader, writer = await asyncio.open_unix_connection(sock)
+    connection = daemon._within_limit(b"x" * 700, Request(id=7, method="app/snapshot", params=msgspec.Raw(b"{}")))
+    frame = decode_envelope(connection)
+    assert isinstance(frame, ResponseErr)
+    writer.close()
+    _ = reader
+    daemon.request_stop()
+    assert await asyncio.wait_for(task, 2) == 0
+    return frame.id, frame.error.message
+
+
+def test_a_reply_over_the_limit_answers_the_request_with_an_error(tmp_path: Path) -> None:
+    assert asyncio.run(_reply_over_limit(tmp_path)) == (7, "MESSAGE_TOO_LARGE")

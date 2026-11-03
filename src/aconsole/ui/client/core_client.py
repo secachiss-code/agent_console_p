@@ -3,6 +3,7 @@
 import asyncio
 import contextlib
 import fcntl
+import logging
 import os
 import signal
 from pathlib import Path
@@ -20,6 +21,7 @@ from aconsole.contracts.ipc import (
     InitializeParams,
     InitializeResult,
     Notification,
+    ProtocolLimits,
     ProtocolVersion,
     Request,
     ResponseErr,
@@ -28,6 +30,8 @@ from aconsole.contracts.ipc import (
 from aconsole.contracts.methods import method_by_name
 from aconsole.ui.client.store import CONNECTING_BANNER, CoreStore
 
+_LOG = logging.getLogger(__name__)
+_READ_LIMIT = ProtocolLimits().max_message_bytes + 1
 _DEFAULT_TIMEOUT_S = 10.0
 _LONG_TIMEOUT_S = 60.0
 _CANCEL_GRACE_S = 1.0
@@ -313,7 +317,7 @@ class CoreClient:
         return result
 
     async def _open_socket(self) -> None:
-        self._reader, self._writer = await asyncio.open_unix_connection(self.path)
+        self._reader, self._writer = await asyncio.open_unix_connection(self.path, limit=_READ_LIMIT)
         self.connects += 1
         self._read_task = asyncio.create_task(self._read_loop())
 
@@ -327,6 +331,13 @@ class CoreClient:
                 if line == b"":
                     break
                 self._dispatch_line(line)
+        except ValueError:
+            # A frame over the protocol limit: the stream cannot be resynchronised, only reopened.
+            _LOG.exception("core sent a frame over %d bytes; reconnecting", _READ_LIMIT - 1)
+        except msgspec.DecodeError:
+            _LOG.exception("core sent a frame that does not decode; reconnecting")
+        except (ConnectionError, OSError) as exc:
+            _LOG.warning("core connection failed: %s", exc)
         finally:
             self._fail_pending()
             if not self._closing:
@@ -363,14 +374,35 @@ class CoreClient:
                 future.set_exception(error)
 
     async def _resync(self) -> None:
+        """Pull a snapshot until one arrives, or until the connection it was asked on is gone.
+
+        A lost connection ends the attempt because the read loop then starts ``_reconnect``, which resyncs itself.
+        """
+        self.resyncs = 1
         self.resync_count += 1
-        try:
-            _ = await self.pull_snapshot()
-        except ConnectionError, CoreCallError, CoreTimeoutError, OSError:
-            self.store.banner = CONNECTING_BANNER
-            self.store.reconnecting = True
-            return
-        self.resyncs = 0
+        reader = self._reader
+        delay = _BACKOFF_S[0]
+        while not self._closing and self._reader is reader:
+            try:
+                _ = await self.pull_snapshot()
+            except ConnectionError, OSError:
+                self._show_connecting()
+                return
+            except CoreCallError, CoreTimeoutError, msgspec.DecodeError:
+                _LOG.warning("snapshot failed; retrying in %.2f s", delay, exc_info=True)
+                self._show_connecting()
+                await asyncio.sleep(delay)
+                delay = min(delay * 2, _BACKOFF_S[-1])
+                continue
+            if not self.store.reconnecting:
+                self.resyncs = 0
+                return
+            # The events after that snapshot left a gap again.
+            await asyncio.sleep(delay)
+
+    def _show_connecting(self) -> None:
+        self.store.banner = CONNECTING_BANNER
+        self.store.reconnecting = True
 
     async def _reconnect(self) -> None:
         delay = _BACKOFF_S[0]
