@@ -22,8 +22,8 @@ from aconsole.ui.views.sidebar.messages import _ as translate  # noqa: E402
 
 
 def window_name(window: QuotaWindowView) -> str:
-    """What the window is called: a pool with a billing period is named by its days, as "5 h" and "7 d" are."""
-    if window.period_days is not None:
+    """What the window is called. The plan's main pool is named by its days, as "5 h" and "7 d" are; API stays API."""
+    if window.period_days is not None and window.key != "api":
         return translate("quota.days").format(count=window.period_days)
     return translate(f"quota.{window.key}")
 
@@ -68,8 +68,9 @@ class QuotaRow(Gtk.Box):
         self.time_label: Gtk.Label = Gtk.Label(xalign=1)
         self.time_label.add_css_class("numeric")
         self.time_label.add_css_class("ac-quota-key")
-        self.key_label.set_width_chars(5)
-        self.percent_label.set_width_chars(5)
+        # Wide enough for "Неделя" and "$391.54 / $450", so every bar in the list has one width.
+        self.key_label.set_width_chars(7)
+        self.percent_label.set_width_chars(15)
         self.time_label.set_width_chars(5)
         for child in (self.key_label, self.level_bar, self.percent_label, self.time_label):
             self.append(child)

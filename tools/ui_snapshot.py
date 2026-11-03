@@ -22,7 +22,7 @@ class _SnapshotArguments(argparse.Namespace):
     out: Path = Path("docs/ui/B0/window.png")
 
 
-_PREVIEWS = frozenset({"plan-graph", "review", "git", "quota-dialog", "palette", "setup", "prefs"})
+_PREVIEWS = frozenset({"plan-graph", "review", "git", "quota-dialog", "quota-account", "palette", "setup", "prefs"})
 
 
 def main(argv: list[str]) -> int:
@@ -46,7 +46,10 @@ def main(argv: list[str]) -> int:
     _ = parser.add_argument(
         "--view",
         required=True,
-        choices=("window", "tabs", "plan-graph", "review", "git", "quota-dialog", "palette", "setup", "prefs"),
+        choices=(
+            "window", "tabs", "plan-graph", "review", "git", "quota-dialog", "quota-account", "palette", "setup",
+            "prefs",
+        ),
     )
     _ = parser.add_argument("--theme", required=True, choices=("light", "dark"))
     _ = parser.add_argument("--size", required=True)
@@ -98,7 +101,11 @@ def _preview_app(client: CoreClient, request: SnapshotRequest | None, scenario: 
             elif snapshot.view == "prefs":
                 window.app_vm.dispatch("settings")
             else:
-                _ = window.quota_card.open_details(window)
+                dialog = window.quota_card.open_details(window)
+                if self.snapshot_request is not None and self.snapshot_request.view == "quota-account":
+                    # Cursor when it is there: it reports the most.
+                    accounts = window.quota_card.accounts
+                    dialog.open_account(next((a.id for a in accounts if a.agent.value == "cursor"), accounts[0].id))
             _ = GLib.timeout_add(450, self._arm_preview)
 
         def _preview_target(self) -> Gtk.Widget | None:
@@ -106,7 +113,7 @@ def _preview_app(client: CoreClient, request: SnapshotRequest | None, scenario: 
             snapshot = self.snapshot_request
             if window is None or snapshot is None:
                 return None
-            if snapshot.view == "quota-dialog":
+            if snapshot.view in {"quota-dialog", "quota-account"}:
                 return window.quota_card.details_dialog
             if snapshot.view == "palette":
                 return window.palette_dialog

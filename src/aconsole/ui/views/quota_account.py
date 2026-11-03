@@ -95,9 +95,12 @@ def _two_sides(left: str, right: str) -> Gtk.Box:
 
 
 def _reset_text(reset: datetime) -> str:
-    language = locale.getlocale()[0] or "en"
-    left = format_remaining(int((reset - datetime.now(UTC)).total_seconds()), language)
-    return translate("quota.panel.reset").format(time=reset.astimezone().strftime("%d.%m.%Y %H:%M"), left=left)
+    moment = reset.astimezone().strftime("%d.%m.%Y %H:%M")
+    seconds = int((reset - datetime.now(UTC)).total_seconds())
+    if seconds <= 0:
+        return translate("quota.reset").format(time=moment)
+    left = format_remaining(seconds, locale.getlocale()[0] or "en")
+    return translate("quota.panel.reset").format(time=moment, left=left)
 
 
 def _limit_block(window: QuotaWindowView) -> Gtk.Box:

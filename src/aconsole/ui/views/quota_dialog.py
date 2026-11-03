@@ -60,6 +60,7 @@ class QuotaDialog(Adw.Dialog):
         panel_scroll.set_child(self.panel)
         self.panel_revealer: Gtk.Revealer = Gtk.Revealer(
             child=panel_scroll, transition_type=Gtk.RevealerTransitionType.SLIDE_LEFT, reveal_child=False,
+            visible=False,
         )
         sides = Gtk.Box()
         sides.append(self.scroll)
@@ -237,6 +238,8 @@ class QuotaDialog(Adw.Dialog):
 
     def _sync_panel(self) -> None:
         account = next((item for item in self._accounts if item.id == self.open_account_id), None)
+        # Hidden, not only folded: a folded revealer still kept part of the dialog's width.
+        self.panel_revealer.set_visible(account is not None)
         self.panel_revealer.set_reveal_child(account is not None)
         self.set_content_width(_WIDTH if account is None else _WIDTH_WITH_PANEL)
         root = self.get_root()

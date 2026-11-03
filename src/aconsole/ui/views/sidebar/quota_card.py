@@ -90,6 +90,10 @@ class QuotaCard(Gtk.Button):
         self._sync_details()
 
     @property
+    def accounts(self) -> tuple[AccountView, ...]:
+        return self._accounts
+
+    @property
     def display(self) -> str:
         """"used" or "remaining", as the settings chose."""
         return self._display

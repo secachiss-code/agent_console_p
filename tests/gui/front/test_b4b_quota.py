@@ -123,6 +123,15 @@ def _labels(widget: Gtk.Widget) -> list[str]:
     return texts
 
 
+def test_the_main_pool_is_named_by_its_days_and_api_stays_api() -> None:
+    from aconsole.ui.views.sidebar.quota_row import window_name
+
+    auto = msgspec.structs.replace(_quota("5h", 87, QuotaLevel.WARN), key="auto", period_days=31)
+    api = msgspec.structs.replace(auto, key="api")
+    assert "31" in window_name(auto)
+    assert window_name(api) == "API"
+
+
 def _assert_quota_card_rows(card: QuotaCard) -> None:
     # One line per account, with one bar: the window closest to its limit, and the time until it resets.
     labels = [line.percent_label.get_text() for line in card.account_lines]
