@@ -293,8 +293,11 @@ class FactReviewView(msgspec.Struct, frozen=True, kw_only=True):
 
 
 class FactsToReviewResult(msgspec.Struct, frozen=True, kw_only=True):
+    """`note_path` is the vault note listing these facts, when a vault is set and there are any."""
+
     head_oid: str | None
     facts: tuple[FactReviewView, ...]
+    note_path: str | None = None
 
 
 class RebaseParams(msgspec.Struct, frozen=True, kw_only=True):

@@ -29,6 +29,7 @@
       "type": "object"
     },
     "FactsToReviewResult": {
+      "description": "`note_path` is the vault note listing these facts, when a vault is set and there are any.",
       "properties": {
         "facts": {
           "items": {
@@ -45,6 +46,17 @@
               "type": "null"
             }
           ]
+        },
+        "note_path": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
         }
       },
       "required": [

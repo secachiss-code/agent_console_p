@@ -92,6 +92,7 @@ from aconsole.core.infrastructure.persistence.writer import Writer
 from aconsole.core.infrastructure.setup_checks import HostSetupFixes, HostSetupProbe, SetupTokens
 from aconsole.core.infrastructure.tabs import HostAgents, HostRepos, HostTabs
 from aconsole.core.infrastructure.vault.sync import VaultSync
+lazy from aconsole.contracts.git import FactReviewView
 lazy from aconsole.core.application.ports.knowledge_store import StoredFact
 lazy from aconsole.core.domain.git_operation import GitOperationRecord
 
@@ -424,6 +425,7 @@ class Daemon:
             now=lambda: datetime.now(UTC),
             facts=self._facts_to_check,
             close_tab=self._close_for_cleanup,
+            publish_facts=self._publish_facts,
             changed=self._git_changed,
         )
         self.git.rewrite = GitRewriteService(
@@ -782,6 +784,19 @@ class Daemon:
         if worker is None:
             return self.review.send_text(tab_id, message)
         return worker.submit(self.review.send_text, tab_id, message).result()
+
+    def _publish_facts(self, project_id: str, facts: tuple[FactReviewView, ...]) -> str | None:
+        """Into the vault on its own thread. The path is known now, and the note follows."""
+        lines = tuple(
+            f"{item.title}: {', '.join(item.changed_paths)} (since {item.verified_commit[:10]})" for item in facts
+        )
+
+        def write(_nothing: None) -> None:
+            self.vault.publish_facts(project_id, lines)
+
+        self._to_vault(write, None)
+        path = self.vault.facts_note(project_id)
+        return None if path is None or not facts else str(path)
 
     def _node_held_by(self, tab_id: str) -> str | None:
         return self._plans.node_held_by(tab_id)

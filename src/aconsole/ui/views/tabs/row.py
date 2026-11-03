@@ -24,6 +24,16 @@ def _wait_text(minutes: int) -> str:
     return translate("tabs.wait_minutes").format(minutes=minutes)
 
 
+def _git_label() -> Gtk.Label:
+    label = Gtk.Label(xalign=0, visible=False)
+    label.set_ellipsize(Pango.EllipsizeMode.END)
+    label.set_single_line_mode(True)
+    label.set_max_width_chars(1)
+    label.add_css_class("ac-tab-subtitle")
+    label.add_css_class("numeric")
+    return label
+
+
 class TabRow(Gtk.Box):
     def __init__(self, tabs: TabsViewModel) -> None:
         super().__init__(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
@@ -61,6 +71,8 @@ class TabRow(Gtk.Box):
         self.subtitle_label.add_css_class("ac-tab-subtitle")
         text.append(self.title_label)
         text.append(self.subtitle_label)
+        self.git_label: Gtk.Label = _git_label()
+        text.append(self.git_label)
         self.append(text)
         self._setup_trailing()
         actions = Gio.SimpleActionGroup()
@@ -179,6 +191,14 @@ class TabRow(Gtk.Box):
         detail = str(item.detail)
         self.subtitle_label.set_label(" · ".join(value for value in (subtitle, detail) if value))
         self.subtitle_label.set_tooltip_text(self.subtitle_label.get_label())
+        git_line = str(item.git_line)
+        self.git_label.set_label(git_line)
+        self.git_label.set_tooltip_text(git_line or None)
+        self.git_label.set_visible(bool(git_line))
+        if item.git_warning:
+            self.git_label.add_css_class("warning")
+        else:
+            self.git_label.remove_css_class("warning")
         minutes = int(str(item.waiting_minutes))
         self.waiting_label.set_visible(minutes >= 0)
         self.waiting_label.set_label(_wait_text(minutes) if minutes >= 0 else "")

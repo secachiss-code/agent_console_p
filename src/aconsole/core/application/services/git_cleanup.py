@@ -59,6 +59,7 @@ class GitCleanupService:
         now: Callable[[], datetime],
         facts: Callable[[str], tuple[StoredFact, ...]],
         close_tab: Callable[[str], None],
+        publish_facts: Callable[[str, tuple[FactReviewView, ...]], str | None],
         changed: Callable[[str], None],
     ) -> None:
         self._state: GitStateService = state
@@ -68,6 +69,7 @@ class GitCleanupService:
         self._now: Callable[[], datetime] = now
         self._facts: Callable[[str], tuple[StoredFact, ...]] = facts
         self._close_tab: Callable[[str], None] = close_tab
+        self._publish_facts: Callable[[str, tuple[FactReviewView, ...]], str | None] = publish_facts
         self._changed: Callable[[str], None] = changed
         self._paths: dict[tuple[str, str, str], tuple[str, ...]] = {}
 
@@ -113,7 +115,9 @@ class GitCleanupService:
             if touched:
                 view = FactReviewView(id=fact.id, title=fact.title, verified_commit=commit, changed_paths=touched)
                 found.append(view)
-        return FactsToReviewResult(head_oid=head, facts=tuple(found))
+        return FactsToReviewResult(
+            head_oid=head, facts=tuple(found), note_path=self._publish_facts(project_id, tuple(found))
+        )
 
     def _journalled(self, project_id: str, row: WorktreeRow) -> GitOperationRecord:
         at = self._now()

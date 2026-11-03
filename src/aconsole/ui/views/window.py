@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import logging
 from typing import TYPE_CHECKING, Literal
 
@@ -12,7 +13,7 @@ gi.require_version("Adw", "1")
 from gi.repository import Adw, Gio, GLib, GObject, Gtk  # noqa: E402
 
 from aconsole.contracts.app import CommandResult, EmptyParams, PaletteQuery  # noqa: E402
-from aconsole.contracts.common import ApprovalDecision, PlanId, TabId  # noqa: E402
+from aconsole.contracts.common import ApprovalDecision, PlanId, ProjectId, TabId  # noqa: E402
 from aconsole.contracts.events import CheckpointCreated, GitStateUpdated, InjectToTerminal, SettingsChanged, UiEvent  # noqa: E402
 from aconsole.contracts.settings import Settings  # noqa: E402
 from aconsole.ui.bootstrap import spawn_task  # noqa: E402
@@ -50,6 +51,7 @@ from aconsole.ui.views.terminal.messages import _ as terminal_text  # noqa: E402
 from aconsole.ui.views.terminal.page import TerminalPage  # noqa: E402
 
 _LOG = logging.getLogger(__name__)
+_GIT_KEEP_S = 15
 _ISLAND_MARGIN = 8
 _TAB_ARRIVAL_MS = 200
 _BANNER_HEIGHT = 48
@@ -174,6 +176,9 @@ class MainWindow(Adw.ApplicationWindow):
         self.plan_page: PlanGraph | None = None
         self.review_page: ReviewPage | None = None
         self.git_pane: GitPane | None = None
+        self._git_badged: set[ProjectId] = set()
+        self._git_badge_timer: int | None = None
+        _ = self.tabs.model.connect("items-changed", self._tab_list_changed)
         body = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         self.project_bar: ProjectBar = ProjectBar(self.tabs, self.tabs_sidebar)
         body.append(self.project_bar)
@@ -645,6 +650,33 @@ class MainWindow(Adw.ApplicationWindow):
             pane = self.git_pane
             if pane is not None and pane.viewmodel.project_id == event.project_id:
                 pane.reload()
+            _ = spawn_task(self._load_git_badges(event.project_id))
+
+    def _tab_list_changed(self, _model: Gio.ListStore, _at: int, _removed: int, _added: int) -> None:
+        """A project with its first tab starts showing Git in the sidebar. No timer asks git anything after this."""
+        for project_id in self._tab_projects():
+            if project_id not in self._git_badged:
+                self._git_badged.add(project_id)
+                _ = spawn_task(self._load_git_badges(project_id))
+        if self._git_badge_timer is None:
+            self._git_badge_timer = GLib.timeout_add_seconds(_GIT_KEEP_S, self._keep_git_badges)
+
+    def _tab_projects(self) -> frozenset[ProjectId]:
+        snapshot = self.tabs.client.store.snapshot
+        return frozenset() if snapshot is None else frozenset(tab.project_id for tab in snapshot.tabs)
+
+    def _keep_git_badges(self) -> bool:
+        for project_id in self._tab_projects():
+            _ = spawn_task(self._renew_git_watch(project_id))
+        return GLib.SOURCE_CONTINUE
+
+    async def _renew_git_watch(self, project_id: ProjectId) -> None:
+        with contextlib.suppress(Exception):  # a hint in the sidebar: the core's own errors show elsewhere
+            await GitViewModel(self.tabs.client, project_id).watch()
+
+    async def _load_git_badges(self, project_id: ProjectId) -> None:
+        with contextlib.suppress(Exception):  # a hint in the sidebar: the core's own errors show elsewhere
+            self.tabs.apply_git(await GitViewModel(self.tabs.client, project_id).state())
 
     def _snapshot_changed(self, _store: CoreStore) -> None:
         self._sync_terminal_pages(_store)

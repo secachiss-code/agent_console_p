@@ -13,7 +13,7 @@ import gi
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
-from gi.repository import Gio, GLib, GObject, Gtk, Pango  # noqa: E402
+from gi.repository import Adw, Gio, GLib, GObject, Gtk, Pango  # noqa: E402
 
 from aconsole.contracts.app import DiffFileResult, DiffFileView  # noqa: E402
 from aconsole.contracts.common import TabId  # noqa: E402
@@ -30,6 +30,7 @@ from aconsole.ui.viewmodels.git_vm import (  # noqa: E402
     node_source,
     short,
     uncommitted_rows,
+    worktree_of,
     worktree_source,
 )
 from aconsole.ui.views.review.diff_widgets import file_row, hunk_text  # noqa: E402
@@ -154,9 +155,11 @@ class GitPane(Gtk.Box):
         self.selected_path: str | None = None
         self.source: DiffSource | None = None
         self.store: Gio.ListStore = Gio.ListStore.new(RowItem)
+        self.facts_banner: Adw.Banner = Adw.Banner(button_label=translate("git.facts_show"))
+        self.append(self.facts_banner)
         self.append(self._build_toolbar())
         self.append(self._build_body())
-        self.git_actions: GitActions = GitActions(self, self.actions)
+        self.git_actions: GitActions = GitActions(self, self.actions, self.commit_slot, self.facts_banner)
         self._keep_watch: int | None = None
         _ = self.connect("map", self._mapped)
         _ = self.connect("unmap", self._unmapped)
@@ -197,16 +200,6 @@ class GitPane(Gtk.Box):
         refresh = Gtk.Button(icon_name="view-refresh-symbolic", tooltip_text=translate("git.refresh"))
         _ = refresh.connect("clicked", self._refresh_clicked)
         bar.append(refresh)
-        self.actions: Gtk.Box = Gtk.Box(spacing=6)
-        # Six buttons must not set how narrow the window may get.
-        bar.append(
-            Gtk.ScrolledWindow(
-                child=self.actions,
-                hscrollbar_policy=Gtk.PolicyType.EXTERNAL,
-                vscrollbar_policy=Gtk.PolicyType.NEVER,
-                propagate_natural_width=True,
-            )
-        )
         return bar
 
     def _refresh_clicked(self, _button: Gtk.Button) -> None:
@@ -241,12 +234,27 @@ class GitPane(Gtk.Box):
         _ = self.mode_choice.connect("notify::selected", self._mode_changed)
         top.append(self.mode_choice)
         box.append(top)
+        self.inspect_meta: Gtk.Label = Gtk.Label(xalign=0, ellipsize=Pango.EllipsizeMode.END, visible=False)
+        self.inspect_meta.add_css_class("dim-label")
+        self.inspect_meta.add_css_class("ac-git-inspector-meta")
+        box.append(self.inspect_meta)
+        self.actions: Gtk.FlowBox = Gtk.FlowBox(
+            selection_mode=Gtk.SelectionMode.NONE,
+            homogeneous=False,
+            column_spacing=6,
+            row_spacing=6,
+            max_children_per_line=8,
+        )
+        self.actions.add_css_class("ac-git-actions")
+        box.append(self.actions)
         self.file_list: Gtk.ListBox = Gtk.ListBox(selection_mode=Gtk.SelectionMode.SINGLE)
         self.file_list.add_css_class("navigation-sidebar")
         _ = self.file_list.connect("row-selected", self._file_selected)
         files = Gtk.ScrolledWindow(child=self.file_list, hscrollbar_policy=Gtk.PolicyType.NEVER)
         files.set_min_content_height(_FILES_HEIGHT)
         box.append(files)
+        self.commit_slot: Gtk.Box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+        box.append(self.commit_slot)
         box.append(Gtk.Separator())
         self.diff_box: Gtk.Box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
         self.diff_box.add_css_class("ac-review-diff")
@@ -292,6 +300,7 @@ class GitPane(Gtk.Box):
 
     def _show_state(self, state: GitStateResult) -> None:
         self.git_actions.show_state(state)
+        self._show_meta()
         self.base_label.set_text(state.base_branch or translate("git.empty"))
         self._syncing = True
         tabs = tuple(row for row in state.worktrees if row.tab_id is not None)
@@ -407,10 +416,29 @@ class GitPane(Gtk.Box):
         self.mode_choice.set_visible(row.worktree is not None)
         self.source = self._source_of(row)
         self.inspect_title.set_text(_title_of(row))
+        self._show_meta()
         _ = spawn_task(self._load_files())
+
+    def _show_meta(self) -> None:
+        """Which branch and plan node this row is, and how merging it stands, in one line."""
+        row = self.selected_row()
+        worktree = None if row is None else worktree_of(self.state, row)
+        parts: list[str] = []
+        if worktree is not None:
+            parts.append(translate("git.meta_branch").format(branch=worktree.branch or translate("git.detached")))
+            if worktree.plan_node is not None:
+                parts.append(translate("git.meta_node").format(node=worktree.plan_node))
+            parts.extend(_badge_text(badge) for badge in merge_badges(worktree))
+        elif row is not None and row.node is not None and row.node.plan_node is not None:
+            parts.append(translate("git.meta_node").format(node=row.node.plan_node))
+            if row.node.agent:
+                parts.append(row.node.agent)
+        self.inspect_meta.set_text("   ".join(parts))
+        self.inspect_meta.set_visible(bool(parts))
 
     def _clear_inspector(self) -> None:
         self.source = None
+        self.inspect_meta.set_visible(False)
         self.mode_choice.set_visible(False)
         self.inspect_title.set_text(translate("git.select"))
         self.file_list.remove_all()
@@ -442,7 +470,7 @@ class GitPane(Gtk.Box):
             self._show_message(translate("review.no_changes"))
             return
         for item in files:
-            self.file_list.append(file_row(item))
+            self.file_list.append(file_row(item, self.git_actions.file_buttons(item.path)))
         at = self._file_paths.index(previous) if previous in self._file_paths else 0
         self.file_list.select_row(self.file_list.get_row_at_index(at))
 

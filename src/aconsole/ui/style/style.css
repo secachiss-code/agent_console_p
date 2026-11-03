@@ -91,6 +91,10 @@ progressbar.horizontal > trough, levelbar.horizontal > trough { min-height: 4px;
 
 /* Git & checkpoints. Pills are plain CSS: libadwaita 1.5 has no tag widget. */
 .ac-git-toolbar { padding: 6px 16px; }
+.ac-git-inspector-meta { padding: 0 12px 6px; font-size: 9pt; }
+.ac-git-actions { padding: 0 12px 6px; }
+.ac-git-commit { padding: 6px 12px; }
+.ac-git-message { padding: 6px; border-radius: 6px; background-color: alpha(currentColor, 0.06); }
 .ac-git-row { padding: 0 8px 0 0; min-height: 36px; }
 .ac-git-list > row { padding: 0; min-height: 36px; }
 .ac-git-when { font-size: 9pt; }

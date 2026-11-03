@@ -17,7 +17,7 @@ _WORD_ADD = "rgba(46, 160, 67, 0.45)"
 _WORD_DEL = "rgba(248, 81, 73, 0.45)"
 
 
-def file_row(item: DiffFileView) -> Gtk.ListBoxRow:
+def file_row(item: DiffFileView, actions: tuple[Gtk.Widget, ...] = ()) -> Gtk.ListBoxRow:
     box = Gtk.Box(spacing=8)
     box.add_css_class("ac-review-file")
     name = Gtk.Label(label=item.path, xalign=0, hexpand=True, ellipsize=Pango.EllipsizeMode.START)
@@ -27,6 +27,8 @@ def file_row(item: DiffFileView) -> Gtk.ListBoxRow:
     counts.add_css_class("dim-label")
     counts.add_css_class("numeric")
     box.append(counts)
+    for action in actions:
+        box.append(action)
     return Gtk.ListBoxRow(child=box)
 
 

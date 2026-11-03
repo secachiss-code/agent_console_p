@@ -21,9 +21,11 @@ from aconsole.contracts.app import (
 )
 from aconsole.contracts.common import AgentKind, ProjectId, TabId, WorkspaceMode
 from aconsole.contracts.events import QuotaUpdated, TabAdded, TabRemoved, TabUpdated, UiEvent
+from aconsole.contracts.git import GitStateResult
 from aconsole.ui.client.core_client import CoreClient
 from aconsole.ui.client.store import CoreStore
 from aconsole.ui.gtk_typed import TypedListStore, gproperty
+from aconsole.ui.viewmodels.git_vm import row_flags, tab_git_line
 from aconsole.ui.viewmodels.logic.tab_format import format_tab
 
 MAX_TAB_TITLE_LENGTH = 80
@@ -44,6 +46,8 @@ class TabItem(GObject.Object):
     spinning: object = gproperty(bool, False)  # noqa: FBT003 -- GObject property default is positional
     attention: object = gproperty(bool, False)  # noqa: FBT003 -- GObject property default is positional
     waiting_minutes: object = gproperty(int, -1)
+    git_line: object = gproperty(str, "")
+    git_warning: object = gproperty(bool, False)  # noqa: FBT003 -- GObject property default is positional
 
     def __init__(self, tab_id: str, title: str) -> None:
         super().__init__()
@@ -105,6 +109,21 @@ class TabsViewModel:
     @property
     def store(self) -> TabListStore:
         return self._store
+
+    def apply_git(self, state: GitStateResult) -> None:
+        """Each of this project's tabs says where its worktree stands. The rows follow by notify."""
+        rows = {str(row.tab_id): row for row in state.worktrees if row.tab_id is not None}
+        for at in range(self.model.get_n_items()):
+            item = self.model.get_item(at)
+            if not isinstance(item, TabItem) or str(item.project_id) != str(state.project_id):
+                continue
+            row = rows.get(str(item.tab_id))
+            line = "" if row is None else tab_git_line(row)
+            warning = row is not None and row_flags(row, state.base_branch).has_conflicts
+            if str(item.git_line) != line:
+                item.set_property("git-line", line)
+            if bool(item.git_warning) != warning:
+                item.set_property("git-warning", warning)
 
     def _refresh(self, state: CoreStore) -> None:
         snapshot = state.snapshot

@@ -7,12 +7,13 @@ dialog states what that preview said. The core checks everything again, so a ref
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Final, Protocol
+from urllib.parse import quote
 
 import gi
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
-from gi.repository import Adw, Gtk  # noqa: E402
+from gi.repository import Adw, GObject, Gtk  # noqa: E402
 
 from aconsole.ui.bootstrap import spawn_task  # noqa: E402
 from aconsole.ui.client.core_client import CoreCallError  # noqa: E402
@@ -24,6 +25,7 @@ from aconsole.ui.viewmodels.git_vm import (  # noqa: E402
     merge_source,
     open_operations,
     recipients,
+    row_flags,
     short,
     worktree_of,
 )
@@ -50,7 +52,6 @@ _ORDER: Final = (
     "abort",
     "stage",
     "unstage",
-    "commit",
     "merge",
     "rebase",
     "cherry_pick",
@@ -68,6 +69,7 @@ _KNOWN_ERRORS: Final = frozenset(
         "MERGE_CONFLICT",
         "MERGE_MODE_UNAVAILABLE",
         "CONFIRM_TOKEN_INVALID",
+        "DATABASE_TRANSACTION_FAILED",
     }
 )
 _NOT_REMOVABLE: Final = "WORKTREE_NOT_REMOVABLE"
@@ -107,27 +109,54 @@ def refusal_text(error: CoreCallError) -> str:
 
 
 class GitActions:
-    def __init__(self, host: GitHost, bar: Gtk.Box) -> None:
+    def __init__(self, host: GitHost, bar: Gtk.FlowBox, commit_slot: Gtk.Box, banner: Adw.Banner) -> None:
         self._host: GitHost = host
-        self._bar: Gtk.Box = bar
+        self._bar: Gtk.FlowBox = bar
+        self.banner: Adw.Banner = banner
+        self._note_path: str | None = None
         self._revision: str | None = None
         self.dialog: Adw.AlertDialog | None = None
-        self.message_view: Gtk.TextView | None = None
+        self.cleanup_choice: Gtk.CheckButton | None = None
         self.mode_choice: Gtk.DropDown | None = None
         self.choice: Gtk.DropDown | None = None
         self.facts: tuple[FactReviewView, ...] = ()
-        self.status: Gtk.Label = Gtk.Label()
+        self.status: Gtk.Label = Gtk.Label(xalign=0)
         self.status.add_css_class("dim-label")
         bar.append(self.status)
-        self.facts_button: Gtk.Button = Gtk.Button(visible=False)
-        _ = self.facts_button.connect("clicked", self._facts_clicked)
-        bar.append(self.facts_button)
+        self.spinner: Gtk.Spinner = Gtk.Spinner(visible=False)
+        bar.append(self.spinner)
+        self._parent_of(self.spinner).set_visible(False)
+        self._parent_of(self.status).set_visible(False)
+        _ = banner.connect("button-clicked", self._facts_clicked)
+        self.file_actions: dict[tuple[str, str], Gtk.Button] = {}
         self.buttons: dict[str, Gtk.Button] = {}
         for key in _ORDER:
-            button = Gtk.Button(label=translate(f"git.do.{key}"), visible=False)
+            button = Gtk.Button(label=translate(f"git.do.{key}"))
             _ = button.connect("clicked", self._clicked, key)
             self.buttons[key] = button
             bar.append(button)
+            self._parent_of(button).set_visible(False)
+        self.commit_counts: Gtk.Label = Gtk.Label(xalign=0)
+        self.commit_counts.add_css_class("dim-label")
+        self.message_view: Gtk.TextView = Gtk.TextView(wrap_mode=Gtk.WrapMode.WORD_CHAR, accepts_tab=False)
+        self.message_view.add_css_class("ac-git-message")
+        self.message_view.update_property(
+            [Gtk.AccessibleProperty.LABEL], [GObject.Value(GObject.TYPE_STRING, translate("git.commit_placeholder"))]
+        )
+        _ = self.message_view.get_buffer().connect("changed", self._message_changed)
+        self.commit_button: Gtk.Button = Gtk.Button(label=translate("git.commit_go"), halign=Gtk.Align.END)
+        self.commit_button.add_css_class("suggested-action")
+        _ = self.commit_button.connect("clicked", self._commit_clicked)
+        self._commit_slot: Gtk.Box = commit_slot
+        commit_slot.add_css_class("ac-git-commit")
+        commit_slot.append(self.commit_counts)
+        commit_slot.append(Gtk.ScrolledWindow(child=self.message_view, min_content_height=_MESSAGE_HEIGHT))
+        commit_slot.append(self.commit_button)
+        commit_slot.set_visible(False)
+
+    def _parent_of(self, widget: Gtk.Widget) -> Gtk.Widget:
+        parent = widget.get_parent()
+        return widget if parent is None else parent
 
     def show_state(self, state: GitStateResult) -> None:
         self.refresh()
@@ -135,6 +164,7 @@ class GitActions:
         self.status.set_text(
             "  ".join(translate("git.op_line").format(kind=item.kind, status=item.status) for item in running),
         )
+        self._parent_of(self.status).set_visible(bool(running))
         if state.revision != self._revision:
             self._revision = state.revision
             _ = spawn_task(self._load_facts())
@@ -142,7 +172,99 @@ class GitActions:
     def refresh(self) -> None:
         offered = self._offered()
         for key, button in self.buttons.items():
-            button.set_visible(key in offered)
+            self._parent_of(button).set_visible(key in offered)
+        row = self._host.selected_row()
+        state = self._host.state
+        worktree = None if row is None or row.worktree is None else worktree_of(state, row)
+        self._commit_slot.set_visible(worktree is not None and not worktree.busy and worktree.in_progress is None)
+        self._update_commit()
+
+    def offered(self, key: str) -> bool:
+        return self._parent_of(self.buttons[key]).get_visible()
+
+    def _commit_row(self) -> WorktreeGitState | None:
+        row = self._host.selected_row()
+        return None if row is None else worktree_of(self._host.state, row)
+
+    def _message(self) -> str:
+        buffer = self.message_view.get_buffer()
+        return buffer.get_text(buffer.get_start_iter(), buffer.get_end_iter(), include_hidden_chars=False).strip()
+
+    def _update_commit(self) -> None:
+        row = self._commit_row()
+        state = self._host.state
+        flags = row_flags(row, None if state is None else state.base_branch)
+        self.commit_counts.set_text(translate("git.commit_counts").format(count=0 if row is None else row.staged))
+        self.commit_button.set_sensitive(flags.can_commit and bool(self._message()))
+
+    def _message_changed(self, _buffer: Gtk.TextBuffer) -> None:
+        self._update_commit()
+
+    def _commit_clicked(self, _button: Gtk.Button) -> None:
+        row = self._commit_row()
+        message = self._message()
+        if row is not None and message:
+            self._start(self._commit(row, message))
+
+    def file_buttons(self, path: str) -> tuple[Gtk.Widget, ...]:
+        """Per file, on the side of the diff the inspector is showing."""
+        source = self._host.source
+        row = self._commit_row()
+        if source is None or row is None or row.busy:
+            return ()
+        if source.kind == "index":
+            return (self._file_button("list-remove-symbolic", "git.file_unstage", self._unstage_file, path),)
+        if source.kind != "worktree":
+            return ()
+        return (
+            self._file_button("list-add-symbolic", "git.file_stage", self._stage_file, path),
+            self._file_button("edit-undo-symbolic", "git.file_discard", self._discard_file, path),
+        )
+
+    def _file_button(
+        self, icon: str, tip: str, action: Callable[[Gtk.Button, str], None], path: str
+    ) -> Gtk.Button:
+        button = Gtk.Button(icon_name=icon, tooltip_text=translate(tip), valign=Gtk.Align.CENTER)
+        button.add_css_class("flat")
+        button.update_property([Gtk.AccessibleProperty.LABEL], [GObject.Value(GObject.TYPE_STRING, translate(tip))])
+        _ = button.connect("clicked", action, path)
+        self.file_actions[(tip, path)] = button
+        return button
+
+    def _stage_file(self, _button: Gtk.Button, path: str) -> None:
+        row = self._commit_row()
+        if row is not None:
+            self._start(self._stage(row, (path,)))
+
+    def _unstage_file(self, _button: Gtk.Button, path: str) -> None:
+        row = self._commit_row()
+        if row is not None:
+            self._start(self._unstage(row, (path,)))
+
+    def _discard_file(self, _button: Gtk.Button, path: str) -> None:
+        row = self._commit_row()
+        if row is not None and row.head_oid is not None:
+            self._start(self._open_discard(row, path, row.head_oid))
+
+    async def _open_discard(self, row: WorktreeGitState, path: str, oid: str) -> None:
+        preview = await self._host.viewmodel.restore_preview(row.path, path, oid)
+
+        def discard() -> None:
+            self._start(self._do_restore(row, preview))
+
+        if preview.exists_in_source:
+            body = translate("git.discard_body").format(
+                oid=short(oid), insertions=preview.insertions, deletions=preview.deletions
+            )
+        else:
+            body = translate("git.discard_removes")
+        self._ask(
+            translate("git.discard_heading").format(path=path),
+            body,
+            translate("git.discard_go"),
+            discard,
+            destructive=True,
+        )
 
     def _offered(self) -> tuple[str, ...]:
         row = self._host.selected_row()
@@ -158,7 +280,7 @@ class GitActions:
             has_file=self._host.selected_path is not None,
         )
 
-    def _clicked(self, _button: Gtk.Button, key: str) -> None:  # noqa: C901, PLR0912 -- one line per button
+    def _clicked(self, _button: Gtk.Button, key: str) -> None:  # noqa: C901 -- one line per button
         row = self._host.selected_row()
         if row is None:
             return
@@ -174,11 +296,9 @@ class GitActions:
         elif worktree is None:
             return
         elif key == "stage":
-            self._start(self._stage(worktree))
+            self._start(self._stage(worktree, _ALL_FILES))
         elif key == "unstage":
-            self._start(self._unstage(worktree))
-        elif key == "commit":
-            self._commit_dialog(worktree)
+            self._start(self._unstage(worktree, _ALL_FILES))
         elif key == "continue":
             self._start(self._resume(worktree))
         elif key == "abort":
@@ -192,13 +312,23 @@ class GitActions:
         _ = spawn_task(self._guarded(work))
 
     async def _guarded(self, work: Coroutine[object, object, None]) -> None:
-        """Whatever the answer, the page shows what is true now."""
+        """One at a time, and whatever the answer, the page shows what is true now."""
+        self._bar.set_sensitive(False)
+        self.commit_button.set_sensitive(False)
+        self._parent_of(self.spinner).set_visible(True)
+        self.spinner.set_visible(True)
+        self.spinner.start()
         try:
             await work
         except CoreCallError as error:
             self._host.toast(refusal_text(error))
         except Exception as error:  # noqa: BLE001 -- a lost core shows here, not in a crash
             self._host.toast(translate("review.load_error").format(error=error))
+        finally:
+            self.spinner.stop()
+            self._parent_of(self.spinner).set_visible(False)
+            self._bar.set_sensitive(True)
+            self._update_commit()
         self._host.reload()
 
     def _ask(  # noqa: PLR0913 -- one dialog, in the words of its caller
@@ -262,47 +392,21 @@ class GitActions:
         else:
             self._host.toast(translate("git.op_done").format(oid=short(operation.result_oid)))
 
-    def _chosen_paths(self, kind: str) -> tuple[str, ...]:
-        """The file in view when the inspector shows that side. Otherwise everything."""
-        source = self._host.source
-        path = self._host.selected_path
-        if path is not None and source is not None and source.kind == kind:
-            return (path,)
-        return _ALL_FILES
-
-    async def _stage(self, row: WorktreeGitState) -> None:
-        done = await self._host.viewmodel.stage(row, self._chosen_paths("worktree"))
+    async def _stage(self, row: WorktreeGitState, paths: tuple[str, ...]) -> None:
+        done = await self._host.viewmodel.stage(row, paths)
         if not done.ok:
             self._say(done, "")
 
-    async def _unstage(self, row: WorktreeGitState) -> None:
-        done = await self._host.viewmodel.unstage(row, self._chosen_paths("index"))
+    async def _unstage(self, row: WorktreeGitState, paths: tuple[str, ...]) -> None:
+        done = await self._host.viewmodel.unstage(row, paths)
         if not done.ok:
             self._say(done, "")
-
-    def _commit_dialog(self, row: WorktreeGitState) -> None:
-        view = Gtk.TextView(wrap_mode=Gtk.WrapMode.WORD_CHAR, accepts_tab=False)
-        self.message_view = view
-        frame = Gtk.ScrolledWindow(child=view, min_content_height=_MESSAGE_HEIGHT)
-        frame.add_css_class("card")
-
-        def commit() -> None:
-            buffer = view.get_buffer()
-            text = buffer.get_text(buffer.get_start_iter(), buffer.get_end_iter(), include_hidden_chars=False).strip()
-            if text:
-                self._start(self._commit(row, text))
-
-        self._ask(
-            translate("git.commit_heading").format(branch=row.branch or translate("git.detached")),
-            translate("git.commit_body").format(count=row.staged),
-            translate("git.commit_go"),
-            commit,
-            extra=frame,
-        )
 
     async def _commit(self, row: WorktreeGitState, message: str) -> None:
         done = await self._host.viewmodel.commit(row, message)
         self._say(done, translate("git.committed").format(oid=short(done.head_oid)))
+        if done.ok:
+            self.message_view.get_buffer().set_text("")
 
     async def _resume(self, row: WorktreeGitState) -> None:
         done = await self._host.viewmodel.resume(row.path)
@@ -378,19 +482,37 @@ class GitActions:
         box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
         box.append(choice)
         box.append(entry)
+        removable = self._removable_after(preview.source)
+        cleanup = Gtk.CheckButton(label=translate("git.merge_cleanup"), active=True, visible=removable is not None)
+        self.cleanup_choice = cleanup
+        box.append(cleanup)
 
         def merge() -> None:
             mode = modes[choice.get_selected()]
-            self._start(self._do_merge(preview, mode, entry.get_text().strip() or None))
+            then = removable if cleanup.get_active() else None
+            self._start(self._do_merge(preview, mode, entry.get_text().strip() or None, then))
 
         self._ask(heading, "\n".join(lines), translate("git.merge_go"), merge, extra=box)
 
-    async def _do_merge(self, preview: MergePreviewResult, mode: MergeMode, message: str | None) -> None:
+    def _removable_after(self, branch: str) -> WorktreeGitState | None:
+        state = self._host.state
+        rows = () if state is None else state.worktrees
+        return next((row for row in rows if row.branch == branch and not row.is_main), None)
+
+    async def _do_merge(
+        self,
+        preview: MergePreviewResult,
+        mode: MergeMode,
+        message: str | None,
+        then_remove: WorktreeGitState | None,
+    ) -> None:
         operation = (await self._host.viewmodel.merge(preview, mode, message)).operation
-        if operation.status in {"finished", "merged"}:
-            self._host.toast(translate("git.merged").format(oid=short(operation.result_oid)))
-        else:
+        if operation.status not in {"finished", "merged"}:
             self._say_operation(operation)
+            return
+        self._host.toast(translate("git.merged").format(oid=short(operation.result_oid)))
+        if then_remove is not None:
+            await self._cleanup(then_remove, discard_ignored=False)
 
     def _cleanup_dialog(self, row: WorktreeGitState) -> None:
         def remove() -> None:
@@ -533,7 +655,7 @@ class GitActions:
         self._host.toast(done.toast or translate("git.sent"))
 
     async def _load_facts(self) -> None:
-        """A hint beside the work. If it cannot be read, the button just stays away."""
+        """A hint beside the work. If it cannot be read, the banner just stays away."""
         try:
             found = await self._host.viewmodel.facts()
         except CoreCallError:
@@ -541,20 +663,29 @@ class GitActions:
         except Exception:  # noqa: BLE001 -- the page's own load reports a lost core
             return
         self.facts = found.facts
-        self.facts_button.set_visible(bool(found.facts))
-        self.facts_button.set_label(translate("git.facts").format(count=len(found.facts)))
+        self._note_path = found.note_path
+        self.banner.set_title(translate("git.facts").format(count=len(found.facts)))
+        self.banner.set_revealed(bool(found.facts))
 
-    def _facts_clicked(self, _button: Gtk.Button) -> None:
+    def _facts_clicked(self, _banner: Adw.Banner) -> None:
         lines = [
             translate("git.facts_line").format(title=item.title, paths=", ".join(item.changed_paths))
             for item in self.facts
         ]
+        go = None if self._note_path is None else translate("git.facts_open")
         self._ask(
             translate("git.facts_heading"),
             "\n".join((translate("git.facts_body"), "", *lines)),
-            None,
-            _nothing,
+            go,
+            self._open_note,
         )
+
+    def _open_note(self) -> None:
+        if self._note_path is None:
+            return
+        uri = f"obsidian://open?path={quote(self._note_path, safe='')}"
+        window = self._host.get_root() if isinstance(self._host, Gtk.Widget) else None
+        Gtk.UriLauncher.new(uri).launch(window if isinstance(window, Gtk.Window) else None, None, None, None)
 
 
 def _nothing() -> None:

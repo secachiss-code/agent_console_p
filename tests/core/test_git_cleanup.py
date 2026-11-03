@@ -192,6 +192,20 @@ def test_a_fact_needs_a_look_only_when_its_own_code_moved(tmp_path: Path) -> Non
         found = await client.call("git/factsToReview", ask, FactsToReviewResult)
         assert [item.id for item in found.facts] == [a_fact.kb_id]
         assert found.facts[0].changed_paths == ("src/a.py",)
+        assert found.note_path is None, "no vault set yet"
+
+        vault = tmp_path / "vault"
+        vault.mkdir()
+        daemon._to_vault(daemon.vault.use_root, vault)
+        found = await client.call("git/factsToReview", ask, FactsToReviewResult)
+        assert found.note_path is not None
+        note = Path(found.note_path)
+        async with asyncio.timeout(5):
+            while not note.exists():  # noqa: ASYNC110, ASYNC240 -- the vault thread writes this
+                await asyncio.sleep(0.02)
+        text = note.read_text(encoding="utf-8")  # noqa: ASYNC240
+        assert "about a: src/a.py" in text
+        assert "about b" not in text
         await _stop(daemon, task, client)
 
     asyncio.run(scenario())

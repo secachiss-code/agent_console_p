@@ -288,6 +288,39 @@ def actions_for(
     return tuple(found)
 
 
+@dataclass(frozen=True, slots=True, kw_only=True)
+class RowFlags:
+    """What the inspector needs to know of a worktree, in one place."""
+
+    can_commit: bool
+    can_merge: bool
+    is_merging: bool
+    has_conflicts: bool
+
+
+def row_flags(row: WorktreeGitState | None, base_branch: str | None) -> RowFlags:
+    if row is None:
+        return RowFlags(can_commit=False, can_merge=False, is_merging=False, has_conflicts=False)
+    conflict = row.conflicted > 0 or row.merge.status == "conflict"
+    return RowFlags(
+        can_commit=row.staged > 0 and not row.busy and row.in_progress is None,
+        can_merge=not row.is_main and not row.busy and row.branch not in {None, base_branch} and not conflict,
+        is_merging=row.in_progress is not None,
+        has_conflicts=conflict,
+    )
+
+
+def tab_git_line(row: WorktreeGitState) -> str:
+    """The sidebar's line for a tab: its branch, its plan node, and what merging it would bring."""
+    parts = [row.branch or short(row.head_oid)]
+    if row.plan_node is not None:
+        parts.append(str(row.plan_node))
+    line = " · ".join(parts)
+    if row.merge.insertions or row.merge.deletions:
+        return f"{line}  +{row.merge.insertions} −{row.merge.deletions}"  # noqa: RUF001 -- the minus sign
+    return line
+
+
 def _worktree_actions(row: WorktreeGitState, base_branch: str | None) -> list[str]:
     found: list[str] = []
     if row.in_progress in {"merge", "rebase", "cherry-pick"}:
@@ -296,12 +329,12 @@ def _worktree_actions(row: WorktreeGitState, base_branch: str | None) -> list[st
         found.append("stage")
     if row.staged:
         found.append("unstage")
-        if row.in_progress is None:
-            found.append("commit")
     if row.is_main or row.in_progress is not None:
         return found
     if row.branch is not None and row.branch != base_branch:
-        found.extend(("merge", "rebase"))
+        found.append("merge")
+        if row.behind > 0:
+            found.append("rebase")
     found.append("cleanup")
     return found
 

@@ -23,6 +23,7 @@ from aconsole.core.infrastructure.vault.writer import VaultWriter, dump_front, l
 
 _LOG = logging.getLogger(__name__)
 _PLANS: Final = "plans"
+_FACTS: Final = "facts"
 _NOTE: Final = ".md"
 _DEPTH: Final = 3
 _LIST_FIELDS: Final = frozenset({"depends_on", "paths", "acceptance", "tags"})
@@ -113,6 +114,22 @@ class VaultSync:
         root = self._root.resolve()
         path = (root / note_ref).resolve()
         return path if path.is_relative_to(root) and path.is_file() else None
+
+    def facts_note(self, project_id: str) -> Path | None:
+        """Where a project's facts to review are listed. The core owns this file and rewrites it whole."""
+        return None if self._root is None else self._root / _FACTS / f"{project_id}-to-review{_NOTE}"
+
+    def publish_facts(self, project_id: str, lines: tuple[str, ...]) -> None:
+        """List what needs a look, or say that nothing does. An unchanged list writes nothing."""
+        path = self.facts_note(project_id)
+        if path is None:
+            return
+        path.parent.mkdir(exist_ok=True)
+        body = "".join(f"- {line}\n" for line in lines) if lines else "Nothing right now.\n"
+        lead = "The code behind these changed after they were written. They may still be true.\n\n" if lines else ""
+        text = f"# Facts to review\n\n{lead}{body}"
+        if not path.is_file() or path.read_text(encoding="utf-8") != text:
+            _ = self._writer.write(path, text)
 
     def publish_all(self) -> None:
         for plan_id in self._board.plan_ids():
