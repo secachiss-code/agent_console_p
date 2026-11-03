@@ -68,6 +68,7 @@ from aconsole.core.infrastructure.persistence.engine import write_engine
 from aconsole.core.infrastructure.persistence.models import ApprovalStatus
 from aconsole.core.infrastructure.persistence.repositories.catalog import ApprovalRecord, ApprovalRepository
 from aconsole.core.infrastructure.persistence.repositories.checkpoints import CheckpointDatabase
+from aconsole.core.infrastructure.persistence.repositories.knowledge import KnowledgeDatabase
 from aconsole.core.infrastructure.persistence.repositories.plans import PlanDatabase
 from aconsole.core.infrastructure.persistence.repositories.tabs import TabDatabase
 from aconsole.core.infrastructure.persistence.repositories.vault_files import VaultFileDatabase
@@ -706,6 +707,7 @@ class Daemon:
         store = TabDatabase(writer)
         self.review.checkpoints.use_journal(CheckpointDatabase(writer))
         await asyncio.to_thread(self._plans.use_store, PlanDatabase(writer))
+        await asyncio.to_thread(self._plans.use_knowledge, KnowledgeDatabase(writer))
         await asyncio.to_thread(self.vault.use_bases, VaultFileDatabase(writer))
         self.tabs.use_store(store)
         self.tabs.use_projects(self._catalog, store)

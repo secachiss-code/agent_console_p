@@ -380,6 +380,7 @@ class KbNode(Base):
     status: Mapped[str | None] = mapped_column(String(24))
     source: Mapped[str | None] = mapped_column(String(2048))
     verified_commit: Mapped[str | None] = mapped_column(String(64))
+    body: Mapped[str | None] = mapped_column(Text)
     is_stale: Mapped[bool] = mapped_column(Boolean(create_constraint=True))
     updated_at: Mapped[datetime] = mapped_column()
 
@@ -427,6 +428,7 @@ class Handover(Base):
     target_agent: Mapped[AgentKind | None] = mapped_column(_enum(AgentKind))
     plan_node_id: Mapped[str | None] = mapped_column(ForeignKey("plan_nodes.id", ondelete="SET NULL"))
     summary_markdown: Mapped[str] = mapped_column(Text)
+    packet: Mapped[dict[str, object] | None] = mapped_column(JsonObject)
     note_ref: Mapped[str | None] = mapped_column(String(1024))
     created_at: Mapped[datetime] = mapped_column()
 

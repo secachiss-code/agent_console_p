@@ -24,6 +24,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from aconsole.contracts.app import PlanNodeView, PlanView
 from aconsole.contracts.common import AgentKind, NodeId, NoteRef, PlanId, ProjectId, TabId
 from aconsole.contracts.common import NodeStatus as NodeStatusView
+from aconsole.core.application.ports.knowledge_store import KnowledgeStore, StoredFact, StoredHandover
 from aconsole.core.application.ports.plan_store import (
     PlanStore,
     StoredArtifact,
@@ -329,6 +330,7 @@ class PlanBoard:
         self._handovers: dict[str, _Handover] = {}
         self._store: PlanStore | None = None
         self._saved: dict[str, StoredPlan] = {}
+        self._knowledge: KnowledgeStore | None = None
         self.on_changed: Callable[[PlanView], None] | None = None
         self.note_ref: Callable[[str, str], str | None] = lambda _plan, _key: None
         self.code_graph: CodeGraph | None = None
@@ -341,6 +343,39 @@ class PlanBoard:
                 self._plans[saved.id] = _restored(saved)
                 self._saved[saved.id] = saved
                 self._seq = max(self._seq, _number(saved.id), *(_number(node.id) for node in saved.nodes))
+
+    def use_knowledge(self, store: KnowledgeStore) -> None:
+        """Take the facts and handovers `store` kept. From here on each one is committed before it is answered."""
+        with self._lock:
+            self._knowledge = store
+            facts, handovers = store.load()
+            for fact in facts:
+                self._facts[fact.id] = _Fact(
+                    kb_id=fact.id,
+                    project_id=fact.project_id,
+                    kind=fact.kind,
+                    title=fact.title,
+                    body=fact.body,
+                    source=fact.source,
+                    code_refs=fact.code_refs,
+                    stale=fact.stale,
+                    note_ref=fact.note_ref,
+                )
+                self._seq = max(self._seq, _number(fact.id))
+            for packet in handovers:
+                self._seq = max(self._seq, _number(packet.id))
+                if packet.tab_id is None:
+                    continue
+                self._handovers[packet.tab_id] = _Handover(
+                    handover_id=packet.id,
+                    note_ref=packet.note_ref,
+                    goal=packet.goal,
+                    done=packet.done,
+                    decisions=packet.decisions,
+                    open_questions=packet.open_questions,
+                    next_steps=packet.next_steps,
+                    failing_checks=packet.failing_checks,
+                )
 
     def views(self, project_id: str | None = None, *, active_only: bool = False) -> tuple[PlanView, ...]:
         """Plans for `app/snapshot` and `plan/list`."""
@@ -673,10 +708,9 @@ class PlanBoard:
                 previous = self._facts.get(supersedes)
                 if previous is None or previous.project_id != ctx.project_id:
                     _stop("NOTE_NOT_FOUND", f"no knowledge item {supersedes}")
-                previous.stale = True
             kb_id = self._id("kb")
             note_ref = f"aconsole://note/{kb_id}"
-            self._facts[kb_id] = _Fact(
+            fact = _Fact(
                 kb_id=kb_id,
                 project_id=ctx.project_id,
                 kind=kind,
@@ -687,7 +721,31 @@ class PlanBoard:
                 stale=False,
                 note_ref=note_ref,
             )
+            self._keep_fact(fact, supersedes)
+            if supersedes is not None:
+                self._facts[supersedes].stale = True
+            self._facts[kb_id] = fact
             return KbAdded(kb_id=kb_id, note_ref=note_ref)
+
+    def _keep_fact(self, fact: _Fact, supersedes: str | None) -> None:
+        if self._knowledge is None:
+            return
+        record = StoredFact(
+            id=fact.kb_id,
+            project_id=fact.project_id,
+            kind=fact.kind,
+            title=fact.title,
+            body=fact.body,
+            source=fact.source,
+            code_refs=fact.code_refs,
+            stale=fact.stale,
+            note_ref=fact.note_ref,
+            updated_at=self._now(),
+        )
+        try:
+            self._knowledge.save_fact(record, supersedes)
+        except StoreWriteError as exc:
+            _stop("INTERNAL_ERROR", str(exc))
 
     def impact(self, ctx: TabContext, target: str, hops: int, limit: int, kinds: list[str] | None) -> Impact:
         _require_tab(ctx)
@@ -834,7 +892,7 @@ class PlanBoard:
                 _stop("NOTE_NOT_FOUND", f"decision {kb_id} is not a knowledge item")
         handover_id = self._id("ho")
         note_ref = f"aconsole://note/{handover_id}"
-        self._handovers[ctx.tab_id] = _Handover(
+        packet = _Handover(
             handover_id=handover_id,
             note_ref=note_ref,
             goal=goal,
@@ -844,6 +902,25 @@ class PlanBoard:
             next_steps=tuple(next_steps),
             failing_checks=tuple(failing_checks),
         )
+        if self._knowledge is not None:
+            record = StoredHandover(
+                id=handover_id,
+                project_id=ctx.project_id,
+                tab_id=ctx.tab_id,
+                note_ref=note_ref,
+                goal=goal,
+                done=packet.done,
+                decisions=packet.decisions,
+                open_questions=packet.open_questions,
+                next_steps=packet.next_steps,
+                failing_checks=packet.failing_checks,
+                created_at=self._now(),
+            )
+            try:
+                self._knowledge.save_handover(record)
+            except StoreWriteError as exc:
+                _stop("INTERNAL_ERROR", str(exc))
+        self._handovers[ctx.tab_id] = packet
         return HandoverResult(handover_id=handover_id, note_ref=note_ref, goal=goal)
 
     def _read_handover(self, ctx: TabContext) -> HandoverResult:
