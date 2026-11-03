@@ -19,9 +19,11 @@ import pytest
 from aconsole.contracts.common import AgentKind
 from aconsole.core.domain.agent import CAPABILITIES
 from aconsole.core.domain.agent import AgentKind as DomainAgent
+from aconsole.core.infrastructure.agents.command_files import cursor_rules, opencode_commands
 from aconsole.core.infrastructure.agents.cursor.launcher import CursorLauncher
 from aconsole.core.infrastructure.agents.launch import HostAgentCommands
 from aconsole.core.infrastructure.agents.opencode.launcher import OpenCodeLauncher
+from aconsole.core.infrastructure.agents.opencode.sessions import parse_sessions
 from aconsole.core.infrastructure.agents.opencode.stream import EventReader, EventStream
 from aconsole.core.infrastructure.containers.podman import ContainerError, Inspected
 from aconsole.core.infrastructure.http.consumer import OPENCODE_EVENT, hook_event, submitted_prompt
@@ -275,3 +277,31 @@ def test_visible_tail_removes_controls_and_keeps_the_last_lines() -> None:
     tail = visible_tail(raw).splitlines()
     assert tail[-1] == "red"
     assert len(tail) == 12
+
+
+def test_opencode_sessions_skip_subagents_and_other_projects() -> None:
+    rows = [
+        {"id": "a", "directory": "/p/", "title": "first\nmore", "time": {"created": 1000, "updated": 2000}},
+        {"id": "b", "directory": "/p", "title": "", "time": {"created": 5000, "updated": 6000}},
+        {"id": "kid", "directory": "/p", "parentID": "a", "time": {"created": 1, "updated": 1}},
+        {"id": "far", "directory": "/q", "time": {"created": 1, "updated": 1}},
+    ]
+    found = parse_sessions(json.dumps(rows).encode(), "/p").sessions
+    assert [info.session_id for info in found] == ["b", "a"]
+    assert found[0].title == "b"
+    assert found[1].title == "first"
+    assert parse_sessions(b"nope", "/p").sessions == ()
+
+
+def test_command_files_find_commands_and_rules(tmp_path: Path) -> None:
+    home = tmp_path / "home"
+    project = tmp_path / "project"
+    (project / ".opencode" / "commands").mkdir(parents=True)
+    ship = project / ".opencode" / "commands" / "ship.md"
+    ship.write_text("---\ndescription: Ship it\n---\nbody", encoding="utf-8")
+    (project / ".cursor" / "rules").mkdir(parents=True)
+    (project / ".cursor" / "rules" / "style.mdc").write_text("no front matter", encoding="utf-8")
+    home.mkdir()
+    commands = opencode_commands(home, project)
+    assert [(item.title, item.subtitle) for item in commands] == [("ship", "Ship it")]
+    assert [(item.title, item.subtitle) for item in cursor_rules(project)] == [("style", None)]
