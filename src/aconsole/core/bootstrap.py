@@ -64,7 +64,7 @@ from aconsole.core.infrastructure.ipc.session import Connection
 from aconsole.core.infrastructure.knowledge import KnowledgeService
 from aconsole.core.infrastructure.mcp.server import TabTokens, beside_ingest, build_server, http_app
 from aconsole.core.infrastructure.mcp.tools import PlanBoard, TabContext
-from aconsole.core.infrastructure.persistence.cleanup import sweep
+from aconsole.core.infrastructure.persistence.cleanup import SweepResult, sweep
 from aconsole.core.infrastructure.persistence.engine import write_engine
 from aconsole.core.infrastructure.persistence.models import ApprovalStatus
 from aconsole.core.infrastructure.persistence.repositories.catalog import ApprovalRecord, ApprovalRepository
@@ -807,7 +807,11 @@ class Daemon:
     async def _sweep_loop(self, writer: Writer) -> None:
         while True:
             try:
-                _ = await writer.submit(self._sweep_once)
+                # One portion per commit, so that writes queued meanwhile get their turn.
+                more = True
+                while more:
+                    swept = await writer.submit(self._sweep_once)
+                    more = isinstance(swept, SweepResult) and swept.more
                 await self._drop_swept_refs()
             except Exception:  # noqa: BLE001 -- a failed sweep is retried next period; the core keeps serving
                 _LOG.exception("retention sweep failed")

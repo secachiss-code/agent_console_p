@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 
 from aconsole.core.domain.agent import AgentKind
 from aconsole.core.domain.tab_status import TabStatus
+from aconsole.core.infrastructure.persistence import cleanup
 from aconsole.core.infrastructure.persistence.cleanup import sweep
 from aconsole.core.infrastructure.persistence.engine import migrate, write_engine
 from aconsole.core.infrastructure.persistence.models import (
@@ -26,6 +27,8 @@ from aconsole.core.infrastructure.persistence.models import (
 
 if TYPE_CHECKING:
     from pathlib import Path
+
+    import pytest
 
 _NOW = datetime(2026, 10, 26, tzinfo=UTC)
 _EVENTS = 2002
@@ -166,3 +169,22 @@ def _checkpoint(tab_id: str, turn: int, ref: str) -> Checkpoint:
         deletions=0,
         created_at=_NOW,
     )
+
+
+def test_a_long_backlog_is_swept_in_portions(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(cleanup, "_PORTION", 2)
+    url = f"sqlite:///{tmp_path / 'store.db'}"
+    migrate(url, "head")
+    engine = write_engine(url)
+    with Session(engine) as session:
+        session.add_all(
+            QuotaHistory(account_id="a", window_key="5h", used_pct=1.0, observed_at=_NOW - timedelta(days=60))
+            for _ in range(5)
+        )
+        session.commit()
+        passes: list[tuple[int, bool]] = []
+        for _ in range(3):
+            result = sweep(session, now=_NOW, drop_ref=lambda _ref: None)
+            passes.append((result.quota_deleted, result.more))
+        session.commit()
+    assert passes == [(2, True), (2, True), (1, False)]

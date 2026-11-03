@@ -6,7 +6,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 
-from sqlalchemy import delete, select
+from sqlalchemy import ColumnElement, CursorResult, and_, delete, select
 from sqlalchemy.orm import Session
 
 from aconsole.core.domain.checkpoints import check_keep
@@ -26,6 +26,9 @@ _CLOSED_TAB_DAYS = 30
 _DEFAULT_KEEP = 100
 _KEEP_KEY = "checkpoints_keep"
 _APP_KEY = "app"
+_PORTION = 5000
+
+type _IdTable = type[EventLog | QuotaHistory | Approval]
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -36,6 +39,7 @@ class SweepResult:
     checkpoints_deleted: int
     tabs_deleted: int
     refs: tuple[str, ...]
+    more: bool = False
 
 
 def sweep(session: Session, *, now: datetime, drop_ref: Callable[[str], None]) -> SweepResult:
@@ -62,6 +66,7 @@ def sweep(session: Session, *, now: datetime, drop_ref: Callable[[str], None]) -
         checkpoints_deleted=checkpoints,
         tabs_deleted=tabs,
         refs=tuple(refs),
+        more=_PORTION in {quota, approvals} or events >= _PORTION,
     )
 
 
@@ -76,10 +81,16 @@ def _keep(session: Session) -> int:
     return check_keep(chosen) if isinstance(chosen, int) else _DEFAULT_KEEP
 
 
+def _delete_portion(session: Session, table: _IdTable, condition: ColumnElement[bool]) -> int:
+    """Delete by condition, at most one portion: a long delete would hold up every other write."""
+    chosen = select(table.id).where(condition).limit(_PORTION)
+    result = session.execute(delete(table).where(table.id.in_(chosen)).execution_options(synchronize_session=False))
+    return result.rowcount if isinstance(result, CursorResult) else 0
+
+
 def _trim_events(session: Session) -> int:
-    tab_ids = session.scalars(select(EventLog.tab_id).distinct()).all()
     deleted = 0
-    for tab_id in tab_ids:
+    for tab_id in session.scalars(select(EventLog.tab_id).distinct()).all():
         boundary = (
             select(EventLog.id)
             .where(EventLog.tab_id == tab_id)
@@ -88,27 +99,16 @@ def _trim_events(session: Session) -> int:
             .limit(1)
             .scalar_subquery()
         )
-        doomed = session.scalars(select(EventLog.id).where(EventLog.tab_id == tab_id, EventLog.id < boundary)).all()
-        if doomed:
-            _ = session.execute(delete(EventLog).where(EventLog.id.in_(doomed)))
-        deleted += len(doomed)
+        deleted += _delete_portion(session, EventLog, and_(EventLog.tab_id == tab_id, EventLog.id < boundary))
     return deleted
 
 
 def _trim_quota(session: Session, now: datetime) -> int:
-    cutoff = now - timedelta(days=_QUOTA_DAYS)
-    doomed = session.scalars(select(QuotaHistory.id).where(QuotaHistory.observed_at < cutoff)).all()
-    if doomed:
-        _ = session.execute(delete(QuotaHistory).where(QuotaHistory.id.in_(doomed)))
-    return len(doomed)
+    return _delete_portion(session, QuotaHistory, QuotaHistory.observed_at < now - timedelta(days=_QUOTA_DAYS))
 
 
 def _trim_approvals(session: Session, now: datetime) -> int:
-    cutoff = now - timedelta(days=_APPROVAL_DAYS)
-    doomed = session.scalars(select(Approval.id).where(Approval.requested_at < cutoff)).all()
-    if doomed:
-        _ = session.execute(delete(Approval).where(Approval.id.in_(doomed)))
-    return len(doomed)
+    return _delete_portion(session, Approval, Approval.requested_at < now - timedelta(days=_APPROVAL_DAYS))
 
 
 def _trim_checkpoints(session: Session, keep: int, dropped: Callable[[str], None]) -> int:
