@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 from datetime import UTC, datetime, timedelta
 from typing import TYPE_CHECKING
 
@@ -21,20 +22,20 @@ if TYPE_CHECKING:
 _HINT = "open a tab and pass Authorization: Bearer <tab token>"
 _READ = frozenset({"plan_get", "plan_ready", "ctx_get", "kb_impact", "plan_list"})
 _IDEMPOTENT = frozenset({"plan_create", "plan_add_nodes", "node_attach"})
-_FIELDS = {
-    "plan_create": {"plan_id", "nodes", "canvas_note"},
-    "plan_add_nodes": {"added", "unchanged"},
-    "plan_get": {"title", "goal", "counts", "nodes"},
-    "plan_ready": {"nodes"},
-    "node_claim": {"lease_id", "fence", "expires_at", "brief", "context"},
-    "node_update": {"status", "expires_at"},
-    "node_attach": {"artifact_id"},
-    "ctx_get": {"items", "truncated", "verified_commit"},
-    "kb_add": {"kb_id", "note_ref"},
-    "kb_impact": {"layers", "truncated", "canvas_note"},
-    "handover": {"handover_id", "note_ref", "goal", "diff_stat", "nodes"},
-    "plan_list": {"plans"},
-}
+_TOOLS = frozenset({
+    "plan_create",
+    "plan_add_nodes",
+    "plan_get",
+    "plan_ready",
+    "node_claim",
+    "node_update",
+    "node_attach",
+    "ctx_get",
+    "kb_add",
+    "kb_impact",
+    "handover",
+    "plan_list",
+})
 _ERROR_ARGS: dict[str, dict[str, object]] = {
     "plan_create": {"title": "Plan", "goal": "Ship"},
     "plan_add_nodes": {"plan_id": "plan-1", "nodes": []},
@@ -83,7 +84,7 @@ def _server(
 
 
 def _body(result: CallToolResult) -> dict[str, object]:
-    raw = result.structured_content
+    raw: object = result.structured_content if result.is_error else json.loads(_text(result))
     assert isinstance(raw, dict)
     body: dict[str, object] = {}
     for key, value in raw.items():
@@ -102,12 +103,10 @@ def _error(result: CallToolResult) -> dict[str, object]:
     return error
 
 
-def _properties(tool: Tool) -> set[str]:
-    schema = tool.output_schema
-    assert isinstance(schema, dict)
-    props = schema.get("properties")
-    assert isinstance(props, dict)
-    return {key for key in props if isinstance(key, str)}
+def _lean(tool: Tool) -> bool:
+    """No output schema, and no generated title or ``null`` alternative in the argument schema."""
+    schema = json.dumps(tool.input_schema)
+    return tool.output_schema is None and '"title": "' not in schema and '{"type": "null"}' not in schema
 
 
 def _node_id(body: dict[str, object], key: str) -> str:
@@ -157,7 +156,7 @@ async def _each_tool(worktree: Path) -> None:
     async with Client(server) as client, Client(denied) as blocked:
         listed = await client.list_tools()
         tools = {tool.name: tool for tool in listed.tools}
-        assert set(tools) == set(_FIELDS)
+        assert set(tools) == _TOOLS
         for name, tool in tools.items():
             _check_tool(name, tool)
             failed = await blocked.call_tool(name, _ERROR_ARGS[name])
@@ -175,7 +174,7 @@ def _check_tool(name: str, tool: Tool) -> None:
     assert marks.open_world_hint is False
     assert marks.read_only_hint is (name in _READ)
     assert marks.idempotent_hint is (name in _READ or name in _IDEMPOTENT)
-    assert _FIELDS[name] <= _properties(tool)
+    assert _lean(tool)
 
 
 async def _success(client: Client, worktree: Path) -> None:

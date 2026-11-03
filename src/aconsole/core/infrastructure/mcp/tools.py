@@ -254,14 +254,11 @@ def publish(fn: Callable[..., object]) -> Callable[..., object]:
 def compact(result: BaseModel) -> CallToolResult:
     """The answer as the agent reads it: JSON without indentation, and without fields left empty or at their default.
 
-    Every byte here is a token in the agent's context, on every call. The structured copy keeps every field, so a
-    client that validates it against the tool's output schema still can.
+    Every byte here is a token in the agent's context, on every call. Agents read the text, so no structured copy of
+    the same answer goes beside it, and the tools publish no output schema.
     """
     lean = result.model_dump(mode="json", exclude_defaults=True, exclude_none=True)
-    return CallToolResult(
-        content=[TextContent(type="text", text=pydantic_core.to_json(lean).decode())],
-        structured_content=result.model_dump(mode="json"),
-    )
+    return CallToolResult(content=[TextContent(type="text", text=pydantic_core.to_json(lean).decode())])
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
