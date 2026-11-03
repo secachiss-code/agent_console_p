@@ -132,6 +132,9 @@ class GitHistory:
         git_dir = Path(self._git.read(root, "rev-parse", "--absolute-git-dir").text.strip())
         return recorded_start(git_dir, worktree)
 
+    def common_dir(self, root: Path) -> Path:
+        return Path(self._git.read(root, "rev-parse", "--path-format=absolute", "--git-common-dir").text.strip())
+
     def log(self, root: Path, tips: tuple[str, ...], skip: int, limit: int) -> tuple[CommitRow, ...]:
         if not tips:
             return ()

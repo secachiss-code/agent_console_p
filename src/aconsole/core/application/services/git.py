@@ -4,13 +4,16 @@ An agent's edits are not announced by anything, so while a client looks at a pro
 and at once after a turn ends. Single tool calls never trigger a look: a tab's status changes at most once a turn.
 """
 
+import logging
 import threading
 import time
 from collections.abc import Callable
+from pathlib import Path
 from typing import Final, final
 
 import msgspec
 
+from aconsole.contracts.app import EmptyResult
 from aconsole.contracts.common import ProjectId
 from aconsole.contracts.events import CheckpointCreated, GitStateUpdated, TabUpdated, UiEvent
 from aconsole.contracts.git import (
@@ -24,6 +27,7 @@ from aconsole.contracts.git import (
     GitPathsParams,
     GitStateParams,
     GitStateResult,
+    GitWatchParams,
     MergePreviewParams,
     MergeWorktreeParams,
     RebaseParams,
@@ -33,6 +37,7 @@ from aconsole.contracts.git import (
     SendDiffPreviewParams,
     WorktreeOperationParams,
 )
+from aconsole.core.application.ports.git_repo import GitCommandError, GitWatcher
 from aconsole.core.application.services.git_cleanup import GitCleanupService
 from aconsole.core.application.services.git_merge import GitMergeService
 from aconsole.core.application.services.git_ops import GitOperationService
@@ -42,6 +47,7 @@ from aconsole.core.application.services.git_state import GitStateService
 GIT_METHODS: Final = frozenset(
     {
         "git/state",
+        "git/watch",
         "git/graph",
         "git/diffSummary",
         "git/diffFile",
@@ -63,13 +69,16 @@ GIT_METHODS: Final = frozenset(
         "git/sendDiff",
     }
 )
-_READS: Final = frozenset({"git/state", "git/graph", "git/diffSummary", "git/diffFile"})
+_LOG: Final = logging.getLogger(__name__)
+_READS: Final = frozenset({"git/state", "git/watch", "git/graph", "git/diffSummary", "git/diffFile"})
 _MERGING: Final = frozenset({"git/mergePreview", "git/mergeWorktree", "git/operation"})
 _CLEANING: Final = frozenset({"git/cleanupWorktree", "git/factsToReview"})
 _REWRITING: Final = frozenset(
     {"git/rebase", "git/cherryPick", "git/continue", "git/abort", "git/sendDiffPreview", "git/sendDiff"}
 )
 _WATCH_S: Final = 30.0
+_QUIET_S: Final = 0.3
+_RETRY_S: Final = 5.0
 
 
 @final
@@ -92,6 +101,10 @@ class GitService:
         self._asked: dict[str, float] = {}
         self._revisions: dict[str, str] = {}
         self._nudged: set[str] = set()
+        self._watching: set[str] = set()
+        self._last_nudge: float = 0.0
+        self.watcher: GitWatcher | None = None
+        self.wake: Callable[[], None] = lambda: None
 
     def dispatch(self, method: str, raw: bytes) -> msgspec.Struct:
         if method in _REWRITING and self.rewrite is not None:
@@ -107,6 +120,9 @@ class GitService:
     def _read(self, method: str, raw: bytes) -> msgspec.Struct:
         if method == "git/state":
             return self._state(str(msgspec.json.decode(raw, type=GitStateParams).project_id))
+        if method == "git/watch":
+            self.keep_watching(str(msgspec.json.decode(raw, type=GitWatchParams).project_id))
+            return EmptyResult()
         if method == "git/graph":
             return self.state.graph(msgspec.json.decode(raw, type=GitGraphParams))
         if method == "git/diffSummary":
@@ -158,21 +174,34 @@ class GitService:
         elif isinstance(event, CheckpointCreated):
             with self._lock:
                 self._nudged.update(self._asked)
+                self._last_nudge = self._monotonic()
+            self.wake()
+
+    def heard(self, project_id: str) -> None:
+        """Git changed this repository. From the watcher's thread."""
+        self._nudge(project_id)
 
     def check(self) -> tuple[str, ...]:
-        """One pass over the projects a client looked at lately. Off the loop: it runs git."""
+        """Look at what changed in projects a client is showing. Off the loop: it runs git."""
         if self.merges is not None:
             self.merges.retry()
         now = self._monotonic()
         with self._lock:
             self._asked = {key: at for key, at in self._asked.items() if now - at < _WATCH_S}
-            watched = tuple(self._asked)
+            changed = tuple(key for key in self._nudged if key in self._asked)
             self._nudged.clear()
-        return tuple(project for project in watched if self.announce(project))
+        return tuple(project for project in changed if self.announce(project))
 
-    def nudged(self) -> bool:
+    def settled_in(self) -> float | None:
+        """Seconds until a burst of writes has gone quiet. None when nothing is waiting for a look."""
         with self._lock:
-            return bool(self._nudged)
+            if not self._nudged:
+                return None
+            return max(0.0, self._last_nudge + _QUIET_S - self._monotonic())
+
+    def retry_in(self) -> float | None:
+        """A follow-up that failed is the one thing tried again on a timer, and only while it is failing."""
+        return _RETRY_S if self.merges is not None and self.merges.waiting() else None
 
     def announce(self, project_id: str) -> bool:
         """Say so when this project's revision is not the one a client last saw."""
@@ -186,12 +215,29 @@ class GitService:
 
     def _nudge(self, project_id: str) -> None:
         with self._lock:
-            if project_id in self._asked:
-                self._nudged.add(project_id)
+            self._nudged.add(project_id)
+            self._last_nudge = self._monotonic()
+        self.wake()
+
+    def keep_watching(self, project_id: str) -> None:
+        """A client still shows this project. Costs one `rev-parse` once per project, then nothing."""
+        with self._lock:
+            self._asked[project_id] = self._monotonic()
+            known = project_id in self._watching
+            self._watching.add(project_id)
+        if known or self.watcher is None:
+            return
+        root = Path(self.state.project(project_id).root)
+        try:
+            self.watcher.watch(project_id, self.state.reader.common_dir(root))
+        except GitCommandError as exc:
+            _LOG.info("%s cannot be watched yet: %s", root, exc.detail)
+            with self._lock:
+                self._watching.discard(project_id)
 
     def _state(self, project_id: str) -> GitStateResult:
         state = self.state.state(project_id)
+        self.keep_watching(project_id)
         with self._lock:
-            self._asked[project_id] = self._monotonic()
             self._revisions[project_id] = state.revision
         return state

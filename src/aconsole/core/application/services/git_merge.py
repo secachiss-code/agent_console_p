@@ -256,6 +256,11 @@ class GitMergeService:
                 return item
         return None
 
+    def waiting(self) -> bool:
+        """Something failed and needs another try, which no Git event would bring."""
+        with self._guard:
+            return bool(self._unsaved) or any(item.follow_up_pending for item in self._records.values())
+
     def retry(self) -> None:
         """Follow-ups a failure left behind, and journal rows that did not get written. Off the loop."""
         with self._guard:

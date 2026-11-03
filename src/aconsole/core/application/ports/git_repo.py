@@ -74,7 +74,17 @@ class DiffSpec:
     untracked: bool = False
 
 
+class GitWatcher(Protocol):
+    def watch(self, project_id: str, common_dir: Path) -> None:
+        """Say when Git changes this repository. Watching it twice is one watch."""
+        ...
+
+
 class GitReader(Protocol):
+    def common_dir(self, root: Path) -> Path:
+        """The repository's own directory, shared by all its worktrees."""
+        ...
+
     def worktrees(self, root: Path) -> tuple[WorktreeRow, ...]:
         """Every worktree git knows, the main checkout first."""
         ...

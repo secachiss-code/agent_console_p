@@ -79,6 +79,7 @@ from aconsole.contracts.git import (
     GitPathsParams,
     GitStateParams,
     GitStateResult,
+    GitWatchParams,
     MergePreviewParams,
     MergePreviewResult,
     MergeWorktreeParams,
@@ -211,6 +212,9 @@ class TypedFacade(Facade):
 
     async def git_state(self, params: GitStateParams) -> GitStateResult:
         return await self.typed("git/state", params, GitStateResult)
+
+    async def git_watch(self, params: GitWatchParams) -> EmptyResult:
+        return await self.typed("git/watch", params, EmptyResult)
 
     async def git_graph(self, params: GitGraphParams) -> GitGraphResult:
         return await self.typed("git/graph", params, GitGraphResult)

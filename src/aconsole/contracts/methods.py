@@ -167,6 +167,13 @@ METHODS: tuple[Method, ...] = (
         capability=_GIT,
     ),
     Method(
+        name="git/watch",
+        params="GitWatchParams",
+        result="EmptyResult",
+        errors=("PROJECT_NOT_FOUND",),
+        capability=_GIT,
+    ),
+    Method(
         name="git/graph",
         params="GitGraphParams",
         result="GitGraphResult",

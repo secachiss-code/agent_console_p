@@ -111,6 +111,12 @@ class GitStateResult(msgspec.Struct, frozen=True, kw_only=True):
     operations: tuple[GitOperationView, ...]
 
 
+class GitWatchParams(msgspec.Struct, frozen=True, kw_only=True):
+    """A client is showing this project. Good for 30 seconds, and it runs no git: send it again to keep the updates."""
+
+    project_id: ProjectId
+
+
 class GitGraphParams(msgspec.Struct, frozen=True, kw_only=True):
     project_id: ProjectId
     tab_id: TabId | None = None

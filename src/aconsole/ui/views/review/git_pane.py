@@ -6,6 +6,7 @@ selection and the scroll position. Commit, merge, and other changes are in `git_
 
 from __future__ import annotations
 
+import contextlib
 from typing import TYPE_CHECKING, Final
 
 import gi
@@ -167,6 +168,8 @@ class GitPane(Gtk.Box):
     def _mapped(self, _widget: Gtk.Widget) -> None:
         if self._keep_watch is None:
             self._keep_watch = GLib.timeout_add_seconds(_KEEP_WATCHED_S, self._tick)
+        # An edit nobody staged makes no Git event, so coming back to the page is a reason to look.
+        self.reload()
 
     def _unmapped(self, _widget: Gtk.Widget) -> None:
         if self._keep_watch is not None:
@@ -174,9 +177,13 @@ class GitPane(Gtk.Box):
             self._keep_watch = None
 
     def _tick(self) -> bool:
-        """The core looks at Git for projects a client asked about lately."""
-        self.reload()
+        """The core tells clients what changed, for as long as one says it is looking. This runs no git."""
+        _ = spawn_task(self._keep_updates())
         return GLib.SOURCE_CONTINUE
+
+    async def _keep_updates(self) -> None:
+        with contextlib.suppress(Exception):  # the page's next load reports a lost core
+            await self.viewmodel.watch()
 
     def _build_toolbar(self) -> Gtk.Box:
         bar = Gtk.Box(spacing=8)
@@ -187,6 +194,9 @@ class GitPane(Gtk.Box):
         self.base_label: Gtk.Label = Gtk.Label(xalign=0, hexpand=True, ellipsize=Pango.EllipsizeMode.END)
         self.base_label.add_css_class("dim-label")
         bar.append(self.base_label)
+        refresh = Gtk.Button(icon_name="view-refresh-symbolic", tooltip_text=translate("git.refresh"))
+        _ = refresh.connect("clicked", self._refresh_clicked)
+        bar.append(refresh)
         self.actions: Gtk.Box = Gtk.Box(spacing=6)
         # Six buttons must not set how narrow the window may get.
         bar.append(
@@ -198,6 +208,9 @@ class GitPane(Gtk.Box):
             )
         )
         return bar
+
+    def _refresh_clicked(self, _button: Gtk.Button) -> None:
+        self.reload()
 
     def _build_body(self) -> Gtk.Paned:
         self.selection: Gtk.SingleSelection = Gtk.SingleSelection(model=self.store, autoselect=False, can_unselect=True)

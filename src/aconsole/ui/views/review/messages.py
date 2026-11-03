@@ -34,6 +34,7 @@ _MESSAGES = {
     "git.badge_busy": ("Agent is working", "Агент работает"),
     "git.snapshot": ("Snapshot {turn}: {label}", "Снимок {turn}: {label}"),
     "git.stale": ("Git moved. Reloading", "Git изменился. Обновляю"),
+    "git.refresh": ("Refresh", "Обновить"),
     "git.do.stage": ("Stage", "В индекс"),
     "git.do.unstage": ("Unstage", "Из индекса"),
     "git.do.commit": ("Commit…", "Коммит…"),

@@ -57,6 +57,7 @@ from aconsole.core.infrastructure.git.checkpoints import GitCheckpoints
 from aconsole.core.infrastructure.git.diff import GitDiff
 from aconsole.core.infrastructure.git.history import GitHistory
 from aconsole.core.infrastructure.git.operations import GitMutations
+from aconsole.core.infrastructure.git.watch import GitWatch
 from aconsole.core.infrastructure.http.app import IngestApp, serve_config
 from aconsole.core.infrastructure.http.approval import handle_permission
 from aconsole.core.infrastructure.http.auth import TokenBook
@@ -282,8 +283,6 @@ _MS_PER_S = 1000
 _IMPACT = "knowledge/impact"
 _GIT_PREFIX = "git/"
 _MAX_GIT_READS = 4
-_GIT_CHECK_S = 3.0
-_GIT_NUDGE_S = 0.3
 _NOW_METHODS = frozenset({"approval/decide", "approval/releaseToNative", "core/hold", "app/health"})
 _CANCEL = "$/cancelRequest"
 _MAX_QUEUED = ProtocolLimits().max_inflight_requests
@@ -397,8 +396,10 @@ class Daemon:
             emit=self._from_worker,
         )
         history = GitHistory()
+        self._git_watch: GitWatch = GitWatch(self._git_heard)
         mutations = GitMutations()
         self.git: GitService = GitService(GitStateService(history, lambda: self.tabs), emit=self._from_worker)
+        self.git.watcher = self._git_watch
         self.git.operations = GitOperationService(
             self.git.state,
             mutations,
@@ -533,6 +534,7 @@ class Daemon:
                 self._arm_idle()
             _ = await self._stopped.wait()
         finally:
+            self._git_watch.stop()
             if git_watch is not None:
                 _ = git_watch.cancel()
                 with contextlib.suppress(asyncio.CancelledError):
@@ -779,6 +781,9 @@ class Daemon:
             return self.review.send_text(tab_id, message)
         return worker.submit(self.review.send_text, tab_id, message).result()
 
+    def _git_heard(self, project_id: str) -> None:
+        self.git.heard(project_id)
+
     def _facts_to_check(self, project_id: str) -> tuple[StoredFact, ...]:
         return self._plans.facts_to_check(project_id)
 
@@ -811,17 +816,23 @@ class Daemon:
             _LOG.warning("git look after a change failed: %s", exc)
 
     async def _watch_git(self) -> None:
-        """Look at projects a client has open. One pass at a time; a turn's end brings the next one forward."""
-        waited = 0.0
+        """Sleep until Git changes, a turn ends, or a failed follow-up is due. One pass at a time."""
+        wake = asyncio.Event()
+        loop = asyncio.get_running_loop()
+
+        def wake_up() -> None:
+            _ = loop.call_soon_threadsafe(wake.set)
+
+        self.git.wake = wake_up
         while True:
-            await asyncio.sleep(_GIT_NUDGE_S)
-            waited += _GIT_NUDGE_S
-            if waited < _GIT_CHECK_S and not self.git.nudged():
-                continue
-            waited = 0.0
+            with contextlib.suppress(TimeoutError):
+                _ = await asyncio.wait_for(wake.wait(), self.git.retry_in())
+            wake.clear()
+            while (remaining := self.git.settled_in()) is not None and remaining > 0:  # noqa: ASYNC110 -- writes move this
+                await asyncio.sleep(remaining)
             try:
                 _ = await asyncio.to_thread(self.git.check)
-            except Exception:  # noqa: BLE001 -- logged; the next pass may well work
+            except Exception:  # noqa: BLE001 -- logged; the next change brings another pass
                 _LOG.exception("git check failed")
 
     async def _watch_codex_turns(self) -> None:

@@ -166,6 +166,7 @@ def _samples() -> dict[str, msgspec.Struct]:
             branches=(),
             operations=(),
         ),
+        "git/watch": EmptyResult(),
         "git/graph": GitGraphResult(version="0", nodes=(), next_cursor=None),
         "git/diffSummary": demo_diff(),
         "git/diffFile": demo_diff_file(),

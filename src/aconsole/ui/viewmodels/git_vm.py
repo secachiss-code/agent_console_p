@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from typing import Final, Literal
 
-from aconsole.contracts.app import CommandResult, DiffFileResult, DiffSummaryResult
+from aconsole.contracts.app import CommandResult, DiffFileResult, DiffSummaryResult, EmptyResult
 from aconsole.contracts.common import ProjectId, TabId
 from aconsole.contracts.git import (
     CherryPickParams,
@@ -23,6 +23,7 @@ from aconsole.contracts.git import (
     GitPathsParams,
     GitStateParams,
     GitStateResult,
+    GitWatchParams,
     MergeMode,
     MergePreviewParams,
     MergePreviewResult,
@@ -140,6 +141,10 @@ class GitViewModel:
 
     async def state(self) -> GitStateResult:
         return await self.client.request("git/state", GitStateParams(project_id=self.project_id), GitStateResult)
+
+    async def watch(self) -> None:
+        """Keep the core's updates for this project coming. No git runs for this."""
+        _ = await self.client.request("git/watch", GitWatchParams(project_id=self.project_id), EmptyResult)
 
     async def graph(self, tab: TabId | None, cursor: str | None, limit: int = _PAGE) -> GitGraphResult:
         params = GitGraphParams(project_id=self.project_id, tab_id=tab, cursor=cursor, limit=limit)
