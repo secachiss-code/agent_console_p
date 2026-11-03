@@ -1,6 +1,6 @@
 """Draw the Git page on the real core and a generated repository: light, dark, narrow.
 
-Usage, on a display or under xvfb-run: python tools/git_snapshot.py --out docs/ui/GIT
+Usage, on a display or under xvfb-run: python tools/git_snapshot.py --out tests/gui/snapshots/GIT
 """
 
 from __future__ import annotations
@@ -176,7 +176,7 @@ def _draw(socket: Path, repo: Path, out: Path, failures: list[BaseException]) ->
 
 def main(argv: list[str]) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    _ = parser.add_argument("--out", type=Path, default=Path("docs/ui/GIT"))
+    _ = parser.add_argument("--out", type=Path, default=Path("tests/gui/snapshots/GIT"))
     out: Path = parser.parse_args(argv).out
     out.mkdir(parents=True, exist_ok=True)
     failures: list[BaseException] = []
