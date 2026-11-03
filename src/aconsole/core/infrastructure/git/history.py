@@ -23,6 +23,7 @@ from aconsole.core.infrastructure.git.runner import GitRunner
 from aconsole.core.infrastructure.git.worktrees import recorded_start
 
 _COMMIT_FIELDS: Final = 7
+_NUMSTAT_FIELDS: Final = 3
 _LOG_FORMAT: Final = (
     "--format=%H%x00%P%x00%an%x00%at%x00%s%x00"
      "%(trailers:key=AConsole-Node,valueonly,separator=%x20)%x00"
@@ -130,7 +131,7 @@ class GitHistory:
         deletions = 0
         for line in raw.text.split("\0"):
             fields = line.split("\t", 2)
-            if len(fields) == _COMMIT_FIELDS - 2 and fields[0] != "-":
+            if len(fields) == _NUMSTAT_FIELDS and fields[0] != "-":
                 insertions += int(fields[0])
                 deletions += int(fields[1])
         return insertions, deletions

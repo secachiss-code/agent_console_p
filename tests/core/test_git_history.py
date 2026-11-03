@@ -158,3 +158,10 @@ def test_a_failed_read_says_so(tmp_path: Path) -> None:
         _ = GitRunner(Path("/nonexistent/git")).read(tmp_path, "status")
     with pytest.raises(GitCommandError):
         _ = GitRunner().read(Path("relative"), "status")
+
+
+def test_counts_add_up_the_lines_between_two_commits(tmp_path: Path) -> None:
+    repo = new_repo(tmp_path / "repo")
+    first = commit(repo, "lines.txt", "one\ntwo\n", "first")
+    second = commit(repo, "lines.txt", "one\nchanged\nthree\n", "second")
+    assert GitHistory(GitRunner()).counts(repo, first, second) == (2, 1)
