@@ -330,7 +330,8 @@ class Daemon:
         self._mcp_tokens: TabTokens = TabTokens()
         self._mcp: MCPServer = build_server(
             self._plans,
-            TabContext(tab_id="local", project_id="local", worktree=None, agent="claude"),
+            # No tab: a request without a token may list the tools, and every tool refuses it.
+            TabContext(tab_id="", project_id="", worktree=None, agent="claude"),
         )
         self._ingest_queue: IngestQueue = IngestQueue()
         self._ingest_ready: asyncio.Event | None = None

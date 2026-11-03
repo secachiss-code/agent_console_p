@@ -76,15 +76,15 @@ class TabTokens:
             del self._by_token[token]
 
     def resolve(self, header: str | None) -> TabContext | Literal["absent"] | None:
-        """The tab for a bearer, ``absent`` when the header was omitted, or None when it is unknown."""
-        token = bearer_token(header)
-        if token is None:
+        """The tab for a bearer, ``absent`` when no header was sent. None for a malformed or unknown one."""
+        if header is None:
             return "absent"
-        return self._by_token.get(token)
+        token = bearer_token(header)
+        return None if token is None else self._by_token.get(token)
 
 
 def build_server(board: PlanBoard, context: TabContext) -> MCPServer:
-    """An in-process server. ``context`` is the tab used when the request has no bearer."""
+    """An in-process server. ``context`` serves a request with no bearer: it can list tools and call none."""
     server = MCPServer(name="aconsole", instructions="Plan, claim, and record knowledge for the current tab.")
     _register(server, board, context)
     return server
