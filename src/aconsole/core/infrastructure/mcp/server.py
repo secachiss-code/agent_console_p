@@ -188,9 +188,14 @@ def _register(server: MCPServer, board: PlanBoard, context: TabContext) -> None:
         """Add nodes. An existing key is left unchanged. A cycle adds nothing."""
         return board.add_nodes(active(context), plan_id, nodes)
 
-    def plan_get(plan_id: str, response_format: Literal["concise", "detailed"] = "concise") -> PlanGot:
-        """Read one plan. Detailed adds objective, acceptance, paths, and the lease."""
-        return board.get(active(context), plan_id, detailed=response_format == "detailed")
+    def plan_get(
+        plan_id: str, response_format: Literal["concise", "detailed"] = "concise", since: str | None = None
+    ) -> PlanGot:
+        """Read one plan. Detailed adds objective, acceptance, paths, and the lease.
+
+        Pass the revision of your last read as since to get only the nodes that changed (changed_only is true).
+        """
+        return board.get(active(context), plan_id, detailed=response_format == "detailed", since=since)
 
     def plan_ready(plan_id: str | None = None, limit: Annotated[int, Field(ge=1, le=20)] = 5) -> PlanReady:
         """Claimable nodes, highest priority first."""
@@ -280,7 +285,7 @@ def _register(server: MCPServer, board: PlanBoard, context: TabContext) -> None:
     specs = (
         (plan_create, "Create a plan", _IDEMPOTENT),
         (plan_add_nodes, "Add plan nodes", _IDEMPOTENT),
-        (plan_get, "Read a plan", _READ),
+        (plan_get, "Read a plan. since=<revision> returns only the nodes changed after that read", _READ),
         (plan_ready, "List claimable nodes", _READ),
         (node_claim, "Claim a node", _WRITE),
         (node_update, "Update a node or extend its lease", _WRITE),

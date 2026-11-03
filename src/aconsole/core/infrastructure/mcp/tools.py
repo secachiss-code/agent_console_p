@@ -9,8 +9,10 @@ from __future__ import annotations
 import inspect
 import logging
 import re
+import secrets
 import subprocess
 import threading
+from collections import OrderedDict
 from collections.abc import Callable
 from contextvars import ContextVar
 from dataclasses import dataclass, field
@@ -44,6 +46,10 @@ _NODE_NOT_FOUND = 4002
 _HUMAN_TAB = "human"
 _HELD = frozenset({NodeStatus.IN_PROGRESS, NodeStatus.VERIFYING})
 _SUMMARY = 300
+# Revisions of one plan kept to answer `since`: enough for several tabs reading it in turn.
+_REVISIONS = 16
+# What one `plan_get` showed: whether it was detailed, and each node as it read.
+type _Shown = tuple[bool, dict[str, str]]
 _DIFF = 4000
 _LINE = re.compile(r"^(.+)#L(\d+)-(\d+)$")
 _URL = re.compile(r"^https?://\S+$")
@@ -107,6 +113,8 @@ class PlanGot(_Frozen):
     goal: str
     counts: dict[str, int]
     nodes: list[NodeBrief]
+    revision: str
+    changed_only: bool = False
 
 
 class ReadyNode(_Frozen):
@@ -348,6 +356,9 @@ class PlanBoard:
         self.on_changed: Callable[[PlanView], None] | None = None
         self.note_ref: Callable[[str, str], str | None] = lambda _plan, _key: None
         self.code_graph: CodeGraph | None = None
+        self._epoch: str = secrets.token_hex(3)
+        self._shown: int = 0
+        self._seen: dict[str, OrderedDict[str, _Shown]] = {}
 
     def use_store(self, store: PlanStore) -> None:
         """Take the plans `store` kept. From here on every change is saved there."""
@@ -664,16 +675,45 @@ class PlanBoard:
             unchanged = [item.key for item in nodes if item.key not in fresh_keys]
             return Added(added=added, unchanged=unchanged)
 
-    def get(self, ctx: TabContext, plan_id: str, *, detailed: bool) -> PlanGot:
+    def get(self, ctx: TabContext, plan_id: str, *, detailed: bool, since: str | None = None) -> PlanGot:
+        """The plan. With ``since``, a revision an earlier answer gave, only the nodes that read differently now.
+
+        A revision names what one answer showed, so a node counts as changed for any reason: its own move, a
+        dependency finishing that made it ready, or a lease running out. A revision this core no longer remembers
+        (an older process, or one pushed out by newer ones) gets the whole plan.
+        """
         _require_tab(ctx)
         with self._lock:
             stored = self._owned(ctx, plan_id)
+            briefs = [_brief(stored, meta, detailed=detailed) for meta in stored.meta.values()]
+            marks = {brief.node_id: brief.model_dump_json() for brief in briefs}
+            seen = self._seen.setdefault(plan_id, OrderedDict())
+            revision = self._revision(seen, (detailed, marks))
+            base = seen.get(since) if since is not None else None
+            changed = base is not None and base[0] == detailed
+            if base is not None and changed:
+                briefs = [brief for brief in briefs if base[1].get(brief.node_id) != marks[brief.node_id]]
             return PlanGot(
                 title=stored.title,
                 goal=stored.goal,
                 counts=_counts(stored),
-                nodes=[_brief(stored, meta, detailed=detailed) for meta in stored.meta.values()],
+                nodes=briefs,
+                revision=revision,
+                changed_only=changed,
             )
+
+    def _revision(self, seen: OrderedDict[str, _Shown], shown: _Shown) -> str:
+        """The revision for what ``shown`` holds: the last one that showed the same, else a new one."""
+        for revision, earlier in reversed(seen.items()):
+            if earlier == shown:
+                seen.move_to_end(revision)
+                return revision
+        self._shown += 1
+        revision = f"{self._epoch}.{self._shown}"
+        seen[revision] = shown
+        while len(seen) > _REVISIONS:
+            _ = seen.popitem(last=False)
+        return revision
 
     def ready(self, ctx: TabContext, plan_id: str | None, limit: int) -> PlanReady:
         _require_tab(ctx)

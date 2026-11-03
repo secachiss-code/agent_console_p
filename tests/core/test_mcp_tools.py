@@ -355,3 +355,40 @@ async def _compact() -> None:
 
 def _text(result: CallToolResult) -> str:
     return "".join(block.text for block in result.content if isinstance(block, TextContent))
+
+
+def test_mcp_plan_get_since() -> None:
+    asyncio.run(_since())
+
+
+async def _since() -> None:
+    clock = _Clock()
+    _plans, server = _server(clock, "tab-a")
+    async with Client(server) as client:
+        nodes = [_node("A-1"), _node("B-1", depends_on=["A-1"]), _node("C-1")]
+        created = await _call(client, "plan_create", {"title": "Plan", "goal": "Ship", "nodes": nodes})
+        plan_id = created["plan_id"]
+        first = await _call(client, "plan_get", {"plan_id": plan_id})
+        revision = first["revision"]
+        same = await _call(client, "plan_get", {"plan_id": plan_id, "since": revision})
+        assert same["changed_only"] is True
+        assert same["nodes"] == []
+        assert same["revision"] == revision
+        _ = await _call(client, "node_claim", {"node_id": _node_id(created, "A-1")})
+        delta = await _call(client, "plan_get", {"plan_id": plan_id, "since": revision})
+        assert delta["changed_only"] is True
+        assert delta["revision"] != revision
+        assert [item["key"] for item in _nodes(delta)] == ["A-1"]
+        unknown = await _call(client, "plan_get", {"plan_id": plan_id, "since": "gone.1"})
+        assert "changed_only" not in unknown
+        assert len(_nodes(unknown)) == len(nodes)
+        detailed = await _call(
+            client, "plan_get", {"plan_id": plan_id, "since": revision, "response_format": "detailed"}
+        )
+        assert len(_nodes(detailed)) == len(nodes)
+
+
+def _nodes(body: dict[str, object]) -> list[dict[str, object]]:
+    found = body["nodes"]
+    assert isinstance(found, list)
+    return [item for item in found if isinstance(item, dict)]
