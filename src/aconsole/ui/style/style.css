@@ -88,3 +88,11 @@ progressbar.horizontal > trough, levelbar.horizontal > trough { min-height: 4px;
 .ac-review-text { padding: 4px 0 6px; background: none; font-size: 10pt; }
 .ac-review-file { padding: 4px 6px; }
 .ac-review-checkpoints { margin: 12px 16px; }
+
+.ac-approval-panel { background-color: @window_bg_color; border-top: 1px solid alpha(@window_fg_color, 0.12); }
+.ac-approval-count { padding: 8px 16px 4px; }
+.ac-approval-body { padding: 10px 16px 12px; }
+.ac-approval-command { padding: 6px 8px; border-radius: 6px; background-color: alpha(@window_fg_color, 0.06); }
+.ac-approval-risk { padding: 1px 8px; border-radius: 99px; color: @error_color; background-color: alpha(@error_color, 0.14); }
+.ac-approval-busy { opacity: 0.55; }
+.ac-attention-card:focus-visible { outline: 2px solid @accent_color; outline-offset: -2px; }

@@ -61,6 +61,11 @@ _MESSAGES = {
     "prefs.system": ("System", "Системная"),
     "prefs.light": ("Light", "Светлая"),
     "prefs.dark": ("Dark", "Тёмная"),
+    "prefs.approvals": ("Agent requests", "Запросы агентов"),
+    "prefs.approvals_mode": ("Answer in", "Отвечать"),
+    "prefs.approvals_inline": ("This window", "В этом окне"),  # noqa: RUF001 -- Russian UI text
+    "prefs.approvals_native": ("The agent's own prompt", "В диалоге агента"),  # noqa: RUF001 -- Russian UI text
+    "prefs.approval_hold": ("Seconds to wait for a decision", "Секунд на решение"),
     "prefs.apply": ("Apply", "Применить"),
     "prefs.saved": ("Preferences saved", "Настройки сохранены"),
     "prefs.error": (

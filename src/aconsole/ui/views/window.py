@@ -12,18 +12,20 @@ gi.require_version("Adw", "1")
 from gi.repository import Adw, Gio, GLib, GObject, Gtk  # noqa: E402
 
 from aconsole.contracts.app import CommandResult, EmptyParams, PaletteQuery  # noqa: E402
-from aconsole.contracts.common import PlanId, TabId  # noqa: E402
+from aconsole.contracts.common import ApprovalDecision, PlanId, TabId  # noqa: E402
 from aconsole.contracts.events import CheckpointCreated, InjectToTerminal, SettingsChanged, UiEvent  # noqa: E402
 from aconsole.contracts.settings import Settings  # noqa: E402
 from aconsole.ui.bootstrap import spawn_task  # noqa: E402
 from aconsole.ui.client.core_client import CoreClient  # noqa: E402
 from aconsole.ui.client.store import CoreStore  # noqa: E402
 from aconsole.ui.viewmodels.app_vm import AppViewModel  # noqa: E402
+from aconsole.ui.viewmodels.approvals_vm import ApprovalsViewModel  # noqa: E402
 from aconsole.ui.viewmodels.logic.quota_fmt import quota_level  # noqa: E402
 from aconsole.ui.viewmodels.review_vm import ReviewViewModel  # noqa: E402
 from aconsole.ui.viewmodels.setup_vm import PreferencesViewModel  # noqa: E402
 from aconsole.ui.viewmodels.sidebar_vm import SidebarSummaryViewModel  # noqa: E402
 from aconsole.ui.viewmodels.tabs_vm import TabItem, TabsViewModel  # noqa: E402
+from aconsole.ui.views.approvals.panel import ApprovalPanel  # noqa: E402
 from aconsole.ui.views.palette.dialog import PaletteDialog  # noqa: E402
 from aconsole.ui.views.palette.messages import _ as palette_text  # noqa: E402
 from aconsole.ui.views.review.messages import _ as review_text  # noqa: E402
@@ -90,6 +92,7 @@ class MainWindow(Adw.ApplicationWindow):
         content.add_top_bar(header)
         self._install_quota_banner(content)
         self._setup_terminals(content)
+        self._install_approvals(content)
         _ = self.selection.connect("notify::selected-item", self._selection_changed)
         _ = self.connect("unrealize", self._dispose_terminals)
         self.toast_overlay: Adw.ToastOverlay = Adw.ToastOverlay()
@@ -252,6 +255,7 @@ class MainWindow(Adw.ApplicationWindow):
     def _dispose_terminals(self, _widget: Gtk.Widget) -> None:
         self._terminals_disposed = True
         self._preferences_unsubscribe()
+        self.approval_panel.stop()
         for page in self.terminal_pages.values():
             page.close()
 
@@ -432,6 +436,61 @@ class MainWindow(Adw.ApplicationWindow):
             self._open_preferences()
         elif action_id == "diff":
             self._open_review()
+        else:
+            self._handle_attention(action_id)
+
+    def _install_approvals(self, content: Adw.ToolbarView) -> None:
+        self.approval_panel: ApprovalPanel = ApprovalPanel(
+            ApprovalsViewModel(self.tabs.client),
+            on_toast=self._tab_error,
+            on_open=self._open_approval_tab,
+            on_left=self._focus_terminal,
+        )
+        content.add_bottom_bar(self.approval_panel)
+        self._sync_approvals(self.tabs.client.store)
+
+    def _handle_attention(self, action_id: str) -> None:
+        panel = self.approval_panel
+        if action_id == "next-attention":
+            if not panel.step(1):
+                self._next_attention_tab()
+        elif action_id in {"attention-next", "attention-previous"}:
+            _ = panel.step(1 if action_id == "attention-next" else -1)
+        elif action_id in {"approve", "attention-allow"}:
+            panel.decide_focused(ApprovalDecision.ALLOW)
+        elif action_id in {"deny", "attention-deny"}:
+            panel.decide_focused(ApprovalDecision.DENY)
+        elif action_id == "attention-open":
+            focus = self.get_focus()
+            # Return on a focused button still presses that button.
+            if isinstance(focus, Gtk.Button):
+                _ = focus.activate()
+            else:
+                panel.open_focused()
+
+    def _next_attention_tab(self) -> None:
+        snapshot = self.tabs.client.store.snapshot
+        waiting = [tab.id for tab in (() if snapshot is None else snapshot.tabs) if tab.attention]
+        if not waiting:
+            return
+        selected = self.selection.get_selected_item()
+        current = TabId(str(selected.tab_id)) if isinstance(selected, TabItem) else None
+        at = waiting.index(current) + 1 if current is not None and current in waiting else 0
+        self._select_tab(waiting[at % len(waiting)])
+
+    def _open_approval_tab(self, tab_id: TabId) -> None:
+        self._select_tab(tab_id)
+        self._focus_terminal()
+
+    def _focus_terminal(self) -> None:
+        selected = self.selection.get_selected_item()
+        if isinstance(selected, TabItem) and self.content_view.get_content() is self.terminal_stack:
+            self._terminal_page(str(selected.tab_id)).focus_terminal()
+
+    def _sync_approvals(self, store: CoreStore) -> None:
+        snapshot = store.snapshot
+        if snapshot is not None:
+            self.approval_panel.update(snapshot.approvals, {str(tab.id): tab.title for tab in snapshot.tabs})
 
     def _build_settings_menu(self) -> Gio.Menu:
         menu = Gio.Menu()
@@ -511,6 +570,7 @@ class MainWindow(Adw.ApplicationWindow):
 
     def _store_event(self, event: UiEvent, _store: CoreStore) -> None:
         self._sync_terminal_pages(_store)
+        self._sync_approvals(_store)
         if isinstance(event, SettingsChanged):
             _ = spawn_task(self._refresh_settings())
         elif isinstance(event, InjectToTerminal):
@@ -522,6 +582,7 @@ class MainWindow(Adw.ApplicationWindow):
 
     def _snapshot_changed(self, _store: CoreStore) -> None:
         self._sync_terminal_pages(_store)
+        self._sync_approvals(_store)
         _ = spawn_task(self._refresh_settings())
 
     async def _refresh_settings(self) -> None:

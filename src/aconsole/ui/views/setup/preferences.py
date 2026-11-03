@@ -20,6 +20,7 @@ from aconsole.ui.views.setup.messages import _ as translate  # noqa: E402
 
 _THEMES: tuple[Literal["system", "light", "dark"], ...] = ("system", "light", "dark")
 _QUOTA_DISPLAYS: tuple[Literal["used", "remaining"], ...] = ("used", "remaining")
+_APPROVAL_MODES: tuple[Literal["inline", "native"], ...] = ("inline", "native")
 
 
 class PreferencesDialog(Adw.PreferencesDialog):
@@ -52,15 +53,29 @@ class PreferencesDialog(Adw.PreferencesDialog):
             model=Gtk.StringList.new([translate(f"prefs.quota_{display}") for display in _QUOTA_DISPLAYS]),
         )
         appearance.add(self.quota_display)
+        page.add(appearance)
+        page.add(self._build_approvals())
+        actions = Adw.PreferencesGroup()
         self.save_button: Gtk.Button = Gtk.Button(label=translate("prefs.apply"))
         self.save_button.add_css_class("suggested-action")
         _ = self.save_button.connect("clicked", self._save_clicked)
-        appearance.add(self.save_button)
+        actions.add(self.save_button)
         self.status_label: Gtk.Label = Gtk.Label(xalign=0, wrap=True)
-        appearance.add(self.status_label)
-        page.add(appearance)
+        actions.add(self.status_label)
+        page.add(actions)
         self.add(page)
         _ = self.connect("closed", self._closed)
+
+    def _build_approvals(self) -> Adw.PreferencesGroup:
+        group = Adw.PreferencesGroup(title=translate("prefs.approvals"))
+        self.approvals_mode: Adw.ComboRow = Adw.ComboRow(
+            title=translate("prefs.approvals_mode"),
+            model=Gtk.StringList.new([translate(f"prefs.approvals_{mode}") for mode in _APPROVAL_MODES]),
+        )
+        group.add(self.approvals_mode)
+        self.approval_hold: Gtk.SpinButton = Gtk.SpinButton.new_with_range(30, 540, 30)
+        self._add_spin(group, self.approval_hold, "prefs.approval_hold")
+        return group
 
     @staticmethod
     def _add_spin(group: Adw.PreferencesGroup, spin: Gtk.SpinButton, key: str) -> None:
@@ -104,6 +119,8 @@ class PreferencesDialog(Adw.PreferencesDialog):
         self.scrollback.set_value(settings.scrollback_lines)
         self.theme.set_selected(_THEMES.index(settings.theme))
         self.quota_display.set_selected(_QUOTA_DISPLAYS.index(settings.quota_display))
+        self.approvals_mode.set_selected(_APPROVAL_MODES.index(settings.approvals_mode))
+        self.approval_hold.set_value(settings.approval_hold_seconds)
 
     def save(self) -> None:
         if self.loading or self._shown is None or (self.worker is not None and not self.worker.done()):
@@ -114,7 +131,11 @@ class PreferencesDialog(Adw.PreferencesDialog):
         scrollback = self.scrollback.get_value_as_int()
         theme = _THEMES[min(self.theme.get_selected(), len(_THEMES) - 1)]
         display = _QUOTA_DISPLAYS[min(self.quota_display.get_selected(), len(_QUOTA_DISPLAYS) - 1)]
+        mode = _APPROVAL_MODES[min(self.approvals_mode.get_selected(), len(_APPROVAL_MODES) - 1)]
+        hold = self.approval_hold.get_value_as_int()
         patch = SettingsPatch(
+            approvals_mode=mode if mode != shown.approvals_mode else msgspec.UNSET,
+            approval_hold_seconds=hold if hold != shown.approval_hold_seconds else msgspec.UNSET,
             quota_display=display if display != shown.quota_display else msgspec.UNSET,
             terminal_font=font if font != shown.terminal_font else msgspec.UNSET,
             terminal_font_size=size if size != shown.terminal_font_size else msgspec.UNSET,

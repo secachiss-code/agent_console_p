@@ -182,6 +182,10 @@ class TerminalPage(Gtk.Overlay):
             if not self._closed:
                 self.ended_actions.set_sensitive(True)
 
+    def focus_terminal(self) -> None:
+        widget: Gtk.Widget = self.terminal  # pyright: ignore[reportAssignmentType] -- VTE 0.76 is Gtk4 at runtime
+        _ = widget.grab_focus()
+
     def inject(self, text: str, *, submit: bool) -> None:
         """Text the core sends to the agent: a bracketed paste, so its lines do not run as separate prompts."""
         if self._closed:
