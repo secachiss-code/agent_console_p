@@ -81,10 +81,7 @@ class _SetupClient(CoreClient):
         method: str,
         params: msgspec.Struct,
         result_type: type[T],
-        *,
-        long: bool = False,
     ) -> T:
-        _ = long
         self.requests.append(_Request(method, params, result_type))
         if method == "setup/checks":
             return await self._checks_response()  # pyright: ignore[reportReturnType] -- the fake returns the configured contract result
@@ -126,10 +123,7 @@ class _PreferencesClient(CoreClient):
         method: str,
         params: msgspec.Struct,
         result_type: type[T],
-        *,
-        long: bool = False,
     ) -> T:
-        _ = long
         self.requests.append(_Request(method, params, result_type))
         if method == "settings/get":
             return self.settings_result  # pyright: ignore[reportReturnType] -- the fake returns the configured contract result

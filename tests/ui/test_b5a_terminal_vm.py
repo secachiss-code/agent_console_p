@@ -40,10 +40,7 @@ class _RecordingClient(CoreClient):
         method: str,
         params: msgspec.Struct,
         result_type: type[T],
-        *,
-        long: bool = False,
     ) -> T:
-        _ = long
         self.calls.append(_Call(method, params, result_type))
         if self.error is not None:
             raise self.error

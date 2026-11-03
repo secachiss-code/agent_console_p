@@ -44,9 +44,9 @@ class _StubClient(CoreClient):
 
     @override
     async def request[T: msgspec.Struct](
-        self, method: str, params: msgspec.Struct, result_type: type[T], *, long: bool = False
+        self, method: str, params: msgspec.Struct, result_type: type[T]
     ) -> T:
-        _ = (params, result_type, long)
+        _ = (params, result_type)
         self.calls.append(method)
         return self._answer  # pyright: ignore[reportReturnType]  -- the wrong type is the point of the stub
 

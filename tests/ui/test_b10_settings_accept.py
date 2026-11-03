@@ -24,10 +24,8 @@ class _SettingsClient(CoreClient):
         method: str,
         params: msgspec.Struct,
         result_type: type[T],
-        *,
-        long: bool = False,
     ) -> T:
-        _ = params, long
+        _ = params
         assert method == "settings/get"
         assert result_type is Settings
         self.started.set()

@@ -70,7 +70,7 @@ from aconsole.contracts.app import (
 )
 from aconsole.contracts.events import UiEvent
 from aconsole.contracts.ipc import InitializeParams, InitializeResult
-from aconsole.contracts.methods import METHODS, method_by_name
+from aconsole.contracts.methods import METHODS
 from aconsole.contracts.settings import Settings
 from aconsole.ui.client.core_client import CoreClient
 from aconsole.ui.client.store import CoreStore, Subscription
@@ -159,11 +159,10 @@ class Facade:
 
     async def call(self, name: str, params: msgspec.Struct) -> msgspec.Struct:
         binding = BINDINGS[name]
-        spec = method_by_name(name)
         if not isinstance(params, binding.params):
             message = f"{name} params are not {binding.params.__name__}"
             raise TypeError(message)
-        return await self._client.request(name, params, binding.result, long=spec.long)
+        return await self._client.request(name, params, binding.result)
 
     async def snapshot(self) -> tuple[AppSnapshot, int]:
         found = await self.call("app/snapshot", EmptyParams())

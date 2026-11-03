@@ -41,10 +41,7 @@ class _TerminalClient(CoreClient):
         method: str,
         params: msgspec.Struct,
         result_type: type[T],
-        *,
-        long: bool = False,
     ) -> T:
-        _ = long
         self.calls.append((method, params))
         if method == "tab/launchSpec":
             return msgspec.convert(self.spec, type=result_type)

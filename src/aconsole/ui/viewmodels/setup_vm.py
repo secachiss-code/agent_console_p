@@ -36,7 +36,7 @@ class SetupViewModel:
     async def load_checks(self) -> None:
         self._checks_generation += 1
         generation = self._checks_generation
-        result = await self._client.request("setup/checks", EmptyParams(), ChecksResult, long=True)
+        result = await self._client.request("setup/checks", EmptyParams(), ChecksResult)
         if generation == self._checks_generation:
             self.checks = result.checks
 
@@ -49,7 +49,7 @@ class SetupViewModel:
     async def start_first_task(self, project_id: ProjectId, agent: AgentKind) -> TabView:
         return await self._client.request(
             "tab/open", OpenTabParams(project_id=project_id, agent=agent, workspace=WorkspaceMode.NEW_WORKTREE),
-            TabView, long=True,
+            TabView,
         )
 
     async def preview_fix(self, fix_id: str) -> None:
@@ -79,7 +79,6 @@ class SetupViewModel:
                 "setup/applyFix",
                 ApplyFixParams(fix_id=preview.fix_id, confirm_token=preview.confirm_token),
                 CheckResult,
-                long=True,
             )
         finally:
             self.applying = False

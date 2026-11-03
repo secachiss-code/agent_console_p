@@ -141,10 +141,8 @@ def test_b2_reorder_requests_core(monkeypatch: pytest.MonkeyPatch) -> None:
             method: str,
             params: object,
             result_type: type[object],
-            *,
-            long: bool = False,
         ) -> EmptyResult:
-            _ = result_type, long
+            _ = result_type
             nonlocal sequence
             requests.append((method, params))
             assert method == "tab/reorder"
@@ -208,10 +206,8 @@ def test_b2_reorder_partial_failure_keeps_store_state(monkeypatch: pytest.Monkey
             method: str,
             params: object,
             result_type: type[object],
-            *,
-            long: bool = False,
         ) -> EmptyResult:
-            _ = result_type, long
+            _ = result_type
             assert method == "tab/reorder"
             assert isinstance(params, ReorderParams)
             requests.append(params)
@@ -282,10 +278,8 @@ def test_b2_rename_requests_core(monkeypatch: pytest.MonkeyPatch) -> None:
             method: str,
             params: object,
             result_type: type[object],
-            *,
-            long: bool = False,
         ) -> EmptyResult:
-            _ = result_type, long
+            _ = result_type
             requests.append((method, params))
             return EmptyResult()
 
@@ -334,10 +328,8 @@ def test_b2_rebinding_while_editing_does_not_rename_new_tab(
             method: str,
             params: object,
             result_type: type[object],
-            *,
-            long: bool = False,
         ) -> EmptyResult:
-            _ = result_type, long
+            _ = result_type
             requests.append((method, params))
             return EmptyResult()
 
@@ -375,10 +367,7 @@ def test_b2_focus_requests_core(monkeypatch: pytest.MonkeyPatch) -> None:
             method: str,
             params: object,
             result_type: type[object],
-            *,
-            long: bool = False,
         ) -> EmptyResult:
-            _ = long
             requests.append((method, params, result_type))
             return EmptyResult()
 

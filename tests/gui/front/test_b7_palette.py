@@ -53,10 +53,7 @@ class _PaletteClient(CoreClient):
         method: str,
         params: msgspec.Struct,
         result_type: type[T],
-        *,
-        long: bool = False,
     ) -> T:
-        _ = long
         self.requests.append(_Request(method, params, result_type))
         if method == "palette/items":
             plan = self.loads.pop(0)

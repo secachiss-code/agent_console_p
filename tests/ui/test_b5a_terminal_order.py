@@ -31,10 +31,8 @@ class _LifecycleClient(CoreClient):
         method: str,
         params: msgspec.Struct,
         result_type: type[T],
-        *,
-        long: bool = False,
     ) -> T:
-        _ = (params, result_type, long)
+        _ = (params, result_type)
         self.calls.append(method)
         if method == "tab/started":
             self.started_entered.set()

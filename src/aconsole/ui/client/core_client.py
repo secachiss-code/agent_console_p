@@ -227,15 +227,13 @@ class CoreClient:
         method: str,
         params: msgspec.Struct,
         result_type: type[T],
-        *,
-        long: bool = False,
     ) -> T:
         request_id = self._next_id
         self._next_id += 1
         loop = asyncio.get_running_loop()
         future: asyncio.Future[Envelope] = loop.create_future()
         self._pending[request_id] = future
-        timeout = _LONG_TIMEOUT_S if long else self.timeout_s
+        timeout = self.timeout_for(method)
         body = Request(
             id=request_id,
             method=method,

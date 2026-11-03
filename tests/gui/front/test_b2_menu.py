@@ -158,10 +158,8 @@ def test_b2_close_intent_is_disabled_without_handler_and_targets_bound_row(
             method: str,
             params: object,
             result_type: type[object],
-            *,
-            long: bool = False,
         ) -> object:
-            _ = params, result_type, long
+            _ = params, result_type
             requests.append(method)
             if method == "tab/focus":
                 return EmptyResult()

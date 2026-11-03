@@ -98,10 +98,8 @@ def test_b2_drag_prepare_and_drop_signals_request_reorder(monkeypatch: pytest.Mo
             method: str,
             params: object,
             result_type: type[object],
-            *,
-            long: bool = False,
         ) -> EmptyResult:
-            _ = result_type, long
+            _ = result_type
             assert method == "tab/reorder"
             assert isinstance(params, ReorderParams)
             requests.append(params)

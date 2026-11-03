@@ -598,14 +598,12 @@ def test_b1_keys_settings_override_updates_controller(
         method: str,
         params: msgspec.Struct,
         result_type: type[msgspec.Struct],
-        *,
-        long: bool = False,
     ) -> msgspec.Struct:
         requests.append(method)
         if method == "settings/get":
             assert result_type is Settings
             return settings
-        return await original_request(method, params, result_type, long=long)
+        return await original_request(method, params, result_type)
 
     monkeypatch.setattr(client, "request", request_with_override)
     app = _SettingsProbeApp(client)
@@ -644,11 +642,9 @@ def test_b1_keys_older_settings_response_cannot_replace_keymap(
         method: str,
         params: msgspec.Struct,
         result_type: type[msgspec.Struct],
-        *,
-        long: bool = False,
     ) -> msgspec.Struct:
         if method != "settings/get":
-            return await original_request(method, params, result_type, long=long)
+            return await original_request(method, params, result_type)
         app.settings_started += 1
         if app.settings_started == 1:
             app.old_response = asyncio.get_running_loop().create_future()

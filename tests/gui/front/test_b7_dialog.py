@@ -53,10 +53,7 @@ class _PaletteClient(CoreClient):
         method: str,
         params: msgspec.Struct,
         result_type: type[T],
-        *,
-        long: bool = False,
     ) -> T:
-        _ = long
         self.requests.append((method, params))
         if method == "palette/items":
             return msgspec.convert(PaletteItemsResult(items=self.items), type=result_type)

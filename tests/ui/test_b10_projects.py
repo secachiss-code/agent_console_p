@@ -39,10 +39,7 @@ class _ProjectsClient(CoreClient):
         method: str,
         params: msgspec.Struct,
         result_type: type[T],
-        *,
-        long: bool = False,
     ) -> T:
-        _ = long
         self.requests.append(_Request(method, params, result_type))
         return msgspec.convert(self.responses[method], type=result_type)
 
