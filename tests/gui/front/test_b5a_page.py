@@ -131,6 +131,12 @@ def test_b5a_terminal_page_starts_once_and_shows_three_actions_after_exit(
         window.set_content(page)
         window.present()
 
+        # The bar follows the terminal's own history: output past one screen gives it something to scroll.
+        adjustment = page.scrollbar.get_adjustment()
+        assert adjustment is page.terminal.get_vadjustment()
+        page.terminal.feed(b"line\r\n" * 500)
+        await _until(lambda: adjustment.get_upper() > adjustment.get_page_size())
+
         assert page.worker is None
         page.start()
         worker = page.worker

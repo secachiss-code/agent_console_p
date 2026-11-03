@@ -74,10 +74,13 @@ progressbar.horizontal > trough, levelbar.horizontal > trough { min-height: 4px;
 button.ac-quota-group { background-color: alpha(@window_fg_color, 0.05); border-radius: 12px; padding: 14px; font-weight: normal; }
 button.ac-quota-group:hover { background-color: alpha(@window_fg_color, 0.09); }
 button.ac-quota-group-open { background-color: alpha(@accent_bg_color, 0.18); }
-.ac-quota-panel { margin: 4px 16px 16px 0; }
+.ac-quota-panel { margin: 4px 0 16px; padding: 0 16px; border-left: 1px solid alpha(@window_fg_color, 0.1); }
+.ac-quota-panel-heading { color: @ac_dim_text; }
 
 /* The right column: the terminal reaches the window frame. */
 .ac-terminal { padding: 10px 12px; }
+/* Below the window buttons, which float over the terminal's corner. */
+.ac-terminal-scrollbar { background: none; border: none; margin-top: 46px; }
 .ac-session-ended { padding: 20px 24px; border-radius: 14px; background-color: @popover_bg_color; box-shadow: 0 8px 28px alpha(black, 0.35), 0 0 0 1px alpha(@window_fg_color, 0.08); }
 .ac-session-error { padding: 12px; margin: 12px; border-radius: 8px; background-color: @popover_bg_color; }
 

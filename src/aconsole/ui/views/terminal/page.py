@@ -41,7 +41,16 @@ class TerminalPage(Gtk.Overlay):
         # Installed VTE stubs derive from Gtk3.Widget; runtime VTE 0.76 is Gtk4.
         terminal_widget: Gtk.Widget = self.terminal  # pyright: ignore[reportAssignmentType] -- VTE Gtk3 stub base mismatch
         terminal_widget.add_css_class("ac-terminal")
-        self.set_child(terminal_widget)
+        # VTE scrolls by itself and shows no bar: this one reads the terminal's own position in its history.
+        self.scrollbar: Gtk.Scrollbar = Gtk.Scrollbar(
+            orientation=Gtk.Orientation.VERTICAL,
+            adjustment=self.terminal.get_vadjustment(),  # pyright: ignore[reportArgumentType] -- VTE Gtk3 stub
+        )
+        self.scrollbar.add_css_class("ac-terminal-scrollbar")
+        with_bar = Gtk.Box()
+        with_bar.append(terminal_widget)
+        with_bar.append(self.scrollbar)
+        self.set_child(with_bar)
         keys = Gtk.EventControllerKey()
         keys.set_propagation_phase(Gtk.PropagationPhase.CAPTURE)
         _ = keys.connect("key-pressed", self._key_pressed)

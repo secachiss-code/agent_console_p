@@ -77,12 +77,6 @@ def detail(text: str) -> Gtk.Label:
     return label
 
 
-def _heading(text: str) -> Gtk.Label:
-    label = Gtk.Label(label=text, xalign=0)
-    label.add_css_class("caption-heading")
-    return label
-
-
 def _two_sides(left: str, right: str) -> Gtk.Box:
     line = Gtk.Box(spacing=8)
     name = Gtk.Label(label=left, xalign=0, hexpand=True, wrap=True)
@@ -134,8 +128,20 @@ def _model_block(model: ModelUsageView) -> Gtk.Box:
     return block
 
 
+def _section(title: str, *children: Gtk.Widget) -> Gtk.Box:
+    """A named block: its lines sit together, and the blocks stand apart."""
+    section = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+    heading = Gtk.Label(label=title.upper(), xalign=0)
+    heading.add_css_class("caption-heading")
+    heading.add_css_class("ac-quota-panel-heading")
+    section.append(heading)
+    for child in children:
+        section.append(child)
+    return section
+
+
 class AccountPanel(Gtk.Box):
-    """The right side of the limits dialog. `show` draws one account; the close button is the caller's."""
+    """The right side of the limits dialog. `show_account` draws one account; the close button is the caller's."""
 
     def __init__(self, on_close: Callable[[], None]) -> None:
         super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=8)
@@ -151,7 +157,7 @@ class AccountPanel(Gtk.Box):
         _ = self.close_button.connect("clicked", self._close_clicked)
         header.append(self.close_button)
         self.append(header)
-        self.body: Gtk.Box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+        self.body: Gtk.Box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=18)
         self.append(self.body)
 
     def _close_clicked(self, _button: Gtk.Button) -> None:
@@ -161,48 +167,43 @@ class AccountPanel(Gtk.Box):
         self.title_label.set_label(agent_name(account.agent.value))
         while (child := self.body.get_first_child()) is not None:
             self.body.remove(child)
-        self._plan(account)
-        self.body.append(_heading(translate("quota.panel.limits")))
-        for window in account.quota:
-            self.body.append(_limit_block(window))
-        if not account.quota:
-            self.body.append(detail(translate("quota.unknown.copy")))
-        for line in money_lines(account, tabs):
-            self.body.append(detail(line))
-        self._tokens(account)
+        if account.plan_label or account.plan_price:
+            plan = _two_sides(account.plan_label, account.plan_price or "")
+            self.body.append(_section(translate("quota.panel.plan"), plan))
+        self.body.append(_section(translate("quota.panel.limits"), *self._limits(account, tabs)))
+        self.body.append(_section(self._tokens_title(account), *self._tokens(account)))
         titles = ", ".join(tab.title for tab in tabs if tab.account_id == account.id)
         if titles:
-            self.body.append(_heading(translate("quota.tabs")))
-            self.body.append(detail(titles))
-        self._source(account)
-
-    def _plan(self, account: AccountView) -> None:
-        if not account.plan_label and not account.plan_price:
-            return
-        self.body.append(_heading(translate("quota.panel.plan")))
-        self.body.append(_two_sides(account.plan_label, account.plan_price or ""))
-
-    def _tokens(self, account: AccountView) -> None:
-        since = account.usage_since
-        title = "quota.panel.tokens"
+            self.body.append(_section(translate("quota.tabs"), detail(titles)))
+        observed = [window.observed_at for window in account.quota if window.observed_at is not None]
         self.body.append(
-            _heading(
-                translate(title) if since is None
-                else translate("quota.panel.tokens_since").format(date=since.astimezone().strftime("%d.%m %H:%M")),
+            _section(
+                translate("quota.panel.source"),
+                detail(source_text(account.source)),
+                detail(ago(max(observed) if observed else None)),
             ),
         )
+
+    @staticmethod
+    def _limits(account: AccountView, tabs: tuple[TabView, ...]) -> list[Gtk.Widget]:
+        lines: list[Gtk.Widget] = [_limit_block(window) for window in account.quota]
+        if not account.quota:
+            lines.append(detail(translate("quota.unknown.copy")))
+        lines.extend(detail(line) for line in money_lines(account, tabs))
+        return lines
+
+    @staticmethod
+    def _tokens_title(account: AccountView) -> str:
+        since = account.usage_since
+        if since is None:
+            return translate("quota.panel.tokens")
+        return translate("quota.panel.tokens_since").format(date=since.astimezone().strftime("%d.%m %H:%M"))
+
+    @staticmethod
+    def _tokens(account: AccountView) -> list[Gtk.Widget]:
         if not account.usage:
-            self.body.append(detail(translate("quota.panel.no_tokens")))
-            return
+            return [detail(translate("quota.panel.no_tokens"))]
         total = format_tokens(sum(_model_total(model) for model in account.usage))
         costs = [model.cost_usd for model in account.usage if model.cost_usd is not None]
         cost = f" · ${sum(costs):,.2f}" if costs else ""
-        self.body.append(_two_sides(translate("quota.panel.total"), total + cost))
-        for model in account.usage:
-            self.body.append(_model_block(model))
-
-    def _source(self, account: AccountView) -> None:
-        self.body.append(_heading(translate("quota.panel.source")))
-        self.body.append(detail(source_text(account.source)))
-        observed = [window.observed_at for window in account.quota if window.observed_at is not None]
-        self.body.append(detail(ago(max(observed) if observed else None)))
+        return [_two_sides(translate("quota.panel.total"), total + cost), *map(_model_block, account.usage)]

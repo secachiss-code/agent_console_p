@@ -242,7 +242,8 @@ class GitPane(Gtk.Box):
         top = Gtk.Box(spacing=8)
         top.add_css_class("ac-git-inspector-head")
         self.inspect_title: Gtk.Label = Gtk.Label(
-            label=translate("git.select"), xalign=0, hexpand=True, ellipsize=Pango.EllipsizeMode.END,
+            label=translate("git.select"), xalign=0, hexpand=True, wrap=True, lines=2,
+            ellipsize=Pango.EllipsizeMode.END,
         )
         top.append(self.inspect_title)
         self.mode_choice: Gtk.DropDown = Gtk.DropDown.new_from_strings(

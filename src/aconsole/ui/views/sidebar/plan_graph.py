@@ -57,7 +57,6 @@ class PlanGraph(Gtk.Box):
         text.append(summary)
         # On the left: the top right corner may hold the floating window buttons.
         self.close_button: Gtk.Button = Gtk.Button(label=translate("plan.back"), valign=Gtk.Align.CENTER)
-        self.close_button.add_css_class("pill")
         self.close_button.add_css_class("ac-plan-back")
         _ = self.close_button.connect("clicked", self._close)
         heading.append(self.close_button)
@@ -109,7 +108,6 @@ class PlanGraph(Gtk.Box):
         details.add_css_class("ac-plan-details")
         details.append(self.details_label)
         self.tab_button: Gtk.Button = Gtk.Button(label=translate("plan.go_tab"), valign=Gtk.Align.START)
-        self.tab_button.add_css_class("pill")
         self.tab_button.add_css_class("ac-plan-back")
         self.tab_button.set_sensitive(False)
         _ = self.tab_button.connect("clicked", self._go_tab)
