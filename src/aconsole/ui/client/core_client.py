@@ -46,6 +46,25 @@ _UI_CAPABILITIES = frozenset({
 })
 
 
+def core_log_path() -> Path:
+    """`$XDG_STATE_HOME/aconsole/core.log`. The core logs to stderr, and only this run and the one before are kept."""
+    state = os.environ.get("XDG_STATE_HOME", "")
+    return (Path(state) if state else Path.home() / ".local" / "state") / "aconsole" / "core.log"
+
+
+def _core_log() -> int:
+    """Where the core's stderr goes. Without a place to write, the core must still start."""
+    path = core_log_path()
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        if path.exists():
+            _ = path.replace(path.with_suffix(".log.1"))
+        return os.open(path, os.O_WRONLY | os.O_CREAT | os.O_APPEND | os.O_CLOEXEC, 0o600)
+    except OSError:
+        _LOG.warning("cannot open the core log %s", path, exc_info=True)
+        return asyncio.subprocess.DEVNULL
+
+
 class CoreCallError(Exception):
     """The core answered with an error object."""
 
@@ -167,13 +186,18 @@ class CoreClient:
         try:
             return await self.connect()
         except OSError:
-            self._process = await asyncio.create_subprocess_exec(
-                *argv,
-                start_new_session=True,
-                stdin=asyncio.subprocess.DEVNULL,
-                stdout=asyncio.subprocess.DEVNULL,
-                stderr=asyncio.subprocess.DEVNULL,
-            )
+            log = _core_log()
+            try:
+                self._process = await asyncio.create_subprocess_exec(
+                    *argv,
+                    start_new_session=True,
+                    stdin=asyncio.subprocess.DEVNULL,
+                    stdout=asyncio.subprocess.DEVNULL,
+                    stderr=log,
+                )
+            finally:
+                if log >= 0:
+                    os.close(log)
         deadline = asyncio.get_running_loop().time() + _READY_DEADLINE_S
         delay = _BACKOFF_S[0]
         while asyncio.get_running_loop().time() < deadline:

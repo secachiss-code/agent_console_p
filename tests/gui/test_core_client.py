@@ -16,7 +16,14 @@ from aconsole.contracts.app import EmptyParams, OpenTabParams, SnapshotResult, S
 from aconsole.contracts.common import AgentKind, ProjectId, WorkspaceMode
 from aconsole.core.infrastructure.fake.scenarios import APP_EVENT_TYPES
 from aconsole.core.infrastructure.fake.server import FakeCore
-from aconsole.ui.client.core_client import CoreCallError, CoreClient, core_paths, lock_held
+from aconsole.ui.client.core_client import (
+    CoreCallError,
+    CoreClient,
+    _core_log,
+    core_log_path,
+    core_paths,
+    lock_held,
+)
 from aconsole.ui.client.methods import Facade, methods_cover_the_table
 
 _CANCELLED = -32800
@@ -212,3 +219,23 @@ async def _send_close_race() -> None:
     del request
     _ = gc.collect()
     await asyncio.sleep(0)
+
+
+def test_core_log_keeps_this_run_and_the_one_before(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("XDG_STATE_HOME", str(tmp_path))
+    log = core_log_path()
+    for text in (b"first", b"second", b"third"):
+        fd = _core_log()
+        assert fd >= 0
+        _ = os.write(fd, text)
+        os.close(fd)
+    assert log == tmp_path / "aconsole" / "core.log"
+    assert log.read_bytes() == b"third"
+    assert log.with_suffix(".log.1").read_bytes() == b"second"
+
+
+def test_core_starts_without_a_log_it_cannot_write(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    blocked = tmp_path / "file"
+    blocked.write_text("not a directory", encoding="utf-8")
+    monkeypatch.setenv("XDG_STATE_HOME", str(blocked))
+    assert _core_log() == asyncio.subprocess.DEVNULL
