@@ -42,6 +42,12 @@ class Writer:
         self._thread = threading.Thread(target=self._loop, name="aconsole-writer", daemon=True)
         self._started = False
         self.last_tick_s = 0.0
+        self.failed_jobs = 0
+
+    @property
+    def queued(self) -> int:
+        """Jobs waiting for the writer thread."""
+        return self._queue.qsize()
 
     def start(self) -> None:
         if self._started:
@@ -119,6 +125,7 @@ class Writer:
                 for job in jobs:
                     self._flush(session, [job])
             else:
+                self.failed_jobs += 1
                 self._fail(jobs[0], exc)
             self.last_tick_s = time.perf_counter() - started
             return

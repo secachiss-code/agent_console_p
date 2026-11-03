@@ -380,6 +380,7 @@ class CoreClient:
         """
         self.resyncs = 1
         self.resync_count += 1
+        _LOG.info("pulling a new snapshot (resync %d)", self.resync_count)
         reader = self._reader
         delay = _BACKOFF_S[0]
         while not self._closing and self._reader is reader:

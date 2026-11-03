@@ -13,6 +13,7 @@ import struct
 import sys
 import time
 from concurrent.futures import ThreadPoolExecutor
+from dataclasses import dataclass
 from datetime import UTC, datetime
 from enum import Enum, auto
 from pathlib import Path
@@ -230,6 +231,22 @@ def _windows(account: AccountView) -> tuple[tuple[str, float | None, datetime | 
     return tuple((window.key, window.used_pct, window.resets_at) for window in account.quota)
 
 
+@dataclass
+class _IpcTimes:
+    """How long requests took since the last health line."""
+
+    answered: int = 0
+    slowest_s: float = 0.0
+
+    def note(self, seconds: float) -> None:
+        self.answered += 1
+        self.slowest_s = max(self.slowest_s, seconds)
+
+    def reset(self) -> None:
+        self.answered = 0
+        self.slowest_s = 0.0
+
+
 class _Route(Enum):
     """How a frame runs relative to the ones read before it."""
 
@@ -238,6 +255,8 @@ class _Route(Enum):
     TURN = auto()  # After the frames before it, so that tab changes stay in order.
 
 
+_HEALTH_EVERY_S = 60.0
+_MS_PER_S = 1000
 _IMPACT = "knowledge/impact"
 _NOW_METHODS = frozenset({"approval/decide", "approval/releaseToNative", "core/hold"})
 _CANCEL = "$/cancelRequest"
@@ -320,6 +339,8 @@ class Daemon:
         self._live_tabs: int = live_tabs
         self._frame_limit: int = frame_limit
         self._impacts: asyncio.Semaphore = asyncio.Semaphore(_MAX_IMPACTS)
+        self._ipc: _IpcTimes = _IpcTimes()
+        self._health: asyncio.Task[None] | None = None
         self._holders: int = 0
         self._listening: bool = False
         self._closing: bool = False
@@ -803,6 +824,23 @@ class Daemon:
         self._engine = engine
         self._writer = writer
         self._sweeper = asyncio.create_task(self._sweep_loop(writer))
+        self._health = asyncio.create_task(self._health_loop())
+
+    def health_line(self) -> str:
+        """What a slow or failing core looks like from outside: the writer's backlog, its failures, and IPC times."""
+        writer = self._writer
+        store = "no database"
+        if writer is not None:
+            tick_ms = writer.last_tick_s * _MS_PER_S
+            store = f"writer queued={writer.queued} failed={writer.failed_jobs} last_commit_ms={tick_ms:.1f}"
+        return f"{store}; ipc answered={self._ipc.answered} slowest_ms={self._ipc.slowest_s * _MS_PER_S:.1f}"
+
+    async def _health_loop(self) -> None:
+        while True:
+            await asyncio.sleep(_HEALTH_EVERY_S)
+            if self._ipc.answered > 0:
+                _LOG.info("health: %s", self.health_line())
+            self._ipc.reset()
 
     async def _sweep_loop(self, writer: Writer) -> None:
         while True:
@@ -833,6 +871,12 @@ class Daemon:
             _ = sweeper.cancel()
             with contextlib.suppress(asyncio.CancelledError):
                 await sweeper
+        health = self._health
+        self._health = None
+        if health is not None:
+            _ = health.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await health
         writer = self._writer
         self._writer = None
         if writer is not None:
@@ -921,6 +965,7 @@ class Daemon:
 
     async def _answer(self, connection: Connection, writer: asyncio.StreamWriter, frame: bytes) -> bool:
         """Handle one frame on the worker and write the replies. False when the frame cannot be decoded."""
+        started = time.perf_counter()
         try:
             envelope = decode_envelope(frame)
             if _route(envelope, ready=connection.ready) is _Route.NOW:
@@ -933,6 +978,7 @@ class Daemon:
                 payloads = await self._in_worker(lambda: connection.receive(frame))
         except msgspec.DecodeError:
             return False
+        self._ipc.note(time.perf_counter() - started)
         for payload in payloads:
             writer.write(self._within_limit(payload, envelope))
             await writer.drain()

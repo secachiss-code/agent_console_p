@@ -108,3 +108,20 @@ def test_more_impacts_than_the_daemon_runs_are_refused(tmp_path: Path, monkeypat
         await _stop(daemon, task, client)
 
     asyncio.run(run())
+
+
+def test_the_health_line_counts_what_a_failing_core_shows(tmp_path: Path) -> None:
+    async def run() -> None:
+        daemon = _daemon(tmp_path, serve_ingest=False)
+        task = asyncio.create_task(daemon.serve())
+        client = await _connect(daemon.socket)
+        await _send(client, 100, "app/snapshot")
+        _ = await _reply(client)
+        line = daemon.health_line()
+        assert "writer queued=" in line
+        assert "failed=0" in line
+        assert "ipc answered=" in line
+        assert "ipc answered=0" not in line
+        await _stop(daemon, task, client)
+
+    asyncio.run(run())
