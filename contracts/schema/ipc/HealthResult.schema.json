@@ -1,0 +1,39 @@
+{
+  "$defs": {
+    "HealthResult": {
+      "description": "Why a core may feel slow or lose writes. The times cover the last minute or two.",
+      "properties": {
+        "database": {
+          "type": "boolean"
+        },
+        "ipc_answered": {
+          "type": "integer"
+        },
+        "ipc_slowest_ms": {
+          "type": "number"
+        },
+        "writer_failed": {
+          "type": "integer"
+        },
+        "writer_last_commit_ms": {
+          "type": "number"
+        },
+        "writer_queued": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "database",
+        "writer_queued",
+        "writer_failed",
+        "writer_last_commit_ms",
+        "ipc_answered",
+        "ipc_slowest_ms"
+      ],
+      "title": "HealthResult",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/HealthResult",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

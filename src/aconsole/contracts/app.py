@@ -546,6 +546,17 @@ class QuitCheckResult(msgspec.Struct, frozen=True, kw_only=True):
     pending_approvals: int
 
 
+class HealthResult(msgspec.Struct, frozen=True, kw_only=True):
+    """Why a core may feel slow or lose writes. The times cover the last minute or two."""
+
+    database: bool
+    writer_queued: int
+    writer_failed: int
+    writer_last_commit_ms: float
+    ipc_answered: int
+    ipc_slowest_ms: float
+
+
 class ScreenTextReplyParams(msgspec.Struct, frozen=True, kw_only=True):
     request_id: str
     tab_id: TabId

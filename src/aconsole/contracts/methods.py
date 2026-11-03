@@ -173,6 +173,7 @@ METHODS: tuple[Method, ...] = (
         errors=("CONTENT_MODIFIED",),
     ),
     Method(name="app/quitCheck", params="EmptyParams", result="QuitCheckResult"),
+    Method(name="app/health", params="EmptyParams", result="HealthResult"),
     Method(name="app/stopAgents", params="EmptyParams", result="EmptyResult", long=True),
     Method(
         name="terminal/screenTextReply",

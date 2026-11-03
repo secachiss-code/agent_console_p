@@ -31,7 +31,7 @@ def _listen(scenario: str, **kwargs: float | bool) -> tuple[FakeCore, str]:
 
 
 def test_method_table_matches_methods_and_version() -> None:
-    assert API_VERSION == "1.1.0"
+    assert API_VERSION == "1.2.0"
     assert methods_cover_the_table()
     client = CoreClient("unused")
     assert client.timeout_for("knowledge/impact") == 60

@@ -28,6 +28,7 @@ from aconsole.contracts.app import (
     FixIdParams,
     FixPreview,
     FocusParams,
+    HealthResult,
     ImpactParams,
     ImpactView,
     NoteUriParams,
@@ -126,6 +127,7 @@ def _bindings() -> dict[str, Binding]:
         ("settings/get", EmptyParams, Settings),
         ("settings/update", SettingsUpdateParams, Settings),
         ("app/quitCheck", EmptyParams, QuitCheckResult),
+        ("app/health", EmptyParams, HealthResult),
         ("app/stopAgents", EmptyParams, EmptyResult),
         ("terminal/screenTextReply", ScreenTextReplyParams, EmptyResult),
     )

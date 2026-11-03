@@ -3,6 +3,6 @@
 from aconsole.contracts.errors import ERRORS
 from aconsole.contracts.methods import METHODS
 
-API_VERSION = "1.1.0"
+API_VERSION = "1.2.0"
 
 __all__ = ["API_VERSION", "ERRORS", "METHODS"]

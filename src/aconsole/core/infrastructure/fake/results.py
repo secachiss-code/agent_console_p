@@ -11,6 +11,7 @@ from aconsole.contracts.app import (
     CommandResult,
     EmptyResult,
     FixPreview,
+    HealthResult,
     ImpactView,
     NoteUriResult,
     PaletteItemsResult,
@@ -135,6 +136,14 @@ def _samples() -> dict[str, msgspec.Struct]:
         "settings/get": settings,
         "settings/update": settings,
         "app/quitCheck": QuitCheckResult(busy_tabs=(), pending_approvals=0),
+        "app/health": HealthResult(
+            database=True,
+            writer_queued=0,
+            writer_failed=0,
+            writer_last_commit_ms=1.0,
+            ipc_answered=1,
+            ipc_slowest_ms=1.0,
+        ),
         "app/stopAgents": empty,
         "terminal/screenTextReply": empty,
     }

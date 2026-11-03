@@ -7,8 +7,9 @@ import time
 from typing import TYPE_CHECKING
 
 import msgspec
+from sqlalchemy.exc import OperationalError
 
-from aconsole.contracts.app import EmptyParams
+from aconsole.contracts.app import EmptyParams, HealthResult
 from aconsole.contracts.ipc import Request, ResponseErr, ResponseOk
 from aconsole.core.bootstrap import _MAX_APART
 from aconsole.core.infrastructure.ipc.framing import decode_envelope, encode_line
@@ -24,6 +25,7 @@ if TYPE_CHECKING:
 _ENCODER = msgspec.json.Encoder()
 _SLOW_S = 1.0
 _PROMPT_S = 0.4
+_STATEMENT = "INSERT"
 
 
 def _slow(service: object, monkeypatch: pytest.MonkeyPatch, method: str) -> None:
@@ -110,18 +112,49 @@ def test_more_impacts_than_the_daemon_runs_are_refused(tmp_path: Path, monkeypat
     asyncio.run(run())
 
 
-def test_the_health_line_counts_what_a_failing_core_shows(tmp_path: Path) -> None:
+def test_health_is_answered_while_the_worker_is_busy(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    async def run() -> None:
+        daemon = _daemon(tmp_path, serve_ingest=False)
+        task = asyncio.create_task(daemon.serve())
+        client = await _connect(daemon.socket)
+        _slow(daemon.review, monkeypatch, "checkpoint/list")
+        await _send(client, 100, "checkpoint/list")
+        await asyncio.sleep(0.05)
+        started = time.monotonic()
+        await _send(client, 101, "app/health")
+        reply = await _reply(client)
+        elapsed = time.monotonic() - started
+        assert isinstance(reply, ResponseOk)
+        assert reply.id == 101
+        assert elapsed < _PROMPT_S
+        health = msgspec.json.decode(reply.result, type=HealthResult)
+        assert health.database is (daemon._writer is not None)
+        assert health.writer_failed == 0
+        _ = await _reply(client)
+        await _stop(daemon, task, client)
+
+    asyncio.run(run())
+
+
+def test_health_counts_failed_writes_and_slow_answers(tmp_path: Path) -> None:
     async def run() -> None:
         daemon = _daemon(tmp_path, serve_ingest=False)
         task = asyncio.create_task(daemon.serve())
         client = await _connect(daemon.socket)
         await _send(client, 100, "app/snapshot")
         _ = await _reply(client)
-        line = daemon.health_line()
-        assert "writer queued=" in line
-        assert "failed=0" in line
-        assert "ipc answered=" in line
-        assert "ipc answered=0" not in line
+        writer = daemon._writer
+        assert writer is not None
+
+        def broken(_session: object) -> None:
+            raise OperationalError(_STATEMENT, {}, ValueError())
+
+        writer.post(broken)
+        _ = writer.call(lambda _session: None)
+        health = await client.call("app/health", EmptyParams(), HealthResult)
+        assert health.writer_failed == 1
+        assert health.ipc_answered >= 1
+        assert health.ipc_slowest_ms > 0
         await _stop(daemon, task, client)
 
     asyncio.run(run())

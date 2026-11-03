@@ -17,6 +17,7 @@ from aconsole.contracts.app import (
     EmptyParams,
     EmptyResult,
     FixIdParams,
+    HealthResult,
     QuitCheckResult,
     ReleaseParams,
     ScreenTextReplyParams,
@@ -106,6 +107,7 @@ class Connection:
         self.role: ClientRole | None = None
         self.on_agent_notice: Callable[[str, str], None] | None = None
         self.holds_core = False
+        self.health: Callable[[], HealthResult] | None = None
         self._sidecar_tab: str | None = None
         self.sidecar_claim: tuple[str, str] | None = None
         self.peer_pid: int | None = None
@@ -179,6 +181,8 @@ class Connection:
         if request.method == _HOLD:
             self.inflight.add(request.id)
             return ()
+        if request.method == "app/health" and self.health is not None:
+            return (self._ok(request.id, self.health()),)
         if request.method == "approval/decide" and self.approval_hold is not None:
             return self._decide_approval(request, self.approval_hold)
         if request.method == "approval/releaseToNative" and self.approval_hold is not None:

@@ -22,6 +22,7 @@ from typing import TYPE_CHECKING, override
 import msgspec
 import uvicorn
 
+from aconsole.contracts.app import HealthResult
 from aconsole.contracts.common import ClientRole, TabId
 from aconsole.contracts.errors import ErrorData, ErrorObject, MessageTooLargeDetails, error_by_name
 from aconsole.contracts.events import Notify, PlanUpdated, QuotaUpdated, TabAdded, TabRemoved, TabUpdated, UiEvent
@@ -233,18 +234,26 @@ def _windows(account: AccountView) -> tuple[tuple[str, float | None, datetime | 
 
 @dataclass
 class _IpcTimes:
-    """How long requests took since the last health line."""
+    """How many requests were answered, and the slowest of the last minute or two."""
 
     answered: int = 0
+    in_window: int = 0
     slowest_s: float = 0.0
+    previous_slowest_s: float = 0.0
 
     def note(self, seconds: float) -> None:
         self.answered += 1
+        self.in_window += 1
         self.slowest_s = max(self.slowest_s, seconds)
 
-    def reset(self) -> None:
-        self.answered = 0
+    def next_window(self) -> None:
+        self.in_window = 0
+        self.previous_slowest_s = self.slowest_s
         self.slowest_s = 0.0
+
+    @property
+    def recent_slowest_s(self) -> float:
+        return max(self.slowest_s, self.previous_slowest_s)
 
 
 class _Route(Enum):
@@ -258,7 +267,7 @@ class _Route(Enum):
 _HEALTH_EVERY_S = 60.0
 _MS_PER_S = 1000
 _IMPACT = "knowledge/impact"
-_NOW_METHODS = frozenset({"approval/decide", "approval/releaseToNative", "core/hold"})
+_NOW_METHODS = frozenset({"approval/decide", "approval/releaseToNative", "core/hold", "app/health"})
 _CANCEL = "$/cancelRequest"
 _MAX_QUEUED = ProtocolLimits().max_inflight_requests
 _MAX_APART = 4
@@ -826,21 +835,24 @@ class Daemon:
         self._sweeper = asyncio.create_task(self._sweep_loop(writer))
         self._health = asyncio.create_task(self._health_loop())
 
-    def health_line(self) -> str:
+    def health(self) -> HealthResult:
         """What a slow or failing core looks like from outside: the writer's backlog, its failures, and IPC times."""
         writer = self._writer
-        store = "no database"
-        if writer is not None:
-            tick_ms = writer.last_tick_s * _MS_PER_S
-            store = f"writer queued={writer.queued} failed={writer.failed_jobs} last_commit_ms={tick_ms:.1f}"
-        return f"{store}; ipc answered={self._ipc.answered} slowest_ms={self._ipc.slowest_s * _MS_PER_S:.1f}"
+        return HealthResult(
+            database=writer is not None,
+            writer_queued=0 if writer is None else writer.queued,
+            writer_failed=0 if writer is None else writer.failed_jobs,
+            writer_last_commit_ms=0.0 if writer is None else writer.last_tick_s * _MS_PER_S,
+            ipc_answered=self._ipc.answered,
+            ipc_slowest_ms=self._ipc.recent_slowest_s * _MS_PER_S,
+        )
 
     async def _health_loop(self) -> None:
         while True:
             await asyncio.sleep(_HEALTH_EVERY_S)
-            if self._ipc.answered > 0:
-                _LOG.info("health: %s", self.health_line())
-            self._ipc.reset()
+            if self._ipc.in_window > 0:
+                _LOG.info("health: %s", self.health())
+            self._ipc.next_window()
 
     async def _sweep_loop(self, writer: Writer) -> None:
         while True:
@@ -1063,6 +1075,7 @@ class Daemon:
             review=self.review, knowledge=self.knowledge,
         )
         connection.on_agent_notice = self._agent_notice
+        connection.health = self.health
         self._writers.add(writer)
         self._connections[connection] = writer
         turns: asyncio.Queue[bytes | None] = asyncio.Queue(maxsize=_MAX_QUEUED)
