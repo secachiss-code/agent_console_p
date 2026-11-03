@@ -11,7 +11,7 @@ gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
 from gi.repository import Adw, Gdk, Gio, GLib  # noqa: E402
 
-from aconsole.contracts.app import EmptyResult  # noqa: E402
+from aconsole.contracts.app import EmptyResult, HealthResult  # noqa: E402
 from aconsole.core.infrastructure.fake.scenarios import demo_snapshot  # noqa: E402
 from aconsole.ui.bootstrap import run_app, spawn_task  # noqa: E402
 from aconsole.ui.client.core_client import CoreClient  # noqa: E402
@@ -212,5 +212,34 @@ def test_b2_unbind_rebind_closes_menu_and_discards_old_row_target() -> None:
             assert str(items[0].tab_id) not in calls
         finally:
             row.unbind_item()
+
+    _run_ui(scenario)
+
+
+def test_the_menu_opens_the_health_dialog_with_the_core_s_answer() -> None:
+    answer = HealthResult(
+        database=True,
+        writer_queued=7,
+        writer_failed=0,
+        writer_last_commit_ms=1.0,
+        ipc_answered=9,
+        ipc_slowest_ms=2.0,
+    )
+
+    async def scenario(app: _MenuTestApp) -> None:
+        window, _tabs, _items = _window(app)
+
+        async def request(method: str, _params: object, _result: object) -> HealthResult:
+            assert method == "app/health"
+            return answer
+
+        app.client.request = request  # pyright: ignore[reportAttributeAccessIssue] -- the stub answers one method
+        window.present()
+        assert window.activate_action("win.health", None)
+        dialog = window.health_dialog
+        assert dialog is not None
+        await dialog.refresh()
+        assert dialog.values["health.queued"].get_label() == "7"
+        assert dialog.values["health.answered"].get_label() == "9"
 
     _run_ui(scenario)

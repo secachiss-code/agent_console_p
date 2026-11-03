@@ -20,12 +20,14 @@ from aconsole.ui.client.core_client import CoreClient  # noqa: E402
 from aconsole.ui.client.store import CoreStore  # noqa: E402
 from aconsole.ui.viewmodels.app_vm import AppViewModel  # noqa: E402
 from aconsole.ui.viewmodels.approvals_vm import ApprovalsViewModel  # noqa: E402
+from aconsole.ui.viewmodels.health_vm import HealthViewModel  # noqa: E402
 from aconsole.ui.viewmodels.logic.quota_fmt import quota_level  # noqa: E402
 from aconsole.ui.viewmodels.review_vm import ReviewViewModel  # noqa: E402
 from aconsole.ui.viewmodels.setup_vm import PreferencesViewModel  # noqa: E402
 from aconsole.ui.viewmodels.sidebar_vm import SidebarSummaryViewModel  # noqa: E402
 from aconsole.ui.viewmodels.tabs_vm import TabItem, TabsViewModel  # noqa: E402
 from aconsole.ui.views.approvals.panel import ApprovalPanel  # noqa: E402
+from aconsole.ui.views.health_dialog import HealthDialog  # noqa: E402
 from aconsole.ui.views.palette.dialog import PaletteDialog  # noqa: E402
 from aconsole.ui.views.palette.messages import _ as palette_text  # noqa: E402
 from aconsole.ui.views.review.messages import _ as review_text  # noqa: E402
@@ -345,6 +347,7 @@ class MainWindow(Adw.ApplicationWindow):
         self.preferences_vm: PreferencesViewModel = PreferencesViewModel(client)
         self._preferences_unsubscribe: Callable[[], None] = self.preferences_vm.subscribe(self._apply_preferences)
         self.preferences_dialog: PreferencesDialog | None = None
+        self.health_dialog: HealthDialog | None = None
         self.setup_wizard: SetupWizard | None = None
         self._setup_shown: bool = False
         self.app_vm.action_handler = self._handle_action
@@ -498,6 +501,7 @@ class MainWindow(Adw.ApplicationWindow):
             ("palette", palette_text("palette.title")),
             ("settings", setup_text("prefs.title")),
             ("setup", setup_text("setup.restart")),
+            ("health", setup_text("health.title")),
         ):
             action = Gio.SimpleAction.new(name, None)
             _ = action.connect("activate", self._settings_menu_action)
@@ -508,8 +512,15 @@ class MainWindow(Adw.ApplicationWindow):
     def _settings_menu_action(self, action: Gio.SimpleAction, _parameter: object) -> None:
         if action.get_name() == "setup":
             _ = spawn_task(self._restart_setup())
+        elif action.get_name() == "health":
+            self._open_health()
         else:
             self.app_vm.dispatch(action.get_name())
+
+    def _open_health(self) -> None:
+        if self.health_dialog is None:
+            self.health_dialog = HealthDialog(HealthViewModel(self.tabs.client))
+        self.health_dialog.present(self)
 
     def _open_preferences(self) -> None:
         if self.preferences_dialog is None:

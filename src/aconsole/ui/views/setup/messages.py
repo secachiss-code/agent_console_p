@@ -67,6 +67,18 @@ _MESSAGES = {
     "prefs.approvals_native": ("The agent's own prompt", "В диалоге агента"),  # noqa: RUF001 -- Russian UI text
     "prefs.approval_hold": ("Seconds to wait for a decision", "Секунд на решение"),
     "prefs.apply": ("Apply", "Применить"),
+    "health.title": ("Core health", "Состояние ядра"),
+    "health.core": ("Core", "Ядро"),
+    "health.ok": ("Working", "Работает"),
+    "health.no_database": ("Working without a database", "Работает без базы данных"),
+    "health.no_answer": ("Not answering", "Не отвечает"),  # noqa: RUF001 -- Russian
+    "health.queued": ("Writes waiting", "Записей в очереди"),
+    "health.failed": ("Failed writes", "Ошибок записи"),
+    "health.commit": ("Last commit, ms", "Последняя запись, мс"),
+    "health.answered": ("Requests answered", "Обработано запросов"),
+    "health.slowest": ("Slowest request lately, ms", "Самый долгий запрос за последнее время, мс"),
+    "health.resyncs": ("Snapshots pulled again", "Повторных снимков"),
+    "health.reconnects": ("Reconnections", "Переподключений"),
     "prefs.saved": ("Preferences saved", "Настройки сохранены"),
     "prefs.error": (
         "Could not save preferences. Reopen preferences and try again.",
