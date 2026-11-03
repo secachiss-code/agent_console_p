@@ -60,6 +60,7 @@ def test_agent_capabilities_names() -> None:
         skills=True,
         approvals=True,
         checkpoints=False,
+        mcp_http=False,
     )
     assert AgentKind.CLAUDE == "claude"
     assert caps.names() == frozenset({"hooks", "limits", "skills", "approvals"})

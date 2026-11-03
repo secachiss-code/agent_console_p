@@ -210,7 +210,12 @@ def test_projects_are_added_once_activated_and_survive_a_restart(tmp_path: Path)
     assert relative == error_by_name("PATH_NOT_ALLOWED").name
     assert restored.projects == (first,)
     assert restored.active_project == first.id
-    assert [agent.kind for agent in restored.agents] == [AgentKind.CLAUDE, AgentKind.CODEX]
+    assert [agent.kind for agent in restored.agents] == [
+        AgentKind.CLAUDE,
+        AgentKind.CODEX,
+        AgentKind.OPENCODE,
+        AgentKind.CURSOR,
+    ]
     assert all(agent.available for agent in restored.agents)
 
 

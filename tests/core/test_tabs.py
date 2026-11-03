@@ -732,3 +732,36 @@ def test_orphans_are_stopped_inside_their_container_not_on_the_host(monkeypatch:
     monkeypatch.setattr("os.kill", host_kill)
     host.stop_in_container("agent-claude", 4242)
     assert calls == [("agent-claude", "sas", "kill", "-TERM", "4242")]
+
+
+def _opened(service: TabService, agent: AgentKind, *, session: str | None = None) -> str:
+    view = service.open_tab(
+        OpenTabParams(
+            project_id=ProjectId("proj"),
+            agent=agent,
+            workspace=WorkspaceMode.MAIN_CHECKOUT,
+            resume_session=session,
+            title="t",
+        ),
+    )
+    return str(view.id)
+
+
+@pytest.mark.parametrize(
+    ("agent", "expected"),
+    [(AgentKind.OPENCODE, ("opencode", "-s", "s1")), (AgentKind.CURSOR, ("agent", "--resume", "s1"))],
+)
+def test_new_agents_resume_with_their_own_flags(agent: AgentKind, expected: tuple[str, ...]) -> None:
+    seed = ProjectSeed(project_id="proj", root="/repo", container="box", sessions=frozenset({"s1"}))
+    service, _ports = _service(seed)
+    tab = _opened(service, agent, session="s1")
+    spec = service.launch_spec(TabIdParams(tab_id=TabId(tab)))
+    assert spec.argv[-len(expected) :] == expected
+
+
+@pytest.mark.parametrize("agent", [AgentKind.OPENCODE, AgentKind.CURSOR])
+def test_agents_that_cannot_fork_refuse_it(agent: AgentKind) -> None:
+    service, _ports = _service(ProjectSeed(project_id="proj", root="/repo", container="box"))
+    tab = _opened(service, agent)
+    with pytest.raises(TabRequestError):
+        _ = service.fork(TabIdParams(tab_id=TabId(tab)))

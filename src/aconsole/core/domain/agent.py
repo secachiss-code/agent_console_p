@@ -1,6 +1,6 @@
 """Agent kind and the capabilities a container can offer."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from enum import StrEnum
 
 
@@ -22,6 +22,7 @@ class AgentCapabilities:
     skills: bool
     approvals: bool
     checkpoints: bool
+    mcp_http: bool
 
     def names(self) -> frozenset[str]:
         enabled = {
@@ -33,5 +34,23 @@ class AgentCapabilities:
             "skills": self.skills,
             "approvals": self.approvals,
             "checkpoints": self.checkpoints,
+            "mcp_http": self.mcp_http,
         }
         return frozenset(name for name, on in enabled.items() if on)
+
+
+_ALL_ON = AgentCapabilities(
+    hooks=True, statusline=True, limits=True, resume=True, fork=True, skills=True, approvals=True, checkpoints=True,
+    mcp_http=True,
+)
+# No hooks, so no inline approvals and no checkpoint at each prompt. Their status comes from elsewhere.
+_NO_HOOKS = AgentCapabilities(
+    hooks=False, statusline=False, limits=False, resume=True, fork=False, skills=True, approvals=False,
+    checkpoints=False, mcp_http=True,
+)
+CAPABILITIES: dict[AgentKind, AgentCapabilities] = {
+    AgentKind.CLAUDE: _ALL_ON,
+    AgentKind.CODEX: replace(_ALL_ON, statusline=False, skills=False),
+    AgentKind.OPENCODE: _NO_HOOKS,
+    AgentKind.CURSOR: _NO_HOOKS,
+}

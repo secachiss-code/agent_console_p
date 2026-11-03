@@ -50,6 +50,8 @@ from aconsole.core.application.ports.tab_store import (
 )
 from aconsole.core.application.services.git_state import GitProject, GitTab
 from aconsole.core.application.services.projects import ProjectCatalog
+from aconsole.core.domain.agent import CAPABILITIES
+from aconsole.core.domain.agent import AgentKind as DomainAgent
 from aconsole.core.domain.clock import Clock
 
 _ZERO: Final = 0
@@ -92,12 +94,23 @@ _CODEX_ID: Final = re.compile(r"^[A-Za-z0-9_-]{1,128}$")
 
 
 def _launch_command(agent: AgentKind, session: str | None, *, fork: bool) -> tuple[str, ...]:
-    """Claude flags, or Codex ``resume`` / ``fork``. Other agents stay a single argv word."""
+    """Each agent's own way to resume. Fork is refused earlier for agents that cannot do it."""
     if agent is AgentKind.CLAUDE:
         return _claude_command(session, fork=fork)
     if agent is AgentKind.CODEX:
         return _codex_command(session, fork=fork)
+    if agent is AgentKind.OPENCODE:
+        return ("opencode",) if session is None else ("opencode", "-s", session)
+    if agent is AgentKind.CURSOR:
+        return ("agent",) if session is None else ("agent", "--resume", session)
     return (agent.value,)
+
+
+def _require_fork(agent: AgentKind) -> None:
+    """Without this the copy would resume the same session, and two terminals would write to it."""
+    kind = DomainAgent(agent.value)
+    if kind in CAPABILITIES and not CAPABILITIES[kind].fork:
+        raise TabRequestError(_UNAVAILABLE)
 
 
 def _claude_command(session: str | None, *, fork: bool) -> tuple[str, ...]:
@@ -642,6 +655,8 @@ class TabService:
             raise TabRequestError(_UNAVAILABLE)
         if params.resume_session is not None and params.resume_session not in project.sessions:
             raise TabRequestError(_SESSION)
+        if params.fork:
+            _require_fork(params.agent)
         tab_id = self._ports.new_id()
         dest, branch, created = self._place(params, project, tab_id)
         detail = None if project.logged_in else _LOGIN
@@ -836,6 +851,7 @@ class TabService:
 
     def fork(self, params: TabIdParams) -> TabView:
         tab = self._require(str(params.tab_id))
+        _require_fork(tab.agent)
         tab_id = self._ports.new_id()
         dest = tab.worktree
         branch = tab.branch

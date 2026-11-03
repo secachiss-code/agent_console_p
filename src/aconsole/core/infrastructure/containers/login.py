@@ -13,6 +13,7 @@ _FIND_AND_RUN: Final = r"""
 PATH="$PATH:/usr/local/bin:/usr/bin:/bin"
 prefix=$(sed -n "s/^prefix=//p" "$HOME/.npmrc" 2>/dev/null | head -n 1)
 PATH="$PATH:${prefix:+$prefix/bin:}$HOME/.npm-global/bin:$HOME/.local/bin:$HOME/bin:$HOME/.cargo/bin"
+PATH="$PATH:$HOME/.opencode/bin:$HOME/.cursor/bin"
 PATH="$PATH:${HOME%/containers/*}/host-bins"
 export PATH
 if ! command -v "$1" >/dev/null 2>&1; then

@@ -103,9 +103,11 @@ def _in_container(env: SetupEnvironment, name: str, *command: str) -> tuple[str,
 
 
 def _agent_command(name: str) -> str | None:
-    for agent in ("claude", "codex", "grok"):
+    for agent, command in (
+        ("claude", "claude"), ("codex", "codex"), ("grok", "grok"), ("opencode", "opencode"), ("cursor", "agent"),
+    ):
         if name == f"agent-{agent}" or name.startswith(f"agent-{agent}-"):
-            return agent
+            return command
     return None
 
 

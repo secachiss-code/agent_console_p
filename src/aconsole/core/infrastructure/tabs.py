@@ -19,6 +19,8 @@ from typing import Final, final
 from aconsole.contracts.app import AgentInfo
 from aconsole.contracts.common import AgentKind
 from aconsole.core.application.services.tabs import TabRequestError, TabService
+from aconsole.core.domain.agent import CAPABILITIES
+from aconsole.core.domain.agent import AgentKind as DomainAgent
 from aconsole.core.domain.clock import Clock
 from aconsole.core.infrastructure.agents.live_limits import ask_rate_limits
 from aconsole.core.infrastructure.containers.distrobox_env import DistroboxEnvCache, DistroboxError
@@ -32,7 +34,8 @@ _GIT: Final = host_binary("git")
 _GIT_TIMEOUT_S: Final = 10.0
 _DEFAULT_BRANCH: Final = "main"
 _AGENTS_TTL_S: Final = 30.0
-_WAVE_ONE: Final = (AgentKind.CLAUDE, AgentKind.CODEX)
+_AGENTS: Final = (AgentKind.CLAUDE, AgentKind.CODEX, AgentKind.OPENCODE, AgentKind.CURSOR)
+_DISPLAY: Final = {AgentKind.OPENCODE: "OpenCode"}
 _PODMAN: Final = host_binary("podman")
 _SHELL: Final = Path("/bin/sh")
 _PATH: Final = "/usr/bin"
@@ -268,7 +271,7 @@ class HostRepos:
 
 @final
 class HostAgents:
-    """The agents of wave 1 and their containers. Cached: the snapshot must not wait for podman each time."""
+    """The agents and their containers. Cached: the snapshot must not wait for podman each time."""
 
     def __init__(self, inspect: Callable[[str], Inspected], *, ttl_s: float = _AGENTS_TTL_S) -> None:
         self._inspect = inspect
@@ -281,7 +284,7 @@ class HostAgents:
         with self._lock:
             now = time.monotonic()
             if now >= self._until:
-                self._cached = tuple(self._probe(kind) for kind in _WAVE_ONE)
+                self._cached = tuple(self._probe(kind) for kind in _AGENTS)
                 self._until = now + self._ttl_s
             return self._cached
 
@@ -294,8 +297,9 @@ class HostAgents:
             reason = f"container {container} not found"
         # A stopped container still counts: `tab/launchSpec` starts it.
         return AgentInfo(
-            kind=kind, display_name=kind.value.capitalize(), container=container, available=reason is None,
-            unavailable_reason=reason, logged_in=None, version=None, supported=True, capabilities=frozenset({"hooks"}),
+            kind=kind, display_name=_DISPLAY.get(kind, kind.value.capitalize()), container=container,
+            available=reason is None, unavailable_reason=reason, logged_in=None, version=None, supported=True,
+            capabilities=CAPABILITIES[DomainAgent(kind.value)].names(),
         )
 
 
