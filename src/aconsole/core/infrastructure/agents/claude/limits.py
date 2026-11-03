@@ -44,6 +44,12 @@ _USAGE_WINDOWS: Final = (
 _RESET_DATE: Final = r"^(?:(?P<month>[A-Z][a-z]{2}) (?P<day>\d{1,2}), )?"
 _RESET_CLOCK: Final = r"(?P<hour>\d{1,2})(?::(?P<minute>\d{2}))?(?P<half>am|pm) \((?P<zone>[^)]+)\)$"
 _RESET: Final = re.compile(_RESET_DATE + _RESET_CLOCK)
+# Pay-as-you-go past the plan, in dollars: "Extra usage: 77% used · $15.40 / $20.00 spent · resets 12am (…)".
+_EXTRA_LINE: Final = re.compile(r"^Extra usage\b(?P<rest>.*)$", re.MULTILINE)
+_EXTRA_PCT: Final = re.compile(r"(\d{1,3}(?:\.\d+)?)% used")
+_EXTRA_MONEY: Final = re.compile(r"\$([\d,]+(?:\.\d+)?)\s*/\s*\$([\d,]+(?:\.\d+)?)\s*spent")
+_EXTRA_RESET: Final = re.compile(r"[Rr]esets (.+?)\s*$")
+_MAX_PCT: Final = 100.0
 _MONTHS: Final = ("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
 _HALF_DAY: Final = 12
 
@@ -147,12 +153,13 @@ class ClaudeLimits:
                     tab_id=_USAGE_SOURCE,
                 ),
             )
+        extra = read_extra_usage(text, now)
         return QuotaUpdated(
             account=AccountView(
                 id=account.id,
                 agent=AgentKind.CLAUDE,
                 plan_label=account.plan_label,
-                quota=_quota(self._aggregator, account.id, now),
+                quota=(*_quota(self._aggregator, account.id, now), *(() if extra is None else (extra,))),
             )
         )
 
@@ -165,6 +172,28 @@ def read_usage(text: str, now: datetime) -> tuple[tuple[QuotaKey, float, datetim
         if match is not None:
             found.append((key, float(match.group(1)), _reset_time(match.group(2), now)))
     return tuple(found)
+
+
+def read_extra_usage(text: str, now: datetime) -> QuotaWindowView | None:
+    """The extra usage line of `/usage` as the budget window, in dollars. None when it is off or not printed."""
+    line = _EXTRA_LINE.search(text)
+    money = _EXTRA_MONEY.search(line["rest"]) if line is not None else None
+    if line is None or money is None:
+        return None
+    spent = float(money.group(1).replace(",", ""))
+    limit = float(money.group(2).replace(",", "")) or None
+    percent = _EXTRA_PCT.search(line["rest"])
+    if percent is not None:
+        used: float | None = min(_MAX_PCT, float(percent.group(1)))
+    else:
+        used = min(_MAX_PCT, round(spent / limit * 100, 2)) if limit else None
+    reset = _EXTRA_RESET.search(line["rest"])
+    resets_at = _reset_time(reset.group(1), now) if reset is not None else None
+    level = QuotaLevel(quota_level(used_pct=used, resets_at=resets_at, now=now).value)
+    return QuotaWindowView(
+        key="budget", used_pct=used, resets_at=resets_at, level=level, observed_at=now, estimated=False,
+        spent_usd=spent, limit_usd=limit,
+    )
 
 
 def _reset_time(text: str | None, now: datetime) -> datetime | None:

@@ -7,7 +7,7 @@ from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
 from aconsole.core.domain.quota import QuotaKey
-from aconsole.core.infrastructure.agents.claude.limits import read_usage
+from aconsole.core.infrastructure.agents.claude.limits import read_extra_usage, read_usage
 from aconsole.core.infrastructure.agents.live_limits import CachedAuth, ask_rate_limits
 from aconsole.core.infrastructure.containers.login import LOGIN_SHELL
 
@@ -88,3 +88,18 @@ def test_a_profile_that_swallows_stdin_leaves_the_request_to_the_command(
     answer = f"read -r first; read -r second; read -r third; case \"$third\" in *rateLimits*) echo '{reply}';; esac"
     argv = (*LOGIN_SHELL, "sh", "-c", answer)
     assert ask_rate_limits(argv) == reply.encode()
+
+
+def test_extra_usage_is_a_budget_in_dollars() -> None:
+    now = datetime(2026, 11, 2, 21, 50, tzinfo=UTC)
+    text = _USAGE + "Extra usage: 77% used · $15.40 / $20.00 spent · resets Dec 1, 12am (UTC)\n"
+    window = read_extra_usage(text, now)
+    assert window is not None
+    assert (window.key, window.used_pct, window.spent_usd, window.limit_usd) == ("budget", 77.0, 15.4, 20.0)
+    assert window.resets_at == datetime(2026, 12, 1, tzinfo=UTC)
+    # The interactive screen puts a bar and a comma in; the numbers are the same.
+    drawn = read_extra_usage("Extra usage ██████ 7% used, $1,015.40 / $2,000.00 spent", now)
+    assert drawn is not None
+    assert (drawn.used_pct, drawn.spent_usd, drawn.limit_usd, drawn.resets_at) == (7.0, 1015.4, 2000.0, None)
+    assert read_extra_usage(_USAGE, now) is None
+    assert read_extra_usage("Extra usage not enabled • /extra-usage to enable", now) is None
