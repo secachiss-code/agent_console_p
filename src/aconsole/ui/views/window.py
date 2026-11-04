@@ -37,7 +37,7 @@ from aconsole.ui.viewmodels.review_vm import ReviewViewModel  # noqa: E402
 from aconsole.ui.viewmodels.setup_vm import PreferencesViewModel  # noqa: E402
 from aconsole.ui.viewmodels.sidebar_vm import SidebarSummaryViewModel  # noqa: E402
 from aconsole.ui.viewmodels.tabs_vm import TabItem, TabsViewModel  # noqa: E402
-from aconsole.ui.views.approvals.panel import ApprovalPanel  # noqa: E402
+from aconsole.ui.views.approvals.panel import ApprovalPanel, place_at_bottom  # noqa: E402
 from aconsole.ui.views.health_dialog import HealthDialog  # noqa: E402
 from aconsole.ui.views.palette.dialog import PaletteDialog  # noqa: E402
 from aconsole.ui.views.palette.messages import _ as palette_text  # noqa: E402
@@ -114,7 +114,7 @@ class MainWindow(Adw.ApplicationWindow):
         _ = self.selection.connect("notify::selected-item", self._selection_changed)
         _ = self.connect("unrealize", self._dispose_terminals)
         self.toast_overlay: Adw.ToastOverlay = Adw.ToastOverlay()
-        self.toast_overlay.set_child(content)
+        self.toast_overlay.set_child(self.approvals_overlay)
         self.tabs_sidebar.on_error = self._tab_error
         self.end_island: Gtk.Box = self._build_end_island()
         frame = Gtk.Overlay(child=self.toast_overlay)
@@ -517,6 +517,7 @@ class MainWindow(Adw.ApplicationWindow):
 
     def _selection_changed(self, _object: object, _property: object) -> None:
         self._show_selected_terminal()
+        self._sync_approvals(self.tabs.client.store)
         self._focus_changed(_object, _property)
 
     def _focus_changed(self, _object: object, _property: object) -> None:
@@ -661,14 +662,18 @@ class MainWindow(Adw.ApplicationWindow):
             on_open=self._open_approval_tab,
             on_left=self._focus_terminal,
         )
-        content.add_bottom_bar(self.approval_panel)
+        # Toasts stay above it, and the overlay does not count towards the size of what it covers.
+        self.approvals_overlay: Gtk.Overlay = Gtk.Overlay(child=content)
+        self.approvals_overlay.add_overlay(self.approval_panel)
+        _ = self.approvals_overlay.connect("get-child-position", place_at_bottom)
         self._sync_approvals(self.tabs.client.store)
 
     def _handle_attention(self, action_id: str) -> None:
         panel = self.approval_panel
         if action_id == "next-attention":
-            if not panel.step(1):
+            if not panel.advance():
                 self._next_attention_tab()
+                _ = panel.step(0)
         elif action_id in {"attention-next", "attention-previous"}:
             _ = panel.step(1 if action_id == "attention-next" else -1)
         elif action_id in {"approve", "attention-allow"}:
@@ -705,7 +710,12 @@ class MainWindow(Adw.ApplicationWindow):
     def _sync_approvals(self, store: CoreStore) -> None:
         snapshot = store.snapshot
         if snapshot is not None:
-            self.approval_panel.update(snapshot.approvals, {str(tab.id): tab.title for tab in snapshot.tabs})
+            selected = self.selection.get_selected_item()
+            self.approval_panel.update(
+                snapshot.approvals,
+                {str(tab.id): tab.title for tab in snapshot.tabs},
+                TabId(str(selected.tab_id)) if isinstance(selected, TabItem) else None,
+            )
 
     def _build_settings_menu(self) -> Gio.Menu:
         menu = Gio.Menu()

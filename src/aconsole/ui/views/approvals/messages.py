@@ -4,19 +4,24 @@
 import locale
 
 _MESSAGES = {
-    "approvals.count": ("Waiting for your decision: {count}", "Ждут решения: {count}"),
-    "approvals.title": ("{tool} · {agent} · {tab}", "{tool} · {agent} · {tab}"),
+    "approvals.title.command": ("{agent} wants to run a command", "{agent} хочет выполнить команду"),
+    "approvals.title.edit": ("{agent} wants to edit files: {count}", "{agent} хочет изменить файлы: {count}"),
+    "approvals.title.tool": ("{agent} wants to use {tool}", "{agent} хочет использовать {tool}"),
+    "approvals.more_here": ("{count} more here", "ещё {count} здесь"),
+    "approvals.more_elsewhere": (
+        "{count} more in other tabs · Ctrl+Shift+Y", "ещё {count} в других вкладках · Ctrl+Shift+Y",
+    ),
     "approvals.left": ("{time} left", "Осталось {time}"),
     "approvals.time_up": ("Time is up", "Время вышло"),
     "approvals.cwd": ("In {cwd}", "В {cwd}"),
     "approvals.allow": ("Allow", "Разрешить"),
-    "approvals.allow_session": ("Allow in this tab", "Разрешить во вкладке"),
+    "approvals.allow_session": ("Allow until this tab closes", "Разрешать до закрытия вкладки"),
     "approvals.allow_session_tip": (
         "Also allow the same command for the rest of this tab's session",
         "Также разрешить такую команду до конца сессии этой вкладки",
     ),
     "approvals.deny": ("Deny", "Отклонить"),
-    "approvals.release": ("Ask in terminal", "Спросить в терминале"),
+    "approvals.release": ("In terminal", "В терминале"),
     "approvals.release_tip": (
         "Leave this request to the agent's own prompt",
         "Передать запрос собственному диалогу агента",

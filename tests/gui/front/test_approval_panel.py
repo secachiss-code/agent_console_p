@@ -1,4 +1,4 @@
-"""The approval panel against the fake core: cards, decisions, focus, and closed requests."""
+"""The approval card against the fake core: decisions, focus, closed requests, and its place on screen."""
 
 from __future__ import annotations
 
@@ -7,13 +7,15 @@ import tempfile
 from typing import TYPE_CHECKING
 
 import gi
+import msgspec
 import pytest
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
 from gi.repository import Adw, Gdk, GLib, Gtk  # noqa: E402
 
-from aconsole.contracts.common import ApprovalDecision, TabId  # noqa: E402
+from aconsole.contracts.app import ApprovalView, CommandDetail  # noqa: E402
+from aconsole.contracts.common import ApprovalDecision, ApprovalScope, RiskTag, TabId  # noqa: E402
 from aconsole.core.infrastructure.fake.server import FakeCore  # noqa: E402
 from aconsole.ui.bootstrap import run_app, spawn_task  # noqa: E402
 from aconsole.ui.client.core_client import CoreClient  # noqa: E402
@@ -89,7 +91,9 @@ def _on_panel(socket: str, check: Callable[[ApprovalPanel, _Seen, Gtk.Window], A
                 )
                 window = Adw.ApplicationWindow(application=self, content=panel)
                 window.present()
-                panel.update(pulled.snapshot.approvals, {str(pulled.snapshot.approvals[0].tab_id): "tab"})
+                first = pulled.snapshot.approvals[0].tab_id
+                panel.update(pulled.snapshot.approvals, {str(first): "tab"}, first)
+                seen.now += 1.0  # past the wait for a card that has just appeared
                 await check(panel, seen, window)
             except BaseException as error:  # noqa: BLE001 -- reported after the loop stops
                 failures.append(error)
@@ -127,18 +131,19 @@ def _labels(widget: Gtk.Widget) -> list[str]:
 
 @pytest.mark.parametrize("core", ["waiting"], indirect=True)
 def test_cards_show_what_is_asked_and_take_no_focus(core: str) -> None:
-    async def check(panel: ApprovalPanel, _seen: _Seen, window: Gtk.Window) -> None:
+    async def check(panel: ApprovalPanel, _seen: _Seen, _window: Gtk.Window) -> None:
         assert panel.get_visible()
         assert len(panel.cards) == 2
         first = _labels(panel.cards[0])
         assert "rm -rf build" in first
         assert any("/wt/1" in label for label in first)
         assert any("a.py" in label for label in _labels(panel.cards[1]))
-        assert panel.cards[0].session_button is not None
-        assert panel.cards[1].session_button is None
+        assert panel.cards[0].session_check is not None
+        assert panel.cards[1].session_check is None
         assert panel.cards[0].has_css_class("ac-attention-card")
         assert panel.focused_index() is None
-        assert window.get_focus() is None or not isinstance(window.get_focus(), Gtk.ListBoxRow)
+        assert panel.shown is panel.cards[0]
+        assert panel.stack.get_visible_child() is panel.cards[0]
 
     _on_panel(core, check)
 
@@ -152,6 +157,7 @@ def test_a_decision_closes_the_card_and_the_next_press_cannot_land_on_the_next_o
         panel.decide_focused(ApprovalDecision.ALLOW)
         await _settled(lambda: len(panel.cards) == 1)
         assert panel.focused_index() == 0
+        assert panel.shown is panel.cards[0]
         panel.decide_focused(ApprovalDecision.ALLOW)
         await asyncio.sleep(0.1)
         assert len(panel.cards) == 1
@@ -219,6 +225,112 @@ def test_a_lost_call_keeps_the_card_for_another_try(core: str) -> None:
     _on_panel(core, check)
 
 
+def _other_tab(view: ApprovalView, number: int) -> ApprovalView:
+    return msgspec.structs.replace(view, id=f"{view.id[:-1]}{number}", tab_id=TabId(f"{view.tab_id}-other"))
+
+
+@pytest.mark.parametrize("core", ["waiting"], indirect=True)
+def test_only_the_open_tab_shows_its_request_and_the_rest_are_counted(core: str) -> None:
+    async def check(panel: ApprovalPanel, _seen: _Seen, _window: Gtk.Window) -> None:
+        here = panel.cards[0].view
+        others = (_other_tab(here, 7), _other_tab(here, 8))
+        panel.update((here, *others), {}, here.tab_id)
+        assert [card.view.id for card in panel.cards] == [here.id]
+        assert "2" in panel.more_label.get_label()
+        assert panel.more_label.get_visible()
+        panel.update((here,), {}, here.tab_id)
+        assert not panel.more_label.get_visible()
+        panel.update(others, {}, here.tab_id)
+        assert not panel.cards
+        assert not panel.get_visible()
+
+    _on_panel(core, check)
+
+
+@pytest.mark.parametrize("core", ["waiting"], indirect=True)
+def test_a_risky_allow_waits_half_a_second_and_is_never_the_default(core: str) -> None:
+    async def check(panel: ApprovalPanel, _seen: _Seen, _window: Gtk.Window) -> None:
+        risky, plain = panel.cards
+        assert RiskTag.DESTRUCTIVE in risky.view.risk
+        assert not risky.allow_button.has_css_class("suggested-action")
+        assert plain.allow_button.has_css_class("suggested-action")
+        assert not risky.allow_button.get_sensitive()
+        await asyncio.sleep(0.3)
+        assert not risky.allow_button.get_sensitive()
+        await _settled(risky.allow_button.get_sensitive)
+
+    _on_panel(core, check)
+
+
+@pytest.mark.parametrize("core", ["waiting"], indirect=True)
+def test_a_new_card_cannot_be_decided_by_the_press_that_met_it(core: str) -> None:
+    async def check(panel: ApprovalPanel, seen: _Seen, _window: Gtk.Window) -> None:
+        first, second = panel.cards
+        panel.update((second.view,), {}, second.view.tab_id)
+        assert panel.shown is second
+        panel.decide(second, ApprovalDecision.DENY)
+        await asyncio.sleep(0.05)
+        assert not second.busy
+        assert first not in panel.cards
+        seen.now += 1.0
+        panel.decide(second, ApprovalDecision.DENY)
+        assert second.busy
+
+    _on_panel(core, check)
+
+
+@pytest.mark.parametrize("core", ["waiting"], indirect=True)
+def test_the_checkbox_widens_the_allow_to_the_tab(core: str) -> None:
+    async def check(panel: ApprovalPanel, _seen: _Seen, _window: Gtk.Window) -> None:
+        card = panel.cards[0]
+        sent: list[ApprovalScope] = []
+
+        def spy(target: object, decision: ApprovalDecision, scope: ApprovalScope = ApprovalScope.ONCE) -> None:
+            sent.append(scope)
+            _ = (target, decision)
+
+        panel.decide = spy  # type: ignore[method-assign]
+        await _settled(card.allow_button.get_sensitive)
+        card.allow_button.emit("clicked")
+        assert card.session_check is not None
+        card.session_check.set_active(True)
+        card.allow_button.emit("clicked")
+        assert sent == [ApprovalScope.ONCE, ApprovalScope.TAB_SESSION]
+
+    _on_panel(core, check)
+
+
+@pytest.mark.parametrize("core", ["waiting"], indirect=True)
+def test_tab_reaches_the_details_the_checkbox_and_every_button(core: str) -> None:
+    async def check(panel: ApprovalPanel, _seen: _Seen, window: Gtk.Window) -> None:
+        card = panel.cards[0]
+        await _settled(card.allow_button.get_sensitive)
+        assert panel.step(1)
+        reached: list[Gtk.Widget | None] = [window.get_focus()]
+        for _ in range(6):
+            _ = window.child_focus(Gtk.DirectionType.TAB_FORWARD)
+            reached.append(window.get_focus())
+        for stop in (card.details, card.session_check, card.release_button, card.deny_button, card.allow_button):
+            assert stop in reached
+
+    _on_panel(core, check)
+
+
+@pytest.mark.parametrize("core", ["waiting"], indirect=True)
+def test_buttons_keep_one_row_against_the_end_when_there_is_room(core: str) -> None:
+    async def check(panel: ApprovalPanel, _seen: _Seen, window: Gtk.Window) -> None:
+        window.set_default_size(900, 500)
+        await asyncio.sleep(0.2)
+        card = panel.cards[0]
+        buttons = (card.release_button, card.deny_button, card.allow_button)
+        spots = [button.compute_bounds(window)[1] for button in buttons]
+        assert len({spot.get_y() for spot in spots}) == 1
+        assert spots[0].get_x() < spots[1].get_x() < spots[2].get_x()
+        assert spots[2].get_x() + spots[2].get_width() > window.get_width() - 40
+
+    _on_panel(core, check)
+
+
 class _WindowApp(AConsoleApp):
     """The whole window, with the panel reached through its registered shortcuts."""
 
@@ -261,18 +373,51 @@ class _WindowApp(AConsoleApp):
         assert _press(window, Gdk.KEY_k)
         assert panel.focused_index() == 0
         first = panel.cards[0]
+        await _past_guard(panel)
         assert _press(window, Gdk.KEY_d)
         await _settled(lambda: first not in panel.cards)
         assert panel.focused_index() == 0
-        for _ in range(100):
-            await asyncio.sleep(0.02)
-            if panel._clock() >= panel._guard_until:
-                break
+        await _past_guard(panel)
         assert _press(window, Gdk.KEY_Return)
         selected = window.selection.get_selected_item()
         assert selected is not None
         assert selected.tab_id == panel.cards[0].view.tab_id
         assert panel.focused_index() is None
+
+
+class _ScreenApp(_WindowApp):
+    """Card over the real terminal, in the narrowest window there is, asked about the longest command."""
+
+    async def _check(self, window: MainWindow) -> None:
+        panel = window.approval_panel
+        await _settled(lambda: len(panel.cards) == 2)
+        window.set_default_size(360, 640)
+        await asyncio.sleep(0.3)
+        covered = window.terminal_stack
+        with_card = (covered.get_width(), covered.get_height())
+        waiting = panel._approvals
+        selected = panel._tab
+        panel.update((), {}, selected)
+        await asyncio.sleep(0.2)
+        assert (covered.get_width(), covered.get_height()) == with_card
+        huge = "npm publish " * 4000
+        view = msgspec.structs.replace(
+            waiting[0], summary=huge, detail=CommandDetail(command=huge, args_preview=huge),
+        )
+        panel.update((view,), {}, selected)
+        await asyncio.sleep(0.3)
+        assert (covered.get_width(), covered.get_height()) == with_card
+        assert window.get_focus() is None or panel.focused_index() is None
+        card = panel.cards[0]
+        for button in (card.release_button, card.deny_button, card.allow_button):
+            found, bounds = button.compute_bounds(window)
+            assert found
+            assert bounds.get_y() >= 0
+            assert bounds.get_x() >= 0
+            assert bounds.get_y() + bounds.get_height() <= window.get_height()
+            assert bounds.get_x() + bounds.get_width() <= window.get_width()
+        scroll = card.details.get_vadjustment()
+        assert scroll.get_page_size() < scroll.get_upper()
 
 
 def _press(window: MainWindow, keyval: int, modifiers: Gdk.ModifierType | None = None) -> bool:
@@ -292,6 +437,18 @@ def _press(window: MainWindow, keyval: int, modifiers: Gdk.ModifierType | None =
             return action.activate(Gtk.ShortcutActionFlags.EXCLUSIVE, window, None)
     message = f"no shortcut for key {keyval}"
     raise AssertionError(message)
+
+
+async def _past_guard(panel: ApprovalPanel) -> None:
+    await _settled(lambda: panel._clock() >= panel._guard_until)
+
+
+@pytest.mark.parametrize("core", ["waiting"], indirect=True)
+def test_the_card_leaves_the_terminal_alone_and_its_buttons_on_screen(core: str) -> None:
+    app = _ScreenApp(CoreClient(core))
+    assert run_app(lambda: app, ["approval-screen-test"]) == 0
+    if app.failure is not None:
+        raise app.failure
 
 
 @pytest.mark.parametrize("core", ["waiting"], indirect=True)
