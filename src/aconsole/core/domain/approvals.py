@@ -227,7 +227,7 @@ class ApprovalBook:
         if request.expires_at < request.at:
             message = "expires_at must not precede the request"
             raise ValueError(message)
-        self.prune(request.at)
+        _ = self.prune(request.at)
         replay = self._replay(request)
         if replay is not None:
             return replay
@@ -358,7 +358,7 @@ class ApprovalBook:
         if not gone:
             return
         for approval_id in gone:
-            self._items.pop(approval_id, None)
+            _ = self._items.pop(approval_id, None)
         self._by_input = {key: value for key, value in self._by_input.items() if value not in gone}
         self._by_event = {key: value for key, value in self._by_event.items() if value not in gone}
 

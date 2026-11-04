@@ -130,7 +130,7 @@ class ApprovalHold:
         for approval_id in list(self._settled):
             if approval_id not in live:
                 self._settled.discard(approval_id)
-                self._decisions.pop(approval_id, None)
+                _ = self._decisions.pop(approval_id, None)
 
     def release_to_native(self, params: ReleaseParams, *, at: datetime) -> ReleasedResult:
         approval = self._book.release(str(params.approval_id), nonce=params.nonce, at=at)

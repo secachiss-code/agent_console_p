@@ -12,7 +12,7 @@ class AppViewModel:
         self.bindings: tuple[BindingSpec, ...] = resolve_keymap({})
         self.on_action: Callable[[str], None] | None = None
         self.on_bindings: Callable[[tuple[BindingSpec, ...]], bool] | None = None
-        self.action_handler: Callable[[str], None] | None = None
+        self.action_handler: Callable[[str], bool] | None = None
 
     def apply_overrides(self, overrides: Mapping[str, str]) -> bool:
         try:
@@ -24,8 +24,9 @@ class AppViewModel:
         self.bindings = candidate
         return True
 
-    def dispatch(self, action_id: str) -> None:
-        if self.action_handler is not None:
-            self.action_handler(action_id)
+    def dispatch(self, action_id: str) -> bool:
+        """True when the action did something. False leaves the key to the focused widget."""
+        handled = self.action_handler is not None and self.action_handler(action_id)
         if self.on_action is not None:
             self.on_action(action_id)
+        return handled

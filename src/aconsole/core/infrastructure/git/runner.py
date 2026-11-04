@@ -195,7 +195,7 @@ def _environment(
         "GIT_PAGER": "cat",
     }
     for name in (*_DROPPED_ENV, *drop):
-        env.pop(name, None)
+        _ = env.pop(name, None)
     if not write:
         env["GIT_OPTIONAL_LOCKS"] = "0"
     if extra:

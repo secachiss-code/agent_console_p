@@ -47,3 +47,14 @@ def add_family(text: str | None, family: str) -> str:
 
 def _css_escape(name: str) -> str:
     return "".join(ch for ch in name if ch not in '"\\;{}<>\n\r')
+
+
+ZOOM_DEFAULT = 1.0
+_ZOOM_MIN = 0.5
+_ZOOM_MAX = 3.0
+_ZOOM_STEP = 0.1
+
+
+def zoomed(current: float, steps: int) -> float:
+    """The terminal font scale `steps` away, kept in range. Rounded so that steps do not drift."""
+    return round(min(_ZOOM_MAX, max(_ZOOM_MIN, current + steps * _ZOOM_STEP)), 1)

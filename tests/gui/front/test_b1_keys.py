@@ -133,7 +133,7 @@ class _KeyboardApp(AConsoleApp):
             assert window.shortcut_manager is not None
             window.app_vm.on_action = self.actions.append
             # The test checks key routing. A real palette dialog would take the focus from VTE.
-            window.app_vm.action_handler = lambda _action: None
+            window.app_vm.action_handler = lambda _action: True
             terminal.connect("commit", self._committed)
             child_code = dedent(
                 f"""

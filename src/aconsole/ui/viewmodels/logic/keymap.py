@@ -26,7 +26,6 @@ DEFAULT_BINDINGS: tuple[BindingSpec, ...] = (
     BindingSpec("attention-allow", ("a",), "attention"),
     BindingSpec("attention-deny", ("d",), "attention"),
     BindingSpec("attention-open", ("Return",), "attention"),
-    BindingSpec("handover", ("<Control><Shift>h",)),
     BindingSpec("diff", ("<Control><Shift>d",)),
     BindingSpec("git", ("<Control><Shift>g",)),
     BindingSpec("terminal-search", ("<Control><Shift>f",)),
@@ -43,9 +42,13 @@ DEFAULT_BINDINGS: tuple[BindingSpec, ...] = (
 )
 
 
+# Actions that once had a key. A saved override for one must not reject every other override.
+_RETIRED = frozenset({"handover"})
+
+
 def resolve_keymap(overrides: Mapping[str, str]) -> tuple[BindingSpec, ...]:
     """Replace an action's bindings atomically; reject unknown IDs and collisions."""
-    unknown = set(overrides).difference(item.action_id for item in DEFAULT_BINDINGS)
+    unknown = set(overrides).difference(item.action_id for item in DEFAULT_BINDINGS).difference(_RETIRED)
     if unknown:
         message = f"unknown shortcut action: {min(unknown)}"
         raise ValueError(message)

@@ -19,6 +19,7 @@ from aconsole.ui.viewmodels.logic.fonts import font_families, pango_family  # no
 from aconsole.ui.viewmodels.terminal_vm import TerminalViewModel  # noqa: E402
 from aconsole.ui.views.terminal.messages import _ as translate  # noqa: E402
 from aconsole.ui.views.terminal.palette import TerminalPaletteBinding  # noqa: E402
+from aconsole.ui.views.terminal.search import TerminalSearchBar  # noqa: E402
 from aconsole.ui.views.terminal.session import TerminalSession  # noqa: E402
 
 _TEXT_TYPES = ("text/plain;charset=utf-8", "text/plain", "UTF8_STRING")
@@ -64,6 +65,8 @@ class TerminalPage(Gtk.Overlay):
 
     def _key_pressed(self, _keys: Gtk.EventControllerKey, keyval: int, _code: int, state: Gdk.ModifierType) -> bool:
         """Copy and paste belong to the terminal: an agent in a container cannot reach the desktop clipboard."""
+        if self._search_focused():
+            return False
         modifiers = state & Gtk.accelerator_get_default_mod_mask()
         key = Gdk.keyval_to_lower(keyval)
         with_shift = modifiers == Gdk.ModifierType.CONTROL_MASK | Gdk.ModifierType.SHIFT_MASK
@@ -78,6 +81,25 @@ class TerminalPage(Gtk.Overlay):
             self.terminal.paste_clipboard()
             return True
         return False
+
+    def _search_focused(self) -> bool:
+        return self.search.entry_focused()
+
+    def has_terminal_focus(self) -> bool:
+        widget: Gtk.Widget = self.terminal  # pyright: ignore[reportAssignmentType] -- VTE 0.76 is Gtk4 at runtime
+        return widget.has_focus()
+
+    def copy_selection(self) -> None:
+        self.terminal.copy_clipboard_format(Vte.Format.TEXT)
+
+    def paste_clipboard(self) -> None:
+        self.terminal.paste_clipboard()
+
+    def set_zoom(self, scale: float) -> None:
+        self.terminal.set_font_scale(scale)
+
+    def show_search(self) -> None:
+        self.search.open()
 
     def _clipboard_has_text(self) -> bool:
         formats = self.get_clipboard().get_formats()
@@ -111,6 +133,8 @@ class TerminalPage(Gtk.Overlay):
         panel.append(self.ended_actions)
         self.ended_revealer.set_child(panel)
         self.add_overlay(self.ended_revealer)
+        self.search: TerminalSearchBar = TerminalSearchBar(self.terminal, self.focus_terminal)
+        self.add_overlay(self.search)
 
     def start(self) -> None:
         if not self._closed and self.worker is None:

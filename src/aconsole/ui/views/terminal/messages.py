@@ -3,6 +3,10 @@
 import locale
 
 _MESSAGES = {
+    "terminal.search": ("Search the terminal", "Поиск в терминале"),
+    "terminal.search_previous": ("Previous match", "Предыдущее совпадение"),
+    "terminal.search_next": ("Next match", "Следующее совпадение"),
+    "terminal.search_close": ("Close search", "Закрыть поиск"),
     "terminal.ended": ("Session ended", "Сессия завершена"),
     "terminal.ended_code": ("Session ended with code {code}", "Сессия завершена с кодом {code}"),  # noqa: RUF001 -- Russian
     "terminal.resume": ("Resume", "Возобновить"),

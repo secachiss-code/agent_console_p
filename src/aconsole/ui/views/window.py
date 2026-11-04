@@ -24,7 +24,7 @@ from aconsole.ui.viewmodels.app_vm import AppViewModel  # noqa: E402
 from aconsole.ui.viewmodels.approvals_vm import ApprovalsViewModel  # noqa: E402
 from aconsole.ui.viewmodels.git_vm import GitViewModel, git_summary  # noqa: E402
 from aconsole.ui.viewmodels.health_vm import HealthViewModel  # noqa: E402
-from aconsole.ui.viewmodels.logic.fonts import css_font_family, font_families  # noqa: E402
+from aconsole.ui.viewmodels.logic.fonts import ZOOM_DEFAULT, css_font_family, font_families, zoomed  # noqa: E402
 from aconsole.ui.viewmodels.logic.quota_fmt import quota_level  # noqa: E402
 from aconsole.ui.viewmodels.review_vm import ReviewViewModel  # noqa: E402
 from aconsole.ui.viewmodels.setup_vm import PreferencesViewModel  # noqa: E402
@@ -41,6 +41,7 @@ from aconsole.ui.views.setup.messages import _ as setup_text  # noqa: E402
 from aconsole.ui.views.setup.preferences import PreferencesDialog  # noqa: E402
 from aconsole.ui.views.setup.wizard import SetupWizard  # noqa: E402
 from aconsole.ui.views.shortcuts import ShortcutManager  # noqa: E402
+from aconsole.ui.views.shortcuts_dialog import ShortcutsDialog  # noqa: E402
 from aconsole.ui.views.sidebar.git_card import GitCard  # noqa: E402
 from aconsole.ui.views.sidebar.messages import _ as translate  # noqa: E402
 from aconsole.ui.views.sidebar.plan_card import PlanCard  # noqa: E402
@@ -248,6 +249,7 @@ class MainWindow(Adw.ApplicationWindow):
         page = self.terminal_pages.get(tab_id)
         if page is None:
             page = TerminalPage(self.tabs.client, TabId(tab_id), self._terminal_new, self._terminal_close)
+            page.set_zoom(self._terminal_zoom)
             if self._terminal_settings is not None:
                 page.apply_settings(self._terminal_settings)
             self.terminal_pages[tab_id] = page
@@ -255,7 +257,7 @@ class MainWindow(Adw.ApplicationWindow):
         return page
 
     def _terminal_new(self) -> None:
-        self.app_vm.dispatch("new-tab")
+        _ = self.app_vm.dispatch("new-tab")
 
     def _select_tab(self, tab_id: TabId) -> None:
         snapshot = self.tabs.client.store.snapshot
@@ -408,6 +410,7 @@ class MainWindow(Adw.ApplicationWindow):
 
     def _init_shortcuts(self, app: Adw.Application) -> None:
         self.palette_dialog: PaletteDialog | None = None
+        self._terminal_zoom: float = ZOOM_DEFAULT
         client = getattr(app, "client", None)
         if not isinstance(client, CoreClient):
             message = "application has no core client"
@@ -428,10 +431,10 @@ class MainWindow(Adw.ApplicationWindow):
         _ = spawn_task(self._refresh_settings())
 
     def _toggle_sidebar(self, _action: Gio.SimpleAction, _parameter: object) -> None:
-        self.app_vm.dispatch("toggle-sidebar")
+        _ = self.app_vm.dispatch("toggle-sidebar")
 
     def _new_tab(self, _action: Gio.SimpleAction, _parameter: object) -> None:
-        self.app_vm.dispatch("new-tab")
+        _ = self.app_vm.dispatch("new-tab")
 
     def _tab_opened(self, tab_id: TabId) -> None:
         self._select_tab(tab_id)
@@ -502,21 +505,127 @@ class MainWindow(Adw.ApplicationWindow):
         except Exception:  # noqa: BLE001 -- focus reports must not break the window on disconnect
             _LOG.debug("Could not report tab focus", exc_info=True)
 
-    def _handle_action(self, action_id: str) -> None:
-        if action_id == "toggle-sidebar":
-            self.split.set_show_sidebar(not self.split.get_show_sidebar())
-        elif action_id == "palette":
-            self._open_palette()
-        elif action_id == "new-tab":
-            NewTabDialog(self.tabs, self._tab_opened, self._tab_error).present(self)
-        elif action_id == "settings":
-            self._open_preferences()
-        elif action_id == "diff":
-            self._open_review()
-        elif action_id == "git":
-            self._open_git()
-        else:
-            self._handle_attention(action_id)
+    def action_handlers(self) -> dict[str, Callable[[], bool]]:
+        """Every shortcut action. Each answers whether it took the key; False leaves it to the focused widget."""
+        return {
+            "toggle-sidebar": self._toggle_sidebar_now,
+            "palette": self._done(self._open_palette),
+            "new-tab": self._done(self._present_new_tab),
+            "close-tab": self._close_selected_tab,
+            "next-tab": lambda: self._step_tab(1),
+            "previous-tab": lambda: self._step_tab(-1),
+            **{f"tab-{number}": self._tab_at(number) for number in range(1, 10)},
+            "settings": self._done(self._open_preferences),
+            "diff": self._done(self._open_review),
+            "git": self._done(self._open_git),
+            "terminal-search": self._search_terminal,
+            "copy": self._copy,
+            "paste": self._paste,
+            "shortcuts": self._show_shortcuts,
+            "zoom-in": lambda: self._zoom_by(1),
+            "zoom-out": lambda: self._zoom_by(-1),
+            "zoom-reset": lambda: self._zoom(ZOOM_DEFAULT),
+            "quit": self._quit,
+            # The shortcut manager itself lets the next key through.
+            "send-next-key": lambda: True,
+            **{
+                action: self._attention(action)
+                for action in (
+                    "next-attention", "attention-next", "attention-previous", "approve", "attention-allow",
+                    "deny", "attention-deny", "attention-open",
+                )
+            },
+        }
+
+    def _handle_action(self, action_id: str) -> bool:
+        handler = self.action_handlers().get(action_id)
+        return handler is not None and handler()
+
+    @staticmethod
+    def _done(action: Callable[[], None]) -> Callable[[], bool]:
+        def run() -> bool:
+            action()
+            return True
+
+        return run
+
+    def _attention(self, action_id: str) -> Callable[[], bool]:
+        return self._done(lambda: self._handle_attention(action_id))
+
+    def _toggle_sidebar_now(self) -> bool:
+        self.split.set_show_sidebar(not self.split.get_show_sidebar())
+        return True
+
+    def _present_new_tab(self) -> None:
+        NewTabDialog(self.tabs, self._tab_opened, self._tab_error).present(self)
+
+    def _selected_page(self) -> TerminalPage | None:
+        selected = self.selection.get_selected_item()
+        return self._terminal_page(str(selected.tab_id)) if isinstance(selected, TabItem) else None
+
+    def _close_selected_tab(self) -> bool:
+        selected = self.selection.get_selected_item()
+        if not isinstance(selected, TabItem):
+            return False
+        self._terminal_close(str(selected.tab_id))
+        return True
+
+    def _step_tab(self, step: int) -> bool:
+        count = self.selection.get_n_items()
+        if count == 0:
+            return False
+        at = self.selection.get_selected()
+        start = 0 if at == Gtk.INVALID_LIST_POSITION else at
+        return self._show_tab_at((start + step) % count)
+
+    def _tab_at(self, number: int) -> Callable[[], bool]:
+        # With fewer tabs, Alt+digit stays what it is in the terminal.
+        return lambda: number <= self.selection.get_n_items() and self._show_tab_at(number - 1)
+
+    def _show_tab_at(self, index: int) -> bool:
+        self.selection.set_selected(index)
+        self._show_selected_terminal()
+        self._focus_terminal()
+        return True
+
+    def _search_terminal(self) -> bool:
+        page = self._selected_page()
+        if page is None:
+            return False
+        self._show_selected_terminal()
+        page.show_search()
+        return True
+
+    def _copy(self) -> bool:
+        page = self._selected_page()
+        if page is None or not page.has_terminal_focus():
+            return False
+        page.copy_selection()
+        return True
+
+    def _paste(self) -> bool:
+        page = self._selected_page()
+        if page is None or not page.has_terminal_focus():
+            return False
+        page.paste_clipboard()
+        return True
+
+    def _show_shortcuts(self) -> bool:
+        ShortcutsDialog(self.app_vm.bindings).present(self)
+        return True
+
+    def _zoom_by(self, steps: int) -> bool:
+        return self._zoom(zoomed(self._terminal_zoom, steps))
+
+    def _zoom(self, scale: float) -> bool:
+        self._terminal_zoom = scale
+        for page in self.terminal_pages.values():
+            page.set_zoom(scale)
+        return True
+
+    def _quit(self) -> bool:
+        self.close()
+        return True
 
     def _install_approvals(self, content: Adw.ToolbarView) -> None:
         self.approval_panel: ApprovalPanel = ApprovalPanel(
@@ -591,7 +700,7 @@ class MainWindow(Adw.ApplicationWindow):
         elif action.get_name() == "health":
             self._open_health()
         else:
-            self.app_vm.dispatch(action.get_name())
+            _ = self.app_vm.dispatch(action.get_name())
 
     def _open_health(self) -> None:
         if self.health_dialog is None:

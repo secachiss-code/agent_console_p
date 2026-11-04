@@ -142,3 +142,6 @@ button.ac-quota-group-open { background-color: alpha(@accent_bg_color, 0.18); }
 .ac-plan-page { animation: ac-page-in 180ms ease-out; }
 .ac-approval-panel list > row.ac-attention-card { animation: ac-card-in 200ms ease-out; }
 .ac-session-ended { animation: ac-page-in 220ms ease-out; }
+
+/* Terminal search, over the terminal's top right corner. */
+.ac-terminal-search { padding: 6px; margin: 8px 20px 0 0; border-radius: 10px; background-color: @popover_bg_color; box-shadow: 0 4px 16px alpha(black, 0.3), 0 0 0 1px alpha(@window_fg_color, 0.08); }

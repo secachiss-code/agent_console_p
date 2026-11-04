@@ -62,8 +62,7 @@ class ShortcutManager:
             if binding.action_id == "send-next-key":
                 self._bypass = True
                 self.controller.set_propagation_phase(Gtk.PropagationPhase.NONE)
-            self.viewmodel.dispatch(binding.action_id)
-            return True
+            return self.viewmodel.dispatch(binding.action_id)
 
         return Gtk.CallbackAction.new(activate)
 

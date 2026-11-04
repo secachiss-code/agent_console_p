@@ -32,7 +32,6 @@ def test_b1_keymap_defaults_and_overrides() -> None:
         "attention-open": ("Return",),
         "approve": ("<Control><Shift>Return",),
         "deny": ("<Control><Shift>BackSpace",),
-        "handover": ("<Control><Shift>h",),
         "diff": ("<Control><Shift>d",),
         "terminal-search": ("<Control><Shift>f",),
         "copy": ("<Control><Shift>c",),
@@ -120,7 +119,42 @@ def test_b1_app_vm_rejects_binding_callback_atomically_and_dispatches() -> None:
     )
 
     delivered: list[tuple[str, str]] = []
-    vm.action_handler = lambda action_id: delivered.append(("handler", action_id))
+
+
+    def handle(action_id: str) -> bool:
+        delivered.append(("handler", action_id))
+        return True
+
+    vm.action_handler = handle
     vm.on_action = lambda action_id: delivered.append(("action", action_id))
-    vm.dispatch("palette")
+    assert vm.dispatch("palette") is True
     assert delivered == [("handler", "palette"), ("action", "palette")]
+
+
+def test_action_without_a_handler_leaves_the_key_alone() -> None:
+    from aconsole.ui.client.core_client import CoreClient
+    from aconsole.ui.viewmodels.app_vm import AppViewModel
+
+    vm = AppViewModel(CoreClient("unused"))
+    assert vm.dispatch("palette") is False
+    vm.action_handler = lambda _action: False
+    assert vm.dispatch("palette") is False
+
+
+def test_a_saved_override_for_a_retired_action_keeps_the_others() -> None:
+    from aconsole.ui.viewmodels.logic.keymap import resolve_keymap
+
+    resolved = {item.action_id: item.accelerators for item in resolve_keymap({
+        "handover": "<Control><Shift>h", "palette": "<Control><Alt>p",
+    })}
+    assert "handover" not in resolved
+    assert resolved["palette"] == ("<Control><Alt>p",)
+
+
+def test_zoom_stays_in_range_without_drift() -> None:
+    from aconsole.ui.viewmodels.logic.fonts import zoomed
+
+    assert zoomed(1.0, 1) == 1.1
+    assert zoomed(1.1, -1) == 1.0
+    assert zoomed(3.0, 1) == 3.0
+    assert zoomed(0.5, -1) == 0.5

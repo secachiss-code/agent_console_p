@@ -165,6 +165,6 @@ class TerminalSession:
             disconnect = getattr(self._terminal, "disconnect", None)
             if callable(disconnect):
                 with contextlib.suppress(TypeError, ValueError):
-                    disconnect(previous)
+                    _ = disconnect(previous)
         handler = self._terminal.connect("child-exited", callback)
         _EXIT_HANDLERS[self._terminal] = handler

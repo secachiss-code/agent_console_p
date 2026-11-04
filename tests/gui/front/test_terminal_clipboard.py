@@ -35,7 +35,7 @@ class _Terminal:
 
 def _press(key: int, state: Gdk.ModifierType, *, selection: bool = False, text: bool = True) -> tuple[bool, list[str]]:
     terminal = _Terminal(selection=selection)
-    page = SimpleNamespace(terminal=terminal, _clipboard_has_text=lambda: text)
+    page = SimpleNamespace(terminal=terminal, _clipboard_has_text=lambda: text, _search_focused=lambda: False)
     return TerminalPage._key_pressed(page, None, key, 0, state), terminal.calls  # type: ignore[arg-type]
 
 
