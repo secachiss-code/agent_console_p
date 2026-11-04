@@ -650,6 +650,7 @@ class PlanBoard:
             tab_id=None if node.tab_id is None or node.tab_id == _HUMAN_TAB else TabId(node.tab_id),
             lease_expires_at=node.lease_expires_at,
             note=None if note is None else NoteRef(note),
+            evidence=node.evidence if node.status is NodeStatus.VERIFYING else None,
         )
 
     def create(self, ctx: TabContext, title: str, goal: str, nodes: list[NodeIn]) -> PlanCreated:

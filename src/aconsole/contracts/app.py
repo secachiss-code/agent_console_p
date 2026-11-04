@@ -169,6 +169,8 @@ class PlanNodeView(msgspec.Struct, frozen=True, kw_only=True):
     tab_id: TabId | None
     lease_expires_at: AwareDatetime | None
     note: NoteRef | None
+    # What the agent reports while a person decides whether to accept the node. Empty in any other status.
+    evidence: str | None = None
 
 
 class PlanView(msgspec.Struct, frozen=True, kw_only=True):

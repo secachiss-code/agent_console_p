@@ -11,15 +11,17 @@ if TYPE_CHECKING:
     from pathlib import Path
 
     from aconsole.contracts.app import PlanView
-    from aconsole.contracts.common import PlanId
+    from aconsole.contracts.common import NodeId, PlanId
     from aconsole.ui.views.window import MainWindow
 
 import gi
+import msgspec
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
 from gi.repository import Adw, Gio, GLib, Gtk  # noqa: E402
 
+from aconsole.contracts.common import NodeStatus  # noqa: E402
 from aconsole.core.infrastructure.fake.scenarios import demo_snapshot  # noqa: E402
 from aconsole.ui.bootstrap import run_app, spawn_task  # noqa: E402
 from aconsole.ui.client.core_client import CoreClient  # noqa: E402
@@ -320,5 +322,46 @@ def test_a_summary_section_folds_and_remembers_it(tmp_path: Path) -> None:
         assert again.folded
         again.set_detail("2/8")
         assert again.detail_label.get_text() == "2/8"
+
+    _in_gtk_context(check)
+
+
+def test_a_person_accepts_or_sends_back_a_step_on_verification() -> None:
+    base = _demo_plan()
+    waiting = msgspec.structs.replace(base.nodes[0], status=NodeStatus.VERIFYING, evidence="tests <passed>")
+    other = msgspec.structs.replace(base.nodes[1], status=NodeStatus.PENDING, depends_on=())
+    plan = msgspec.structs.replace(base, nodes=(waiting, other))
+
+    def check() -> None:
+        decided: list[tuple[NodeId, bool]] = []
+        graph = PlanGraph(plan, lambda: None, None, lambda node, accept: decided.append((node, accept)))
+        assert not graph.accept_button.get_visible()
+        graph.set_hovered(other.id)
+        assert not graph.accept_button.get_visible()
+        graph.set_hovered(waiting.id)
+        assert graph.accept_button.get_visible()
+        assert graph.send_back_button.get_visible()
+        # A report is shown as text, whatever it contains.
+        assert "tests <passed>" in graph.details_label.get_text()
+        graph.accept_button.emit("clicked")
+        assert decided == [(waiting.id, True)]
+        assert not graph.accept_button.get_sensitive()
+        graph.decision_failed()
+        assert graph.accept_button.get_sensitive()
+        graph.send_back_button.emit("clicked")
+        assert decided[-1] == (waiting.id, False)
+
+    _in_gtk_context(check)
+
+
+def test_without_a_decision_handler_no_step_offers_to_be_accepted() -> None:
+    base = _demo_plan()
+    waiting = msgspec.structs.replace(base.nodes[0], status=NodeStatus.VERIFYING)
+    plan = msgspec.structs.replace(base, nodes=(waiting,))
+
+    def check() -> None:
+        graph = PlanGraph(plan, lambda: None)
+        graph.set_hovered(waiting.id)
+        assert not graph.accept_button.get_visible()
 
     _in_gtk_context(check)

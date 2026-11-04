@@ -17,6 +17,11 @@ _MESSAGES = {
     "plan.depends": ("Depends on: {nodes}", "Зависит от: {nodes}"),
     "plan.blocks": ("Blocks: {nodes}", "Блокирует: {nodes}"),
     "plan.lease": ("Lease until {time}", "Аренда до {time}"),
+    "plan.accept": ("Accept", "Принять"),
+    "plan.send_back": ("Send back", "Вернуть"),
+    "plan.evidence": ("Agent's report: {text}", "Отчёт агента: {text}"),
+    "plan.decision_error": ("Could not change the step: {error}", "Не удалось изменить шаг: {error}"),  # noqa: RUF001 -- Russian
+    "plan.sent_back_note": ("Sent back when accepting the step", "Возвращено при приёмке"),
     "plan.status.pending": ("Waiting", "Ожидает"),
     "plan.status.in_progress": ("In progress", "В работе"),  # noqa: RUF001 -- Russian UI text
     "plan.status.verifying": ("Verifying", "Проверяется"),

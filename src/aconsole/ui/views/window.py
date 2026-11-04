@@ -12,8 +12,15 @@ gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
 from gi.repository import Adw, Gdk, Gio, GLib, GObject, Gtk  # noqa: E402
 
-from aconsole.contracts.app import CommandResult, EmptyParams, EmptyResult, PaletteQuery  # noqa: E402
-from aconsole.contracts.common import ApprovalDecision, PlanId, ProjectId, TabId  # noqa: E402
+from aconsole.contracts.app import (  # noqa: E402
+    CommandResult,
+    EmptyParams,
+    EmptyResult,
+    PaletteQuery,
+    PlanNodeView,
+    SetNodeStatusParams,
+)
+from aconsole.contracts.common import ApprovalDecision, NodeId, NodeStatus, PlanId, ProjectId, TabId  # noqa: E402
 from aconsole.contracts.events import CheckpointCreated, GitStateUpdated, InjectToTerminal, SettingsChanged, UiEvent  # noqa: E402
 from aconsole.contracts.settings import Settings  # noqa: E402
 from aconsole.ui.bootstrap import spawn_task  # noqa: E402
@@ -325,8 +332,28 @@ class MainWindow(Adw.ApplicationWindow):
     def _open_plan(self, plan_id: PlanId) -> None:
         plan = self._summary_vm.plan
         if plan is not None and plan.id == plan_id:
-            self.plan_page = PlanGraph(plan, self._close_plan, self._select_tab)
+            self.plan_page = PlanGraph(plan, self._close_plan, self._select_tab, self._decide_node)
             self.content_view.set_content(self.plan_page)
+
+    def _decide_node(self, node_id: NodeId, accept: bool) -> None:  # noqa: FBT001 -- the plan page's callback
+        _ = spawn_task(self._set_node_decision(node_id, accept=accept))
+
+    async def _set_node_decision(self, node_id: NodeId, *, accept: bool) -> None:
+        """Accepting ends the node. Sending back puts it in the queue again, through the one step the board allows."""
+        moves = (
+            ((NodeStatus.DONE, None),)
+            if accept
+            else ((NodeStatus.FAILED, translate("plan.sent_back_note")), (NodeStatus.PENDING, None))
+        )
+        try:
+            for status, note in moves:
+                _ = await self.tabs.client.request(
+                    "plan/setNodeStatus", SetNodeStatusParams(node_id=node_id, status=status, note=note), PlanNodeView,
+                )
+        except Exception as error:  # noqa: BLE001 -- a refusal stays visible; the node stays as the core keeps it
+            self._tab_error(translate("plan.decision_error").format(error=error))
+            if self.plan_page is not None:
+                self.plan_page.decision_failed()
 
     def _close_plan(self) -> None:
         self._show_selected_terminal()

@@ -337,3 +337,39 @@ class PlanMachine(RuleBasedStateMachine):
 
 TestPlanMachine = PlanMachine.TestCase
 TestPlanMachine.settings = settings(max_examples=40, stateful_step_count=12, deadline=None)
+
+
+def test_a_node_on_verification_waits_for_a_person_past_its_lease() -> None:
+    plan = Plan()
+    plan.add(_spec("N-1"))
+    claimed = plan.claim("N-1", tab_id="tab", at=AT)
+    plan.transition(
+        Move(
+            key="N-1", to=NodeStatus.VERIFYING, role=Role.AGENT, at=AT + timedelta(seconds=1),
+            fence=claimed.fence, evidence="shipped",
+        )
+    )
+    later = AT + timedelta(days=3)
+    assert plan.expire_leases(later) == ()
+    assert plan.get("N-1").status is NodeStatus.VERIFYING
+    accepted = plan.transition(Move(key="N-1", to=NodeStatus.DONE, role=Role.HUMAN, at=later, fence=claimed.fence))
+    assert accepted.status is NodeStatus.DONE
+
+
+def test_a_person_sends_back_a_node_on_verification_past_its_lease() -> None:
+    plan = Plan()
+    plan.add(_spec("N-1"))
+    claimed = plan.claim("N-1", tab_id="tab", at=AT)
+    plan.transition(
+        Move(
+            key="N-1", to=NodeStatus.VERIFYING, role=Role.AGENT, at=AT + timedelta(seconds=1),
+            fence=claimed.fence, evidence="shipped",
+        )
+    )
+    later = AT + timedelta(days=3)
+    failed = plan.transition(
+        Move(key="N-1", to=NodeStatus.FAILED, role=Role.HUMAN, at=later, fence=claimed.fence, note="redo")
+    )
+    assert failed.status is NodeStatus.FAILED
+    back = plan.transition(Move(key="N-1", to=NodeStatus.PENDING, role=Role.HUMAN, at=later))
+    assert back.status is NodeStatus.PENDING

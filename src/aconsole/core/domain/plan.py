@@ -303,6 +303,11 @@ def paths_overlap(left: tuple[str, ...], right: tuple[str, ...]) -> bool:
     return any(globs_overlap(a, b) for a in left for b in right)
 
 
+def _lease_over(node: Node, at: datetime) -> bool:
+    """Only work in progress runs out. A node on verification waits for a person, however long that takes."""
+    return node.status is NodeStatus.IN_PROGRESS and node.lease_expires_at is not None and at >= node.lease_expires_at
+
+
 class Plan:
     """One plan. Blocking edges are a DAG. A node has at most one lease holder."""
 
@@ -428,7 +433,7 @@ class Plan:
         expired: list[str] = []
         for key in tuple(self._nodes):
             node = self._nodes[key]
-            if node.lease_expires_at is not None and at >= node.lease_expires_at and node.status in _LEASED:
+            if _lease_over(node, at):
                 self._nodes[key] = self._clear_holder(node, NodeStatus.PENDING)
                 expired.append(key)
         return tuple(expired)
@@ -549,16 +554,15 @@ class Plan:
             raise _fail(_OVERLAP, "PATHS_OVERLAP", (other.key,))
 
     def _require_fence(self, node: Node, fence: int | None, at: datetime) -> None:
-        if node.lease_expires_at is None or at >= node.lease_expires_at:
+        if node.lease_expires_at is None or _lease_over(node, at):
             self._expire_if_due(node, at)
             raise _fail(_LEASE_EXPIRED, "LEASE_EXPIRED")
         if fence != node.fence:
             raise _fail(_STALE_FENCE, "LEASE_STALE_FENCE", (str(node.fence),))
 
     def _expire_if_due(self, node: Node, at: datetime) -> None:
-        if node.lease_expires_at is None or at < node.lease_expires_at or node.status not in _LEASED:
-            return
-        self._nodes[node.key] = self._clear_holder(node, NodeStatus.PENDING)
+        if _lease_over(node, at):
+            self._nodes[node.key] = self._clear_holder(node, NodeStatus.PENDING)
 
     def _apply(self, node: Node, move: Move) -> Node:
         evidence = move.evidence if move.evidence is not None else node.evidence

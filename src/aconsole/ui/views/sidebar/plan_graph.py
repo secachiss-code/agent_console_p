@@ -12,7 +12,7 @@ gi.require_version("Gtk", "4.0")
 from gi.repository import Gdk, GLib, Gtk, Pango  # noqa: E402
 
 from aconsole.contracts.app import PlanNodeView, PlanView  # noqa: E402
-from aconsole.contracts.common import NodeId, TabId  # noqa: E402
+from aconsole.contracts.common import NodeId, NodeStatus, TabId  # noqa: E402
 from aconsole.ui.viewmodels.logic.plan_layout import PlanNodePosition, layout_plan  # noqa: E402
 from aconsole.ui.viewmodels.logic.quota_fmt import agent_name  # noqa: E402
 from aconsole.ui.views.sidebar.messages import _ as translate  # noqa: E402
@@ -27,13 +27,18 @@ _DETAILS_HEIGHT = 96  # room for every detail line, so hovering a node never mov
 
 class PlanGraph(Gtk.Box):
     def __init__(
-        self, plan: PlanView, on_close: Callable[[], None], on_tab: Callable[[TabId], None] | None = None,
+        self,
+        plan: PlanView,
+        on_close: Callable[[], None],
+        on_tab: Callable[[TabId], None] | None = None,
+        on_decide: Callable[[NodeId, bool], None] | None = None,
     ) -> None:
         super().__init__(orientation=Gtk.Orientation.VERTICAL)
         self.add_css_class("ac-plan-page")
         self.plan: PlanView = plan
         self._on_close: Callable[[], None] = on_close
         self._on_tab: Callable[[TabId], None] | None = on_tab
+        self._on_decide: Callable[[NodeId, bool], None] | None = on_decide
         self._hovered: NodeId | None = None
         self._selected: NodeId | None = None
         self._nodes: dict[NodeId, PlanNodeView] = {node.id: node for node in plan.nodes[:30]}
@@ -100,19 +105,36 @@ class PlanGraph(Gtk.Box):
         scroll = Gtk.ScrolledWindow(hexpand=True, vexpand=True)
         scroll.set_child(overlay)
         self.append(scroll)
+        self.append(self._build_details())
+
+    def _build_details(self) -> Gtk.Box:
         self.details_label: Gtk.Label = Gtk.Label(label=translate("plan.select_node"), xalign=0, yalign=0, wrap=True)
         self.details_label.add_css_class("ac-plan-details-text")
         self.details_label.set_hexpand(True)
-        self.details_label.set_size_request(-1, _DETAILS_HEIGHT)
+        # A fixed height: hovering a node never moves the graph, and a long report scrolls by itself.
+        details_scroll = Gtk.ScrolledWindow(hexpand=True, min_content_height=_DETAILS_HEIGHT)
+        details_scroll.set_max_content_height(_DETAILS_HEIGHT)
+        details_scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+        details_scroll.set_child(self.details_label)
         details = Gtk.Box(spacing=16)
         details.add_css_class("ac-plan-details")
-        details.append(self.details_label)
+        details.append(details_scroll)
+        self.accept_button: Gtk.Button = Gtk.Button(label=translate("plan.accept"), valign=Gtk.Align.START)
+        self.accept_button.add_css_class("suggested-action")
+        self.accept_button.set_visible(False)
+        _ = self.accept_button.connect("clicked", self._decide, True)  # noqa: FBT003 -- GObject passes it positionally
+        details.append(self.accept_button)
+        self.send_back_button: Gtk.Button = Gtk.Button(label=translate("plan.send_back"), valign=Gtk.Align.START)
+        self.send_back_button.add_css_class("ac-plan-back")
+        self.send_back_button.set_visible(False)
+        _ = self.send_back_button.connect("clicked", self._decide, False)  # noqa: FBT003 -- GObject passes it positionally
+        details.append(self.send_back_button)
         self.tab_button: Gtk.Button = Gtk.Button(label=translate("plan.go_tab"), valign=Gtk.Align.START)
         self.tab_button.add_css_class("ac-plan-back")
         self.tab_button.set_sensitive(False)
         _ = self.tab_button.connect("clicked", self._go_tab)
         details.append(self.tab_button)
-        self.append(details)
+        return details
 
     def _close(self, _button: Gtk.Button) -> None:
         self._on_close()
@@ -134,6 +156,18 @@ class PlanGraph(Gtk.Box):
         if node is not None and node.tab_id is not None and self._on_tab is not None:
             self._on_tab(node.tab_id)
 
+    def _decide(self, _button: Gtk.Button, accept: bool) -> None:  # noqa: FBT001 -- a GObject signal argument
+        node = self._nodes.get(self._selected) if self._selected is not None else None
+        if node is not None and node.status is NodeStatus.VERIFYING and self._on_decide is not None:
+            self.accept_button.set_sensitive(False)
+            self.send_back_button.set_sensitive(False)
+            self._on_decide(node.id, accept)
+
+    def decision_failed(self) -> None:
+        """The core refused: the node is as it was, so the buttons work again."""
+        self.accept_button.set_sensitive(True)
+        self.send_back_button.set_sensitive(True)
+
     def set_hovered(self, node_id: NodeId | None) -> None:
         node = self._nodes.get(node_id) if node_id is not None else None
         self._hovered = node.id if node is not None else None
@@ -151,6 +185,9 @@ class PlanGraph(Gtk.Box):
                 button.remove_css_class("ac-plan-muted")
         selected = self._nodes.get(self._selected) if self._selected is not None else None
         self.tab_button.set_sensitive(selected is not None and selected.tab_id is not None and self._on_tab is not None)
+        deciding = selected is not None and selected.status is NodeStatus.VERIFYING and self._on_decide is not None
+        self.accept_button.set_visible(deciding)
+        self.send_back_button.set_visible(deciding)
         if selected is None:
             self.details_label.set_label(translate("plan.select_node"))
         else:
@@ -164,6 +201,8 @@ class PlanGraph(Gtk.Box):
                          translate("plan.blocks").format(nodes=children or "—")))
             if node.lease_expires_at is not None:
                 text.append(translate("plan.lease").format(time=node.lease_expires_at.astimezone().strftime("%H:%M")))
+            if node.evidence:
+                text.append(translate("plan.evidence").format(text=node.evidence))
             head, *rest = text
             self.details_label.set_markup("\n".join((f"<b>{GLib.markup_escape_text(head)}</b>",
                                                      *(GLib.markup_escape_text(line) for line in rest))))
