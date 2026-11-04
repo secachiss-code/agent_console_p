@@ -49,7 +49,7 @@ def save_tab(session: Session, tab: StoredTab) -> None:
 
 
 def remove_tab(session: Session, tab_id: str, closed_at: datetime, *, drop_worktree: bool) -> None:
-    """Keep the row for the retention sweep. A removed worktree is marked, not deleted here."""
+    """Keep the row for the retention sweep. Mark the workspace removed only when its directory is gone."""
     row = session.get(Tab, tab_id)
     if row is None:
         return

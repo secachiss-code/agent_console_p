@@ -202,6 +202,43 @@ def test_worktrees_ignored_files_keep_the_tree_until_discarded(tmp_path: Path) -
     assert not _branch_listed(repo, created.branch)
 
 
+def test_worktrees_keep_the_tree_when_remove_is_refused_after_a_clean_check(tmp_path: Path) -> None:
+    """Git can refuse after the status check, for example because a file appeared. Do not force it."""
+    repo = tmp_path / "repo"
+    _init(repo)
+    log = tmp_path / "git-args"
+    wrapper = _git_refusing_remove(tmp_path / "git", log, plant_file=True)
+    trees = Worktrees(wrapper)
+    dest = tmp_path / "wt"
+    created = trees.create(_request(repo, dest, "agent", "race"))
+    trees.release(dest)
+    assert trees.state(repo, dest) == "clean"
+    held = trees.close(repo, dest)
+    recorded = log.read_text(encoding="utf-8")
+    assert held == CloseResult(removed=False, reason="dirty")
+    assert (dest / "raced.txt").is_file()
+    assert dest.is_dir()
+    assert _branch_listed(repo, created.branch)
+    assert "worktree remove" in recorded
+    assert "--force" not in recorded
+
+
+def test_worktrees_keep_a_clean_tree_when_git_refuses_without_a_new_change(tmp_path: Path) -> None:
+    repo = tmp_path / "repo"
+    _init(repo)
+    log = tmp_path / "git-args"
+    wrapper = _git_refusing_remove(tmp_path / "git", log, plant_file=False)
+    trees = Worktrees(wrapper)
+    dest = tmp_path / "wt"
+    created = trees.create(_request(repo, dest, "agent", "refuse"))
+    trees.release(dest)
+    held = trees.close(repo, dest)
+    assert held == CloseResult(removed=False, reason="refused")
+    assert dest.is_dir()
+    assert _branch_listed(repo, created.branch)
+    assert "--force" not in log.read_text(encoding="utf-8")
+
+
 def test_worktrees_clean_tree_removes_its_branch_when_the_base_is_unmerged(tmp_path: Path) -> None:
     repo = tmp_path / "repo"
     _init(repo)
@@ -295,6 +332,25 @@ def _raised(exc: type[BaseException], call: Callable[[], object]) -> str:
     with pytest.raises(exc) as caught:
         _ = call()
     return str(caught.value)
+
+
+def _git_refusing_remove(path: Path, log: Path, *, plant_file: bool) -> Path:
+    """A git stand-in: `worktree remove` fails, and every other command is the real git."""
+    plant = 'echo raced > "$dest/raced.txt"\n' if plant_file else ""
+    _ = path.write_text(
+        "#!/bin/sh\n"
+        f"printf '%s\\n' \"$*\" >> '{log}'\n"
+        'if [ "$1" = -C ] && [ "$3" = worktree ] && [ "$4" = remove ]; then\n'
+        '  if [ "$5" = "--force" ]; then dest=$6; else dest=$5; fi\n'
+        f"{plant}"
+        "  echo 'fatal: working tree is dirty' >&2\n"
+        "  exit 1\n"
+        "fi\n"
+        f'exec {_GIT} "$@"\n',
+        encoding="utf-8",
+    )
+    path.chmod(0o755)
+    return path
 
 
 def _worktrees() -> Worktrees:

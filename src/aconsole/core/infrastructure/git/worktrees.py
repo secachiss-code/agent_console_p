@@ -7,8 +7,9 @@ the sha256 of its exact bytes (the user approved that script); its whole process
 group is killed on timeout. A create that fails after `worktree add` is rolled back.
 A dirty tree, or one with commits ahead of the base, is kept. A tree with ignored
 files (`.venv/`, included copies) is kept unless the caller discards them. A clean
-tree is removed and its branch deleted. `--force` is used only to roll back a
-create or when the caller discards ignored files.
+tree is removed and its branch deleted. If `git worktree remove` refuses after that
+check, the directory and the branch stay; nothing retries with `--force`. `--force`
+is used only to roll back a create or when the caller discards ignored files.
 """
 
 import contextlib
@@ -58,7 +59,7 @@ _DEST_EXISTS: Final = "worktree path already exists"
 _PARENT_MISSING: Final = "worktree parent is missing"
 _DEST_INSIDE: Final = "worktree must be outside the repository"
 
-CloseReason = Literal["locked", "dirty", "ahead", "ignored", "clean"]
+CloseReason = Literal["locked", "dirty", "ahead", "ignored", "clean", "refused"]
 TreeState = Literal["dirty", "ahead", "ignored", "clean"]
 
 
@@ -274,6 +275,7 @@ class Worktrees:
         """Keep a locked, dirty, or ahead tree, and one with ignored files unless `discard_ignored`.
 
         `git worktree remove` deletes ignored files without asking, so they are checked here first.
+        A refusal after that check keeps the tree and its branch. A later `--force` is not attempted.
         """
         _check_absolute(repo, _ABS_REPO)
         _check_absolute(dest, _ABS_DEST)
@@ -292,13 +294,44 @@ class Worktrees:
         ignored = _status_ignored(status)
         if ignored and not discard_ignored:
             return CloseResult(removed=False, reason="ignored")
+        return self._remove(repo, dest, branch, base, ignored=ignored)
+
+    def _remove(self, repo: Path, dest: Path, branch: str, base: str, *, ignored: bool) -> CloseResult:
+        """Delete a tree git accepts. A refusal leaves the directory and the branch."""
         remove = ("-C", str(repo), "worktree", "remove", *(("--force",) if ignored else ()), str(dest))
-        _ = self._run(remove)
+        try:
+            _ = self._run(remove)
+        except WorktreeError as exc:
+            if str(exc) != _FAILED:
+                raise
+            return CloseResult(removed=False, reason=self._kept_reason(dest, base, exc.detail))
+        if dest.exists():
+            return CloseResult(removed=False, reason=self._kept_reason(dest, base, ""))
         # The branch has no commits beyond the base (checked above), so `-D` loses nothing even when
         # the base is not merged into the current HEAD, where `-d` would refuse and leave the branch.
         _ = self._run(("-C", str(repo), "branch", "-D", branch))
         _meta_path(self._git_dir(repo), dest).unlink(missing_ok=True)
         return CloseResult(removed=True, reason="ignored" if ignored else "clean")
+
+    def _kept_reason(self, dest: Path, base: str, detail: str) -> CloseReason:
+        """Why a remove that git refused left the tree. Never a reason to try `--force`."""
+        if self.locked(dest) or "locked" in detail.lower():
+            return "locked"
+        return self._reason_after_refusal(dest, base)
+
+    def _reason_after_refusal(self, dest: Path, base: str) -> CloseReason:
+        try:
+            status = self._status(dest)
+            ahead = self._ahead(dest, base)
+        except WorktreeError:
+            return "refused"
+        if _status_dirty(status):
+            return "dirty"
+        if ahead:
+            return "ahead"
+        if _status_ignored(status):
+            return "ignored"
+        return "refused"
 
     def _status(self, dest: Path) -> str:
         return self._run(("-C", str(dest), "status", "--porcelain", "--untracked-files=all", "--ignored=matching"))

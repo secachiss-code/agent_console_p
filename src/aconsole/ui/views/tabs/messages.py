@@ -30,6 +30,10 @@ _MESSAGES = {
     "tabs.close_cancel": ("Cancel", "Отмена"),
     "tabs.close_keep": ("Keep", "Оставить"),
     "tabs.close_remove": ("Remove", "Удалить"),
+    "tabs.close_kept": (
+        "Closed the tab and kept the working copy ({reason})",
+        "Вкладка закрыта, рабочая копия осталась ({reason})",
+    ),
     "tabs.reorder_error": (
         "Could not finish reordering. Tab order may have changed",
         "Не удалось завершить перестановку. Порядок вкладок мог измениться",  # noqa: RUF001 -- Russian UI text

@@ -464,6 +464,9 @@ class MainWindow(Adw.ApplicationWindow):
             dialog.set_close_response("cancel")
             _ = dialog.connect("response", self._close_decided, tab_id)
             dialog.present(self)
+            return
+        if result.closed and result.dirty_summary:
+            self._tab_error(tabs_text("tabs.close_kept").format(reason=result.dirty_summary))
 
     def _close_decided(self, _dialog: Adw.AlertDialog, response: str, tab_id: str) -> None:
         if response == "keep":

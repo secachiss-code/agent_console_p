@@ -891,13 +891,14 @@ class TabService:
             self._commands.release(tab.agent, tab.id, tab.container)
         # A failed orphan scan may leave processes in the tree: keep it rather than delete files under them.
         decision = params.decision if stopped else _KEEP
-        self._finish_tree(tab, decision, discard_ignored=summary == _IGNORED)
-        self._forget(tab, drop_worktree=tab.created_here and decision != _KEEP)
+        removed = self._finish_tree(tab, decision, discard_ignored=summary == _IGNORED)
+        left = None if removed or decision == _KEEP or not tab.created_here else self._kept_summary(tab)
+        self._forget(tab, drop_worktree=removed)
         del self._tabs[tab.id]
         if self._focused == tab.id:
             self._focused = None
         self._emit(TabRemoved(tab_id=TabId(tab.id)))
-        return CloseTabResult(closed=True, needs_decision=False, dirty_summary=None)
+        return CloseTabResult(closed=True, needs_decision=False, dirty_summary=left)
 
     def restart(self, params: RestartParams) -> TabView:
         """Stop the old process and its orphans first, so a restart never leaves two agents in one tree.
@@ -1072,13 +1073,24 @@ class TabService:
             return None
         return state
 
-    def _finish_tree(self, tab: _Tab, decision: str | None, *, discard_ignored: bool) -> None:
+    def _finish_tree(self, tab: _Tab, decision: str | None, *, discard_ignored: bool) -> bool:
+        """True only when the worktree directory was actually deleted."""
         if not tab.created_here:
-            return
+            return False
         if decision == _KEEP:
             self._ports.release_worktree(tab.worktree)
-            return
-        _ = self._ports.remove_worktree(tab.repo, tab.worktree, discard_ignored=discard_ignored)
+            return False
+        return self._ports.remove_worktree(tab.repo, tab.worktree, discard_ignored=discard_ignored)
+
+    def _kept_summary(self, tab: _Tab) -> str:
+        """Status after git refused a remove. `kept` means the fresh check still looks clean."""
+        try:
+            state = self._ports.worktree_state(tab.repo, tab.worktree)
+        except TabRequestError:
+            return "kept"
+        if state == _CLEAN:
+            return "kept"
+        return state
 
     def _stop(self, tab: _Tab) -> bool:
         """Stop the tab process and its orphans. False when the orphan scan failed."""

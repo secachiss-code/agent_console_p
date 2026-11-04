@@ -6,9 +6,14 @@ import subprocess
 import sys
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import msgspec
 import pytest
+from sqlalchemy import select
+
+if TYPE_CHECKING:
+    from sqlalchemy.orm import Session
 
 from aconsole.contracts.app import (
     CloseTabParams,
@@ -32,6 +37,11 @@ from aconsole.core.domain.clock import FrozenClock
 from aconsole.core.infrastructure.ipc.framing import decode_envelope, encode_line
 from aconsole.core.infrastructure.ipc.ring import EventRing
 from aconsole.core.infrastructure.ipc.session import Connection
+from aconsole.core.infrastructure.persistence.engine import write_engine
+from aconsole.core.infrastructure.persistence.models import Workspace
+from aconsole.core.infrastructure.persistence.repositories.tabs import TabDatabase
+from aconsole.core.infrastructure.persistence.startup import prepare_database, sqlite_url
+from aconsole.core.infrastructure.persistence.writer import Writer
 from aconsole.core.infrastructure.tabs import HostBins, HostBox, HostTabs, default_tabs
 
 _WHEN = datetime(2026, 10, 27, tzinfo=UTC)
@@ -60,6 +70,8 @@ class _Ports:
         self.created: list[tuple[str, str, str, str]] = []
         self.released: list[str] = []
         self.removed: list[tuple[str, str, bool]] = []
+        self.refuse_remove = False
+        self.remove_state: str | None = None
         self.ensured: list[str] = []
         self.state: str = "clean"
         self.fail_ensure: bool = False
@@ -99,7 +111,9 @@ class _Ports:
 
     def remove_worktree(self, repo: str, dest: str, *, discard_ignored: bool) -> bool:
         self.removed.append((repo, dest, discard_ignored))
-        return True
+        if self.remove_state is not None:
+            self.state = self.remove_state
+        return not self.refuse_remove
 
     def ensure_container(self, name: str) -> None:
         if self.fail_ensure:
@@ -297,6 +311,43 @@ def test_tabs_failed_orphan_scan_keeps_the_tree_even_when_asked_to_remove() -> N
     assert kept.closed is True
     assert ports.released == ["/wt/tab-a", "/wt/tab-b"]
     assert ports.removed == []
+
+
+def test_tabs_refused_remove_keeps_the_workspace_registered(tmp_path: Path) -> None:
+    """A clean pre-check can go stale before git remove. The closed tab must not forget that path."""
+    database = tmp_path / "aconsole.db"
+    _ = prepare_database(database, now=_WHEN)
+    engine = write_engine(sqlite_url(database))
+    writer = Writer(engine)
+    writer.start()
+    try:
+        store = TabDatabase(writer)
+        service, ports = _service(_seed())
+        service.use_store(store)
+        ports.refuse_remove = True
+        ports.remove_state = "dirty"
+        opened = service.open_tab(_open())
+        refused = service.close_tab(CloseTabParams(tab_id=opened.id))
+        kept = _workspace(writer, "/wt/tab-a")
+        ports.refuse_remove = False
+        ports.remove_state = None
+        ports.state = "clean"
+        second = service.open_tab(_open(title="second"))
+        removed = service.close_tab(CloseTabParams(tab_id=second.id))
+        dropped = _workspace(writer, "/wt/tab-b")
+        open_tabs = store.load_open()
+    finally:
+        writer.stop()
+        engine.dispose()
+    assert refused.closed is True
+    assert refused.needs_decision is False
+    assert refused.dirty_summary == "dirty"
+    assert ports.removed[0] == ("/repo", "/wt/tab-a", False)
+    assert kept == ("/wt/tab-a", None)
+    assert removed.dirty_summary is None
+    assert dropped[0] == "/wt/tab-b"
+    assert dropped[1] == _WHEN
+    assert open_tabs == ()
 
 
 def test_tabs_rename_reorder_focus_and_main_checkout() -> None:
@@ -539,6 +590,16 @@ def test_host_tabs_worktree_errors(tmp_path: Path, monkeypatch: pytest.MonkeyPat
     with pytest.raises(TabRequestError, match="WORKTREE_CREATE_FAILED"):
         _ = host.remove_worktree(str(repo), str(orphan), discard_ignored=False)
     host.release_worktree(dest)
+
+
+def _workspace(writer: Writer, path: str) -> tuple[str, datetime | None]:
+    def read(session: Session) -> tuple[str, datetime | None]:
+        row = session.scalars(select(Workspace).where(Workspace.path == path)).one()
+        return row.path, row.removed_at
+
+    found = writer.call(read)
+    assert isinstance(found, tuple)
+    return found
 
 
 def _present(connection: Connection, request_id: int, tab_id: str) -> bool:
