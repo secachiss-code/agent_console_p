@@ -4,7 +4,7 @@ from gi.repository import Gio, GLib
 
 from aconsole.ui.viewmodels.approval_alerts import Alert
 from aconsole.ui.viewmodels.approvals_vm import safe_text
-from aconsole.ui.views.approvals.messages import _ as text
+from aconsole.ui.views.approvals.messages import _ as message
 
 OPEN_APPROVAL_ACTION = "open-approval"
 _DETAILED = f"app.{OPEN_APPROVAL_ACTION}"
@@ -17,10 +17,10 @@ def alert_body(alert: Alert) -> str:
 
 
 def alert_notification(alert: Alert) -> Gio.Notification:
-    notification = Gio.Notification.new(text("approvals.alert.title"))
+    notification = Gio.Notification.new(message("approvals.alert.title"))
     notification.set_body(alert_body(alert))
     notification.set_priority(Gio.NotificationPriority.HIGH)
     target = GLib.Variant("s", str(alert.tab_id))
     notification.set_default_action_and_target(_DETAILED, target)
-    notification.add_button_with_target(text("approvals.alert.open"), _DETAILED, target)
+    notification.add_button_with_target(message("approvals.alert.open"), _DETAILED, target)
     return notification

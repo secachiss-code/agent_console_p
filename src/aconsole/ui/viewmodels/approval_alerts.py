@@ -32,10 +32,10 @@ class _Episode:
 
 class ApprovalAlerts:
     def __init__(self, post: Callable[[Alert], None], withdraw: Callable[[str], None]) -> None:
-        self._post = post
-        self._withdraw = withdraw
+        self._post: Callable[[Alert], None] = post
+        self._withdraw: Callable[[str], None] = withdraw
         self._episodes: dict[TabId, _Episode] = {}
-        self._count = 0
+        self._count: int = 0
 
     def update(self, approvals: tuple[ApprovalView, ...], titles: Mapping[str, str], *, window_active: bool) -> None:
         first: dict[TabId, ApprovalView] = {}

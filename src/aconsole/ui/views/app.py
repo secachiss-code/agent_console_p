@@ -17,11 +17,11 @@ gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
 from gi.repository import Adw, Gdk, Gio, GLib, Gtk  # noqa: E402
 
+from aconsole.contracts.common import TabId  # noqa: E402
 from aconsole.ui.bootstrap import spawn_task  # noqa: E402
 from aconsole.ui.client.core_age import core_is_older_than_code  # noqa: E402
 from aconsole.ui.snapshot import after_first_paint, capture_window  # noqa: E402
 from aconsole.ui.viewmodels.tabs_vm import TabsViewModel  # noqa: E402
-from aconsole.contracts.common import TabId  # noqa: E402
 from aconsole.ui.views.approvals.alert import OPEN_APPROVAL_ACTION  # noqa: E402
 from aconsole.ui.views.startup import StartupWindow  # noqa: E402
 from aconsole.ui.views.window import MainWindow  # noqa: E402
