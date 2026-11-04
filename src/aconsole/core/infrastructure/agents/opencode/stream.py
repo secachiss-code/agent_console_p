@@ -45,11 +45,14 @@ _WANTED: Final = frozenset(
         _USAGE,
         "permission.asked",
         "permission.replied",
+        "session.deleted",
     },
 )
 # Not a status: the tab's running total of what its model calls cost, in dollars, priced by OpenCode itself.
 COST_EVENT: Final = "cost"
 _COST_STEP: Final = 0.0005
+# A long tab can spawn many child sessions. Keep the newest ones; fold the rest into the running total.
+_KEEP: Final = 64
 
 
 class _Head(msgspec.Struct, frozen=True):
@@ -86,11 +89,13 @@ class EventReader:
     """
 
     def __init__(self) -> None:
-        self._children: set[str] = set()
-        self._open: set[str] = set()
+        self._children: dict[str, None] = {}
+        self._open: dict[str, None] = {}
         self._last: str | None = None
-        # Each session's running total, latest seen.
+        # Each live session's running total, latest seen. Closed sessions stay in `_closed_cost`.
         self._costs: dict[str, float] = {}
+        self._closed_cost: float = 0.0
+        self._frozen: set[str] = set()
         self._said_cost: float = 0.0
 
     def read(self, data: bytes) -> bytes | None:
@@ -112,10 +117,10 @@ class EventReader:
 
     def _cost(self, data: _Data) -> bytes | None:
         """The tab's total, subagents included: they spend on its behalf. Said again only when it moved."""
-        if data.sessionID is None or data.cost is None or data.cost < 0:
+        if data.sessionID is None or data.cost is None or data.cost < 0 or data.sessionID in self._frozen:
             return None
-        self._costs[data.sessionID] = data.cost
-        total = round(sum(self._costs.values()), 4)
+        self._note_cost(data.sessionID, data.cost)
+        total = round(self._closed_cost + sum(self._costs.values()), 4)
         if abs(total - self._said_cost) < _COST_STEP:
             return None
         self._said_cost = total
@@ -126,13 +131,16 @@ class EventReader:
         kind = event.type
         if kind == "session.created":
             if data.parentID and data.sessionID:
-                self._children.add(data.sessionID)
+                self._note_child(data.sessionID)
+            return None
+        if kind == "session.deleted":
+            self._forget_session(data.sessionID)
             return None
         if kind == "permission.asked":
-            self._open.add(data.id or "")
+            self._note_open(data.id or "")
             return _ASKED
         if kind == "permission.replied":
-            self._open.discard(data.requestID or "")
+            self._open.pop(data.requestID or "", None)
             return None if self._open else _ANSWERED
         return None if data.sessionID in self._children else self._root_meaning(kind)
 
@@ -144,6 +152,42 @@ class EventReader:
             self._open.clear()
             return _IDLE
         return _WORKING if kind == _STARTED and not self._open else None
+
+    def _note_child(self, session_id: str) -> None:
+        self._children[session_id] = None
+        self._trim_ids(self._children, session_id)
+
+    def _note_open(self, request_id: str) -> None:
+        self._open[request_id] = None
+        self._trim_ids(self._open, request_id)
+
+    def _note_cost(self, session_id: str, cost: float) -> None:
+        if session_id in self._costs:
+            del self._costs[session_id]
+        self._costs[session_id] = cost
+        while len(self._costs) > _KEEP:
+            oldest = next(iter(self._costs))
+            if oldest == session_id:
+                return
+            self._closed_cost += self._costs.pop(oldest)
+            self._frozen.add(oldest)
+
+    def _forget_session(self, session_id: str | None) -> None:
+        """A deleted session keeps the dollars it already cost and stops taking new events."""
+        if not session_id:
+            return
+        self._children.pop(session_id, None)
+        cost = self._costs.pop(session_id, None)
+        if cost is not None:
+            self._closed_cost += cost
+        self._frozen.add(session_id)
+
+    def _trim_ids(self, store: dict[str, None], newest: str) -> None:
+        while len(store) > _KEEP:
+            oldest = next(iter(store))
+            if oldest == newest:
+                return
+            del store[oldest]
 
 
 def data_lines(lines: Callable[[], bytes]) -> list[bytes]:

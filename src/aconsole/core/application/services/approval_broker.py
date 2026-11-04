@@ -117,6 +117,20 @@ class ApprovalHold:
     def expire(self, *, at: datetime) -> None:
         for approval in self._book.expire(at):
             self._settle(approval, None)
+        self._drop_forgotten()
+
+    def drop_tab(self, tab_id: str) -> None:
+        """Free one closed tab. A pending hook is cancelled and its waiter is released."""
+        for approval in self._book.drop_tab(tab_id):
+            self._settle(approval, None)
+        self._drop_forgotten()
+
+    def _drop_forgotten(self) -> None:
+        live = self._book.live_ids()
+        for approval_id in list(self._settled):
+            if approval_id not in live:
+                self._settled.discard(approval_id)
+                self._decisions.pop(approval_id, None)
 
     def release_to_native(self, params: ReleaseParams, *, at: datetime) -> ReleasedResult:
         approval = self._book.release(str(params.approval_id), nonce=params.nonce, at=at)

@@ -29,7 +29,8 @@ async def _bounded[T](awaitable: Awaitable[T]) -> T:
 
 class _FakeTerminal:
     def __init__(self) -> None:
-        self.handlers: dict[str, Callable[..., None]] = {}
+        self.handlers: dict[str, list[tuple[int, Callable[..., None]]]] = {}
+        self._next_handler = 1
         self.spawn_args: tuple[object, ...] | None = None
         self.spawn_callback: _SpawnCallback | None = None
         self.spawn_user_data: object = None
@@ -44,8 +45,14 @@ class _FakeTerminal:
         self.scrollback_lines = lines
 
     def connect(self, signal: str, callback: Callable[..., None]) -> int:
-        self.handlers[signal] = callback
-        return len(self.handlers)
+        handler_id = self._next_handler
+        self._next_handler += 1
+        self.handlers.setdefault(signal, []).append((handler_id, callback))
+        return handler_id
+
+    def disconnect(self, handler_id: int) -> None:
+        for signal, rows in self.handlers.items():
+            self.handlers[signal] = [row for row in rows if row[0] != handler_id]
 
     def spawn_async(self, *args: object) -> None:
         self.spawn_args = args
@@ -63,7 +70,8 @@ class _FakeTerminal:
         self.spawn_callback(self, pid, error, self.spawn_user_data)
 
     def exit_child(self, wait_status: int) -> None:
-        self.handlers["child-exited"](self, wait_status)
+        for _handler_id, callback in tuple(self.handlers.get("child-exited", ())):
+            callback(self, wait_status)
 
 
 class _FakeViewModel:
@@ -181,6 +189,25 @@ def test_b5a_terminal_session_spawn(monkeypatch: pytest.MonkeyPatch) -> None:
         assert terminal.spawn_args is args
         terminal.exit_child(0)
         assert await _bounded(session.wait_finished()) == (None, None)
+
+    asyncio.run(exercise())
+
+
+def test_b5a_restart_on_one_terminal_keeps_a_single_exit_handler(monkeypatch: pytest.MonkeyPatch) -> None:
+    async def exercise() -> None:
+        module, _vte = _adapter(monkeypatch)
+        terminal = _FakeTerminal()
+        for pid in (11, 22, 33):
+            vm = _FakeViewModel()
+            session = module.TerminalSession(terminal, vm)  # pyright: ignore[reportAttributeAccessIssue] -- Adapter module is imported dynamically for this GUI-free test.
+            started = asyncio.create_task(session.start())
+            await _bounded(terminal.spawn_called.wait())
+            terminal.complete_spawn(pid)
+            assert await _bounded(started) == pid
+            terminal.exit_child(0)
+            assert await _bounded(session.wait_finished()) == (None, None)
+            terminal.spawn_called.clear()
+        assert len(terminal.handlers["child-exited"]) == 1
 
     asyncio.run(exercise())
 

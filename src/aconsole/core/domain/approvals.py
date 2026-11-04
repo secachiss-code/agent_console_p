@@ -225,6 +225,7 @@ class ApprovalBook:
         if request.expires_at < request.at:
             message = "expires_at must not precede the request"
             raise ValueError(message)
+        self.prune(request.at)
         replay = self._replay(request)
         if replay is not None:
             return replay
@@ -312,8 +313,52 @@ class ApprovalBook:
         )
 
     def expire(self, at: datetime) -> tuple[Approval, ...]:
-        due = [item for item in self._items.values() if item.phase is ApprovalPhase.PENDING and at >= item.expires_at]
-        return tuple(self._replace(item, phase=ApprovalPhase.EXPIRED_TO_NATIVE, by=DecisionBy.TIMEOUT) for item in due)
+        due = [
+            item
+            for item in self._items.values()
+            if item.phase is ApprovalPhase.PENDING and at >= item.expires_at
+        ]
+        expired = tuple(
+            self._replace(item, phase=ApprovalPhase.EXPIRED_TO_NATIVE, by=DecisionBy.TIMEOUT) for item in due
+        )
+        _ = self.prune(at)
+        return expired
+
+    def prune(self, at: datetime) -> tuple[str, ...]:
+        """Drop decided rows whose hold has ended. A pending request stays until `expire`."""
+        stale = [
+            item.id
+            for item in self._items.values()
+            if item.phase is not ApprovalPhase.PENDING and at >= item.expires_at
+        ]
+        self._forget(stale)
+        return tuple(stale)
+
+    def drop_tab(self, tab_id: str) -> tuple[Approval, ...]:
+        """Release one tab's rows and its remembered rules. Pending rows come back cancelled."""
+        matched = [item for item in self._items.values() if item.tab_id == tab_id]
+        released: list[Approval] = []
+        for item in matched:
+            if item.phase is ApprovalPhase.PENDING:
+                released.append(self._replace(item, phase=ApprovalPhase.CANCELLED, by=DecisionBy.USER))
+            else:
+                released.append(item)
+        self._forget([item.id for item in released])
+        self._rules = [rule for rule in self._rules if rule.tab_id != tab_id]
+        self._deny_rules = [rule for rule in self._deny_rules if rule.tab_id != tab_id]
+        return tuple(released)
+
+    def live_ids(self) -> frozenset[str]:
+        return frozenset(self._items)
+
+    def _forget(self, ids: list[str]) -> None:
+        gone = set(ids)
+        if not gone:
+            return
+        for approval_id in gone:
+            self._items.pop(approval_id, None)
+        self._by_input = {key: value for key, value in self._by_input.items() if value not in gone}
+        self._by_event = {key: value for key, value in self._by_event.items() if value not in gone}
 
     def cancel(self, approval_id: str, *, at: datetime) -> Approval:
         current = self.get(approval_id)

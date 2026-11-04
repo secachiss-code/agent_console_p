@@ -594,6 +594,69 @@ def test_pending_dedup_shares_one_request_and_remembers_the_second_event() -> No
     assert replay.phase is ApprovalPhase.ALLOWED
 
 
+def test_expired_decision_is_dropped_and_a_pending_one_stays() -> None:
+    book = ApprovalBook()
+    _open(book, replace(_request(), event_id="toolu-1"))
+    _ = book.decide("a1", nonce="n1", decision=ApprovalDecision.ALLOW, remember_prefix=False, at=AT)
+    assert book.prune(AT + timedelta(seconds=5)) == ()
+    replay = book.open(
+        replace(
+            _request(),
+            approval_id="a-replay",
+            nonce="n-replay",
+            at=AT + timedelta(seconds=5),
+            expires_at=AT + HOLD,
+            event_id="toolu-1",
+        ),
+    )
+    assert replay.id == "a1"
+    pending = book.open(
+        replace(
+            _request(),
+            approval_id="a-live",
+            nonce="n-live",
+            input_sha256="other",
+            at=AT + timedelta(seconds=5),
+            expires_at=AT + HOLD,
+        ),
+    )
+    assert pending.phase is ApprovalPhase.PENDING
+    dropped = book.prune(AT + HOLD)
+    assert dropped == ("a1",)
+    with pytest.raises(DomainError, match="NOT_FOUND"):
+        _ = book.get("a1")
+    assert book.get("a-live").phase is ApprovalPhase.PENDING
+
+
+def test_closing_a_tab_frees_its_rows_and_keeps_the_other_tab() -> None:
+    book = ApprovalBook()
+    _open(book)
+    _ = book.decide("a1", nonce="n1", decision=ApprovalDecision.ALLOW, remember_prefix=True, at=AT)
+    later = AT + timedelta(seconds=1)
+    other = book.open(
+        replace(
+            _request(),
+            approval_id="a2",
+            nonce="n2",
+            tab_id="other",
+            input_sha256="s2",
+            at=later,
+            expires_at=later + HOLD,
+        ),
+    )
+    assert other.phase is ApprovalPhase.PENDING
+    released = book.drop_tab("tab")
+    assert [item.id for item in released] == ["a1"]
+    with pytest.raises(DomainError, match="NOT_FOUND"):
+        _ = book.get("a1")
+    assert book.get("a2").phase is ApprovalPhase.PENDING
+    again = book.open(
+        replace(_request(), approval_id="a3", nonce="n3", input_sha256="s3", at=later, expires_at=later + HOLD),
+    )
+    assert again.phase is ApprovalPhase.PENDING
+    assert again.by is None
+
+
 def test_duplicate_input_during_hold_is_the_same_approval() -> None:
     book = ApprovalBook()
     _open(book)
@@ -609,7 +672,7 @@ def test_expiry_blocks_decide_and_a_later_open_is_new() -> None:
     expired = book.expire(AT + HOLD)
     assert expired[0].phase is ApprovalPhase.EXPIRED_TO_NATIVE
     assert expired[0].by is DecisionBy.TIMEOUT
-    with pytest.raises(DomainError, match="ALREADY_DECIDED"):
+    with pytest.raises(DomainError, match="NOT_FOUND"):
         _ = book.decide("a1", nonce="n1", decision=ApprovalDecision.DENY, remember_prefix=False, at=AT + HOLD)
     fresh = book.open(
         replace(

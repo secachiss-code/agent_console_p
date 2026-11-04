@@ -37,6 +37,33 @@ def test_opencode_sessions_add_up_and_are_said_when_they_move() -> None:
     assert reader.read(_usage("kid", 0.0201)) is None, "a step under a twentieth of a cent is not news"
 
 
+def test_a_deleted_session_keeps_its_cost_without_staying_in_the_map() -> None:
+    reader = EventReader()
+    assert reader.read(_usage("root", 0.01)) is not None
+    assert reader.read(_usage("kid", 0.02)) is not None
+    deleted = json.dumps({"type": "session.deleted", "data": {"sessionID": "kid"}}).encode()
+    assert reader.read(deleted) is None
+    moved = reader.read(_usage("root", 0.04))
+    assert moved is not None
+    assert json.loads(moved)["cost_usd"] == 0.06
+    assert reader.read(_usage("kid", 9.0)) is None
+
+
+def test_opencode_cost_map_keeps_a_bounded_number_of_sessions() -> None:
+    reader = EventReader()
+    last = b""
+    for index in range(70):
+        body = reader.read(_usage(f"s{index}", 0.01))
+        if body is not None:
+            last = body
+    assert json.loads(last)["cost_usd"] == 0.7
+    # The oldest session was folded in. A later total from it must not be added again.
+    assert reader.read(_usage("s0", 5.0)) is None
+    moved = reader.read(_usage("s69", 0.02))
+    assert moved is not None
+    assert json.loads(moved)["cost_usd"] == 0.71
+
+
 def test_a_cost_signal_moves_no_status() -> None:
     body = json.dumps({"hook_event_name": COST_EVENT, "cost_usd": 0.4}).encode()
     item = IngestItem(tab_id="t", kind="opencode.event", body=body)

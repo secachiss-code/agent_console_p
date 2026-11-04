@@ -32,7 +32,7 @@ from aconsole.core.infrastructure.ipc.framing import (
     read_frame,
 )
 from aconsole.core.infrastructure.ipc.ring import EventRing
-from aconsole.core.infrastructure.ipc.server import IpcServer, allow_peer
+from aconsole.core.infrastructure.ipc.server import IpcServer, allow_peer, note_peer
 from aconsole.core.infrastructure.ipc.session import OUTBOUND_LIMIT, Connection
 from aconsole.core.infrastructure.tabs import default_tabs
 
@@ -89,6 +89,13 @@ async def _oversize() -> bool:
     except MessageTooLargeError:
         return True
     return False
+
+
+def test_ipc_peer_history_keeps_the_newest_entries() -> None:
+    peers: list[int] = []
+    for uid in range(40):
+        note_peer(peers, uid)
+    assert peers == list(range(8, 40))
 
 
 def test_ipc_a_other_uid_is_rejected() -> None:

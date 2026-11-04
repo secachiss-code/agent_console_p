@@ -117,16 +117,26 @@ class EchoBook:
 
     def remember(self, path: Path, text: str, now: datetime) -> None:
         """Record the hashes of ``text`` until ``now + ttl``."""
+        self._prune(now)
         front, body = split_note(text)
         self._seen[path] = _Echo(front=_digest(front), body=_digest(body), until=now + self._ttl)
 
     def is_echo(self, path: Path, text: str, now: datetime) -> bool:
         """True when ``text`` is a write this book still remembers."""
+        self._prune(now)
         found = self._seen.get(path)
-        if found is None or now > found.until:
+        if found is None:
             return False
         front, body = split_note(text)
         return found.front == _digest(front) and found.body == _digest(body)
+
+    def __len__(self) -> int:
+        return len(self._seen)
+
+    def _prune(self, now: datetime) -> None:
+        stale = [path for path, item in self._seen.items() if now > item.until]
+        for path in stale:
+            del self._seen[path]
 
 
 def append_under(text: str, heading: str, line: str) -> str:

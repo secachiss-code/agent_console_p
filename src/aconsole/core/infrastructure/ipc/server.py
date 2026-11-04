@@ -7,7 +7,7 @@ import os
 import socket
 import struct
 from pathlib import Path
-from typing import final
+from typing import Final, final
 
 import msgspec
 
@@ -35,6 +35,17 @@ def peer_uid(sock: object) -> int:
 
 def allow_peer(uid: int) -> bool:
     return uid == os.getuid()
+
+
+_PEER_KEEP: Final = 32
+
+
+def note_peer(peers: list[int], uid: int) -> None:
+    """Remember a connecting uid. The diagnostic list keeps the newest `_PEER_KEEP` entries."""
+    peers.append(uid)
+    extra = len(peers) - _PEER_KEEP
+    if extra > 0:
+        del peers[:extra]
 
 
 def _peer_uid(writer: asyncio.StreamWriter) -> int:
@@ -81,7 +92,7 @@ class IpcServer:
 
     async def _client(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter) -> None:
         uid = _peer_uid(writer)
-        self.peers.append(uid)
+        note_peer(self.peers, uid)
         if not allow_peer(uid):
             writer.close()
             await writer.wait_closed()

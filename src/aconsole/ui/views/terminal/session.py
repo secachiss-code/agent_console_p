@@ -3,8 +3,11 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import os
+from collections.abc import Callable
 from typing import TYPE_CHECKING
+from weakref import WeakKeyDictionary
 
 import gi
 
@@ -16,6 +19,9 @@ from aconsole.ui.bootstrap import spawn_task  # noqa: E402
 if TYPE_CHECKING:
     from aconsole.contracts.app import TerminalLaunchSpec
     from aconsole.ui.viewmodels.terminal_vm import TerminalViewModel
+
+# One child-exited handler per widget. Resume and New Session spawn again on the same VTE.
+_EXIT_HANDLERS: WeakKeyDictionary[object, int] = WeakKeyDictionary()
 
 
 class TerminalSession:
@@ -133,7 +139,7 @@ class TerminalSession:
             else:
                 spawn_result.set_result(pid)
 
-        _ = self._terminal.connect("child-exited", child_exited)
+        self._connect_exit(child_exited)
         self._terminal.set_audible_bell(False)
         self._terminal.set_scrollback_lines(spec.scrollback_lines)
         self._cancellable = Gio.Cancellable()
@@ -151,3 +157,14 @@ class TerminalSession:
             spawned,
             None,
         )
+
+    def _connect_exit(self, callback: Callable[[Vte.Terminal, int], None]) -> None:
+        """Replace this widget's previous exit handler. A restarted session must not keep the old one."""
+        previous = _EXIT_HANDLERS.pop(self._terminal, None)
+        if previous is not None:
+            disconnect = getattr(self._terminal, "disconnect", None)
+            if callable(disconnect):
+                with contextlib.suppress(TypeError, ValueError):
+                    disconnect(previous)
+        handler = self._terminal.connect("child-exited", callback)
+        _EXIT_HANDLERS[self._terminal] = handler

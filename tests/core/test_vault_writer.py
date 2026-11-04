@@ -54,6 +54,7 @@ def test_vault_writer_repeat_does_not_change_mtime(tmp_path: Path) -> None:
     assert writer.echo.is_echo(source, updated, clock.moment) is True
     clock.moment += timedelta(seconds=11)
     assert writer.echo.is_echo(source, updated, clock.moment) is False
+    assert len(writer.echo) == 0
 
 
 def test_vault_writer_refuses_a_user_section() -> None:

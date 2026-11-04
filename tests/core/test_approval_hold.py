@@ -349,6 +349,31 @@ async def _permission_hook_route_sends_exactly_one_response(
     assert hook_response.hook_specific_output.decision.message == message
 
 
+def test_expired_and_closed_tabs_leave_the_hold_maps() -> None:
+    asyncio.run(_expired_and_closed_tabs_leave_the_hold_maps())
+
+
+async def _expired_and_closed_tabs_leave_the_hold_maps() -> None:
+    harness = _Harness()
+    request = _request()
+    waiting = asyncio.create_task(harness.service.hold(request, _view(request)))
+    await harness.requested.wait()
+    _ = harness.service.decide(_decide(request, ContractDecision.ALLOW), at=_AT)
+    assert (await waiting).phase is ApprovalPhase.ALLOWED
+    harness.service.expire(at=request.expires_at)
+    with pytest.raises(DomainError, match="NOT_FOUND"):
+        _ = harness.service.decide(_decide(request, ContractDecision.ALLOW), at=request.expires_at)
+    harness.requested.clear()
+    fresh = _request(approval_id="approval-2", nonce="nonce-2", command="git diff")
+    second = asyncio.create_task(harness.service.hold(fresh, _view(fresh)))
+    await harness.requested.wait()
+    harness.service.drop_tab(fresh.tab_id)
+    cancelled = await second
+    assert cancelled.phase is ApprovalPhase.CANCELLED
+    with pytest.raises(DomainError, match="NOT_FOUND"):
+        _ = harness.book.get(fresh.approval_id)
+
+
 def test_permission_hook_expiry_returns_one_native_response() -> None:
     asyncio.run(_permission_hook_expiry_returns_one_native_response())
 
