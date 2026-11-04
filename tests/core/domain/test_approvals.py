@@ -519,6 +519,81 @@ def test_end_to_end_prefix_rules_through_the_book(rule: str, command: str, *, ex
     assert _covered(rule, command) is expected
 
 
+def test_one_time_allow_does_not_cover_the_next_identical_call() -> None:
+    book = ApprovalBook()
+    _open(book)
+    allowed = book.decide("a1", nonce="n1", decision=ApprovalDecision.ALLOW, remember_prefix=False, at=AT)
+    assert allowed.phase is ApprovalPhase.ALLOWED
+    later = AT + timedelta(seconds=5)
+    again = book.open(
+        replace(_request(), approval_id="a2", nonce="n2", at=later, expires_at=later + HOLD),
+    )
+    assert again.id == "a2"
+    assert again.phase is ApprovalPhase.PENDING
+    assert again.by is None
+
+
+def test_same_event_id_is_one_approval_after_a_one_time_allow() -> None:
+    book = ApprovalBook()
+    _open(book, replace(_request(), event_id="toolu-1"))
+    _ = book.decide("a1", nonce="n1", decision=ApprovalDecision.ALLOW, remember_prefix=False, at=AT)
+    later = AT + timedelta(seconds=5)
+    replay = book.open(
+        replace(
+            _request(),
+            approval_id="a2",
+            nonce="n2",
+            at=later,
+            expires_at=later + HOLD,
+            event_id="toolu-1",
+        ),
+    )
+    assert replay.id == "a1"
+    assert replay.phase is ApprovalPhase.ALLOWED
+    fresh = book.open(
+        replace(
+            _request(),
+            approval_id="a3",
+            nonce="n3",
+            at=later,
+            expires_at=later + HOLD,
+            event_id="toolu-2",
+        ),
+    )
+    assert fresh.id == "a3"
+    assert fresh.phase is ApprovalPhase.PENDING
+
+
+def test_pending_dedup_shares_one_request_and_remembers_the_second_event() -> None:
+    book = ApprovalBook()
+    _open(book, replace(_request(), event_id="toolu-1"))
+    later = AT + timedelta(seconds=5)
+    shared = book.open(
+        replace(
+            _request(),
+            approval_id="a2",
+            nonce="n2",
+            at=later,
+            expires_at=later + HOLD,
+            event_id="toolu-2",
+        ),
+    )
+    assert shared.id == "a1"
+    _ = book.decide("a1", nonce="n1", decision=ApprovalDecision.ALLOW, remember_prefix=False, at=later)
+    replay = book.open(
+        replace(
+            _request(),
+            approval_id="a3",
+            nonce="n3",
+            at=later,
+            expires_at=later + HOLD,
+            event_id="toolu-2",
+        ),
+    )
+    assert replay.id == "a1"
+    assert replay.phase is ApprovalPhase.ALLOWED
+
+
 def test_duplicate_input_during_hold_is_the_same_approval() -> None:
     book = ApprovalBook()
     _open(book)

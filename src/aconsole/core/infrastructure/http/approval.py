@@ -22,6 +22,7 @@ class _Permission(msgspec.Struct, frozen=True, kw_only=True):
     tool_name: str
     tool_input: msgspec.Raw
     cwd: str | None = None
+    tool_use_id: str = ""
 
 
 class _Command(msgspec.Struct, frozen=True, kw_only=True):
@@ -44,7 +45,7 @@ async def handle_permission(
     risk = classify(command, cwd=cwd, worktree=worktree)
     request = OpenRequest(approval_id=identity, nonce=nonce, tab_id=item.tab_id, session_id=hook.session_id,
         tool=hook.tool_name, command=command, input_sha256=digest_input(bytes(hook.tool_input)), risk=risk,
-        at=at, expires_at=expiry, allow_tab_session=bool(command))
+        at=at, expires_at=expiry, allow_tab_session=bool(command), event_id=hook.tool_use_id)
     view = ApprovalView(id=ApprovalId(identity), nonce=nonce, tab_id=TabId(item.tab_id),
         agent=AgentKind.CLAUDE if item.kind == "claude.hook" else AgentKind.CODEX,
         tool=hook.tool_name, summary=command or hook.tool_name,

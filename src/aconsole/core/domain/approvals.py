@@ -179,6 +179,8 @@ class OpenRequest:
     at: datetime
     expires_at: datetime
     allow_tab_session: bool
+    # Stable id of this tool call, when the hook protocol has one. Empty means each delivery is a new call.
+    event_id: str = ""
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -206,6 +208,7 @@ class ApprovalBook:
     def __init__(self, *, cwd: str = "", worktree: str = "", resolver: PathResolver | None = None) -> None:
         self._items: dict[str, Approval] = {}
         self._by_input: dict[tuple[str, str, str], str] = {}
+        self._by_event: dict[str, str] = {}
         self._rules: list[TabAllowRule] = []
         self._deny_rules: list[TabDenyRule] = []
         # Empty values make every absolute path count as outside the worktree. Without a resolver, a prefix rule
@@ -222,12 +225,9 @@ class ApprovalBook:
         if request.expires_at < request.at:
             message = "expires_at must not precede the request"
             raise ValueError(message)
-        key = (request.session_id, request.tool, request.input_sha256)
-        existing_id = self._by_input.get(key)
-        if existing_id is not None:
-            existing = self._items[existing_id]
-            if request.at < existing.expires_at and existing.phase is not ApprovalPhase.CANCELLED:
-                return existing
+        replay = self._replay(request)
+        if replay is not None:
+            return replay
         risk = request.risk | classify(request.command, cwd=self._scope.cwd, worktree=self._scope.worktree)
         phase = ApprovalPhase.PENDING
         by = None
@@ -254,8 +254,30 @@ class ApprovalBook:
             allow_tab_session=request.allow_tab_session,
         )
         self._items[request.approval_id] = created
-        self._by_input[key] = request.approval_id
+        self._by_input[(request.session_id, request.tool, request.input_sha256)] = request.approval_id
+        if request.event_id != "":
+            self._by_event[request.event_id] = request.approval_id
         return created
+
+    def _replay(self, request: OpenRequest) -> Approval | None:
+        """Pending dedup by input, or the same call when the protocol sent a stable event id.
+
+        A finished one-time decision does not cover a later call with the same input. A remembered
+        tab/session rule still does, through `_rule_for` on the new row.
+        """
+        if request.event_id != "":
+            found = self._by_event.get(request.event_id)
+            if found is not None:
+                return self._items[found]
+        existing_id = self._by_input.get((request.session_id, request.tool, request.input_sha256))
+        if existing_id is None:
+            return None
+        existing = self._items[existing_id]
+        if request.at >= existing.expires_at or existing.phase is not ApprovalPhase.PENDING:
+            return None
+        if request.event_id != "":
+            self._by_event[request.event_id] = existing.id
+        return existing
 
     def decide(
         self,
