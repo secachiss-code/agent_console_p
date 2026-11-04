@@ -99,3 +99,26 @@ def test_b4a_plan_layout_is_deterministic_and_does_not_change_input() -> None:
     assert all(isinstance(position, PlanNodePosition) for position in positions)
     with pytest.raises(FrozenInstanceError):
         setattr(positions[0], "x", 900)  # noqa: B010 -- intentionally verify the frozen value rejects mutation.
+
+
+def test_shown_nodes_never_leave_out_one_waiting_for_a_person() -> None:
+    from aconsole.contracts.common import NodeStatus
+    from aconsole.ui.viewmodels.logic.plan_layout import SHOWN_NODES, shown_nodes
+
+    nodes = [
+        msgspec.structs.replace(_node(f"id-{index}", f"N-{index}", 0), status=NodeStatus.PENDING)
+        for index in range(SHOWN_NODES + 10)
+    ]
+    nodes[-1] = msgspec.structs.replace(nodes[-1], status=NodeStatus.VERIFYING)
+    shown = shown_nodes(nodes)
+    assert len(shown) == SHOWN_NODES
+    assert nodes[-1] in shown
+    assert shown[0] is nodes[0]
+    assert shown[-1] is nodes[-1]
+
+
+def test_shown_nodes_keep_a_short_plan_whole_and_in_order() -> None:
+    from aconsole.ui.viewmodels.logic.plan_layout import shown_nodes
+
+    nodes = [_node(f"id-{index}", f"N-{index}", 0) for index in range(3)]
+    assert shown_nodes(nodes) == tuple(nodes)

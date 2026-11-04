@@ -1,9 +1,10 @@
 """Deterministic layer layout for project plan previews."""
 
+from collections.abc import Sequence
 from dataclasses import dataclass
 
 from aconsole.contracts.app import PlanNodeView
-from aconsole.contracts.common import NodeId
+from aconsole.contracts.common import NodeId, NodeStatus
 
 
 @dataclass(frozen=True, slots=True)
@@ -30,3 +31,18 @@ def layout_plan(nodes: tuple[PlanNodeView, ...]) -> tuple[PlanNodePosition, ...]
             ranks[node.id] = rank
             positions.append(PlanNodePosition(node.id, layer * 160 + 12, rank * 64 + 12))
     return tuple(positions)
+
+
+SHOWN_NODES = 30
+_FIRST_SHOWN = (NodeStatus.VERIFYING, NodeStatus.IN_PROGRESS)
+
+
+def shown_nodes(nodes: Sequence[PlanNodeView]) -> tuple[PlanNodeView, ...]:
+    """The nodes the page has room for, in plan order. One waiting for a person is never left out."""
+    wanted = [node for node in nodes if node.status in _FIRST_SHOWN][:SHOWN_NODES]
+    chosen = {node.id for node in wanted}
+    for node in nodes:
+        if len(chosen) >= SHOWN_NODES:
+            break
+        chosen.add(node.id)
+    return tuple(node for node in nodes if node.id in chosen)

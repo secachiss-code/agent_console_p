@@ -17,6 +17,7 @@ _MESSAGES = {
     "plan.depends": ("Depends on: {nodes}", "Зависит от: {nodes}"),
     "plan.blocks": ("Blocks: {nodes}", "Блокирует: {nodes}"),
     "plan.lease": ("Lease until {time}", "Аренда до {time}"),
+    "plan.hidden": ("{count} more not shown", "ещё {count} не показано"),
     "plan.accept": ("Accept", "Принять"),
     "plan.send_back": ("Send back", "Вернуть"),
     "plan.evidence": ("Agent's report: {text}", "Отчёт агента: {text}"),

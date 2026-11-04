@@ -13,7 +13,7 @@ from gi.repository import Gdk, GLib, Gtk, Pango  # noqa: E402
 
 from aconsole.contracts.app import PlanNodeView, PlanView  # noqa: E402
 from aconsole.contracts.common import NodeId, NodeStatus, TabId  # noqa: E402
-from aconsole.ui.viewmodels.logic.plan_layout import PlanNodePosition, layout_plan  # noqa: E402
+from aconsole.ui.viewmodels.logic.plan_layout import PlanNodePosition, layout_plan, shown_nodes  # noqa: E402
 from aconsole.ui.viewmodels.logic.quota_fmt import agent_name  # noqa: E402
 from aconsole.ui.views.sidebar.messages import _ as translate  # noqa: E402
 
@@ -41,7 +41,7 @@ class PlanGraph(Gtk.Box):
         self._on_decide: Callable[[NodeId, bool], None] | None = on_decide
         self._hovered: NodeId | None = None
         self._selected: NodeId | None = None
-        self._nodes: dict[NodeId, PlanNodeView] = {node.id: node for node in plan.nodes[:30]}
+        self._nodes: dict[NodeId, PlanNodeView] = {node.id: node for node in shown_nodes(plan.nodes)}
         self._positions: dict[NodeId, PlanNodePosition] = {
             position.node_id: position for position in layout_plan(tuple(self._nodes.values()))
         }
@@ -57,6 +57,9 @@ class PlanGraph(Gtk.Box):
         title.add_css_class("title-2")
         text.append(title)
         progress = translate("plan.card.progress").format(done=self.plan.done, total=self.plan.total)
+        hidden = len(self.plan.nodes) - len(self._nodes)
+        if hidden > 0:
+            progress = f"{progress} · {translate('plan.hidden').format(count=hidden)}"
         summary = Gtk.Label(label=progress, xalign=0, ellipsize=Pango.EllipsizeMode.END)
         summary.add_css_class("ac-summary-detail")
         text.append(summary)
