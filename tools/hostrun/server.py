@@ -918,20 +918,6 @@ class Application:
             except (OSError, ValueError, KeyError, TypeError, IndexError, subprocess.SubprocessError, UnicodeError) as exc:
                 write(f"hostrun: gate review failed: {exc}\n".encode())
                 return 1
-        if plan.mode == "check":
-            script = str(Path(plan.repo) / "tools" / "check.sh")
-            env = base_env()
-            if container:
-                env["HOSTRUN_CONTAINER"] = container
-            return execute_argv(
-                ("sh", script),
-                cwd=cwd,
-                env=env,
-                deadline=time.monotonic() + plan.timeout_s,
-                output_limit=self.policy.output_limit_bytes,
-                written=[0],
-                write=write,
-            )
         if plan.mode == "fake-start":
             return self.start_fake(plan, cwd=cwd, write=write, container=container)
         if plan.mode == "fake-stop":
@@ -959,9 +945,9 @@ class Application:
                 deadline=deadline,
                 output_limit=self.policy.output_limit_bytes,
                 written=written,
-                write=buffered.append if step.quiet_success or plan.gate_id else write,
+                write=buffered.append if step.quiet_success or step.gate else write,
             )
-            if plan.gate_id:
+            if step.gate:
                 if code == 1 and _review_gate(plan.repo, self.policy.state_dir, plan.gate_id, container, previous):
                     write(f"Phase {plan.gate_id} gate: PASS (reviewed protected changes)\n".encode())
                     return 0

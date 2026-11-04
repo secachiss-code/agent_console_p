@@ -263,7 +263,7 @@ def _run_gate_with_report(
     report_path = repo / ".aconsole-dev" / "gates" / f"{task}.json"
 
     def fake_execute(
-        _argv: tuple[str, ...],
+        argv: tuple[str, ...],
         *,
         cwd: str,
         env: dict[str, str],
@@ -273,6 +273,8 @@ def _run_gate_with_report(
         write: Callable[[bytes], None],
     ) -> int:
         del cwd, env, deadline, output_limit, written
+        if argv[:3] == ("podman", "start", "devtools"):
+            return 0
         report_path.parent.mkdir(parents=True, exist_ok=True)
         report_path.write_bytes(raw)
         write(b"phase gate reported FAIL\n")
@@ -640,7 +642,7 @@ def test_audit_gate_is_never_postprocessed(
     report_path = repo / ".aconsole-dev" / "gates" / "audit-core.json"
 
     def fake_execute(
-        _argv: tuple[str, ...],
+        argv: tuple[str, ...],
         *,
         cwd: str,
         env: dict[str, str],
@@ -650,6 +652,8 @@ def test_audit_gate_is_never_postprocessed(
         write: Callable[[bytes], None],
     ) -> int:
         del cwd, env, deadline, output_limit, written
+        if argv[:3] == ("podman", "start", "devtools"):
+            return 0
         report_path.parent.mkdir(parents=True, exist_ok=True)
         report_path.write_bytes(raw)
         write(b"audit failed\n")

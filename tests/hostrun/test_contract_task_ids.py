@@ -14,7 +14,7 @@ def test_gate_plan_accepts_contract_request_task_id_syntax(tmp_path: Path, task:
     plan = actions.build_plan("gate", [task], tmp_path, str(tmp_path), 30)
 
     assert plan.gate_id == task
-    assert plan.steps[0].argv[-1] == task
+    assert plan.steps[-1].argv[-1] == task
 
 
 @pytest.mark.parametrize("task", ["C", "C0.1", "C1a", "C100", "c1", "CC1", "C-1"])
@@ -33,4 +33,4 @@ def test_audit_plan_has_no_contract_task_id(tmp_path: Path) -> None:
     plan = actions.build_plan("gate", ["--audit", "core"], tmp_path, str(tmp_path), 30)
 
     assert plan.gate_id == ""
-    assert plan.steps[0].argv[-2:] == ("--audit", "core")
+    assert plan.steps[-1].argv[-2:] == ("--audit", "core")

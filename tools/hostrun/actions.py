@@ -7,7 +7,6 @@ user input is never interpreted as shell code.
 from __future__ import annotations
 
 import re
-import sys
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -141,6 +140,8 @@ class Step:
     argv: tuple[str, ...]
     env: tuple[tuple[str, str], ...] = ()
     quiet_success: bool = False
+    # The phase-gate command. A startup step must not be treated as the gate result.
+    gate: bool = False
 
 
 # devtools is stopped after a host reboot; `podman start` on a running container is a no-op.
@@ -202,11 +203,18 @@ def build_plan(
         raise ActionError(400, "unknown action")
     if action == "check":
         _no_args(args, "check")
-        return Plan(mode="check", steps=(), timeout_s=timeout_s, repo=repo, side=side)
+        script = f"{repo}/tools/check.sh"
+        return Plan(
+            mode="exec",
+            steps=_in_devtools(repo, ("sh", script), side=side),
+            timeout_s=timeout_s,
+            repo=repo,
+            side=side,
+        )
     if action == "deps-sync":
         return Plan(mode="exec", steps=_deps_sync(args, repo), timeout_s=timeout_s)
     if action == "test":
-        return Plan(mode="exec", steps=(_test(args, repo),), timeout_s=timeout_s)
+        return Plan(mode="exec", steps=_test(args, repo, side), timeout_s=timeout_s)
     if action == "ui-snapshot":
         return Plan(mode="exec", steps=(_ui_snapshot(args, repo),), timeout_s=timeout_s)
     if action == "ui-run":
@@ -232,8 +240,14 @@ def build_plan(
     if action == "git":
         return Plan(mode="exec", steps=(_git(args, cwd),), timeout_s=timeout_s)
     if action == "gate":
-        return Plan(mode="exec", steps=(_gate(args, repo),), timeout_s=timeout_s, repo=repo, side=side,
-                    gate_id=args[0] if len(args) == 1 else "")
+        return Plan(
+            mode="exec",
+            steps=_gate(args, repo, side),
+            timeout_s=timeout_s,
+            repo=repo,
+            side=side,
+            gate_id=args[0] if len(args) == 1 else "",
+        )
     if action == "gate-review":
         if (len(args) not in (3, 4) or args[0] not in ("inspect", "approve")
                 or len(args) != (3 if args[0] == "inspect" else 4)
@@ -321,7 +335,26 @@ _SUITES: dict[str, tuple[str, ...]] = {
 }
 
 
-def _test(args: list[str], repo: str) -> Step:
+def _in_devtools(
+    repo: str,
+    command: tuple[str, ...],
+    env: tuple[tuple[str, str], ...] = (),
+    *,
+    side: str = "",
+    gate: bool = False,
+) -> tuple[Step, ...]:
+    """Run one command in devtools. The host process is podman, not the checkout's interpreter or shell."""
+    argv = ["podman", "exec", "--workdir", repo]
+    for key, value in env:
+        argv.extend(("-e", f"{key}={value}"))
+    if side:
+        argv.extend(("-e", f"HOSTRUN_CONTAINER={side}"))
+    argv.append(_DEVTOOLS)
+    argv.extend(command)
+    return (_START_DEVTOOLS, Step(argv=tuple(argv), gate=gate))
+
+
+def _test(args: list[str], repo: str, side: str) -> tuple[Step, ...]:
     if not args or args[0] not in _SUITES:
         raise ActionError(400, "test expects core, ui, gui, contracts, hostrun, or gate")
     suite = args[0]
@@ -344,8 +377,9 @@ def _test(args: list[str], repo: str) -> Step:
     command.extend(paths)
     if suite == "gui":
         # GUI tests get a private X server, so XTest never types into the user's session.
-        return Step(argv=(sys.executable, str(_ISOLATED_X), "--", *command), env=env)
-    return Step(argv=tuple(command), env=env)
+        # The venv interpreter exists in devtools because that container mounts the same home.
+        command = [python, str(_ISOLATED_X), "--", *command]
+    return _in_devtools(repo, tuple(command), env, side=side)
 
 
 def _pytest_path(path: str) -> str:
@@ -423,7 +457,8 @@ def _git(args: list[str], cwd: Path) -> Step:
     if args == ["status"]:
         return Step(argv=base + ("status",))
     if args == ["diff"]:
-        return Step(argv=base + ("diff",))
+        # A repo can name diff.external and textconv drivers. These flags keep git from running them.
+        return Step(argv=base + ("diff", "--no-ext-diff", "--no-textconv"))
     if args == ["log"]:
         return Step(argv=base + ("log",))
     if args == ["worktree", "list"]:
@@ -433,18 +468,16 @@ def _git(args: list[str], cwd: Path) -> Step:
     raise ActionError(400, "git arguments are not allowed")
 
 
-def _gate(args: list[str], repo: str) -> Step:
+def _gate(args: list[str], repo: str, side: str) -> tuple[Step, ...]:
+    """Run the phase gate inside devtools. The host process is podman, not the checkout interpreter."""
+    tool = f"{repo}/tools/gate/phase_gate.py"
     if args == ["--audit", "core"]:
-        return Step(
-            argv=(_core_python(repo), f"{repo}/tools/gate/phase_gate.py", "--audit", "core"),
-            env=_gil_off(),
-        )
+        command = (_core_python(repo), tool, "--audit", "core")
+        return _in_devtools(repo, command, _gil_off(), side=side)
     if len(args) != 1 or _TASK.fullmatch(args[0]) is None:
         raise ActionError(400, "gate expects a task id or --audit core")
-    return Step(
-        argv=(_core_python(repo), f"{repo}/tools/gate/phase_gate.py", args[0]),
-        env=_gil_off(),
-    )
+    command = (_core_python(repo), tool, args[0])
+    return _in_devtools(repo, command, _gil_off(), side=side, gate=True)
 
 
 def _conformance(args: list[str], repo: str) -> Step:

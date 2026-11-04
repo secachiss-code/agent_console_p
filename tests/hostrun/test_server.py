@@ -115,7 +115,7 @@ def test_gate_ids_match_the_plan(tmp_path: Path) -> None:
     accepted = ("A1.1", "A1.10", "A1.1b", "A0.0r", "A2.1br", "A1.6r", "H1", "R0b", "I0", "B5a")
     for task_id in accepted:
         plan = actions.build_plan("gate", [task_id], tmp_path, repo, 30)
-        assert plan.steps[0].argv[-1] == task_id
+        assert plan.steps[-1].argv[-1] == task_id
     with pytest.raises(actions.ActionError, match="task id"):
         _ = actions.build_plan("gate", ["A1.1bb"], tmp_path, repo, 30)
 
@@ -123,10 +123,11 @@ def test_gate_ids_match_the_plan(tmp_path: Path) -> None:
 def test_gate_audit_core_builds_the_audit_argv(tmp_path: Path) -> None:
     repo = str(tmp_path)
     plan = actions.build_plan("gate", ["--audit", "core"], tmp_path, repo, 30)
-    argv = plan.steps[0].argv
-    assert argv[1] == f"{repo}/tools/gate/phase_gate.py"
+    argv = plan.steps[-1].argv
+    assert argv[0] == "podman"
+    assert f"{repo}/tools/gate/phase_gate.py" in argv
     assert argv[-2:] == ("--audit", "core")
-    assert ("PYTHON_GIL", "0") in plan.steps[0].env
+    assert "PYTHON_GIL=0" in argv
 
 
 def test_gate_audit_ui_is_rejected(tmp_path: Path) -> None:
@@ -162,10 +163,11 @@ def test_policy_rejects_a_container_without_worktree(tmp_path: Path) -> None:
 def test_default_paths_stay_inside_the_suite(tmp_path: Path) -> None:
     repo = tmp_path / "core"
     repo.mkdir()
-    core = actions.build_plan("test", ["core"], repo, str(repo), 30).steps[0]
+    core = actions.build_plan("test", ["core"], repo, str(repo), 30).steps[-1]
+    assert core.argv[0] == "podman"
     assert core.argv[-5:] == ("tests/core", "tests/contracts", "tests/gate", "tests/hostrun", "tests/smoke")
     assert "tests/ui" not in core.argv
-    ui = actions.build_plan("test", ["ui"], repo, str(repo), 30).steps[0]
+    ui = actions.build_plan("test", ["ui"], repo, str(repo), 30).steps[-1]
     assert ui.argv[-2:] == ("tests/smoke", "tests/ui")
     fake = actions.build_plan(
         "fake-core",
@@ -179,7 +181,8 @@ def test_default_paths_stay_inside_the_suite(tmp_path: Path) -> None:
     assert fake.steps[0].argv[-2:] == ("--socket", str(tmp_path / "rt" / "demo.sock"))
     assert fake.side == "agent-cursor"
     gate = actions.build_plan("gate", ["R0c"], repo, str(repo), 30)
-    assert gate.steps[0].argv[1] == f"{repo}/tools/gate/phase_gate.py"
+    assert f"{repo}/tools/gate/phase_gate.py" in gate.steps[-1].argv
+    assert gate.steps[-1].argv[0] == "podman"
 
 
 def test_example_policy_loads() -> None:
@@ -495,36 +498,78 @@ def _install_check(repo: str, body: str) -> None:
     script.chmod(0o755)
 
 
-def test_check_names_the_tools(running: Running) -> None:
+def _capture_exec(
+    monkeypatch: pytest.MonkeyPatch,
+    *,
+    code: int = 0,
+    output: bytes = b"",
+) -> list[tuple[str, ...]]:
+    """Stand in for process start so a test never runs checkout code or podman."""
+    seen: list[tuple[str, ...]] = []
+
+    def fake_execute(
+        argv: tuple[str, ...],
+        *,
+        cwd: str,
+        env: dict[str, str],
+        deadline: float,
+        output_limit: int,
+        written: list[int],
+        write: Callable[[bytes], None],
+    ) -> int:
+        del cwd, env, deadline, output_limit, written
+        seen.append(argv)
+        if argv[:3] == ("podman", "start", "devtools"):
+            return 0
+        if output:
+            write(output)
+        return code
+
+    monkeypatch.setattr(server, "execute_argv", fake_execute)
+    return seen
+
+
+def test_check_names_the_tools(running: Running, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     policy, _holder = running
-    _install_check(policy.repo, "#!/bin/sh\nprintf '%s\\n' ruff basedpyright import-linter\n")
+    marker = tmp_path / "host-ran"
+    _install_check(policy.repo, f"#!/bin/sh\ntouch '{marker}'\nprintf '%s\\n' ruff\n")
+    seen = _capture_exec(monkeypatch, output=b"ruff\nbasedpyright\n")
     status, body = _post(policy.socket_path, {"action": "check", "args": []})
     assert status == 200
     assert b"ruff\n" in body
     assert b"basedpyright\n" in body
     assert b"__EXIT__ 0\n" in body
-    assert body != b"ok\n__EXIT__ 0\n"
+    assert not marker.exists()
+    assert seen[0] == ("podman", "start", "devtools")
+    assert seen[1][0] == "podman"
+    assert seen[1][-2:] == ("sh", f"{policy.repo}/tools/check.sh")
+    assert "HOSTRUN_CONTAINER=agent-cursor" in seen[1]
     audit = Path(policy.audit_path).read_text(encoding="utf-8")
     assert '"container":"agent-cursor"' in audit
     assert '"action":"check"' in audit
 
 
-def test_check_sets_the_container_env_for_steps(running: Running, tmp_path: Path) -> None:
+def test_check_passes_the_container_name_into_devtools(running: Running, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     policy, _holder = running
     dump = tmp_path / "env-dump"
-    _install_check(policy.repo, f"#!/bin/sh\nprintf '%s' \"$HOSTRUN_CONTAINER\" > {dump}\n")
+    _install_check(policy.repo, f"#!/bin/sh\nprintf '%s' \"$HOSTRUN_CONTAINER\" > '{dump}'\n")
+    seen = _capture_exec(monkeypatch)
     status, _body = _post(policy.socket_path, {"action": "check", "args": []})
     assert status == 200
-    assert dump.read_text(encoding="utf-8") == "agent-cursor"
+    assert not dump.exists()
+    assert "HOSTRUN_CONTAINER=agent-cursor" in seen[-1]
 
 
-def test_check_fails_when_a_tool_fails(running: Running) -> None:
+def test_check_fails_when_a_tool_fails(running: Running, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     policy, _holder = running
-    _install_check(policy.repo, "#!/bin/sh\nprintf '%s\\n' ruff\nexit 1\n")
+    marker = tmp_path / "host-ran"
+    _install_check(policy.repo, f"#!/bin/sh\ntouch '{marker}'\nprintf '%s\\n' ruff\nexit 1\n")
+    _ = _capture_exec(monkeypatch, code=1, output=b"ruff\n")
     status, body = _post(policy.socket_path, {"action": "check", "args": []})
     assert status == 200
     assert b"ruff\n" in body
     assert b"__EXIT__ 1\n" in body
+    assert not marker.exists()
 
 
 def test_codex_cannot_gate(running: Running) -> None:
@@ -575,22 +620,30 @@ def test_deps_sync_interpreters(tmp_path: Path) -> None:
         "3.15+gil",
     )
     assert ("UV_PROJECT_ENVIRONMENT", str(repo / ".venv-ui")) in synced_ui.steps[1].env
-    assert ("PYTHON_GIL", "0") in actions.build_plan("test", ["core", "-k", "smoke"], repo, str(repo), 30).steps[0].env
-    ui_test = actions.build_plan("test", ["ui"], repo, str(repo), 30).steps[0]
-    assert ui_test.argv[0].endswith("/.venv-ui/bin/python")
+    core_test = actions.build_plan("test", ["core", "-k", "smoke"], repo, str(repo), 30).steps[-1]
+    assert "PYTHON_GIL=0" in core_test.argv
+    ui_test = actions.build_plan("test", ["ui"], repo, str(repo), 30).steps[-1]
+    assert ui_test.argv[0] == "podman"
+    assert f"{repo}/.venv-ui/bin/python" in ui_test.argv
     assert ui_test.argv[-1] == "tests/ui"
     assert "tests/core" not in ui_test.argv
+    assert "PYTHON_GIL=0" not in ui_test.argv
     assert ui_test.env == ()
-    hostrun = actions.build_plan("test", ["hostrun"], repo, str(repo), 30).steps[0]
+    hostrun = actions.build_plan("test", ["hostrun"], repo, str(repo), 30).steps[-1]
     assert hostrun.argv[-1] == "tests/hostrun"
     with pytest.raises(actions.ActionError, match="core or ui"):
         _ = actions.build_plan("deps-sync", ["both"], repo, str(repo), 30)
 
 
-def test_client_check_and_rejects_shell_args(running: Running, tmp_path: Path) -> None:
+def test_client_check_and_rejects_shell_args(
+    running: Running,
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
     policy, _holder = running
-    _install_check(policy.repo, "#!/bin/sh\nprintf '%s\\n' ruff basedpyright\n")
-    marker = tmp_path / "client-pwned"
+    marker = tmp_path / "host-ran"
+    _install_check(policy.repo, f"#!/bin/sh\ntouch '{marker}'\nprintf '%s\\n' ruff basedpyright\n")
+    _ = _capture_exec(monkeypatch, output=b"ruff\nbasedpyright\n")
     env = {**os.environ, "HOSTRUN_SOCK": policy.socket_path}
     ok = subprocess.run(
         ["/bin/sh", str(CLIENT), "check"],
@@ -798,3 +851,92 @@ def test_fake_start_step_carries_hostrun_container(tmp_path: Path) -> None:
             os.kill(int(pid_path.read_text(encoding="utf-8").strip()), signal.SIGTERM)
     assert code == 0, b"".join(written)
     assert env_file.read_text(encoding="utf-8") == "agent-grok"
+
+
+def _devtools_command(argv: tuple[str, ...], repo: str) -> tuple[str, ...]:
+    assert argv[:4] == ("podman", "exec", "--workdir", repo)
+    rest = argv[4:]
+    while rest[:1] == ("-e",):
+        rest = rest[2:]
+    assert rest[0] == "devtools"
+    return rest[1:]
+
+
+def test_check_test_and_gate_keep_checkout_code_inside_devtools(tmp_path: Path) -> None:
+    """The host process is podman. A rewritten check script is only an argument, so this test never starts it."""
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    script = repo / "tools" / "check.sh"
+    script.parent.mkdir()
+    marker = tmp_path / "host-ran"
+    _ = script.write_text(f"#!/bin/sh\ntouch '{marker}'\n", encoding="utf-8")
+    script.chmod(0o755)
+    cases = (
+        ("check", []),
+        ("test", ["core", "-k", "smoke"]),
+        ("test", ["gui"]),
+        ("gate", ["A1"]),
+        ("gate", ["--audit", "core"]),
+    )
+    for action, args in cases:
+        plan = actions.build_plan(action, list(args), repo, str(repo), 30, side="agent-cursor")
+        assert [step.argv[0] for step in plan.steps] == ["podman", "podman"]
+        assert plan.steps[0].argv == ("podman", "start", "devtools")
+        command = _devtools_command(plan.steps[1].argv, str(repo))
+        assert "HOSTRUN_CONTAINER=agent-cursor" in plan.steps[1].argv
+        assert command[0] not in {"podman", "sh"} or action == "check"
+        if action == "check":
+            assert command == ("sh", str(script))
+        if action == "gate":
+            assert command[1] == f"{repo}/tools/gate/phase_gate.py"
+            assert "PYTHON_GIL=0" in plan.steps[1].argv
+        if action == "test" and args[0] == "core":
+            assert command[0] == f"{repo}/.venv-core/bin/python"
+            assert "PYTHON_GIL=0" in plan.steps[1].argv
+    refused = ("git", ["diff", "--textconv"])
+    with pytest.raises(actions.ActionError, match="not allowed"):
+        _ = actions.build_plan(refused[0], list(refused[1]), repo, str(repo), 30)
+    assert not marker.exists()
+
+
+def test_git_diff_does_not_run_repo_diff_drivers(tmp_path: Path) -> None:
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    marker = tmp_path / "driver-ran"
+    driver = tmp_path / "driver.sh"
+    _ = driver.write_text(
+        f"#!/bin/sh\nprintf ran >> '{marker}'\nprintf 'hijacked\\n'\n",
+        encoding="utf-8",
+    )
+    driver.chmod(0o755)
+    _git(repo, "init", "-q")
+    _ = (repo / "note.txt").write_text("before\n", encoding="utf-8")
+    _ = (repo / ".gitattributes").write_text("*.txt diff=evil\n", encoding="utf-8")
+    _git(repo, "add", "-A")
+    _git(repo, "commit", "-q", "-m", "base")
+    _git(repo, "config", "diff.external", str(driver))
+    _git(repo, "config", "diff.evil.textconv", str(driver))
+    _ = (repo / "note.txt").write_text("after\n", encoding="utf-8")
+    plan = actions.build_plan("git", ["diff"], repo, str(repo), 30)
+    argv = plan.steps[0].argv
+    assert argv == ("git", "-C", str(repo), "diff", "--no-ext-diff", "--no-textconv")
+    chunks: list[bytes] = []
+    code = server.execute_argv(
+        argv,
+        cwd=str(repo),
+        env=server.base_env(),
+        deadline=time.monotonic() + 10,
+        output_limit=100_000,
+        written=[0],
+        write=chunks.append,
+    )
+    text = b"".join(chunks)
+    assert code == 0, text
+    assert b"after" in text
+    assert b"hijacked" not in text
+    assert not marker.exists()
+
+
+def _git(repo: Path, *args: str) -> None:
+    completed = subprocess.run(("git", "-C", str(repo), *args), check=False, capture_output=True, text=True)
+    assert completed.returncode == 0, completed.stderr

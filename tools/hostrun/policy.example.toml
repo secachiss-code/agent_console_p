@@ -1,5 +1,7 @@
 # Copy to ~/.config/aconsole-hostrun/policy.toml
 # Named actions only. The server never accepts a raw command line.
+# check, test, and gate run inside the devtools container: the host process is podman.
+# git diff passes --no-ext-diff and --no-textconv, so repo diff drivers do not run.
 # Paths: ~ is this user's home, @REPO@ this checkout, @REPO_PARENT@ the directory holding it.
 
 socket_path = "~/.containers/hostrun/hostrun.sock"

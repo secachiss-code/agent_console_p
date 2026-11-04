@@ -45,14 +45,20 @@ def _fake(tmp_path: Path) -> tuple[Path, Path]:
 def test_gui_suite_runs_under_isolated_x(tmp_path: Path) -> None:
     repo = str(tmp_path)
     plan = actions.build_plan("test", ["gui", "-k", "test_b1_"], tmp_path, repo, 30)
-    argv = plan.steps[0].argv
-    assert argv[:3] == (sys.executable, str(TOOLS / "isolated_x.py"), "--")
-    assert argv[3:] == (f"{repo}/.venv-ui/bin/python", "-m", "pytest", "-q", "-k", "test_b1_", *actions._SUITES["gui"])
+    argv = plan.steps[-1].argv
+    python = f"{repo}/.venv-ui/bin/python"
+    split = argv.index("--")
+    assert argv[split - 2:split] == (python, str(TOOLS / "isolated_x.py"))
+    assert argv[split + 1:] == (python, "-m", "pytest", "-q", "-k", "test_b1_", *actions._SUITES["gui"])
+    assert argv[0] == "podman"
 
 
 def test_ui_suite_is_not_wrapped(tmp_path: Path) -> None:
     plan = actions.build_plan("test", ["ui"], tmp_path, str(tmp_path), 30)
-    assert plan.steps[0].argv[0] == f"{tmp_path}/.venv-ui/bin/python"
+    argv = plan.steps[-1].argv
+    assert argv[0] == "podman"
+    assert str(TOOLS / "isolated_x.py") not in argv
+    assert f"{tmp_path}/.venv-ui/bin/python" in argv
 
 
 def test_xauthority_is_one_wild_cookie_entry() -> None:
