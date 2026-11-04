@@ -496,7 +496,7 @@ def test_tabs_fork_can_create_a_new_worktree() -> None:
 
 
 def test_tabs_missing_service_reports_method_not_found() -> None:
-    connection = Connection(EventRing())
+    connection = Connection(EventRing(), host_namespace=True)
     ready = connection.receive(_init())
     assert ready
     missing = _call(connection, 2, "tab/open", _open())
@@ -698,7 +698,7 @@ def _init() -> bytes:
 
 
 def _ready(service: TabService) -> Connection:
-    connection = Connection(EventRing(), tabs=service)
+    connection = Connection(EventRing(), tabs=service, host_namespace=True)
     assert connection.receive(_init())
     return connection
 

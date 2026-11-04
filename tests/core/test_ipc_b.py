@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 import os
 import secrets
 import stat
@@ -161,12 +162,12 @@ def test_ipc_b_live_tabs_hold(tmp_path: Path) -> None:
     assert asyncio.run(_tabs(tmp_path)) == 0
 
 
-def _no_credentials(_sock: object) -> int:
-    return -1
+def _no_credentials(_sock: object) -> tuple[int, int]:
+    return -1, -1
 
 
 def test_ipc_b_rejects_other_uid_and_oversize(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr("aconsole.core.bootstrap.credentials_uid", _no_credentials)
+    monkeypatch.setattr("aconsole.core.bootstrap.credentials", _no_credentials)
     assert asyncio.run(_reject(tmp_path)) == 0
 
 
@@ -361,7 +362,7 @@ async def _ping(path: Path) -> ResponseOk:
 
 
 def test_bad_params_are_reported_instead_of_dropping_the_connection() -> None:
-    connection = Connection(EventRing())
+    connection = Connection(EventRing(), host_namespace=True)
     bad = connection.receive(_line(Request(id=7, method="initialize", params=msgspec.Raw(b"{}"))))
     assert _message(bad[0]) == "INVALID_PARAMS"
     _ = connection.receive(_init(ClientRole.UI))
@@ -375,8 +376,51 @@ def _message(frame: bytes) -> str:
     return reply.error.message
 
 
+def test_other_namespace_cannot_initialize_as_the_host(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    monkeypatch.setattr("aconsole.core.bootstrap.same_mnt_namespace", lambda _pid: False)
+    caplog.set_level(logging.WARNING)
+    messages = asyncio.run(_other_namespace(tmp_path))
+    assert messages == (
+        "ROLE_FORBIDDEN",
+        "NOT_INITIALIZED",
+        "NOT_INITIALIZED",
+        "NOT_INITIALIZED",
+        "SIDECAR_TOKEN_INVALID",
+    )
+    assert any("refused ui" in record.message for record in caplog.records)
+
+
+async def _other_namespace(tmp_path: Path) -> tuple[str, str, str, str, str]:
+    sock = tmp_path / "core.sock"
+    daemon = Daemon(sock, idle_s=30)
+    task = asyncio.create_task(daemon.serve())
+    await wait_for_socket(sock)
+    try:
+        _reader, writer = await asyncio.open_unix_connection(sock)
+        writer.write(_init(ClientRole.UI))
+        for request_id, method in ((2, "approval/decide"), (3, "settings/update"), (4, "events/subscribe")):
+            writer.write(_line(Request(id=request_id, method=method, params=msgspec.Raw(b"{}"))))
+        writer.write(_init(ClientRole.SIDECAR))
+        await writer.drain()
+        frames = [decode_envelope(await _reader.readuntil(b"\n")) for _ in range(5)]
+        writer.close()
+        await writer.wait_closed()
+    finally:
+        daemon.request_stop()
+        assert await asyncio.wait_for(task, 2) == 0
+    messages: list[str] = []
+    for frame in frames:
+        assert isinstance(frame, ResponseErr)
+        messages.append(frame.error.message)
+    return messages[0], messages[1], messages[2], messages[3], messages[4]
+
+
 def test_server_reports_itself_and_only_what_it_serves() -> None:
-    connection = Connection(EventRing())
+    connection = Connection(EventRing(), host_namespace=True)
     reply = decode_envelope(connection.receive(_init(ClientRole.UI))[0])
     assert isinstance(reply, ResponseOk)
     result = msgspec.json.decode(reply.result, type=InitializeResult)

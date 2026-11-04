@@ -103,6 +103,7 @@ class Connection:
         review: ReviewService | None = None,
         knowledge: KnowledgeService | None = None,
         git: GitService | None = None,
+        host_namespace: bool = False,
     ) -> None:
         self.ring = ring
         self.outbound_limit = outbound_limit
@@ -127,6 +128,8 @@ class Connection:
         self._sidecar_tab: str | None = None
         self.sidecar_claim: tuple[str, str] | None = None
         self.peer_pid: int | None = None
+        # UI and CLI are accepted only from the core's mount namespace. A container stays a sidecar.
+        self.host_namespace = host_namespace
         self.inflight: set[int] = set()
         self._queued = 0
         self._encoder = msgspec.json.Encoder()
@@ -372,6 +375,9 @@ class Connection:
         chosen = _negotiate(params.protocol[0], params.protocol[1])
         if chosen is None:
             return (self._err(request.id, "PROTOCOL_VERSION_UNSUPPORTED"),)
+        if params.role is not ClientRole.SIDECAR and not self.host_namespace:
+            _LOG.warning("refused %s initialize from outside the core mount namespace", params.role)
+            return (self._err(request.id, "ROLE_FORBIDDEN"),)
         if params.role is ClientRole.SIDECAR and not self._sidecar_ok(params):
             return (self._err(request.id, "SIDECAR_TOKEN_INVALID"),)
         self.ready = True

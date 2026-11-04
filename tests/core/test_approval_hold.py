@@ -470,7 +470,7 @@ async def _ipc_decide_dispatches_to_approval_hold_and_negotiates_capability() ->
     request = _request(at=at, expires_at=at + _HOLD)
     waiter = asyncio.create_task(harness.service.hold(request, _view(request)))
     await harness.requested.wait()
-    connection = Connection(EventRing(), approval_hold=harness.service)
+    connection = Connection(EventRing(), approval_hold=harness.service, host_namespace=True)
 
     initialize = InitializeParams(
         protocol=(ProtocolVersion(major=1, minor=0), ProtocolVersion(major=1, minor=0)),
@@ -527,7 +527,7 @@ def test_ipc_approval_events_are_filtered_by_inline_capability() -> None:
 
 
 def _initialized_connection(capabilities: frozenset[str]) -> Connection:
-    connection = Connection(EventRing(), approval_hold=_Harness().service)
+    connection = Connection(EventRing(), approval_hold=_Harness().service, host_namespace=True)
     params = InitializeParams(
         protocol=(ProtocolVersion(major=1, minor=0), ProtocolVersion(major=1, minor=0)),
         role=ClientRole.UI,

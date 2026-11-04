@@ -75,7 +75,7 @@ from aconsole.core.infrastructure.ipc.framing import (
     read_frame,
 )
 from aconsole.core.infrastructure.ipc.ring import EventRing
-from aconsole.core.infrastructure.ipc.server import allow_peer, peer_uid
+from aconsole.core.infrastructure.ipc.server import allow_peer, peer_credentials, same_mnt_namespace
 from aconsole.core.infrastructure.ipc.session import Connection
 from aconsole.core.infrastructure.knowledge import KnowledgeService
 from aconsole.core.infrastructure.mcp.server import TabTokens, beside_ingest, build_server, http_app
@@ -207,12 +207,17 @@ def release_lock(descriptor: int) -> None:
         os.close(descriptor)
 
 
+def credentials(sock: object) -> tuple[int, int]:
+    """Peer pid and uid from the kernel, or (-1, -1) when the socket has none."""
+    try:
+        return peer_credentials(sock)
+    except AttributeError, OSError, TypeError, struct.error:
+        return -1, -1
+
+
 def credentials_uid(sock: object) -> int:
     """Peer uid, or -1 when the socket has no credentials."""
-    try:
-        return peer_uid(sock)
-    except AttributeError, OSError, TypeError, struct.error:
-        return -1
+    return credentials(sock)[1]
 
 
 def initialize_role(frame: bytes) -> ClientRole | None:
@@ -1424,13 +1429,15 @@ class Daemon:
 
     async def _client(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter) -> None:
         raw = writer.get_extra_info("socket")  # pyright: ignore[reportAny] -- asyncio types this as Any
-        if not allow_peer(credentials_uid(raw)):  # pyright: ignore[reportAny] -- asyncio types this as Any
+        pid, uid = credentials(raw)  # pyright: ignore[reportAny] -- asyncio types this as Any
+        if not allow_peer(uid):
             writer.close()
             await writer.wait_closed()
             return
         connection = Connection(
             self._ring, tabs=self.tabs, approval_hold=self.approvals, setup_service=self.setup_service,
             review=self.review, knowledge=self.knowledge, git=self.git,
+            host_namespace=same_mnt_namespace(pid),
         )
         connection.on_agent_notice = self._agent_notice
         connection.on_screen_signal = self._screen_signal

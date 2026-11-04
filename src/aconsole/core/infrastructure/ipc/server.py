@@ -19,8 +19,8 @@ from aconsole.core.infrastructure.ipc.ring import EventRing
 from aconsole.core.infrastructure.ipc.session import Connection
 
 
-def peer_uid(sock: object) -> int:
-    """Uid from ``SO_PEERCRED``. A different uid is not this user."""
+def peer_credentials(sock: object) -> tuple[int, int]:
+    """Pid and uid from ``SO_PEERCRED``. The pid is the kernel's, not a value the client sent."""
     getsockopt = getattr(sock, "getsockopt", None)
     if not callable(getsockopt):
         message = "socket has no credentials"
@@ -29,8 +29,29 @@ def peer_uid(sock: object) -> int:
     if not isinstance(raw, (bytes, bytearray)):
         message = "credentials were not bytes"
         raise TypeError(message)
-    _pid, uid, _gid = struct.unpack("3i", bytes(raw))
+    pid, uid, _gid = struct.unpack("3i", bytes(raw))
+    return pid, uid
+
+
+def peer_uid(sock: object) -> int:
+    """Uid from ``SO_PEERCRED``. A different uid is not this user."""
+    _pid, uid = peer_credentials(sock)
     return uid
+
+
+def same_mnt_namespace(pid: int) -> bool:
+    """True when ``pid`` shares this process's mount namespace.
+
+    A container has its own. The inode of ``/proc/<pid>/ns/mnt`` is the namespace itself.
+    """
+    if pid <= 0:
+        return False
+    try:
+        ours = Path("/proc/self/ns/mnt").stat()
+        theirs = Path(f"/proc/{pid}/ns/mnt").stat()
+    except OSError:
+        return False
+    return ours.st_dev == theirs.st_dev and ours.st_ino == theirs.st_ino
 
 
 def allow_peer(uid: int) -> bool:
@@ -48,13 +69,13 @@ def note_peer(peers: list[int], uid: int) -> None:
         del peers[:extra]
 
 
-def _peer_uid(writer: asyncio.StreamWriter) -> int:
+def _peer(writer: asyncio.StreamWriter) -> tuple[int, int]:
     try:
         # asyncio types the socket as Any.
         socket_info = writer.get_extra_info("socket")  # pyright: ignore[reportAny] -- asyncio types this as Any
-        return peer_uid(socket_info)  # pyright: ignore[reportAny] -- asyncio types this as Any
+        return peer_credentials(socket_info)  # pyright: ignore[reportAny] -- asyncio types this as Any
     except AttributeError, OSError, TypeError, struct.error:
-        return -1
+        return -1, -1
 
 
 @final
@@ -91,13 +112,13 @@ class IpcServer:
         await server.wait_closed()
 
     async def _client(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter) -> None:
-        uid = _peer_uid(writer)
+        pid, uid = _peer(writer)
         note_peer(self.peers, uid)
         if not allow_peer(uid):
             writer.close()
             await writer.wait_closed()
             return
-        connection = Connection(self.ring, tabs=self.tabs)
+        connection = Connection(self.ring, tabs=self.tabs, host_namespace=same_mnt_namespace(pid))
         try:
             while True:
                 try:

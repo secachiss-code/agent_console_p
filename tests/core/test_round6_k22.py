@@ -172,7 +172,7 @@ def test_round6_k22_burst_commits_in_batches(store: tuple[Writer, Engine]) -> No
 
 
 def _ready_connection() -> Connection:
-    connection = Connection(EventRing(), outbound_limit=2)
+    connection = Connection(EventRing(), outbound_limit=2, host_namespace=True)
     _ = connection.receive(_init())
     return connection
 

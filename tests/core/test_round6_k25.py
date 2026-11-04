@@ -397,7 +397,7 @@ def test_round6_k25_sidecar_may_only_call_sidecar_methods() -> None:
 
 def test_round6_k25_ui_may_not_call_sidecar_methods() -> None:
     service, _ports, _events = _service()
-    connection = Connection(EventRing(), tabs=service)
+    connection = Connection(EventRing(), tabs=service, host_namespace=True)
     ready = _reply(connection, _init_frame(ClientRole.UI))
     assert isinstance(ready, ResponseOk)
     refused = _reply(connection, _request(2, "sidecar/started", b"{}"))
@@ -425,7 +425,7 @@ def test_round6_k25_sidecar_initialize_needs_a_live_one_shot_token() -> None:
 
 
 def test_round6_k25_deliver_waits_for_subscribe() -> None:
-    connection = Connection(EventRing())
+    connection = Connection(EventRing(), host_namespace=True)
     assert connection.push_event(_notice("before-init"), _WHEN) == ()
     ready = _reply(connection, _init_frame(ClientRole.UI))
     assert isinstance(ready, ResponseOk)
