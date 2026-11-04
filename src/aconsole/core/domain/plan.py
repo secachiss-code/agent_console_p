@@ -390,7 +390,11 @@ class Plan:
 
     def ready(self, key: str) -> bool:
         node = self.get(key)
-        return node.status is NodeStatus.PENDING and not self.unmet_blockers(key)
+        return (
+            node.status is NodeStatus.PENDING
+            and not self.unmet_blockers(key)
+            and self._path_blocker(node, None) is None
+        )
 
     def priority(self, key: str, now: datetime) -> float:
         node = self.get(key)
@@ -546,12 +550,19 @@ class Plan:
         if move.tab_id is None:
             message = "claim requires tab_id"
             raise ValueError(message)
+        blocker = self._path_blocker(node, move.tab_id)
+        if blocker is not None:
+            raise _fail(_OVERLAP, "PATHS_OVERLAP", (blocker,))
+
+    def _path_blocker(self, node: Node, tab_id: str | None) -> str | None:
         for other in self._nodes.values():
             if other.key == node.key or other.status not in _LEASED:
                 continue
-            if other.tab_id == move.tab_id or not paths_overlap(node.paths, other.paths):
+            if tab_id is not None and other.tab_id == tab_id:
                 continue
-            raise _fail(_OVERLAP, "PATHS_OVERLAP", (other.key,))
+            if paths_overlap(node.paths, other.paths):
+                return other.key
+        return None
 
     def _require_fence(self, node: Node, fence: int | None, at: datetime) -> None:
         if node.lease_expires_at is None or _lease_over(node, at):
