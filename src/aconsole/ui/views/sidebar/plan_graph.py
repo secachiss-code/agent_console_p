@@ -84,7 +84,7 @@ class PlanGraph(Gtk.Box):
             button = Gtk.Button()
             label = Gtk.Label(ellipsize=Pango.EllipsizeMode.END, max_width_chars=16, justify=Gtk.Justification.CENTER)
             # The key is a reference, the title is what is read: the title carries the weight.
-            key = f'<span size="small" fgalpha="72%">{GLib.markup_escape_text(node.key)}</span>'
+            key = f'<span size="small">{GLib.markup_escape_text(node.key)}</span>'
             name = f'<span weight="600">{GLib.markup_escape_text(node.title)}</span>'
             label.set_markup(f"{key}\n{name}")
             label.set_tooltip_text(f"{node.key} {node.title}")
