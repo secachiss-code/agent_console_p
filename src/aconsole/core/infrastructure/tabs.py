@@ -6,7 +6,6 @@ import getpass
 import logging
 import os
 import signal
-import subprocess
 import sys
 import threading
 import time
@@ -17,6 +16,7 @@ from typing import Final, final
 
 from aconsole.contracts.app import AgentInfo
 from aconsole.contracts.common import AgentKind
+from aconsole.core.application.ports.git_repo import GitCommandError
 from aconsole.core.application.services.tabs import TabRequestError, TabService
 from aconsole.core.domain.agent import CAPABILITIES
 from aconsole.core.domain.agent import AgentKind as DomainAgent
@@ -27,6 +27,7 @@ from aconsole.core.infrastructure.agents.opencode import limits as opencode_limi
 from aconsole.core.infrastructure.containers.distrobox_env import DistroboxEnvCache, DistroboxError
 from aconsole.core.infrastructure.containers.login import LOGIN_SHELL
 from aconsole.core.infrastructure.containers.podman import ContainerError, ExecRequest, Inspected, Podman
+from aconsole.core.infrastructure.git.runner import GitCall, GitRunner
 from aconsole.core.infrastructure.git.worktrees import WorktreeError, WorktreeRequest, Worktrees
 from aconsole.core.infrastructure.host_bins import host_binary
 
@@ -285,7 +286,7 @@ class HostRepos:
     """`RepoInspector` backed by git."""
 
     def __init__(self, git: Path = _GIT, *, timeout_s: float = _GIT_TIMEOUT_S) -> None:
-        self._git = git
+        self._runner = GitRunner(git)
         self._timeout_s = timeout_s
 
     def toplevel(self, path: Path) -> tuple[Path, str] | None:
@@ -296,14 +297,13 @@ class HostRepos:
         return Path(top), self._ask(path, "symbolic-ref", "--short", "HEAD") or _DEFAULT_BRANCH
 
     def _ask(self, path: Path, *args: str) -> str | None:
-        try:
-            done = subprocess.run(  # noqa: S603 -- argv is a list; the git path is absolute
-                [str(self._git), "-C", str(path), *args],
-                check=False, capture_output=True, text=True, timeout=self._timeout_s,
-            )
-        except (OSError, subprocess.SubprocessError):
+        if not path.is_absolute():
             return None
-        return done.stdout.strip() if done.returncode == 0 else None
+        try:
+            done = self._runner.invoke(path, args, GitCall(timeout_s=self._timeout_s))
+        except GitCommandError:
+            return None
+        return done.text.strip() if done.code == 0 else None
 
 
 @final

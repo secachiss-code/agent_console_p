@@ -6,21 +6,23 @@ import ast
 import stat
 from pathlib import Path
 
+import pytest
+
 from aconsole.core.infrastructure.git.checkpoints import GitCheckpoints
 from aconsole.core.infrastructure.git.diff import GitDiff
 from aconsole.core.infrastructure.git.history import GitHistory
 from aconsole.core.infrastructure.git.operations import GitMutations
-from aconsole.core.infrastructure.git.runner import GitRunner
+from aconsole.core.infrastructure.git.runner import GitCall, GitRunner
 from tests.core.git_helpers import commit, git, new_repo
 
-_PACKAGE = Path(__file__).parents[2] / "src/aconsole/core/infrastructure/git"
+_CORE = Path(__file__).parents[2] / "src/aconsole/core"
 _REF = "refs/aconsole/checkpoints/tab-1/1"
 
 
 def test_only_the_runner_spawns_git() -> None:
     offenders = [
         f"{path.name}:{node.lineno}"
-        for path in sorted(_PACKAGE.glob("*.py"))
+        for path in sorted(_CORE.rglob("*.py"))
         if path.name != "runner.py"
         for node in ast.walk(ast.parse(path.read_text(encoding="utf-8")))
         if isinstance(node, ast.Call) and _is_subprocess(node.func) and _mentions_git(node)
@@ -88,6 +90,123 @@ def test_ssh_command_from_the_repository_does_not_run(tmp_path: Path) -> None:
     _ = git(repo, "config", "core.sshCommand", str(script))
     _ = GitRunner().read(repo, "ls-remote", "git@127.0.0.1:none.git", codes=frozenset(range(256)))
     assert not marker.exists()
+
+
+@pytest.mark.parametrize("key", ["clean", "process"])
+def test_a_filter_from_the_repository_does_not_run_on_status_or_diff(tmp_path: Path, key: str) -> None:
+    repo, marker, script = _dirty_repo(tmp_path, "* filter=evil\n")
+    _ = git(repo, "config", f"filter.evil.{key}", str(script))
+    _ = git(repo, "config", "filter.evil.required", "true")
+    runner = GitRunner()
+    assert runner.invoke(repo, ("status", "--porcelain")).code == 0
+    assert runner.invoke(repo, ("diff",)).code == 0
+    _ = GitHistory(runner).status(repo)
+    assert not marker.exists()
+
+
+def test_a_filter_name_holding_an_equals_sign_is_still_overridden(tmp_path: Path) -> None:
+    repo, marker, script = _dirty_repo(tmp_path, "* filter=a=b\n")
+    _ = git(repo, "config", "filter.a=b.clean", str(script))
+    assert GitRunner().invoke(repo, ("status", "--porcelain")).code == 0
+    assert not marker.exists()
+
+
+def test_a_smudge_filter_does_not_run_when_a_file_is_restored(tmp_path: Path) -> None:
+    repo, marker, script = _dirty_repo(tmp_path, "")
+    _ = git(repo, "config", "filter.evil.smudge", str(script))
+    (repo / ".gitattributes").write_text("* filter=evil\n", encoding="utf-8")
+    assert GitRunner().invoke(repo, ("checkout", "--", "f.txt"), GitCall(write=True)).code == 0
+    assert not marker.exists()
+
+
+@pytest.mark.parametrize("command", [("show", "HEAD"), ("log", "-p", "-1")])
+def test_textconv_does_not_run_outside_git_diff(tmp_path: Path, command: tuple[str, ...]) -> None:
+    repo, marker, script = _dirty_repo(tmp_path, "* diff=evil\n")
+    _ = git(repo, "config", "diff.evil.textconv", str(script))
+    assert GitRunner().invoke(repo, command).code == 0
+    assert not marker.exists()
+
+
+def test_a_merge_driver_does_not_run_and_the_conflict_stays_visible(tmp_path: Path) -> None:
+    repo = new_repo(tmp_path / "repo")
+    _ = commit(repo, "f.txt", "base\n", "init")
+    (repo / ".gitattributes").write_text("* merge=evil\n", encoding="utf-8")
+    _ = commit(repo, ".gitattributes", "* merge=evil\n", "attrs")
+    marker = tmp_path / "ran"
+    script = tmp_path / "evil.sh"
+    _script(script, marker)
+    _ = git(repo, "config", "merge.evil.driver", str(script))
+    _ = git(repo, "checkout", "-q", "-b", "other")
+    _ = commit(repo, "f.txt", "other\n", "other")
+    _ = git(repo, "checkout", "-q", "-")
+    _ = commit(repo, "f.txt", "ours\n", "ours")
+    merged = GitRunner().invoke(repo, ("merge", "other"), GitCall(write=True))
+    assert not marker.exists()
+    assert merged.code != 0
+
+
+def test_signing_and_its_program_from_the_repository_do_not_run(tmp_path: Path) -> None:
+    repo, marker, script = _dirty_repo(tmp_path, "")
+    _ = git(repo, "config", "gpg.program", str(script))
+    _ = git(repo, "config", "commit.gpgSign", "true")
+    assert GitRunner().invoke(repo, ("commit", "-qam", "y"), GitCall(write=True)).code == 0
+    assert not marker.exists()
+
+
+@pytest.mark.parametrize("command", [("show", "HEAD"), ("log", "-p", "-1"), ("diff", "HEAD~0")])
+def test_a_diff_driver_command_does_not_run(tmp_path: Path, command: tuple[str, ...]) -> None:
+    repo, marker, script = _dirty_repo(tmp_path, "* diff=evil\n")
+    _ = git(repo, "add", ".gitattributes", "f.txt")
+    _ = git(repo, "commit", "-qm", "y")
+    _ = git(repo, "config", "diff.evil.command", str(script))
+    assert GitRunner().invoke(repo, command).code == 0
+    assert not marker.exists()
+
+
+def test_showing_a_signature_does_not_run_a_verifier_from_the_repository(tmp_path: Path) -> None:
+    repo, marker, script = _dirty_repo(tmp_path, "")
+    _ = git(repo, "config", "gpg.format", "ssh")
+    _ = git(repo, "config", "gpg.ssh.program", str(script))
+    (repo / "signers").write_text("", encoding="utf-8")
+    _ = git(repo, "config", "gpg.ssh.allowedSignersFile", str(repo / "signers"))
+    _ = git(repo, "config", "log.showSignature", "true")
+    tree = git(repo, "rev-parse", "HEAD^{tree}").strip()
+    who = "A <a@example.com> 1700000000 +0000"
+    signed = (
+        f"tree {tree}\nauthor {who}\ncommitter {who}\n"
+        "gpgsig -----BEGIN SSH SIGNATURE-----\n x\n -----END SSH SIGNATURE-----\n\nsigned\n"
+    )
+    (repo / "object").write_text(signed, encoding="utf-8")
+    head = git(repo, "hash-object", "-t", "commit", "-w", "object").strip()
+    _ = git(repo, "update-ref", "HEAD", head)
+    assert GitRunner().invoke(repo, ("log", "-1")).code == 0
+    assert not marker.exists()
+
+
+@pytest.mark.parametrize("key", ["cmd", "command"])
+def test_a_trailer_command_from_the_repository_does_not_run(tmp_path: Path, key: str) -> None:
+    repo, marker, script = _dirty_repo(tmp_path, "")
+    _ = git(repo, "config", f"trailer.evil.{key}", str(script))
+    asked = ("--trailer", "Node: X", "--trailer", "evil: y")
+    said = GitRunner().read(repo, "interpret-trailers", *asked, stdin=b"subject\n").text
+    assert not marker.exists()
+    assert "Node: X" in said
+
+
+def test_a_folder_that_is_not_there_is_an_exit_code_not_an_exception(tmp_path: Path) -> None:
+    assert GitRunner().invoke(tmp_path / "gone", ("status",)).code != 0
+
+
+def _dirty_repo(tmp_path: Path, attributes: str) -> tuple[Path, Path, Path]:
+    repo = new_repo(tmp_path / "repo")
+    _ = commit(repo, "f.txt", "one\n", "init")
+    (repo / "f.txt").write_text("two\n", encoding="utf-8")
+    if attributes:
+        (repo / ".gitattributes").write_text(attributes, encoding="utf-8")
+    marker = tmp_path / "ran"
+    script = tmp_path / "evil.sh"
+    _script(script, marker)
+    return repo, marker, script
 
 
 def _script(path: Path, marker: Path) -> None:
