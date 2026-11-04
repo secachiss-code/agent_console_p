@@ -41,9 +41,16 @@ _READY_DEADLINE_S = 20.0
 _CATCH_UP_S = 0.01
 _CATCH_UP_DEADLINE_S = 1.0
 _BACKOFF_S = (0.05, 0.1, 0.2, 0.4, 0.8)
-_UI_CAPABILITIES = frozenset({
-    "events.v1", "approvals.inline", "terminal.inject", "notifications.desktop", "diff.v1", "checkpoints.v1",
-})
+_UI_CAPABILITIES = frozenset(
+    {
+        "events.v1",
+        "approvals.inline",
+        "terminal.inject",
+        "notifications.desktop",
+        "diff.v1",
+        "checkpoints.v1",
+    }
+)
 
 
 def core_log_path() -> Path:
@@ -170,11 +177,14 @@ class CoreClient:
         return await self._handshake()
 
     async def start_daemon(self, argv: list[str], *, runtime: Path | None = None) -> InitializeResult:
-        """Connect, or spawn ``argv`` when the core lock is free."""
+        """Connect, or spawn ``argv`` when the core lock is free.
+
+        A held lock means a core is already starting. This waits for its socket and does not spawn another.
+        """
         if runtime is not None:
             _socket, lock = core_paths(runtime)
             if lock_held(lock):
-                return await self.connect()
+                return await self._wait_for_socket()
         try:
             return await self.connect()
         except OSError:
@@ -190,16 +200,23 @@ class CoreClient:
             finally:
                 if log >= 0:
                     os.close(log)
-        deadline = asyncio.get_running_loop().time() + _READY_DEADLINE_S
+        return await self._wait_for_socket()
+
+    async def _wait_for_socket(self) -> InitializeResult:
+        """Retry until the socket accepts a handshake, or the ready deadline passes."""
+        loop = asyncio.get_running_loop()
+        deadline = loop.time() + _READY_DEADLINE_S
         delay = _BACKOFF_S[0]
-        while asyncio.get_running_loop().time() < deadline:
-            await asyncio.sleep(delay)
+        while True:
             try:
                 return await self.connect()
             except OSError:
-                delay = min(delay * 2, _BACKOFF_S[-1])
-        message = "core socket did not appear"
-        raise ConnectionError(message)
+                if loop.time() >= deadline:
+                    message = "core socket did not appear"
+                    raise ConnectionError(message) from None
+            remaining = deadline - loop.time()
+            await asyncio.sleep(min(delay, remaining))
+            delay = min(delay * 2, _BACKOFF_S[-1])
 
     async def replace_daemon(self, pid: int, argv: list[str], *, runtime: Path) -> InitializeResult:
         """Stop the core on ``pid`` and start ``argv``. Agents keep running; the new core restores the tabs.

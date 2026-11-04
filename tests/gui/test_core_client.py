@@ -7,6 +7,7 @@ import logging
 import os
 import sys
 import tempfile
+import time
 from pathlib import Path
 
 import pytest
@@ -93,6 +94,21 @@ def test_fake_errors_resync_after_a_seq_gap() -> None:
 
 def test_client_starts_the_fake_daemon() -> None:
     asyncio.run(_spawn())
+
+
+def test_held_lock_waits_for_the_socket_and_does_not_spawn() -> None:
+    asyncio.run(_held_lock_waits())
+
+
+def test_held_lock_reports_when_the_socket_never_appears(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr("aconsole.ui.client.core_client._READY_DEADLINE_S", 0.3)
+    started = time.monotonic()
+    asyncio.run(_held_lock_never())
+    assert time.monotonic() - started < 2
+
+
+def test_free_lock_still_starts_one_core() -> None:
+    asyncio.run(_free_lock_starts())
 
 
 def test_send_failure_during_close_consumes_pending_future_exception(
@@ -195,6 +211,77 @@ async def _spawn() -> None:
         assert client.daemon_pid is not None
     finally:
         await client.close()
+
+
+async def _held_lock_waits() -> None:
+    runtime = Path(tempfile.mkdtemp(prefix="aconsole-gui-"))
+    socket, lock = core_paths(runtime)
+    socket.parent.mkdir()
+    held = _hold(lock)
+    marker = runtime / "spawned"
+    late: FakeCore | None = None
+
+    async def listen_late() -> None:
+        nonlocal late
+        await asyncio.sleep(0.2)
+        late = FakeCore(str(socket), "demo")
+        await asyncio.to_thread(late.start)
+
+    waiter = asyncio.create_task(listen_late())
+    client = CoreClient(str(socket))
+    try:
+        _ = await client.start_daemon(_marker_argv(marker), runtime=runtime)
+        assert client.daemon_pid is None
+        assert not marker.exists()
+    finally:
+        await client.close()
+        await waiter
+        if late is not None:
+            late.stop()
+        os.close(held)
+
+
+async def _held_lock_never() -> None:
+    runtime = Path(tempfile.mkdtemp(prefix="aconsole-gui-"))
+    socket, lock = core_paths(runtime)
+    socket.parent.mkdir()
+    held = _hold(lock)
+    marker = runtime / "spawned"
+    client = CoreClient(str(socket))
+    try:
+        with pytest.raises(ConnectionError, match="core socket did not appear"):
+            _ = await client.start_daemon(_marker_argv(marker), runtime=runtime)
+        assert client.daemon_pid is None
+        assert not marker.exists()
+    finally:
+        await client.close()
+        os.close(held)
+
+
+async def _free_lock_starts() -> None:
+    runtime = Path(tempfile.mkdtemp(prefix="aconsole-gui-"))
+    socket, _lock = core_paths(runtime)
+    socket.parent.mkdir()
+    client = CoreClient(str(socket))
+    try:
+        _ = await client.start_daemon(
+            [sys.executable, "-m", "aconsole.core", "--fake", "demo", "--socket", str(socket)],
+            runtime=runtime,
+        )
+        assert client.daemon_pid is not None
+    finally:
+        await client.close()
+
+
+def _hold(lock: Path) -> int:
+    _ = lock.write_text("", encoding="utf-8")
+    descriptor = os.open(lock, os.O_RDWR)
+    fcntl.flock(descriptor, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    return descriptor
+
+
+def _marker_argv(marker: Path) -> list[str]:
+    return [sys.executable, "-c", "import pathlib, sys; pathlib.Path(sys.argv[1]).write_text('x')", str(marker)]
 
 
 async def _send_close_race() -> None:
