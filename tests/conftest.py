@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import tempfile
 from typing import TYPE_CHECKING
 
 import pytest
@@ -28,3 +29,15 @@ def _isolated_git(tmp_path_factory: pytest.TempPathFactory, monkeypatch: pytest.
 def _isolated_ui_state(tmp_path_factory: pytest.TempPathFactory, monkeypatch: pytest.MonkeyPatch) -> None:
     """What the window remembers (folded sections) stays out of the real `~/.local/state`."""
     monkeypatch.setenv("XDG_STATE_HOME", str(tmp_path_factory.mktemp("state")))
+
+
+def pytest_configure(config: pytest.Config) -> None:
+    """Isolate HOME before collection, including modules that cache paths on import."""
+    directory = tempfile.TemporaryDirectory(prefix="aconsole-test-home-")
+    environment = pytest.MonkeyPatch()
+    environment.setenv("HOME", directory.name)
+    environment.setenv("XDG_CONFIG_HOME", f"{directory.name}/.config")
+    environment.setenv("XDG_CACHE_HOME", f"{directory.name}/.cache")
+    environment.setenv("XDG_DATA_HOME", f"{directory.name}/.local/share")
+    config.add_cleanup(directory.cleanup)
+    config.add_cleanup(environment.undo)

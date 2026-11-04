@@ -21,7 +21,7 @@ def test_samples_round_trip() -> None:
 
 
 def test_golden_count_covers_every_struct() -> None:
-    golden_dir = Path("tests/contracts/golden")
+    golden_dir = Path(__file__).resolve().parents[1] / "fixtures" / "contracts" / "golden"
     assert len(list(golden_dir.glob("*.json"))) >= len(struct_types())
 
 

@@ -90,7 +90,7 @@ def check_draft_schema(repo: Path) -> list[str]:
 
 def check_golden(repo: Path) -> list[str]:
     by_name = {struct.__name__: struct for struct in struct_types()}
-    golden = repo / "tests" / "contracts" / "golden"
+    golden = repo / "tests" / "fixtures" / "contracts" / "golden"
     files = sorted(golden.glob("*.json"))
     problems: list[str] = []
     if len(files) < len(by_name):

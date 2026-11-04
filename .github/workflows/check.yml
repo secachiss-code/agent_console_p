@@ -23,7 +23,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y gir1.2-adw-1 gir1.2-gtk-4.0 gir1.2-vte-3.91 \
-            libgirepository-2.0-dev libcairo2-dev xvfb
+            libgirepository-2.0-dev libcairo2-dev xvfb git podman desktop-file-utils
       - name: Install the two environments
         run: |
           uv python install 3.15t 3.15
@@ -32,14 +32,34 @@ jobs:
       - name: Lint, types, layers, contracts
         run: tools/check.sh
       - name: Core tests
+        env:
+          COVERAGE_FILE: .coverage.core
         run: >
           .venv-core/bin/python -m pytest tests/core tests/contracts tests/gate tests/hostrun tests/smoke
-          tests/test_package.py tests/test_contrast.py
+          tests/test_package.py tests/test_packaging.py tests/test_contrast.py
+          --cov=aconsole --cov-branch --cov-report= --cov-fail-under=0
           -p no:cacheprovider --basetemp=/tmp/ac-core
       - name: Interface tests
+        env:
+          COVERAGE_FILE: .coverage.ui
         # Runs after failed core tests too, so one red run shows both halves.
         if: ${{ !cancelled() }}
         run: >
           xvfb-run -a .venv-ui/bin/python -m pytest tests/gui tests/ui tests/smoke
+          --cov=aconsole --cov-branch --cov-report= --cov-fail-under=0
           -p no:cacheprovider --basetemp=/tmp/ac-ui
           --deselect tests/gui/front/test_git_scale_ui.py::test_scrolling_a_long_history
+      - name: Enforce combined coverage
+        run: |
+          .venv-core/bin/python -m coverage combine
+          .venv-core/bin/python -m coverage report
+      - name: Build and install Debian package
+        run: |
+          .venv-ui/bin/python packaging/build_deb.py
+          sudo apt-get install -y ./dist/aconsole_*_amd64.deb
+          cd /tmp
+          env -u PYTHONPATH -u PYTHONHOME /usr/bin/aconsole --help
+          # The core prints usage and returns 2 for unsupported arguments, including --help.
+          env -u PYTHONPATH -u PYTHONHOME /usr/bin/aconsoled --help || test "$?" -eq 2
+          /opt/aconsole/core/bin/python -c 'import sys; assert not sys._is_gil_enabled(); import aconsole.core'
+          /opt/aconsole/ui/bin/python -c 'import sys; assert sys._is_gil_enabled(); import aconsole.ui'
