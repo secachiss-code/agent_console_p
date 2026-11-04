@@ -14,12 +14,13 @@ import gi
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
-from gi.repository import Adw, Gdk, Gio, Gtk  # noqa: E402
+from gi.repository import Adw, Gdk, Gio, GLib, Gtk  # noqa: E402
 
 from aconsole.ui.bootstrap import spawn_task  # noqa: E402
 from aconsole.ui.client.core_age import core_is_older_than_code  # noqa: E402
 from aconsole.ui.snapshot import after_first_paint, capture_window  # noqa: E402
 from aconsole.ui.viewmodels.tabs_vm import TabsViewModel  # noqa: E402
+from aconsole.ui.views.startup import StartupWindow  # noqa: E402
 from aconsole.ui.views.window import MainWindow  # noqa: E402
 
 if TYPE_CHECKING:
@@ -27,6 +28,7 @@ if TYPE_CHECKING:
 
 _LOG = logging.getLogger(__name__)
 _STOP_DEADLINE_S = 5.0
+_STARTUP_WINDOW_DELAY_MS = 300
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -56,6 +58,8 @@ class AConsoleApp(Adw.Application):
         self.failed: bool = False
         self._starting: bool = False
         self._finishing: bool = False
+        self.startup_window: StartupWindow | None = None
+        self._startup_timer: int | None = None
 
     @override
     def do_startup(self) -> None:
@@ -73,7 +77,26 @@ class AConsoleApp(Adw.Application):
         elif not self._starting:
             self._starting = True
             self.hold()
+            if self.snapshot_request is None:
+                self.startup_window = StartupWindow(self)
+                _ = self.startup_window.connect("close-request", self._startup_closed)
+                # A start that takes no time should not flash a window first.
+                self._startup_timer = GLib.timeout_add(_STARTUP_WINDOW_DELAY_MS, self._show_starting)
             _ = spawn_task(self._open())
+
+    def _show_starting(self) -> bool:
+        self._startup_timer = None
+        if self.startup_window is not None:
+            self.startup_window.present()
+        return GLib.SOURCE_REMOVE
+
+    def _startup_over(self) -> None:
+        if self._startup_timer is not None:
+            _ = GLib.source_remove(self._startup_timer)
+            self._startup_timer = None
+        if self.startup_window is not None:
+            window, self.startup_window = self.startup_window, None
+            window.destroy()
 
     async def _open(self) -> None:
         try:
@@ -105,12 +128,46 @@ class AConsoleApp(Adw.Application):
                 self.window.set_default_size(request.width, request.height)
                 after_first_paint(self.window, self._capture)
             self.window.present()
-        except Exception:  # noqa: BLE001 -- report startup errors and exit instead of hanging the process
+            self._startup_over()
+        except Exception as error:  # noqa: BLE001 -- a start that failed must say so and never hang the process
             self.failed = True
             _LOG.exception("Cannot start AConsole")
-            await self._finish()
+            if self.startup_window is None:
+                await self._finish()
+            else:
+                self._show_failure(error)
         finally:
             self.release()
+
+    def _startup_closed(self, _window: Gtk.Window) -> bool:
+        if self.failed:
+            self._give_up()
+        else:
+            _ = spawn_task(self._finish())
+        return False
+
+    def _show_failure(self, error: Exception) -> None:
+        """Stay open, or the person is left with a window that vanished and no reason."""
+        if self._startup_timer is not None:
+            _ = GLib.source_remove(self._startup_timer)
+            self._startup_timer = None
+        if self.startup_window is None:
+            return
+        self.hold()
+        self.startup_window.show_failure(str(error) or type(error).__name__, self._retry_start, self._give_up)
+
+    def _retry_start(self) -> None:
+        if self.startup_window is None:
+            return
+        self.failed = False
+        self.startup_window.show_starting()
+        # The hold from the failure stays: _open releases it when it is done.
+        _ = spawn_task(self._open())
+
+    def _give_up(self) -> None:
+        self._startup_over()
+        self.release()
+        _ = spawn_task(self._finish())
 
     def _close_requested(self, window: Gtk.Window) -> bool:
         # The window goes at once; stopping the core must never be what the user is left looking at.

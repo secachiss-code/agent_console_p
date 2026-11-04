@@ -50,7 +50,7 @@ from aconsole.core.bootstrap import Daemon
 from aconsole.core.domain.errors import DomainError
 from aconsole.core.infrastructure.containers.login import LOGIN_SHELL
 from aconsole.core.infrastructure.ipc.framing import decode_envelope, encode_line
-from aconsole.core.infrastructure.setup_checks import HostSetupProbe, SetupEnvironment
+from aconsole.core.infrastructure.setup_checks import HostSetupFixes, HostSetupProbe, SetupEnvironment
 from tests.core.conftest import wait_for_socket
 
 _AT = datetime(2026, 10, 31, 12, 0, tzinfo=UTC)
@@ -248,7 +248,7 @@ def test_host_setup_probe_reports_all_eight_categories_from_fake_environment(tmp
     assert tuple(check.id for check in checks) == _CHECK_IDS
     assert all(check.ok and check.severity == "info" for check in checks)
     assert by_id["host_dependencies"].detail == "podman and distrobox"
-    assert by_id["agent_login"].detail == "Agent authentication status; unsupported agents require manual verification"
+    assert by_id["agent_login"].ok
     assert by_id["storage"].detail == str(tmp_path / "Obsidian" / "AConsole")
     assert ("podman", "exec", "agent-claude", "claude", "auth", "status") in environment.calls
     # A check sees what a tab will see: the same user, the same way of finding the agent.
@@ -279,17 +279,59 @@ def test_host_setup_probe_marks_missing_evidence_for_each_category(tmp_path: Pat
     assert all(isinstance(argv, tuple) and argv for argv in environment.calls)
 
 
-def test_host_setup_probe_does_not_claim_login_for_unsupported_agent_kinds(tmp_path: Path) -> None:
+def test_an_agent_that_cannot_report_its_login_is_not_a_failed_check(tmp_path: Path) -> None:
     environment = _FakeSetupEnvironment(tmp_path)
     environment.containers = ("agent-claude", "agent-codex")
 
     checks = {check.id: check for check in HostSetupProbe(environment).run_checks()}
 
     assert checks["agent_versions"].ok is True
-    assert checks["agent_login"].ok is False
-    detail = checks["agent_login"].detail
-    assert detail is not None
-    assert "unsupported agents require manual verification" in detail
+    assert checks["agent_login"].ok is True
+    assert checks["agent_login"].command is None
+
+
+def test_no_containers_fails_one_check_and_says_what_to_run(tmp_path: Path) -> None:
+    environment = _FakeSetupEnvironment(tmp_path)
+    environment.fail_category("agent_containers")
+
+    checks = {check.id: check for check in HostSetupProbe(environment).run_checks()}
+
+    assert [check_id for check_id, check in checks.items() if not check.ok] == ["agent_containers"]
+    assert "distrobox create" in (checks["agent_containers"].command or "")
+
+
+@pytest.mark.parametrize("category", _CHECK_IDS)
+def test_every_failed_check_names_a_command_and_a_passed_one_none(tmp_path: Path, category: str) -> None:
+    environment = _FakeSetupEnvironment(tmp_path)
+    assert all(check.command is None for check in HostSetupProbe(environment).run_checks())
+
+    environment.fail_category(category)
+
+    check = next(item for item in HostSetupProbe(environment).run_checks() if item.id == category)
+    assert check.command
+
+
+def test_a_failed_check_names_what_is_missing(tmp_path: Path) -> None:
+    environment = _FakeSetupEnvironment(tmp_path)
+    environment.fail_category("host_dependencies")
+
+    check = next(item for item in HostSetupProbe(environment).run_checks() if item.id == "host_dependencies")
+
+    assert check.detail == "distrobox"
+    assert check.command == "sudo apt install distrobox"
+
+
+def test_a_missing_notes_folder_can_be_created_and_only_under_home(tmp_path: Path) -> None:
+    fixes = HostSetupFixes(tmp_path)
+    plan = fixes.preview("create_storage_directory")
+    assert plan is not None
+
+    result = fixes.apply(plan)
+
+    assert result.ok
+    assert (tmp_path / "Obsidian" / "AConsole").is_dir()
+    assert fixes.preview("no_such_fix") is None
+    assert fixes.preview("create_storage_directory") != plan
 
 
 def _service(

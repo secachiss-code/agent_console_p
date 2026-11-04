@@ -10,20 +10,40 @@ import gi
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
-from gi.repository import Adw, Gio, GLib, Gtk  # noqa: E402
+from gi.repository import Adw, Gio, GLib, Gtk, Pango  # noqa: E402
 
-from aconsole.contracts.app import AgentInfo, ProjectView  # noqa: E402
+from aconsole.contracts.app import AgentInfo, CheckResult, ProjectView  # noqa: E402
 from aconsole.contracts.common import ProjectId, TabId  # noqa: E402
 from aconsole.contracts.events import AgentsChanged, ProjectsChanged, UiEvent  # noqa: E402
 from aconsole.contracts.settings import SettingsPatch  # noqa: E402
 from aconsole.ui.bootstrap import spawn_task  # noqa: E402
 from aconsole.ui.client.core_client import CoreClient  # noqa: E402
+from aconsole.ui.client.error_text import core_log_path  # noqa: E402
 from aconsole.ui.client.store import CoreStore  # noqa: E402
 from aconsole.ui.viewmodels.setup_vm import PreferencesViewModel, SetupViewModel  # noqa: E402
 from aconsole.ui.views.setup.messages import _ as translate  # noqa: E402
+from aconsole.ui.views.setup.messages import known  # noqa: E402
 
 _PREVIEW_STEP = 2
 _DONE_STEP = 4
+
+def _note(text: str) -> Gtk.Label:
+    label = Gtk.Label(label=text, xalign=0, wrap=True, wrap_mode=Pango.WrapMode.WORD_CHAR)
+    label.add_css_class("dim-label")
+    return label
+
+
+def _check_title(check: CheckResult) -> str:
+    key = f"setup.check.{check.id}"
+    return translate(key) if known(key) else check.title
+
+
+def _check_reason(check: CheckResult) -> str:
+    key = f"setup.reason.{check.id}"
+    if not known(key):
+        return check.detail or check.title
+    return translate(key).format(detail=check.detail or "")
+
 
 class SetupWizard(Adw.Dialog):
     def __init__(self, client: CoreClient, preferences: PreferencesViewModel, on_tab: Callable[[TabId], None]) -> None:
@@ -128,6 +148,8 @@ class SetupWizard(Adw.Dialog):
         self.first_task_button: Gtk.Button = Gtk.Button(label=translate("setup.open_task"))
         _ = self.first_task_button.connect("clicked", self._start_task)
         page.append(self.first_task_button)
+        self.no_agents_label: Gtk.Label = _note(translate("setup.no_agents"))
+        page.append(self.no_agents_label)
         _ = self.stack.add_named(page, "3")
 
     def _setup_navigation(self, box: Gtk.Box) -> None:
@@ -183,14 +205,42 @@ class SetupWizard(Adw.Dialog):
                     key = "setup.login"
                 self.checks_box.append(Gtk.Label(label=f"{agent.display_name} · {translate(key)}", xalign=0))
         for check in self.viewmodel.checks:
-            label = Gtk.Label(label=f"{'✓' if check.ok else '!'} {check.title}", xalign=0)
-            label.set_tooltip_text(check.detail)
-            self.checks_box.append(label)
+            self.checks_box.append(self._check_row(check))
+        self.checks_box.append(_note(translate("setup.log").format(path=core_log_path())))
         checks = tuple(check for check in self.viewmodel.checks if check.fix_id is not None)
         self._fix_ids = tuple(check.fix_id for check in checks if check.fix_id is not None)
         self._syncing_fixes = True
-        self.fix_dropdown.set_model(Gtk.StringList.new([check.title for check in checks]))
+        self.fix_dropdown.set_model(Gtk.StringList.new([_check_title(check) for check in checks]))
         self._syncing_fixes = False
+
+    def _check_row(self, check: CheckResult) -> Gtk.Box:
+        """A failed check says why and what to do in the open, not in a tooltip."""
+        row = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
+        row.append(Gtk.Label(label=f"{'✓' if check.ok else '!'} {_check_title(check)}", xalign=0))
+        if check.ok:
+            return row
+        row.append(_note(_check_reason(check)))
+        if check.command is not None:
+            row.append(self._command_row(check.command))
+        return row
+
+    def _command_row(self, command: str) -> Gtk.Box:
+        line = Gtk.Box(spacing=6)
+        text = Gtk.Label(
+            label=command, xalign=0, hexpand=True, wrap=True, wrap_mode=Pango.WrapMode.WORD_CHAR, selectable=True,
+        )
+        text.set_focusable(False)
+        text.add_css_class("monospace")
+        text.add_css_class("ac-approval-command")
+        line.append(text)
+        copy = Gtk.Button(label=translate("setup.copy_command"), valign=Gtk.Align.CENTER)
+        _ = copy.connect("clicked", self._copy_command, command)
+        line.append(copy)
+        return line
+
+    def _copy_command(self, _button: Gtk.Button, command: str) -> None:
+        self.get_clipboard().set(command)
+        self.status_label.set_label(translate("setup.copied"))
 
     def _valid(self, generation: int) -> bool:
         return self._active and generation == self._generation
@@ -223,6 +273,8 @@ class SetupWizard(Adw.Dialog):
         ))
         self.project_dropdown.set_sensitive(bool(self._projects))
         self.agent_dropdown.set_sensitive(bool(self._agents))
+        self.first_task_button.set_sensitive(bool(self._agents))
+        self.no_agents_label.set_visible(not self._agents)
 
     def _catalog_event(self, event: UiEvent, store: CoreStore) -> None:
         if isinstance(event, (AgentsChanged, ProjectsChanged)):
@@ -253,7 +305,7 @@ class SetupWizard(Adw.Dialog):
         if self._busy:
             return
         if self.step == _DONE_STEP:
-            self.skip()
+            self.finish()
             return
         self._navigate(self.step + 1)
 
@@ -332,6 +384,11 @@ class SetupWizard(Adw.Dialog):
                 self._set_busy(busy=False)
 
     def skip(self) -> None:
+        """Later means later: the wizard is back on the next start, until a person finishes it."""
+        if not self._busy:
+            _ = self.close()
+
+    def finish(self) -> None:
         if not self._busy:
             self._set_busy(busy=True)
             self.worker = spawn_task(self._complete(self._generation))

@@ -542,6 +542,7 @@ class CheckResult(msgspec.Struct, frozen=True, kw_only=True):
     detail: str | None
     fix_id: str | None
     requires_confirmation: bool
+    command: str | None = None
 
 
 class ChecksResult(msgspec.Struct, frozen=True, kw_only=True):

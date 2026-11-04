@@ -440,7 +440,7 @@ class ApprovalPanel(Gtk.Box):
                 self._toast(translate("approvals.closed"))
                 self._answer(card)
             else:
-                self._retry(card, error.error.message)
+                self._retry(card, str(error))
         except Exception as error:  # noqa: BLE001 -- the request is still open, so the card stays
             self._retry(card, str(error))
         else:
