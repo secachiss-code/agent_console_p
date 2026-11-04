@@ -906,8 +906,8 @@ class TabService:
     def restart(self, params: RestartParams) -> TabView:
         """Stop the old process and its orphans first, so a restart never leaves two agents in one tree.
 
-        When the orphan scan fails, the known pid is stopped but the tab does not go idle: an orphan may still
-        hold the tree, so the restart fails with CONTAINER_START_FAILED and the user can retry or close.
+        When the orphan scan fails, a kill fails, or a pid is still there, the known pid is stopped but the
+        tab does not go idle: an orphan may still hold the tree, so the restart fails with CONTAINER_START_FAILED.
         """
         tab = self._require(str(params.tab_id))
         scanned = self._stop(tab)
@@ -1103,20 +1103,30 @@ class TabService:
         return self._stop_orphans(tab)
 
     def _stop_orphans(self, tab: _Tab, *, attempts: int = 1) -> bool:
-        """Stop what still runs with this tab's id in its container. False when every scan failed."""
-        found: tuple[int, ...] | None = None
+        """Stop this tab's container processes. False when a scan or a kill failed, or a pid is still there."""
+        found = self._scan_orphans(tab, attempts)
+        if found is None or not self._signal_orphans(tab, found):
+            return False
+        if not found:
+            return True
+        left = self._scan_orphans(tab, 1)
+        return left == ()
+
+    def _scan_orphans(self, tab: _Tab, attempts: int) -> tuple[int, ...] | None:
         for _attempt in range(attempts):
             try:
-                found = self._ports.orphans(tab.container, tab.id)
+                return self._ports.orphans(tab.container, tab.id)
             except TabRequestError:
-                found = None
-            else:
-                break
-        if found is None:
-            return False
+                continue
+        return None
+
+    def _signal_orphans(self, tab: _Tab, found: tuple[int, ...]) -> bool:
         # These pids belong to the container's namespace: on the host the same numbers are other processes.
         for pid in found:
-            self._ports.stop_in_container(tab.container, pid)
+            try:
+                self._ports.stop_in_container(tab.container, pid)
+            except TabRequestError:
+                return False
         return True
 
     def _require(self, tab_id: str) -> _Tab:

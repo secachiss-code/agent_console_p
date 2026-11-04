@@ -34,6 +34,7 @@ from aconsole.contracts.events import TabAdded, TabRemoved, TabUpdated, UiEvent
 from aconsole.contracts.ipc import InitializeParams, ProtocolVersion, Request, ResponseErr, ResponseOk
 from aconsole.core.application.services.tabs import ProjectSeed, TabRequestError, TabService
 from aconsole.core.domain.clock import FrozenClock
+from aconsole.core.infrastructure.containers.podman import ContainerError
 from aconsole.core.infrastructure.ipc.framing import decode_envelope, encode_line
 from aconsole.core.infrastructure.ipc.ring import EventRing
 from aconsole.core.infrastructure.ipc.session import Connection
@@ -78,6 +79,9 @@ class _Ports:
         self.create_error: TabRequestError | None = None
         self.orphan_pids: tuple[int, ...] = ()
         self.orphan_error: TabRequestError | None = None
+        self.stop_error: TabRequestError | None = None
+        self.after_stop: tuple[int, ...] = ()
+        self._confirm = False
         self.scans: list[tuple[str, str]] = []
         # The listener of every service built by `_service`. Tests read tab state from these events.
         self.events: list[UiEvent] = []
@@ -93,6 +97,9 @@ class _Ports:
 
     def stop_in_container(self, _name: str, pid: int) -> None:
         self.stop_process(pid)
+        if self.stop_error is not None:
+            raise self.stop_error
+        self._confirm = True
 
     def stop_process(self, pid: int) -> None:
         self.stopped.append(pid)
@@ -127,6 +134,9 @@ class _Ports:
 
     def orphans(self, name: str, tab_id: str) -> tuple[int, ...]:
         self.scans.append((name, tab_id))
+        if self._confirm:
+            self._confirm = False
+            return self.after_stop
         if self.orphan_error is not None:
             raise self.orphan_error
         return self.orphan_pids
@@ -292,6 +302,36 @@ def test_tabs_remove_is_refused_for_dirty_and_ahead_trees() -> None:
     assert refusals == ["WORKTREE_DIRTY", "WORKTREE_DIRTY"]
     assert ports.removed == []
     assert _present(connection, 90, "tab-a")
+
+
+def test_tabs_launch_stays_down_when_a_stop_or_a_survivor_remains() -> None:
+    """A kill error is not a stopped process. A pid that is still there blocks the new terminal."""
+    service, ports = _service(_seed())
+    connection = _ready(service)
+    _ = _view(_call(connection, 2, "tab/open", _open()))
+    ports.orphan_pids = (77, 78)
+    ports.stop_error = TabRequestError("CONTAINER_START_FAILED")
+    failed = _call(connection, 3, "tab/launchSpec", _tab("tab-a"))
+    assert isinstance(failed, ResponseErr)
+    assert failed.error.message == "CONTAINER_START_FAILED"
+    assert ports.stopped == [77]
+    assert len(ports.scans) == 1
+    ports.stop_error = None
+    ports.stopped.clear()
+    ports.scans.clear()
+    ports.after_stop = (78,)
+    survived = _call(connection, 4, "tab/launchSpec", _tab("tab-a"))
+    assert isinstance(survived, ResponseErr)
+    assert survived.error.message == "CONTAINER_START_FAILED"
+    assert ports.stopped == [77, 78]
+    assert len(ports.scans) == 2
+    ports.after_stop = ()
+    ports.stopped.clear()
+    ports.scans.clear()
+    started = _spec(_call(connection, 5, "tab/launchSpec", _tab("tab-a")))
+    assert started.argv[5:8] == ("/usr/bin/podman", "exec", "agentbox")
+    assert ports.stopped == [77, 78]
+    assert len(ports.scans) == 2
 
 
 def test_tabs_launch_stays_down_when_the_orphan_scan_fails() -> None:
@@ -814,6 +854,18 @@ def test_orphans_are_stopped_inside_their_container_not_on_the_host(monkeypatch:
     monkeypatch.setattr("os.kill", host_kill)
     host.stop_in_container("agent-claude", 4242)
     assert calls == [("agent-claude", "sas", "kill", "-TERM", "4242")]
+
+
+def test_stop_in_container_reports_a_podman_failure(monkeypatch: pytest.MonkeyPatch) -> None:
+    host = HostTabs(bins=HostBins(podman=_PODMAN), socket_path="/sock", ingest_port="4", user="sas")
+
+    def run_in(_name: str, _user: str, _command: tuple[str, ...]) -> str:
+        message = "podman command failed"
+        raise ContainerError(message)
+
+    monkeypatch.setattr(host._podman, "run_in", run_in)
+    with pytest.raises(TabRequestError, match="CONTAINER_START_FAILED"):
+        host.stop_in_container("agent-claude", 4242)
 
 
 def _opened(service: TabService, agent: AgentKind, *, session: str | None = None) -> str:

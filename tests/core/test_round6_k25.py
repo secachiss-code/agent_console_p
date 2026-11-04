@@ -334,7 +334,7 @@ def test_round6_k25_restart_stops_the_old_process_and_its_orphans() -> None:
     restarted = service.restart(RestartParams(tab_id=tab, resume=True))
     assert ports.stopped == [_PID, _ORPHAN]
     assert ports.pauses == [_STOP_S]
-    assert ports.scans == [("agentbox", str(tab))]
+    assert ports.scans == [("agentbox", str(tab)), ("agentbox", str(tab))]
     assert restarted.status is TabStatus.IDLE
     assert restarted.started is False
     # No pid: no stop wait and no signal, but the orphan scan still runs.

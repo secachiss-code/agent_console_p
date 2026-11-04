@@ -55,6 +55,9 @@ class FakeTabPorts:
         self.state: str = "clean"
         self.orphan_pids: tuple[int, ...] = ()
         self.orphan_error: TabRequestError | None = None
+        self.stop_error: TabRequestError | None = None
+        self.after_stop: tuple[int, ...] = ()
+        self._confirm = False
         self.gate: threading.Event | None = None
 
     def new_id(self) -> str:
@@ -71,6 +74,9 @@ class FakeTabPorts:
 
     def stop_in_container(self, _name: str, pid: int) -> None:
         self.stop_process(pid)
+        if self.stop_error is not None:
+            raise self.stop_error
+        self._confirm = True
 
     def stop_process(self, pid: int) -> None:
         self.stopped.append(pid)
@@ -99,6 +105,9 @@ class FakeTabPorts:
 
     def orphans(self, name: str, tab_id: str) -> tuple[int, ...]:
         self.scans.append((name, tab_id))
+        if self._confirm:
+            self._confirm = False
+            return self.after_stop
         if self.orphan_error is not None:
             raise self.orphan_error
         return self.orphan_pids

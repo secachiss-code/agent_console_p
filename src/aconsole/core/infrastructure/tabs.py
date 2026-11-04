@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import contextlib
 import getpass
 import logging
 import os
@@ -120,8 +119,11 @@ class HostTabs:
             return
 
     def stop_in_container(self, name: str, pid: int) -> None:
-        with contextlib.suppress(ContainerError, ValueError):
+        """Signal one pid in this tab's container. A Podman error is a failed stop, not a success."""
+        try:
             _ = self._podman.run_in(name, self._user, ("kill", "-TERM", str(pid)))
+        except (ContainerError, ValueError) as exc:
+            raise TabRequestError(_START_FAILED) from exc
 
     def create_worktree(self, repo: str, tab_id: str, slug: str, base: str) -> tuple[str, str]:
         root = Path(repo)
