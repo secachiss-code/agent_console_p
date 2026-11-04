@@ -206,12 +206,27 @@ def test_system_title_buttons_keep_clear_header_space(
         settings.set_property("gtk-decoration-layout", previous_layout)
 
 
-def test_startup_connection_error_exits_without_a_window(tmp_path: Path) -> None:
+def test_startup_connection_error_says_so_and_exits_once_closed(tmp_path: Path) -> None:
+    from gi.repository import GLib
+
     from aconsole.ui.bootstrap import run_app
     from aconsole.ui.client.core_client import CoreClient
     from aconsole.ui.views.app import AConsoleApp
 
     app = AConsoleApp(CoreClient(str(tmp_path / "missing-core.sock")))
+    stayed: list[bool] = []
+
+    def look_and_close() -> bool:
+        if not app.failed:
+            return GLib.SOURCE_CONTINUE
+        window = app.startup_window
+        stayed.append(window is not None and window.get_visible())
+        if window is not None:
+            window.close()
+        return GLib.SOURCE_REMOVE
+
+    _ = GLib.timeout_add(100, look_and_close)
     assert run_app(lambda: app, ["aconsole-test-error"]) == 0
+    assert stayed == [True]
     assert app.failed
     assert app.window is None

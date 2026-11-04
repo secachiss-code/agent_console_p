@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import os
 import sys
 import tempfile
 from dataclasses import dataclass
@@ -20,6 +21,8 @@ from aconsole.ui.bootstrap import spawn_task  # noqa: E402
 from aconsole.ui.client.core_age import core_is_older_than_code  # noqa: E402
 from aconsole.ui.snapshot import after_first_paint, capture_window  # noqa: E402
 from aconsole.ui.viewmodels.tabs_vm import TabsViewModel  # noqa: E402
+from aconsole.contracts.common import TabId  # noqa: E402
+from aconsole.ui.views.approvals.alert import OPEN_APPROVAL_ACTION  # noqa: E402
 from aconsole.ui.views.startup import StartupWindow  # noqa: E402
 from aconsole.ui.views.window import MainWindow  # noqa: E402
 
@@ -49,6 +52,8 @@ class AConsoleApp(Adw.Application):
         scenario: str | None = None,
         core_command: list[str] | None = None,
     ) -> None:
+        # A non-unique app owns no bus name, so the shell's own backend could not call it back on a click.
+        _ = os.environ.setdefault("GNOTIFICATION_BACKEND", "freedesktop")
         super().__init__(application_id="io.github.aconsole.AConsole", flags=Gio.ApplicationFlags.NON_UNIQUE)
         self.client: CoreClient = client
         self.snapshot_request: SnapshotRequest | None = snapshot
@@ -69,6 +74,9 @@ class AConsoleApp(Adw.Application):
         display = Gdk.Display.get_default()
         if display is not None:
             Gtk.StyleContext.add_provider_for_display(display, provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+        open_tab = Gio.SimpleAction.new(OPEN_APPROVAL_ACTION, GLib.VariantType.new("s"))
+        _ = open_tab.connect("activate", self._open_approval)
+        self.add_action(open_tab)
 
     @override
     def do_activate(self) -> None:
@@ -83,6 +91,10 @@ class AConsoleApp(Adw.Application):
                 # A start that takes no time should not flash a window first.
                 self._startup_timer = GLib.timeout_add(_STARTUP_WINDOW_DELAY_MS, self._show_starting)
             _ = spawn_task(self._open())
+
+    def _open_approval(self, _action: Gio.SimpleAction, tab: GLib.Variant | None) -> None:
+        if self.window is not None and tab is not None:
+            self.window.open_approval(TabId(tab.get_string()))
 
     def _show_starting(self) -> bool:
         self._startup_timer = None
