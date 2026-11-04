@@ -32,3 +32,6 @@ cache/
 *.log.*
 logs/
 dist/
+
+# Per-worktree runtime state
+.aconsole/
