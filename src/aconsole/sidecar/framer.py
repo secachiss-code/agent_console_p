@@ -18,6 +18,8 @@ _ESU: Final = b"\x1b[?2026l"
 _OSC: Final = b"\x1b]"
 # BEL, an OSC start, or a finished BSU/ESU. A marker cut off at the end is checked separately.
 _MARK: Final = re.compile(rb"\x07|\x1b\]|\x1b\[\?2026[hl]")
+_PLAIN_TOKENS: Final = re.compile(rb"\x1b\][^\x07\x1b]*(?:\x1b(?!\\)[^\x07\x1b]*)*(?:\x07|\x1b\\|$)|\x07")
+_PREFIXES: Final = tuple(marker[:size] for marker in (_BSU, _ESU, _OSC) for size in range(1, len(marker)))
 _LEFT_BRACKET: Final = 0x5B
 _RIGHT_BRACKET: Final = 0x5D
 _ST: Final = b"\x1b\\"
@@ -109,28 +111,77 @@ class Framer:
         self._signals.clear()
         return found
 
+    def _plain_read(self) -> bytes | None:
+        data = self._pending
+        if self._depth or self._osc_since is not None:
+            return None
+        if _BSU in data or _ESU in data or data.endswith(_PREFIXES):
+            return None
+        signals: list[Signal] = []
+        complete = True
+
+        def replace(match: re.Match[bytes]) -> bytes:
+            nonlocal complete
+            raw = match.group()
+            if raw == b"\x07":
+                signals.append(Signal(kind="bell"))
+                return b""
+            if not raw.endswith((b"\x07", _ST)):
+                complete = False
+                return raw
+            if raw.startswith(_OWN_OSC):
+                signal = _signal_from_osc(raw)
+                if signal is not None:
+                    signals.append(signal)
+                return b""
+            return raw
+
+        output = _PLAIN_TOKENS.sub(replace, data)
+        if not complete:
+            return None
+        self._signals.extend(signals)
+        self.bytes_out += len(output)
+        data.clear()
+        return output
+
     def _drain(self, now: float) -> bytes:
+        plain_output = self._plain_read()
+        if plain_output is not None:
+            return plain_output
         out = bytearray()
         data = self._pending
         pos = 0
+        plain = 0
         length = len(data)
         while pos < length:
             found = _next_special(data, pos)
             if found >= length:
-                self._emit(data[pos:], out)
                 pos = length
                 break
-            if found > pos:
-                self._emit(data[pos:found], out)
+            # Links and shell-integration OSCs are ordinary output. Keep them in the
+            # surrounding run instead of copying and emitting each sequence separately.
+            if data.startswith(_OSC, found) and not _owned_osc(data, found):
+                end = _osc_end(data, found)
+                if end is not None:
+                    self._osc_since = None
+                    pos = end
+                    continue
+            if found > plain:
+                self._emit(data[plain:found], out)
             if data[found] == _BEL:
                 self._signals.append(Signal(kind="bell"))
                 pos = found + _ONE
+                plain = pos
                 continue
             step = self._escape(data, found, out, now)
             if step is None:
                 pos = found
+                plain = pos
                 break
             pos = step
+            plain = pos
+        if pos > plain:
+            self._emit(data[plain:pos], out)
         del data[:pos]
         return bytes(out)
 
