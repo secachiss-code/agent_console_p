@@ -9,7 +9,6 @@ from __future__ import annotations
 import os
 import re
 import stat
-import subprocess
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Final, final
@@ -24,7 +23,8 @@ from aconsole.core.application.ports.diff_reader import (
     DiffSummary,
     DiffWordLine,
 )
-from aconsole.core.application.ports.git_repo import DiffSpec
+from aconsole.core.application.ports.git_repo import DiffSpec, GitCommandError
+from aconsole.core.infrastructure.git.runner import GitCall, GitRunner
 from aconsole.core.infrastructure.host_bins import host_binary
 
 _TIMEOUT_S: Final = 30.0
@@ -77,7 +77,7 @@ class _Token:
 class GitDiff:
     """`git diff` against HEAD, or against the base the caller names."""
 
-    _git: Path
+    _runner: GitRunner
     _timeout_s: float
     _max_bytes: int
 
@@ -88,12 +88,13 @@ class GitDiff:
         timeout_s: float = _TIMEOUT_S,
         max_bytes: int = _MAX_BYTES,
     ) -> None:
-        if not git.is_absolute():
-            raise DiffReadError(_ABS_GIT, too_large=False, files=0, byte_count=0)
         if timeout_s <= 0 or max_bytes <= 0:
             message = "timeout and byte cap must be positive"
             raise DiffReadError(message, too_large=False, files=0, byte_count=0)
-        self._git = git
+        try:
+            self._runner = GitRunner(git, timeout_s=timeout_s)
+        except GitCommandError as exc:
+            raise DiffReadError(_ABS_GIT, too_large=False, files=0, byte_count=0) from exc
         self._timeout_s = timeout_s
         self._max_bytes = max_bytes
 
@@ -203,23 +204,13 @@ class GitDiff:
     def _git_stdout(self, repo: Path, argv: tuple[str, ...]) -> str:
         _absolute_repo(repo)
         try:
-            completed = subprocess.run(  # noqa: S603 -- argv is a list; the git path is absolute
-                (str(self._git), "-C", str(repo), *argv),
-                check=False,
-                capture_output=True,
-                timeout=self._timeout_s,
-                env=os.environ.copy(),
-                encoding="utf-8",
-                errors="replace",
-            )
-        except subprocess.TimeoutExpired as exc:
-            raise DiffReadError(_TIMED_OUT, too_large=False, files=0, byte_count=0) from exc
-        except FileNotFoundError as exc:
-            raise DiffReadError(_MISSING, too_large=False, files=0, byte_count=0) from exc
-        if completed.returncode != _OK:
+            completed = self._runner.invoke(repo, argv, GitCall(timeout_s=self._timeout_s))
+        except GitCommandError as exc:
+            raise DiffReadError(_diff_failure(str(exc)), too_large=False, files=0, byte_count=0) from exc
+        if completed.code != _OK:
             raise DiffReadError(_FAILED, too_large=False, files=0, byte_count=0)
-        raw = completed.stdout
-        size = len(raw.encode("utf-8"))
+        raw = completed.text
+        size = len(completed.stdout)
         if size > self._max_bytes:
             raise DiffReadError(
                 _TOO_LARGE,
@@ -258,6 +249,14 @@ def _sides(spec: DiffSpec) -> tuple[str, ...]:
     left = () if spec.left is None else (spec.left,)
     right = () if spec.right is None else (spec.right,)
     return (*cached, *left, *right)
+
+
+def _diff_failure(message: str) -> str:
+    if message == _TIMED_OUT:
+        return _TIMED_OUT
+    if message == _MISSING:
+        return _MISSING
+    return _FAILED
 
 
 def _absolute_repo(repo: Path) -> None:
@@ -522,5 +521,3 @@ def _spans(tokens: list[_Token], changed: str) -> tuple[str, tuple[tuple[int, in
     if not saw_common:
         return "".join(parts), ()
     return "".join(parts), tuple(spans)
-
-

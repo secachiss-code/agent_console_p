@@ -24,6 +24,9 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Final, Literal, final
 
+from aconsole.core.application.ports.git_repo import GitCommandError
+from aconsole.core.infrastructure.git.runner import GitCall, GitRunner
+
 _TIMEOUT_S: Final = 30.0
 _SETUP_TIMEOUT_S: Final = 30.0
 _OK: Final = 0
@@ -34,6 +37,7 @@ _SHA: Final = re.compile(r"[0-9a-f]{7,64}")
 _DIGEST_LEN: Final = 16
 _STATUS_PATH: Final = 3
 _ZERO: Final = "0"
+_C_AND_PATH: Final = 2
 _LOCK_REL: Final = ".aconsole/lock"
 _SHELL: Final = Path("/bin/sh")
 _FAILED: Final = "git command failed"
@@ -184,7 +188,7 @@ def recorded_start(git_dir: Path, dest: Path) -> str | None:
     """The commit `create` recorded for this worktree. None for one this core did not create."""
     try:
         _branch, base, recorded = _read_meta(_meta_path(git_dir, dest))
-    except (WorktreeError, OSError):
+    except WorktreeError, OSError:
         return None
     return base if recorded == dest else None
 
@@ -203,7 +207,7 @@ class Worktrees:
         _check_absolute(shell, _ABS_SHELL)
         if timeout_s <= 0:
             raise ValueError(_POSITIVE)
-        self._git = git
+        self._runner = GitRunner(git, timeout_s=timeout_s)
         self._shell = shell
         self._timeout_s = timeout_s
 
@@ -417,21 +421,27 @@ class Worktrees:
         return True
 
     def _run(self, args: tuple[str, ...]) -> str:
+        if len(args) <= _C_AND_PATH or args[0] != "-C":
+            raise WorktreeError(_FAILED)
+        command = next((word for word in args[_C_AND_PATH:] if not word.startswith("-")), "")
         try:
-            completed = subprocess.run(  # noqa: S603 -- argv is a list; the git path is absolute
-                [str(self._git), *args],
-                check=False,
-                capture_output=True,
-                text=True,
-                timeout=self._timeout_s,
+            completed = self._runner.invoke(
+                Path(args[1]),
+                args[_C_AND_PATH:],
+                GitCall(
+                    timeout_s=self._timeout_s,
+                    write=command not in {"status", "rev-parse", "rev-list"},
+                ),
             )
-        except subprocess.TimeoutExpired as exc:
-            raise WorktreeError(_TIMED_OUT) from exc
-        except FileNotFoundError as exc:
-            raise WorktreeError(_MISSING) from exc
-        if completed.returncode != _OK:
-            raise WorktreeError(_FAILED, code=completed.returncode, detail=completed.stderr)
-        return completed.stdout
+        except GitCommandError as exc:
+            if str(exc) == _TIMED_OUT:
+                raise WorktreeError(_TIMED_OUT) from exc
+            if str(exc) == _MISSING:
+                raise WorktreeError(_MISSING) from exc
+            raise WorktreeError(_FAILED, detail=exc.detail) from exc
+        if completed.code != _OK:
+            raise WorktreeError(_FAILED, code=completed.code, detail=completed.stderr)
+        return completed.text
 
 
 def _locations(request: WorktreeRequest) -> tuple[Path, Path]:

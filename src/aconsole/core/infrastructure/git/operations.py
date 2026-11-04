@@ -1,4 +1,15 @@
-"""Changes to a worktree. Hooks and signing stay on: `--no-verify` would hide what the user set up."""
+"""Changes to a worktree.
+
+Commit and merge are the user operations that run hooks. They do not pass `--no-verify`. The hooks that run are
+the scripts in the repository's own `hooks` directory (`$GIT_COMMON_DIR/hooks`), including a linked worktree.
+`core.hooksPath` from the repository config is not followed: an agent can write that key, and a commit would
+otherwise execute it on the host. A refusing hook is the answer, with its text. Signing stays on.
+
+Status, diff, snapshots, and every other git call point `core.hooksPath` at `/dev/null` and force
+`core.fsmonitor=false`, an empty `diff.external`, and `core.sshCommand` to the host `true`. Diffs also pass
+`--no-ext-diff` and `--no-textconv`. A merge that has no checkout still runs `pre-merge-commit` (or `pre-commit`
+when squashing) and `commit-msg` from that same hooks directory, against a throwaway index.
+"""
 
 from __future__ import annotations
 
@@ -8,9 +19,9 @@ import tempfile
 from pathlib import Path
 from typing import Final, final
 
-from aconsole.core.application.ports.git_repo import GitDone
+from aconsole.core.application.ports.git_repo import GitCommandError, GitDone
 from aconsole.core.infrastructure.git.checkpoints import GitCheckpoints
-from aconsole.core.infrastructure.git.runner import GitOutput, GitRunner
+from aconsole.core.infrastructure.git.runner import GitCall, GitOutput, GitRunner
 from aconsole.core.infrastructure.git.worktrees import forget_record, has_ignored_files
 
 _HOOK_TIMEOUT_S: Final = 300.0
@@ -39,7 +50,17 @@ class GitMutations:
         return _done(self._git.write(worktree, _LITERAL, "rm", "-q", "--cached", "--", *paths))
 
     def commit(self, worktree: Path, message: str) -> GitDone:
-        return _done(self._git.write(worktree, "commit", "-F", "-", stdin=message.encode(), timeout_s=_HOOK_TIMEOUT_S))
+        return _done(
+            self._git.write(
+                worktree,
+                "commit",
+                "-F",
+                "-",
+                stdin=message.encode(),
+                timeout_s=_HOOK_TIMEOUT_S,
+                hooks=True,
+            )
+        )
 
     def head(self, worktree: Path) -> str | None:
         output = self._git.read(worktree, "rev-parse", "--verify", "--quiet", "HEAD", codes=frozenset({0, 1}))
@@ -78,11 +99,32 @@ class GitMutations:
 
     def merge(self, worktree: Path, oid: str, mode: str, message: str) -> GitDone:
         if mode == "fast_forward":
-            done = _done(self._git.write(worktree, "merge", "--ff-only", "--no-edit", oid, timeout_s=_HOOK_TIMEOUT_S))
+            done = _done(
+                self._git.write(
+                    worktree,
+                    "merge",
+                    "--ff-only",
+                    "--no-edit",
+                    oid,
+                    timeout_s=_HOOK_TIMEOUT_S,
+                    hooks=True,
+                )
+            )
         elif mode == "merge":
-            done = _done(self._git.write(worktree, "merge", "--no-ff", "-m", message, oid, timeout_s=_HOOK_TIMEOUT_S))
+            done = _done(
+                self._git.write(
+                    worktree,
+                    "merge",
+                    "--no-ff",
+                    "-m",
+                    message,
+                    oid,
+                    timeout_s=_HOOK_TIMEOUT_S,
+                    hooks=True,
+                )
+            )
         else:
-            done = _done(self._git.write(worktree, "merge", "--squash", oid, timeout_s=_HOOK_TIMEOUT_S))
+            done = _done(self._git.write(worktree, "merge", "--squash", oid, timeout_s=_HOOK_TIMEOUT_S, hooks=True))
             if done.ok:
                 done = self.commit(worktree, message)
         if not done.ok:
@@ -105,10 +147,11 @@ class GitMutations:
         if before is None and after is None:
             return GitDone(ok=True, said="", text=message)
         with tempfile.TemporaryDirectory(prefix="aconsole-hook-") as folder:
-            environment = {**os.environ, "GIT_INDEX_FILE": str(Path(folder) / "index")}
+            index = Path(folder) / "index"
+            environment = {**os.environ, "GIT_INDEX_FILE": str(index)}
             for name in ("GIT_DIR", "GIT_WORK_TREE"):
                 _ = environment.pop(name, None)
-            loaded = self._run_hook(("git", "read-tree", tree), root, environment)
+            loaded = self._load_tree(root, tree, index)
             if not loaded.ok:
                 return loaded
             if before is not None:
@@ -124,9 +167,21 @@ class GitMutations:
             return GitDone(ok=True, said="", text=text_file.read_text(encoding="utf-8"))
 
     def _hook(self, root: Path, name: str) -> Path | None:
-        relative = self._git.read(root, "rev-parse", "--git-path", f"hooks/{name}").text.strip()
-        path = root / relative
+        """The repository's own hook, not the path `core.hooksPath` names."""
+        common = self._git.read(root, "rev-parse", "--path-format=absolute", "--git-common-dir").text.strip()
+        path = Path(common) / "hooks" / name
         return path if path.is_file() and os.access(path, os.X_OK) else None
+
+    def _load_tree(self, root: Path, tree: str, index: Path) -> GitDone:
+        try:
+            output = self._git.invoke(
+                root,
+                ("read-tree", tree),
+                GitCall(env={"GIT_INDEX_FILE": str(index)}, drop=("GIT_DIR", "GIT_WORK_TREE"), write=True),
+            )
+        except GitCommandError as exc:
+            return GitDone(ok=False, said=str(exc))
+        return GitDone(ok=output.code == 0, said=output.said)
 
     def _run_hook(self, argv: tuple[str, ...], root: Path, environment: dict[str, str]) -> GitDone:
         try:

@@ -7,13 +7,13 @@ This module does not run `git stash` or `git reset --hard`.
 
 from __future__ import annotations
 
-import os
-import subprocess
 import tempfile
 from pathlib import Path
 from typing import Final, final
 
 from aconsole.core.application.ports.checkpoint_store import TreeCapture
+from aconsole.core.application.ports.git_repo import GitCommandError
+from aconsole.core.infrastructure.git.runner import GitCall, GitRunner
 from aconsole.core.infrastructure.host_bins import host_binary
 
 _TIMEOUT_S: Final = 30.0
@@ -51,16 +51,17 @@ class CheckpointGitError(Exception):
 class GitCheckpoints:
     """Side refs under `refs/aconsole/checkpoints/<tab>/<n>`."""
 
-    _git: Path
+    _runner: GitRunner
     _timeout_s: float
 
     def __init__(self, git: Path = _GIT, *, timeout_s: float = _TIMEOUT_S) -> None:
-        if not git.is_absolute():
-            raise CheckpointGitError(_ABS_GIT)
         if timeout_s <= 0:
             message = "timeout must be positive"
             raise CheckpointGitError(message)
-        self._git = git
+        try:
+            self._runner = GitRunner(git, timeout_s=timeout_s)
+        except GitCommandError as exc:
+            raise CheckpointGitError(_ABS_GIT) from exc
         self._timeout_s = timeout_s
 
     def capture(self, repo: Path, ref: str, message: str) -> TreeCapture:
@@ -119,27 +120,26 @@ class GitCheckpoints:
         return tuple(piece for piece in raw.split("\0") if piece)
 
     def _stdout(self, repo: Path, args: tuple[str, ...], *, index: str | None = None, author: bool = False) -> str:
-        env = os.environ.copy()
+        extra: dict[str, str] = {}
         if author:
-            env.update(_AUTHOR)
+            extra.update(_AUTHOR)
         if index is not None:
-            env["GIT_INDEX_FILE"] = index
+            extra["GIT_INDEX_FILE"] = index
         try:
-            completed = subprocess.run(  # noqa: S603 -- argv is a list; the git path is absolute
-                (str(self._git), "-C", str(repo), *args),
-                check=False,
-                capture_output=True,
-                text=True,
-                timeout=self._timeout_s,
-                env=env,
+            completed = self._runner.invoke(
+                repo,
+                args,
+                GitCall(env=extra, timeout_s=self._timeout_s, write=True),
             )
-        except subprocess.TimeoutExpired as exc:
-            raise CheckpointGitError(_TIMED_OUT) from exc
-        except FileNotFoundError as exc:
-            raise CheckpointGitError(_MISSING) from exc
-        if completed.returncode != _OK:
+        except GitCommandError as exc:
+            if str(exc) == _TIMED_OUT:
+                raise CheckpointGitError(_TIMED_OUT) from exc
+            if str(exc) == _MISSING:
+                raise CheckpointGitError(_MISSING) from exc
+            raise CheckpointGitError(_FAILED, detail=exc.detail) from exc
+        if completed.code != _OK:
             raise CheckpointGitError(_FAILED, detail=completed.stderr)
-        return completed.stdout
+        return completed.text
 
 
 _MIN_NUMSTAT: Final = 3
