@@ -97,6 +97,32 @@ _CHECKOUT_BRANCH_FLAGS = frozenset({"-b", "-B", "--orphan"})
 _CHECKOUT_FORCE_FLAGS = frozenset({"-f", "--force"})
 _CONFIG_WRITE_FLAGS = frozenset({"--add", "--unset", "--unset-all", "--replace-all", "--global", "--system"})
 _PIP_CONFIG_WRITES = frozenset({"set", "unset", "edit"})
+# A path with one of these directories is git metadata or an agent config, so writing it changes what later runs.
+_PROTECTED_DIRS = frozenset({".git", ".claude", ".codex"})
+_PATH_WRITERS = frozenset({"cp", "mv", "tee", "install", "ln", "rsync"})
+# `git -c` of one of these keys, or an assignment of the matching environment variable, makes git run a program.
+_GIT_EXEC_KEYS = frozenset(
+    {
+        "core.fsmonitor",
+        "core.sshcommand",
+        "core.pager",
+        "core.editor",
+        "core.askpass",
+        "diff.external",
+        "sequence.editor",
+        "gpg.program",
+        "credential.helper",
+    }
+)
+_GIT_EXEC_PREFIXES = ("alias.", "filter.", "difftool.", "mergetool.")
+_GIT_CONFIG_ENV = re.compile(
+    r"(?:GIT_CONFIG_(?:COUNT|PARAMETERS|GLOBAL|SYSTEM|KEY_\d+|VALUE_\d+)|GIT_EXTERNAL_DIFF|GIT_EXEC_PATH)="
+)
+# Flags that launch a nested agent without its own approval prompt.
+_AGENT_BYPASS = {
+    "claude": frozenset({"--dangerously-skip-permissions"}),
+    "codex": frozenset({"--yolo", "--dangerously-bypass-approvals-and-sandbox"}),
+}
 _MAX_DEPTH = 3
 
 
@@ -237,6 +263,81 @@ def _segments(tokens: list[str]) -> list[list[str]]:
 def _truncates(tokens: list[str]) -> bool:
     """`> x` and `: > x` empty a file, and so does `cat /dev/null > x`."""
     return any(_truncating_segment(segment) for segment in _segments(tokens))
+
+
+def _protected_path(word: str) -> bool:
+    """True when `word` or the value after its `=` names `.git`, `.claude` or `.codex`."""
+    candidates = [word, word.split("=", 1)[1]] if "=" in word else [word]
+    return any(part in _PROTECTED_DIRS for candidate in candidates for part in Path(candidate).parts)
+
+
+def _in_place(word: str) -> bool:
+    """True for sed's `-i` and `--in-place`, including a backup suffix such as `-i.bak`."""
+    if word.startswith("--"):
+        return word == "--in-place" or word.startswith("--in-place=")
+    return word.startswith("-i")
+
+
+def _redirects_to_protected(tokens: list[str]) -> bool:
+    """A `>` or `>>` whose target is git metadata or an agent config."""
+    for segment in _segments(tokens):
+        target_next = False
+        for word in segment:
+            if target_next:
+                if _protected_path(word):
+                    return True
+                target_next = False
+            elif _is_redirect(word):
+                target_next = True
+    return False
+
+
+def _writes_protected(tokens: list[str], names: list[str]) -> bool:
+    """Redirects, in-place sed, and copy tools that write `.git`, `.claude` or `.codex`."""
+    if _redirects_to_protected(tokens):
+        return True
+    for index, name in enumerate(names):
+        if not _starts_command(tokens, index):
+            continue
+        words = _arguments(tokens, index)
+        base = _base(name)
+        inplace = base in _SCRIPT_TOOLS and any(_in_place(word) for word in words)
+        if inplace and any(_protected_path(word) for word in words):
+            return True
+        if base in _PATH_WRITERS and any(_protected_path(word) for word in words):
+            return True
+    return False
+
+
+def _git_setting_runs(setting: str) -> bool:
+    """True when a `git -c` value names a key whose setting is a program."""
+    key = setting.split("=", 1)[0].lower()
+    return key in _GIT_EXEC_KEYS or key.startswith(_GIT_EXEC_PREFIXES)
+
+
+def _git_exec_config(tokens: list[str], names: list[str]) -> bool:
+    """`git -c core.fsmonitor=...` and `GIT_CONFIG_*` inject a program into this git invocation."""
+    if any(_GIT_CONFIG_ENV.match(word) for word in tokens):
+        return True
+    if "git" not in names:
+        return False
+    for index, word in enumerate(tokens):
+        if word == "-c" and index + 1 < len(tokens) and _git_setting_runs(tokens[index + 1]):
+            return True
+        if word.startswith("--config-env=") and _git_setting_runs(word.split("=", 1)[1]):
+            return True
+    return False
+
+
+def _agent_bypass(tokens: list[str], names: list[str]) -> bool:
+    """`claude --dangerously-skip-permissions` and `codex exec --yolo` skip the nested agent's approvals."""
+    for index, name in enumerate(names):
+        flags = _AGENT_BYPASS.get(name)
+        if flags is None or not _starts_command(tokens, index):
+            continue
+        if any(word in flags for word in _arguments(tokens, index)):
+            return True
+    return False
 
 
 def _code_arguments(tokens: list[str], names: list[str]) -> bool:
@@ -517,13 +618,79 @@ def _exec_payloads(tokens: list[str], names: list[str]) -> list[list[str]]:
 def _nested(tokens: list[str], names: list[str], *, cwd: str, worktree: str, depth: int) -> frozenset[RiskTag]:
     tags: set[RiskTag] = set()
     for text in _scripts(tokens, names):
-        inner = _split(text)
-        if inner is None:
-            tags.update(RiskTag)
-        else:
-            tags |= _classify_tokens(inner, cwd=cwd, worktree=worktree, depth=depth + 1)
+        tags |= _classify_text(text, cwd=cwd, worktree=worktree, depth=depth + 1)
     for payload in _exec_payloads(tokens, names):
         tags |= _classify_tokens(payload, cwd=cwd, worktree=worktree, depth=depth + 1)
+    return frozenset(tags)
+
+
+def _closing_paren(text: str, open_at: int) -> int | None:
+    """The index of the `)` that closes the `(` at `open_at`, or None when it never closes."""
+    depth = 0
+    index = open_at
+    while index < len(text):
+        if text.startswith("$(", index):
+            depth += 1
+            index += 2
+            continue
+        if text[index] == "(":
+            depth += 1
+        elif text[index] == ")":
+            depth -= 1
+            if depth == 0:
+                return index
+        index += 1
+    return None
+
+
+def _substitution_bodies(text: str) -> list[str] | None:
+    """The text inside `$(...)` and backticks, or None when one of them is not closed.
+
+    An empty list means the command has no command substitution. The shell runs this text first, and quoting
+    does not make it safe to ignore: a quote the lexer did not understand would hide the inner command.
+    """
+    if "$(" not in text and "`" not in text:
+        return []
+    bodies: list[str] = []
+    index = 0
+    while index < len(text):
+        if text.startswith("$(", index):
+            end = _closing_paren(text, index + 1)
+            if end is None:
+                return None
+            bodies.append(text[index + 2 : end])
+            index = end + 1
+            continue
+        if text[index] == "`":
+            end = text.find("`", index + 1)
+            if end < 0:
+                return None
+            bodies.append(text[index + 1 : end])
+            index = end + 1
+            continue
+        index += 1
+    return bodies
+
+
+def has_command_substitution(command: str) -> bool:
+    """True when `command` contains `$(` or a backtick, so the shell runs text inside it first."""
+    return "$(" in command or "`" in command
+
+
+def _classify_text(text: str, *, cwd: str, worktree: str, depth: int) -> frozenset[RiskTag]:
+    """Tags for `text`, including command substitutions. Unbalanced quotes or substitutions get every tag."""
+    if depth > _MAX_DEPTH:
+        return frozenset(RiskTag)
+    tokens = _split(text)
+    if tokens is None:
+        return frozenset(RiskTag)
+    tags = set(_classify_tokens(tokens, cwd=cwd, worktree=worktree, depth=depth))
+    bodies = _substitution_bodies(text)
+    if bodies is None:
+        return frozenset(RiskTag)
+    for body in bodies:
+        tags.add(RiskTag.DESTRUCTIVE)
+        tags |= _classify_text(body, cwd=cwd, worktree=worktree, depth=depth + 1)
     return frozenset(tags)
 
 
@@ -539,6 +706,9 @@ def _destroys(tokens: list[str], names: list[str]) -> bool:
         or _config_writes(tokens, names)
         or _truncates(tokens)
         or _code_arguments(tokens, names)
+        or _writes_protected(tokens, names)
+        or _git_exec_config(tokens, names)
+        or _agent_bypass(tokens, names)
     )
 
 
@@ -573,9 +743,10 @@ def classify(command: str, *, cwd: str, worktree: str) -> frozenset[RiskTag]:
     (`su -c`, `ssh host`, `watch`) that hold whitespace or punctuation. `find -delete` and `find -exec` are
     destructive, and their payload is classified too. Inline code, pipes or here-strings into a shell,
     interpreter or `at`, `$` in a program word, code arguments of awk or sed, and truncating redirects are
-    destructive. Unbalanced quotes and nesting deeper than `_MAX_DEPTH` fail closed with every tag.
+    destructive. Command substitution (`$(...)` and backticks) is destructive, and the substituted text is
+    classified too. A redirect, copy, or in-place edit that writes `.git`, `.claude` or `.codex`, `git -c` of a
+    key that runs a program, `GIT_CONFIG_*` assignments, and `claude` or `codex` launched with a flag that skips
+    approvals are destructive. Unbalanced quotes, an unclosed substitution, and nesting deeper than `_MAX_DEPTH`
+    fail closed with every tag.
     """
-    tokens = _split(command)
-    if tokens is None:
-        return frozenset(RiskTag)
-    return _classify_tokens(tokens, cwd=cwd, worktree=worktree, depth=0)
+    return _classify_text(command, cwd=cwd, worktree=worktree, depth=0)

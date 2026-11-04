@@ -7,7 +7,7 @@ from enum import StrEnum
 
 from aconsole.core.domain.errors import DomainError
 from aconsole.core.domain.prefix_allowlist import AllowEntry, allowed_by_entry, entry_for_prefix
-from aconsole.core.domain.risk import RiskTag, classify
+from aconsole.core.domain.risk import RiskTag, classify, has_command_substitution
 from aconsole.core.ports.paths import PathResolver
 
 _NOT_FOUND = 3001
@@ -114,8 +114,10 @@ def prefix_matches(command: str, prefix: str, *, exact_only: bool = False, scope
     """True when the remembered `prefix` covers `command`, compared as raw text with the ends stripped.
 
     Only ASCII spaces and tabs are blanks, as in the shell, so a no-break space stays part of its word.
-    The identical command is covered whatever its risk, but when the scope is given and the command is an allowlisted
-    program, its path words must still resolve inside the worktree. Unless `exact_only`, the prefix covers the
+    The identical command is covered whatever its risk, except when it contains command substitution (`$(` or a
+    backtick): the shell runs that text first, so a tab rule never covers it. When the scope is given and the
+    command is an allowlisted program, its path words must still resolve inside the worktree. Unless `exact_only`,
+    the prefix covers the
     command only when the prefix is exactly the program and subcommand of one `prefix_allowlist` entry (a bare
     `git` is not one), the command and the prefix are plain (see `_is_plain`), `allowed_by_entry` accepts the
     command's words, every path word resolves through the scope's resolver to a path inside its worktree, and
@@ -124,7 +126,7 @@ def prefix_matches(command: str, prefix: str, *, exact_only: bool = False, scope
     """
     rule = prefix.strip(_BLANKS)
     text = command.strip(_BLANKS)
-    if rule == "":
+    if rule == "" or has_command_substitution(text):
         return False
     if text == rule:
         return scope is None or _exact_paths_inside(text, scope)

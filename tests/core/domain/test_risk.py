@@ -182,6 +182,18 @@ CASES: tuple[tuple[str, frozenset[str]], ...] = (
     ("env -i", frozenset({"secrets"})),
     ("env FOO=1 ls", frozenset()),
     ("git grep env", frozenset()),
+    # A9: command substitution, writes into git and agent config, git config injection, nested agents.
+    ('echo "$(rm -rf ~)"', frozenset({"destructive", "outside_worktree"})),
+    ("echo x > .git/hooks/pre-commit", frozenset({"destructive"})),
+    ("echo x >> .git/config", frozenset({"destructive"})),
+    ("sed -i s/a/b/ .git/config", frozenset({"destructive"})),
+    ("git -c core.fsmonitor=evil status", frozenset({"destructive"})),
+    ("GIT_CONFIG_COUNT=1 git status", frozenset({"destructive"})),
+    ("echo x > .claude/settings.local.json", frozenset({"destructive"})),
+    ("echo x > .codex/config.toml", frozenset({"destructive"})),
+    ("claude --dangerously-skip-permissions", frozenset({"destructive"})),
+    ("codex exec --yolo", frozenset({"destructive"})),
+    ("X=$(rm -rf ~)", frozenset({"destructive", "outside_worktree"})),
 )
 
 
@@ -200,7 +212,7 @@ def test_parent_path_that_leaves_the_worktree_is_outside() -> None:
     assert RiskTag.OUTSIDE_WORKTREE in tags
 
 
-@pytest.mark.parametrize("command", ['echo "hi', "sh -c 'rm -rf x", "bash -lc 'rm -rf x"])
+@pytest.mark.parametrize("command", ['echo "hi', "sh -c 'rm -rf x", "bash -lc 'rm -rf x", "echo $(rm", "echo `rm"])
 def test_unbalanced_quotes_fail_closed(command: str) -> None:
     assert classify(command, cwd=CWD, worktree=ROOT) == frozenset(RiskTag)
 

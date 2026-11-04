@@ -421,6 +421,15 @@ def test_remembered_rule_does_not_cover_bypass_commands(rule: str, command: str)
     assert _covered(rule, command) is False
 
 
+def test_tab_rule_does_not_cover_command_substitution() -> None:
+    quoted = 'echo "$(rm -rf ~)"'
+    assigned = "X=$(rm -rf ~)"
+    assert prefix_matches(quoted, quoted) is False
+    assert prefix_matches(quoted, "echo") is False
+    assert prefix_matches(assigned, assigned) is False
+    assert _covered(quoted, quoted) is False
+
+
 def test_exact_rule_and_plain_prefix_cover_their_commands() -> None:
     assert _covered("git status", "git status") is True
     assert _covered("git status", "git status short", cwd="/wt", worktree="/wt", resolver=_FakeResolver()) is True
