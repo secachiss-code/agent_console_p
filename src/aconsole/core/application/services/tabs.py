@@ -74,6 +74,8 @@ _TAB_CONFLICT: Final = "TAB_STATE_CONFLICT"
 _UNAVAILABLE: Final = "AGENT_UNAVAILABLE"
 _SESSION: Final = "SESSION_NOT_FOUND"
 _SCAN_FAILED: Final = "CONTAINER_START_FAILED"
+# A launch retries a failed orphan scan a few times, then refuses to start. Close and restart try once.
+_SCAN_ATTEMPTS: Final = 3
 _DIRTY: Final = "WORKTREE_DIRTY"
 # Only ignored files (`.venv/`, included copies) differ from the base: removing needs the user's `remove`.
 _IGNORED: Final = "ignored"
@@ -761,7 +763,8 @@ class TabService:
                 notify(tab.id, tab.ingest)
         # A new terminal replaces the old one: a window that closed or crashed may have left its agent behind.
         tab.live_sidecar = ""
-        _ = self._stop_orphans(tab)
+        if not self._stop_orphans(tab, attempts=_SCAN_ATTEMPTS):
+            raise TabRequestError(_SCAN_FAILED)
         secret = self._ports.new_secret()
         tab.sidecar = secret
         path = self._ports.container_path(tab.container)
@@ -1099,11 +1102,17 @@ class TabService:
             self._ports.pause(self._stop_s)
         return self._stop_orphans(tab)
 
-    def _stop_orphans(self, tab: _Tab) -> bool:
-        """Stop what still runs with this tab's id in its container. False when the scan failed."""
-        try:
-            found = self._ports.orphans(tab.container, tab.id)
-        except TabRequestError:
+    def _stop_orphans(self, tab: _Tab, *, attempts: int = 1) -> bool:
+        """Stop what still runs with this tab's id in its container. False when every scan failed."""
+        found: tuple[int, ...] | None = None
+        for _attempt in range(attempts):
+            try:
+                found = self._ports.orphans(tab.container, tab.id)
+            except TabRequestError:
+                found = None
+            else:
+                break
+        if found is None:
             return False
         # These pids belong to the container's namespace: on the host the same numbers are other processes.
         for pid in found:

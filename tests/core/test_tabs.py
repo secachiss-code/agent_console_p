@@ -78,6 +78,7 @@ class _Ports:
         self.create_error: TabRequestError | None = None
         self.orphan_pids: tuple[int, ...] = ()
         self.orphan_error: TabRequestError | None = None
+        self.scans: list[tuple[str, str]] = []
         # The listener of every service built by `_service`. Tests read tab state from these events.
         self.events: list[UiEvent] = []
 
@@ -125,7 +126,7 @@ class _Ports:
         return ("/usr/bin/podman", "exec", name, workdir, env["ACONSOLE_TAB"], *command)
 
     def orphans(self, name: str, tab_id: str) -> tuple[int, ...]:
-        _ = (name, tab_id)
+        self.scans.append((name, tab_id))
         if self.orphan_error is not None:
             raise self.orphan_error
         return self.orphan_pids
@@ -291,6 +292,26 @@ def test_tabs_remove_is_refused_for_dirty_and_ahead_trees() -> None:
     assert refusals == ["WORKTREE_DIRTY", "WORKTREE_DIRTY"]
     assert ports.removed == []
     assert _present(connection, 90, "tab-a")
+
+
+def test_tabs_launch_stays_down_when_the_orphan_scan_fails() -> None:
+    """Podman errors are not an empty process list. No old processes still launches as before."""
+    service, ports = _service(_seed())
+    connection = _ready(service)
+    _ = _view(_call(connection, 2, "tab/open", _open()))
+    ports.orphan_error = TabRequestError("CONTAINER_START_FAILED")
+    failed = _call(connection, 3, "tab/launchSpec", _tab("tab-a"))
+    assert isinstance(failed, ResponseErr)
+    assert failed.error.message == "CONTAINER_START_FAILED"
+    assert len(ports.scans) == 3
+    assert _present(connection, 90, "tab-a")
+    ports.orphan_error = None
+    ports.orphan_pids = ()
+    started = _spec(_call(connection, 4, "tab/launchSpec", _tab("tab-a")))
+    assert started.argv[5:8] == ("/usr/bin/podman", "exec", "agentbox")
+    assert ports.scans[-1] == ("agentbox", "tab-a")
+    assert len(ports.scans) == 4
+    assert ports.stopped == []
 
 
 def test_tabs_failed_orphan_scan_keeps_the_tree_even_when_asked_to_remove() -> None:
