@@ -1,4 +1,16 @@
-@define-color ac_dim_text alpha(@window_fg_color, 0.65);
+/* tools/contrast_check.py holds every color here to WCAG AA in both themes. A mix with the text color
+   moves away from the background whichever theme is on, and @define-color cannot differ between them. */
+@define-color ac_dim_text alpha(@window_fg_color, 0.78);
+@define-color ac_success_text mix(@success_color, @window_fg_color, 0.3);
+@define-color ac_warning_text mix(@warning_color, @window_fg_color, 0.35);
+@define-color ac_error_text mix(@error_color, @window_fg_color, 0.4);
+@define-color ac_quiet_shape alpha(@window_fg_color, 0.6);
+@define-color ac_warning_shape @warning_color;
+@define-color ac_error_shape @error_color;
+@define-color ac_accent_button mix(@accent_bg_color, black, 0.18);
+/* The theme's dim label is an opacity, and comes out at 3.15:1 on the sidebar. */
+.dim-label { opacity: 1; color: @ac_dim_text; }
+button.suggested-action { background-color: @ac_accent_button; }
 
 /* The left column: window buttons in one island, the application name, the tab list. */
 .ac-window-island { background-color: alpha(@window_fg_color, 0.07); border-radius: 999px; padding: 2px; }
@@ -29,9 +41,9 @@
 .ac-status-working { box-shadow: inset 0 0 0 2px @accent_color; }
 .ac-status-idle { box-shadow: inset 0 0 0 2px @success_color; }
 .ac-status-waiting_approval, .ac-status-waiting_input { background-color: @accent_bg_color; box-shadow: 0 0 0 3px alpha(@accent_bg_color, 0.22); }
-.ac-status-error { background-color: @error_bg_color; box-shadow: 0 0 0 3px alpha(@error_bg_color, 0.2); }
-.ac-status-exited { box-shadow: inset 0 0 0 2px alpha(@window_fg_color, 0.3); }
-.ac-status-unknown { background-color: alpha(@window_fg_color, 0.25); }
+.ac-status-error { background-color: @ac_error_shape; box-shadow: 0 0 0 3px alpha(@ac_error_shape, 0.2); }
+.ac-status-exited { box-shadow: inset 0 0 0 2px @ac_quiet_shape; }
+.ac-status-unknown { background-color: @ac_quiet_shape; }
 .ac-attention-ring { border-radius: 999px; box-shadow: 0 0 0 4px alpha(@accent_bg_color, 0.35); }
 @keyframes ac-attention-pulse { from { opacity: 1; } to { opacity: 0.35; } }
 .ac-attention-animated { animation: ac-attention-pulse 1.6s ease-in-out infinite alternate; }
@@ -47,8 +59,8 @@
 .ac-section-header:hover { background-color: alpha(@window_fg_color, 0.04); }
 .ac-section-header .caption-heading { color: @ac_dim_text; font-size: 8pt; }
 .ac-section-detail { color: @ac_dim_text; font-size: 9pt; }
-.ac-section-detail.warning { color: @warning_color; }
-.ac-section-detail.error { color: @error_color; }
+.ac-section-detail.warning { color: @ac_warning_text; }
+.ac-section-detail.error { color: @ac_error_text; }
 .ac-section-chevron { color: @ac_dim_text; transition: -gtk-icon-transform 180ms ease-out; }
 .ac-folded .ac-section-chevron { -gtk-icon-transform: rotate(-90deg); }
 .ac-summary-block .ac-summary-section { padding-top: 2px; }
@@ -67,8 +79,8 @@ progressbar.horizontal > trough, levelbar.horizontal > trough { min-height: 4px;
 .ac-summary-card progressbar trough, .ac-quota-row levelbar trough { background-color: alpha(@window_fg_color, 0.1); border: none; box-shadow: none; padding: 0; }
 .ac-quota-row levelbar block { border: none; box-shadow: none; margin: 0; }
 .ac-quota-row levelbar block.empty { background: none; }
-.ac-quota-warn levelbar block.filled { background-color: @warning_bg_color; }
-.ac-quota-critical levelbar block.filled { background-color: @error_bg_color; }
+.ac-quota-warn levelbar block.filled { background-color: @ac_warning_shape; }
+.ac-quota-critical levelbar block.filled { background-color: @ac_error_shape; }
 
 .ac-quota-details { margin: 4px 16px 16px; }
 button.ac-quota-group { background-color: alpha(@window_fg_color, 0.05); border-radius: 12px; padding: 14px; font-weight: normal; }
@@ -93,9 +105,9 @@ button.ac-quota-group-open { background-color: alpha(@accent_bg_color, 0.18); }
 .ac-plan-node { padding: 2px 8px; border-radius: 10px; font-size: 9pt; font-weight: normal; line-height: 1.15; background-color: @view_bg_color; background-image: linear-gradient(alpha(@window_fg_color, 0.05), alpha(@window_fg_color, 0.05)); box-shadow: inset 0 0 0 1px alpha(@window_fg_color, 0.12), 0 1px 2px alpha(black, 0.06); transition: background-image 150ms ease-out, box-shadow 150ms ease-out, opacity 150ms ease-out; }
 .ac-plan-node:hover { background-image: linear-gradient(alpha(@window_fg_color, 0.09), alpha(@window_fg_color, 0.09)); box-shadow: inset 0 0 0 1px alpha(@window_fg_color, 0.18), 0 3px 8px alpha(black, 0.10); }
 .ac-plan-node:focus-visible { outline: 2px solid alpha(@accent_color, 0.7); outline-offset: 1px; }
-.ac-plan-done { color: @success_color; background-image: linear-gradient(alpha(@success_color, 0.12), alpha(@success_color, 0.12)); box-shadow: inset 0 0 0 1px alpha(@success_color, 0.3), 0 1px 2px alpha(black, 0.06); }
-.ac-plan-in_progress, .ac-plan-verifying { color: @warning_color; background-image: linear-gradient(alpha(@warning_color, 0.12), alpha(@warning_color, 0.12)); box-shadow: inset 0 0 0 1px alpha(@warning_color, 0.36), 0 1px 2px alpha(black, 0.06); }
-.ac-plan-failed { color: @error_color; background-image: linear-gradient(alpha(@error_color, 0.12), alpha(@error_color, 0.12)); box-shadow: inset 0 0 0 1px alpha(@error_color, 0.36), 0 1px 2px alpha(black, 0.06); }
+.ac-plan-done { color: @ac_success_text; background-image: linear-gradient(alpha(@success_color, 0.12), alpha(@success_color, 0.12)); box-shadow: inset 0 0 0 1px alpha(@success_color, 0.3), 0 1px 2px alpha(black, 0.06); }
+.ac-plan-in_progress, .ac-plan-verifying { color: @ac_warning_text; background-image: linear-gradient(alpha(@warning_color, 0.12), alpha(@warning_color, 0.12)); box-shadow: inset 0 0 0 1px alpha(@warning_color, 0.36), 0 1px 2px alpha(black, 0.06); }
+.ac-plan-failed { color: @ac_error_text; background-image: linear-gradient(alpha(@error_color, 0.12), alpha(@error_color, 0.12)); box-shadow: inset 0 0 0 1px alpha(@error_color, 0.36), 0 1px 2px alpha(black, 0.06); }
 .ac-plan-ready { color: @accent_color; box-shadow: 0 1px 2px alpha(black, 0.06); border: 1px dashed alpha(@accent_color, 0.65); }
 
 .ac-palette { margin: 12px; }
@@ -132,7 +144,7 @@ button.ac-quota-group-open { background-color: alpha(@accent_bg_color, 0.18); }
 .ac-approval-body { padding: 12px 14px; border-radius: 14px; }
 .ac-approval-body button { border-radius: 8px; padding-left: 10px; padding-right: 10px; }
 .ac-approval-command { padding: 7px 10px; border-radius: 8px; font-size: 10pt; background-color: alpha(@window_fg_color, 0.06); box-shadow: inset 0 0 0 1px alpha(@window_fg_color, 0.05); }
-.ac-approval-risk { padding: 1px 9px; border-radius: 9px; font-weight: 600; color: @error_color; background-color: alpha(@error_color, 0.14); }
+.ac-approval-risk { padding: 1px 9px; border-radius: 9px; font-weight: 600; color: @ac_error_text; background-color: alpha(@error_color, 0.14); }
 .ac-approval-busy { opacity: 0.55; }
 .ac-approval-details:focus-visible { outline: 2px solid @accent_color; outline-offset: -2px; border-radius: 8px; }
 

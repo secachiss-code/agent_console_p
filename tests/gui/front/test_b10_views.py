@@ -154,7 +154,7 @@ async def _until(predicate: Callable[[], bool]) -> None:
     await asyncio.wait_for(poll(), timeout=5.0)
 
 
-def test_b10_wizard_can_skip_read_only_checks_and_persist_completion() -> None:
+def test_b10_wizard_later_closes_without_finishing_and_finish_persists_completion() -> None:
     from aconsole.ui.views.setup.wizard import SetupWizard
 
     async def scenario(app: _ViewTestApp) -> None:
@@ -175,6 +175,10 @@ def test_b10_wizard_can_skip_read_only_checks_and_persist_completion() -> None:
         )
 
         wizard.skip()
+        await asyncio.sleep(0.05)
+        assert all(method != "settings/update" for method, _params in app.client.requests)
+
+        wizard.finish()
         await _until(
             lambda: any(method == "settings/update" for method, _params in app.client.requests)
         )
@@ -380,3 +384,71 @@ def test_b10_wizard_refreshes_agents_live_and_projects_when_reopened() -> None:
         assert wizard.agent_dropdown.get_sensitive()
 
     _run_ui(scenario)
+
+
+def test_b10_wizard_says_why_a_check_failed_and_gives_the_command() -> None:
+    from aconsole.ui.views.setup import wizard as module
+    from aconsole.ui.views.setup.messages import _ as translate
+    from aconsole.ui.views.setup.wizard import SetupWizard
+
+    async def scenario(app: _ViewTestApp) -> None:
+        app.client.store.apply_snapshot(demo_snapshot(), 0)
+        window = Adw.ApplicationWindow(application=app)
+        app.window = window
+        window.present()
+        preferences = PreferencesViewModel(app.client)
+        await preferences.load()
+        wizard = SetupWizard(app.client, preferences, on_tab=lambda _tab_id: None)
+        wizard.open(window)
+        await _until(lambda: not wizard.loading)
+        failed = CheckResult(
+            id="host_dependencies", title="Host Dependencies", ok=False, severity="warning", detail="distrobox",
+            fix_id=None, requires_confirmation=False, command="sudo apt install distrobox",
+        )
+        passed = CheckResult(
+            id="notifications", title="Notifications", ok=True, severity="info", detail="x",
+            fix_id=None, requires_confirmation=False,
+        )
+        row = wizard._check_row(failed)
+        shown = _texts(row)
+        assert any(translate("setup.check.host_dependencies") in text for text in shown)
+        assert any("distrobox" in text and text != failed.command for text in shown)
+        assert failed.command in shown
+        assert len(_texts(wizard._check_row(passed))) == 1
+        unknown = msgspec.structs.replace(failed, id="not_known_here", title="Other", detail="why", command=None)
+        assert module._check_title(unknown) == "Other"
+        assert module._check_reason(unknown) == "why"
+        _ = wizard.close()
+
+    _run_ui(scenario)
+
+
+def test_b10_wizard_without_an_agent_says_what_to_do_next() -> None:
+    from aconsole.ui.views.setup.wizard import SetupWizard
+
+    async def scenario(app: _ViewTestApp) -> None:
+        app.client.store.apply_snapshot(msgspec.structs.replace(demo_snapshot(), agents=()), 0)
+        window = Adw.ApplicationWindow(application=app)
+        app.window = window
+        window.present()
+        preferences = PreferencesViewModel(app.client)
+        await preferences.load()
+        wizard = SetupWizard(app.client, preferences, on_tab=lambda _tab_id: None)
+        wizard.open(window)
+        await _until(lambda: not wizard.loading)
+        assert wizard.no_agents_label.get_visible()
+        assert not wizard.first_task_button.get_sensitive()
+        _ = wizard.close()
+
+    _run_ui(scenario)
+
+
+def _texts(widget: Gtk.Widget) -> list[str]:
+    found: list[str] = []
+    child = widget.get_first_child()
+    while child is not None:
+        if isinstance(child, Gtk.Label):
+            found.append(child.get_label())
+        found.extend(_texts(child))
+        child = child.get_next_sibling()
+    return found

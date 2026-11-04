@@ -10,7 +10,6 @@ import inspect
 import logging
 import re
 import secrets
-import subprocess
 import threading
 from collections import OrderedDict
 from collections.abc import Callable
@@ -27,6 +26,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from aconsole.contracts.app import PlanNodeView, PlanView
 from aconsole.contracts.common import AgentKind, NodeId, NoteRef, PlanId, ProjectId, TabId
 from aconsole.contracts.common import NodeStatus as NodeStatusView
+from aconsole.core.application.ports.git_repo import GitCommandError
 from aconsole.core.application.ports.knowledge_store import KnowledgeStore, StoredFact, StoredHandover
 from aconsole.core.application.ports.plan_store import (
     PlanStore,
@@ -39,6 +39,7 @@ from aconsole.core.domain.errors import DomainError
 from aconsole.core.domain.plan import Move, Node, NodeSpec, NodeStatus, Plan, Role, after_merge
 from aconsole.core.domain.vault_sync import Note as VaultNote
 from aconsole.core.domain.vault_sync import Owners, resolve_ref
+from aconsole.core.infrastructure.git.runner import GitRunner
 from aconsole.core.infrastructure.vault.sync import NodeNote
 
 _LOG = logging.getLogger(__name__)
@@ -51,6 +52,7 @@ _REVISIONS = 16
 # What one `plan_get` showed: whether it was detailed, and each node as it read.
 type _Shown = tuple[bool, dict[str, str]]
 _DIFF = 4000
+_GIT_RUNNER = GitRunner(timeout_s=5.0)
 _LINE = re.compile(r"^(.+)#L(\d+)-(\d+)$")
 _URL = re.compile(r"^https?://\S+$")
 
@@ -1507,17 +1509,9 @@ def _git(worktree: Path | None, *args: str) -> str:
     if worktree is None or not worktree.is_dir() or not (worktree / ".git").exists():
         return ""
     try:
-        completed = subprocess.run(  # noqa: S603 -- the argv is a list; git is not invoked through a shell
-            ["git", "-C", str(worktree), *args],  # noqa: S607 -- git is resolved on PATH
-            check=False,
-            capture_output=True,
-            timeout=5,
-        )
-    except (OSError, subprocess.TimeoutExpired):
+        return _GIT_RUNNER.read(worktree, *args).text.strip()
+    except GitCommandError:
         return ""
-    if completed.returncode != 0:
-        return ""
-    return completed.stdout.decode("utf-8", errors="replace").strip()
 
 
 _CODES: dict[str, int] = {

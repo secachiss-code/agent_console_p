@@ -7,6 +7,8 @@ _MESSAGES = {
     "approvals.title.command": ("{agent} wants to run a command", "{agent} хочет выполнить команду"),
     "approvals.title.edit": ("{agent} wants to edit files: {count}", "{agent} хочет изменить файлы: {count}"),
     "approvals.title.tool": ("{agent} wants to use {tool}", "{agent} хочет использовать {tool}"),
+    "approvals.alert.title": ("An agent is waiting for a decision", "Агент ждёт решения"),
+    "approvals.alert.open": ("Open", "Открыть"),
     "approvals.more_here": ("{count} more here", "ещё {count} здесь"),
     "approvals.more_elsewhere": (
         "{count} more in other tabs · Ctrl+Shift+Y", "ещё {count} в других вкладках · Ctrl+Shift+Y",

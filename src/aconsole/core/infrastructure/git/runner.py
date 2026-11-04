@@ -38,7 +38,28 @@ _SAFE_CONFIG: Final = (
     f"core.sshCommand={host_binary('true')}",
     "diff.external=",
     "core.pager=cat",
+    "core.askPass=",
+    "core.editor=true",
+    "sequence.editor=true",
+    "core.gitProxy=",
+    "credential.helper=",
+    "protocol.ext.allow=never",
+    # A repository can ask for signing and name the signing program. The core's commits go unsigned.
+    "commit.gpgSign=false",
+    "tag.gpgSign=false",
+    "gpg.program=true",
+    "gpg.ssh.program=true",
+    "gpg.x509.program=true",
+    "gpg.ssh.defaultKeyCommand=",
+    "log.showSignature=false",
 )
+# Drivers live under a name the repository picks, so no fixed override can reach them. Each one found is
+# replaced for that one process. An agent that writes a driver between the listing and the command wins
+# that race: this closes a driver left in place, not one timed to the millisecond.
+_DRIVER_KEYS: Final = (
+    r"^(filter\..*\.(clean|smudge|process)|merge\..*\.driver|diff\..*\.textconv|trailer\..*\.(cmd|command))$"
+)
+_NO_MATCH: Final = 1
 _NO_HOOKS: Final = "/dev/null"
 _DIFF_GUARDS: Final = ("--no-ext-diff", "--no-textconv")
 # Environment forms of the same programs. The child must not inherit them.
@@ -143,15 +164,27 @@ class GitRunner:
                 raise GitCommandError(_FAILED, detail=located.stderr)
             hooks_path = str(Path(located.text.strip()) / "hooks")
         limit = self._timeout_s if call.timeout_s is None else call.timeout_s
+        prefix = (str(self._git), *_config(hooks_path), "-C", str(repo))
+        listed = self._execute(
+            (*prefix, "config", "--null", "--name-only", "--get-regexp", _DRIVER_KEYS), None, child, limit,
+        )
+        if listed.code not in {0, _NO_MATCH}:
+            return listed  # Unreadable config or no such folder: the command itself would stop here too.
+        drivers = _without_drivers(listed.stdout, child)
+        return self._execute((*prefix, *_guard_diff(args)), call.stdin, drivers, limit)
+
+    def _execute(
+        self, argv: tuple[str, ...], stdin: bytes | None, env: Mapping[str, str], limit: float,
+    ) -> GitOutput:
         try:
             completed = subprocess.run(  # noqa: S603 -- argv is a list; the git path is absolute
-                (str(self._git), *_config(hooks_path), "-C", str(repo), *_guard_diff(args)),
+                argv,
                 check=False,
                 capture_output=True,
-                input=call.stdin,
-                stdin=subprocess.DEVNULL if call.stdin is None else None,
+                input=stdin,
+                stdin=subprocess.DEVNULL if stdin is None else None,
                 timeout=limit,
-                env=child,
+                env=env,
             )
         except subprocess.TimeoutExpired as exc:
             raise GitCommandError(_TIMED_OUT) from exc
@@ -162,6 +195,30 @@ class GitRunner:
             stdout=completed.stdout,
             stderr=completed.stderr.decode("utf-8", errors="replace"),
         )
+
+
+def _without_drivers(listing: bytes, env: Mapping[str, str]) -> dict[str, str]:
+    """`env` plus an override for every driver named. Through the environment, as a name may hold an `=`."""
+    child = dict(env)
+    start = int(child.get("GIT_CONFIG_COUNT", "0") or "0")
+    names = [name for name in listing.decode("utf-8", errors="surrogateescape").split("\0") if name]
+    overrides = [setting for name in names for setting in _neutral(name)]
+    for offset, (key, value) in enumerate(overrides):
+        child[f"GIT_CONFIG_KEY_{start + offset}"] = key
+        child[f"GIT_CONFIG_VALUE_{start + offset}"] = value
+    if overrides:
+        child["GIT_CONFIG_COUNT"] = str(start + len(overrides))
+    return child
+
+
+def _neutral(name: str) -> tuple[tuple[str, str], ...]:
+    if name.startswith("filter."):
+        base = name.rpartition(".")[0]
+        return ((name, ""), (f"{base}.required", "false"))
+    if name.startswith("trailer."):
+        return ((name, "true"), (f"{name.rpartition('.')[0]}.ifMissing", "doNothing"))
+    # A failing merge driver reports a conflict for a person to see. An empty one would keep "ours" silently.
+    return ((name, "false"),) if name.startswith("merge.") else ((name, "cat"),)
 
 
 def _config(hooks_path: str) -> tuple[str, ...]:

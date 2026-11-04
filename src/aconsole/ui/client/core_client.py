@@ -28,6 +28,7 @@ from aconsole.contracts.ipc import (
     ResponseOk,
 )
 from aconsole.contracts.methods import method_by_name
+from aconsole.ui.client.error_text import core_log_path, error_text
 from aconsole.ui.client.store import CONNECTING_BANNER, CoreStore
 
 _LOG = logging.getLogger(__name__)
@@ -53,12 +54,6 @@ _UI_CAPABILITIES = frozenset(
 )
 
 
-def core_log_path() -> Path:
-    """`$XDG_STATE_HOME/aconsole/core.log`. The core logs to stderr, and only this run and the one before are kept."""
-    state = os.environ.get("XDG_STATE_HOME", "")
-    return (Path(state) if state else Path.home() / ".local" / "state") / "aconsole" / "core.log"
-
-
 def _core_log() -> int:
     """Where the core's stderr goes. Without a place to write, the core must still start."""
     path = core_log_path()
@@ -78,7 +73,7 @@ class CoreCallError(Exception):
 
     def __init__(self, error: ErrorObject) -> None:
         self.error: ErrorObject = error
-        super().__init__(f"{error.message} ({error.code})")
+        super().__init__(error_text(error))
 
 
 class CoreTimeoutError(Exception):

@@ -28,6 +28,7 @@ from aconsole.ui.client.core_client import CoreClient  # noqa: E402
 from aconsole.ui.client.store import CoreStore  # noqa: E402
 from aconsole.ui.client.ui_state import UiState  # noqa: E402
 from aconsole.ui.viewmodels.app_vm import AppViewModel  # noqa: E402
+from aconsole.ui.viewmodels.approval_alerts import Alert, ApprovalAlerts  # noqa: E402
 from aconsole.ui.viewmodels.approvals_vm import ApprovalsViewModel  # noqa: E402
 from aconsole.ui.viewmodels.git_vm import GitViewModel, git_summary  # noqa: E402
 from aconsole.ui.viewmodels.health_vm import HealthViewModel  # noqa: E402
@@ -37,6 +38,7 @@ from aconsole.ui.viewmodels.review_vm import ReviewViewModel  # noqa: E402
 from aconsole.ui.viewmodels.setup_vm import PreferencesViewModel  # noqa: E402
 from aconsole.ui.viewmodels.sidebar_vm import SidebarSummaryViewModel  # noqa: E402
 from aconsole.ui.viewmodels.tabs_vm import TabItem, TabsViewModel  # noqa: E402
+from aconsole.ui.views.approvals.alert import alert_notification  # noqa: E402
 from aconsole.ui.views.approvals.panel import ApprovalPanel, place_at_bottom  # noqa: E402
 from aconsole.ui.views.health_dialog import HealthDialog  # noqa: E402
 from aconsole.ui.views.palette.dialog import PaletteDialog  # noqa: E402
@@ -297,6 +299,7 @@ class MainWindow(Adw.ApplicationWindow):
         self._terminals_disposed = True
         self._preferences_unsubscribe()
         self.approval_panel.stop()
+        self.approval_alerts.clear()
         for page in self.terminal_pages.values():
             page.close()
 
@@ -666,6 +669,8 @@ class MainWindow(Adw.ApplicationWindow):
         self.approvals_overlay: Gtk.Overlay = Gtk.Overlay(child=content)
         self.approvals_overlay.add_overlay(self.approval_panel)
         _ = self.approvals_overlay.connect("get-child-position", place_at_bottom)
+        self.approval_alerts: ApprovalAlerts = ApprovalAlerts(self._post_alert, self._withdraw_alert)
+        _ = self.connect("notify::is-active", self._activity_changed)
         self._sync_approvals(self.tabs.client.store)
 
     def _handle_attention(self, action_id: str) -> None:
@@ -711,11 +716,34 @@ class MainWindow(Adw.ApplicationWindow):
         snapshot = store.snapshot
         if snapshot is not None:
             selected = self.selection.get_selected_item()
+            titles = {str(tab.id): tab.title for tab in snapshot.tabs}
             self.approval_panel.update(
                 snapshot.approvals,
-                {str(tab.id): tab.title for tab in snapshot.tabs},
+                titles,
                 TabId(str(selected.tab_id)) if isinstance(selected, TabItem) else None,
             )
+            if not self._snapshot_mode:
+                # While the window is still opening it is not yet active, and nobody has left it.
+                seen = self.is_active() or not self.get_mapped()
+                self.approval_alerts.update(snapshot.approvals, titles, window_active=seen)
+
+    def _activity_changed(self, _object: object, _property: object) -> None:
+        self._sync_approvals(self.tabs.client.store)
+
+    def _post_alert(self, alert: Alert) -> None:
+        app = self.get_application()
+        if app is not None:
+            app.send_notification(alert.id, alert_notification(alert))
+
+    def _withdraw_alert(self, alert_id: str) -> None:
+        app = self.get_application()
+        if app is not None:
+            app.withdraw_notification(alert_id)
+
+    def open_approval(self, tab_id: TabId) -> None:
+        """A click on the system's notification."""
+        self.present()
+        self._open_approval_tab(tab_id)
 
     def _build_settings_menu(self) -> Gio.Menu:
         menu = Gio.Menu()
