@@ -340,12 +340,14 @@ def _git_refusing_remove(path: Path, log: Path, *, plant_file: bool) -> Path:
     _ = path.write_text(
         "#!/bin/sh\n"
         f"printf '%s\\n' \"$*\" >> '{log}'\n"
-        'if [ "$1" = -C ] && [ "$3" = worktree ] && [ "$4" = remove ]; then\n'
-        '  if [ "$5" = "--force" ]; then dest=$6; else dest=$5; fi\n'
+        # Hardening options come before the subcommand, and the tree is always the last word.
+        'case " $* " in\n'
+        '*" worktree remove "*)\n'
+        '  for dest; do :; done\n'
         f"{plant}"
         "  echo 'fatal: working tree is dirty' >&2\n"
-        "  exit 1\n"
-        "fi\n"
+        "  exit 1 ;;\n"
+        "esac\n"
         f'exec {_GIT} "$@"\n',
         encoding="utf-8",
     )

@@ -46,6 +46,7 @@ case "$1" in
 inspect) printf '[{"Id":"i","Name":"x","State":{"Running":true}}]\\n' ;;
 exec)
   case "$*" in
+  *ACONSOLE_ORPHAN_TAB=*) ;;
   *"/usage"*) printf 'Current session: 40%% used · resets Jan 1, 1am (UTC)\\nCurrent week (all models): 12%% used\\n' ;;
   *"auth status"*) printf '{"loggedIn":true,"email":"e@x","subscriptionType":"pro"}' ;;
   *app-server*) read -r _; printf '@REPLY@\\n' ;;
