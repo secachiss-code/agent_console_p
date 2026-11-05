@@ -266,7 +266,9 @@ class MainWindow(Adw.ApplicationWindow):
     def _terminal_page(self, tab_id: str) -> TerminalPage:
         page = self.terminal_pages.get(tab_id)
         if page is None:
-            page = TerminalPage(self.tabs.client, TabId(tab_id), self._terminal_new, self._terminal_close)
+            page = TerminalPage(
+                self.tabs.client, TabId(tab_id), self._terminal_new, self._terminal_close, on_error=self._tab_error,
+            )
             if self._terminal_settings is not None:
                 page.apply_settings(self._terminal_settings)
             self.terminal_pages[tab_id] = page
@@ -532,7 +534,9 @@ class MainWindow(Adw.ApplicationWindow):
             _LOG.debug("Could not report tab focus", exc_info=True)
 
     def _handle_action(self, action_id: str) -> None:
-        if action_id == "toggle-sidebar":
+        if action_id in {"copy", "paste"}:
+            self._clipboard_action(action_id)
+        elif action_id == "toggle-sidebar":
             self.split.set_show_sidebar(not self.split.get_show_sidebar())
         elif action_id == "palette":
             self._open_palette()
@@ -546,6 +550,16 @@ class MainWindow(Adw.ApplicationWindow):
             self._open_git()
         else:
             self._handle_attention(action_id)
+
+    def _clipboard_action(self, action_id: str) -> None:
+        focus = self.get_focus()
+        while focus is not None and not isinstance(focus, TerminalPage):
+            focus = focus.get_parent()
+        if isinstance(focus, TerminalPage):
+            if action_id == "copy":
+                focus.copy_selection()
+            else:
+                focus.clipboard.paste()
 
     def _install_approvals(self, content: Adw.ToolbarView) -> None:
         self.approval_panel: ApprovalPanel = ApprovalPanel(

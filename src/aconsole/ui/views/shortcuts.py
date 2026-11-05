@@ -57,6 +57,12 @@ class ShortcutManager:
 
     def _make_action(self, binding: BindingSpec) -> Gtk.CallbackAction:
         def activate(_widget: Gtk.Widget, _args: GLib.Variant | None) -> bool:
+            if binding.action_id in {"copy", "paste"}:
+                focus = self.window.get_focus()
+                while focus is not None and not focus.has_css_class("ac-terminal"):
+                    focus = focus.get_parent()
+                if focus is None:
+                    return False
             if binding.context != "global" and not self._attention_focused():
                 return False
             if binding.action_id == "send-next-key":

@@ -86,6 +86,7 @@ def _scalar(annotation: object) -> object:
         return next(iter(annotation))
     scalars: dict[object, object] = {
         str: "x",
+        bytes: b"png",
         int: 1,
         float: 1.0,
         bool: True,

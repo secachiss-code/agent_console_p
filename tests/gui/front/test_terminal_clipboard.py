@@ -20,6 +20,9 @@ class _Terminal:
         self.selection = selection
         self.calls: list[str] = []
 
+    def has_focus(self) -> bool:
+        return True
+
     def get_has_selection(self) -> bool:
         return self.selection
 
@@ -33,9 +36,9 @@ class _Terminal:
         self.calls.append("unselect")
 
 
-def _press(key: int, state: Gdk.ModifierType, *, selection: bool = False, text: bool = True) -> tuple[bool, list[str]]:
+def _press(key: int, state: Gdk.ModifierType, *, selection: bool = False) -> tuple[bool, list[str]]:
     terminal = _Terminal(selection=selection)
-    page = SimpleNamespace(terminal=terminal, _clipboard_has_text=lambda: text)
+    page = SimpleNamespace(terminal=terminal, clipboard=SimpleNamespace(paste=terminal.paste_clipboard))
     return TerminalPage._key_pressed(page, None, key, 0, state), terminal.calls  # type: ignore[arg-type]
 
 
@@ -53,5 +56,5 @@ def test_paste_keys() -> None:
     assert _press(Gdk.KEY_v, _CTRL) == (True, ["paste"])
 
 
-def test_ctrl_v_with_an_image_goes_to_the_agent() -> None:
-    assert _press(Gdk.KEY_v, _CTRL, text=False) == (False, [])
+def test_ctrl_v_with_an_image_uses_the_host_clipboard() -> None:
+    assert _press(Gdk.KEY_v, _CTRL) == (True, ["paste"])

@@ -5,6 +5,8 @@ import asyncio
 from aconsole.contracts.app import (
     EmptyResult,
     ExitedParams,
+    PreparedImagePaste,
+    PrepareImagePasteParams,
     RestartParams,
     StartedParams,
     TabIdParams,
@@ -21,6 +23,12 @@ class TerminalViewModel:
     def __init__(self, client: CoreClient, tab_id: TabId) -> None:
         self._client: CoreClient = client
         self._tab_id: TabId = tab_id
+
+    async def prepare_image(self, png: bytes) -> str:
+        result = await self._client.request(
+            "terminal/prepareImagePaste", PrepareImagePasteParams(tab_id=self._tab_id, png=png), PreparedImagePaste,
+        )
+        return result.path
 
     async def launch_spec(self) -> TerminalLaunchSpec:
         return await self._client.request("tab/launchSpec", TabIdParams(tab_id=self._tab_id), TerminalLaunchSpec)

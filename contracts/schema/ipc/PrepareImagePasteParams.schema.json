@@ -1,0 +1,24 @@
+{
+  "$defs": {
+    "PrepareImagePasteParams": {
+      "properties": {
+        "png": {
+          "contentEncoding": "base64",
+          "maxLength": 11184812,
+          "type": "string"
+        },
+        "tab_id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "tab_id",
+        "png"
+      ],
+      "title": "PrepareImagePasteParams",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/PrepareImagePasteParams",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

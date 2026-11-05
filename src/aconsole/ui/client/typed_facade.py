@@ -36,6 +36,8 @@ from aconsole.contracts.app import (
     PlanListResult,
     PlanNodeView,
     PlanView,
+    PreparedImagePaste,
+    PrepareImagePasteParams,
     ProjectAddParams,
     ProjectIdParams,
     ProjectView,
@@ -134,6 +136,9 @@ class TypedFacade(Facade):
 
     async def tab_launch_spec(self, params: TabIdParams) -> TerminalLaunchSpec:
         return await self.typed("tab/launchSpec", params, TerminalLaunchSpec)
+
+    async def terminal_prepare_image_paste(self, params: PrepareImagePasteParams) -> PreparedImagePaste:
+        return await self.typed("terminal/prepareImagePaste", params, PreparedImagePaste)
 
     async def tab_started(self, params: StartedParams) -> EmptyResult:
         return await self.typed("tab/started", params, EmptyResult)

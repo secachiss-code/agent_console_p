@@ -204,6 +204,15 @@ class AppSnapshot(msgspec.Struct, frozen=True, kw_only=True):
     settings_rev: int
 
 
+class PrepareImagePasteParams(msgspec.Struct, frozen=True, kw_only=True):
+    tab_id: TabId
+    png: Annotated[bytes, Meta(max_length=8 * 1024 * 1024)]
+
+
+class PreparedImagePaste(msgspec.Struct, frozen=True, kw_only=True):
+    path: str
+
+
 class TerminalLaunchSpec(msgspec.Struct, frozen=True, kw_only=True):
     argv: tuple[str, ...]
     env: dict[str, str]

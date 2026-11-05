@@ -3,6 +3,13 @@
 import locale
 
 _MESSAGES = {
+    "clipboard.copy": ("Copy", "Копировать"),
+    "clipboard.paste": ("Paste", "Вставить"),
+    "clipboard.image": ("Paste image", "Вставить изображение"),
+    "clipboard.select": ("Select all", "Выделить всё"),
+    "clipboard.empty": ("No text or image in clipboard", "В буфере нет текста или изображения"),  # noqa: RUF001 -- Russian
+    "clipboard.large": ("Image exceeds 8 MiB or 32 megapixels", "Изображение больше 8 МиБ или 32 мегапикселей"),
+    "clipboard.error": ("Could not paste: {error}", "Не удалось вставить: {error}"),  # noqa: RUF001 -- Russian
     "terminal.start": ("Start an agent in your project", "Запустите агента в своём проекте"),
     "terminal.retry": ("Retry starting the session", "Повторить запуск сессии"),
     "terminal.ended": ("Session ended", "Сессия завершена"),
