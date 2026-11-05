@@ -153,6 +153,8 @@ class CoreClient:
         self._reconnect_task = None
         self._resync_task = None
         self._process = None
+        self._daemon_argv: tuple[str, ...] | None = None
+        self._daemon_runtime: Path | None = None
         # The fake dies with its UI. The real core stays until its idle timer, so a new window finds it.
         self.keep_daemon = False
 
@@ -177,6 +179,8 @@ class CoreClient:
 
         A held lock means a core is already starting. This waits for its socket and does not spawn another.
         """
+        self._daemon_argv = tuple(argv)
+        self._daemon_runtime = runtime
         if runtime is not None:
             _socket, lock = core_paths(runtime)
             if lock_held(lock):
@@ -368,10 +372,12 @@ class CoreClient:
         except (ConnectionError, OSError) as exc:
             _LOG.warning("core connection failed: %s", exc)
         finally:
-            self._fail_pending()
-            if not self._closing:
-                self.store.set_connecting()
-                self._reconnect_task = asyncio.create_task(self._reconnect())
+            if self._reader is reader:
+                self._fail_pending()
+                if not self._closing:
+                    self.store.set_connecting()
+                    if self._reconnect_task is None or self._reconnect_task.done():
+                        self._reconnect_task = asyncio.create_task(self._reconnect())
 
     def _dispatch_line(self, line: bytes) -> None:
         envelope = _decode_line(line)
@@ -437,10 +443,20 @@ class CoreClient:
         while not self._closing:
             await asyncio.sleep(delay)
             try:
-                await self._open_socket()
-                _ = await self._handshake()
+                writer = self._writer
+                self._reader = None
+                if writer is not None:
+                    writer.close()
+                    with contextlib.suppress(OSError):
+                        await writer.wait_closed()
+                if self._daemon_argv is None:
+                    _ = await self.connect()
+                else:
+                    _ = await self.start_daemon(list(self._daemon_argv), runtime=self._daemon_runtime)
                 self.resyncs = 0
                 await self._resync()
+                if self.store.reconnecting:
+                    continue
             except ConnectionError, CoreCallError, CoreTimeoutError, OSError:
                 delay = min(delay * 2, _BACKOFF_S[-1])
                 continue

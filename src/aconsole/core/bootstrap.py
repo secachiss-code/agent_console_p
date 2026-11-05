@@ -9,8 +9,10 @@ import logging
 import os
 import signal
 import socket as sockets
+import stat
 import struct
 import sys
+import tempfile
 import time
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
@@ -197,6 +199,50 @@ def acquire_lock(path: Path) -> int | None:
         os.close(descriptor)
         return None
     return descriptor
+
+
+_RECOVERY_BYTES = 256 * 1024
+_MAX_PORT = 65535
+
+
+class _Recovery(msgspec.Struct):
+    """Runtime credentials survive a core restart, never a reboot or a database export."""
+
+    port: int = 0
+    tokens: dict[str, str] = msgspec.field(default_factory=dict)
+
+
+def _read_recovery(path: Path) -> _Recovery:
+    try:
+        descriptor = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK | os.O_CLOEXEC)
+    except FileNotFoundError:
+        return _Recovery()
+    with os.fdopen(descriptor, "rb") as stream:
+        info = os.fstat(stream.fileno())
+        if not stat.S_ISREG(info.st_mode) or info.st_uid != os.getuid() or info.st_mode & 0o077:
+            message = "unsafe core recovery file"
+            raise PermissionError(message)
+        data = stream.read(_RECOVERY_BYTES + 1)
+    if len(data) > _RECOVERY_BYTES:
+        message = "core recovery file is too large"
+        raise ValueError(message)
+    recovered = msgspec.json.decode(data, type=_Recovery)
+    if not 0 <= recovered.port <= _MAX_PORT or any(not key or not token for key, token in recovered.tokens.items()):
+        message = "invalid core recovery credentials"
+        raise ValueError(message)
+    return recovered
+
+
+def _write_recovery(path: Path, recovered: _Recovery) -> None:
+    descriptor, temporary = tempfile.mkstemp(prefix=".core-recovery-", dir=path.parent)
+    try:
+        with os.fdopen(descriptor, "wb") as stream:
+            _ = stream.write(msgspec.json.encode(recovered))
+            stream.flush()
+            os.fsync(stream.fileno())
+        _ = Path(temporary).replace(path)
+    finally:
+        Path(temporary).unlink(missing_ok=True)
 
 
 def release_lock(descriptor: int) -> None:
@@ -514,6 +560,8 @@ class Daemon:
         self.serve_ingest: bool = False
         self.ingest_port: int | None = None
         self._tokens: TokenBook = TokenBook()
+        self._recovery: _Recovery | None = None
+        self._recovery_path: Path = self.socket.with_suffix(".recovery.json")
         self._plans: PlanBoard = PlanBoard()
         self._plans.on_changed = self._plan_changed
         # Off the loop and off the tab worker: files can be slow, and an edit must not wait for a tab call.
@@ -604,6 +652,7 @@ class Daemon:
         try:
             await self._open_database()
             await self._restore_tabs()
+            self._restore_credentials()
             await self._open_ingest()
             await self._listen()
             self._listening = True
@@ -624,13 +673,28 @@ class Daemon:
             try:
                 await self._close_server()
                 await self._close_ingest()
+                await asyncio.to_thread(self._worker.shutdown, wait=True, cancel_futures=True)
                 await asyncio.to_thread(self._stop_vault)
                 await self._close_database()
             finally:
-                self._worker.shutdown(wait=False, cancel_futures=True)
+                await asyncio.to_thread(self._worker.shutdown, wait=True, cancel_futures=True)
                 self._worker = None
                 release_lock(descriptor)
         return 0
+
+    def _restore_credentials(self) -> None:
+        """Keep old hooks and MCP sessions valid until an explicit agent relaunch rotates them."""
+        if self.database is not None and self.serve_ingest:
+            self._recovery = _read_recovery(self._recovery_path)
+            tabs = self.tabs.snapshot().tabs
+            self._recovery.tokens = {
+                str(tab.id): token for tab in tabs
+                if (token := self._recovery.tokens.get(str(tab.id))) is not None
+            }
+            for tab in tabs:
+                token = self._recovery.tokens.get(str(tab.id))
+                if token is not None:
+                    self._register_tab(tab, token)
 
     def _from_worker(self, event: UiEvent) -> None:
         """Tab listener. Runs on the worker; the live count is read there, where the tab book is consistent."""
@@ -696,6 +760,9 @@ class Daemon:
 
     def _register_tab(self, tab: TabView, token: str) -> None:
         tab_id = str(tab.id)
+        if self._recovery is not None and self._recovery.tokens.get(tab_id) != token:
+            self._recovery.tokens[tab_id] = token
+            _write_recovery(self._recovery_path, self._recovery)
         self._tokens.register(tab_id, token)
         worktree = tab.worktree_path
         self._mcp_tokens.register(
@@ -756,6 +823,9 @@ class Daemon:
         if isinstance(event, TabRemoved):
             self._tokens.drop(str(event.tab_id))
             self._mcp_tokens.drop(str(event.tab_id))
+            if self._recovery is not None:
+                _ = self._recovery.tokens.pop(str(event.tab_id), None)
+                _write_recovery(self._recovery_path, self._recovery)
         item = self._ring.append(event, datetime.now(UTC))
         for connection, writer in tuple(self._connections.items()):
             self._deliver(connection, writer, item)
@@ -799,11 +869,14 @@ class Daemon:
         )
         listener = sockets.socket(sockets.AF_INET, sockets.SOCK_STREAM)
         listener.setsockopt(sockets.SOL_SOCKET, sockets.SO_REUSEADDR, 1)
-        listener.bind(("127.0.0.1", 0))
+        listener.bind(("127.0.0.1", self._recovery.port if self._recovery is not None else 0))
         port = int(listener.getsockname()[1])  # pyright: ignore[reportAny] -- AF_INET address is (host, port)
         server = uvicorn.Server(serve_config(app, port=port))
         self._uvicorn = server
         self.ingest_port = port
+        if self._recovery is not None:
+            self._recovery.port = port
+            _write_recovery(self._recovery_path, self._recovery)
         self._host.set_ingest_port(port)
         self._ingest_tasks = [
             asyncio.create_task(server.serve(sockets=[listener])),
@@ -1251,7 +1324,12 @@ class Daemon:
         writer = self._writer
         self._writer = None
         if writer is not None:
-            await asyncio.to_thread(writer.stop)
+            while True:
+                try:
+                    await asyncio.to_thread(writer.stop)
+                    break
+                except TimeoutError:
+                    _LOG.warning("waiting for the database writer before releasing the core lock")
         engine = self._engine
         self._engine = None
         if engine is not None:
