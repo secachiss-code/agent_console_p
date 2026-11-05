@@ -1,0 +1,114 @@
+"""Disposable-repository audit; never acts on the project checkout."""
+from pathlib import Path
+from datetime import datetime, UTC
+import json
+import os
+import subprocess
+import tempfile
+
+from aconsole.core.application.services.checkpoints import CheckpointService, CheckpointRestore
+from aconsole.core.domain.tab_status import TabStatus
+from aconsole.core.infrastructure.git.checkpoints import GitCheckpoints
+from aconsole.core.infrastructure.git.worktrees import Worktrees, WorktreeRequest
+from aconsole.core.infrastructure.git.runner import GitRunner
+from aconsole.core.infrastructure.git.operations import GitMutations
+from aconsole.core.application.ports.git_repo import GitCommandError
+
+GIT=Path('/usr/bin/git')
+AT=datetime(2026,11,5,tzinfo=UTC)
+BASE=Path(tempfile.mkdtemp(prefix='aconsole-aud1-'))
+results=[]
+
+def git(repo,*args):
+    env={**os.environ,'GIT_CONFIG_GLOBAL':'/dev/null','GIT_CONFIG_NOSYSTEM':'1'}
+    return subprocess.check_output([str(GIT),'-C',str(repo),*args],env=env,stderr=subprocess.PIPE,text=True)
+
+def init(name,ignore=''):
+    repo=BASE/name;repo.mkdir()
+    git(repo,'init','-b','main');git(repo,'config','user.name','Audit');git(repo,'config','user.email','audit@example.invalid')
+    (repo/'base.txt').write_text('base\n')
+    (repo/'.gitignore').write_text(ignore)
+    commit(repo,'base')
+    return repo
+
+def commit(repo,message):
+    git(repo,'add','-A','--','.');git(repo,'commit','-m',message)
+
+def service(repo):
+    svc=CheckpointService(GitCheckpoints(git=GIT));target=svc.on_user_prompt(repo,'audit','target',AT)
+    return svc,target
+
+def restore(svc,target,repo):
+    preview=svc.preview('audit',target.id,now=AT)
+    return svc.restore(CheckpointRestore(repo=repo,tab_id='audit',checkpoint_id=target.id,confirm=preview.confirm_token,status=TabStatus.IDLE,at=AT))
+
+def record(name,**data): results.append({'scenario':name,**data})
+
+repo=init('untracked');svc,target=service(repo)
+(repo/'new.txt').write_text('recover me\n');(repo/'base.txt').write_text('later\n')
+restored=restore(svc,target,repo)
+safety=next(p for p in svc.list('audit') if p.id==restored.safety_checkpoint)
+record('untracked safety checkpoint',file_removed=not (repo/'new.txt').exists(),recoverable=git(repo,'show',f'{safety.ref}:new.txt')=='recover me\n',base_restored=(repo/'base.txt').read_text()=='base\n')
+
+repo=init('outside');svc,target=service(repo)
+(repo/'sub').mkdir();(repo/'sub/victim.txt').write_text('tracked\n');commit(repo,'track sub')
+outside=BASE/'outside-data';outside.mkdir();(outside/'victim.txt').write_text('outside sentinel\n')
+(repo/'sub/victim.txt').unlink();(repo/'sub').rmdir();(repo/'sub').symlink_to(outside,target_is_directory=True)
+status_before=git(repo,'ls-files','-c','-o','--exclude-standard','-z').split('\0')
+restored=restore(svc,target,repo)
+safety=next(p for p in svc.list('audit') if p.id==restored.safety_checkpoint)
+record('checkpoint cleanup through parent symlink',outside_file_survives=(outside/'victim.txt').exists(),current_paths=status_before,safety_paths=git(repo,'ls-tree','-r','--name-only',safety.ref).splitlines(),restored=restored.restored)
+
+repo=init('dangling');svc,target=service(repo)
+(repo/'dangling').symlink_to('missing')
+restore(svc,target,repo)
+record('dangling symlink cleanup',symlink_remains=(repo/'dangling').is_symlink(),status=git(repo,'status','--porcelain').strip())
+
+repo=init('ignored-aconsole',ignore='.aconsole/\n');trees=Worktrees(GIT);dest=BASE/'wt-ignored'
+created=trees.create(WorktreeRequest(repo=repo,dest=dest,slug='audit',tab_id='ignored'))
+trees.release(dest);(dest/'.aconsole/notes.txt').write_text('private notes\n')
+before=git(dest,'status','--porcelain','--untracked-files=all','--ignored=matching')
+state=trees.state(repo,dest);closed=trees.close(repo,dest)
+record('ignored .aconsole data on close',status=before.strip(),state=state,removed_without_discard=closed.removed,reason=closed.reason,notes_survive=(dest/'.aconsole/notes.txt').exists())
+
+repo=init('dirty-close');dest=BASE/'wt-dirty';trees.create(WorktreeRequest(repo=repo,dest=dest,slug='audit',tab_id='dirty'));trees.release(dest)
+(dest/'new.txt').write_text('keep\n');closed=trees.close(repo,dest)
+record('dirty worktree close',removed=closed.removed,reason=closed.reason,contents=(dest/'new.txt').read_text())
+
+repo=init('ignored-other',ignore='secret/\n');dest=BASE/'wt-other';trees.create(WorktreeRequest(repo=repo,dest=dest,slug='audit',tab_id='other'));trees.release(dest)
+(dest/'secret').mkdir();(dest/'secret/note').write_text('keep\n');closed=trees.close(repo,dest)
+record('other ignored directory close',removed=closed.removed,reason=closed.reason,contents=(dest/'secret/note').read_text())
+closed=trees.close(repo,dest,discard_ignored=True)
+record('explicit ignored discard',removed=closed.removed,reason=closed.reason)
+
+repo=init('leading-dash');mutations=GitMutations(GitRunner(git=GIT));(repo/'--help').write_text('literal\n');staged=mutations.stage(repo,('--help',))
+base_rejected=False
+try: trees.create(WorktreeRequest(repo=repo,dest=BASE/'invalid-base',slug='audit',tab_id='bad',base='--help'))
+except ValueError: base_rejected=True
+record('leading dash',literal_staged=staged.ok and '--help' in git(repo,'diff','--cached','--name-only'),base_rejected=base_rejected)
+
+repo=init('index-lock');(repo/'base.txt').write_text('local\n');index_before=(repo/'.git/index').read_bytes();lock=repo/'.git/index.lock';lock.write_text('other owner\n');stage_refused=False
+try: stage_refused=not mutations.stage(repo,('base.txt',)).ok
+except GitCommandError: stage_refused=True
+store=GitCheckpoints(git=GIT);store.capture(repo,'refs/aconsole/checkpoints/audit/1','with locked real index')
+record('concurrent index.lock',stage_refused=stage_refused,index_unchanged=(repo/'.git/index').read_bytes()==index_before,lock_unchanged=lock.read_text()=='other owner\n',snapshot_captures_worktree=git(repo,'show','refs/aconsole/checkpoints/audit/1:base.txt')=='local\n')
+
+repo=init('merge');git(repo,'checkout','-b','topic');(repo/'base.txt').write_text('topic\n');commit(repo,'topic');oid=git(repo,'rev-parse','HEAD').strip();git(repo,'checkout','main');(repo/'base.txt').write_text('main\n');(repo/'other.txt').write_text('clean\n');commit(repo,'main');head=git(repo,'rev-parse','HEAD').strip();(repo/'other.txt').write_text('local dirty\n')
+merged=mutations.merge(repo,oid,'merge','merge audit')
+record('merge conflict',ok=merged.ok,head_unchanged=git(repo,'rev-parse','HEAD').strip()==head,local_changes_preserved=(repo/'other.txt').read_text()=='local dirty\n',base_preserved=(repo/'base.txt').read_text()=='main\n',unmerged=git(repo,'ls-files','-u').strip())
+
+repo=init('single-file-outside');old=git(repo,'rev-parse','HEAD').strip()
+(repo/'sub').mkdir();(repo/'sub/victim.txt').write_text('tracked\n');commit(repo,'track sub')
+outside=BASE/'single-file-outside-data';outside.mkdir();(outside/'victim.txt').write_text('outside sentinel\n')
+(repo/'sub/victim.txt').unlink();(repo/'sub').rmdir();(repo/'sub').symlink_to(outside,target_is_directory=True)
+mutations.safety_ref(repo,'refs/aconsole/safety/audit','before restoring sub/victim.txt')
+restored=mutations.restore_file(repo,old,'sub/victim.txt')
+record('single-file restore cleanup through parent symlink',outside_file_survives=(outside/'victim.txt').exists(),restore_ok=restored.ok)
+
+repo=init('linked-root');dest=BASE/'linked-wt';trees.create(WorktreeRequest(repo=repo,dest=dest,slug='audit',tab_id='linked'))
+svc,target=service(dest);(dest/'base.txt').write_text('changed\n');restored=restore(svc,target,dest)
+record('linked worktree checkpoint',git_is_file=(dest/'.git').is_file(),restored=restored.restored,base_restored=(dest/'base.txt').read_text()=='base\n',main_unchanged=(repo/'base.txt').read_text()=='base\n')
+
+out={'source_commit':os.environ.get('AUDIT_COMMIT','72612ff'),'temporary_root':str(BASE),'results':results}
+print(json.dumps(out,ensure_ascii=False,indent=2))
+Path('/tmp/aconsole-aud1-results.json').write_text(json.dumps(out,ensure_ascii=False,indent=2)+'\n')

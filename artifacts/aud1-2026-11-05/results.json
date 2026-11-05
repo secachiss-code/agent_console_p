@@ -1,0 +1,91 @@
+{
+  "source_commit": "72612ff",
+  "temporary_root": "/tmp/aconsole-aud1-lgcwrdyp",
+  "results": [
+    {
+      "scenario": "untracked safety checkpoint",
+      "file_removed": true,
+      "recoverable": true,
+      "base_restored": true
+    },
+    {
+      "scenario": "checkpoint cleanup through parent symlink",
+      "outside_file_survives": false,
+      "current_paths": [
+        "sub",
+        ".gitignore",
+        "base.txt",
+        "sub/victim.txt",
+        ""
+      ],
+      "safety_paths": [
+        ".gitignore",
+        "base.txt",
+        "sub"
+      ],
+      "restored": true
+    },
+    {
+      "scenario": "dangling symlink cleanup",
+      "symlink_remains": true,
+      "status": "?? dangling"
+    },
+    {
+      "scenario": "ignored .aconsole data on close",
+      "status": "!! .aconsole/",
+      "state": "clean",
+      "removed_without_discard": true,
+      "reason": "clean",
+      "notes_survive": false
+    },
+    {
+      "scenario": "dirty worktree close",
+      "removed": false,
+      "reason": "dirty",
+      "contents": "keep\n"
+    },
+    {
+      "scenario": "other ignored directory close",
+      "removed": false,
+      "reason": "ignored",
+      "contents": "keep\n"
+    },
+    {
+      "scenario": "explicit ignored discard",
+      "removed": true,
+      "reason": "ignored"
+    },
+    {
+      "scenario": "leading dash",
+      "literal_staged": true,
+      "base_rejected": true
+    },
+    {
+      "scenario": "concurrent index.lock",
+      "stage_refused": true,
+      "index_unchanged": true,
+      "lock_unchanged": true,
+      "snapshot_captures_worktree": true
+    },
+    {
+      "scenario": "merge conflict",
+      "ok": false,
+      "head_unchanged": true,
+      "local_changes_preserved": true,
+      "base_preserved": true,
+      "unmerged": ""
+    },
+    {
+      "scenario": "single-file restore cleanup through parent symlink",
+      "outside_file_survives": false,
+      "restore_ok": true
+    },
+    {
+      "scenario": "linked worktree checkpoint",
+      "git_is_file": true,
+      "restored": true,
+      "base_restored": true,
+      "main_unchanged": true
+    }
+  ]
+}
