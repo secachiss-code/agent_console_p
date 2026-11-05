@@ -6,7 +6,8 @@ competes with an agent's own `git` for the index lock.
 A repository config can name programs (`core.fsmonitor`, `diff.external`, `core.sshCommand`, a textconv, or
 `core.hooksPath`). Every spawn overrides those. Status, diff, and snapshots point `core.hooksPath` at `/dev/null`.
 A user commit or merge (`hooks=True`) runs the hooks in the repository's own `hooks` directory, not the path from
-that config. Diffs also pass `--no-ext-diff` and `--no-textconv`.
+that config. The permission requires a write with `commit` or `merge` as its first argument; read calls and
+other commands cannot enable hooks. Diffs also pass `--no-ext-diff` and `--no-textconv`.
 """
 
 from __future__ import annotations
@@ -143,6 +144,9 @@ class GitRunner:
         if not repo.is_absolute():
             raise GitCommandError(_ABSOLUTE)
         options = GitCall() if call is None else call
+        if options.hooks and (not options.write or not args or args[0] not in {"commit", "merge"}):
+            message = "hooks require an explicit commit or merge write"
+            raise GitCommandError(message)
         with self._slots:
             return self._spawn(repo, args, options)
 

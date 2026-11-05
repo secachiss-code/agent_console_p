@@ -3,7 +3,8 @@
 Commit and merge are the user operations that run hooks. They do not pass `--no-verify`. The hooks that run are
 the scripts in the repository's own `hooks` directory (`$GIT_COMMON_DIR/hooks`), including a linked worktree.
 `core.hooksPath` from the repository config is not followed: an agent can write that key, and a commit would
-otherwise execute it on the host. A refusing hook is the answer, with its text. Signing stays on.
+otherwise execute it on the host. A refusing hook is the answer, with its text. Automatic signing is disabled:
+the repository config must not select a signing program to execute on the host.
 
 Status, diff, snapshots, and every other git call point `core.hooksPath` at `/dev/null` and force
 `core.fsmonitor=false`, an empty `diff.external`, and `core.sshCommand` to the host `true`. Diffs also pass

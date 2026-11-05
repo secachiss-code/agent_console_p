@@ -8,6 +8,7 @@ from pathlib import Path
 
 import pytest
 
+from aconsole.core.application.ports.git_repo import GitCommandError
 from aconsole.core.infrastructure.git.checkpoints import GitCheckpoints
 from aconsole.core.infrastructure.git.diff import GitDiff
 from aconsole.core.infrastructure.git.history import GitHistory
@@ -228,3 +229,52 @@ def _mentions_git(node: ast.AST) -> bool:
         if isinstance(child, ast.Attribute) and child.attr == "_git":
             return True
     return False
+
+
+@pytest.mark.parametrize(("command", "write"), [
+    (("status", "--porcelain"), False),
+    (("checkout", "--", "f.txt"), True),
+    (("commit", "--dry-run"), False),
+    (("-c", "alias.go=!true", "go"), True),
+])
+def test_hooks_permission_is_limited_to_explicit_commit_or_merge_writes(
+    tmp_path: Path, command: tuple[str, ...], *, write: bool,
+) -> None:
+    repo = new_repo(tmp_path / "repo")
+    _ = commit(repo, "f.txt", "one\n", "init")
+    with pytest.raises(GitCommandError, match="hooks require an explicit commit or merge write"):
+        _ = GitRunner().invoke(repo, command, GitCall(write=write, hooks=True))
+
+
+@pytest.mark.parametrize("source", ["include", "worktree"])
+def test_background_reads_override_indirect_repository_config(tmp_path: Path, source: str) -> None:
+    repo, marker, script = _dirty_repo(tmp_path, "* diff=evil\n")
+    hooks = tmp_path / "foreign-hooks"
+    _script(hooks / "post-index-change", marker)
+    config = tmp_path / "included.config"
+    if source == "include":
+        _ = git(repo, "config", "include.path", str(config))
+    else:
+        _ = git(repo, "config", "extensions.worktreeConfig", "true")
+        config = repo / ".git" / "config.worktree"
+    config.write_text(
+        f'[core]\n fsmonitor = {script}\n hooksPath = {hooks}\n'
+        f'[diff]\n external = {script}\n[diff "evil"]\n textconv = {script}\n',
+        encoding="utf-8",
+    )
+    _ = GitHistory(GitRunner()).status(repo)
+    _ = GitDiff().summary(repo, None)
+    _ = GitCheckpoints().capture(repo, _REF, "safe")
+    assert not marker.exists()
+
+
+def test_process_environment_does_not_enable_external_diff_or_ssh(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    repo, marker, script = _dirty_repo(tmp_path, "")
+    monkeypatch.setenv("GIT_EXTERNAL_DIFF", str(script))
+    monkeypatch.setenv("GIT_SSH_COMMAND", str(script))
+    runner = GitRunner()
+    _ = runner.read(repo, "diff")
+    _ = runner.read(repo, "ls-remote", "git@127.0.0.1:none.git", codes=frozenset(range(256)))
+    assert not marker.exists()
