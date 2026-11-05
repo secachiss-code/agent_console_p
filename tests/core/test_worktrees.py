@@ -15,6 +15,7 @@ import pytest
 
 from aconsole.core.domain.errors import DomainError
 from aconsole.core.infrastructure.containers.distrobox_ini import DistroboxIni, IniError, assemble_argv, ini_diff
+from aconsole.core.infrastructure.git.operations import GitMutations
 from aconsole.core.infrastructure.git.worktrees import (
     CloseResult,
     Created,
@@ -417,3 +418,41 @@ def _git_ok(*args: str) -> None:
 
 def _git_completed(args: tuple[str, ...]) -> subprocess.CompletedProcess[str]:
     return subprocess.run([str(_GIT), *args], check=False, capture_output=True, text=True)
+
+
+@pytest.mark.parametrize("relative", ["notes.txt", "clipboard/image.png"])
+def test_ignored_aconsole_data_requires_explicit_discard(tmp_path: Path, relative: str) -> None:
+    repo = tmp_path / "repo"
+    _init(repo)
+    _ = (repo / ".gitignore").write_text(".aconsole/\n", encoding="utf-8")
+    _ = _git(repo, "add", ".gitignore")
+    _commit(repo, "ignore runtime directory")
+    trees = _worktrees()
+    dest = tmp_path / "tree"
+    _ = trees.create(_request(repo, dest, "agent", "private"))
+    trees.release(dest)
+    note = dest / ".aconsole" / relative
+    note.parent.mkdir(parents=True, exist_ok=True)
+    _ = note.write_text("private bytes\n", encoding="utf-8")
+    assert trees.state(repo, dest) == "ignored"
+    assert GitMutations().has_ignored(dest)
+    assert trees.close(repo, dest) == CloseResult(removed=False, reason="ignored")
+    assert note.read_text(encoding="utf-8") == "private bytes\n"
+    assert trees.close(repo, dest, discard_ignored=True).removed
+    assert not dest.exists()
+
+
+def test_an_ignored_runtime_lock_alone_is_not_user_data(tmp_path: Path) -> None:
+    repo = tmp_path / "repo"
+    _init(repo)
+    _ = (repo / ".gitignore").write_text(".aconsole/\n", encoding="utf-8")
+    _ = _git(repo, "add", ".gitignore")
+    _commit(repo, "ignore runtime directory")
+    trees = _worktrees()
+    dest = tmp_path / "tree"
+    _ = trees.create(_request(repo, dest, "agent", "lock"))
+    assert trees.state(repo, dest) == "clean"
+    assert not GitMutations().has_ignored(dest)
+    assert trees.close(repo, dest).reason == "locked"
+    trees.release(dest)
+    assert trees.close(repo, dest).removed

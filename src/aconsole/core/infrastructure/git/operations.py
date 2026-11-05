@@ -217,7 +217,7 @@ class GitMutations:
 
     def has_ignored(self, worktree: Path) -> bool:
         return has_ignored_files(
-            self._git.read(worktree, "status", "--porcelain", "--untracked-files=all", "--ignored=matching").text
+            self._git.read(worktree, "status", "--porcelain", "--untracked-files=all", "--ignored=traditional").text
         )
 
     def remove_worktree(self, root: Path, worktree: Path, *, discard_ignored: bool) -> GitDone:

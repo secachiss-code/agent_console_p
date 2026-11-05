@@ -148,11 +148,8 @@ def has_ignored_files(status: str) -> bool:
 
 
 def _status_ignored(text: str) -> bool:
-    """True when `status --ignored` lists an ignored entry other than the tab lock."""
-    for line in text.splitlines():
-        if line.startswith("!! ") and line[_STATUS_PATH:].rstrip("/") not in {_LOCK_REL, ".aconsole"}:
-            return True
-    return False
+    """Only the exact tab lock is disposable; a collapsed directory may contain user files."""
+    return any(line.startswith("!! ") and line[_STATUS_PATH:].rstrip("/") != _LOCK_REL for line in text.splitlines())
 
 
 def _status_dirty(text: str) -> bool:
@@ -338,7 +335,7 @@ class Worktrees:
         return "refused"
 
     def _status(self, dest: Path) -> str:
-        return self._run(("-C", str(dest), "status", "--porcelain", "--untracked-files=all", "--ignored=matching"))
+        return self._run(("-C", str(dest), "status", "--porcelain", "--untracked-files=all", "--ignored=traditional"))
 
     def prune(self, repo: Path) -> tuple[str, ...]:
         """Drop stale git worktree entries and records whose directory is gone."""
