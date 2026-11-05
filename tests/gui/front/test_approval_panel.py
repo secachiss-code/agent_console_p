@@ -4,9 +4,11 @@ from __future__ import annotations
 
 import asyncio
 import tempfile
+from datetime import UTC, datetime, timedelta
 from typing import TYPE_CHECKING
 
 import gi
+import msgspec
 import pytest
 
 gi.require_version("Gtk", "4.0")
@@ -139,6 +141,10 @@ def test_cards_show_what_is_asked_and_take_no_focus(core: str) -> None:
         assert panel.cards[0].has_css_class("ac-attention-card")
         assert panel.focused_index() is None
         assert window.get_focus() is None or not isinstance(window.get_focus(), Gtk.ListBoxRow)
+        panel.toggle_button.set_active(False)
+        assert not panel.requests_scroll.get_visible()
+        assert panel.step(1)
+        assert panel.requests_scroll.get_visible()
 
     _on_panel(core, check)
 
@@ -215,6 +221,29 @@ def test_a_lost_call_keeps_the_card_for_another_try(core: str) -> None:
         await _settled(lambda: bool(seen.toasts))
         assert card in panel.cards
         assert not card.busy
+
+    _on_panel(core, check)
+
+
+@pytest.mark.parametrize("core", ["waiting"], indirect=True)
+def test_expired_approval_disables_allow_and_blocks_keyboard_decision(core: str) -> None:
+    async def check(panel: ApprovalPanel, seen: _Seen, _window: Gtk.Window) -> None:
+        card = panel.cards[0]
+        now = datetime.now(UTC)
+        card.view = msgspec.structs.replace(card.view, expires_at=now + timedelta(seconds=1))
+        card.tick(now)
+        assert card.allow_button.get_sensitive()
+        card.view = msgspec.structs.replace(card.view, expires_at=now)
+        card.tick(now)
+        assert not card.allow_button.get_sensitive()
+        assert card.session_button is not None
+        assert not card.session_button.get_sensitive()
+        assert panel.step(1)
+        panel.decide_focused(ApprovalDecision.ALLOW)
+        await asyncio.sleep(0)
+        assert not card.busy
+        assert len(panel.cards) == 2
+        assert seen.toasts
 
     _on_panel(core, check)
 

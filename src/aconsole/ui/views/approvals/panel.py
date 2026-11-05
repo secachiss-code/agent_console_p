@@ -70,6 +70,7 @@ class ApprovalCard(Gtk.ListBoxRow):
         body.append(cwd)
         body.append(self._buttons())
         self.set_child(body)
+        self.tick(datetime.now(UTC))
 
     def _heading(self, tab_title: str) -> Gtk.Box:
         heading = Gtk.Box(spacing=12)
@@ -85,7 +86,6 @@ class ApprovalCard(Gtk.ListBoxRow):
         self.timer.add_css_class("dim-label")
         self.timer.add_css_class("numeric")
         heading.append(self.timer)
-        self.tick(datetime.now(UTC))
         return heading
 
     def _risks(self) -> Gtk.Box | None:
@@ -147,6 +147,9 @@ class ApprovalCard(Gtk.ListBoxRow):
         self.timer.set_label(
             translate("approvals.time_up") if left is None else translate("approvals.left").format(time=left),
         )
+        self.allow_button.set_sensitive(self.view.expires_at > now)
+        if self.session_button is not None:
+            self.session_button.set_sensitive(self.view.expires_at > now)
 
     def _allow(self, _button: Gtk.Button) -> None:
         self._panel.decide(self, ApprovalDecision.ALLOW)
@@ -187,13 +190,20 @@ class ApprovalPanel(Gtk.Box):
         self.count_label: Gtk.Label = Gtk.Label(xalign=0)
         self.count_label.add_css_class("ac-approval-count")
         self.count_label.add_css_class("heading")
-        self.append(self.count_label)
+        self.toggle_button: Gtk.ToggleButton = Gtk.ToggleButton(child=self.count_label, active=True)
+        self.toggle_button.add_css_class("flat")
+        _ = self.toggle_button.connect("toggled", self._toggle_requests)
+        self.append(self.toggle_button)
         self.list_box: Gtk.ListBox = Gtk.ListBox(selection_mode=Gtk.SelectionMode.NONE)
         self.list_box.add_css_class("background")
-        self.append(Gtk.ScrolledWindow(
+        self.requests_scroll: Gtk.ScrolledWindow = Gtk.ScrolledWindow(
             child=self.list_box, hscrollbar_policy=Gtk.PolicyType.NEVER,
             propagate_natural_height=True, max_content_height=_MAX_HEIGHT,
-        ))
+        )
+        self.append(self.requests_scroll)
+
+    def _toggle_requests(self, _button: Gtk.ToggleButton) -> None:
+        self.requests_scroll.set_visible(self.toggle_button.get_active())
 
     def update(self, approvals: tuple[ApprovalView, ...], titles: Mapping[str, str]) -> None:
         self._approvals = approvals
@@ -238,6 +248,7 @@ class ApprovalPanel(Gtk.Box):
         """Focus the next or previous card. False when there is none to go to."""
         if not self.cards:
             return False
+        self.toggle_button.set_active(True)
         index = self.focused_index()
         target = 0 if index is None else (index + delta) % len(self.cards)
         return self.cards[target].grab_focus()
@@ -253,6 +264,11 @@ class ApprovalPanel(Gtk.Box):
             self._open(self.cards[index].view.tab_id)
 
     def decide(self, card: ApprovalCard, decision: ApprovalDecision, scope: ApprovalScope = ApprovalScope.ONCE) -> None:
+        now = datetime.now(UTC)
+        card.tick(now)
+        if decision == ApprovalDecision.ALLOW and card.view.expires_at <= now:
+            self._toast(translate("approvals.closed"))
+            return
         self._send(card, self.viewmodel.decide(card.view, decision, scope))
 
     def release(self, card: ApprovalCard) -> None:

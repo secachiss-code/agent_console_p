@@ -43,6 +43,7 @@ class TabSidebar(Gtk.Stack):
         self.on_error: Callable[[str], None] | None = None
         self.on_row_pressed: Callable[[], None] | None = None
         self._section_handlers: list[tuple[TabItem, int, int]] = []
+        self._filter_handlers: list[tuple[TabItem, int]] = []
         self._header_bindings: dict[Gtk.ListHeader, GObject.Binding] = {}
         self._timer: int | None = None
         _ = self.connect("map", self._start_clock)
@@ -98,6 +99,9 @@ class TabSidebar(Gtk.Stack):
         return GLib.SOURCE_CONTINUE
 
     def _model_changed(self, _model: object, _position: int, _removed: int, _added: int) -> None:
+        for item, handler in self._filter_handlers:
+            item.disconnect(handler)
+        self._filter_handlers.clear()
         for item, key_handler, title_handler in self._section_handlers:
             item.disconnect(key_handler)
             item.disconnect(title_handler)
@@ -107,6 +111,9 @@ class TabSidebar(Gtk.Stack):
             key_handler = item.connect("notify::section-key", self._section_changed)
             title_handler = item.connect("notify::section-title", self._section_changed)
             self._section_handlers.append((item, key_handler, title_handler))
+            for name in ("title", "subtitle", "detail", "section-title", "project-id"):
+                handler = item.connect(f"notify::{name}", self._search_field_changed)
+                self._filter_handlers.append((item, handler))
         self._filter.changed(Gtk.FilterChange.DIFFERENT)
         self._sync_page()
         self._sorter.changed(Gtk.SorterChange.DIFFERENT)
@@ -140,6 +147,10 @@ class TabSidebar(Gtk.Stack):
 
     def _section_changed(self, _item: TabItem, _property: object) -> None:
         self._sorter.changed(Gtk.SorterChange.DIFFERENT)
+
+    def _search_field_changed(self, _item: TabItem, _property: object) -> None:
+        self._filter.changed(Gtk.FilterChange.DIFFERENT)
+        self._sync_page()
 
     def _row_setup(self, _factory: Gtk.SignalListItemFactory, item: Gtk.ListItem) -> None:
         row = TabRow(self.tabs)

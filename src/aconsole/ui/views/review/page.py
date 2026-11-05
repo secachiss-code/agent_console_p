@@ -42,6 +42,8 @@ class ReviewPage(Gtk.Box):
         self._file_generation: int = 0
         self._file_paths: list[str] = []
         self.selected_path: str | None = None
+        self._comment_drafts: dict[tuple[str, str], str] = {}
+        self._sending_comments: set[tuple[str, str]] = set()
         self.stack: Adw.ViewStack = Adw.ViewStack(vexpand=True)
         self.append(self._build_heading(title))
         self.append(self.stack)
@@ -101,6 +103,7 @@ class ReviewPage(Gtk.Box):
 
     async def load_changes(self) -> None:
         self._generation += 1
+        self._file_generation += 1
         generation = self._generation
         try:
             summary = await self.viewmodel.summary()
@@ -112,11 +115,14 @@ class ReviewPage(Gtk.Box):
             self._show_files(summary.files)
 
     def _show_files_message(self, text: str) -> None:
+        self._file_generation += 1
+        self.selected_path = None
         self.file_list.remove_all()
         self._file_paths = []
         self._set_diff_message(text)
 
     def _show_files(self, files: tuple[DiffFileView, ...]) -> None:
+        self._file_generation += 1
         previous = self.selected_path
         self.file_list.remove_all()
         self._file_paths = [item.path for item in files]
@@ -136,22 +142,24 @@ class ReviewPage(Gtk.Box):
         _ = spawn_task(self._load_file(self.selected_path))
 
     async def _load_file(self, path: str) -> None:
+        if path != self.selected_path:
+            return
         self._file_generation += 1
         generation = self._file_generation
         try:
             detail = await self.viewmodel.file(path)
         except CoreCallError as error:
-            if generation == self._file_generation:
+            if generation == self._file_generation and path == self.selected_path:
                 self._set_diff_message(
                     translate("review.too_large") if error.error.message == "DIFF_TOO_LARGE"
                     else translate("review.load_error").format(error=error),
                 )
             return
         except Exception as error:  # noqa: BLE001 -- a lost core shows here, not in a crash
-            if generation == self._file_generation:
+            if generation == self._file_generation and path == self.selected_path:
                 self._set_diff_message(translate("review.load_error").format(error=error))
             return
-        if generation == self._file_generation:
+        if generation == self._file_generation and path == self.selected_path:
             self._show_diff(path, detail)
 
     def _clear_diff(self) -> None:
@@ -198,6 +206,7 @@ class ReviewPage(Gtk.Box):
             body=translate("review.comment_body").format(path=path, hunk=hunk_id),
         )
         entry = Gtk.Entry(activates_default=True)
+        entry.set_text(self._comment_drafts.get((path, hunk_id), ""))
         dialog.set_extra_child(entry)
         dialog.add_response("cancel", translate("review.comment_cancel"))
         dialog.add_response("send", translate("review.comment_send"))
@@ -211,15 +220,28 @@ class ReviewPage(Gtk.Box):
         self, _dialog: Adw.AlertDialog, response: str, entry: Gtk.Entry, path: str, hunk_id: str,
     ) -> None:
         text = entry.get_text().strip()
+        self._comment_drafts[path, hunk_id] = text
         if response == "send" and text:
             _ = spawn_task(self.send_comment(path, hunk_id, text))
 
     async def send_comment(self, path: str, hunk_id: str, text: str) -> None:
+        key = (path, hunk_id)
+        if key in self._sending_comments:
+            return
+        self._comment_drafts[key] = text
+        self._sending_comments.add(key)
         try:
             result = await self.viewmodel.comment(path, hunk_id, text)
-        except Exception:  # noqa: BLE001 -- the failure is told; the text is the user's to send again
+        except Exception:  # noqa: BLE001 -- preserve the draft so reopening the comment restores it
             self._toast(translate("review.comment_error"))
             return
+        finally:
+            self._sending_comments.discard(key)
+        if not result.ok:
+            self._toast(result.toast or translate("review.comment_error"))
+            return
+        if self._comment_drafts.get(key) == text:
+            _ = self._comment_drafts.pop(key, None)
         self._toast(result.toast or translate("review.comment_sent"))
 
     async def load_checkpoints(self) -> None:

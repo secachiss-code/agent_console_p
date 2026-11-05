@@ -206,12 +206,62 @@ def test_system_title_buttons_keep_clear_header_space(
         settings.set_property("gtk-decoration-layout", previous_layout)
 
 
-def test_startup_connection_error_exits_without_a_window(tmp_path: Path) -> None:
+def test_snapshot_connection_error_exits_without_a_window(tmp_path: Path) -> None:
     from aconsole.ui.bootstrap import run_app
     from aconsole.ui.client.core_client import CoreClient
     from aconsole.ui.views.app import AConsoleApp
 
-    app = AConsoleApp(CoreClient(str(tmp_path / "missing-core.sock")))
+    request = SnapshotRequest(view="window", theme="light", width=700, height=800, out=tmp_path / "failed.png")
+    app = AConsoleApp(CoreClient(str(tmp_path / "missing-core.sock")), request)
     assert run_app(lambda: app, ["aconsole-test-error"]) == 0
     assert app.failed
     assert app.window is None
+
+
+def test_startup_error_offers_retry_and_opens_the_window(running_app: str, tmp_path: Path) -> None:
+    from gi.repository import GLib
+
+    from aconsole.ui.bootstrap import spawn_task
+
+    class _RetryApp(AConsoleApp):
+        error_shown: bool = False
+        recovered: bool = False
+        timed_out: bool = False
+
+        def _show_startup_error(self, error: Exception) -> None:
+            super()._show_startup_error(error)
+            self.error_shown = self.startup_window is not None
+            assert self.startup_retry is not None
+            assert self.startup_retry.get_visible()
+            assert self.startup_diagnostics is not None
+            assert self.startup_diagnostics.get_sensitive()
+            _ = GLib.idle_add(self._drive_retry)
+
+        def _drive_retry(self) -> bool:
+            assert self.startup_retry is not None
+            self.client.path = running_app
+            self.startup_retry.emit("clicked")
+            self.startup_retry.emit("clicked")
+            return GLib.SOURCE_REMOVE
+
+        async def _open(self) -> None:
+            await super()._open()
+            if self.window is not None:
+                self.recovered = self.startup_window is None and not self.failed
+                self.window.close()
+
+        def _timeout(self) -> bool:
+            self.timed_out = True
+            _ = spawn_task(self._finish())
+            return GLib.SOURCE_REMOVE
+
+    app = _RetryApp(CoreClient(str(tmp_path / "missing.sock")))
+    watchdog = GLib.timeout_add(8000, app._timeout)
+    try:
+        assert run_app(lambda: app, ["aconsole-retry-test"]) == 0
+        assert app.error_shown
+        assert app.recovered
+        assert not app.timed_out
+    finally:
+        if not app.timed_out:
+            _ = GLib.source_remove(watchdog)

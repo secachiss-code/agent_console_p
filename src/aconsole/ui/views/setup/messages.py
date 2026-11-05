@@ -3,6 +3,14 @@
 import locale
 
 _MESSAGES = {
+    "startup.loading": ("Connecting to core…", "Подключаемся к ядру…"),
+    "startup.failed": ("Could not start AConsole", "Не удалось запустить AConsole"),  # noqa: RUF001 -- Russian UI
+    "startup.retry": ("Retry", "Повторить"),
+    "startup.diagnostics": ("Copy diagnostics", "Скопировать диагностику"),
+    "connection.reconnecting": (
+        "Connection to core lost. Reconnecting; displayed data may be out of date.",
+        "Связь с ядром потеряна. Переподключаемся; данные на экране могут быть устаревшими.",  # noqa: RUF001 -- Russian UI
+    ),
     "setup.title": ("Welcome to AConsole", "Добро пожаловать в AConsole"),
     "setup.found": ("Found", "Нашли"),
     "setup.project": ("Project", "Проект"),
@@ -85,6 +93,10 @@ _MESSAGES = {
     "health.resyncs": ("Snapshots pulled again", "Повторных снимков"),
     "health.reconnects": ("Reconnections", "Переподключений"),
     "prefs.saved": ("Preferences saved", "Настройки сохранены"),
+    "prefs.updated_draft": (
+        "Preferences changed elsewhere. Your edits are kept; review them before applying.",
+        "Настройки изменились в другом окне. Ваши правки сохранены; проверьте их перед применением.",
+    ),
     "prefs.error": (
         "Could not save preferences. Reopen preferences and try again.",
         "Не удалось сохранить настройки. Откройте настройки заново и повторите попытку.",  # noqa: RUF001 -- Russian UI text

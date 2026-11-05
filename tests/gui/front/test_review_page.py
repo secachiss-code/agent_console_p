@@ -6,6 +6,7 @@ import asyncio
 from typing import TYPE_CHECKING
 
 import gi
+import pytest
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
@@ -124,6 +125,35 @@ def test_comment_reports_back(running_app: str) -> None:
     _on_page(running_app, check)
 
 
+@pytest.mark.parametrize("rejected", [False, True])
+def test_failed_comment_restores_the_draft_when_reopened(
+    running_app: str, monkeypatch: pytest.MonkeyPatch, *, rejected: bool,
+) -> None:
+    from aconsole.contracts.app import CommandResult
+
+    async def check(page: ReviewPage, toasts: list[str]) -> None:
+        async def failed_comment(_path: str, _hunk: str, _text: str) -> CommandResult:
+            if rejected:
+                return CommandResult(ok=False, toast=None)
+            message = "core unavailable"
+            raise ConnectionError(message)
+
+        monkeypatch.setattr(page.viewmodel, "comment", failed_comment)
+        await page.send_comment("a.py", "h1", "Keep this comment")
+        assert toasts
+        page._ask_comment(Gtk.Button(), "a.py", "h1")
+        window = page.get_root()
+        assert isinstance(window, Adw.ApplicationWindow)
+        dialog = window.get_visible_dialog()
+        assert isinstance(dialog, Adw.AlertDialog)
+        entry = dialog.get_extra_child()
+        assert isinstance(entry, Gtk.Entry)
+        assert entry.get_text() == "Keep this comment"
+        dialog.force_close()
+
+    _on_page(running_app, check)
+
+
 def test_checkpoints_are_listed_newest_first_and_restore(running_app: str) -> None:
     async def check(page: ReviewPage, toasts: list[str]) -> None:
         await _settled(lambda: page.checkpoint_list.get_row_at_index(0) is not None)
@@ -152,3 +182,40 @@ def test_gutter_and_file_preview() -> None:
     assert gutter(3, None, "del") == "    3       - "
     assert gutter(None, 12, "add") == "         12 + "
     assert files_preview(("a", "b", "c"), limit=2) == (("a", "b"), 1)
+
+
+@pytest.mark.parametrize("failed", [False, True])
+def test_late_file_cannot_replace_a_new_summary(
+    running_app: str, monkeypatch: pytest.MonkeyPatch, *, failed: bool,
+) -> None:
+    from aconsole.contracts.app import DiffFileResult, DiffSummaryResult
+
+    async def check(page: ReviewPage, _toasts: list[str]) -> None:
+        await _settled(lambda: bool(_text_views(page.diff_box)))
+        original_file = page.viewmodel.file
+        started = asyncio.Event()
+        release = asyncio.Event()
+
+        async def delayed_file(path: str) -> DiffFileResult:
+            started.set()
+            await release.wait()
+            return await original_file(path)
+
+        async def empty_summary() -> DiffSummaryResult:
+            if failed:
+                message = "summary unavailable"
+                raise ConnectionError(message)
+            return DiffSummaryResult(base="base", head="head", files=(), insertions=0, deletions=0)
+
+        monkeypatch.setattr(page.viewmodel, "file", delayed_file)
+        monkeypatch.setattr(page.viewmodel, "summary", empty_summary)
+        task = asyncio.create_task(page._load_file("a.py"))
+        await started.wait()
+        await page.load_changes()
+        release.set()
+        await task
+        assert page.selected_path is None
+        assert not _text_views(page.diff_box)
+        assert _labels(page.diff_box)
+
+    _on_page(running_app, check)

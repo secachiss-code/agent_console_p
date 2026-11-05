@@ -221,16 +221,21 @@ class MainWindow(Adw.ApplicationWindow):
         return body
 
     def _setup_terminals(self, content: Adw.ToolbarView) -> None:
+        self.context_title: Adw.WindowTitle = Adw.WindowTitle(title="AConsole")
+        self.content_header.set_title_widget(self.context_title)
         self._terminals_disposed: bool = False
         self.terminal_pages: dict[str, TerminalPage] = {}
         self.terminal_stack: Gtk.Stack = Gtk.Stack()
         self.terminal_stack.set_transition_type(Gtk.StackTransitionType.NONE)
-        _ = self.terminal_stack.add_named(Adw.StatusPage(title=terminal_text("terminal.empty")), "empty")
+        self.empty_terminal_page: Adw.StatusPage = Adw.StatusPage(title=terminal_text("terminal.empty"))
+        self.empty_terminal_page.set_child(Gtk.Button(label=tabs_text("tabs.new"), action_name="win.new-tab"))
+        _ = self.terminal_stack.add_named(self.empty_terminal_page, "empty")
         content.set_content(self.terminal_stack)
 
     def _show_selected_terminal(self, *, show_content: bool = True) -> None:
         if self._terminals_disposed:
             return
+        self._sync_context()
         if show_content and self.content_view.get_content() is not self.terminal_stack:
             self.plan_page = None
             self.review_page = None
@@ -243,6 +248,20 @@ class MainWindow(Adw.ApplicationWindow):
         page = self._terminal_page(str(selected.tab_id))
         self.terminal_stack.set_visible_child(page)
         page.start()
+
+    def _sync_context(self) -> None:
+        snapshot = self.tabs.client.store.snapshot
+        selected = self.selection.get_selected_item()
+        tab = next((tab for tab in (() if snapshot is None else snapshot.tabs)
+                    if isinstance(selected, TabItem) and str(tab.id) == str(selected.tab_id)), None)
+        project_id = tab.project_id if tab is not None else (snapshot.active_project if snapshot is not None else None)
+        project = next((project for project in (() if snapshot is None else snapshot.projects)
+                        if project.id == project_id), None)
+        name = project.name if project is not None else "AConsole"
+        self.context_title.set_title(f"{tab.title} · {tab.agent.value}" if tab is not None else name)
+        self.context_title.set_subtitle(" · ".join(part for part in (name, tab.branch if tab else "") if part))
+        self.set_title(f"{tab.title} — {name} — AConsole" if tab is not None else f"{name} — AConsole")
+        self.empty_terminal_page.set_title(terminal_text("terminal.empty" if tab is not None else "terminal.start"))
 
     def _terminal_page(self, tab_id: str) -> TerminalPage:
         page = self.terminal_pages.get(tab_id)
@@ -287,15 +306,28 @@ class MainWindow(Adw.ApplicationWindow):
     def _dispose_terminals(self, _widget: Gtk.Widget) -> None:
         self._terminals_disposed = True
         self._preferences_unsubscribe()
+        self._connection_unsubscribe()
         self.approval_panel.stop()
         for page in self.terminal_pages.values():
             page.close()
 
     def _install_quota_banner(self, content: Adw.ToolbarView) -> None:
+        self.connection_banner: Adw.Banner = Adw.Banner(title=setup_text("connection.reconnecting"))
+        self.connection_banner.set_button_label(setup_text("health.title"))
+        _ = self.connection_banner.connect("button-clicked", self._connection_details)
+        content.add_top_bar(self.connection_banner)
         self.quota_banner: Adw.Banner = Adw.Banner(title=translate("quota.critical"))
         self.quota_banner.set_button_label(translate("quota.details"))
         _ = self.quota_banner.connect("button-clicked", self._quota_details)
         content.add_top_bar(self.quota_banner)
+
+    def _connection_details(self, _banner: Adw.Banner) -> None:
+        self._open_health()
+
+    def _connection_changed(self, store: CoreStore) -> None:
+        self.connection_banner.set_revealed(store.reconnecting)
+        self.approval_panel.set_sensitive(not store.reconnecting)
+        self.new_tab_button.set_sensitive(not store.reconnecting)
 
     def _quota_details(self, _banner: Adw.Banner) -> None:
         _ = self.quota_card.open_details(self)
@@ -523,6 +555,10 @@ class MainWindow(Adw.ApplicationWindow):
             on_left=self._focus_terminal,
         )
         content.add_bottom_bar(self.approval_panel)
+        self._connection_unsubscribe: Callable[[], None] = self.tabs.client.store.subscribe_connection(
+            self._connection_changed,
+        )
+        self._connection_changed(self.tabs.client.store)
         self._sync_approvals(self.tabs.client.store)
 
     def _handle_attention(self, action_id: str) -> None:

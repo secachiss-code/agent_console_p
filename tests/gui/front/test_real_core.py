@@ -11,9 +11,9 @@ from aconsole.contracts.app import ProjectAddParams, ProjectView
 from aconsole.ui.bootstrap import run_app
 from aconsole.ui.client.core_age import core_is_older_than_code
 from aconsole.ui.client.core_client import CoreClient
-from aconsole.ui.client.daemon import core_python
 from aconsole.ui.views import app as app_module
 from aconsole.ui.views.app import AConsoleApp, SnapshotRequest
+from tests.gui.core_daemon import core_command
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -40,7 +40,7 @@ def test_window_opens_on_the_real_core(tmp_path: Path, monkeypatch: pytest.Monke
     socket = tmp_path / "aconsole" / "core.sock"
     out = tmp_path / "real.png"
     client = CoreClient(str(socket))
-    command = [str(core_python()), "-m", "aconsole.core", "--serve", "--socket", str(socket)]
+    command = core_command(socket)
     request = SnapshotRequest(view="window", theme="light", width=1280, height=800, out=out)
     app = _RealApp(client, request, core_command=command)
     app.repo = str(repo)
@@ -67,7 +67,7 @@ def test_window_replaces_a_core_older_than_the_code(tmp_path: Path, monkeypatch:
     _ = subprocess.run(["/usr/bin/git", "init", "-q", str(repo)], check=True)
     socket = tmp_path / "aconsole" / "core.sock"
     socket.parent.mkdir()
-    command = [str(core_python()), "-m", "aconsole.core", "--serve", "--socket", str(socket)]
+    command = core_command(socket)
     old = subprocess.Popen(command)
     deadline = time.monotonic() + 20
     while not socket.exists() and time.monotonic() < deadline:

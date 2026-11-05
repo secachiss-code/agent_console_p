@@ -182,6 +182,31 @@ def test_b5a_closed_terminal_page_does_not_start_queued_worker() -> None:
     _run_ui(scenario)
 
 
+def test_failed_terminal_spawn_can_be_retried(tmp_path: Path) -> None:
+    from aconsole.ui.views.terminal.page import TerminalPage
+
+    async def scenario(app: _PageTestApp) -> None:
+        app.client.spec = msgspec.structs.replace(app.client.spec, argv=(str(tmp_path / "missing"),))
+        page = TerminalPage(app.client, demo_snapshot().tabs[0].id, lambda: None, lambda _tab: None)
+        app.window = Adw.ApplicationWindow(application=app, content=page)
+        app.window.present()
+        page.start()
+        assert page.worker is not None
+        await page.worker
+        assert page.error_label.get_visible()
+        assert page.retry_button.get_visible()
+        app.client.spec = msgspec.structs.replace(app.client.spec, argv=("/usr/bin/true",))
+        page.retry_button.emit("clicked")
+        page.retry_button.emit("clicked")
+        await _until(page.ended_revealer.get_reveal_child)
+        assert not page.error_label.get_visible()
+        assert not page.retry_button.get_visible()
+        assert sum(method == "tab/launchSpec" for method, _params in app.client.calls) == 2
+        page.close()
+
+    _run_ui(scenario)
+
+
 def test_b5a_window_creates_terminal_pages_on_selection_and_reuses_them() -> None:
     async def scenario(app: _PageTestApp) -> None:
         snapshot = demo_snapshot()

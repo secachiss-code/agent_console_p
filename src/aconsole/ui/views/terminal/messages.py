@@ -3,6 +3,8 @@
 import locale
 
 _MESSAGES = {
+    "terminal.start": ("Start an agent in your project", "Запустите агента в своём проекте"),
+    "terminal.retry": ("Retry starting the session", "Повторить запуск сессии"),
     "terminal.ended": ("Session ended", "Сессия завершена"),
     "terminal.ended_code": ("Session ended with code {code}", "Сессия завершена с кодом {code}"),  # noqa: RUF001 -- Russian
     "terminal.resume": ("Resume", "Возобновить"),

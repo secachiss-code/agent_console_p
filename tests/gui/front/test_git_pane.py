@@ -18,10 +18,10 @@ from aconsole.contracts.app import ProjectAddParams, ProjectView  # noqa: E402
 from aconsole.contracts.git import MergeProbeView, WorktreeGitState  # noqa: E402
 from aconsole.ui.bootstrap import run_app, spawn_task  # noqa: E402
 from aconsole.ui.client.core_client import CoreClient  # noqa: E402
-from aconsole.ui.client.daemon import core_python  # noqa: E402
 from aconsole.ui.snapshot import capture_window  # noqa: E402
 from aconsole.ui.viewmodels.git_vm import GitViewModel, merge_badges  # noqa: E402
 from aconsole.ui.views.review.git_pane import GitPane, RowItem  # noqa: E402
+from tests.gui.core_daemon import core_command  # noqa: E402
 
 if TYPE_CHECKING:
     from collections.abc import Awaitable, Callable
@@ -73,7 +73,7 @@ def _on_pane(
     socket = tmp_path / "s" / "core.sock"
     socket.parent.mkdir()
     socket.parent.chmod(0o700)
-    command = [str(core_python()), "-m", "aconsole.core", "--serve", "--socket", str(socket)]
+    command = core_command(socket)
     daemon = subprocess.Popen(command, env=dict(os.environ))
     failures: list[BaseException] = []
 
@@ -117,7 +117,12 @@ def _on_pane(
         assert run_app(_App, ["git-pane-test"]) == 0
     finally:
         daemon.terminate()
-        _ = daemon.wait(timeout=10)
+        try:
+            _ = daemon.wait(timeout=10)
+        except subprocess.TimeoutExpired:
+            daemon.kill()
+            _ = daemon.wait(timeout=5)
+            raise
     if failures:
         raise failures[0]
 

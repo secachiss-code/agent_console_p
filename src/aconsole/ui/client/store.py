@@ -73,6 +73,28 @@ class CoreStore:
         self.event_types = set()
         self._listeners = []
         self._snapshot_listeners = []
+        self._connection_listeners: list[Callable[[CoreStore], None]] = []
+
+    def subscribe_connection(self, callback: Callable[[CoreStore], None]) -> Callable[[], None]:
+        """Watch connection transitions, including disconnects without an event."""
+        self._connection_listeners.append(callback)
+
+        def unsubscribe() -> None:
+            if callback in self._connection_listeners:
+                self._connection_listeners.remove(callback)
+
+        return unsubscribe
+
+    def set_connecting(self) -> None:
+        changed = not self.reconnecting
+        self.banner = CONNECTING_BANNER
+        self.reconnecting = True
+        if changed:
+            self._notify_connection()
+
+    def _notify_connection(self) -> None:
+        for callback in tuple(self._connection_listeners):
+            callback(self)
 
     def subscribe(self, callback: Callable[[UiEvent, CoreStore], None]) -> None:
         """Call `callback(event, store)` after every applied event, for the life of the store."""
@@ -99,13 +121,13 @@ class CoreStore:
         self.banner = None
         self.reconnecting = False
         self._notify_snapshot()
+        self._notify_connection()
 
     def apply(self, envelope: EventEnvelope) -> bool:
         """Apply one event. False means the UI must snapshot again."""
         self.event_types.add(event_name(envelope.event))
         if envelope.seq != self.seq + 1 or isinstance(envelope.event, ResyncRequired):
-            self.banner = CONNECTING_BANNER
-            self.reconnecting = True
+            self.set_connecting()
             self._notify(envelope.event)
             return False
         self.seq = envelope.seq

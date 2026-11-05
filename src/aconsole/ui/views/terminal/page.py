@@ -90,6 +90,11 @@ class TerminalPage(Gtk.Overlay):
         self.error_label.add_css_class("ac-session-error")
         self.error_label.set_visible(False)
         self.add_overlay(self.error_label)
+        self.retry_button: Gtk.Button = Gtk.Button(label=translate("terminal.retry"), visible=False)
+        self.retry_button.set_halign(Gtk.Align.CENTER)
+        self.retry_button.set_valign(Gtk.Align.CENTER)
+        _ = self.retry_button.connect("clicked", self._retry_start)
+        self.add_overlay(self.retry_button)
         self.ended_revealer: Gtk.Revealer = Gtk.Revealer(
             transition_type=Gtk.RevealerTransitionType.CROSSFADE, transition_duration=200,
         )
@@ -140,6 +145,16 @@ class TerminalPage(Gtk.Overlay):
         except Exception as error:  # noqa: BLE001 -- a failed spawn stays visible and never invents a fallback command
             if not self._closed and session is self.session:
                 self._show_error(translate("terminal.error").format(error=error))
+                self.retry_button.set_visible(True)
+
+    def _retry_start(self, _button: Gtk.Button) -> None:
+        if self._closed or self.worker is None or not self.worker.done():
+            return
+        self.retry_button.set_visible(False)
+        self.error_label.set_visible(False)
+        self.session = TerminalSession(self.terminal, self.viewmodel)
+        self.worker = None
+        self.start()
 
     def _show_error(self, message: str) -> None:
         self.error_label.set_label(message)
