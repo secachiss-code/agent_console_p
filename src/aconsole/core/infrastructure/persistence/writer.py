@@ -8,7 +8,8 @@ import queue
 import threading
 import time
 from collections.abc import Callable
-from dataclasses import dataclass
+from concurrent.futures import Future as ThreadFuture
+from dataclasses import dataclass, field
 from typing import final
 
 from sqlalchemy.engine import Engine
@@ -27,9 +28,9 @@ class _Job:
     work: Callable[[Session], object]
     loop: asyncio.AbstractEventLoop | None
     future: asyncio.Future[object] | None
-    done: threading.Event | None
-    result: object = None
-    error: BaseException | None = None
+    blocking: bool = False
+    running: bool = False
+    completion: ThreadFuture[object] = field(default_factory=ThreadFuture[object])
 
 
 @final
@@ -41,6 +42,8 @@ class Writer:
         self._queue: queue.Queue[_Job | None] = queue.Queue()
         self._thread = threading.Thread(target=self._loop, name="aconsole-writer", daemon=True)
         self._started = False
+        self._stopping = False
+        self._state_lock = threading.Lock()
         self.last_tick_s = 0.0
         self.failed_jobs = 0
 
@@ -50,40 +53,70 @@ class Writer:
         return self._queue.qsize()
 
     def start(self) -> None:
-        if self._started:
-            return
-        self._thread.start()
-        self._started = True
+        with self._state_lock:
+            if self._stopping:
+                message = "a stopped writer cannot restart"
+                raise RuntimeError(message)
+            if self._started:
+                return
+            self._thread.start()
+            self._started = True
 
     def stop(self) -> None:
-        if not self._started:
-            return
-        self._queue.put(None)
+        with self._state_lock:
+            if not self._started:
+                return
+            if not self._stopping:
+                self._stopping = True
+                self._queue.put(None)
         self._thread.join(timeout=_WAIT_S)
-        self._started = False
+        if self._thread.is_alive():
+            message = "writer did not stop; accepted writes are still draining"
+            raise TimeoutError(message)
+        with self._state_lock:
+            self._started = False
+
+    def _enqueue(self, job: _Job) -> None:
+        # The sentinel and acceptance share this lock, so no accepted job can land after shutdown.
+        with self._state_lock:
+            if not self._started or self._stopping or not self._thread.is_alive():
+                message = "writer is not accepting work"
+                raise RuntimeError(message)
+            self._queue.put(job)
 
     def submit(self, work: Callable[[Session], object]) -> asyncio.Future[object]:
-        """Run ``work`` on the writer thread and finish the future on the caller's loop."""
+        """Run ``work`` on the writer thread; cancellation skips work that has not started."""
         loop = asyncio.get_running_loop()
         future: asyncio.Future[object] = loop.create_future()
-        self._queue.put(_Job(work=work, loop=loop, future=future, done=None))
+        job = _Job(work=work, loop=loop, future=future)
+
+        def cancelled(done: asyncio.Future[object]) -> None:
+            if done.cancelled():
+                _ = job.completion.cancel()
+
+        future.add_done_callback(cancelled)
+        self._enqueue(job)
         return future
 
     def call(self, work: Callable[[Session], object]) -> object:
-        """Blocking submit for tests that are not on an event loop."""
-        done = threading.Event()
-        job = _Job(work=work, loop=None, future=None, done=done)
-        self._queue.put(job)
-        if not done.wait(_WAIT_S):
-            message = "writer did not finish"
-            raise TimeoutError(message)
-        if job.error is not None:
-            raise job.error
-        return job.result
+        """Cancel a queued job on timeout; once started, wait for its definitive commit or failure.
+
+        Returning a timeout while a transaction is still allowed to commit would let callers
+        roll back memory even though the database later changes. Running work cannot be cancelled.
+        """
+        job = _Job(work=work, loop=None, future=None, blocking=True)
+        self._enqueue(job)
+        try:
+            return job.completion.result(timeout=_WAIT_S)
+        except TimeoutError:
+            if job.completion.cancel():
+                message = "writer did not start the job before its deadline"
+                raise TimeoutError(message) from None
+            return job.completion.result()
 
     def post(self, work: Callable[[Session], object]) -> None:
         """Queue ``work`` and return at once. Order is kept; a failure is logged, and nobody waits for it."""
-        self._queue.put(_Job(work=work, loop=None, future=None, done=None))
+        self._enqueue(_Job(work=work, loop=None, future=None))
 
     def _loop(self) -> None:
         session = Session(self._engine)
@@ -107,7 +140,7 @@ class Writer:
                     deadline = time.monotonic() + _WINDOW_S
                 pending.append(item)
                 # Somebody is blocked on this job; the window would only make them wait.
-                if item.done is not None or len(pending) >= _BATCH or time.monotonic() >= deadline:
+                if item.blocking or len(pending) >= _BATCH or time.monotonic() >= deadline:
                     self._flush(session, pending)
                     pending = []
         finally:
@@ -115,9 +148,18 @@ class Writer:
 
     def _flush(self, session: Session, jobs: list[_Job]) -> None:
         started = time.perf_counter()
+        active: list[_Job] = []
+        results: list[object] = []
         try:
-            results = [job.work(session) for job in jobs]
-            session.commit()
+            for job in jobs:
+                if not job.running:
+                    if job.completion.cancelled() or not job.completion.set_running_or_notify_cancel():
+                        continue
+                    job.running = True
+                active.append(job)
+                results.append(job.work(session))
+            if active:
+                session.commit()
         except Exception as exc:  # noqa: BLE001
             session.rollback()
             if len(jobs) > 1:
@@ -130,26 +172,27 @@ class Writer:
             self.last_tick_s = time.perf_counter() - started
             return
         self.last_tick_s = time.perf_counter() - started
-        for job, result in zip(jobs, results, strict=True):
+        for job, result in zip(active, results, strict=True):
             self._succeed(job, result)
 
     def _succeed(self, job: _Job, result: object) -> None:
-        if job.loop is not None and job.future is not None:
-            _ = job.loop.call_soon_threadsafe(_resolve, job.future, result, None)
-            return
-        job.result = result
-        if job.done is not None:
-            job.done.set()
+        job.completion.set_result(result)
+        self._notify(job, result, None)
 
     def _fail(self, job: _Job, exc: BaseException) -> None:
-        if job.loop is not None and job.future is not None:
-            _ = job.loop.call_soon_threadsafe(_resolve, job.future, None, exc)
-            return
-        job.error = exc
-        if job.done is not None:
-            job.done.set()
-        else:
+        job.completion.set_exception(exc)
+        if job.loop is None and not job.blocking:
             _LOG.error("a queued write failed: %s", exc)
+        self._notify(job, None, exc)
+
+    @staticmethod
+    def _notify(job: _Job, result: object, error: BaseException | None) -> None:
+        if job.loop is not None and job.future is not None:
+            try:
+                _ = job.loop.call_soon_threadsafe(_resolve, job.future, result, error)
+            except RuntimeError:
+                # The transaction is already finished. A vanished caller must not kill the writer.
+                _LOG.warning("a write finished after its caller's event loop closed")
 
 
 def _resolve(future: asyncio.Future[object], result: object, error: BaseException | None) -> None:

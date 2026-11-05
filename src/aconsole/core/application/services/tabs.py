@@ -359,6 +359,7 @@ class TabService:
         self._focused: str | None = None
         self._store: TabStore | None = None
         self._settings_rev = 0
+        self._worktrees_dir: str | None = None
         self.on_settings_changed: Callable[[Settings], None] | None = None
         self._approvals_mode: str = "inline"
         self._approval_hold_seconds: int = 540
@@ -671,21 +672,20 @@ class TabService:
         nxt = commit_settings(current, params.patch)
         if nxt == current:
             return current
+        preferences = _preferences_of(nxt)
+        store = self._store
+        if store is not None:
+            store.save_settings(TabDirectory(
+                worktrees_dir=nxt.worktrees_dir or None, rev=nxt.rev,
+                setup_completed=nxt.setup_completed, approvals_mode=nxt.approvals_mode,
+                approval_hold_seconds=nxt.approval_hold_seconds, preferences=preferences,
+            ))
         self._settings_rev = nxt.rev
+        self._worktrees_dir = nxt.worktrees_dir or None
         self._setup_completed = nxt.setup_completed
         self._approvals_mode = nxt.approvals_mode
         self._approval_hold_seconds = nxt.approval_hold_seconds
-        self._preferences = _preferences_of(nxt)
-        store = self._store
-        if store is not None:
-            store.save_setup(completed=nxt.setup_completed, rev=nxt.rev)
-            # Older TabStore implementations persist only setup; the database adapter also stores approval settings.
-            save_approval = getattr(store, "save_approval_settings", None)
-            if callable(save_approval):
-                _ = save_approval(mode=nxt.approvals_mode, hold=nxt.approval_hold_seconds, rev=nxt.rev)
-            save_preferences = getattr(store, "save_preferences", None)
-            if callable(save_preferences):
-                _ = save_preferences(values=_preferences_of(nxt), rev=nxt.rev)
+        self._preferences = preferences
         if self.on_settings_changed is not None:
             self.on_settings_changed(nxt)
         return nxt
@@ -693,7 +693,8 @@ class TabService:
     def _stored_settings(self) -> TabDirectory:
         store = self._store
         if store is None:
-            return TabDirectory(worktrees_dir=None, rev=self._settings_rev, setup_completed=self._setup_completed,
+            return TabDirectory(
+                worktrees_dir=self._worktrees_dir, rev=self._settings_rev, setup_completed=self._setup_completed,
                 approvals_mode=self._approvals_mode, approval_hold_seconds=self._approval_hold_seconds,
                 preferences=self._preferences)
         return store.settings()

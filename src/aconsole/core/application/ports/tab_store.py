@@ -16,6 +16,7 @@ PREFERENCE_KEYS: Final = (
     "quota_warn_pct",
     "quota_critical_pct",
     "quota_display",
+    "codegraph_languages",
     "checkpoints_enabled",
     "checkpoints_keep",
     "vault_path",
@@ -106,6 +107,10 @@ class TabStore(Protocol):
 
     def settings(self) -> TabDirectory:
         """The stored worktree directory, or none when settings were never written."""
+        ...
+
+    def save_settings(self, settings: TabDirectory) -> None:
+        """Commit the complete settings document in one transaction before publishing it."""
         ...
 
     def save_setup(self, *, completed: bool, rev: int) -> None:

@@ -162,6 +162,9 @@ class _Memory:
     def settings(self) -> TabDirectory:
         return self.directory
 
+    def save_settings(self, settings: TabDirectory) -> None:
+        self.directory = settings
+
     def save_setup(self, *, completed: bool, rev: int) -> None:
         self.directory = TabDirectory(
             worktrees_dir=self.directory.worktrees_dir,

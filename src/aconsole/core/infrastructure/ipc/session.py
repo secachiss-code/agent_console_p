@@ -321,6 +321,9 @@ class Connection:
             return (self._err(request.id, exc.name),)
         except msgspec.DecodeError:
             return (self._err(request.id, "INVALID_PARAMS"),)
+        except Exception:  # noqa: BLE001 -- a storage failure must answer the request and keep its turn runner alive
+            _LOG.exception("%s failed", request.method)
+            return (self._err(request.id, "INTERNAL_ERROR"),)
         return (self._ok(request.id, result),)
 
     def _snapshot(self, request: Request, tabs: TabService) -> tuple[bytes, ...]:

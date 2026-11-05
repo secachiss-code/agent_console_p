@@ -189,6 +189,23 @@ class TabDatabase:
             raise TypeError(_BAD_RESULT)
         return found
 
+    def save_settings(self, settings: TabDirectory) -> None:
+        def save(session: Session) -> None:
+            row = session.get(Setting, SETTINGS_KEY)
+            values = {
+                **settings.preferences,
+                "worktrees_dir": settings.worktrees_dir or "",
+                "setup_completed": settings.setup_completed,
+                "approvals_mode": settings.approvals_mode,
+                "approval_hold_seconds": settings.approval_hold_seconds,
+            }
+            if row is None:
+                session.add(Setting(key=SETTINGS_KEY, value=values, rev=settings.rev))
+            else:
+                row.value = {**row.value, **values}
+                row.rev = settings.rev
+        _ = self._writer.call(save)
+
     def save_setup(self, *, completed: bool, rev: int) -> None:
         _ = self._writer.call(lambda session: write_setup_completed(session, completed=completed, rev=rev))
 
