@@ -1,0 +1,12 @@
+Cannot start AConsole
+Traceback (most recent call last):
+  File "/home/somovas/.local/share/aconsole/worktrees/agent_console_p/144692d5df12db43/src/aconsole/ui/views/app.py", line 94, in _open
+    _ = await self.client.pull_snapshot()
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/somovas/.local/share/aconsole/worktrees/agent_console_p/144692d5df12db43/src/aconsole/ui/client/core_client.py", line 280, in pull_snapshot
+    snapshot = await self.request("app/snapshot", EmptyParams(), SnapshotResult)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/somovas/.local/share/aconsole/worktrees/agent_console_p/144692d5df12db43/src/aconsole/ui/client/core_client.py", line 273, in request
+    raise CoreCallError(envelope.error)
+aconsole.ui.client.core_client.CoreCallError: PARSE_ERROR (-32700)
+snapshot missing or application failed
