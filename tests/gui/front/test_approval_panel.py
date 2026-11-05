@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import tempfile
+from datetime import UTC, datetime, timedelta
 from typing import TYPE_CHECKING
 
 import gi
@@ -327,6 +328,29 @@ def test_buttons_keep_one_row_against_the_end_when_there_is_room(core: str) -> N
         assert len({spot.get_y() for spot in spots}) == 1
         assert spots[0].get_x() < spots[1].get_x() < spots[2].get_x()
         assert spots[2].get_x() + spots[2].get_width() > window.get_width() - 40
+
+    _on_panel(core, check)
+
+
+@pytest.mark.parametrize("core", ["waiting"], indirect=True)
+def test_expired_approval_disables_allow_and_blocks_keyboard_decision(core: str) -> None:
+    async def check(panel: ApprovalPanel, seen: _Seen, _window: Gtk.Window) -> None:
+        card = panel.cards[0]
+        now = datetime.now(UTC)
+        card.view = msgspec.structs.replace(card.view, expires_at=now + timedelta(seconds=1))
+        card.tick(now)
+        await _settled(card.allow_button.get_sensitive)
+        card.view = msgspec.structs.replace(card.view, expires_at=now)
+        card.tick(now)
+        assert not card.allow_button.get_sensitive()
+        assert card.session_check is not None
+        assert not card.session_check.get_sensitive()
+        assert panel.step(1)
+        panel.decide_focused(ApprovalDecision.ALLOW)
+        await asyncio.sleep(0)
+        assert not card.busy
+        assert len(panel.cards) == 2
+        assert seen.toasts
 
     _on_panel(core, check)
 

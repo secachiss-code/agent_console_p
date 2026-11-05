@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, override
 
 import gi
 import msgspec
+import pytest
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
@@ -303,6 +304,94 @@ def test_b10_preferences_save_updates_two_retained_terminals_without_restart() -
             scrollback_lines=40000,
             theme="dark",
         )
+
+    _run_ui(scenario)
+
+
+def test_preferences_keep_drafts_when_remote_settings_change() -> None:
+    from aconsole.ui.views.setup.preferences import PreferencesDialog
+
+    async def scenario(app: _ViewTestApp) -> None:
+        window = Adw.ApplicationWindow(application=app)
+        app.window = window
+        window.present()
+        vm = PreferencesViewModel(app.client)
+        dialog = PreferencesDialog(vm)
+        dialog.open(window)
+        await _until(lambda: not dialog.loading)
+        dialog.font_entry.set_text("User font")
+        dialog.font_size.set_value(16)
+        remote = msgspec.structs.replace(app.client.settings_result, rev=9, theme="dark", terminal_font="Remote font")
+        vm.accept(remote)
+        assert dialog.font_entry.get_text() == "User font"
+        assert dialog.font_size.get_value_as_int() == 16
+        assert dialog.theme.get_selected() == 2
+        assert dialog.status_label.get_text()
+        dialog.save()
+        assert dialog.worker is not None
+        await dialog.worker
+        params = next(params for method, params in app.client.requests if method == "settings/update")
+        assert params.rev == 9
+        assert params.patch == SettingsPatch(terminal_font="User font", terminal_font_size=16)
+        dialog.close()
+
+    _run_ui(scenario)
+
+
+def test_window_shows_connection_loss_and_recovers_controls() -> None:
+    async def scenario(app: _ViewTestApp) -> None:
+        snapshot = demo_snapshot()
+        app.client.store.apply_snapshot(snapshot, 0)
+        window = MainWindow(app, TabsViewModel(app.client))
+        app.window = window
+        window.present()
+        assert not window.connection_banner.get_revealed()
+        app.client.store.set_connecting()
+        assert window.connection_banner.get_revealed()
+        assert not window.approval_panel.get_sensitive()
+        assert not window.new_tab_button.get_sensitive()
+        app.client.store.apply_snapshot(snapshot, 0)
+        assert not window.connection_banner.get_revealed()
+        assert window.approval_panel.get_sensitive()
+        assert window.new_tab_button.get_sensitive()
+        selected = window.selection.get_selected_item()
+        assert selected is not None
+        assert selected.title in window.context_title.get_title()
+        assert snapshot.projects[0].name in window.context_title.get_subtitle()
+        assert selected.title in window.get_title()
+
+    _run_ui(scenario)
+
+
+@pytest.mark.parametrize("mode", [0, 1, 2])
+def test_new_tab_uses_selected_workspace_and_guards_duplicate_launches(mode: int) -> None:
+    from aconsole.contracts.common import WorkspaceMode
+    from aconsole.ui.views.tabs.new_tab import NewTabDialog
+
+    async def scenario(app: _ViewTestApp) -> None:
+        app.client.store.apply_snapshot(demo_snapshot(), 0)
+        window = Adw.ApplicationWindow(application=app)
+        app.window = window
+        window.present()
+        opened: list[str] = []
+        errors: list[str] = []
+        dialog = NewTabDialog(TabsViewModel(app.client), opened.append, errors.append)
+        dialog.present(window)
+        dialog.workspace_row.set_selected(mode)
+        if mode == 2:
+            assert dialog.existing_path.get_visible()
+            assert not dialog.open_button.get_sensitive()
+            dialog.existing_path.set_text("/existing/worktree")
+        assert dialog.open_button.get_sensitive()
+        assert demo_snapshot().projects[0].root in dialog.location.get_text()
+        dialog.open_button.emit("clicked")
+        dialog.open_button.emit("clicked")
+        await _until(lambda: bool(opened))
+        params = [params for method, params in app.client.requests if method == "tab/open"]
+        assert len(params) == 1
+        assert params[0].workspace == tuple(WorkspaceMode)[mode]
+        assert params[0].existing_worktree == ("/existing/worktree" if mode == 2 else None)
+        assert not errors
 
     _run_ui(scenario)
 

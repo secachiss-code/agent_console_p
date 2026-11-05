@@ -3,6 +3,15 @@
 import locale
 
 _MESSAGES = {
+    "tabs.new.workspace": ("Working copy", "Рабочая копия"),
+    "tabs.new.new_worktree": ("New working copy", "Новая рабочая копия"),
+    "tabs.new.main_checkout": ("Main checkout", "Основная рабочая копия"),
+    "tabs.new.existing_worktree": ("Existing working copy", "Существующая рабочая копия"),
+    "tabs.new.path": ("Existing working copy path", "Путь существующей рабочей копии"),
+    "tabs.new.main_warning": (
+        "The agent will edit the project's main working copy.",
+        "Агент будет менять основную рабочую копию проекта.",
+    ),
     "tabs.list": ("Tabs", "Вкладки"),
     "tabs.name": ("Tab name", "Название вкладки"),
     "tabs.empty": ("Open an agent in a project working copy", "Откройте агента в рабочей копии проекта"),

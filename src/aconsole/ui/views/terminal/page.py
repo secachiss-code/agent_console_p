@@ -4,12 +4,13 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable
+from functools import partial
 
 import gi
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Vte", "3.91")
-from gi.repository import Gdk, Gio, Gtk, Pango, Vte  # noqa: E402
+from gi.repository import Gdk, Gio, GLib, Gtk, Pango, Vte  # noqa: E402
 
 from aconsole.contracts.common import TabId  # noqa: E402
 from aconsole.contracts.settings import Settings  # noqa: E402
@@ -17,17 +18,17 @@ from aconsole.ui.bootstrap import spawn_task  # noqa: E402
 from aconsole.ui.client.core_client import CoreClient  # noqa: E402
 from aconsole.ui.viewmodels.logic.fonts import font_families, pango_family  # noqa: E402
 from aconsole.ui.viewmodels.terminal_vm import TerminalViewModel  # noqa: E402
+from aconsole.ui.views.terminal.clipboard import TerminalClipboard  # noqa: E402
 from aconsole.ui.views.terminal.messages import _ as translate  # noqa: E402
 from aconsole.ui.views.terminal.palette import TerminalPaletteBinding  # noqa: E402
 from aconsole.ui.views.terminal.search import TerminalSearchBar  # noqa: E402
 from aconsole.ui.views.terminal.session import TerminalSession  # noqa: E402
 
-_TEXT_TYPES = ("text/plain;charset=utf-8", "text/plain", "UTF8_STRING")
-
 
 class TerminalPage(Gtk.Overlay):
     def __init__(
         self, client: CoreClient, tab_id: TabId, on_new: Callable[[], None], on_close: Callable[[str], None],
+        *, on_error: Callable[[str], None] | None = None,
     ) -> None:
         super().__init__()
         self.tab_id: TabId = tab_id
@@ -62,10 +63,29 @@ class TerminalPage(Gtk.Overlay):
         self._settings: Settings | None = None
         self.font_description: Pango.FontDescription | None = None
         self._setup_overlays()
+        self.clipboard: TerminalClipboard = TerminalClipboard(
+            self, self.terminal, self.viewmodel.prepare_image, on_error or self._show_error,
+        )
+        focus = Gtk.EventControllerFocus()
+        _ = focus.connect("leave", self._cancel_clipboard)
+        terminal_widget.add_controller(focus)
+        _ = self.connect("unmap", self._cancel_clipboard)
+        self._setup_clipboard_menu()
 
-    def _key_pressed(self, _keys: Gtk.EventControllerKey, keyval: int, _code: int, state: Gdk.ModifierType) -> bool:
+    def _cancel_clipboard(self, _source: object) -> None:
+        self.clipboard.cancel()
+
+    @staticmethod
+    def _activate_clipboard(
+        callback: Callable[[], None], _action: Gio.SimpleAction, _param: GLib.Variant | None,
+    ) -> None:
+        callback()
+
+    def _key_pressed(  # noqa: PLR0911 -- each consumed chord returns immediately
+        self, _keys: Gtk.EventControllerKey, keyval: int, _code: int, state: Gdk.ModifierType,
+    ) -> bool:
         """Copy and paste belong to the terminal: an agent in a container cannot reach the desktop clipboard."""
-        if self._search_focused():
+        if not self.terminal.has_focus():
             return False
         modifiers = state & Gtk.accelerator_get_default_mod_mask()
         key = Gdk.keyval_to_lower(keyval)
@@ -76,9 +96,17 @@ class TerminalPage(Gtk.Overlay):
             if plain:
                 self.terminal.unselect_all()
             return True
-        # Plain Ctrl+V with something other than text is the agent's own image paste.
-        if key == Gdk.KEY_v and (with_shift or (plain and self._clipboard_has_text())):
-            self.terminal.paste_clipboard()
+        if key == Gdk.KEY_v and (with_shift or plain):
+            self.clipboard.paste()
+            return True
+        if key == Gdk.KEY_Insert and modifiers == Gdk.ModifierType.SHIFT_MASK:
+            self.clipboard.paste()
+            return True
+        if key == Gdk.KEY_Insert and plain:
+            self.terminal.copy_clipboard_format(Vte.Format.TEXT)
+            return True
+        if key == Gdk.KEY_Menu or (key == Gdk.KEY_F10 and modifiers == Gdk.ModifierType.SHIFT_MASK):
+            self._popup_clipboard()
             return True
         return False
 
@@ -93,7 +121,7 @@ class TerminalPage(Gtk.Overlay):
         self.terminal.copy_clipboard_format(Vte.Format.TEXT)
 
     def paste_clipboard(self) -> None:
-        self.terminal.paste_clipboard()
+        self.clipboard.paste()
 
     def set_zoom(self, scale: float) -> None:
         self.terminal.set_font_scale(scale)
@@ -101,9 +129,49 @@ class TerminalPage(Gtk.Overlay):
     def show_search(self) -> None:
         self.search.open()
 
-    def _clipboard_has_text(self) -> bool:
-        formats = self.get_clipboard().get_formats()
-        return any(formats.contain_mime_type(kind) for kind in _TEXT_TYPES)
+    def _setup_clipboard_menu(self) -> None:
+        actions = Gio.SimpleActionGroup()
+        self._copy_action: Gio.SimpleAction = Gio.SimpleAction.new("copy", None)
+        _ = self._copy_action.connect("activate", lambda *_args: self.terminal.copy_clipboard_format(Vte.Format.TEXT))
+        actions.add_action(self._copy_action)
+        for name, callback in (
+            ("paste", lambda: self._menu_paste(image_only=False)),
+            ("image", lambda: self._menu_paste(image_only=True)),
+            ("select", self.terminal.select_all),
+        ):
+            action = Gio.SimpleAction.new(name, None)
+            _ = action.connect("activate", partial(self._activate_clipboard, callback))
+            actions.add_action(action)
+        self.insert_action_group("terminal", actions)
+        menu = Gio.Menu()
+        for name in ("copy", "paste", "image", "select"):
+            menu.append(translate(f"clipboard.{name}"), f"terminal.{name}")
+        self._clipboard_menu: Gtk.PopoverMenu = Gtk.PopoverMenu.new_from_model(menu)
+        self._clipboard_menu.set_parent(self)
+        click = Gtk.GestureClick(button=3)
+        click.set_propagation_phase(Gtk.PropagationPhase.CAPTURE)
+        _ = click.connect("pressed", self._clipboard_pressed)
+        self.add_controller(click)
+
+    def _clipboard_pressed(self, gesture: Gtk.GestureClick, _count: int, x: float, y: float) -> None:
+        _ = gesture.set_state(Gtk.EventSequenceState.CLAIMED)
+        self._popup_clipboard(x, y)
+
+    def _popup_clipboard(self, x: float = 0, y: float = 0) -> None:
+        self._copy_action.set_enabled(self.terminal.get_has_selection())
+        rect = Gdk.Rectangle()
+        rect.x, rect.y, rect.width, rect.height = int(x), int(y), 1, 1
+        self._clipboard_menu.set_pointing_to(rect)
+        self._clipboard_menu.popup()
+
+    def _menu_paste(self, *, image_only: bool) -> None:
+        self._clipboard_menu.popdown()
+        self.focus_terminal()
+        # Restore keyboard focus before starting the asynchronous clipboard transfer.
+        def paste() -> bool:
+            self.clipboard.paste(image_only=image_only)
+            return GLib.SOURCE_REMOVE
+        _ = GLib.idle_add(paste)
 
     def _setup_overlays(self) -> None:
         self.error_label: Gtk.Label = Gtk.Label(wrap=True)
@@ -112,6 +180,11 @@ class TerminalPage(Gtk.Overlay):
         self.error_label.add_css_class("ac-session-error")
         self.error_label.set_visible(False)
         self.add_overlay(self.error_label)
+        self.retry_button: Gtk.Button = Gtk.Button(label=translate("terminal.retry"), visible=False)
+        self.retry_button.set_halign(Gtk.Align.CENTER)
+        self.retry_button.set_valign(Gtk.Align.CENTER)
+        _ = self.retry_button.connect("clicked", self._retry_start)
+        self.add_overlay(self.retry_button)
         self.ended_revealer: Gtk.Revealer = Gtk.Revealer(
             transition_type=Gtk.RevealerTransitionType.CROSSFADE, transition_duration=200,
         )
@@ -164,6 +237,16 @@ class TerminalPage(Gtk.Overlay):
         except Exception as error:  # noqa: BLE001 -- a failed spawn stays visible and never invents a fallback command
             if not self._closed and session is self.session:
                 self._show_error(translate("terminal.error").format(error=error))
+                self.retry_button.set_visible(True)
+
+    def _retry_start(self, _button: Gtk.Button) -> None:
+        if self._closed or self.worker is None or not self.worker.done():
+            return
+        self.retry_button.set_visible(False)
+        self.error_label.set_visible(False)
+        self.session = TerminalSession(self.terminal, self.viewmodel)
+        self.worker = None
+        self.start()
 
     def _show_error(self, message: str) -> None:
         self.error_label.set_label(message)
@@ -244,5 +327,8 @@ class TerminalPage(Gtk.Overlay):
         if self._closed:
             return
         self._closed = True
+        self.clipboard.closed = True
+        self.clipboard.cancel()
+        self._clipboard_menu.unparent()
         _ = self.session.cancel_pending_spawn()
         self.palette.close()

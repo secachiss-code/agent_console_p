@@ -149,6 +149,7 @@ class ApprovalCard(Gtk.Box):
             )
             self.append(self.session_check)
         self.append(self._buttons())
+        self.tick(datetime.now(UTC))
         self.details.update_property(
             [Gtk.AccessibleProperty.LABEL, Gtk.AccessibleProperty.DESCRIPTION],
             [
@@ -172,8 +173,8 @@ class ApprovalCard(Gtk.Box):
             self._allow_timer = GLib.timeout_add(_RISKY_ALLOW_MS, self._enable_allow)
 
     def _enable_allow(self) -> bool:
-        self.allow_button.set_sensitive(True)
         self._allow_timer = None
+        self.tick(datetime.now(UTC))
         return GLib.SOURCE_REMOVE
 
     def stop(self) -> None:
@@ -193,7 +194,6 @@ class ApprovalCard(Gtk.Box):
         self.timer.add_css_class("dim-label")
         self.timer.add_css_class("numeric")
         heading.append(self.timer)
-        self.tick(datetime.now(UTC))
         return heading
 
     def _title_text(self) -> str:
@@ -279,6 +279,9 @@ class ApprovalCard(Gtk.Box):
         self.timer.set_label(
             translate("approvals.time_up") if left is None else translate("approvals.left").format(time=left),
         )
+        self.allow_button.set_sensitive(self.view.expires_at > now and self._allow_timer is None)
+        if self.session_check is not None:
+            self.session_check.set_sensitive(self.view.expires_at > now)
 
     def _allow(self, _button: Gtk.Button) -> None:
         for_session = self.session_check is not None and self.session_check.get_active()
@@ -418,6 +421,11 @@ class ApprovalPanel(Gtk.Box):
             self._open(self.cards[index].view.tab_id)
 
     def decide(self, card: ApprovalCard, decision: ApprovalDecision, scope: ApprovalScope = ApprovalScope.ONCE) -> None:
+        now = datetime.now(UTC)
+        card.tick(now)
+        if decision == ApprovalDecision.ALLOW and card.view.expires_at <= now:
+            self._toast(translate("approvals.closed"))
+            return
         self._send(card, self.viewmodel.decide(card.view, decision, scope))
 
     def release(self, card: ApprovalCard) -> None:

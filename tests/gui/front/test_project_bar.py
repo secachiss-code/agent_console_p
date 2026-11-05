@@ -4,8 +4,13 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 
+import msgspec
+import pytest
+
 from aconsole.contracts.app import AccountView, QuotaWindowView
 from aconsole.contracts.common import AccountId, AgentKind, QuotaLevel
+from aconsole.contracts.events import TabUpdated
+from aconsole.contracts.ipc import EventEnvelope
 from aconsole.core.infrastructure.fake.scenarios import demo_snapshot
 from aconsole.ui.client.core_client import CoreClient
 from aconsole.ui.viewmodels.logic.quota_fmt import shown_percent
@@ -54,3 +59,24 @@ def test_switcher_and_search_filter_the_tab_list() -> None:
     assert sidebar.get_visible_child_name() == "empty"
     sidebar.set_query("")
     assert sidebar.get_visible_child_name() == "tabs"
+
+
+@pytest.mark.parametrize("field", ["title", "last_message", "branch"])
+def test_search_follows_live_tab_changes(field: str) -> None:
+    client = CoreClient("unused")
+    snapshot = demo_snapshot()
+    client.store.apply_snapshot(snapshot, 0)
+    sidebar = TabSidebar(TabsViewModel(client))
+    sidebar.set_query("unique-search-regression")
+    assert sidebar.selection.get_n_items() == 0
+    updated = msgspec.structs.replace(snapshot.tabs[0], **{field: "unique-search-regression"})
+    client.store.apply(EventEnvelope(seq=1, at=datetime.now(UTC), event=TabUpdated(
+        tab=updated, changed=frozenset({field}),
+    )))
+    assert sidebar.selection.get_n_items() == 1
+    assert sidebar.get_visible_child_name() == "tabs"
+    client.store.apply(EventEnvelope(seq=2, at=datetime.now(UTC), event=TabUpdated(
+        tab=snapshot.tabs[0], changed=frozenset({field}),
+    )))
+    assert sidebar.selection.get_n_items() == 0
+    assert sidebar.get_visible_child_name() == "empty"

@@ -20,10 +20,11 @@ from gi.repository import Adw, Gdk, Gio, GLib, Gtk  # noqa: E402
 from aconsole.contracts.common import TabId  # noqa: E402
 from aconsole.ui.bootstrap import spawn_task  # noqa: E402
 from aconsole.ui.client.core_age import core_is_older_than_code  # noqa: E402
+from aconsole.ui.client.error_text import core_log_path  # noqa: E402
 from aconsole.ui.snapshot import after_first_paint, capture_window  # noqa: E402
 from aconsole.ui.viewmodels.tabs_vm import TabsViewModel  # noqa: E402
 from aconsole.ui.views.approvals.alert import OPEN_APPROVAL_ACTION  # noqa: E402
-from aconsole.ui.views.startup import StartupWindow  # noqa: E402
+from aconsole.ui.views.setup.messages import _ as translate  # noqa: E402
 from aconsole.ui.views.window import MainWindow  # noqa: E402
 
 if TYPE_CHECKING:
@@ -31,7 +32,6 @@ if TYPE_CHECKING:
 
 _LOG = logging.getLogger(__name__)
 _STOP_DEADLINE_S = 5.0
-_STARTUP_WINDOW_DELAY_MS = 300
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -52,7 +52,7 @@ class AConsoleApp(Adw.Application):
         scenario: str | None = None,
         core_command: list[str] | None = None,
     ) -> None:
-        # A non-unique app owns no bus name, so the shell's own backend could not call it back on a click.
+        # A non-unique app needs the backend that can route notification clicks back to this process.
         _ = os.environ.setdefault("GNOTIFICATION_BACKEND", "freedesktop")
         super().__init__(application_id="io.github.aconsole.AConsole", flags=Gio.ApplicationFlags.NON_UNIQUE)
         self.client: CoreClient = client
@@ -60,11 +60,16 @@ class AConsoleApp(Adw.Application):
         self.scenario: str | None = scenario
         self.core_command: list[str] | None = core_command
         self.window: MainWindow | None = None
+        self.startup_window: Adw.ApplicationWindow | None = None
+        self.startup_page: Adw.StatusPage | None = None
+        self.startup_retry: Gtk.Button | None = None
+        self.startup_diagnostics: Gtk.Button | None = None
+        self._startup_error: str = ""
+        self._retrying: bool = False
+        self._opening_task: asyncio.Task[None] | None = None
         self.failed: bool = False
         self._starting: bool = False
         self._finishing: bool = False
-        self.startup_window: StartupWindow | None = None
-        self._startup_timer: int | None = None
 
     @override
     def do_startup(self) -> None:
@@ -74,58 +79,98 @@ class AConsoleApp(Adw.Application):
         display = Gdk.Display.get_default()
         if display is not None:
             Gtk.StyleContext.add_provider_for_display(display, provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+
         open_tab = Gio.SimpleAction.new(OPEN_APPROVAL_ACTION, GLib.VariantType.new("s"))
         _ = open_tab.connect("activate", self._open_approval)
         self.add_action(open_tab)
-
-    @override
-    def do_activate(self) -> None:
-        if self.window is not None:
-            self.window.present()
-        elif not self._starting:
-            self._starting = True
-            self.hold()
-            if self.snapshot_request is None:
-                self.startup_window = StartupWindow(self)
-                _ = self.startup_window.connect("close-request", self._startup_closed)
-                # A start that takes no time should not flash a window first.
-                self._startup_timer = GLib.timeout_add(_STARTUP_WINDOW_DELAY_MS, self._show_starting)
-            _ = spawn_task(self._open())
 
     def _open_approval(self, _action: Gio.SimpleAction, tab: GLib.Variant | None) -> None:
         if self.window is not None and tab is not None:
             self.window.open_approval(TabId(tab.get_string()))
 
-    def _show_starting(self) -> bool:
-        self._startup_timer = None
-        if self.startup_window is not None:
+    @override
+    def do_activate(self) -> None:
+        if self.window is not None:
+            self.window.present()
+        elif self.startup_window is not None:
             self.startup_window.present()
-        return GLib.SOURCE_REMOVE
+        elif not self._starting:
+            self._starting = True
+            if self.snapshot_request is None:
+                self._show_startup()
+            self.hold()
+            self._opening_task = spawn_task(self._open())
 
-    def _startup_over(self) -> None:
-        if self._startup_timer is not None:
-            _ = GLib.source_remove(self._startup_timer)
-            self._startup_timer = None
+    def _show_startup(self) -> None:
+        self.startup_page = Adw.StatusPage(title=translate("startup.loading"))
+        actions = Gtk.Box(spacing=12, halign=Gtk.Align.CENTER)
+        self.startup_retry = Gtk.Button(label=translate("startup.retry"), visible=False)
+        self.startup_retry.add_css_class("suggested-action")
+        _ = self.startup_retry.connect("clicked", self._retry_startup)
+        actions.append(self.startup_retry)
+        self.startup_diagnostics = Gtk.Button(label=translate("startup.diagnostics"), visible=False)
+        _ = self.startup_diagnostics.connect("clicked", self._copy_diagnostics)
+        actions.append(self.startup_diagnostics)
+        self.startup_page.set_child(actions)
+        toolbar = Adw.ToolbarView(content=self.startup_page)
+        toolbar.add_top_bar(Adw.HeaderBar())
+        self.startup_window = Adw.ApplicationWindow(
+            application=self, title="AConsole", content=toolbar, default_width=600, default_height=400,
+        )
+        _ = self.startup_window.connect("close-request", self._close_requested)
+        self.startup_window.present()
+
+    def _show_startup_error(self, error: Exception) -> None:
+        self._startup_error = f"{error}\n{core_log_path()}"
+        if self.startup_page is not None:
+            self.startup_page.set_title(translate("startup.failed"))
+            self.startup_page.set_description(str(error))
+        for button in (self.startup_retry, self.startup_diagnostics):
+            if button is not None:
+                button.set_visible(True)
+                button.set_sensitive(True)
+
+    def _copy_diagnostics(self, _button: Gtk.Button) -> None:
         if self.startup_window is not None:
-            window, self.startup_window = self.startup_window, None
-            window.destroy()
+            self.startup_window.get_clipboard().set(self._startup_error)
+
+    def _retry_startup(self, _button: Gtk.Button) -> None:
+        if self._starting or self._finishing:
+            return
+        self._starting = True
+        self._retrying = True
+        self.failed = False
+        if self.startup_page is not None:
+            self.startup_page.set_title(translate("startup.loading"))
+            self.startup_page.set_description("")
+        for button in (self.startup_retry, self.startup_diagnostics):
+            if button is not None:
+                button.set_sensitive(False)
+        self.hold()
+        self._opening_task = spawn_task(self._open())
+
+    async def _connect_core(self) -> None:
+        if self._retrying:
+            self._retrying = False
+            await self.client.close()
+        if self.core_command is not None:
+            self.client.keep_daemon = True
+            Path(self.client.path).parent.mkdir(parents=True, exist_ok=True)
+            runtime = Path(self.client.path).parents[1]
+            started = await self.client.start_daemon(self.core_command, runtime=runtime)
+            if core_is_older_than_code(started.server_pid):
+                _LOG.info("Core %d is older than the code, restarting it", started.server_pid)
+                _ = await self.client.replace_daemon(started.server_pid, self.core_command, runtime=runtime)
+        elif self.scenario is None:
+            _ = await self.client.connect()
+        else:
+            _ = await self.client.start_daemon([
+                sys.executable, "-m", "aconsole.core", "--fake", self.scenario, "--socket", self.client.path,
+            ])
 
     async def _open(self) -> None:
         try:
-            if self.core_command is not None:
-                self.client.keep_daemon = True
-                Path(self.client.path).parent.mkdir(parents=True, exist_ok=True)
-                runtime = Path(self.client.path).parents[1]
-                started = await self.client.start_daemon(self.core_command, runtime=runtime)
-                if core_is_older_than_code(started.server_pid):
-                    _LOG.info("Core %d is older than the code, restarting it", started.server_pid)
-                    _ = await self.client.replace_daemon(started.server_pid, self.core_command, runtime=runtime)
-            elif self.scenario is None:
-                _ = await self.client.connect()
-            else:
-                _ = await self.client.start_daemon([
-                    sys.executable, "-m", "aconsole.core", "--fake", self.scenario, "--socket", self.client.path,
-                ])
+            await self._connect_core()
             _ = await self.client.pull_snapshot()
             request = self.snapshot_request
             if request is not None:
@@ -140,50 +185,25 @@ class AConsoleApp(Adw.Application):
                 self.window.set_default_size(request.width, request.height)
                 after_first_paint(self.window, self._capture)
             self.window.present()
-            self._startup_over()
-        except Exception as error:  # noqa: BLE001 -- a start that failed must say so and never hang the process
+            if self.startup_window is not None:
+                self.startup_window.destroy()
+                self.startup_window = None
+        except Exception as error:  # noqa: BLE001 -- keep startup failures visible and offer an explicit retry
             self.failed = True
             _LOG.exception("Cannot start AConsole")
             if self.startup_window is None:
                 await self._finish()
             else:
-                self._show_failure(error)
+                self._show_startup_error(error)
         finally:
+            self._starting = False
             self.release()
-
-    def _startup_closed(self, _window: Gtk.Window) -> bool:
-        if self.failed:
-            self._give_up()
-        else:
-            _ = spawn_task(self._finish())
-        return False
-
-    def _show_failure(self, error: Exception) -> None:
-        """Stay open, or the person is left with a window that vanished and no reason."""
-        if self._startup_timer is not None:
-            _ = GLib.source_remove(self._startup_timer)
-            self._startup_timer = None
-        if self.startup_window is None:
-            return
-        self.hold()
-        self.startup_window.show_failure(str(error) or type(error).__name__, self._retry_start, self._give_up)
-
-    def _retry_start(self) -> None:
-        if self.startup_window is None:
-            return
-        self.failed = False
-        self.startup_window.show_starting()
-        # The hold from the failure stays: _open releases it when it is done.
-        _ = spawn_task(self._open())
-
-    def _give_up(self) -> None:
-        self._startup_over()
-        self.release()
-        _ = spawn_task(self._finish())
 
     def _close_requested(self, window: Gtk.Window) -> bool:
         # The window goes at once; stopping the core must never be what the user is left looking at.
         window.set_visible(False)
+        if self._opening_task is not None and not self._opening_task.done():
+            _ = self._opening_task.cancel()
         _ = spawn_task(self._finish())
         return True
 

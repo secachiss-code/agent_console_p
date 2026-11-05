@@ -171,10 +171,13 @@ class TabsViewModel:
             "tab/close", CloseTabParams(tab_id=TabId(tab_id), decision=decision), CloseTabResult,
         )
 
-    async def open(self, project_id: ProjectId, agent: AgentKind) -> TabView:
+    async def open(
+        self, project_id: ProjectId, agent: AgentKind, *,
+        workspace: WorkspaceMode = WorkspaceMode.NEW_WORKTREE, existing_worktree: str | None = None,
+    ) -> TabView:
         return await self.client.request(
             "tab/open",
-            OpenTabParams(project_id=project_id, agent=agent, workspace=WorkspaceMode.NEW_WORKTREE),
+            OpenTabParams(project_id=project_id, agent=agent, workspace=workspace, existing_worktree=existing_worktree),
             TabView,
         )
 

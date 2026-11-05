@@ -7,6 +7,15 @@ _MESSAGES = {
     "terminal.search_previous": ("Previous match", "Предыдущее совпадение"),
     "terminal.search_next": ("Next match", "Следующее совпадение"),
     "terminal.search_close": ("Close search", "Закрыть поиск"),
+    "clipboard.copy": ("Copy", "Копировать"),
+    "clipboard.paste": ("Paste", "Вставить"),
+    "clipboard.image": ("Paste image", "Вставить изображение"),
+    "clipboard.select": ("Select all", "Выделить всё"),
+    "clipboard.empty": ("No text or image in clipboard", "В буфере нет текста или изображения"),  # noqa: RUF001 -- Russian
+    "clipboard.large": ("Image exceeds 8 MiB or 32 megapixels", "Изображение больше 8 МиБ или 32 мегапикселей"),
+    "clipboard.error": ("Could not paste: {error}", "Не удалось вставить: {error}"),  # noqa: RUF001 -- Russian
+    "terminal.start": ("Start an agent in your project", "Запустите агента в своём проекте"),
+    "terminal.retry": ("Retry starting the session", "Повторить запуск сессии"),
     "terminal.ended": ("Session ended", "Сессия завершена"),
     "terminal.ended_code": ("Session ended with code {code}", "Сессия завершена с кодом {code}"),  # noqa: RUF001 -- Russian
     "terminal.resume": ("Resume", "Возобновить"),

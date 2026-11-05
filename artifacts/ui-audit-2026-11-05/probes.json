@@ -1,0 +1,23 @@
+{
+  "selection_after_identical_snapshot": {
+    "before": "01JB2Z00000000000000000103",
+    "after": "01JB2Z00000000000000000103",
+    "preserved": true
+  },
+  "search_after_rename_event": {
+    "before": 0,
+    "after": 0,
+    "expected": 1
+  },
+  "unsaved_preferences_after_remote_update": {
+    "font": "",
+    "expected": "User unsaved font"
+  },
+  "late_file_response_after_empty_summary": {
+    "selected_path": null,
+    "rendered_paths": [
+      "removed.py"
+    ],
+    "expected": []
+  }
+}

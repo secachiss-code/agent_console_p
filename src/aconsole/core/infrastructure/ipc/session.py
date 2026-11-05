@@ -188,6 +188,8 @@ class Connection:
         # APP_API §9: a sidecar may call only `sidecar/*`; ui and cli may not call those.
         if (self.role is ClientRole.SIDECAR) != request.method.startswith(_SIDECAR_PREFIX):
             return (self._err(request.id, "ROLE_FORBIDDEN"),)
+        if request.method == "terminal/prepareImagePaste" and self.role is not ClientRole.UI:
+            return (self._err(request.id, "ROLE_FORBIDDEN"),)
         if request.method == "events/subscribe":
             self.paused = False
             self._queued = 0

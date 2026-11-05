@@ -1,0 +1,38 @@
+import os
+import subprocess
+import sys
+from pathlib import Path
+
+repo = Path(__file__).resolve().parents[2]
+out = repo / 'artifacts/ui-audit-2026-11-05'
+out.mkdir(parents=True, exist_ok=True)
+os.environ['XDG_STATE_HOME'] = '/tmp/aconsole-audit-capture-state'
+os.environ['XDG_DATA_HOME'] = '/tmp/aconsole-audit-capture-data'
+os.environ['PYTHONPATH'] = str(repo / 'src')
+cases = [
+    ('demo', 'window', 'light', '1280x800'),
+    ('demo', 'window', 'dark', '1280x800'),
+    ('empty', 'window', 'light', '1280x800'),
+    ('stress', 'window', 'light', '1280x800'),
+    ('errors', 'window', 'light', '1280x800'),
+    ('waiting', 'window', 'light', '1280x800'),
+    ('quota-critical', 'window', 'light', '1280x800'),
+    ('demo', 'git', 'light', '1280x800'),
+    ('demo', 'review', 'light', '1280x800'),
+    ('demo', 'prefs', 'light', '1280x800'),
+    ('demo', 'setup', 'light', '1280x800'),
+    ('demo', 'palette', 'light', '1280x800'),
+    ('demo', 'window', 'light', '700x800'),
+    ('demo', 'tabs', 'light', '360x640'),
+    ('demo', 'git', 'light', '700x800'),
+]
+for scenario, view, theme, size in cases:
+    name = f'{scenario}-{view}-{theme}-{size}'
+    args = [sys.executable, str(repo / 'tools/ui_snapshot.py'), '--scenario', scenario,
+            '--view', view, '--theme', theme, '--size', size, '--out', str(out / f'{name}.png')]
+    with (out / f'{name}.log').open('w') as log:
+        try:
+            result = subprocess.run(args, cwd=repo, stdout=log, stderr=subprocess.STDOUT, timeout=35)
+            print(name, result.returncode, flush=True)
+        except subprocess.TimeoutExpired:
+            print(name, 'TIMEOUT', flush=True)

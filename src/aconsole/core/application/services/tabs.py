@@ -24,6 +24,8 @@ from aconsole.contracts.app import (
     ExitedParams,
     FocusParams,
     OpenTabParams,
+    PreparedImagePaste,
+    PrepareImagePasteParams,
     ProjectAddParams,
     ProjectIdParams,
     ProjectView,
@@ -171,6 +173,7 @@ TAB_METHODS: Final = frozenset(
     {
         "tab/open",
         "tab/launchSpec",
+        "terminal/prepareImagePaste",
         "tab/started",
         "tab/exited",
         "tab/close",
@@ -199,6 +202,8 @@ class TabRequestError(Exception):
 
 class TabPorts(Protocol):
     """Worktrees, containers, and process signals. The service does not spawn pods."""
+
+    def prepare_image(self, worktree: str, container: str, png: bytes) -> str: ...
 
     def new_id(self) -> str: ...
 
@@ -372,6 +377,7 @@ class TabService:
         self._routes: dict[str, Callable[[bytes], msgspec.Struct]] = {
             "tab/open": self._route_open,
             "tab/launchSpec": self._route_launch,
+            "terminal/prepareImagePaste": self._route_image_paste,
             "tab/started": self._route_started,
             "tab/exited": self._route_exited,
             "tab/close": self._route_close,
@@ -1028,6 +1034,12 @@ class TabService:
 
     def _route_open(self, raw: bytes) -> TabView:
         return self.open_tab(msgspec.json.decode(raw, type=OpenTabParams))
+
+    def _route_image_paste(self, raw: bytes) -> PreparedImagePaste:
+        params = msgspec.json.decode(raw, type=PrepareImagePasteParams)
+        tab = self._require(str(params.tab_id))
+        path = self._ports.prepare_image(tab.worktree, tab.container, params.png)
+        return PreparedImagePaste(path=path)
 
     def _route_launch(self, raw: bytes) -> TerminalLaunchSpec:
         return self.launch_spec(msgspec.json.decode(raw, type=TabIdParams))

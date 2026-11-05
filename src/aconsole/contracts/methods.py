@@ -65,6 +65,10 @@ METHODS: tuple[Method, ...] = (
         result="TerminalLaunchSpec",
         errors=("TAB_NOT_FOUND", "CONTAINER_START_FAILED"),
     ),
+    Method(
+        name="terminal/prepareImagePaste", params="PrepareImagePasteParams", result="PreparedImagePaste",
+        errors=("TAB_NOT_FOUND", "PATH_NOT_ALLOWED", "CONTAINER_START_FAILED"), roles=("ui",), long=True,
+    ),
     Method(name="tab/started", params="StartedParams", result="EmptyResult", errors=("TAB_NOT_FOUND",)),
     Method(name="tab/exited", params="ExitedParams", result="EmptyResult", errors=("TAB_NOT_FOUND",)),
     Method(

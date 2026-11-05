@@ -11,10 +11,12 @@ gi.require_version("Adw", "1")
 from gi.repository import Adw, Gio, GLib, Gtk  # noqa: E402
 
 from aconsole.contracts.app import AgentInfo, ProjectView  # noqa: E402
-from aconsole.contracts.common import TabId  # noqa: E402
+from aconsole.contracts.common import TabId, WorkspaceMode  # noqa: E402
 from aconsole.ui.bootstrap import spawn_task  # noqa: E402
 from aconsole.ui.viewmodels.tabs_vm import TabsViewModel  # noqa: E402
 from aconsole.ui.views.tabs.messages import _ as translate  # noqa: E402
+
+_WORKSPACES = (WorkspaceMode.NEW_WORKTREE, WorkspaceMode.MAIN_CHECKOUT, WorkspaceMode.EXISTING_WORKTREE)
 
 
 class NewTabDialog(Adw.Dialog):
@@ -27,6 +29,7 @@ class NewTabDialog(Adw.Dialog):
         self._on_error: Callable[[str], None] = on_error
         self._projects: tuple[ProjectView, ...] = ()
         self._agents: tuple[AgentInfo, ...] = ()
+        self._opening: bool = False
         self.project_row: Adw.ComboRow = Adw.ComboRow(title=translate("tabs.new.project"))
         self.agent_row: Adw.ComboRow = Adw.ComboRow(title=translate("tabs.new.agent"))
         self.hint: Gtk.Label = Gtk.Label(xalign=0, wrap=True)
@@ -39,6 +42,7 @@ class NewTabDialog(Adw.Dialog):
         group = Adw.PreferencesGroup()
         group.add(self.project_row)
         group.add(self.agent_row)
+        self._build_workspace(group)
         body = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
         body.add_css_class("ac-new-tab-body")
         body.append(group)
@@ -54,6 +58,35 @@ class NewTabDialog(Adw.Dialog):
         toolbar.set_content(body)
         self.set_child(toolbar)
         self.reload()
+
+    def _build_workspace(self, group: Adw.PreferencesGroup) -> None:
+        self.workspace_row: Adw.ComboRow = Adw.ComboRow(
+            title=translate("tabs.new.workspace"),
+            model=Gtk.StringList.new([translate(f"tabs.new.{mode.value}") for mode in _WORKSPACES]),
+        )
+        self.existing_path: Adw.EntryRow = Adw.EntryRow(title=translate("tabs.new.path"), visible=False)
+        group.add(self.workspace_row)
+        group.add(self.existing_path)
+        self.location: Gtk.Label = Gtk.Label(xalign=0, wrap=True, selectable=True)
+        group.add(self.location)
+        _ = self.workspace_row.connect("notify::selected", self._workspace_changed)
+        _ = self.project_row.connect("notify::selected", self._workspace_changed)
+        _ = self.existing_path.connect("changed", self._workspace_changed)
+
+    def _workspace_changed(self, _source: object, _property: object = None) -> None:
+        mode = _WORKSPACES[min(self.workspace_row.get_selected(), len(_WORKSPACES) - 1)]
+        existing = mode is WorkspaceMode.EXISTING_WORKTREE
+        self.existing_path.set_visible(existing)
+        index = self.project_row.get_selected()
+        project = self._projects[index] if index < len(self._projects) else None
+        text = ""
+        if project is not None:
+            text = f"{project.root}\n{project.default_branch}"
+            if mode is WorkspaceMode.MAIN_CHECKOUT:
+                text += "\n" + translate("tabs.new.main_warning")
+        self.location.set_label(text)
+        has_path = not existing or bool(self.existing_path.get_text().strip())
+        self.open_button.set_sensitive(bool(project and self._agents and has_path) and not self._opening)
 
     def reload(self, selected: ProjectView | None = None) -> None:
         snapshot = self._tabs.client.store.snapshot
@@ -74,7 +107,7 @@ class NewTabDialog(Adw.Dialog):
             hint = translate("tabs.new.no_agents")
         self.hint.set_label(hint)
         self.hint.set_visible(bool(hint))
-        self.open_button.set_sensitive(bool(self._projects and self._agents))
+        self._workspace_changed(self.workspace_row)
 
     def _choose_folder(self, _button: Gtk.Button) -> None:
         root = self.get_root()
@@ -98,17 +131,23 @@ class NewTabDialog(Adw.Dialog):
         self.reload(project)
 
     def _open(self, _button: Gtk.Button) -> None:
+        if not self.open_button.get_sensitive():
+            return
         project = self._projects[self.project_row.get_selected()]
         agent = self._agents[self.agent_row.get_selected()]
+        mode = _WORKSPACES[min(self.workspace_row.get_selected(), len(_WORKSPACES) - 1)]
+        path = self.existing_path.get_text().strip() if mode is WorkspaceMode.EXISTING_WORKTREE else None
+        self._opening = True
         self.open_button.set_sensitive(False)
-        _ = spawn_task(self._open_tab(project, agent))
+        _ = spawn_task(self._open_tab(project, agent, mode, path))
 
-    async def _open_tab(self, project: ProjectView, agent: AgentInfo) -> None:
+    async def _open_tab(self, project: ProjectView, agent: AgentInfo, mode: WorkspaceMode, path: str | None) -> None:
         try:
-            tab = await self._tabs.open(project.id, agent.kind)
+            tab = await self._tabs.open(project.id, agent.kind, workspace=mode, existing_worktree=path)
         except Exception as error:  # noqa: BLE001 -- the core's refusal is shown, the dialog stays for another choice
             self._on_error(translate("tabs.new.error").format(error=error))
-            self.open_button.set_sensitive(True)
+            self._opening = False
+            self._workspace_changed(self.workspace_row)
             return
         _ = self.close()
         self._on_opened(tab.id)

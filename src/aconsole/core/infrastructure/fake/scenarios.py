@@ -1,7 +1,7 @@
 """Snapshots and event bursts for `--fake demo|empty|stress|errors`."""
 
 import tempfile
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from typing import Literal
 
 import msgspec
@@ -237,6 +237,8 @@ def _plan(project: str) -> PlanView:
 
 
 def _approvals(tab: TabId) -> tuple[ApprovalView, ...]:
+    requested = datetime.now(UTC)
+    expires = requested + timedelta(seconds=540)
     command = ApprovalView(
         id=ApprovalId(_ulid(400)),
         nonce="n1",
@@ -247,8 +249,8 @@ def _approvals(tab: TabId) -> tuple[ApprovalView, ...]:
         detail=CommandDetail(command="rm -rf build", args_preview=None),
         cwd="/wt/1",
         risk=frozenset({RiskTag.DESTRUCTIVE}),
-        requested_at=AT,
-        expires_at=AT,
+        requested_at=requested,
+        expires_at=expires,
         allow_tab_session=True,
     )
     edit = ApprovalView(
@@ -261,8 +263,8 @@ def _approvals(tab: TabId) -> tuple[ApprovalView, ...]:
         detail=EditDetail(files=("a.py", "b.py", "c.py"), diff_preview=None),
         cwd="/wt/2",
         risk=frozenset(),
-        requested_at=AT,
-        expires_at=AT,
+        requested_at=requested,
+        expires_at=expires,
         allow_tab_session=False,
     )
     return (command, edit)

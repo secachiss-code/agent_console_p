@@ -1,0 +1,93 @@
+import asyncio
+import json
+import os
+from pathlib import Path
+import sys
+
+repo = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(repo / 'src'))
+os.environ['XDG_STATE_HOME'] = '/tmp/aconsole-audit-probes-state'
+import gi
+gi.require_version('Gtk', '4.0')
+gi.require_version('Adw', '1')
+from gi.repository import Adw, Gio, Gtk
+import msgspec
+from aconsole.core.infrastructure.fake.scenarios import demo_snapshot
+from aconsole.contracts.events import TabUpdated
+from aconsole.contracts.app import DiffSummaryResult
+from aconsole.ui.bootstrap import run_app, spawn_task
+from aconsole.ui.client.core_client import CoreClient
+from aconsole.ui.viewmodels.tabs_vm import TabsViewModel
+from aconsole.ui.views.tabs.sidebar import TabSidebar
+from aconsole.ui.views.review.page import ReviewPage
+from aconsole.ui.viewmodels.setup_vm import PreferencesViewModel
+from aconsole.ui.views.setup.preferences import PreferencesDialog
+from aconsole.contracts.settings import Settings
+
+results = {}
+class App(Adw.Application):
+    def __init__(self):
+        super().__init__(application_id='io.github.aconsole.UxAudit', flags=Gio.ApplicationFlags.NON_UNIQUE)
+    def do_activate(self):
+        self.hold()
+        spawn_task(self.probe())
+    async def probe(self):
+        try:
+            client = CoreClient('unused')
+            snapshot = demo_snapshot()
+            client.store.apply_snapshot(snapshot, 0)
+            vm = TabsViewModel(client)
+            sidebar = TabSidebar(vm)
+            sidebar.selection.set_selected(2)
+            before = str(sidebar.selection.get_selected_item().tab_id)
+            client.store.apply_snapshot(snapshot, 0)
+            after = str(sidebar.selection.get_selected_item().tab_id)
+            results['selection_after_identical_snapshot'] = {'before': before, 'after': after, 'preserved': before == after}
+
+            sidebar.set_query('UNIQUE-SEARCH-AUDIT')
+            before = sidebar.selection.get_n_items()
+            updated_tab = msgspec.structs.replace(snapshot.tabs[0], title='UNIQUE-SEARCH-AUDIT')
+            updated = msgspec.structs.replace(snapshot, tabs=(updated_tab, *snapshot.tabs[1:]))
+            client.store.snapshot = updated
+            vm._on_event(TabUpdated(tab=updated_tab, changed=frozenset({'title'})), client.store)
+            results['search_after_rename_event'] = {'before': before, 'after': sidebar.selection.get_n_items(), 'expected': 1}
+
+            prefs_vm = PreferencesViewModel(client)
+            prefs = PreferencesDialog(prefs_vm)
+            prefs._active = True
+            prefs._show_settings(Settings(rev=1, vault_path='/tmp/vault', worktrees_dir='/tmp/worktrees'))
+            prefs.font_entry.set_text('User unsaved font')
+            prefs._show_settings(Settings(rev=2, vault_path='/tmp/vault', worktrees_dir='/tmp/worktrees', theme='dark'))
+            results['unsaved_preferences_after_remote_update'] = {'font': prefs.font_entry.get_text(), 'expected': 'User unsaved font'}
+
+            class ReviewVm:
+                tab_id = snapshot.tabs[0].id
+                gate = asyncio.Event()
+                async def summary(self):
+                    return DiffSummaryResult(base='base', head='head', files=(), insertions=0, deletions=0)
+                async def checkpoints(self):
+                    return ()
+                async def file(self, path):
+                    await self.gate.wait()
+                    return object()
+            review_vm = ReviewVm()
+            page = ReviewPage(review_vm, 'audit', lambda: None, lambda text: None)
+            await asyncio.sleep(0)
+            shown = []
+            page._show_diff = lambda path, detail: shown.append(path)
+            pending_file = asyncio.create_task(page._load_file('removed.py'))
+            await asyncio.sleep(0)
+            await page.load_changes()
+            review_vm.gate.set()
+            await pending_file
+            results['late_file_response_after_empty_summary'] = {'selected_path': page.selected_path, 'rendered_paths': shown, 'expected': []}
+        except Exception as error:
+            results['probe_error'] = repr(error)
+        finally:
+            destination = repo / 'artifacts/ui-audit-2026-11-05/probes.json'
+            destination.write_text(json.dumps(results, indent=2, ensure_ascii=False) + '\n')
+            print(json.dumps(results, indent=2, ensure_ascii=False), flush=True)
+            self.release()
+            self.quit()
+
+raise SystemExit(run_app(App, ['ui-audit-probes']))

@@ -24,6 +24,7 @@ from aconsole.core.domain.clock import Clock
 from aconsole.core.infrastructure.agents.cursor.limits import access_token, ask_usage
 from aconsole.core.infrastructure.agents.live_limits import ask_rate_limits
 from aconsole.core.infrastructure.agents.opencode import limits as opencode_limits
+from aconsole.core.infrastructure.clipboard import store_image
 from aconsole.core.infrastructure.containers.distrobox_env import DistroboxEnvCache, DistroboxError
 from aconsole.core.infrastructure.containers.login import LOGIN_SHELL
 from aconsole.core.infrastructure.containers.podman import ContainerError, ExecRequest, Inspected, Podman
@@ -54,6 +55,7 @@ _SECRET_BYTES: Final = 32
 _CHECKED_OUT: Final = "already checked out"
 _ALREADY: Final = "already exists"
 _CREATE_FAILED: Final = "WORKTREE_CREATE_FAILED"
+_IMAGE_PATH_DENIED: Final = "PATH_NOT_ALLOWED"
 _START_FAILED: Final = "CONTAINER_START_FAILED"
 _BRANCH_BUSY: Final = "BRANCH_ALREADY_CHECKED_OUT"
 
@@ -90,6 +92,7 @@ class HostTabs:
         user: str | None = None,
     ) -> None:
         chosen = HostBins() if bins is None else bins
+        self._git: Path = chosen.git
         linked = HostBox() if box is None else box
         self._trees = Worktrees(chosen.git, shell=chosen.shell)
         self._podman = Podman(chosen.podman)
@@ -118,6 +121,18 @@ class HostTabs:
             os.kill(pid, signal.SIGTERM)
         except OSError:
             return
+
+    def prepare_image(self, worktree: str, container: str, png: bytes) -> str:
+        try:
+            path = store_image(worktree, png, git=self._git)
+        except (OSError, GitCommandError) as error:
+            raise TabRequestError(_IMAGE_PATH_DENIED) from error
+        try:
+            _ = self._podman.run_in(container, self._user, ("test", "-r", str(path)))
+        except ContainerError as error:
+            path.unlink(missing_ok=True)
+            raise TabRequestError(_START_FAILED) from error
+        return str(path)
 
     def stop_in_container(self, name: str, pid: int) -> None:
         """Signal one pid in this tab's container. A Podman error is a failed stop, not a success."""

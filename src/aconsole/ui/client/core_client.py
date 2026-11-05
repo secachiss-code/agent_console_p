@@ -29,7 +29,7 @@ from aconsole.contracts.ipc import (
 )
 from aconsole.contracts.methods import method_by_name
 from aconsole.ui.client.error_text import core_log_path, error_text
-from aconsole.ui.client.store import CONNECTING_BANNER, CoreStore
+from aconsole.ui.client.store import CoreStore
 
 _LOG = logging.getLogger(__name__)
 _READ_LIMIT = ProtocolLimits().max_message_bytes + 1
@@ -168,6 +168,7 @@ class CoreClient:
         return self.timeout_s
 
     async def connect(self) -> InitializeResult:
+        self._closing = False
         await self._open_socket()
         return await self._handshake()
 
@@ -369,8 +370,7 @@ class CoreClient:
         finally:
             self._fail_pending()
             if not self._closing:
-                self.store.banner = CONNECTING_BANNER
-                self.store.reconnecting = True
+                self.store.set_connecting()
                 self._reconnect_task = asyncio.create_task(self._reconnect())
 
     def _dispatch_line(self, line: bytes) -> None:
@@ -430,8 +430,7 @@ class CoreClient:
             await asyncio.sleep(delay)
 
     def _show_connecting(self) -> None:
-        self.store.banner = CONNECTING_BANNER
-        self.store.reconnecting = True
+        self.store.set_connecting()
 
     async def _reconnect(self) -> None:
         delay = _BACKOFF_S[0]

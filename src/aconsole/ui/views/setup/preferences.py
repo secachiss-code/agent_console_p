@@ -137,19 +137,34 @@ class PreferencesDialog(Adw.PreferencesDialog):
     def _show_settings(self, settings: Settings) -> None:
         if not self._active or settings == self._shown:
             return
+        previous = self._shown
+        dirty = previous is not None and self._changes(previous) != SettingsPatch()
+        if previous is None or self.font_entry.get_text() == (previous.terminal_font or ""):
+            self.font_entry.set_text(settings.terminal_font or "")
+        if previous is None or self.font_size.get_value_as_int() == previous.terminal_font_size:
+            self.font_size.set_value(settings.terminal_font_size)
+        if previous is None or self.scrollback.get_value_as_int() == previous.scrollback_lines:
+            self.scrollback.set_value(settings.scrollback_lines)
+        if previous is None or self.theme.get_selected() == _THEMES.index(previous.theme):
+            self.theme.set_selected(_THEMES.index(settings.theme))
+        if previous is None or self.quota_display.get_selected() == _QUOTA_DISPLAYS.index(previous.quota_display):
+            self.quota_display.set_selected(_QUOTA_DISPLAYS.index(settings.quota_display))
+        if previous is None or self.approvals_mode.get_selected() == _APPROVAL_MODES.index(previous.approvals_mode):
+            self.approvals_mode.set_selected(_APPROVAL_MODES.index(settings.approvals_mode))
+        if previous is None or self.approval_hold.get_value_as_int() == previous.approval_hold_seconds:
+            self.approval_hold.set_value(settings.approval_hold_seconds)
         self._shown = settings
-        self.font_entry.set_text(settings.terminal_font or "")
-        self.font_size.set_value(settings.terminal_font_size)
-        self.scrollback.set_value(settings.scrollback_lines)
-        self.theme.set_selected(_THEMES.index(settings.theme))
-        self.quota_display.set_selected(_QUOTA_DISPLAYS.index(settings.quota_display))
-        self.approvals_mode.set_selected(_APPROVAL_MODES.index(settings.approvals_mode))
-        self.approval_hold.set_value(settings.approval_hold_seconds)
+        if dirty:
+            self.status_label.set_label(translate("prefs.updated_draft"))
 
     def save(self) -> None:
         if self.loading or self._shown is None or (self.worker is not None and not self.worker.done()):
             return
-        shown = self._shown
+        patch = self._changes(self._shown)
+        self.save_button.set_sensitive(False)
+        self.worker = spawn_task(self._save(patch, self._generation))
+
+    def _changes(self, shown: Settings) -> SettingsPatch:
         font = ", ".join(font_families(self.font_entry.get_text())) or None
         size = self.font_size.get_value_as_int()
         scrollback = self.scrollback.get_value_as_int()
@@ -157,7 +172,7 @@ class PreferencesDialog(Adw.PreferencesDialog):
         display = _QUOTA_DISPLAYS[min(self.quota_display.get_selected(), len(_QUOTA_DISPLAYS) - 1)]
         mode = _APPROVAL_MODES[min(self.approvals_mode.get_selected(), len(_APPROVAL_MODES) - 1)]
         hold = self.approval_hold.get_value_as_int()
-        patch = SettingsPatch(
+        return SettingsPatch(
             approvals_mode=mode if mode != shown.approvals_mode else msgspec.UNSET,
             approval_hold_seconds=hold if hold != shown.approval_hold_seconds else msgspec.UNSET,
             quota_display=display if display != shown.quota_display else msgspec.UNSET,
@@ -166,8 +181,6 @@ class PreferencesDialog(Adw.PreferencesDialog):
             scrollback_lines=scrollback if scrollback != shown.scrollback_lines else msgspec.UNSET,
             theme=theme if theme != shown.theme else msgspec.UNSET,
         )
-        self.save_button.set_sensitive(False)
-        self.worker = spawn_task(self._save(patch, self._generation))
 
     async def _save(self, patch: SettingsPatch, generation: int) -> None:
         try:
