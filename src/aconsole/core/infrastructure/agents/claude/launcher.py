@@ -99,10 +99,10 @@ class ClaudeLaunch:
 
 @final
 class ClaudeLauncher:
-    """Write ``run/<tab>/settings.json`` and the shared ``bin/statusline.sh``."""
+    """Write per-tab settings and MCP configuration, and the shared statusline script."""
 
     def launch(self, tab: ClaudeTab) -> ClaudeLaunch:
-        """Create the tab files and return ``claude --settings <path>``. Does not start Claude."""
+        """Create private tab files and return Claude's settings and MCP arguments."""
         _require_home(tab.agent_home)
         _require_tab(tab.tab_id)
         _require_port(tab.port)
@@ -117,11 +117,13 @@ class ClaudeLauncher:
         _private_dir(bin_dir)
         script = bin_dir / "statusline.sh"
         settings = tab_dir / "settings.json"
+        mcp = tab_dir / "mcp.json"
         _atomic_write(script, _STATUSLINE.encode("utf-8"), _SCRIPT_MODE)
         _atomic_write(settings, _settings_payload(tab.port, tab.tab_id, script), _FILE_MODE)
+        _atomic_write(mcp, _mcp_payload(tab.port), _FILE_MODE)
         env = {_ENV_PORT: str(tab.port), _ENV_TAB: tab.tab_id, _ENV_AUTH: tab.token}
         return ClaudeLaunch(
-            argv=("claude", "--settings", str(settings)),
+            argv=("claude", "--settings", str(settings), "--mcp-config", str(mcp)),
             env=env,
             settings_path=settings,
             script_path=script,
@@ -186,6 +188,16 @@ def _settings_payload(port: int, tab_id: str, script: Path) -> bytes:
         "permissions": {"allow": [_ALLOW]},
     }
     return json.dumps(document, indent=2, ensure_ascii=False).encode("utf-8") + b"\n"
+
+
+def _mcp_payload(port: int) -> bytes:
+    # Claude expands the token from its tab environment. The secret never enters a file or argv here.
+    document = {"mcpServers": {"aconsole": {
+        "type": "http",
+        "url": f"http://127.0.0.1:{port}/mcp",
+        "headers": {"Authorization": _BEARER},
+    }}}
+    return json.dumps(document, indent=2).encode("utf-8") + b"\n"
 
 
 def _hook_group(url: str, timeout: int) -> dict[str, _Json]:

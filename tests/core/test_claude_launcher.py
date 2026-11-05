@@ -40,7 +40,7 @@ def test_claude_launcher_snapshot_matches_expected(tmp_path: Path) -> None:
     assert script.read_bytes() == (_EXPECTED / "statusline.sh").read_bytes()
     assert _MARKER.encode() not in settings.read_bytes()
     assert _MARKER.encode() not in script.read_bytes()
-    assert launch.argv == ("claude", "--settings", str(settings))
+    assert launch.argv == ("claude", "--settings", str(settings), "--mcp-config", str(settings.with_name("mcp.json")))
     assert _MARKER not in launch.argv
     assert launch.env == {"ACONSOLE_PORT": str(_PORT), "ACONSOLE_TAB": _TAB, "ACONSOLE_TAB_TOKEN": _MARKER}
     assert _mode(settings) == 0o600
