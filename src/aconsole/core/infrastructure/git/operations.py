@@ -20,7 +20,7 @@ from pathlib import Path
 from typing import Final, final
 
 from aconsole.core.application.ports.git_repo import GitCommandError, GitDone
-from aconsole.core.infrastructure.git.checkpoints import GitCheckpoints
+from aconsole.core.infrastructure.git.checkpoints import GitCheckpoints, remove_worktree_file
 from aconsole.core.infrastructure.git.runner import GitCall, GitOutput, GitRunner
 from aconsole.core.infrastructure.git.worktrees import forget_record, has_ignored_files
 
@@ -92,9 +92,11 @@ class GitMutations:
     def restore_file(self, worktree: Path, oid: str, path: str) -> GitDone:
         if self.in_source(worktree, oid, path):
             return _done(self._git.write(worktree, _LITERAL, "restore", "--source", oid, "--worktree", "--", path))
-        target = worktree / path
-        if target.is_symlink() or target.is_file():
-            target.unlink()
+        try:
+            remove_worktree_file(worktree, path)
+        except OSError as exc:
+            message = "could not safely remove worktree file"
+            raise GitCommandError(message, detail=str(exc)) from exc
         return GitDone(ok=True, said="")
 
     def merge(self, worktree: Path, oid: str, mode: str, message: str) -> GitDone:

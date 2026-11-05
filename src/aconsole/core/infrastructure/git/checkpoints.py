@@ -7,6 +7,8 @@ This module does not run `git stash` or `git reset --hard`.
 
 from __future__ import annotations
 
+import errno
+import os
 import tempfile
 from pathlib import Path
 from typing import Final, final
@@ -83,10 +85,12 @@ class GitCheckpoints:
         for path in sorted(snapshot):
             _ = self._stdout(repo, ("restore", "--source", ref, "--worktree", "--", path))
         current = set(self._z(repo, ("ls-files", "-c", "-o", "--exclude-standard", "-z")))
-        for path in sorted(current - snapshot):
-            file = repo / path
-            if file.is_file():
-                file.unlink()
+        # A tracked child must be checked before an untracked symlink replacing its parent is removed.
+        for path in sorted(current - snapshot, reverse=True):
+            try:
+                remove_worktree_file(repo, path)
+            except OSError as exc:
+                raise CheckpointGitError(_FAILED, detail=str(exc)) from exc
 
     def delete(self, repo: Path, ref: str) -> None:
         _absolute_repo(repo)
@@ -166,3 +170,25 @@ def _capture(rows: tuple[tuple[int, int], ...], files: tuple[str, ...], tree: st
         files=files,
         tree=tree,
     )
+
+
+def remove_worktree_file(repo: Path, relative: str) -> None:
+    """Unlink through opened directories; neither parent nor leaf symlinks are followed.
+
+    Holding directory descriptors also keeps a concurrent rename or symlink substitution
+    from redirecting the unlink to another directory. A missing path is already removed.
+    """
+    path = Path(relative)
+    if path.is_absolute() or not path.parts or ".." in path.parts:
+        raise OSError(errno.EPERM, "restore path must stay inside the worktree", relative)
+    directory = os.open(repo, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+    try:
+        for part in path.parts[:-1]:
+            child = os.open(part, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=directory)
+            os.close(directory)
+            directory = child
+        os.unlink(path.parts[-1], dir_fd=directory)
+    except FileNotFoundError:
+        return
+    finally:
+        os.close(directory)
