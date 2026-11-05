@@ -60,6 +60,11 @@ class CachedAuth:
 
 def ask_rate_limits(argv: tuple[str, ...], *, timeout_s: float = _ASK_TIMEOUT_S) -> bytes:
     """Start `codex app-server`, ask once, return that reply line. Empty on any failure."""
+    return ask_app_server(argv, _ASK, timeout_s=timeout_s)
+
+
+def ask_app_server(argv: tuple[str, ...], request: bytes, *, timeout_s: float = _ASK_TIMEOUT_S) -> bytes:
+    """Exchange bounded JSON-RPC messages with a short-lived container process, then reap it."""
     try:
         process = subprocess.Popen(  # noqa: S603 -- argv is a list; the binary path is absolute
             list(argv),
@@ -72,20 +77,20 @@ def ask_rate_limits(argv: tuple[str, ...], *, timeout_s: float = _ASK_TIMEOUT_S)
         _LOG.warning("cannot start the Codex app server", exc_info=True)
         return b""
     try:
-        body = _exchange(process, timeout_s)
+        body = _exchange(process, timeout_s, request)
     finally:
         _stop(process)
     if not body:
-        _LOG.warning("the Codex app server gave no limits within %s s", timeout_s)
+        _LOG.warning("the Codex app server gave no reply within %s s", timeout_s)
     return body
 
 
-def _exchange(process: subprocess.Popen[bytes], timeout_s: float) -> bytes:
+def _exchange(process: subprocess.Popen[bytes], timeout_s: float, request: bytes) -> bytes:
     stdin, stdout = process.stdin, process.stdout
     if stdin is None or stdout is None:
         return b""
     try:
-        _ = stdin.write(_ASK)
+        _ = stdin.write(request)
         stdin.flush()
     except OSError:
         return b""

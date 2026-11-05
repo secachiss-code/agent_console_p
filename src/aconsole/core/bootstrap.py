@@ -494,11 +494,15 @@ class Daemon:
             HostRepos(), new_id=self._host.new_id, now=lambda: datetime.now(UTC),
         )
         self.tabs.use_projects(self._catalog)
+        self._agent_commands: HostAgentCommands = HostAgentCommands(
+            self._host.agent_home, self._opencode_heard, codex_hooks=self._host.codex_hooks,
+            codex_issue=self._codex_hook_issue,
+        )
         self._agents_source: Callable[[], tuple[AgentInfo, ...]] = HostAgents(
             self._host.inspect_container, signed_in=self._host.signed_in,
+            capabilities=self._agent_commands.capabilities,
         ).agents
         self.tabs.use_agents(self._agents_source)
-        self._agent_commands: HostAgentCommands = HostAgentCommands(self._host.agent_home, self._opencode_heard)
         self.tabs.use_commands(self._agent_commands)
         self._setup_limits()
         self.review: ReviewService = ReviewService(
@@ -695,6 +699,10 @@ class Daemon:
                 token = self._recovery.tokens.get(str(tab.id))
                 if token is not None:
                     self._register_tab(tab, token)
+
+    def _codex_hook_issue(self, tab_id: str, body: str) -> None:
+        self._from_worker(Notify(tab_id=TabId(tab_id), title="Hooks Codex недоступны", body=body,
+            priority="normal", episode_id=f"codex-hooks:{tab_id}"))
 
     def _from_worker(self, event: UiEvent) -> None:
         """Tab listener. Runs on the worker; the live count is read there, where the tab book is consistent."""

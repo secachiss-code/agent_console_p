@@ -8,6 +8,8 @@ from pathlib import Path
 from typing import Final, final
 
 from aconsole.contracts.common import AgentKind
+from aconsole.core.domain.agent import CAPABILITIES
+from aconsole.core.domain.agent import AgentKind as DomainAgent
 from aconsole.core.infrastructure.agents.claude.launcher import ClaudeLauncher, ClaudeTab
 from aconsole.core.infrastructure.agents.codex.launcher import CodexLauncher, CodexTab
 from aconsole.core.infrastructure.agents.codex.trust import HookTrustCache
@@ -17,6 +19,10 @@ from aconsole.core.infrastructure.agents.opencode.stream import EventStream
 
 _LOG = logging.getLogger(__name__)
 _NO_PORT: Final = 0
+_CODEX_HOOKS_HELP: Final = """Hooks Codex не подтверждены.
+Согласования остаются в терминале, автоматические чекпоинты отключены.
+Откройте /hooks в Codex, проверьте настройки hooks и ограничения администратора,
+затем перезапустите агента в AConsole."""
 
 
 @final
@@ -30,8 +36,14 @@ class HostAgentCommands:
         self,
         home_of: Callable[[str], Path | None],
         opencode_heard: Callable[[str, bytes], None] | None = None,
+        *,
+        codex_hooks: Callable[[str, tuple[str, ...]], bytes] | None = None,
+        codex_issue: Callable[[str, str], None] | None = None,
     ) -> None:
         self._home_of = home_of
+        self._codex_hooks = codex_hooks
+        self._codex_issue = codex_issue
+        self._codex_ready = False
         self._claude = ClaudeLauncher()
         self._codex = CodexLauncher()
         self._cursor = CursorLauncher()
@@ -41,6 +53,8 @@ class HostAgentCommands:
 
     def command(self, agent: AgentKind, tab_id: str, token: str, container: str, port: str) -> tuple[str, ...] | None:
         """`claude --settings …`, `codex -c …`, or the OpenCode server script. None means run the plain command."""
+        if agent is AgentKind.CODEX:
+            self._codex_ready = False
         number = int(port) if port.isdecimal() else _NO_PORT
         if number == _NO_PORT or agent not in {AgentKind.CLAUDE, AgentKind.CODEX, AgentKind.OPENCODE, AgentKind.CURSOR}:
             return None
@@ -50,6 +64,9 @@ class HostAgentCommands:
         if home is None:
             return None
         try:
+            if agent is AgentKind.CODEX:
+                tab = CodexTab(agent_home=home, tab_id=tab_id, port=number, token=token)
+                return self._codex_command(tab, container)
             return self._write_files(agent, home, tab_id, token, number)
         except (OSError, ValueError):  # json.JSONDecodeError is a ValueError
             _LOG.warning("cannot write hooks for tab %s; starting the agent without them", tab_id, exc_info=True)
@@ -58,11 +75,40 @@ class HostAgentCommands:
     def _write_files(self, agent: AgentKind, home: Path, tab_id: str, token: str, port: int) -> tuple[str, ...]:
         if agent is AgentKind.CLAUDE:
             return self._claude.launch(ClaudeTab(agent_home=home, tab_id=tab_id, port=port, token=token)).argv
-        if agent is AgentKind.CURSOR:
-            return self._cursor.launch(home)
-        # No hook is trusted yet (ADR-0002): notify and MCP are still configured.
-        codex = CodexTab(agent_home=home, tab_id=tab_id, port=port, token=token)
+        return self._cursor.launch(home)
+
+    def _codex_command(self, codex: CodexTab, container: str) -> tuple[str, ...]:
+        self._codex_ready = False
+        source = self._codex_hooks
+        if source is not None:
+            try:
+                argv = self._verified_codex(codex, container, source)
+            except (OSError, ValueError):
+                _LOG.warning("Codex hook verification failed for %s", codex.tab_id, exc_info=True)
+            else:
+                self._codex_ready = True
+                return argv
+        if self._codex_issue is not None:
+            self._codex_issue(codex.tab_id, _CODEX_HOOKS_HELP)
         return self._codex.launch(codex, HookTrustCache()).argv
+
+    def _verified_codex(
+        self, tab: CodexTab, container: str, source: Callable[[str, tuple[str, ...]], bytes],
+    ) -> tuple[str, ...]:
+        probe = self._codex.probe(tab)
+        checked = self._codex.verified(tab, source(container, probe.argv))
+        confirmed = self._codex.verified(tab, source(container, checked.argv), require_trusted=True)
+        if confirmed.argv != checked.argv:
+            message = "Codex hook hashes changed during verification"
+            raise ValueError(message)
+        return confirmed.argv
+
+    def capabilities(self, kind: AgentKind) -> frozenset[str]:
+        """Advertise Codex hook features only after the installed CLI confirmed their trust."""
+        names = CAPABILITIES[DomainAgent(kind.value)].names()
+        if kind is AgentKind.CODEX and self._codex_ready:
+            return names | {"hooks", "approvals", "checkpoints"}
+        return names
 
     def release(self, agent: AgentKind, tab_id: str, container: str) -> None:
         """Stop the tab's event stream and drop its Claude settings. The shared scripts stay."""

@@ -14,6 +14,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Final, final
 
+import msgspec
+
 from aconsole.contracts.app import AgentInfo
 from aconsole.contracts.common import AgentKind
 from aconsole.core.application.ports.git_repo import GitCommandError
@@ -22,7 +24,7 @@ from aconsole.core.domain.agent import CAPABILITIES
 from aconsole.core.domain.agent import AgentKind as DomainAgent
 from aconsole.core.domain.clock import Clock
 from aconsole.core.infrastructure.agents.cursor.limits import access_token, ask_usage
-from aconsole.core.infrastructure.agents.live_limits import ask_rate_limits
+from aconsole.core.infrastructure.agents.live_limits import ask_app_server, ask_rate_limits
 from aconsole.core.infrastructure.agents.opencode import limits as opencode_limits
 from aconsole.core.infrastructure.clipboard import store_image
 from aconsole.core.infrastructure.containers.distrobox_env import DistroboxEnvCache, DistroboxError
@@ -190,6 +192,17 @@ class HostTabs:
             _LOG.warning("claude /usage did not answer in %s", name, exc_info=True)
             return ""
 
+    def codex_hooks(self, name: str, command: tuple[str, ...]) -> bytes:
+        """Inspect session hook definitions, without asking the model or changing user config."""
+        argv = self._podman.pipe_argv(name, self._user, (*LOGIN_SHELL, *command, "app-server"))
+        request = (
+            b'{"id":1,"method":"initialize","params":{"clientInfo":{"name":"aconsole","version":"0.1"},'
+            b'"capabilities":{"experimentalApi":true}}}\n'
+            b'{"method":"initialized"}\n'
+            b'{"id":2,"method":"hooks/list","params":{}}\n'
+        )
+        return ask_app_server(argv, request, timeout_s=5)
+
     def codex_rate_limits(self, name: str) -> bytes:
         """The `account/rateLimits/read` reply of the container's Codex. Empty when it is stopped or silent."""
         try:
@@ -331,9 +344,11 @@ class HostAgents:
         *,
         ttl_s: float = _AGENTS_TTL_S,
         signed_in: Callable[[AgentKind], bool | None] = lambda _kind: None,
+        capabilities: Callable[[AgentKind], frozenset[str]] | None = None,
     ) -> None:
         self._inspect = inspect
         self._signed_in = signed_in
+        self._capabilities = capabilities
         self._ttl_s = ttl_s
         self._lock = threading.Lock()
         self._until = 0.0
@@ -345,7 +360,11 @@ class HostAgents:
             if now >= self._until:
                 self._cached = tuple(self._probe(kind) for kind in _AGENTS)
                 self._until = now + self._ttl_s
-            return self._cached
+            if self._capabilities is None:
+                return self._cached
+            return tuple(
+                msgspec.structs.replace(agent, capabilities=self._capabilities(agent.kind)) for agent in self._cached
+            )
 
     def _probe(self, kind: AgentKind) -> AgentInfo:
         container = f"agent-{kind.value}"

@@ -50,7 +50,9 @@ _NO_HOOKS = AgentCapabilities(
 )
 CAPABILITIES: dict[AgentKind, AgentCapabilities] = {
     AgentKind.CLAUDE: _ALL_ON,
-    AgentKind.CODEX: replace(_ALL_ON, statusline=False, skills=False),
+    AgentKind.CODEX: replace(
+        _ALL_ON, statusline=False, skills=False, hooks=False, approvals=False, checkpoints=False,
+    ),
     AgentKind.OPENCODE: replace(_NO_HOOKS, limits=True),
     AgentKind.CURSOR: replace(_NO_HOOKS, limits=True),
 }

@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import os
 import re
+import shlex
 import tempfile
 from dataclasses import dataclass
 from pathlib import Path
@@ -15,7 +16,7 @@ from typing import Final
 
 import msgspec
 
-from aconsole.core.infrastructure.agents.codex.trust import HookTrustCache
+from aconsole.core.infrastructure.agents.codex.trust import HookTrustCache, verified_hooks
 
 _DIR_MODE: Final = 0o700
 _FILE_MODE: Final = 0o600
@@ -91,6 +92,25 @@ class CodexLaunch:
 class CodexLauncher:
     """Write the shared hook and notify scripts and return the launch argv."""
 
+    def probe(self, tab: CodexTab) -> CodexLaunch:
+        """List all generated definitions without granting trust or starting a model turn."""
+        launch = self.launch(tab, HookTrustCache())
+        command = f"{shlex.quote(str(launch.hook_path))} codex"
+        args = list(launch.argv)
+        for name, _snake, timeout in _HOOKS:
+            args.extend(("-c", _hook_flag(name, command, timeout)))
+        return CodexLaunch(argv=tuple(args), env=launch.env, hook_path=launch.hook_path, notify_path=launch.notify_path)
+
+    def verified(self, tab: CodexTab, raw: bytes, *, require_trusted: bool = False) -> CodexLaunch:
+        """Use hashes returned by the installed Codex for precisely these generated definitions."""
+        hook = tab.agent_home / ".aconsole/bin/aconsole-hook"
+        command = f"{shlex.quote(str(hook))} codex"
+        expected = {
+            _state_key(snake): (name[0].lower() + name[1:], command, timeout) for name, snake, timeout in _HOOKS
+        }
+        trust = verified_hooks(raw, expected, require_trusted=require_trusted)
+        return self.launch(tab, trust)
+
     def launch(self, tab: CodexTab, trust: HookTrustCache) -> CodexLaunch:
         """Create ``bin/aconsole-hook`` and ``bin/aconsole-notify``. Does not start Codex."""
         _require_home(tab.agent_home)
@@ -157,8 +177,13 @@ def _trusted_hooks(trust: HookTrustCache) -> tuple[tuple[str, str, str, int], ..
     return tuple(chosen)
 
 
+def _hook_flag(name: str, command: str, timeout: int) -> str:
+    quoted = msgspec.json.encode(command).decode("utf-8")
+    return f'hooks.{name}=[{{hooks=[{{type="command",command={quoted},timeout={timeout}}}]}}]'
+
+
 def _argv(port: int, hook: Path, notify: Path, trust: HookTrustCache) -> tuple[str, ...]:
-    command = f"{hook} codex"
+    command = f"{shlex.quote(str(hook))} codex"
     trusted = _trusted_hooks(trust)
     args = [
         "codex",
@@ -172,7 +197,7 @@ def _argv(port: int, hook: Path, notify: Path, trust: HookTrustCache) -> tuple[s
         f'notify=["{notify}","codex"]',
     ]
     for name, _key, _digest, timeout in trusted:
-        args.extend(("-c", f'hooks.{name}=[{{hooks=[{{type="command",command="{command}",timeout={timeout}}}]}}]'))
+        args.extend(("-c", _hook_flag(name, command, timeout)))
     if trusted:
         body = ", ".join(f'"{key}" = {{ trusted_hash = "{digest}" }}' for _name, key, digest, _timeout in trusted)
         args.extend(("-c", f"hooks.state={{ {body} }}"))

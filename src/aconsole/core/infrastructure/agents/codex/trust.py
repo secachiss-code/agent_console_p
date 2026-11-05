@@ -127,3 +127,60 @@ def _text(raw: msgspec.Raw | None) -> str | None:
     if value == "":
         return None
     return value
+
+
+class _Hook(msgspec.Struct, rename="camel"):
+    key: str
+    event_name: str
+    handler_type: str
+    command: str
+    timeout_sec: int
+    enabled: bool
+    current_hash: str
+    trust_status: str
+    source: str
+    async_: bool = msgspec.field(name="async", default=False)
+    matcher: str | None = None
+    is_managed: bool = False
+
+
+class _Group(msgspec.Struct):
+    hooks: list[_Hook]
+    errors: list[str] = msgspec.field(default_factory=list)
+
+
+class _Result(msgspec.Struct):
+    data: list[_Group]
+
+
+class _Envelope(msgspec.Struct):
+    result: _Result
+
+
+def verified_hooks(
+    raw: bytes, expected: dict[str, tuple[str, str, int]], *, require_trusted: bool = False,
+) -> HookTrustCache:
+    """Pin only AConsole's exact session definitions, never a user or project hook."""
+    envelope = msgspec.json.decode(raw, type=_Envelope)
+    cache = HookTrustCache()
+    seen: set[str] = set()
+    for group in envelope.result.data:
+        if group.errors:
+            message = "Codex could not load hooks"
+            raise ValueError(message)
+        for hook in group.hooks:
+            wanted = expected.get(hook.key)
+            if wanted is None:
+                continue
+            actual = (hook.event_name, hook.command, hook.timeout_sec)
+            if (hook.key in seen or actual != wanted or not hook.enabled or hook.async_ or hook.matcher is not None
+                    or hook.handler_type != "command" or hook.source != "sessionFlags" or hook.is_managed
+                    or (require_trusted and hook.trust_status != "trusted")):
+                message = "Codex hook definition or trust did not match"
+                raise ValueError(message)
+            seen.add(hook.key)
+            cache.observe(hook.key, hook.current_hash, hook.event_name)
+    if seen != set(expected) or any(cache.hash_for(key) is None for key in expected):
+        message = "Codex did not report every generated hook"
+        raise ValueError(message)
+    return cache
