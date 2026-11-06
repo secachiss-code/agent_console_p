@@ -1,5 +1,6 @@
 """Journal before taking a snapshot; recover its ref if the core stopped before acknowledging it."""
 
+import logging
 from collections.abc import Callable
 from dataclasses import replace
 from datetime import datetime
@@ -14,6 +15,8 @@ from aconsole.core.application.ports.work_session_store import WorkSessionHistor
 from aconsole.core.application.services.git_ops import Tokens
 from aconsole.core.domain.errors import DomainError
 from aconsole.core.domain.work_session import WorkSession, WorkSessionSnapshot
+
+_LOG = logging.getLogger(__name__)
 
 
 class WorkSessionHistory:
@@ -131,6 +134,7 @@ class WorkSessionHistory:
             captured = self._snapshots.capture(path, pending.ref, pending.label)
             oid = next((row.oid for row in self._reader.refs(path) if row.name == pending.ref), None)
         except (CheckpointStoreError, GitCommandError) as exc:
+            _LOG.warning("Session snapshot failed for %s (%s)", pending.work_session_id, path, exc_info=True)
             raise DomainError(code=3020, name="GIT_COMMAND_FAILED", retryable=True) from exc
         if oid is None:
             raise DomainError(code=3005, name="CHECKPOINT_NOT_FOUND", retryable=False)

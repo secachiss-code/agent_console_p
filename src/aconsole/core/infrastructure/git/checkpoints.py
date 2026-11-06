@@ -8,6 +8,7 @@ This module does not run `git stash` or `git reset --hard`.
 from __future__ import annotations
 
 import errno
+import logging
 import os
 import tempfile
 from pathlib import Path
@@ -21,6 +22,7 @@ from aconsole.core.infrastructure.host_bins import host_binary
 _TIMEOUT_S: Final = 30.0
 _OK: Final = 0
 _GIT: Final = host_binary("git")
+_LOG: Final = logging.getLogger(__name__)
 _FAILED: Final = "git command failed"
 _TIMED_OUT: Final = "git timed out"
 _MISSING: Final = "git binary missing"
@@ -72,7 +74,10 @@ class GitCheckpoints:
         base = parent or self._stdout(repo, ("hash-object", "-w", "-t", "tree", "--stdin")).strip()
         with tempfile.NamedTemporaryFile(prefix="aconsole-index-") as index:
             _ = self._stdout(repo, ("read-tree", base), index=index.name)
-            _ = self._stdout(repo, ("add", "-A", "--", ".", ":(exclude).aconsole/lock"), index=index.name)
+            _ = self._stdout(repo, ("add", "-A", "--", "."), index=index.name)
+            # An explicit exclusion below an ignored directory makes git add fail. Remove the runtime lock
+            # from our private index after staging instead; this also handles a previously tracked lock.
+            _ = self._stdout(repo, ("update-index", "--force-remove", "--", ".aconsole/lock"), index=index.name)
             tree = self._stdout(repo, ("write-tree",), index=index.name).strip()
         parents = ("-p", parent) if parent else ()
         commit = self._stdout(repo, ("commit-tree", tree, *parents, "-m", message), author=True).strip()
@@ -144,6 +149,7 @@ class GitCheckpoints:
                 raise CheckpointGitError(_MISSING) from exc
             raise CheckpointGitError(_FAILED, detail=exc.detail) from exc
         if completed.code != _OK:
+            _LOG.warning("Checkpoint git %s failed in %s: %s", args[0], repo, completed.stderr)
             raise CheckpointGitError(_FAILED, detail=completed.stderr)
         return completed.text
 
