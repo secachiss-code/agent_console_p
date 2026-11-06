@@ -53,13 +53,16 @@ class WorkSessionGit:
             params = msgspec.json.decode(raw, type=WorkSessionIntegratePreviewParams)
             session, snapshot = self._result(str(params.project_id), params.work_session_id, params.sequence)
             self._quiet(session)
-            return self._merges.preview(
+            preview = self._merges.preview(
                 MergePreviewParams(
                     project_id=params.project_id,
                     source=snapshot.ref,
                     target=session.branch,
                 )
             )
+            if preview.source_oid != snapshot.oid:
+                raise DomainError(code=3028, name="MERGE_PREVIEW_STALE", retryable=True)
+            return preview
         if method == "workSession/integrate":
             return self._integrate(msgspec.json.decode(raw, type=WorkSessionIntegrateParams))
         if method == "workSession/cleanupWorker":
@@ -89,6 +92,8 @@ class WorkSessionGit:
 
     def _integrate(self, params: WorkSessionIntegrateParams) -> GitOperationResult:
         session, snapshot = self._result(str(params.project_id), params.work_session_id, params.sequence)
+        if params.source_oid != snapshot.oid:
+            raise DomainError(code=3028, name="MERGE_PREVIEW_STALE", retryable=True)
         root = Path(self._state.project(session.project_id).root)
         with self._operations.lock_of(str(root)), self._operations.lock_of(session.worktree):
             previous = self._merges.landed_from(session.project_id, snapshot.ref, snapshot.oid or "")

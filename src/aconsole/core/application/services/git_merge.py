@@ -182,6 +182,7 @@ class GitMergeService:
         if target is None:
             raise DomainError(code=_BRANCH_UNKNOWN, name="GIT_BRANCH_UNKNOWN", retryable=False)
         source_oid = _oid_of(refs, params.source)
+        self._require_recorded_source(project_id, params.source, source_oid)
         target_oid = _oid_of(refs, target)
         probe = self._state.probe(root, target_oid, source_oid)
         reader = self._state.reader
@@ -224,6 +225,7 @@ class GitMergeService:
             refs = reader.refs(root)
             if _oid_of(refs, params.source) != source_oid or _oid_of(refs, params.target) != target_oid:
                 raise DomainError(code=_STALE, name="MERGE_PREVIEW_STALE", retryable=True)
+            self._require_recorded_source(project_id, params.source, source_oid)
             rows = reader.worktrees(root)
             source_row = _row_on(rows, params.source)
             target_row = _row_on(rows, params.target)
@@ -258,6 +260,16 @@ class GitMergeService:
             record = self._ended(root, record, done)
         self._changed(project_id)
         return GitOperationResult(operation=view_of(record))
+
+    def _require_recorded_source(self, project_id: str, source: str, oid: str) -> None:
+        """A mutable session ref must still identify its durable snapshot, including on generic Git RPCs."""
+        if not source.startswith("refs/aconsole/sessions/"):
+            return
+        session_id = source.split("/")[3]
+        _ = self._state.session(project_id, session_id)
+        recorded = next((row for row in self._state.snapshots(session_id) if row.ref == source), None)
+        if recorded is None or recorded.status != "finished" or recorded.oid != oid:
+            raise DomainError(code=_STALE, name="MERGE_PREVIEW_STALE", retryable=True)
 
     def landed_from(self, project_id: str, source: str, oid: str) -> GitOperationRecord | None:
         with self._guard:
