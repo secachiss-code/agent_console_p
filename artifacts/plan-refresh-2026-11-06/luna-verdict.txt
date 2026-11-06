@@ -1,0 +1,6 @@
+Luna runner verdict: PASS. Main checkout source confirms shown_nodes returns every node in input order, with no node cap. The main checkout tests cover a 40-node plan and a 72-node plan, including visibility of the dependency endpoints.
+
+Command: HOSTRUN_CWD=/home/sas/Projects/sp_aconsole_prototype hostrun test ui tests/ui/test_plan_layout.py
+Result: 7 passed.
+
+GTK remains unverified: /tmp/aconsole-ux7-verification.log reports isolated_x has no Wayland socket. Isolation was not bypassed.

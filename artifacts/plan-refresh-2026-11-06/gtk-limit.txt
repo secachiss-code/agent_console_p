@@ -1,0 +1,1 @@
+isolated_x: no Wayland socket in XDG_RUNTIME_DIR; Xwayland needs a Wayland session

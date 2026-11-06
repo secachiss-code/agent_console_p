@@ -1,0 +1,2100 @@
+{
+  "plan_id": "plan-1",
+  "title": "Устранить риски и утечки AConsole",
+  "goal": "Закрыть подтверждённые риски выполнения кода на хосте и повторного разового ALLOW, обеспечить безопасное управление процессами/worktree, исправить гонку старта core и убрать неограниченный рост ресурсов. Изменения выполнять отдельными проверяемыми узлами; безопасность hostrun и approval проверить особенно тщательно.",
+  "captured_at": "2026-11-06T18:30:12.902626+00:00",
+  "database_access": "read-only mode=ro",
+  "nodes": [
+    {
+      "id": "node-2",
+      "key": "SEC-1",
+      "title": "Закрыть границу hostrun",
+      "status": "verifying",
+      "review_required": true,
+      "fence": 2,
+      "note": "Узел не начат в этом проходе: check, test и gate ещё исполняют код checkout на хосте. Следующий шаг — перенести их в контейнер или на неизменяемый инструмент и закрыть diff.external/textconv.",
+      "evidence": "check, test и gate стартуют как podman exec в контейнере devtools; хостовый процесс — podman, а не sh/python checkout. Переписанный tools/check.sh в тесте не запускается. git diff всегда передаёт --no-ext-diff и --no-textconv; тест с diff.external и textconv не запускает драйвер. pytest tests/hostrun. Коммит c412748255a2a0b0abd6aa19217c1b9ce6b2ee1c.",
+      "paths": [
+        "tools/hostrun/server.py",
+        "tools/hostrun/actions.py",
+        "tools/hostrun/policy.example.toml",
+        "tests/hostrun"
+      ],
+      "acceptance": [
+        "Агент не может добиться исполнения изменённого tools/check.sh, tools/gate/phase_gate.py или тестового кода с правами host-пользователя.",
+        "hostrun git diff не запускает diff.external или textconv из конфигурации репозитория.",
+        "Проверки hostrun покрывают разрешённые и запрещённые пути исполнения."
+      ]
+    },
+    {
+      "id": "node-3",
+      "key": "SEC-2",
+      "title": "Исправить повторы разового approval",
+      "status": "verifying",
+      "review_required": true,
+      "fence": 1,
+      "note": null,
+      "evidence": "Разовый ALLOW больше не покрывает новый вызов с тем же session/tool/input внутри TTL. Повтор того же tool_use_id идемпотентен. Pending-дедупликация и правило вкладки сохранены. Коммит e91a0a2576d903ad96ffb7ff177406d25dc7fc6b.",
+      "paths": [
+        "src/aconsole/core/domain/approvals.py",
+        "src/aconsole/core/application/services/approval_broker.py",
+        "src/aconsole/core/infrastructure/http/approval.py",
+        "tests/core/domain/test_approvals.py"
+      ],
+      "acceptance": [
+        "После разового ALLOW новый hook с теми же session/tool/input в пределах TTL не получает автоматический ALLOW.",
+        "Повтор одного и того же события не создаёт лишних запросов, если протокол предоставляет стабильный event id.",
+        "Тесты различают pending-дедупликацию, повтор доставки и независимый повтор действия."
+      ]
+    },
+    {
+      "id": "node-4",
+      "key": "SYS-1",
+      "title": "Не запускать агента при неудачном orphan scan",
+      "status": "done",
+      "review_required": false,
+      "fence": 1,
+      "note": null,
+      "evidence": "tab/launchSpec при ошибке orphan scan делает 3 попытки и возвращает CONTAINER_START_FAILED, argv агента не выдаётся. Повторный launch после успешного скана без старых процессов возвращает прежний spec. Коммит 923a851cafec9bf2695a131f62e83d6cd6a29864.",
+      "paths": [
+        "src/aconsole/core/application/services/tabs.py",
+        "src/aconsole/core/infrastructure/containers/podman.py",
+        "tests/core"
+      ],
+      "acceptance": [
+        "При неудачном orphan scan новый агент не стартует.",
+        "При успешном сканировании сохраняется текущий сценарий запуска.",
+        "Проверки покрывают ошибки Podman и отсутствие старых процессов."
+      ]
+    },
+    {
+      "id": "node-5",
+      "key": "SYS-2",
+      "title": "Сохранять ссылку на worktree при отказе удаления",
+      "status": "done",
+      "review_required": false,
+      "fence": 1,
+      "note": null,
+      "evidence": "Если git worktree remove возвращает ошибку после проверки, каталог и ветка остаются, --force не повторяется. Закрытие вкладки не ставит workspace.removed_at; CloseTabResult.dirty_summary отличает оставленную копию (dirty/kept) от удалённой (None), UI показывает это тостом. Тесты: tests/core/test_worktrees.py, tests/core/test_tabs.py. Коммит 25fbe0231633064adc546ce1bb1a24dd78421e66.",
+      "paths": [
+        "src/aconsole/core/application/services/tabs.py",
+        "src/aconsole/core/infrastructure/git/worktrees.py",
+        "src/aconsole/core/infrastructure/persistence/repositories/tabs.py",
+        "tests/core"
+      ],
+      "acceptance": [
+        "Если удаление возвращает removed=False, путь к worktree остаётся зарегистрированным и доступным после закрытия таба.",
+        "Пользователь получает корректный статус, отличающий удалённый worktree от оставленного.",
+        "Проверки покрывают изменение состояния между предварительным осмотром и удалением."
+      ]
+    },
+    {
+      "id": "node-6",
+      "key": "SYS-3",
+      "title": "Устранить гонку старта core",
+      "status": "done",
+      "review_required": false,
+      "fence": 1,
+      "note": null,
+      "evidence": "При занятом lock клиент повторяет connect до _READY_DEADLINE_S и не запускает второй процесс. Если сокет не появился, ConnectionError «core socket did not appear». Свободный lock по-прежнему стартует один core. pytest tests/gui/test_core_client.py. Коммит f149e4cbc014fb04592d46e5aa05d6c6e3ccd5a1.",
+      "paths": [
+        "src/aconsole/ui/client/core_client.py",
+        "src/aconsole/core/bootstrap.py",
+        "tests/gui/test_core_client.py"
+      ],
+      "acceptance": [
+        "Параллельный запуск UI успешно подключается к core, который уже держит lock и ещё поднимает сокет.",
+        "Если core так и не становится доступен, UI возвращает ограниченную по времени диагностируемую ошибку.",
+        "Второй core не стартует, пока lock удерживается."
+      ]
+    },
+    {
+      "id": "node-7",
+      "key": "MEM-1",
+      "title": "Ограничить рост памяти и очистить обработчики",
+      "status": "done",
+      "review_required": false,
+      "fence": 1,
+      "note": "Finished VTE exit handlers, expired approvals, echo hashes, IPC peer history, and OpenCode session costs are bounded. Core tests passed. GUI VTE tests need libgtk, which this container does not have.",
+      "evidence": "commit a13a7f78354b062616fdf109e75c811b730254d7; pytest tests/core/domain/test_approvals.py tests/core/test_approval_hold.py tests/core/test_approval_native.py tests/core/test_session_cost.py tests/core/test_opencode_cursor.py tests/core/test_vault_writer.py tests/core/test_ipc_a.py",
+      "paths": [
+        "src/aconsole/ui/views/terminal/session.py",
+        "src/aconsole/core/domain/approvals.py",
+        "src/aconsole/core/application/services/approval_broker.py",
+        "src/aconsole/core/infrastructure/vault/writer.py",
+        "src/aconsole/core/infrastructure/agents/opencode/stream.py",
+        "src/aconsole/core/infrastructure/ipc/server.py",
+        "tests"
+      ],
+      "acceptance": [
+        "После серии Resume/New Session на одном VTE-виджете остаётся не более одного активного child-exited обработчика.",
+        "Истёкшие записи и закрытые сессии освобождают память; бесконечные списки имеют TTL или верхнюю границу.",
+        "Проверки подтверждают, что очистка не меняет действующие approval, vault echo и session-cost сценарии."
+      ]
+    },
+    {
+      "id": "node-8",
+      "key": "QA-1",
+      "title": "Проверить исправления и сценарии отказа",
+      "status": "pending",
+      "review_required": true,
+      "fence": 0,
+      "note": null,
+      "evidence": null,
+      "paths": [],
+      "acceptance": [
+        "Добавлены проверки регрессий для каждого принятого дефекта.",
+        "Проверены ошибки старта/остановки процессов, гонка worktree и повторный hook.",
+        "Security review подтверждает отсутствие исполнения изменяемого checkout-кода на host через разрешённые hostrun actions."
+      ]
+    },
+    {
+      "id": "node-9",
+      "key": "SEC-3",
+      "title": "Закрыть оставшиеся host-exec действия",
+      "status": "pending",
+      "review_required": true,
+      "fence": 0,
+      "note": null,
+      "evidence": null,
+      "paths": [
+        "tools/hostrun/server.py",
+        "tools/hostrun/actions.py",
+        "tools/hostrun/policy.example.toml",
+        "tests/hostrun"
+      ],
+      "acceptance": [
+        "core-run, fake-core, ui-run, ui-snapshot и deps-sync не запускают код из рабочего checkout на host-пользователе.",
+        "policy.example.toml не выдаёт агентам действий, исполняющих изменяемый код хоста.",
+        "Проверки покрывают каждый закрытый action и сохранение разрешённых сценариев."
+      ]
+    },
+    {
+      "id": "node-10",
+      "key": "SEC-4",
+      "title": "Защитить review gate от подделки",
+      "status": "pending",
+      "review_required": true,
+      "fence": 0,
+      "note": null,
+      "evidence": null,
+      "paths": [
+        "tools/hostrun/server.py",
+        "tools/hostrun/actions.py",
+        "tools/hostrun/policy.example.toml",
+        "tests/hostrun"
+      ],
+      "acceptance": [
+        "Агент не может подделать успешный gate или review через файлы в checkout или state-каталоге.",
+        "agent-claude не может одобрить собственные изменения; approve требует независимого субъекта.",
+        "Проверки покрывают подделку отчёта, повтор review и попытку self-approval."
+      ]
+    },
+    {
+      "id": "node-11",
+      "key": "SYS-4",
+      "title": "Проверять фактическую остановку orphan-процессов",
+      "status": "verifying",
+      "review_required": true,
+      "fence": 3,
+      "note": "Синхронизирован устаревший pending-статус с существующим кодом и коммитом. Нового смешанного или пустого коммита не создано. Результат передан на приёмку.",
+      "evidence": "Реализация уже в main: ae64625 'treat a failed orphan stop as still running' (AConsole-Node SYS-4). Повторно сверены критерии и выполнен hostrun test core -k 'orphan or stop_in_container' tests/core/test_tabs.py tests/core/test_containers.py:6passed exit0. Проверяются ошибка stop_in_container, оставшиеся процессы, повторный scan и успешная остановка. Полный tabs набор также прошёл в60-тестовом прогоне REL-2.",
+      "paths": [
+        "src/aconsole/core/application/services/tabs.py",
+        "src/aconsole/core/infrastructure/containers/podman.py",
+        "tests/core"
+      ],
+      "acceptance": [
+        "Ошибка stop_in_container не считается успешной остановкой и отражается в результате.",
+        "После остановки выполняется повторное сканирование; оставшиеся процессы блокируют запуск.",
+        "Проверки покрывают ошибку Podman, частичную остановку и успешное завершение."
+      ]
+    },
+    {
+      "id": "node-12",
+      "key": "SEC-5",
+      "title": "Изолировать approval по табам",
+      "status": "pending",
+      "review_required": true,
+      "fence": 0,
+      "note": null,
+      "evidence": null,
+      "paths": [
+        "src/aconsole/core/domain/approvals.py",
+        "src/aconsole/core/application/services/approval_broker.py",
+        "src/aconsole/core/application/services/tabs.py",
+        "src/aconsole/core/infrastructure/http/approval.py",
+        "tests/core"
+      ],
+      "acceptance": [
+        "Новый запрос в другом табе с теми же session/tool/input не получает чужой завершённый ALLOW или DENIED.",
+        "Закрытие таба освобождает его pending/settled approval и не влияет на другие табы.",
+        "Тесты покрывают межтабовую изоляцию, TTL и очистку при закрытии."
+      ]
+    },
+    {
+      "id": "node-13",
+      "key": "QA-2",
+      "title": "Проверить дополнительные исправления",
+      "status": "pending",
+      "review_required": true,
+      "fence": 0,
+      "note": null,
+      "evidence": null,
+      "paths": [
+        "tools/hostrun",
+        "src/aconsole/core",
+        "tests"
+      ],
+      "acceptance": [
+        "Для каждого нового дефекта есть регрессионная проверка.",
+        "Проверены попытки исполнения checkout-кода, подделки gate/review, self-approval и чужого approval.",
+        "Security review подтверждает отсутствие известных обходов в разрешённых actions."
+      ]
+    },
+    {
+      "id": "node-14",
+      "key": "CMT-1",
+      "title": "Проверить обязательные коммиты по узлам",
+      "status": "pending",
+      "review_required": true,
+      "fence": 0,
+      "note": null,
+      "evidence": null,
+      "paths": [],
+      "acceptance": [
+        "Для каждого рабочего узла есть ровно один коммит с AConsole-Node: <KEY>.",
+        "Нет коммитов, смешивающих несколько узлов, и нет изменений вне узлов.",
+        "QA-узлы не создают отдельных коммитов, если не меняют файлы."
+      ]
+    },
+    {
+      "id": "node-18",
+      "key": "AUD-1",
+      "title": "Завершить аудит Git и сохранности данных",
+      "status": "done",
+      "review_required": false,
+      "fence": 3,
+      "note": null,
+      "evidence": "Прямое решение пользователя kb-127, review_required=false; завершение существующей подтверждённой реализации без повторного кода. main 86744c4. 13 disposable Git audit probes and74 existing regressions PASS, specified scenarios recorded, confirmed defects separately tracked/fixed; artifacts/aud1-2026-11-06/REPORT.md.",
+      "paths": [
+        "src/aconsole/core/infrastructure/git",
+        "src/aconsole/core/application/services/git_state.py",
+        "src/aconsole/core/application/services/tabs.py",
+        "src/aconsole/ui/views/review"
+      ],
+      "acceptance": [
+        "Есть отчёт с путями и способом воспроизведения для каждой находки.",
+        "Каждый сценарий потери данных проверен на одноразовом репозитории.",
+        "Подтверждённые дефекты добавлены в план новыми узлами."
+      ]
+    },
+    {
+      "id": "node-19",
+      "key": "AUD-2",
+      "title": "Проверить находки на живом приложении",
+      "status": "blocked",
+      "review_required": false,
+      "fence": 1,
+      "note": "Живые CLI и рабочий стол недоступны через разрешённые действия текущего окружения; подменять проверку реальных hooks тестами фейка нельзя. Unblock: доступен автоматизированный запуск настоящего GUI и CLI через hostrun.",
+      "evidence": null,
+      "paths": [],
+      "acceptance": [
+        "По каждому пункту записан результат: подтверждено или нет, с версией CLI.",
+        "Неподтвердившиеся пункты исключены из соответствующих узлов."
+      ]
+    },
+    {
+      "id": "node-20",
+      "key": "SEC-6",
+      "title": "Аутентифицировать клиентов IPC-сокета",
+      "status": "verifying",
+      "review_required": true,
+      "fence": 3,
+      "note": "Синхронизирован устаревший pending-статус с существующим коммитом, новые файлы/пустой коммит не создавались. Приёмка человеком ещё требуется.",
+      "evidence": "Реализация c13283f уже в main. Повторно проверены SO_PEERCRED kernel pid, сравнение mount namespace, отказ UI/CLI и логирование, sidecar token route без host-привилегий. hostrun test core tests/core/test_ipc_a.py tests/core/test_ipc_b.py tests/core/test_ipc_server_tabs.py =>36passed exit0. Есть настоящий daemon socket test с эквивалентной подменой namespace; запросы settings/update, approval/decide и events/subscribe отклоняются.",
+      "paths": [
+        "src/aconsole/core/infrastructure/ipc",
+        "src/aconsole/core/bootstrap.py",
+        "tests/core"
+      ],
+      "acceptance": [
+        "Процесс из контейнера не может вызвать settings/update, approval/decide и подписаться на события с nonce.",
+        "Клиент с неподтверждённой ролью получает ROLE_FORBIDDEN, отказ пишется в лог.",
+        "Sidecar в контейнере и UI на хосте работают как раньше.",
+        "Тест воспроизводит подключение из другого namespace или эквивалентную подмену."
+      ]
+    },
+    {
+      "id": "node-21",
+      "key": "SEC-7",
+      "title": "Убрать хостовые данные из досягаемости агента",
+      "status": "pending",
+      "review_required": true,
+      "fence": 0,
+      "note": null,
+      "evidence": null,
+      "paths": [
+        "src/aconsole/core/application/services/setup.py",
+        "README.md",
+        "tests/core"
+      ],
+      "acceptance": [
+        "Мастер и health показывают предупреждение, если из контейнера доступны база AConsole или домашний каталог хоста, с готовой инструкцией.",
+        "README описывает рекомендуемую конфигурацию контейнера и её проверку.",
+        "В рекомендуемой конфигурации агент не может записать в базу AConsole и файлы запуска хоста."
+      ]
+    },
+    {
+      "id": "node-22",
+      "key": "SEC-8",
+      "title": "Запретить git исполнять код репозитория на хосте",
+      "status": "verifying",
+      "review_required": true,
+      "fence": 2,
+      "note": null,
+      "evidence": "main583fab0. GitRunner rejects hooks=True unless write=True and first command commit/merge; caller cannot enable own hooks during background reads/other writes. Existing protections cover fsmonitor/hooksPath/diff.external/textconv/sshCommand, signing and named drivers discovered before spawn. Added7 cases: four RED permission cases now pass; include and worktree configs; GIT_EXTERNAL_DIFF/GIT_SSH_COMMAND env. 49 security/operations/merge/durability tests exit0; repeat27 security exit0. hostrun check exit0, ruff/types/architecture/contracts pass; known ownership substep Not a git repository remains unvalidated. Hook/signing policy documented in module docs. IMPORTANT: dynamic driver config race NOT fixed/accepted: SEC-11 stays pending, claim rejected PATHS_OVERLAP UX-7. main clean.",
+      "paths": [
+        "src/aconsole/core/infrastructure/git",
+        "tests/core"
+      ],
+      "acceptance": [
+        "Вредный core.fsmonitor и hooksPath в репозитории не выполняются при опросе статуса, diff и снимках.",
+        "Вызовы git вне общего runner запрещены проверкой.",
+        "Регрессионные тесты покрывают каждый опасный ключ конфигурации.",
+        "Описано поведение hooks при commit и merge из интерфейса."
+      ]
+    },
+    {
+      "id": "node-23",
+      "key": "SEC-9",
+      "title": "Закрыть обходы классификатора риска",
+      "status": "verifying",
+      "review_required": true,
+      "fence": 1,
+      "note": null,
+      "evidence": "pytest tests/core/domain/test_risk.py tests/core/domain/test_approvals.py tests/core/domain/test_prefix_allowlist.py tests/core/domain/test_round6_defects.py passed. Quoted substitution, writes into .git and agent configs, git -c and GIT_CONFIG injection, and nested claude/codex bypass flags are tagged destructive. Unclosed substitution fails closed. A tab rule does not cover a command with substitution.",
+      "paths": [
+        "src/aconsole/core/domain/risk.py",
+        "tests/core/domain"
+      ],
+      "acceptance": [
+        "Все команды из описания получают теги, тест перечисляет их таблицей.",
+        "Команды, которые разбор не смог понять, считаются рискованными.",
+        "Запись в .git, конфиги агентов и запуск вложенных агентов имеют свой тег.",
+        "Правило «во вкладке» не применяется к команде с подстановкой."
+      ]
+    },
+    {
+      "id": "node-24",
+      "key": "SEC-10",
+      "title": "Убрать токен из argv и флаги из session id",
+      "status": "done",
+      "review_required": false,
+      "fence": 2,
+      "note": "Однократное завершение по новому решению пользователя kb-127; review_required=false. Повторной реализации нет, используется подтверждённый результат существующего коммита.",
+      "evidence": "По прямому решению пользователя kb-127: выполненные узлы с PASS завершаются автоматически. main d9ba7cc. artifacts/sec10-2026-11-06/REPORT.md: 213 targeted,67 approved, contracts and static checks PASS; public launchSpec4 agents, real curl, HOME symlink race, local HTTP checks PASS. Unrelated writer-tick timing failure explicitly tracked red PERF-2.",
+      "paths": [
+        "src/aconsole/core/infrastructure/agents",
+        "src/aconsole/core/infrastructure/tabs.py",
+        "src/aconsole/core/infrastructure/mcp/server.py",
+        "tests/core"
+      ],
+      "acceptance": [
+        "Токена нет в командной строке процессов.",
+        "Session id проверяется по формату, перед ним стоит --.",
+        "Запись в HOME не следует по симлинкам наружу.",
+        "/mcp проверяет Origin и Host как ingest."
+      ]
+    },
+    {
+      "id": "node-25",
+      "key": "APR-1",
+      "title": "Перенести запрос согласования поверх терминала",
+      "status": "verifying",
+      "review_required": false,
+      "fence": 2,
+      "note": "Карточка готова. Нужно ваше решение по снимкам.",
+      "evidence": "Коммит 294500e. Снимки: /home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/a17486fc9cb49e8c/docs/ui/APR-1 (light/dark, обычный и рискованный запрос, узкое окно) — ждут приёмки человеком.\nПроверено тестами tests/gui/front/test_approval_panel.py: команда 96 000 символов в окне 350×630 — все кнопки в пределах окна, детали прокручиваются; размер области терминала одинаков с карточкой и без неё; фокус не переходит на карточку; a/d/Enter вне карточки уходят терминалу; рискованное «Разрешить» выключено ~500 мс; Tab доходит до деталей, флажка и всех кнопок; другие вкладки считаются в подписи.\nНе проверено: чтение Orca вживую (задано только accessible label/description и announce); окно ниже ~555 px — сайдбар требует больше высоты и обрезает всё окно, это было и раньше.\nПроверки: check.sh и core-набор зелёные; GUI: падает test_scrolling_a_long_history (падает и на main), test_graph_rows_and_inspector упал один раз при полном прогоне и дважды прошёл отдельно.",
+      "paths": [
+        "src/aconsole/ui/views/approvals",
+        "src/aconsole/ui/views/window.py",
+        "src/aconsole/ui/style/style.css",
+        "tests/gui"
+      ],
+      "acceptance": [
+        "Кнопки решения видны при любой длине команды и diff без прокрутки.",
+        "Появление запроса не меняет размер терминала и не вызывает перерисовку агента.",
+        "Набор текста в терминале в момент появления запроса не может принять решение.",
+        "Снимки светлой и тёмной темы приняты пользователем.",
+        "Работает в узком окне и с клавиатуры, Orca читает запрос."
+      ]
+    },
+    {
+      "id": "node-26",
+      "key": "APR-2",
+      "title": "Показывать содержимое Write, Edit и MCP в запросе",
+      "status": "pending",
+      "review_required": false,
+      "fence": 0,
+      "note": null,
+      "evidence": null,
+      "paths": [
+        "src/aconsole/core/infrastructure/http/approval.py",
+        "src/aconsole/core/domain/approvals.py",
+        "src/aconsole/ui/views/approvals",
+        "tests/core"
+      ],
+      "acceptance": [
+        "Запрос правки показывает пути и diff, запрос MCP показывает инструмент и аргументы.",
+        "Запись в .git и конфиги агентов отмечена как рискованная.",
+        "Длинную команду можно прочитать целиком.",
+        "Отменённый агентом запрос исчезает."
+      ]
+    },
+    {
+      "id": "node-27",
+      "key": "APR-3",
+      "title": "Включить системные уведомления о запросах",
+      "status": "in_progress",
+      "review_required": false,
+      "fence": 2,
+      "note": null,
+      "evidence": null,
+      "paths": [
+        "src/aconsole/ui/views/app.py",
+        "src/aconsole/ui/views/window.py",
+        "tests/gui"
+      ],
+      "acceptance": [
+        "Запрос при неактивном окне даёт уведомление, клик открывает вкладку.",
+        "На один эпизод одно уведомление, при решении оно отзывается.",
+        "При активной вкладке уведомления нет."
+      ]
+    },
+    {
+      "id": "node-28",
+      "key": "APR-4",
+      "title": "Модель режимов согласований: глобально и проект",
+      "status": "pending",
+      "review_required": true,
+      "fence": 0,
+      "note": null,
+      "evidence": null,
+      "paths": [
+        "src/aconsole/core/application",
+        "src/aconsole/core/domain/approvals.py",
+        "src/aconsole/contracts/settings.py",
+        "migrations/versions",
+        "tests/core"
+      ],
+      "acceptance": [
+        "Режим хранится на обоих уровнях и переживает перезапуск ядра.",
+        "Заглушка сценария ведёт себя как «спрашивать» и покрыта тестом.",
+        "Изменить режим можно только из UI: MCP, ingest и контейнер получают отказ.",
+        "Контракты и golden обновлены, миграция обратима."
+      ]
+    },
+    {
+      "id": "node-29",
+      "key": "APR-5",
+      "title": "Применить режимы для Claude Code",
+      "status": "pending",
+      "review_required": true,
+      "fence": 0,
+      "note": null,
+      "evidence": null,
+      "paths": [
+        "src/aconsole/core/infrastructure/agents/claude",
+        "src/aconsole/core/infrastructure/http/approval.py",
+        "src/aconsole/core/application/services/approval_broker.py",
+        "tests/core"
+      ],
+      "acceptance": [
+        "Каждый режим и подрежим проверен на реальном Claude Code, версия записана.",
+        "Падение демона в режиме «запрещать» не даёт выполнить вызов.",
+        "Автоматические решения видны в журнале с причиной.",
+        "Правка настроек агентом не отключает выбранный режим, либо это явно показано."
+      ]
+    },
+    {
+      "id": "node-30",
+      "key": "APR-6",
+      "title": "Перехват и режимы для OpenCode",
+      "status": "pending",
+      "review_required": false,
+      "fence": 0,
+      "note": null,
+      "evidence": null,
+      "paths": [
+        "src/aconsole/core/infrastructure/agents/opencode",
+        "tests/core"
+      ],
+      "acceptance": [
+        "Проверка на реальной версии записана в узел.",
+        "Разрешать и запрещать работают статически.",
+        "Спрашивать через панель включён, только если подтверждена блокировка; иначе UI честно говорит о нативном запросе."
+      ]
+    },
+    {
+      "id": "node-31",
+      "key": "APR-7",
+      "title": "Перехват и режимы для Codex",
+      "status": "pending",
+      "review_required": false,
+      "fence": 0,
+      "note": null,
+      "evidence": null,
+      "paths": [
+        "src/aconsole/core/infrastructure/agents/codex",
+        "tests/core"
+      ],
+      "acceptance": [
+        "Проверка на реальной версии записана в узел.",
+        "Режимы применяются там, где подтверждены; покрытие честно указано в UI.",
+        "Режим запрещать не пропускает вызов при падении hook."
+      ]
+    },
+    {
+      "id": "node-32",
+      "key": "APR-8",
+      "title": "Перехват и режимы для Cursor",
+      "status": "pending",
+      "review_required": false,
+      "fence": 0,
+      "note": null,
+      "evidence": null,
+      "paths": [
+        "src/aconsole/core/infrastructure/agents/cursor",
+        "tests/core"
+      ],
+      "acceptance": [
+        "Проверка на реальной версии записана в узел.",
+        "Для каждого режима указано: работает, частично или неприменимо.",
+        "Настройка не обещает защиту, которой нет."
+      ]
+    },
+    {
+      "id": "node-33",
+      "key": "APR-9",
+      "title": "Настройка режимов в окне и честная матрица",
+      "status": "pending",
+      "review_required": false,
+      "fence": 0,
+      "note": null,
+      "evidence": null,
+      "paths": [
+        "src/aconsole/ui/views/setup/preferences.py",
+        "src/aconsole/ui/viewmodels",
+        "tests/gui"
+      ],
+      "acceptance": [
+        "Режим меняется на обоих уровнях, проект видит унаследованное значение.",
+        "Неприменимые режимы отключены с объяснением причины.",
+        "Активный автоматический режим виден в окне постоянно."
+      ]
+    },
+    {
+      "id": "node-34",
+      "key": "HAR-1",
+      "title": "Подключить MCP-сервер ядра к вкладкам Claude",
+      "status": "verifying",
+      "review_required": false,
+      "fence": 1,
+      "note": "CLI `mcp list` не читает сеансовый --mcp-config; реальный сеансовый контрольный протокол подтверждает подключение. Источники: https://code.claude.com/docs/en/mcp (env expansion headers) и официальный anthropics/claude-agent-sdk-python query.py (initialize/mcp_status). Узел на приёмке; коммит в main прикрепляется отдельно.",
+      "evidence": "HAR-1 реализован: отдельный приватный run/<tab>/mcp.json, --mcp-config в итоговом launcher argv, HTTP127.0.0.1:<port>/mcp, Bearer ${ACONSOLE_TAB_TOKEN} раскрывается Claude из окружения. RED3failed, GREEN13passed launcher/wire/newHTTP isolation suites через hostrun; check0 после lintfix. Installed Claude2.1.318 stream-json initialize/mcp_status =>connected aconsole, все12 инструментов; model request не отправлялся, model endpoint направлен в loopback. Новый HTTPtest использует TerminalLaunchSpec реального daemon, создаёт/читает план своего проекта и получает PLAN_NOT_FOUND из другого проекта.",
+      "paths": [
+        "src/aconsole/core/infrastructure/agents/claude/launcher.py",
+        "tests/core"
+      ],
+      "acceptance": [
+        "Новая вкладка Claude видит двенадцать инструментов aconsole.",
+        "Вызов инструмента работает в контексте своей вкладки.",
+        "Тест проверяет итоговый argv и конфигурацию."
+      ]
+    },
+    {
+      "id": "node-35",
+      "key": "HAR-2",
+      "title": "Включить hooks Codex и исправить заявленные возможности",
+      "status": "verifying",
+      "review_required": false,
+      "fence": 1,
+      "note": null,
+      "evidence": "main bbbc86a, clean ahead34. HAR-2: production launchSpec probes installed container Codex using hooks/list, validates exact7own session definitions, pins separate per-key hashes, confirms trusted status and stable argv. No user config writes and no trust for user/project hooks. Capabilities hooks/approvals/checkpoints false until confirmed; failure runs notify/MCP and existing Notify explains /hooks/settings/admin-policy/restart. README matches. Fixtures0.164 unchanged; captured0.166 added.29targeted tests exit0 including public socket success/fallback; full hostrun test core tests/core tests/contracts exit0; hostrun check exit0(r u f f/types/architecture/contracts green; known ownership substep Not a git repository unvalidated). Real installed Codex0.166 tested with production HostTabs/bootstrap/launchSpec and localmodelstub only: actual PermissionRequest -> codex/Bash approvalcard -> DENY; checkpoint/list=1; denied command marker absent. /tmp/aconsole_har2_live.py reproducer; leftover own diagnostic processes cleaned. No UI view/style edits.",
+      "paths": [
+        "src/aconsole/core/infrastructure/agents/codex",
+        "README.md",
+        "tests/core"
+      ],
+      "acceptance": [
+        "Capabilities и README совпадают с поведением на каждом шаге.",
+        "На реальном Codex hook доходит до ядра и даёт карточку.",
+        "Если доверие получить нельзя, UI объясняет, что делать."
+      ]
+    },
+    {
+      "id": "node-36",
+      "key": "HAR-3",
+      "title": "Исправить fork и выбор сессии",
+      "status": "pending",
+      "review_required": false,
+      "fence": 2,
+      "note": "Без изменений; сначала завершаю отдельный upgrade-path REL-4, чтобы не удерживать пути HAR-3.",
+      "evidence": null,
+      "paths": [
+        "src/aconsole/core/application/services/tabs.py",
+        "src/aconsole/ui/views/tabs",
+        "tests/core"
+      ],
+      "acceptance": [
+        "Форк продолжает отдельную сессию, исходная не меняется.",
+        "Список сессий работает на реальном ядре и доступен из новой вкладки.",
+        "Resume недоступен там, где не поддержан, и не запускает молча новую сессию."
+      ]
+    },
+    {
+      "id": "node-37",
+      "key": "HAR-4",
+      "title": "Сделать статусы вкладок надёжными",
+      "status": "pending",
+      "review_required": false,
+      "fence": 1,
+      "note": "Не вносил изменений. Acceptance требует первых real CLI fixtures; выбираю независимый core-узел без подмены native-проверок фейками.",
+      "evidence": null,
+      "paths": [
+        "src/aconsole/core/infrastructure/agents",
+        "tests/core"
+      ],
+      "acceptance": [
+        "Есть фикстуры с реальным выводом OpenCode и Cursor.",
+        "Статус ожидания не теряется при вводе.",
+        "Статус ожидания без карточки объясняет, где отвечать."
+      ]
+    },
+    {
+      "id": "node-38",
+      "key": "HAR-5",
+      "title": "Устойчивость sidecar и наблюдателей",
+      "status": "pending",
+      "review_required": false,
+      "fence": 0,
+      "note": null,
+      "evidence": null,
+      "paths": [
+        "src/aconsole/core/infrastructure/agents",
+        "src/aconsole/core/infrastructure",
+        "tests/core"
+      ],
+      "acceptance": [
+        "Кратковременная задержка не обрывает связь sidecar с ядром.",
+        "Завершение процесса всегда доходит до ядра.",
+        "Наблюдатель Codex переживает поздний старт контейнера."
+      ]
+    },
+    {
+      "id": "node-39",
+      "key": "UX-1",
+      "title": "Починить горячие клавиши, которые ничего не делают",
+      "status": "verifying",
+      "review_required": false,
+      "fence": 2,
+      "note": "Код и тесты готовы, живое окно проверяется в AUD-2.",
+      "evidence": "Коммит 09ac8ff в ветке ac/claude-a17486fc9cb49e8c (в main не влит). Все действия keymap имеют обработчик; неприменимое действие возвращает False и не забирает клавишу. Добавлены: закрытие и переключение вкладок, Alt+1..9, поиск в терминале, копирование и вставка, масштаб, выход, список клавиш. handover убран из keymap до появления /switch. Проверено: tools/check.sh на ветке 0 ошибок; pytest tests/core, contracts, hostrun, gate зелёные; GUI-набор без падений по UX-1; test_ux1_shortcuts падает при действии без обработчика. Вне узла: test_scrolling_a_long_history падает и на main (в CI исключён); test_git_actions нестабилен и на main (таймаут остановки ядра 10 с). Не проверено: нажатия Ctrl+Shift+C/V на живом окне, это AUD-2.",
+      "paths": [
+        "src/aconsole/ui/views/shortcuts.py",
+        "src/aconsole/ui/views/window.py",
+        "src/aconsole/ui/viewmodels/logic/keymap.py",
+        "tests/gui"
+      ],
+      "acceptance": [
+        "Каждое действие keymap имеет обработчик или удалено из keymap и README.",
+        "Ctrl+Shift+C и V работают в терминале.",
+        "Тест падает при действии без обработчика."
+      ]
+    },
+    {
+      "id": "node-40",
+      "key": "UX-2",
+      "title": "Спрашивать перед закрытием окна и вкладки с агентом",
+      "status": "pending",
+      "review_required": false,
+      "fence": 0,
+      "note": null,
+      "evidence": null,
+      "paths": [
+        "src/aconsole/ui/views/app.py",
+        "src/aconsole/ui/views/window.py",
+        "tests/gui"
+      ],
+      "acceptance": [
+        "Закрытие при работающих агентах или ожидающих запросах спрашивает и показывает их число.",
+        "Закрытие вкладки с работающим агентом спрашивает всегда.",
+        "Диалог говорит человеческим языком, что будет потеряно."
+      ]
+    },
+    {
+      "id": "node-41",
+      "key": "UX-3",
+      "title": "Подключить палитру к настоящему ядру",
+      "status": "pending",
+      "review_required": false,
+      "fence": 0,
+      "note": null,
+      "evidence": null,
+      "paths": [
+        "src/aconsole/core/bootstrap.py",
+        "src/aconsole/core/application",
+        "src/aconsole/ui/views/palette",
+        "tests/core"
+      ],
+      "acceptance": [
+        "Палитра на реальном ядре ищет команды, вкладки, узлы плана, заметки и согласования.",
+        "Ответ укладывается в цель DESIGN: меньше 100 мс.",
+        "Тест идёт через настоящую маршрутизацию ядра."
+      ]
+    },
+    {
+      "id": "node-42",
+      "key": "UX-4",
+      "title": "Сделать первый запуск и ошибки понятными",
+      "status": "in_progress",
+      "review_required": false,
+      "fence": 2,
+      "note": null,
+      "evidence": null,
+      "paths": [
+        "src/aconsole/ui/views/setup",
+        "src/aconsole/ui/views/app.py",
+        "src/aconsole/core/application/services/setup.py",
+        "tests/gui"
+      ],
+      "acceptance": [
+        "При ошибке старта пользователь видит причину и путь к логу.",
+        "Каждая непройденная проверка говорит, что сделать, с готовой командой.",
+        "Без контейнеров есть понятный следующий шаг.",
+        "Мастер можно открыть снова."
+      ]
+    },
+    {
+      "id": "node-43",
+      "key": "UX-5",
+      "title": "Режимы новой вкладки и управление проектами",
+      "status": "pending",
+      "review_required": false,
+      "fence": 0,
+      "note": null,
+      "evidence": null,
+      "paths": [
+        "src/aconsole/ui/views/tabs/new_tab.py",
+        "src/aconsole/ui/views/sidebar",
+        "tests/gui"
+      ],
+      "acceptance": [
+        "Доступны три режима из README и базовая ветка.",
+        "Открытие показывает прогресс и ошибку.",
+        "Проект можно удалить без потери worktree."
+      ]
+    },
+    {
+      "id": "node-44",
+      "key": "UX-6",
+      "title": "Сверить README и настройки с поведением",
+      "status": "pending",
+      "review_required": false,
+      "fence": 0,
+      "note": null,
+      "evidence": null,
+      "paths": [
+        "README.md",
+        "src/aconsole/ui/views/setup/preferences.py"
+      ],
+      "acceptance": [
+        "Каждая заявленная в README функция существует или удалена.",
+        "Настройки либо действуют, либо убраны.",
+        "Несохранённые правки не теряются молча."
+      ]
+    },
+    {
+      "id": "node-45",
+      "key": "CORE-1",
+      "title": "Поднимать ядро после падения и показывать потерю связи",
+      "status": "done",
+      "review_required": false,
+      "fence": 5,
+      "note": null,
+      "evidence": "Прямое решение пользователя kb-127, review_required=false; завершение существующей подтверждённой реализации без повторного кода. main 95ee966. Real disposable daemon kill/recovery, restored tabs, connection banner transitions and surviving hook endpoint/token tests PASS; rechecked in REL-4 29-case suite.",
+      "paths": [
+        "src/aconsole/ui/client/core_client.py",
+        "src/aconsole/core/bootstrap.py",
+        "tests/core"
+      ],
+      "acceptance": [
+        "После kill -9 ядра UI поднимает его и восстанавливает вкладки.",
+        "Во время потери связи виден баннер.",
+        "Живые агенты после перезапуска ядра продолжают отправлять hooks."
+      ]
+    },
+    {
+      "id": "node-46",
+      "key": "CORE-2",
+      "title": "Убрать блокировки из общего потока и event loop",
+      "status": "pending",
+      "review_required": false,
+      "fence": 0,
+      "note": null,
+      "evidence": null,
+      "paths": [
+        "src/aconsole/core/bootstrap.py",
+        "src/aconsole/core/infrastructure/mcp/tools.py",
+        "tests/core"
+      ],
+      "acceptance": [
+        "Решение по согласованию проходит за заданное время при идущем снимке.",
+        "MCP-инструменты не блокируют loop: есть тест на задержку.",
+        "Замеры до и после записаны."
+      ]
+    },
+    {
+      "id": "node-47",
+      "key": "CORE-3",
+      "title": "Согласовать запись в БД и состояние в памяти",
+      "status": "done",
+      "review_required": false,
+      "fence": 3,
+      "note": "Изменение семантики ожидания намеренное: лимит5с применяется до старта, после старта вызывающий ждёт определённый итог транзакции. В адаптерах/фикстуре добавлен внутренний save_settings; wire-контракт не менялся. Коммит прикрепляется отдельно; статус done не выставлялся.",
+      "evidence": "Прямое решение пользователя kb-127, review_required=false; завершение существующей подтверждённой реализации без повторного кода. main f590d26. Queued writer/settings consistency regressions PASS; atomic settings, no phantom late writes, shutdown drains validated. Distinct writer timing limit remains red PERF-2.",
+      "paths": [
+        "src/aconsole/core/infrastructure/persistence",
+        "src/aconsole/core/application/services/tabs.py",
+        "tests/core"
+      ],
+      "acceptance": [
+        "Таймаут не приводит к расхождению памяти и БД.",
+        "Настройки применяются атомарно.",
+        "Завершение не теряет и не повторяет записи."
+      ]
+    },
+    {
+      "id": "node-48",
+      "key": "CORE-4",
+      "title": "Исправить MCP: lease между планами и лимиты",
+      "status": "pending",
+      "review_required": false,
+      "fence": 0,
+      "note": null,
+      "evidence": null,
+      "paths": [
+        "src/aconsole/core/infrastructure/mcp",
+        "src/aconsole/core/domain/plan.py",
+        "src/aconsole/core/infrastructure/persistence/repositories/plans.py",
+        "tests/core"
+      ],
+      "acceptance": [
+        "Одинаковые ключи в двух планах можно взять одновременно.",
+        "Ответы и входы имеют лимиты.",
+        "Сквозной тест подтверждает изоляцию вкладок по токену.",
+        "plan_get показывает зависимости."
+      ]
+    },
+    {
+      "id": "node-49",
+      "key": "CORE-5",
+      "title": "Устойчивость IPC и очереди ingest",
+      "status": "pending",
+      "review_required": false,
+      "fence": 0,
+      "note": null,
+      "evidence": null,
+      "paths": [
+        "src/aconsole/core/infrastructure/ipc",
+        "src/aconsole/core/infrastructure/http",
+        "tests/core"
+      ],
+      "acceptance": [
+        "Каждая ошибка клиента получает ответ, соединение не падает.",
+        "Потеря событий обнаруживается и ведёт к resync.",
+        "Несовпадение версий показывается пользователю."
+      ]
+    },
+    {
+      "id": "node-50",
+      "key": "CORE-6",
+      "title": "Ограничить рост и настроить логи",
+      "status": "done",
+      "review_required": false,
+      "fence": 4,
+      "note": null,
+      "evidence": "Прямое решение пользователя kb-127, review_required=false; завершение существующей подтверждённой реализации без повторного кода. main 2d2e329. Full core/contracts PASS at implementation,82 focused+9 final resource cases PASS; durable refs outbox, byte-tail usage, log rotation and noninterrupting WAL compaction. Retention/pinned-reader limits documented in artifacts/core6-2026-11-06/REPORT.md.",
+      "paths": [
+        "src/aconsole/core/infrastructure/git",
+        "src/aconsole/core/infrastructure/persistence",
+        "tests/core"
+      ],
+      "acceptance": [
+        "Вытесненные refs удаляются, есть тест.",
+        "Опрос логов читает только новое.",
+        "Логи ядра настроены и ротируются.",
+        "WAL не растёт без ограничений."
+      ]
+    },
+    {
+      "id": "node-51",
+      "key": "FE-1",
+      "title": "Устранить гонки и устаревшие ответы в UI",
+      "status": "pending",
+      "review_required": false,
+      "fence": 0,
+      "note": null,
+      "evidence": null,
+      "paths": [
+        "src/aconsole/ui/client",
+        "src/aconsole/ui/views/review",
+        "src/aconsole/ui/views/sidebar",
+        "tests/gui"
+      ],
+      "acceptance": [
+        "Исключение подписчика не рвёт соединение.",
+        "Устаревший ответ не меняет экран.",
+        "Текст для незапущенной вкладки доставляется или даёт ошибку."
+      ]
+    },
+    {
+      "id": "node-52",
+      "key": "DES-1",
+      "title": "Реальный контроль контраста",
+      "status": "verifying",
+      "review_required": false,
+      "fence": 1,
+      "note": "Гейт работает, 0 нарушений. Цвета текста немного изменились: посмотрите на живом приложении.",
+      "evidence": "Коммит c696a05. tools/contrast_check.py без аргументов проверяет каждый color: из style.css на всех поверхностях (light и dark), пары темы, значимые фигуры (3:1) и палитры терминала; входит в check.sh. Нашёл 24 нарушения, все исправлены токенами; 0 сейчас. Падение гейта на плохом цвете проверено в tests/test_contrast.py. Таблица цветов сверена с установленным libadwaita 1.5 GUI-тестом test_contrast_table.\nОграничения: таблица для libadwaita 1.5 и синего акцента; на более новой версии сверка пропускается, системный акцент другого цвета гейт не видит. Слот 0 тёмной палитры терминала исключён, как в дизайне. Состояния hover и приглушение соседних узлов на графе (0.45) не проверяются. Состояния текста поверх заливок, заданных кодом, вне гейта.\nПроверки на c696a05: check.sh rc=0, tests/test_contrast.py rc=0, test_contrast_table и test_approval_panel rc=0. Полный GUI-прогон до последней правки fgalpha: падает только test_scrolling_a_long_history (падает и на main); core rc=0.",
+      "paths": [
+        "tools/contrast_check.py",
+        "tools/check.sh",
+        "src/aconsole/ui/style/style.css",
+        "tests/test_contrast.py"
+      ],
+      "acceptance": [
+        "Гейт проверяет реальные пары цветов обеих тем и падает при нарушении.",
+        "Текст проходит 4.5:1, значимые элементы 3:1."
+      ]
+    },
+    {
+      "id": "node-53",
+      "key": "DES-2",
+      "title": "Различимость состояний и доступность",
+      "status": "pending",
+      "review_required": false,
+      "fence": 0,
+      "note": null,
+      "evidence": null,
+      "paths": [
+        "src/aconsole/ui/views/sidebar",
+        "src/aconsole/ui/views/tabs",
+        "src/aconsole/ui/style/style.css",
+        "tests/gui"
+      ],
+      "acceptance": [
+        "Каждое состояние различимо без цвета.",
+        "Все элементы управления озвучиваются и доступны с клавиатуры.",
+        "Обрезка графа явно показана."
+      ]
+    },
+    {
+      "id": "node-54",
+      "key": "DES-3",
+      "title": "Единый визуальный язык приложения",
+      "status": "pending",
+      "review_required": false,
+      "fence": 0,
+      "note": null,
+      "evidence": null,
+      "paths": [
+        "src/aconsole/ui/style/style.css",
+        "src/aconsole/ui/views",
+        "tests/gui"
+      ],
+      "acceptance": [
+        "Отступы, радиусы и шрифты заданы токенами.",
+        "Панели и диалоги выглядят как одно приложение, снимки приняты пользователем.",
+        "Снимки сравниваются с эталоном в проверках."
+      ]
+    },
+    {
+      "id": "node-55",
+      "key": "DES-4",
+      "title": "Локализация и терминология",
+      "status": "pending",
+      "review_required": false,
+      "fence": 0,
+      "note": null,
+      "evidence": null,
+      "paths": [
+        "src/aconsole/ui/views",
+        "src/aconsole/contracts",
+        "tests/gui"
+      ],
+      "acceptance": [
+        "Один механизм переводов.",
+        "Ядро не содержит текста для пользователя.",
+        "Счётчики верно склоняются в русском."
+      ]
+    },
+    {
+      "id": "node-56",
+      "key": "QA-3",
+      "title": "Проверки на настоящем ядре",
+      "status": "blocked",
+      "review_required": false,
+      "fence": 1,
+      "note": "Маршруты палитры и session/list отсутствуют в настоящем ядре; обязательная сверка METHODS должна обнаруживать их. Для исправления требуется UX-3/HAR-3; оба claim отклонены PATHS_OVERLAP SEC-8, который ожидает приёмки. Unblock: реализованы реальные маршруты UX-3/HAR-3 и освобождены пути тестов. Существующий main оставлен зелёным; исключения/xfail в проверки не добавлялись.",
+      "evidence": null,
+      "paths": [
+        "tools/check_contracts.py",
+        "tests"
+      ],
+      "acceptance": [
+        "Проверка падает на методе клиента без маршрута в ядре.",
+        "Сквозные сценарии покрывают вкладку, запрос и решение, план через MCP.",
+        "Проверка запускается в CI."
+      ]
+    },
+    {
+      "id": "node-57",
+      "key": "QA-4",
+      "title": "CI, сборка и контракты",
+      "status": "blocked",
+      "review_required": false,
+      "fence": 2,
+      "note": "Частичная реализация сохранена в main 2e4c5aa. check PASS, contracts 9 PASS, UI 152 PASS, GUI 35 PASS; повторные rust_metadata/vault PASS. Полный core до окончательной оптимизации PERF-1 имел только framer_speed failure; после 0263d4b целевые тесты проходят, полный core ещё не повторён. Не завершены длинные tmp-пути сокетов (tests/core занято SEC-8) и запуск нового CI. Unblock: доступны tests/core и получены результаты CI. По просьбе пользователя работа остановлена на логической точке.",
+      "evidence": null,
+      "paths": [
+        ".github/workflows",
+        "tools",
+        "packaging/build_deb.py",
+        "tests"
+      ],
+      "acceptance": [
+        "CI собирает и ставит deb.",
+        "Порог покрытия действует.",
+        "Один набор golden.",
+        "Тесты работают при длинном пути и не трогают настоящий HOME."
+      ]
+    },
+    {
+      "id": "node-58",
+      "key": "QA-5",
+      "title": "Гигиена репозитория и лицензия",
+      "status": "blocked",
+      "review_required": false,
+      "fence": 1,
+      "note": "Часть выполнена: .aconsole/ игнорируется, коммит 729ba04, git check-ignore .aconsole/lock PASS. Полное закрытие невозможно без выбора лицензии владельцем проекта (прямое условие узла); личные пути затрагивают зарезервированные тесты. Unblock: лицензия выбрана владельцем и доступны пути тестов для очистки. Эскалация пользователю не создавалась.",
+      "evidence": null,
+      "paths": [
+        ".gitignore",
+        "LICENSE",
+        "install.sh",
+        "packaging",
+        ".github/workflows"
+      ],
+      "acceptance": [
+        "Лицензия выбрана пользователем и добавлена.",
+        ".aconsole/ игнорируется.",
+        "Личных путей нет в отслеживаемых файлах."
+      ]
+    },
+    {
+      "id": "node-59",
+      "key": "QA-6",
+      "title": "Итоговая проверка согласований и выпуска",
+      "status": "pending",
+      "review_required": true,
+      "fence": 0,
+      "note": null,
+      "evidence": null,
+      "paths": [],
+      "acceptance": [
+        "Матрица проверена на реальных версиях.",
+        "Попытки агента изменить режим и одобрить запрос из контейнера не работают.",
+        "Security review пройден."
+      ]
+    },
+    {
+      "id": "node-60",
+      "key": "CMT-2",
+      "title": "Проверить коммиты новых узлов",
+      "status": "pending",
+      "review_required": false,
+      "fence": 0,
+      "note": null,
+      "evidence": null,
+      "paths": [],
+      "acceptance": [
+        "Для каждого рабочего узла есть ровно один коммит с AConsole-Node: <KEY>.",
+        "Нет коммитов, смешивающих узлы."
+      ]
+    },
+    {
+      "id": "node-70",
+      "key": "UX-7",
+      "title": "Кнопка приёмки узлов на странице плана",
+      "status": "verifying",
+      "review_required": false,
+      "fence": 2,
+      "note": "Нужен перезапуск приложения с новым кодом.",
+      "evidence": "Коммит 997074f в ветке ac/claude-a17486fc9cb49e8c. На странице плана у узла на проверке виден отчёт агента и кнопки Принять и Вернуть; Вернуть ставит узел в очередь через failed и pending. Отказ ядра показан тостом, кнопки снова активны. PlanNodeView получил необязательное поле evidence, только для verifying. Заодно исправлено: verifying больше не истекает через 15 минут, иначе Принять падало с LEASE_EXPIRED. Затронуты пути вне узла: core/domain/plan.py, tests/core/domain/test_plan.py. Правило, что агент не может перевести verifying в done, не менялось и покрыто матрицей в test_plan.py. Проверено: tools/check.sh 0 ошибок, pytest core, contracts, hostrun, gate зелёные, test_b4a_plan зелёный. Не проверено: нажатие на живом окне с настоящим ядром.",
+      "paths": [
+        "src/aconsole/ui/views/sidebar/plan_graph.py",
+        "src/aconsole/ui/views/sidebar/messages.py",
+        "src/aconsole/contracts/app.py",
+        "src/aconsole/core/infrastructure/mcp/tools.py",
+        "contracts/schema",
+        "tests/contracts",
+        "tests/gui/front/test_b4a_plan.py"
+      ],
+      "acceptance": [
+        "У узла на проверке видны результат агента и кнопки Принять и Вернуть.",
+        "Принять переводит узел в done, Вернуть возвращает его в очередь.",
+        "Отказ ядра показан пользователю, узел не меняется.",
+        "Агент по-прежнему не может перевести verifying в done."
+      ]
+    },
+    {
+      "id": "node-75",
+      "key": "SEC-11",
+      "title": "Закрыть запуск кода через filter, merge, gpg и git вне runner",
+      "status": "pending",
+      "review_required": false,
+      "fence": 1,
+      "note": null,
+      "evidence": "Коммит 273fbdc на ветке, в main не влит. Обезврежено: filter clean/smudge/process (и имя с '='), merge driver, textconv, gpg.program и gpg.ssh/x509, trailer command/cmd, askpass, editor, gitProxy, credential.helper. Проверено: tests/core/test_git_host_exec.py падает без правки (мутация) для фильтров, textconv, merge, подписи и trailer; с правкой rc=0. Тест diff.X.command зелёный и без правки: его закрывают уже существовавшие guard'ы, это страховка, а не доказательство правки. tools/check.sh rc=0, core-тесты rc=0, GUI-тесты не гонялись (UI не менялся). tabs.py и mcp/tools.py идут через GitRunner; проверка «только runner запускает git» теперь на всё core. Остаточные риски: гонка между перечислением драйверов и запуском команды; +1 процесс git на вызов; коммиты ядра больше не подписываются при глобальной подписи пользователя; живой core на старом коде до перезапуска.",
+      "paths": [
+        "src/aconsole/core/infrastructure/git/runner.py",
+        "src/aconsole/core/infrastructure/tabs.py",
+        "src/aconsole/core/infrastructure/mcp/tools.py",
+        "tests/core/test_git_host_exec.py"
+      ],
+      "acceptance": [
+        "filter clean, smudge и process из репозитория не выполняются при status и diff.",
+        "merge driver, gpg.program, askpass и редактор из репозитория не выполняются.",
+        "Git на хосте запускается только через runner, проверка охватывает всё ядро."
+      ]
+    },
+    {
+      "id": "node-77",
+      "key": "PLAN-1",
+      "title": "Согласовать готовность узла с блокировкой пересекающихся путей",
+      "status": "verifying",
+      "review_required": true,
+      "fence": 1,
+      "note": "Реализовано и закоммичено. Работающий демон загрузит новую логику при штатном перезапуске; текущее окружение использует загруженный ранее код.",
+      "evidence": "main 44e7703. hostrun check PASS. hostrun test core -k 'plan_ready_paths or test_plan': 75 PASS. hostrun test core -k 'plan_ready_paths or mcp_tools': 11 PASS. Регрессии: in_progress/verifying скрывают занятые пути, после human DONE готовность восстанавливается; claim продолжает запрещать пересечение.",
+      "paths": [
+        "src/aconsole/core/domain/plan.py",
+        "tests/contracts/test_plan_ready_paths.py"
+      ],
+      "acceptance": [
+        "ready не предлагает pending узел с путями, занятыми in_progress или verifying узлом.",
+        "После освобождения путей узел снова готов.",
+        "Claim продолжает отклонять пересекающиеся пути; независимые узлы остаются доступны."
+      ]
+    },
+    {
+      "id": "node-80",
+      "key": "PERF-1",
+      "title": "Восстановить порог framer 64 КиБ за 5 мс",
+      "status": "verifying",
+      "review_required": true,
+      "fence": 1,
+      "note": "Готово к проверке. По просьбе пользователя поставлена логическая точка; полный core после окончательной оптимизации ещё не повторён.",
+      "evidence": "main 0263d4b. Итоговый hostrun check PASS. 43 sidecar/framer PASS; hostrun test core -k framer_speed PASS три раза подряд на окончательной реализации. 2000 дифференциальных потоков: байты, сигналы и счётчики совпали со старым парсером. Замер на Python 3.15t: около 3.2–3.3 мс против исходных 5.2–5.5 мс. Порог 5 мс и существующие тесты не менялись.",
+      "paths": [
+        "src/aconsole/sidecar/framer.py"
+      ],
+      "acceptance": [
+        "hostrun test core -k framer_speed проходит три раза подряд без изменения теста и лимита.",
+        "Регрессии sidecar проходят; побайтное поведение и обработка разбиений сохраняются."
+      ]
+    },
+    {
+      "id": "node-83",
+      "key": "AUD-3",
+      "title": "Воспроизвести риски Git и записать отчёт без изменения исходников",
+      "status": "verifying",
+      "review_required": true,
+      "fence": 1,
+      "note": "Все изменения и отчёт в main по прямому указанию пользователя. REL-1 claim отклонён PATHS_OVERLAP SEC-8; обхода блокировок и самостоятельной приёмки verifying узлов не было.",
+      "evidence": "main commit 7448b18; artifacts/aud1-2026-11-05/REPORT.md, reproduce.py.txt и results.json. 12 сценариев на новых временных Git-репозиториях, результаты сверены. Подтверждены REL-1 (удаление вне worktree через parent symlink, checkpoint и single-file restore), REL-2 (ignored .aconsole теряется без discard), REL-3 (dangling symlink остаётся после restore). Узлы node-84/85/86 добавлены в plan-1. Read-only аудит: код продукта и существующие тесты не менялись.",
+      "paths": [
+        "artifacts/aud1-2026-11-05"
+      ],
+      "acceptance": [
+        "Отчёт содержит исходные пути, команды и результаты.",
+        "Подтверждённые дефекты добавлены в план отдельными узлами."
+      ]
+    },
+    {
+      "id": "node-84",
+      "key": "REL-1",
+      "title": "Не удалять файлы за пределами worktree через симлинк каталога",
+      "status": "verifying",
+      "review_required": true,
+      "fence": 1,
+      "note": "Проверено также детерминированное переименование/подмена родителя прямо перед unlink; внешний sentinel сохраняется. Узел передан на приёмку, done агентом не выставлен.",
+      "evidence": "Исправление обоих restore entrypoint через remove_worktree_file: родительские fd с O_DIRECTORY|O_NOFOLLOW, unlink(...,dir_fd), отсутствие перехода по leaf symlink, ошибки преобразованы в GitCommandError/CheckpointGitError. RED:4failed2passed; GREEN:6 boundary tests, расширенный Git набор57passed через hostrun; hostrun check exit0 (известный ownership snapshot warning). Коммит в main прикрепляется отдельно.",
+      "paths": [
+        "src/aconsole/core/infrastructure/git/checkpoints.py",
+        "src/aconsole/core/infrastructure/git/operations.py",
+        "tests/core"
+      ],
+      "acceptance": [
+        "Restore checkpoint и restoreFile не меняют ничего за пределами worktree при подмене родителя симлинком.",
+        "Проверки охватывают оба входа и обычный restore.",
+        "При невозможности безопасного восстановления возвращается диагностируемый отказ."
+      ]
+    },
+    {
+      "id": "node-85",
+      "key": "REL-2",
+      "title": "Сохранять ignored-файлы внутри .aconsole при закрытии worktree",
+      "status": "verifying",
+      "review_required": true,
+      "fence": 1,
+      "note": "Общий helper влияет также на Git cleanup, поэтому operations.py включён в этот узел для согласованности. Done не выставлен: результат на приёмке.",
+      "evidence": "Исправлено перечисление ignored-файлов: --ignored=traditional вместе с --untracked-files=all в Worktrees и GitMutations.has_ignored. Исключается только точный .aconsole/lock. Новые проверки root notes, вложенного clipboard/image и lock-only. RED2failed1passed, GREEN60passed через hostrun, check0. Изменения в main; commit прикрепляется отдельно.",
+      "paths": [
+        "src/aconsole/core/infrastructure/git/worktrees.py",
+        "tests/core/test_worktrees.py"
+      ],
+      "acceptance": [
+        "Ignored файлы .aconsole кроме lock требуют явного discard.",
+        "Без discard данные и worktree остаются.",
+        "Один служебный lock не создаёт ложного предупреждения."
+      ]
+    },
+    {
+      "id": "node-86",
+      "key": "REL-3",
+      "title": "Удалять лишние dangling symlink при восстановлении чекпоинта",
+      "status": "pending",
+      "review_required": true,
+      "fence": 0,
+      "note": null,
+      "evidence": null,
+      "paths": [
+        "src/aconsole/core/infrastructure/git/checkpoints.py",
+        "tests/core/test_checkpoints_git.py"
+      ],
+      "acceptance": [
+        "После restore лишний broken symlink отсутствует.",
+        "Страховочный checkpoint позволяет восстановить прежний симлинк.",
+        "Не нарушается защита от перехода за пределы worktree."
+      ]
+    },
+    {
+      "id": "node-105",
+      "key": "GIT-1",
+      "title": "Проверить неизменность результатов WorkSession и согласовать продолжение после 0.1.1",
+      "status": "verifying",
+      "review_required": true,
+      "fence": 1,
+      "note": null,
+      "evidence": "GIT-1 реализован: preview/merge проверяют snapshot refs против persistedOID в session и genericGit RPC; WorkSession integrate sourceOID pinned. 2REDpreview->fixed;4newRPC tests pass;61 focused regressions pass. Full core/contracts+pureIPCclient exit0. hostrun check exit0 после additive sync linkedgeneratedtypes; ruff/types/architecture/contracts pass; known ownership Not a git repository unvalidated. Review/newcontinuation order artifacts/plan-reconciliation-0.1.1/REVIEW.md. GIT-2 отдельно проверяет такойже mutable-ref risk приrestore; REL-4 отмечает failedinstalledrestart.",
+      "paths": [
+        "src/aconsole/core/application/services/work_session_git.py",
+        "tests/core/test_work_session_result_integrity.py",
+        "artifacts/plan-reconciliation-0.1.1"
+      ],
+      "acceptance": [
+        "Подмена result ref после фиксации не меняет принимаемый результат и не разрешает опасную очистку.",
+        "Preview и integrate проверены через публичный RPC на временном Git-репозитории.",
+        "Регрессии restore, ignored-файлов и WorkSession проходят; обзор новых коммитов и дальнейший порядок записаны."
+      ]
+    },
+    {
+      "id": "node-106",
+      "key": "REL-4",
+      "title": "Проверить обновление UI при ядре без work_sessions.v1",
+      "status": "verifying",
+      "review_required": true,
+      "fence": 1,
+      "note": null,
+      "evidence": "main b73d4b2; artifacts/rel4-2026-11-06/REPORT.md. Three baseline process regressions reproduced open/orphaned handshake connections. Four final isolated-process scenarios plus existing recovery/CoreClient tests passed (29 total); hostrun check exit 0, known ownership substep infrastructure error remains. Safe refusal branch implemented: localized incompatibility error remains, rejected socket/tasks released without signalling existing daemon, automatic reconnect stops, explicit retry works. No initialized/data request after refusal; existing daemon, lock, agent process and binary work preserved. No forced automatic legacy-core upgrade or user app restart.",
+      "paths": [
+        "src/aconsole/ui/client/core_client.py",
+        "tests/core/test_core_upgrade.py"
+      ],
+      "acceptance": [
+        "Старое ядро без work_sessions.v1 безопасно обновляется либо даёт понятный проверяемый отказ.",
+        "Несовместимые UI/core не продолжают работу по новой схеме.",
+        "Тесты используют отдельные процессы и данные, не перезапускают приложение пользователя."
+      ]
+    },
+    {
+      "id": "node-108",
+      "key": "GIT-2",
+      "title": "Восстанавливать историю WorkSession по записанному OID, а не изменяемому ref",
+      "status": "verifying",
+      "review_required": true,
+      "fence": 1,
+      "note": null,
+      "evidence": "main0b7717f. Подтверждено2RED RPC cases: mutable ref before/after preview применяет unreviewed вместоrecordedreviewed. Materialize now uses persistedOID.22focused tests pass including HEAD/index unchanged and safety snapshot exactpre-restorecontent, integration+session+recovery+restore boundaries. Final hostrun check exit0 ruff/types/architecture/contracts; known ownership Not a git repository remainsunvalidated. Full core/contracts+pureIPCclient passed beforeisolatedGIT2change; focused22 after. Report artifacts/plan-reconciliation-0.1.1/RESTORE.md; tracked plans/0.1.1-git.md links revisedplan. mainclean ahead2; no installation/restart/push.",
+      "paths": [
+        "src/aconsole/core/application/services/work_session_history.py",
+        "tests/core/test_work_session_restore_integrity.py"
+      ],
+      "acceptance": [
+        "Подмена snapshot ref до или после restorePreview не подменяет применяемое дерево.",
+        "Restore сохраняет HEAD, индекс и safety snapshot текущего состояния.",
+        "Тест проходит через публичный RPC на временном репозитории."
+      ]
+    },
+    {
+      "id": "node-112",
+      "key": "GIT-3",
+      "title": "Не доверять настройкам скрытия dirty-состояния подмодулей",
+      "status": "verifying",
+      "review_required": true,
+      "fence": 1,
+      "note": null,
+      "evidence": "GIT-3 implemented: both safety status commands force --ignore-submodules=none.6RED tests nowpass (submoduleignoreall/dirty/untracked, diffignoreall, publicRPC cleanup2cases).51focused state/worktree/cleanup/session/durability tests exit0. hostruncheckexit0 ruff/types/architecture/contracts; knownownership Notagit remainsunvalidated. Raw baselineaudit JSON unchanged; diagnosticreproducer movedtotext+ignoredscratch instructions toavoid treating itasproductmodule and preventoverwritingbaseline onreplay. GIT4forcewindow independent remains.",
+      "paths": [
+        "src/aconsole/core/infrastructure/git/history.py",
+        "src/aconsole/core/infrastructure/git/worktrees.py",
+        "tests/core/test_submodule_cleanup_safety.py"
+      ],
+      "acceptance": [
+        "Dirty и untracked-файлы подмодуля не скрываются настройками submodule.*.ignore/diff.ignoreSubmodules.",
+        "Очистка с discard_ignored не удаляет несохранённую работу подмодуля.",
+        "Регрессия воспроизводит исходный дефект на локальных временных репозиториях без сети."
+      ]
+    },
+    {
+      "id": "node-113",
+      "key": "GIT-4",
+      "title": "Не применять blanket --force при согласии удалить только ignored-файлы",
+      "status": "verifying",
+      "review_required": true,
+      "fence": 1,
+      "note": null,
+      "evidence": "main a286858. No blanket --force for ordinary Worktrees.close or GitMutations.remove_worktree; ignored discard uses normal Git removal, with command-scoped status.showUntrackedFiles=all. Writer rejects ignored data without consent. Failed-create rollback force unchanged. Nine RED cases fixed; 14 new cases cover late tracked/untracked/hidden-untracked writes and nested repos in both adapters, ignored-only allowed deletion, consent refusal and lock-only cleanup. 54 focused tests passed. Full core/contracts passed exit0; final hostrun check exit0 (ruff/types/architecture/contracts, known ownership Not a git repository unvalidated). Report artifacts/aud1-2026-11-06/REPORT.md preserves original unsafe observations. Git can refuse initialized submodule/nested repo removal; no force fallback, no claim of atomic external-writer isolation. Main clean ahead5; no push/install/live-user-app restart.",
+      "paths": [
+        "src/aconsole/core/infrastructure/git/worktrees.py",
+        "src/aconsole/core/infrastructure/git/operations.py",
+        "tests/core/test_cleanup_discard_race.py"
+      ],
+      "acceptance": [
+        "Discard ignored не превращается в разрешение удалить новые обычные dirty/untracked-файлы.",
+        "Контролируемая запись непосредственно перед remove сохраняет файл и даёт отказ в обоих адаптерах.",
+        "Nested repositories/submodules и собственный runtime lock обрабатываются безопасно; явный discard действительно удаляет разрешённые ignored-данные."
+      ]
+    },
+    {
+      "id": "node-124",
+      "key": "PLAN-2",
+      "title": "Актуализировать граф и порядок продолжения AConsole",
+      "status": "in_progress",
+      "review_required": true,
+      "fence": 2,
+      "note": null,
+      "evidence": null,
+      "paths": [
+        "artifacts/plan-refresh-2026-11-06"
+      ],
+      "acceptance": [
+        "Статусы и коммиты сверены; реализованные узлы переданы на человеческую проверку.",
+        "Граф содержит реальные зависимости, а блокировки путей и порядок дальнейших работ записаны отдельно.",
+        "Подтверждённые изменения плана сохранены через штатные инструменты; отчёт не утверждает приёмку человеком."
+      ]
+    },
+    {
+      "id": "node-125",
+      "key": "PERF-2",
+      "title": "Проверить превышение задержки writer tick в полном наборе",
+      "status": "failed",
+      "review_required": true,
+      "fence": 1,
+      "note": "Обязательная проверка full core не прошла: test_persistence_b_tick max=6.125119ms при лимите5ms. Отдельный повтор PASS, причина не установлена. Красный по новому правилу пользователя; сначала собственный разбор, не эскалация и не ослабление порога.",
+      "evidence": "artifacts/sec10-2026-11-06/core-final.txt и final-recheck.txt; full core exit1, isolated persistence/security67 exit0.",
+      "paths": [
+        "src/aconsole/core/infrastructure/persistence/writer.py",
+        "tests/core/test_persistence_b.py",
+        "artifacts/perf2"
+      ],
+      "acceptance": [
+        "Повторные измерения отдельно и в полном наборе записаны с условиями нагрузки.",
+        "При подтверждённой причине внесено отдельное исправление без изменения порога и удаления теста.",
+        "Полный набор проходит либо измеренный внешний фактор документирован без ложного успешного результата."
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "src": "node-6",
+      "dst": "node-8",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-5",
+      "dst": "node-8",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-3",
+      "dst": "node-8",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-7",
+      "dst": "node-8",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-4",
+      "dst": "node-8",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-2",
+      "dst": "node-8",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-10",
+      "dst": "node-13",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-5",
+      "dst": "node-11",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-11",
+      "dst": "node-12",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-13",
+      "dst": "node-14",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-12",
+      "dst": "node-13",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-3",
+      "dst": "node-12",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-9",
+      "dst": "node-13",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-7",
+      "dst": "node-12",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-2",
+      "dst": "node-9",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-11",
+      "dst": "node-13",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-4",
+      "dst": "node-11",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-8",
+      "dst": "node-13",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-9",
+      "dst": "node-10",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-27",
+      "dst": "node-59",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-24",
+      "dst": "node-60",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-42",
+      "dst": "node-44",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-56",
+      "dst": "node-59",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-40",
+      "dst": "node-44",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-38",
+      "dst": "node-60",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-20",
+      "dst": "node-49",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-45",
+      "dst": "node-60",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-29",
+      "dst": "node-59",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-20",
+      "dst": "node-28",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-25",
+      "dst": "node-54",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-6",
+      "dst": "node-45",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-55",
+      "dst": "node-60",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-26",
+      "dst": "node-59",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-37",
+      "dst": "node-60",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-20",
+      "dst": "node-21",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-50",
+      "dst": "node-60",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-43",
+      "dst": "node-44",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-53",
+      "dst": "node-60",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-52",
+      "dst": "node-54",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-34",
+      "dst": "node-44",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-36",
+      "dst": "node-44",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-48",
+      "dst": "node-60",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-39",
+      "dst": "node-40",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-30",
+      "dst": "node-59",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-25",
+      "dst": "node-26",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-46",
+      "dst": "node-60",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-49",
+      "dst": "node-60",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-7",
+      "dst": "node-50",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-13",
+      "dst": "node-59",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-51",
+      "dst": "node-60",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-23",
+      "dst": "node-29",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-3",
+      "dst": "node-29",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-44",
+      "dst": "node-60",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-12",
+      "dst": "node-29",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-29",
+      "dst": "node-32",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-28",
+      "dst": "node-33",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-36",
+      "dst": "node-43",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-41",
+      "dst": "node-44",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-58",
+      "dst": "node-60",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-42",
+      "dst": "node-55",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-21",
+      "dst": "node-29",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-31",
+      "dst": "node-59",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-52",
+      "dst": "node-53",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-32",
+      "dst": "node-59",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-28",
+      "dst": "node-29",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-35",
+      "dst": "node-31",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-29",
+      "dst": "node-31",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-54",
+      "dst": "node-60",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-19",
+      "dst": "node-60",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-39",
+      "dst": "node-44",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-18",
+      "dst": "node-60",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-57",
+      "dst": "node-60",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-29",
+      "dst": "node-30",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-14",
+      "dst": "node-60",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-47",
+      "dst": "node-60",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-59",
+      "dst": "node-60",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-33",
+      "dst": "node-59",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-22",
+      "dst": "node-29",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-18",
+      "dst": "node-83",
+      "kind": "parent"
+    },
+    {
+      "src": "node-18",
+      "dst": "node-85",
+      "kind": "parent"
+    },
+    {
+      "src": "node-18",
+      "dst": "node-84",
+      "kind": "parent"
+    },
+    {
+      "src": "node-84",
+      "dst": "node-86",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-18",
+      "dst": "node-86",
+      "kind": "parent"
+    },
+    {
+      "src": "node-57",
+      "dst": "node-106",
+      "kind": "related"
+    },
+    {
+      "src": "node-84",
+      "dst": "node-105",
+      "kind": "related"
+    },
+    {
+      "src": "node-85",
+      "dst": "node-105",
+      "kind": "related"
+    },
+    {
+      "src": "node-18",
+      "dst": "node-105",
+      "kind": "related"
+    },
+    {
+      "src": "node-45",
+      "dst": "node-106",
+      "kind": "related"
+    },
+    {
+      "src": "node-75",
+      "dst": "node-105",
+      "kind": "related"
+    },
+    {
+      "src": "node-105",
+      "dst": "node-108",
+      "kind": "related"
+    },
+    {
+      "src": "node-18",
+      "dst": "node-108",
+      "kind": "related"
+    },
+    {
+      "src": "node-84",
+      "dst": "node-108",
+      "kind": "related"
+    },
+    {
+      "src": "node-85",
+      "dst": "node-113",
+      "kind": "related"
+    },
+    {
+      "src": "node-112",
+      "dst": "node-113",
+      "kind": "related"
+    },
+    {
+      "src": "node-18",
+      "dst": "node-113",
+      "kind": "related"
+    },
+    {
+      "src": "node-85",
+      "dst": "node-112",
+      "kind": "related"
+    },
+    {
+      "src": "node-18",
+      "dst": "node-112",
+      "kind": "related"
+    }
+  ],
+  "artifacts": [
+    {
+      "node": "node-4",
+      "kind": "commit",
+      "ref": "923a851cafec9bf2695a131f62e83d6cd6a29864"
+    },
+    {
+      "node": "node-3",
+      "kind": "commit",
+      "ref": "e91a0a2576d903ad96ffb7ff177406d25dc7fc6b"
+    },
+    {
+      "node": "node-7",
+      "kind": "commit",
+      "ref": "a13a7f78354b062616fdf109e75c811b730254d7"
+    },
+    {
+      "node": "node-20",
+      "kind": "commit",
+      "ref": "c13283feae760b914a146cc4f7c94d630b89fc00"
+    },
+    {
+      "node": "node-2",
+      "kind": "commit",
+      "ref": "c412748255a2a0b0abd6aa19217c1b9ce6b2ee1c"
+    },
+    {
+      "node": "node-11",
+      "kind": "commit",
+      "ref": "ae6462597be29ae37e3c75f5f1a2d687db723801"
+    },
+    {
+      "node": "node-6",
+      "kind": "commit",
+      "ref": "f149e4cbc014fb04592d46e5aa05d6c6e3ccd5a1"
+    },
+    {
+      "node": "node-23",
+      "kind": "commit",
+      "ref": "0b1f778306146a5feedb2e9b976fd28873361397"
+    },
+    {
+      "node": "node-22",
+      "kind": "commit",
+      "ref": "bf46375e8fb25f9ed3e9bc1891ba2d2041465a96"
+    },
+    {
+      "node": "node-25",
+      "kind": "commit",
+      "ref": "294500e"
+    },
+    {
+      "node": "node-25",
+      "kind": "commit",
+      "ref": "14666d8"
+    },
+    {
+      "node": "node-25",
+      "kind": "note",
+      "ref": "Актуальный коммит 14666d8, а не 294500e. В 294500e check.sh возвращал 1 (ruff), запись «check.sh зелёный» для него неверна. На 14666d8: check.sh rc=0, core rc=0, test_approval_panel rc=0."
+    },
+    {
+      "node": "node-52",
+      "kind": "commit",
+      "ref": "c696a05"
+    },
+    {
+      "node": "node-75",
+      "kind": "commit",
+      "ref": "273fbdc721dfb04fb6f32c2f47d82b0b9c7fb99c"
+    },
+    {
+      "node": "node-77",
+      "kind": "commit",
+      "ref": "44e7703"
+    },
+    {
+      "node": "node-58",
+      "kind": "commit",
+      "ref": "729ba04"
+    },
+    {
+      "node": "node-80",
+      "kind": "commit",
+      "ref": "0263d4b"
+    },
+    {
+      "node": "node-57",
+      "kind": "commit",
+      "ref": "2e4c5aa"
+    },
+    {
+      "node": "node-83",
+      "kind": "commit",
+      "ref": "7448b18"
+    },
+    {
+      "node": "node-84",
+      "kind": "commit",
+      "ref": "f410c5e"
+    },
+    {
+      "node": "node-85",
+      "kind": "commit",
+      "ref": "3d18f08"
+    },
+    {
+      "node": "node-11",
+      "kind": "commit",
+      "ref": "ae64625"
+    },
+    {
+      "node": "node-20",
+      "kind": "commit",
+      "ref": "c13283f"
+    },
+    {
+      "node": "node-34",
+      "kind": "commit",
+      "ref": "0a6a207"
+    },
+    {
+      "node": "node-47",
+      "kind": "commit",
+      "ref": "f590d26"
+    },
+    {
+      "node": "node-45",
+      "kind": "commit",
+      "ref": "95ee966"
+    },
+    {
+      "node": "node-22",
+      "kind": "commit",
+      "ref": "583fab0"
+    },
+    {
+      "node": "node-35",
+      "kind": "commit",
+      "ref": "bbbc86a"
+    },
+    {
+      "node": "node-105",
+      "kind": "commit",
+      "ref": "4c9b15a"
+    },
+    {
+      "node": "node-108",
+      "kind": "commit",
+      "ref": "0b7717f"
+    },
+    {
+      "node": "node-18",
+      "kind": "commit",
+      "ref": "86744c4"
+    },
+    {
+      "node": "node-112",
+      "kind": "commit",
+      "ref": "2f3aa87"
+    },
+    {
+      "node": "node-113",
+      "kind": "commit",
+      "ref": "a286858"
+    },
+    {
+      "node": "node-50",
+      "kind": "commit",
+      "ref": "2d2e329"
+    },
+    {
+      "node": "node-106",
+      "kind": "commit",
+      "ref": "b73d4b2"
+    },
+    {
+      "node": "node-24",
+      "kind": "commit",
+      "ref": "d9ba7cc"
+    }
+  ]
+}

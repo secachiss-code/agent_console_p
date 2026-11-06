@@ -1,0 +1,182 @@
+flowchart LR
+  node_2["SEC-1: Закрыть границу hostrun<br/>На проверке"]
+  node_3["SEC-2: Исправить повторы разового approval<br/>На проверке"]
+  node_4["SYS-1: Не запускать агента при неудачном orphan scan<br/>Готово"]
+  node_5["SYS-2: Сохранять ссылку на worktree при отказе удаления<br/>Готово"]
+  node_6["SYS-3: Устранить гонку старта core<br/>Готово"]
+  node_7["MEM-1: Ограничить рост памяти и очистить обработчики<br/>Готово"]
+  node_8["QA-1: Проверить исправления и сценарии отказа<br/>В очереди"]
+  node_9["SEC-3: Закрыть оставшиеся host-exec действия<br/>В очереди"]
+  node_10["SEC-4: Защитить review gate от подделки<br/>В очереди"]
+  node_11["SYS-4: Проверять фактическую остановку orphan-процессов<br/>На проверке"]
+  node_12["SEC-5: Изолировать approval по табам<br/>В очереди"]
+  node_13["QA-2: Проверить дополнительные исправления<br/>В очереди"]
+  node_14["CMT-1: Проверить обязательные коммиты по узлам<br/>В очереди"]
+  node_18["AUD-1: Завершить аудит Git и сохранности данных<br/>Готово"]
+  node_19["AUD-2: Проверить находки на живом приложении<br/>Заблокировано"]
+  node_20["SEC-6: Аутентифицировать клиентов IPC-сокета<br/>На проверке"]
+  node_21["SEC-7: Убрать хостовые данные из досягаемости агента<br/>В очереди"]
+  node_22["SEC-8: Запретить git исполнять код репозитория на хосте<br/>На проверке"]
+  node_23["SEC-9: Закрыть обходы классификатора риска<br/>На проверке"]
+  node_24["SEC-10: Убрать токен из argv и флаги из session id<br/>Готово"]
+  node_25["APR-1: Перенести запрос согласования поверх терминала<br/>На проверке"]
+  node_26["APR-2: Показывать содержимое Write, Edit и MCP в запросе<br/>В очереди"]
+  node_27["APR-3: Включить системные уведомления о запросах<br/>В работе"]
+  node_28["APR-4: Модель режимов согласований: глобально и проект<br/>В очереди"]
+  node_29["APR-5: Применить режимы для Claude Code<br/>В очереди"]
+  node_30["APR-6: Перехват и режимы для OpenCode<br/>В очереди"]
+  node_31["APR-7: Перехват и режимы для Codex<br/>В очереди"]
+  node_32["APR-8: Перехват и режимы для Cursor<br/>В очереди"]
+  node_33["APR-9: Настройка режимов в окне и честная матрица<br/>В очереди"]
+  node_34["HAR-1: Подключить MCP-сервер ядра к вкладкам Claude<br/>На проверке"]
+  node_35["HAR-2: Включить hooks Codex и исправить заявленные возможности<br/>На проверке"]
+  node_36["HAR-3: Исправить fork и выбор сессии<br/>В очереди"]
+  node_37["HAR-4: Сделать статусы вкладок надёжными<br/>В очереди"]
+  node_38["HAR-5: Устойчивость sidecar и наблюдателей<br/>В очереди"]
+  node_39["UX-1: Починить горячие клавиши, которые ничего не делают<br/>На проверке"]
+  node_40["UX-2: Спрашивать перед закрытием окна и вкладки с агентом<br/>В очереди"]
+  node_41["UX-3: Подключить палитру к настоящему ядру<br/>В очереди"]
+  node_42["UX-4: Сделать первый запуск и ошибки понятными<br/>В работе"]
+  node_43["UX-5: Режимы новой вкладки и управление проектами<br/>В очереди"]
+  node_44["UX-6: Сверить README и настройки с поведением<br/>В очереди"]
+  node_45["CORE-1: Поднимать ядро после падения и показывать потерю связи<br/>Готово"]
+  node_46["CORE-2: Убрать блокировки из общего потока и event loop<br/>В очереди"]
+  node_47["CORE-3: Согласовать запись в БД и состояние в памяти<br/>Готово"]
+  node_48["CORE-4: Исправить MCP: lease между планами и лимиты<br/>В очереди"]
+  node_49["CORE-5: Устойчивость IPC и очереди ingest<br/>В очереди"]
+  node_50["CORE-6: Ограничить рост и настроить логи<br/>Готово"]
+  node_51["FE-1: Устранить гонки и устаревшие ответы в UI<br/>В очереди"]
+  node_52["DES-1: Реальный контроль контраста<br/>На проверке"]
+  node_53["DES-2: Различимость состояний и доступность<br/>В очереди"]
+  node_54["DES-3: Единый визуальный язык приложения<br/>В очереди"]
+  node_55["DES-4: Локализация и терминология<br/>В очереди"]
+  node_56["QA-3: Проверки на настоящем ядре<br/>Заблокировано"]
+  node_57["QA-4: CI, сборка и контракты<br/>Заблокировано"]
+  node_58["QA-5: Гигиена репозитория и лицензия<br/>Заблокировано"]
+  node_59["QA-6: Итоговая проверка согласований и выпуска<br/>В очереди"]
+  node_60["CMT-2: Проверить коммиты новых узлов<br/>В очереди"]
+  node_70["UX-7: Кнопка приёмки узлов на странице плана<br/>На проверке"]
+  node_75["SEC-11: Закрыть запуск кода через filter, merge, gpg и git вне runner<br/>В очереди"]
+  node_77["PLAN-1: Согласовать готовность узла с блокировкой пересекающихся путей<br/>На проверке"]
+  node_80["PERF-1: Восстановить порог framer 64 КиБ за 5 мс<br/>На проверке"]
+  node_83["AUD-3: Воспроизвести риски Git и записать отчёт без изменения исходников<br/>На проверке"]
+  node_84["REL-1: Не удалять файлы за пределами worktree через симлинк каталога<br/>На проверке"]
+  node_85["REL-2: Сохранять ignored-файлы внутри .aconsole при закрытии worktree<br/>На проверке"]
+  node_86["REL-3: Удалять лишние dangling symlink при восстановлении чекпоинта<br/>В очереди"]
+  node_105["GIT-1: Проверить неизменность результатов WorkSession и согласовать продолжение после 0.1.1<br/>На проверке"]
+  node_106["REL-4: Проверить обновление UI при ядре без work_sessions.v1<br/>На проверке"]
+  node_108["GIT-2: Восстанавливать историю WorkSession по записанному OID, а не изменяемому ref<br/>На проверке"]
+  node_112["GIT-3: Не доверять настройкам скрытия dirty-состояния подмодулей<br/>На проверке"]
+  node_113["GIT-4: Не применять blanket --force при согласии удалить только ignored-файлы<br/>На проверке"]
+  node_124["PLAN-2: Актуализировать граф и порядок продолжения AConsole<br/>В работе"]
+  node_125["PERF-2: Проверить превышение задержки writer tick в полном наборе<br/>Ошибка"]
+  node_6 --> node_8
+  node_5 --> node_8
+  node_3 --> node_8
+  node_7 --> node_8
+  node_4 --> node_8
+  node_2 --> node_8
+  node_10 --> node_13
+  node_5 --> node_11
+  node_11 --> node_12
+  node_13 --> node_14
+  node_12 --> node_13
+  node_3 --> node_12
+  node_9 --> node_13
+  node_7 --> node_12
+  node_2 --> node_9
+  node_11 --> node_13
+  node_4 --> node_11
+  node_8 --> node_13
+  node_9 --> node_10
+  node_27 --> node_59
+  node_24 --> node_60
+  node_42 --> node_44
+  node_56 --> node_59
+  node_40 --> node_44
+  node_38 --> node_60
+  node_20 --> node_49
+  node_45 --> node_60
+  node_29 --> node_59
+  node_20 --> node_28
+  node_25 --> node_54
+  node_6 --> node_45
+  node_55 --> node_60
+  node_26 --> node_59
+  node_37 --> node_60
+  node_20 --> node_21
+  node_50 --> node_60
+  node_43 --> node_44
+  node_53 --> node_60
+  node_52 --> node_54
+  node_34 --> node_44
+  node_36 --> node_44
+  node_48 --> node_60
+  node_39 --> node_40
+  node_30 --> node_59
+  node_25 --> node_26
+  node_46 --> node_60
+  node_49 --> node_60
+  node_7 --> node_50
+  node_13 --> node_59
+  node_51 --> node_60
+  node_23 --> node_29
+  node_3 --> node_29
+  node_44 --> node_60
+  node_12 --> node_29
+  node_29 --> node_32
+  node_28 --> node_33
+  node_36 --> node_43
+  node_41 --> node_44
+  node_58 --> node_60
+  node_42 --> node_55
+  node_21 --> node_29
+  node_31 --> node_59
+  node_52 --> node_53
+  node_32 --> node_59
+  node_28 --> node_29
+  node_35 --> node_31
+  node_29 --> node_31
+  node_54 --> node_60
+  node_19 --> node_60
+  node_39 --> node_44
+  node_18 --> node_60
+  node_57 --> node_60
+  node_29 --> node_30
+  node_14 --> node_60
+  node_47 --> node_60
+  node_59 --> node_60
+  node_33 --> node_59
+  node_22 --> node_29
+  node_18 -. parent .-> node_83
+  node_18 -. parent .-> node_85
+  node_18 -. parent .-> node_84
+  node_84 --> node_86
+  node_18 -. parent .-> node_86
+  node_57 -. related .-> node_106
+  node_84 -. related .-> node_105
+  node_85 -. related .-> node_105
+  node_18 -. related .-> node_105
+  node_45 -. related .-> node_106
+  node_75 -. related .-> node_105
+  node_105 -. related .-> node_108
+  node_18 -. related .-> node_108
+  node_84 -. related .-> node_108
+  node_85 -. related .-> node_113
+  node_112 -. related .-> node_113
+  node_18 -. related .-> node_113
+  node_85 -. related .-> node_112
+  node_18 -. related .-> node_112
+  classDef done fill:#dcfce7,stroke:#15803d;
+  class node_4,node_5,node_6,node_7,node_18,node_24,node_45,node_47,node_50 done;
+  classDef verifying fill:#ede9fe,stroke:#7c3aed;
+  class node_2,node_3,node_11,node_20,node_22,node_23,node_25,node_34,node_35,node_39,node_52,node_70,node_77,node_80,node_83,node_84,node_85,node_105,node_106,node_108,node_112,node_113 verifying;
+  classDef in_progress fill:#ffedd5,stroke:#c2410c;
+  class node_27,node_42,node_124 in_progress;
+  classDef pending fill:#f1f5f9,stroke:#64748b;
+  class node_8,node_9,node_10,node_12,node_13,node_14,node_21,node_26,node_28,node_29,node_30,node_31,node_32,node_33,node_36,node_37,node_38,node_40,node_41,node_43,node_44,node_46,node_48,node_49,node_51,node_53,node_54,node_55,node_59,node_60,node_75,node_86 pending;
+  classDef blocked fill:#fee2e2,stroke:#b91c1c;
+  class node_19,node_56,node_57,node_58 blocked;
+  classDef failed fill:#fecaca,stroke:#991b1b;
+  class node_125 failed;
+  classDef cancelled fill:#e5e7eb,stroke:#6b7280;

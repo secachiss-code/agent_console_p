@@ -1,0 +1,50 @@
+Collected 0 items to run in parallel
+....F.F                                                                  [100%]
+=================================== FAILURES ===================================
+_____________ test_shown_nodes_preserve_every_input_node_in_order ______________
+
+    def test_shown_nodes_preserve_every_input_node_in_order() -> None:
+        from aconsole.contracts.common import NodeStatus
+        from aconsole.ui.viewmodels.logic.plan_layout import shown_nodes
+    
+        nodes = [
+            msgspec.structs.replace(_node(f"id-{index}", f"N-{index}", 0), status=NodeStatus.PENDING)
+            for index in range(40)
+        ]
+        nodes[-1] = msgspec.structs.replace(nodes[-1], status=NodeStatus.VERIFYING)
+        shown = shown_nodes(nodes)
+>       assert len(shown) == len(nodes)
+E       AssertionError: assert 30 == 40
+E        +  where 30 = len((PlanNodeView(id='id-0', key='N-0', title='Title N-0', status=<NodeStatus.PENDING: 'pending'>, ready=False, layer=0, p...r=0, priority=1.0, depends_on=(), owner_agent=None, tab_id=None, lease_expires_at=None, note=None, evidence=None), ...))
+E        +  and   40 = len([PlanNodeView(id='id-0', key='N-0', title='Title N-0', status=<NodeStatus.PENDING: 'pending'>, ready=False, layer=0, p...r=0, priority=1.0, depends_on=(), owner_agent=None, tab_id=None, lease_expires_at=None, note=None, evidence=None), ...])
+
+tests/ui/test_plan_layout.py:114: AssertionError
+_______ test_large_plan_keeps_all_nodes_and_dependency_endpoints_visible _______
+
+    def test_large_plan_keeps_all_nodes_and_dependency_endpoints_visible() -> None:
+        from aconsole.ui.viewmodels.logic.plan_layout import layout_plan, shown_nodes
+    
+        nodes = tuple(
+            _node(
+                f"id-{index}",
+                f"N-{index:02}",
+                0 if index == 0 else 1,
+                ("id-0",) if index == 71 else (),
+            )
+            for index in range(72)
+        )
+    
+        shown = shown_nodes(nodes)
+        positions = layout_plan(shown)
+        visible_ids = {position.node_id for position in positions}
+    
+>       assert shown == nodes
+E       AssertionError: assert (PlanNodeView...ce=None), ...) == (PlanNodeView...ce=None), ...)
+E         
+E         Right contains 42 more items, first extra item: PlanNodeView(id='id-30', key='N-30', title='Title N-30', status=<NodeStatus.DONE: 'done'>, ready=False, layer=1, priority=1.0, depends_on=(), owner_agent=None, tab_id=None, lease_expires_at=None, note=None, evidence=None)
+E         Use -v to get more diff
+
+tests/ui/test_plan_layout.py:143: AssertionError
+=========================== short test summary info ============================
+FAILED tests/ui/test_plan_layout.py::test_shown_nodes_preserve_every_input_node_in_order
+FAILED tests/ui/test_plan_layout.py::test_large_plan_keeps_all_nodes_and_dependency_endpoints_visible

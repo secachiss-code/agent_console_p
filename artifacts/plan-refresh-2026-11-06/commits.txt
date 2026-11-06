@@ -1,0 +1,115 @@
+d9ba7cc	SEC-10: keep launch credentials out of argv and harden agent inputs	SEC-10
+
+b73d4b2	REL-4: disconnect cleanly when the core rejects UI compatibility	REL-4
+
+2d2e329	CORE-6: maintain expired refs, incremental usage logs and SQLite WAL	CORE-6
+
+a286858	GIT-4: preserve late writes when discarding ignored worktree files	GIT-4
+
+2f3aa87	GIT-3: expose dirty submodules in cleanup safety checks	GIT-3
+
+86744c4	AUD-1: record disposable Git and WorkSession data-preservation audit	AUD-1
+
+0b7717f	GIT-2: restore WorkSession files from the confirmed commit OID	GIT-2
+
+4c9b15a	GIT-1: pin WorkSession integration to the recorded result commit	GIT-1
+
+45152a1	docs: record installed-app restart outcomes in main	
+f4c8ce9	docs(git): record installed shared-agent fix and restart verification	
+e36ce9c	fix(terminal): queue shared-session agents and allow checked handoff	
+af92e2e	test(git): confirm 0.1.1 completion and package acceptance	
+82eaa78	feat(git): implement 0.1.1 task sessions; final acceptance pending	
+bbbc86a	HAR-2: verify Codex hook trust before enabling integrations	
+583fab0	SEC-8: enforce the explicit Git hook permission boundary	
+95ee966	CORE-1: restore the daemon and agent access after a core crash	
+f590d26	fix(core): keep queued writes and settings consistent (CORE-3)	CORE-3
+
+0a6a207	fix(core): connect Claude tabs to the plan MCP server (HAR-1)	HAR-1
+
+3d18f08	fix(core): retain ignored runtime files until discard (REL-2)	REL-2
+
+f410c5e	fix(core): keep restore deletions inside the worktree (REL-1)	REL-1
+
+7448b18	docs(core): record disposable Git data-preservation audit (AUD-3)	AUD-3
+
+72612ff	merge: integrate pulled UI recovery and desktop clipboard	
+66caff5	docs: record verified system installation of clipboard update	
+2f15ab7	docs: record clipboard verification and rebuilt Debian package	
+a23df0e	fix(terminal): handle desktop clipboard text and images across agents	
+e4efa2e	docs: record UI audit and verified application rollout	
+285c879	fix(ui): preserve state and recover from session failures	
+0263d4b	perf(sidecar): batch complete OSC sequences in ordinary output	PERF-1
+
+2e4c5aa	test(ci): consolidate contract goldens and isolate the test home	QA-4
+
+729ba04	chore(repo): ignore per-worktree runtime state	QA-5
+
+44e7703	fix(plans): exclude reserved paths from ready nodes	PLAN-1
+
+1dcbea1	fix(ui): pass static checks for approval notifications	APR-3
+
+5cfaaeb	merge: integrate remaining worktrees in chronological order	
+4bd791b	feat(ui): notify about pending approvals and open their tabs	
+273fbdc	fix(git): keep repository config from running programs on the host	SEC-11
+
+89d19a4	feat(ui): say why a start or a check failed, and what to do about it	UX-4
+
+c696a05	fix(ui): hold every color to WCAG AA, with a gate that reads the style sheet	DES-1
+
+14666d8	feat(ui): show an approval as a card over its tab's terminal	APR-1
+
+017e4fa	fix(ui): always show plan steps that wait for a decision	UX-7
+
+997074f	feat(ui): let a person accept a plan step or send it back	UX-7
+
+09ac8ff	fix(ui): give every shortcut a handler, and let unhandled keys through	UX-1
+
+a259952	test: teach the fake podman and git about orphan scans and hardening options	
+bf46375	fix(git): stop repository config from running programs on the host	SEC-8
+
+0b1f778	fix(risk): tag substitution, git writes, and nested agent bypasses	SEC-9
+
+f149e4c	fix(ui): wait for a core that holds the lock but has no socket yet	SYS-3
+
+ae64625	fix(tabs): treat a failed orphan stop as still running	SYS-4
+
+c412748	fix(hostrun): run check, test, and gate inside devtools	SEC-1
+
+c13283f	fix(ipc): accept UI and CLI only from the core mount namespace	SEC-6
+
+a13a7f7	fix(memory): drop finished rows so a long tab does not grow without bound	MEM-1
+
+e91a0a2	fix(approvals): stop a one-time allow from covering the next identical call	SEC-2
+
+923a851	fix(tabs): refuse to launch an agent when the orphan scan fails	SYS-1
+
+25fbe02	fix(tabs): keep a worktree registered when git refuses to delete it	SYS-2
+
+e52ac73	docs: rewrite README and document the 0.1.0 release	
+e9dd642	feat(packaging): build a .deb that runs apart from the checkout	
+dcc84aa	feat(ui): show every limit of an account in the sidebar	
+19e9ae6	fix(opencode): find its login and ask for its limits on OpenCode 2	
+16b8408	fix(tabs): don't resume a Claude session that was never written	
+ffe1aa2	style(opencode): keep the stream's docstring within the line limit	
+eeefb02	fix(opencode): start and follow tabs on OpenCode 2.1.2	
+de73975	fix(ui): count Cursor's Auto + Composer pool in percent on its card	
+3214f66	fix(ui): a start that wrote nothing keeps the last real core log	
+2ec1641	feat(ui): a scrollbar for the terminal, and tidier limits details	
+c2b5642	fix(limits): keep API named API, give every bar one width, and preview the details	
+4f4d046	Merge origin/main into tmp/limits-ui	
+16e8d4e	feat(limits): one bar per agent, pools in dollars, and an account's details	
+cd17196	chore: measure what the MCP tools put in an agent's context	
+3c7d7d3	perf(ipc): decode each envelope in one pass	
+f89c733	feat: count what AConsole's tools send each agent	
+f1cbdd3	feat(mcp): plan_get since a revision returns only what changed	
+6148d41	perf(mcp): list the tools without output schemas or generated noise	
+8ce1741	perf(mcp): answer agents in compact JSON	
+93f6947	fix(limits): ask and show only agents with a login, and both Cursor pools	
+dc7e791	docs: describe features and architecture in the README	
+d171d6c	test: wait for the core to listen, not only for its socket file	
+7229641	test: do not fail when the OpenCode server exits between two looks at /proc	
+60942ba	fix(ui): pass the folded state to accessibility as GTK expects	
+05c7727	feat(ui): show what sessions cost at API prices, and credits past the plan	
+5cd15f3	feat(core): give each tab what its session has cost at API prices	
+2d53ae6	feat(core): read Codex credits and its workspace spend cap	
+52bc3a1	feat(core): read Claude's extra usage as a pool in dollars	

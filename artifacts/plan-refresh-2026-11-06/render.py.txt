@@ -1,0 +1,83 @@
+from pathlib import Path
+from collections import Counter, defaultdict, deque
+from html import escape
+import json, textwrap
+root=Path('/home/sas/Projects/sp_aconsole_prototype')
+folder=root/'artifacts/plan-refresh-2026-11-06'
+p=json.loads((folder/'snapshot.json').read_text())
+nodes={n['id']:n for n in p['nodes']}
+counts=Counter(n['status'] for n in nodes.values())
+blocks=[e for e in p['edges'] if e['kind']=='blocks']
+indegree={key:0 for key in nodes}
+following=defaultdict(list)
+rank={key:0 for key in nodes}
+for e in blocks:
+    assert e['src'] in nodes and e['dst'] in nodes
+    indegree[e['dst']]+=1
+    following[e['src']].append(e['dst'])
+queue=deque(sorted(key for key,val in indegree.items() if val==0))
+seen=[]
+while queue:
+    key=queue.popleft();seen.append(key)
+    for child in following[key]:
+        rank[child]=max(rank[child],rank[key]+1)
+        indegree[child]-=1
+        if indegree[child]==0:queue.append(child)
+assert len(seen)==len(nodes), 'dependency cycle'
+colors={'done':('#dcfce7','#15803d'),'verifying':('#ede9fe','#7c3aed'),
+        'in_progress':('#ffedd5','#c2410c'),'pending':('#f1f5f9','#64748b'),
+        'blocked':('#fee2e2','#b91c1c'),'failed':('#fecaca','#991b1b'),'cancelled':('#e5e7eb','#6b7280')}
+labels={'done':'Готово','verifying':'На проверке','in_progress':'В работе','pending':'В очереди',
+        'blocked':'Заблокировано','failed':'Ошибка','cancelled':'Отменено'}
+layers=defaultdict(list)
+for key,value in rank.items():layers[value].append(key)
+positions={};x=40
+for layer in sorted(layers):
+    items=sorted(layers[layer],key=lambda key:nodes[key]['key'])
+    cols=(len(items)+15)//16
+    for index,key in enumerate(items):positions[key]=(x+(index//16)*380,130+(index%16)*116)
+    x+=cols*380+100
+width=x;height=130+min(16,max(len(v) for v in layers.values()))*116+60
+svg=[f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} {height}" width="{width}" height="{height}">',
+'<style>text{font-family:system-ui,sans-serif;fill:#0f172a} .edge{fill:none;stroke:#94a3b8;stroke-width:1.5}</style>',
+'<defs><marker id="arrow" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M0 0L7 3.5L0 7" fill="#94a3b8"/></marker></defs>',
+f'<rect width="{width}" height="{height}" fill="#f8fafc"/>',
+'<text x="40" y="32" font-size="24" font-weight="700">AConsole · plan-1 · фактический граф</text>',
+f'<text x="40" y="56" font-size="13">Снимок {escape(p["captured_at"])} · {len(nodes)} узлов · {len(blocks)} зависимостей blocks · по подтверждённым проверкам</text>']
+legendx=40
+for status in ('done','verifying','in_progress','pending','blocked'):
+    fill,stroke=colors[status]
+    svg.append(f'<rect x="{legendx}" y="74" width="14" height="14" rx="3" fill="{fill}" stroke="{stroke}"/>')
+    svg.append(f'<text x="{legendx+21}" y="86" font-size="12">{labels[status]}: {counts[status]}</text>');legendx+=170
+for e in p['edges']:
+    a,b=positions[e['src']],positions[e['dst']]
+    sx,sy=a[0]+350,a[1]+46;dx,dy=b[0],b[1]+46
+    style='' if e['kind']=='blocks' else ' stroke-dasharray="4 5" opacity="0.5"'
+    svg.append(f'<path class="edge" d="M{sx},{sy} C{sx+55},{sy} {dx-55},{dy} {dx},{dy}" marker-end="url(#arrow)"{style}><title>{escape(nodes[e["src"]]["key"])} → {escape(nodes[e["dst"]]["key"])}: {e["kind"]}</title></path>')
+for key,n in nodes.items():
+    nx,ny=positions[key];fill,stroke=colors[n['status']]
+    tooltip=escape(n['key']+' · '+n['title']+' · '+labels[n['status']])
+    svg.append(f'<g id="{escape(key)}"><title>{tooltip}</title><rect x="{nx}" y="{ny}" width="350" height="100" rx="9" fill="{fill}" stroke="{stroke}" stroke-width="2"/>')
+    svg.append(f'<text x="{nx+12}" y="{ny+23}" font-size="16" font-weight="700">{escape(n["key"])} · {labels[n["status"]]}</text>')
+    for lineindex,line in enumerate(textwrap.wrap(n['title'],width=43)[:3]):
+        svg.append(f'<text x="{nx+12}" y="{ny+45+lineindex*17}" font-size="12">{escape(line)}</text>')
+    svg.append('</g>')
+svg.append('</svg>')
+(folder/'graph.svg').write_text('\n'.join(svg)+'\n')
+mmd=['flowchart LR']
+for key,n in nodes.items():
+    title=n['title'].replace('"',"'").replace('\n',' ')
+    mmd.append(f'  {key.replace("-","_")}["{n["key"]}: {title}<br/>{labels[n["status"]]}"]')
+for e in p['edges']:
+    arrow='-->' if e['kind']=='blocks' else f'-. {e["kind"]} .->'
+    mmd.append(f'  {e["src"].replace("-","_")} {arrow} {e["dst"].replace("-","_")}')
+for status,(fill,stroke) in colors.items():
+    mmd.append(f'  classDef {status} fill:{fill},stroke:{stroke};')
+    ids=[key.replace('-','_') for key,n in nodes.items() if n['status']==status]
+    if ids:mmd.append(f'  class {",".join(ids)} {status};')
+(folder/'graph.mmd').write_text('\n'.join(mmd)+'\n')
+import xml.etree.ElementTree as ET
+parsed=ET.parse(folder/'graph.svg')
+assert len(parsed.findall('.//{http://www.w3.org/2000/svg}g'))==len(nodes)
+assert len(p['edges'])==97
+print(json.dumps({'nodes':len(nodes),'edges':len(p['edges']),'counts':counts,'svg_valid':True},ensure_ascii=False))

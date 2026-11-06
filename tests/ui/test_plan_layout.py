@@ -101,19 +101,18 @@ def test_b4a_plan_layout_is_deterministic_and_does_not_change_input() -> None:
         setattr(positions[0], "x", 900)  # noqa: B010 -- intentionally verify the frozen value rejects mutation.
 
 
-def test_shown_nodes_never_leave_out_one_waiting_for_a_person() -> None:
+def test_shown_nodes_preserve_every_input_node_in_order() -> None:
     from aconsole.contracts.common import NodeStatus
-    from aconsole.ui.viewmodels.logic.plan_layout import SHOWN_NODES, shown_nodes
+    from aconsole.ui.viewmodels.logic.plan_layout import shown_nodes
 
     nodes = [
         msgspec.structs.replace(_node(f"id-{index}", f"N-{index}", 0), status=NodeStatus.PENDING)
-        for index in range(SHOWN_NODES + 10)
+        for index in range(40)
     ]
     nodes[-1] = msgspec.structs.replace(nodes[-1], status=NodeStatus.VERIFYING)
     shown = shown_nodes(nodes)
-    assert len(shown) == SHOWN_NODES
-    assert nodes[-1] in shown
-    assert shown[0] is nodes[0]
+    assert len(shown) == len(nodes)
+    assert shown == tuple(nodes)
     assert shown[-1] is nodes[-1]
 
 
@@ -122,3 +121,27 @@ def test_shown_nodes_keep_a_short_plan_whole_and_in_order() -> None:
 
     nodes = [_node(f"id-{index}", f"N-{index}", 0) for index in range(3)]
     assert shown_nodes(nodes) == tuple(nodes)
+
+
+def test_large_plan_keeps_all_nodes_and_dependency_endpoints_visible() -> None:
+    from aconsole.ui.viewmodels.logic.plan_layout import layout_plan, shown_nodes
+
+    nodes = tuple(
+        _node(
+            f"id-{index}",
+            f"N-{index:02}",
+            0 if index == 0 else 1,
+            ("id-0",) if index == 71 else (),
+        )
+        for index in range(72)
+    )
+
+    shown = shown_nodes(nodes)
+    positions = layout_plan(shown)
+    visible_ids = {position.node_id for position in positions}
+
+    assert shown == nodes
+    assert len(positions) == len(nodes)
+    assert nodes[71].depends_on == (nodes[0].id,)
+    assert nodes[0].id in visible_ids
+    assert nodes[71].id in visible_ids

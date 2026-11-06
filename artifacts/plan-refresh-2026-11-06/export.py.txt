@@ -1,0 +1,37 @@
+"""Read-only snapshot of the user-requested plan graph; no database writes."""
+import json
+from datetime import UTC, datetime
+from pathlib import Path
+
+from sqlalchemy import create_engine, select
+from sqlalchemy.orm import Session
+
+from aconsole.core.infrastructure.persistence.models import NodeArtifact, Plan, PlanEdge, PlanNode
+
+
+def test_export_plan_graph_read_only() -> None:
+    root = Path(__file__).resolve().parents[2]
+    folder = root / "artifacts/plan-refresh-2026-11-06"
+    folder.mkdir(parents=True, exist_ok=True)
+    engine = create_engine("sqlite:///file:/home/sas/.local/share/aconsole/aconsole.db?mode=ro&uri=true")
+    try:
+        with Session(engine) as session:
+            plan = session.get(Plan, "plan-1")
+            assert plan is not None
+            nodes = session.scalars(select(PlanNode).where(PlanNode.plan_id == plan.id)).all()
+            assert any(node.id == "node-124" and node.node_key == "PLAN-2" for node in nodes)
+            identities = {node.id for node in nodes}
+            edges = session.scalars(select(PlanEdge).where(PlanEdge.src_node_id.in_(identities))).all()
+            artifacts = session.scalars(select(NodeArtifact).where(NodeArtifact.node_id.in_(identities))).all()
+            data = {"plan_id": plan.id, "title": plan.title, "goal": plan.goal,
+                "captured_at": datetime.now(UTC).isoformat(), "database_access": "read-only mode=ro",
+                "nodes": [{"id": node.id, "key": node.node_key, "title": node.title,
+                    "status": node.status.value, "review_required": node.review_required, "fence": node.fence_seq, "note": node.agent_note, "evidence": node.evidence,
+                    "paths": node.paths, "acceptance": node.acceptance} for node in nodes],
+                "edges": [{"src": edge.src_node_id, "dst": edge.dst_node_id, "kind": edge.kind.value}
+                          for edge in edges],
+                "artifacts": [{"node": item.node_id, "kind": item.kind.value, "ref": item.ref}
+                              for item in artifacts]}
+            (folder / "snapshot.json").write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n")
+    finally:
+        engine.dispose()

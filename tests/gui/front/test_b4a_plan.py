@@ -185,7 +185,7 @@ def test_b4a_plan_card_empty_state_explains_missing_plan() -> None:
     _in_gtk_context(check)
 
 
-def test_b4a_plan_graph_caps_nodes_and_emphasizes_hovered_node_neighbors() -> None:
+def test_b4a_plan_graph_shows_all_nodes_and_emphasizes_hovered_node_neighbors() -> None:
     import msgspec
 
     from aconsole.contracts.common import NodeId
@@ -206,7 +206,7 @@ def test_b4a_plan_graph_caps_nodes_and_emphasizes_hovered_node_neighbors() -> No
     large_plan = msgspec.structs.replace(plan, nodes=nodes, total=len(nodes))
 
     def check() -> None:
-        assert len(PlanGraph(large_plan, lambda: None).node_buttons) == 30
+        assert len(PlanGraph(large_plan, lambda: None).node_buttons) == len(nodes)
 
         neighbor_source = msgspec.structs.replace(
             nodes[0], id=NodeId("neighbor-source"), key="N-source", title="Source",
