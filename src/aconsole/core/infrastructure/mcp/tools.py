@@ -1,7 +1,8 @@
 """The twelve MCP plan tools, backed by the domain plan DAG.
 
 A repeated ``plan_create`` for the same project and title returns the same plan.
-``node_update`` and ``node_attach`` require the fence from ``node_claim``.
+Active-lease ``node_update`` and ``node_attach`` require the fence from ``node_claim``.
+An unleased transition may omit the ``node_update`` fence.
 """
 
 from __future__ import annotations
@@ -775,7 +776,7 @@ class PlanBoard:
         self,
         ctx: TabContext,
         node_id: str,
-        fence: int,
+        fence: int | None,
         status: str | None,
         note: str | None,
         evidence: str | None,
@@ -784,8 +785,13 @@ class PlanBoard:
         with self._lock:
             stored, meta = self._node(ctx, node_id)
             now = self._now()
+            current = stored.dag.get(meta.key)
+            if current.status in _HELD and current.tab_id != ctx.tab_id:
+                _stop("LEASE_HELD", "the active lease belongs to another tab")
             try:
                 if status is None:
+                    if fence is None:
+                        _stop("LEASE_STALE_FENCE", "a heartbeat requires the fence from node_claim")
                     node = stored.dag.heartbeat(meta.key, fence=fence, at=now)
                 else:
                     node = stored.dag.transition(

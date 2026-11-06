@@ -1,0 +1,61 @@
+[
+  {
+    "name": "targeted",
+    "argv": [
+      "hostrun",
+      "test",
+      "core",
+      "tests/core/test_mcp_retry.py",
+      "tests/core/test_mcp_tools.py"
+    ],
+    "exit": 0
+  },
+  {
+    "name": "check",
+    "argv": [
+      "hostrun",
+      "check"
+    ],
+    "exit": 1
+  },
+  {
+    "name": "review-red",
+    "argv": [
+      "hostrun",
+      "test",
+      "core",
+      "-k",
+      "verifying_lease_still_belongs",
+      "tests/core/test_mcp_retry.py"
+    ],
+    "exit": 1
+  },
+  {
+    "name": "targeted-final",
+    "argv": [
+      "hostrun",
+      "test",
+      "core",
+      "tests/core/test_mcp_retry.py",
+      "tests/core/test_mcp_tools.py"
+    ],
+    "exit": 0
+  },
+  {
+    "name": "check-final",
+    "argv": [
+      "hostrun",
+      "check"
+    ],
+    "exit": 0
+  },
+  {
+    "name": "core",
+    "argv": [
+      "hostrun",
+      "test",
+      "core"
+    ],
+    "exit": 0
+  }
+]

@@ -211,12 +211,12 @@ def _register(  # noqa: C901 -- one nested function per MCP tool
 
     def node_update(
         node_id: str,
-        fence: int,
+        fence: int | None = None,
         status: str | None = None,
         note: Annotated[str, Field(max_length=2000)] | None = None,
         evidence: Annotated[str, Field(max_length=4000)] | None = None,
     ) -> Updated:
-        """Move a node, or send a heartbeat when status is omitted."""
+        """Move a node, or heartbeat. Omit fence only for a transition without an active lease."""
         return board.update(active(context), node_id, fence, status, note, evidence)
 
     def node_attach(
