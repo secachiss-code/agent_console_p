@@ -13,11 +13,13 @@ gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
 from gi.repository import Adw, Gio, Gtk  # noqa: E402
 
-from aconsole.contracts.app import TerminalLaunchSpec  # noqa: E402
+from aconsole.contracts.app import SnapshotResult, TerminalLaunchSpec  # noqa: E402
 from aconsole.contracts.common import TabId  # noqa: E402
+from aconsole.contracts.errors import ErrorData, ErrorObject  # noqa: E402
+from aconsole.contracts.work_sessions import WorkSessionHandoffParams  # noqa: E402
 from aconsole.core.infrastructure.fake.scenarios import demo_snapshot  # noqa: E402
 from aconsole.ui.bootstrap import run_app, spawn_task  # noqa: E402
-from aconsole.ui.client.core_client import CoreClient  # noqa: E402
+from aconsole.ui.client.core_client import CoreCallError, CoreClient  # noqa: E402
 from aconsole.ui.viewmodels.tabs_vm import TabItem, TabsViewModel  # noqa: E402
 from aconsole.ui.views.window import MainWindow  # noqa: E402
 
@@ -153,6 +155,80 @@ def test_b5a_terminal_page_starts_once_and_shows_three_actions_after_exit(
         assert not page.error_label.get_visible()
         assert created == []
         assert closed == []
+        page.close()
+
+    _run_ui(scenario)
+
+
+def test_shared_workspace_waits_for_confirmed_handoff_after_failed_launch() -> None:
+    from aconsole.ui.views.terminal.messages import _ as translate
+    from aconsole.ui.views.terminal.page import TerminalPage
+
+    class BusyClient(_TerminalClient):
+        def __init__(self, base: _TerminalClient) -> None:
+            super().__init__(base.spec)
+            self.busy = True
+            self.snapshot = demo_snapshot()
+            self.tab = msgspec.structs.replace(self.snapshot.tabs[0], work_session_id="s-shared")
+            self.snapshot = msgspec.structs.replace(self.snapshot, tabs=(self.tab,))
+            self.handoffs = 0
+
+        @override
+        async def request[T: msgspec.Struct](
+            self, method: str, params: msgspec.Struct, result_type: type[T],
+        ) -> T:
+            if method == "tab/launchSpec" and self.busy:
+                self.calls.append((method, params))
+                raise CoreCallError(ErrorObject(code=3025, message="WORKTREE_BUSY", data=ErrorData(
+                    reason="WORKTREE_BUSY", domain="aconsole.core", retryable=True,
+                    user_message_key="error.worktree_busy", user_message_args={},
+                )))
+            if method == "app/snapshot":
+                return msgspec.convert(SnapshotResult(snapshot=self.snapshot, seq=0), type=result_type)
+            if method == "workSession/handoff":
+                assert isinstance(params, WorkSessionHandoffParams)
+                assert params.to_tab == self.tab.id
+                assert params.work_session_id == "s-shared"
+                self.busy = False
+                self.handoffs += 1
+                return msgspec.convert(self.tab, type=result_type)
+            if method == "tab/restart":
+                return msgspec.convert(self.tab, type=result_type)
+            return await super().request(method, params, result_type)
+
+    async def scenario(app: _PageTestApp) -> None:
+        client = BusyClient(app.client)
+        page = TerminalPage(client, client.tab.id, lambda: None, lambda _tab: None)
+        app.window = Adw.ApplicationWindow(application=app, content=page)
+        app.window.present()
+        page.start()
+        assert page.worker is not None
+        await page.worker
+        assert page.waiting_revealer.get_reveal_child()
+        assert not page.error_label.get_visible()
+        assert not page.retry_button.get_visible()
+        assert client.handoffs == 0
+        page.handoff_button.emit("clicked")
+        await _until(lambda: page.handoff_dialog is not None and page.handoff_dialog.get_mapped())
+        dialog = page.handoff_dialog
+        assert dialog is not None
+        await asyncio.sleep(.3)
+        dialog.emit("response", "cancel")
+        dialog.force_close()
+        assert client.handoffs == 0
+        page.handoff_button.emit("clicked")
+        await _until(lambda: page.handoff_dialog is not dialog)
+        dialog = page.handoff_dialog
+        assert dialog is not None
+        await asyncio.sleep(.3)
+        assert dialog.get_heading() == translate("terminal.handoff")
+        dialog.emit("response", "handoff")
+        dialog.force_close()
+        await _until(page.ended_revealer.get_reveal_child)
+        assert client.handoffs == 1
+        assert not page.waiting_revealer.get_reveal_child()
+        assert not page.error_label.get_visible()
+        assert sum(method == "tab/launchSpec" for method, _ in client.calls) == 2
         page.close()
 
     _run_ui(scenario)

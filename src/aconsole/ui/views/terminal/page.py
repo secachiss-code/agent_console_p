@@ -9,13 +9,14 @@ from functools import partial
 import gi
 
 gi.require_version("Gtk", "4.0")
+gi.require_version("Adw", "1")
 gi.require_version("Vte", "3.91")
-from gi.repository import Gdk, Gio, GLib, Gtk, Pango, Vte  # noqa: E402
+from gi.repository import Adw, Gdk, Gio, GLib, Gtk, Pango, Vte  # noqa: E402
 
 from aconsole.contracts.common import TabId  # noqa: E402
 from aconsole.contracts.settings import Settings  # noqa: E402
 from aconsole.ui.bootstrap import spawn_task  # noqa: E402
-from aconsole.ui.client.core_client import CoreClient  # noqa: E402
+from aconsole.ui.client.core_client import CoreCallError, CoreClient  # noqa: E402
 from aconsole.ui.viewmodels.logic.fonts import font_families, pango_family  # noqa: E402
 from aconsole.ui.viewmodels.terminal_vm import TerminalViewModel  # noqa: E402
 from aconsole.ui.views.terminal.clipboard import TerminalClipboard  # noqa: E402
@@ -35,6 +36,8 @@ class TerminalPage(Gtk.Overlay):
         self.on_new: Callable[[], None] = on_new
         self._on_close: Callable[[str], None] = on_close
         self._closed: bool = False
+        self._launch_failed: bool = False
+        self.handoff_dialog: Adw.AlertDialog | None = None
         self._restart_task: asyncio.Task[None] | None = None
         self.viewmodel: TerminalViewModel = TerminalViewModel(client, tab_id)
         self.terminal: Vte.Terminal = Vte.Terminal()
@@ -206,8 +209,59 @@ class TerminalPage(Gtk.Overlay):
         panel.append(self.ended_actions)
         self.ended_revealer.set_child(panel)
         self.add_overlay(self.ended_revealer)
+        self._setup_waiting()
         self.search: TerminalSearchBar = TerminalSearchBar(self.terminal, self.focus_terminal)
         self.add_overlay(self.search)
+
+    def _setup_waiting(self) -> None:
+        self.waiting_revealer: Gtk.Revealer = Gtk.Revealer()
+        self.waiting_revealer.set_halign(Gtk.Align.CENTER)
+        self.waiting_revealer.set_valign(Gtk.Align.CENTER)
+        panel = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+        panel.add_css_class("ac-session-ended")
+        title = Gtk.Label(label=translate("terminal.waiting_title"))
+        title.add_css_class("title-4")
+        panel.append(title)
+        panel.append(Gtk.Label(label=translate("terminal.waiting_body"), wrap=True, max_width_chars=55))
+        self.handoff_button: Gtk.Button = Gtk.Button(label=translate("terminal.handoff"))
+        self.handoff_button.add_css_class("suggested-action")
+        _ = self.handoff_button.connect("clicked", self._confirm_handoff)
+        panel.append(self.handoff_button)
+        self.waiting_revealer.set_child(panel)
+        self.add_overlay(self.waiting_revealer)
+
+    def _confirm_handoff(self, _button: Gtk.Button) -> None:
+        dialog = Adw.AlertDialog(
+            heading=translate("terminal.handoff"), body=translate("terminal.handoff_confirm"),
+        )
+        dialog.add_response("cancel", translate("terminal.cancel"))
+        dialog.add_response("handoff", translate("terminal.handoff"))
+        dialog.set_default_response("cancel")
+        dialog.set_close_response("cancel")
+        dialog.set_response_appearance("handoff", Adw.ResponseAppearance.SUGGESTED)
+
+        def answered(_dialog: Adw.AlertDialog, response: str) -> None:
+            if response == "handoff" and not self._closed and (
+                self._restart_task is None or self._restart_task.done()
+            ):
+                self._restart_task = spawn_task(self._handoff())
+
+        _ = dialog.connect("response", answered)
+        self.handoff_dialog = dialog
+        dialog.present(self)
+
+    async def _handoff(self) -> None:
+        self.handoff_button.set_sensitive(False)
+        try:
+            _ = await self.viewmodel.handoff()
+            if not self._closed:
+                await self._restart(resume=True)
+        except Exception as error:  # noqa: BLE001 -- keep the waiting tab available when a checked handoff fails
+            if not self._closed:
+                self._show_error(translate("terminal.error").format(error=error))
+        finally:
+            if not self._closed:
+                self.handoff_button.set_sensitive(True)
 
     def start(self) -> None:
         if not self._closed and self.worker is None:
@@ -239,14 +293,21 @@ class TerminalPage(Gtk.Overlay):
             raise
         except Exception as error:  # noqa: BLE001 -- a failed spawn stays visible and never invents a fallback command
             if not self._closed and session is self.session:
-                self._show_error(translate("terminal.error").format(error=error))
-                self.retry_button.set_visible(True)
+                self._launch_failed = True
+                if isinstance(error, CoreCallError) and error.error.message == "WORKTREE_BUSY":
+                    self.error_label.set_visible(False)
+                    self.retry_button.set_visible(False)
+                    self.waiting_revealer.set_reveal_child(True)
+                else:
+                    self._show_error(translate("terminal.error").format(error=error))
+                    self.retry_button.set_visible(True)
 
     def _retry_start(self, _button: Gtk.Button) -> None:
         if self._closed or self.worker is None or not self.worker.done():
             return
         self.retry_button.set_visible(False)
         self.error_label.set_visible(False)
+        self._launch_failed = False
         self.session = TerminalSession(self.terminal, self.viewmodel)
         self.worker = None
         self.start()
@@ -294,12 +355,16 @@ class TerminalPage(Gtk.Overlay):
     async def _restart(self, *, resume: bool) -> None:
         self.ended_actions.set_sensitive(False)
         try:
-            _ = await self.session.wait_finished()
+            if not self._launch_failed:
+                _ = await self.session.wait_finished()
             _ = await self.viewmodel.restart(resume=resume)
             if self._closed:
                 return
             self.ended_revealer.set_reveal_child(False)
             self.error_label.set_visible(False)
+            self.retry_button.set_visible(False)
+            self.waiting_revealer.set_reveal_child(False)
+            self._launch_failed = False
             self.session = TerminalSession(self.terminal, self.viewmodel)
             self.worker = None
             self.start()

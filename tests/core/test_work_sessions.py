@@ -285,6 +285,7 @@ def test_handoff_is_explicit_and_restore_preserves_head_and_index(tmp_path: Path
             TabView,
         )
         assert first.work_session_id is not None
+        _ = await client.call("tab/launchSpec", TabIdParams(tab_id=first.id), TerminalLaunchSpec)
         second = await client.call(
             "tab/open",
             msgspec.structs.replace(
@@ -293,7 +294,6 @@ def test_handoff_is_explicit_and_restore_preserves_head_and_index(tmp_path: Path
             ),
             TabView,
         )
-        _ = await client.call("tab/launchSpec", TabIdParams(tab_id=first.id), TerminalLaunchSpec)
         assert await client.error("tab/launchSpec", TabIdParams(tab_id=second.id)) == "WORKTREE_BUSY"
         tree = tmp_path / "wt" / repo.name / str(first.id)
         (tree / "a").write_text("after\n", encoding="utf-8")

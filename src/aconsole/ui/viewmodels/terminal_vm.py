@@ -3,17 +3,20 @@
 import asyncio
 
 from aconsole.contracts.app import (
+    EmptyParams,
     EmptyResult,
     ExitedParams,
     PreparedImagePaste,
     PrepareImagePasteParams,
     RestartParams,
+    SnapshotResult,
     StartedParams,
     TabIdParams,
     TabView,
     TerminalLaunchSpec,
 )
 from aconsole.contracts.common import TabId
+from aconsole.contracts.work_sessions import WorkSessionHandoffParams
 from aconsole.ui.client.core_client import CoreClient
 
 
@@ -42,6 +45,20 @@ class TerminalViewModel:
     async def report_exited(self, wait_status: int) -> None:
         _ = await self._client.request(
             "tab/exited", ExitedParams(tab_id=self._tab_id, wait_status=wait_status), EmptyResult,
+        )
+
+    async def handoff(self) -> TabView:
+        snapshot = await self._client.request("app/snapshot", EmptyParams(), SnapshotResult)
+        tab = next(tab for tab in snapshot.snapshot.tabs if tab.id == self._tab_id)
+        if tab.work_session_id is None:
+            message = "the tab has no work session"
+            raise ValueError(message)
+        return await self._client.request(
+            "workSession/handoff",
+            WorkSessionHandoffParams(
+                project_id=tab.project_id, work_session_id=tab.work_session_id, to_tab=self._tab_id,
+            ),
+            TabView,
         )
 
     async def report_lifecycle(
