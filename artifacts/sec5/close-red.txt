@@ -1,0 +1,172 @@
+Collected 0 items to run in parallel
+F                                                                        [100%]
+=================================== FAILURES ===================================
+______________ test_public_tab_close_releases_only_its_held_hook _______________
+
+fut = <Future cancelled>, timeout = 1
+
+    async def wait_for(fut, timeout):
+        """Wait for the single Future or coroutine to complete, with timeout.
+
+        Returns result of the Future or coroutine.  When a timeout occurs,
+        it cancels fut and raises TimeoutError.  To prevent fut from being
+        cancelled, wrap it in shield().
+
+        If the wait is cancelled, fut is also cancelled.
+
+        If fut suppresses the cancellation and returns a value instead,
+        that value is returned.
+
+        This function is a coroutine.
+        """
+        # The special case for timeout <= 0 is for the following case:
+        #
+        # async def test_waitfor():
+        #     func_started = False
+        #
+        #     async def func():
+        #         nonlocal func_started
+        #         func_started = True
+        #
+        #     try:
+        #         await asyncio.wait_for(func(), 0)
+        #     except asyncio.TimeoutError:
+        #         assert not func_started
+        #     else:
+        #         assert False
+        #
+        # asyncio.run(test_waitfor())
+
+
+        if timeout is not None and timeout <= 0:
+            fut = ensure_future(fut)
+
+            if fut.done():
+                return fut.result()
+
+            await _cancel_and_wait(fut)
+            try:
+                return fut.result()
+            except exceptions.CancelledError as exc:
+                raise TimeoutError from exc
+
+        async with timeouts.timeout(timeout):
+>           return await fut
+                   ^^^^^^^^^
+E           asyncio.exceptions.CancelledError
+
+../../.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/tasks.py:495: CancelledError
+
+The above exception was the direct cause of the following exception:
+
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-28/test_public_tab_close_releases0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x4a15d29a150>
+
+    def test_public_tab_close_releases_only_its_held_hook(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+        home = tmp_path / "home"
+        home.mkdir()
+        monkeypatch.setenv("FAKE_HOME", str(home))
+        repos = [_git_repo(tmp_path / f"repo-{index}") for index in range(2)]
+
+        async def scenario() -> None:
+            daemon = _daemon(tmp_path)
+            serving = asyncio.create_task(daemon.serve())
+            client = await _connect(daemon.socket)
+            writer: asyncio.StreamWriter | None = None
+            hooks: list[asyncio.Task[tuple[int, bytes]]] = []
+            try:
+                projects = [await client.call("project/add", ProjectAddParams(root=str(repo)), ProjectView) for repo in repos]
+                tabs = [await client.call("tab/open", _open(project.id), TabView) for project in projects]
+                specs = [
+                    await client.call("tab/launchSpec", TabIdParams(tab_id=tab.id), TerminalLaunchSpec) for tab in tabs
+                ]
+                reader, writer = await asyncio.open_unix_connection(daemon.socket)
+                await _daemon_rpc(reader, writer, 1, "initialize", InitializeParams(
+                    protocol=(ProtocolVersion(major=1, minor=0), ProtocolVersion(major=1, minor=0)),
+                    role=ClientRole.UI, client_name="tab-isolation", client_version="1", pid=1,
+                    capabilities=frozenset({"events.v1", "approvals.inline"}),
+                ))
+                await _daemon_rpc(reader, writer, 2, "events/subscribe", SubscribeParams(after_seq=0))
+                assert daemon.ingest_port is not None
+                approvals = []
+                for index, (tab, spec) in enumerate(zip(tabs, specs, strict=True)):
+                    body = msgspec.json.encode({"session_id": f"session-{index}", "hook_event_name": "PermissionRequest",
+                        "tool_name": "Bash", "tool_input": {"command": "git status"}})
+                    hook = asyncio.create_task(asyncio.to_thread(_post_daemon_permission_hook, daemon.ingest_port,
+                        spec.env["ACONSOLE_TAB_TOKEN"], str(tab.id), body))
+                    hooks.append(hook)
+                    event, _earlier = await _daemon_event(reader)
+                    assert isinstance(event.event, ApprovalRequested)
+                    approvals.append(event.event.approval)
+                await _daemon_rpc(reader, writer, 3, "tab/close", CloseTabParams(tab_id=tabs[0].id))
+                status, body = await asyncio.wait_for(asyncio.shield(hooks[0]), 1)
+                assert status == 200
+                assert msgspec.json.decode(body) == {}
+                assert not hooks[1].done()
+                response, _ = await _daemon_rpc(reader, writer, 4, "app/snapshot", EmptyParams())
+                snapshot = msgspec.json.decode(response.result, type=SnapshotResult).snapshot
+                assert {approval.id for approval in snapshot.approvals} == {approvals[1].id}
+                await _daemon_rpc(reader, writer, 5, "approval/decide", DecideParams(
+                    approval_id=approvals[1].id, nonce=approvals[1].nonce, decision=ContractDecision.DENY,
+                ))
+                status, body = await asyncio.wait_for(hooks[1], 2)
+                assert status == 200
+                assert msgspec.json.decode(body, type=HookResponse).hook_specific_output.decision.behavior == "deny"
+            finally:
+                if writer is not None:
+                    writer.close()
+                    await writer.wait_closed()
+                await _stop(daemon, serving, client)
+                if hooks:
+                    await asyncio.gather(*hooks, return_exceptions=True)
+
+>       asyncio.run(scenario())
+
+tests/core/test_approval_tab_isolation.py:146:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+../../.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py:205: in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py:128: in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/base_events.py:724: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+tests/core/test_approval_tab_isolation.py:125: in scenario
+    status, body = await asyncio.wait_for(asyncio.shield(hooks[0]), 1)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/tasks.py:494: in wait_for
+    async with timeouts.timeout(timeout):
+               ^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <Timeout [expired]>
+exc_type = <class 'asyncio.exceptions.CancelledError'>
+exc_val = CancelledError(), exc_tb = <traceback object at 0x4a15d98fe40>
+
+    async def __aexit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: TracebackType | None,
+    ) -> bool | None:
+        assert self._state in (_State.ENTERED, _State.EXPIRING)
+
+        if self._timeout_handler is not None:
+            self._timeout_handler.cancel()
+            self._timeout_handler = None
+
+        if self._state is _State.EXPIRING:
+            self._state = _State.EXPIRED
+
+            if self._task.uncancel() <= self._cancelling and exc_type is not None:
+                # Since there are no new cancel requests, we're
+                # handling this.
+                if issubclass(exc_type, exceptions.CancelledError):
+>                   raise TimeoutError from exc_val
+E                   TimeoutError
+
+../../.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/timeouts.py:115: TimeoutError
+=========================== short test summary info ============================
+FAILED tests/core/test_approval_tab_isolation.py::test_public_tab_close_releases_only_its_held_hook

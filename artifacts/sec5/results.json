@@ -1,0 +1,55 @@
+[
+  {
+    "name": "targeted",
+    "argv": [
+      "hostrun",
+      "test",
+      "core",
+      "tests/core/test_approval_tab_isolation.py",
+      "tests/core/domain/test_approvals.py",
+      "tests/core/test_approval_hold.py",
+      "tests/core/test_approval_native.py",
+      "tests/core/test_ingest_http.py"
+    ],
+    "exit": 0
+  },
+  {
+    "name": "check",
+    "argv": [
+      "hostrun",
+      "check"
+    ],
+    "exit": 0
+  },
+  {
+    "name": "targeted-final",
+    "argv": [
+      "hostrun",
+      "test",
+      "core",
+      "tests/core/test_approval_tab_isolation.py",
+      "tests/core/domain/test_approvals.py",
+      "tests/core/test_approval_hold.py",
+      "tests/core/test_approval_native.py",
+      "tests/core/test_ingest_http.py"
+    ],
+    "exit": 0
+  },
+  {
+    "name": "check-final",
+    "argv": [
+      "hostrun",
+      "check"
+    ],
+    "exit": 0
+  },
+  {
+    "name": "core",
+    "argv": [
+      "hostrun",
+      "test",
+      "core"
+    ],
+    "exit": 0
+  }
+]

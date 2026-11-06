@@ -1,0 +1,11 @@
+{
+  "argv": [
+    "hostrun",
+    "test",
+    "core",
+    "-k",
+    "public_tab_close",
+    "tests/core/test_approval_tab_isolation.py"
+  ],
+  "exit": 1
+}

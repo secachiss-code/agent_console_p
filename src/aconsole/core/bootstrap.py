@@ -852,6 +852,7 @@ class Daemon:
         if isinstance(event, TabAdded) and token is not None:
             self._register_tab(event.tab, token)
         if isinstance(event, TabRemoved):
+            self.approvals.drop_tab(str(event.tab_id))
             self._tokens.drop(str(event.tab_id))
             self._mcp_tokens.drop(str(event.tab_id))
             if self._recovery is not None:
