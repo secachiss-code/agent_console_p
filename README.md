@@ -1,10 +1,9 @@
 # AConsole
 
-Версия исходников: **0.1.1 — Работа с Git**. Последний опубликованный релиз —
-**0.1.0**; сборка **0.1.1** проверена и установлена локально, но не опубликована.
-В `main` уже есть невыпущенные исправления для планируемой **0.1.2** — она выйдет
-после завершения плана `plan-1`. [План 0.1.1](plans/0.1.1-git.md) ·
-[история версий](CHANGELOG.md).
+Версия исходников: **0.1.1 — Работа с Git**. Опубликованный релиз — **0.1.1**
+(2026-11-06); предыдущий — **0.1.0**. В `main` уже есть невыпущенные исправления
+для планируемой **0.1.2** — она выйдет после завершения плана `plan-1`.
+[План 0.1.1](plans/0.1.1-git.md) · [история версий](CHANGELOG.md).
 
 [![check](https://github.com/secachiss-code/agent_console_p/actions/workflows/check.yml/badge.svg)](https://github.com/secachiss-code/agent_console_p/actions/workflows/check.yml)
 [![release](https://img.shields.io/github/v/release/secachiss-code/agent_console_p?display_name=tag&sort=semver)](https://github.com/secachiss-code/agent_console_p/releases)
@@ -27,7 +26,7 @@ review и merge, а также панель лимитов и расходов �
 | Версия | Статус | Главное отличие |
 |---|---|---|
 | **0.1.0** | опубликован 2026-11-04 | Первый `.deb`. Проект → вкладка: у каждой вкладки свой worktree и ветка. Согласования, планы/MCP, чекпоинты, Git-страница, лимиты. |
-| **0.1.1** | собран и установлен локально 2026-11-06, не опубликован | Проект → рабочая сессия задачи → вкладки-исполнители: общая история, эстафета, изолированные worktree, слияние результата сессии. Плюс буфер обмена и исправления безопасности/устойчивости. |
+| **0.1.1** | опубликован 2026-11-06 | Проект → рабочая сессия задачи → вкладки-исполнители: общая история, эстафета, изолированные worktree, слияние результата сессии. Плюс буфер обмена и исправления безопасности/устойчивости. |
 | **0.1.2** | планируется после завершения `plan-1` | Безопасность hostrun и Git, режимы согласований, честная матрица возможностей harness, надёжность сессий/статусов, UX и доступность, финальные QA-проверки. |
 
 Подробная разница между версиями, включая уже вошедшие в `main`, но ещё не выпущенные
@@ -530,28 +529,28 @@ core/GUI/package-проверки зелёные, проведены прове�
 
 ### Из GitHub Release (.deb)
 
-Ниже приведены ссылки на опубликованный **0.1.0**. Сборка **0.1.1** создаётся командой
-`.venv-core/bin/python packaging/build_deb.py` в `dist/`; она проверена и установлена
-локально, но в GitHub Releases не опубликована. Итоговая локальная сборка:
-`dist/aconsole_0.1.1_amd64.deb`, SHA-256
-`68ffe30686277115271b0586b6fe940d69d5f513fbc85dea39d6cedfaf55f8ab`
-(подробности в [отчёте](artifacts/git-0.1.1/SHARED-AGENT-FIX.md)). **0.1.2** пока
-планируется: её пакет будет собран и опубликован после завершения `plan-1`.
-Готовый пакет для `amd64` лежит в GitHub Releases, а не в Git-репозитории: бинарные
-артефакты не стоит коммитить в историю.
+Ниже — ссылки на опубликованный **0.1.1**. Предыдущий релиз **0.1.0** остаётся
+доступен на [своей странице](https://github.com/secachiss-code/agent_console_p/releases/tag/v0.1.0).
+Сборка создаётся командой `.venv-core/bin/python packaging/build_deb.py` в `dist/`.
+Опубликованный пакет: `dist/aconsole_0.1.1_amd64.deb`, 67 586 408 байт, SHA-256
+`23b001936f03cc2f15c9ffdcc6fbc0b68235d212b817eea8e8bf44a2ded2de16`; файлы
+`src/aconsole` и `migrations` в нём побайтово соответствуют коммиту `45152a1`.
+**0.1.2** пока планируется: её пакет будет собран и опубликован после завершения
+`plan-1`. Готовый пакет для `amd64` лежит в GitHub Releases, а не в Git-репозитории:
+бинарные артефакты не стоит коммитить в историю.
 
-- Страница релиза: <https://github.com/secachiss-code/agent_console_p/releases/tag/v0.1.0>
+- Страница релиза: <https://github.com/secachiss-code/agent_console_p/releases/tag/v0.1.1>
 - Прямая ссылка:
-  <https://github.com/secachiss-code/agent_console_p/releases/download/v0.1.0/aconsole_0.1.0_amd64.deb>
+  <https://github.com/secachiss-code/agent_console_p/releases/download/v0.1.1/aconsole_0.1.1_amd64.deb>
 - Контрольные суммы:
-  <https://github.com/secachiss-code/agent_console_p/releases/download/v0.1.0/SHA256SUMS>
+  <https://github.com/secachiss-code/agent_console_p/releases/download/v0.1.1/SHA256SUMS>
 
 ```sh
-wget https://github.com/secachiss-code/agent_console_p/releases/download/v0.1.0/aconsole_0.1.0_amd64.deb
-sha256sum aconsole_0.1.0_amd64.deb
-# f383725cc06f9cd11488f841dc82d78579f17fad69926ec9400bab648d8af53b
+wget https://github.com/secachiss-code/agent_console_p/releases/download/v0.1.1/aconsole_0.1.1_amd64.deb
+sha256sum aconsole_0.1.1_amd64.deb
+# 23b001936f03cc2f15c9ffdcc6fbc0b68235d212b817eea8e8bf44a2ded2de16
 
-sudo apt install ./aconsole_0.1.0_amd64.deb
+sudo apt install ./aconsole_0.1.1_amd64.deb
 aconsole
 ```
 
@@ -731,9 +730,8 @@ xvfb-run -a .venv-ui/bin/python -m pytest tests/gui tests/ui tests/smoke
 
 - Это прототип, а не готовый продукт с обещанием стабильного API.
 - Поддерживается Linux; Windows и macOS не тестировались.
-- **0.1.0 — единственный опубликованный релиз текущей линии 0.1.x.** 0.1.1 существует
-  как проверенная локальная сборка и установка; 0.1.2 ещё не выпущена. Не смешивайте
-  версию из GitHub Releases с версией в текущем дереве `main`.
+- **Опубликованы 0.1.0 и 0.1.1.** 0.1.2 пока не выпущена. Не смешивайте версию из
+  GitHub Releases с текущим деревом `main`, где уже есть невыпущенные исправления.
 - AConsole не управляет созданием контейнеров и не устанавливает CLI агентов. Если в
   контейнер смонтированы домашний каталог, база AConsole или файлы запуска хоста, агент
   может их изменить; проверка монтирования — SEC-7 в 0.1.2.
