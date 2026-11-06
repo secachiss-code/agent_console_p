@@ -17,6 +17,7 @@ from aconsole.core.infrastructure.persistence.models import (
     QuotaHistory,
     Setting,
     Tab,
+    WorkSessionSnapshotRow,
 )
 
 _EVENTS_PER_TAB = 2000
@@ -116,7 +117,10 @@ def _trim_checkpoints(session: Session, keep: int, dropped: Callable[[str], None
     deleted = 0
     for tab_id in tab_ids:
         rows = session.scalars(
-            select(Checkpoint).where(Checkpoint.tab_id == tab_id).order_by(Checkpoint.turn.desc())
+            select(Checkpoint).where(
+                Checkpoint.tab_id == tab_id,
+                ~Checkpoint.git_ref.in_(select(WorkSessionSnapshotRow.ref)),
+            ).order_by(Checkpoint.turn.desc())
         ).all()
         for row in rows[keep:]:
             dropped(row.git_ref)
@@ -127,7 +131,9 @@ def _trim_checkpoints(session: Session, keep: int, dropped: Callable[[str], None
 
 def _trim_closed_tabs(session: Session, now: datetime, dropped: Callable[[str], None]) -> int:
     cutoff = now - timedelta(days=_CLOSED_TAB_DAYS)
-    tabs = session.scalars(select(Tab).where(Tab.closed_at.is_not(None), Tab.closed_at < cutoff)).all()
+    tabs = session.scalars(select(Tab).where(
+        Tab.closed_at.is_not(None), Tab.closed_at < cutoff, Tab.work_session_id.is_(None),
+    )).all()
     for tab in tabs:
         refs = session.scalars(select(Checkpoint.git_ref).where(Checkpoint.tab_id == tab.id)).all()
         for ref in refs:

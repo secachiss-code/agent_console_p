@@ -40,9 +40,11 @@ def session_cost(tab: TabView) -> str:
 
 def format_tab(tab: TabView, _accounts: tuple[AccountView, ...], now: datetime) -> TabPresentation:
     """Convert a tab snapshot into the visible row fields."""
-    section_title = tab.agent.value.upper()
+    section_title = tab.work_session_title or tab.agent.value.upper()
     return TabPresentation(
-        section_key=f"{tab.agent.value}:{tab.account_id or ''}",
+        section_key=(
+            f"session:{tab.work_session_id}" if tab.work_session_id else f"{tab.agent.value}:{tab.account_id or ''}"
+        ),
         section_title=section_title,
         title=tab.title,
         subtitle=" · ".join(value for value in (tab.branch, tab.plan_node_title, session_cost(tab)) if value),

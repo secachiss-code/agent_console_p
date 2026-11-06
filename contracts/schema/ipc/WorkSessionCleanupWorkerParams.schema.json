@@ -1,0 +1,30 @@
+{
+  "$defs": {
+    "WorkSessionCleanupWorkerParams": {
+      "properties": {
+        "discard_ignored": {
+          "default": false,
+          "type": "boolean"
+        },
+        "project_id": {
+          "type": "string"
+        },
+        "sequence": {
+          "type": "integer"
+        },
+        "work_session_id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "project_id",
+        "work_session_id",
+        "sequence"
+      ],
+      "title": "WorkSessionCleanupWorkerParams",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/WorkSessionCleanupWorkerParams",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

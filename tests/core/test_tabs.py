@@ -165,7 +165,7 @@ def test_tabs_open_does_not_start_and_launch_rotates_the_proof() -> None:
     assert opened.status is TabStatus.IDLE
     assert opened.started is False
     assert opened.worktree_path == "/wt/tab-a"
-    assert opened.branch == "ac/claude-tab-a"
+    assert opened.branch == "ac/s-claude-tab-a"
     assert ports.ensured == []
     assert ports.pauses == []
     first = _spec(_call(connection, 3, "tab/launchSpec", _tab("tab-a")))
@@ -213,7 +213,7 @@ def test_tabs_started_exited_restart_and_fork_share_the_tree() -> None:
     assert forked.id == TabId("tab-b")
     assert forked.worktree_path == opened.worktree_path
     assert forked.title == "fork chat"
-    assert ports.created == [("/repo", "tab-a", "claude", "HEAD")]
+    assert ports.created == [("/repo", "tab-a", "s-claude", "HEAD")]
     ports.state = "dirty"
     closed = _closed(_call(connection, 8, "tab/close", CloseTabParams(tab_id=TabId("tab-b"))))
     assert closed.closed is True
@@ -222,86 +222,61 @@ def test_tabs_started_exited_restart_and_fork_share_the_tree() -> None:
     assert not _gone(ports, "tab-a")
 
 
-def test_tabs_close_dirty_asks_then_keep_or_refuse_remove() -> None:
+def test_tabs_close_dirty_preserves_the_task_workspace() -> None:
     service, ports = _service(_seed())
     ports.state = "dirty"
     ports.orphan_pids = (_ORPHAN,)
     connection = _ready(service)
-    _ = _view(_call(connection, 2, "tab/open", _open()))
-    _ = _call(connection, 3, "tab/started", StartedParams(tab_id=TabId("tab-a"), pid=_PID))
-    asked = _closed(_call(connection, 4, "tab/close", CloseTabParams(tab_id=TabId("tab-a"))))
-    assert asked.closed is False
-    assert asked.needs_decision is True
-    assert asked.dirty_summary == "dirty"
-    assert ports.pauses == []
-    assert ports.stopped == []
-    assert not _gone(ports, "tab-a")
-    refused = _call(connection, 5, "tab/close", CloseTabParams(tab_id=TabId("tab-a"), decision="remove"))
-    assert isinstance(refused, ResponseErr)
-    assert refused.error.message == "WORKTREE_DIRTY"
-    assert not _gone(ports, "tab-a")
-    ports.state = "ahead"
-    ahead = _closed(_call(connection, 6, "tab/close", CloseTabParams(tab_id=TabId("tab-a"))))
-    assert ahead.dirty_summary == "ahead"
-    kept = _closed(_call(connection, 7, "tab/close", CloseTabParams(tab_id=TabId("tab-a"), decision="keep")))
-    assert kept.closed is True
+    opened = _view(_call(connection, 2, "tab/open", _open()))
+    _ = _call(connection, 3, "tab/started", StartedParams(tab_id=opened.id, pid=_PID))
+    closed = _closed(_call(connection, 4, "tab/close", CloseTabParams(tab_id=opened.id)))
+    assert closed.closed
+    assert not closed.needs_decision
     assert ports.pauses == [_STOP]
     assert ports.stopped == [_PID, _ORPHAN]
-    assert ports.released == ["/wt/tab-a"]
     assert ports.removed == []
     assert _gone(ports, "tab-a")
+    assert opened.work_session_id is not None
+    assert service.work_sessions.require("proj", opened.work_session_id).worktree == opened.worktree_path
 
 
-def test_tabs_clean_close_removes_and_skips_the_pause_without_a_pid() -> None:
+def test_tabs_clean_close_retains_workspaces_without_stopping_an_unstarted_agent() -> None:
     service, ports = _service(_seed())
     connection = _ready(service)
-    _ = _view(_call(connection, 2, "tab/open", _open()))
-    _ = _view(_call(connection, 3, "tab/open", _open(title="second")))
-    assert _latest(ports, "tab-b").order == 1
-    kept = _closed(_call(connection, 4, "tab/close", CloseTabParams(tab_id=TabId("tab-a"), decision="keep")))
-    assert kept.closed is True
-    assert ports.released == ["/wt/tab-a"]
+    first = _view(_call(connection, 2, "tab/open", _open()))
+    second = _view(_call(connection, 3, "tab/open", _open(title="second")))
+    for ident, tab in enumerate((first, second), 4):
+        closed = _closed(_call(connection, ident, "tab/close", CloseTabParams(tab_id=tab.id)))
+        assert closed.closed
     assert ports.pauses == []
-    removed = _closed(_call(connection, 5, "tab/close", CloseTabParams(tab_id=TabId("tab-b"))))
-    assert removed.closed is True
-    assert removed.dirty_summary is None
-    assert ports.removed == [("/repo", "/wt/tab-b", False)]
-    missing = _call(connection, 6, "tab/close", CloseTabParams(tab_id=TabId("tab-b")))
+    assert ports.removed == []
+    assert len(service.work_sessions.all("proj")) == 2
+    missing = _call(connection, 6, "tab/close", CloseTabParams(tab_id=second.id))
     assert isinstance(missing, ResponseErr)
     assert missing.error.message == "TAB_NOT_FOUND"
 
 
-def test_tabs_ignored_files_ask_then_remove_with_discard() -> None:
+def test_tabs_close_never_discards_ignored_session_files() -> None:
     service, ports = _service(_seed())
     ports.state = "ignored"
     connection = _ready(service)
-    _ = _view(_call(connection, 2, "tab/open", _open()))
-    asked = _closed(_call(connection, 3, "tab/close", CloseTabParams(tab_id=TabId("tab-a"))))
-    assert asked.closed is False
-    assert asked.needs_decision is True
-    assert asked.dirty_summary == "ignored"
+    opened = _view(_call(connection, 2, "tab/open", _open()))
+    closed = _closed(_call(connection, 3, "tab/close", CloseTabParams(tab_id=opened.id, decision="remove")))
+    assert closed.closed
+    assert not closed.needs_decision
     assert ports.removed == []
-    assert _present(connection, 90, "tab-a")
-    removed = _closed(_call(connection, 4, "tab/close", CloseTabParams(tab_id=TabId("tab-a"), decision="remove")))
-    assert removed.closed is True
-    assert removed.dirty_summary is None
-    assert ports.removed == [("/repo", "/wt/tab-a", True)]
-    assert not _present(connection, 91, "tab-a")
+    assert len(service.work_sessions.all("proj")) == 1
 
 
-def test_tabs_remove_is_refused_for_dirty_and_ahead_trees() -> None:
+def test_tabs_close_cannot_remove_a_dirty_or_ahead_session() -> None:
     service, ports = _service(_seed())
-    connection = _ready(service)
-    _ = _view(_call(connection, 2, "tab/open", _open()))
-    refusals: list[str] = []
-    for request_id, state in ((3, "dirty"), (4, "ahead")):
+    for state in ("dirty", "ahead"):
         ports.state = state
-        refused = _call(connection, request_id, "tab/close", CloseTabParams(tab_id=TabId("tab-a"), decision="remove"))
-        assert isinstance(refused, ResponseErr)
-        refusals.append(refused.error.message)
-    assert refusals == ["WORKTREE_DIRTY", "WORKTREE_DIRTY"]
+        opened = service.open_tab(_open())
+        closed = service.close_tab(CloseTabParams(tab_id=opened.id, decision="remove"))
+        assert closed.closed
     assert ports.removed == []
-    assert _present(connection, 90, "tab-a")
+    assert len(service.work_sessions.all("proj")) == 2
 
 
 def test_tabs_launch_stays_down_when_a_stop_or_a_survivor_remains() -> None:
@@ -354,28 +329,23 @@ def test_tabs_launch_stays_down_when_the_orphan_scan_fails() -> None:
     assert ports.stopped == []
 
 
-def test_tabs_failed_orphan_scan_keeps_the_tree_even_when_asked_to_remove() -> None:
+def test_tabs_failed_orphan_scan_keeps_the_tab_and_workspace() -> None:
     service, ports = _service(_seed())
     connection = _ready(service)
-    _ = _view(_call(connection, 2, "tab/open", _open()))
-    _ = _call(connection, 3, "tab/started", StartedParams(tab_id=TabId("tab-a"), pid=_PID))
+    opened = _view(_call(connection, 2, "tab/open", _open()))
+    _ = _call(connection, 3, "tab/started", StartedParams(tab_id=opened.id, pid=_PID))
     ports.orphan_error = TabRequestError("CONTAINER_START_FAILED")
-    closed = _closed(_call(connection, 4, "tab/close", CloseTabParams(tab_id=TabId("tab-a"))))
-    assert closed.closed is True
+    refused = _call(connection, 4, "tab/close", CloseTabParams(tab_id=opened.id))
+    assert isinstance(refused, ResponseErr)
+    assert refused.error.message == "CONTAINER_START_FAILED"
     assert ports.stopped == [_PID]
-    assert ports.released == ["/wt/tab-a"]
     assert ports.removed == []
-    assert not _present(connection, 91, "tab-a")
-    _ = _view(_call(connection, 5, "tab/open", _open()))
-    ports.state = "ignored"
-    kept = _closed(_call(connection, 6, "tab/close", CloseTabParams(tab_id=TabId("tab-b"), decision="remove")))
-    assert kept.closed is True
-    assert ports.released == ["/wt/tab-a", "/wt/tab-b"]
-    assert ports.removed == []
+    assert _present(connection, 91, "tab-a")
+    assert service.snapshot().tabs[0].status is TabStatus.UNKNOWN
 
 
-def test_tabs_refused_remove_keeps_the_workspace_registered(tmp_path: Path) -> None:
-    """A clean pre-check can go stale before git remove. The closed tab must not forget that path."""
+def test_tabs_close_keeps_every_workspace_registered(tmp_path: Path) -> None:
+    """Closing session tabs records no workspace deletion, regardless of dirty state."""
     database = tmp_path / "aconsole.db"
     _ = prepare_database(database, now=_WHEN)
     engine = write_engine(sqlite_url(database))
@@ -402,12 +372,12 @@ def test_tabs_refused_remove_keeps_the_workspace_registered(tmp_path: Path) -> N
         engine.dispose()
     assert refused.closed is True
     assert refused.needs_decision is False
-    assert refused.dirty_summary == "dirty"
-    assert ports.removed[0] == ("/repo", "/wt/tab-a", False)
+    assert refused.dirty_summary is None
+    assert ports.removed == []
     assert kept == ("/wt/tab-a", None)
     assert removed.dirty_summary is None
     assert dropped[0] == "/wt/tab-b"
-    assert dropped[1] == _WHEN
+    assert dropped[1] is None
     assert open_tabs == ()
 
 
@@ -476,7 +446,7 @@ def test_tabs_existing_worktree_and_open_errors() -> None:
         _call(connection, 4, "tab/open", _open(workspace=WorkspaceMode.EXISTING_WORKTREE, existing="/wt/given")),
     )
     assert existing.worktree_path == "/wt/given"
-    assert logged_out_ports.created == [("/repo", "tab-a", "claude", "HEAD")]
+    assert logged_out_ports.created == [("/repo", "tab-a", "s-claude", "HEAD")]
     service, ports = _service(_seed(), ProjectSeed(project_id="down", root="/repo", container="box", available=False))
     connection = _ready(service)
     unknown = _call(connection, 2, "tab/open", _open(project="missing"))
@@ -508,7 +478,7 @@ def test_tabs_checked_out_branch_and_invalid_rename() -> None:
     assert ports.created == []
     ports.create_error = None
     _ = _view(_call(connection, 3, "tab/open", _open(name="feature")))
-    assert ports.created == [("/repo", "tab-b", "feature", "HEAD")]
+    assert ports.created == [("/repo", "tab-b", "s-feature", "HEAD")]
     blank = _call(connection, 4, "tab/rename", b'{"tab_id":"tab-b","title":""}')
     assert isinstance(blank, ResponseErr)
     assert blank.error.message == "INVALID_PARAMS"
@@ -528,11 +498,13 @@ def test_tabs_fork_can_create_a_new_worktree() -> None:
     _ = _view(_call(connection, 2, "tab/open", _open()))
     forked = _view(_call(connection, 3, "tab/fork", _tab("tab-a")))
     assert forked.worktree_path == "/wt/tab-b"
-    assert forked.branch == "ac/claude-fork-tab-b"
-    assert ports.created[-1] == ("/repo", "tab-b", "claude-fork", "HEAD")
+    assert forked.branch == "ac/s-claude-fork-tab-b"
+    assert ports.created[-1] == ("/repo", "tab-b", "s-claude-fork", "HEAD")
     closed = _closed(_call(connection, 4, "tab/close", CloseTabParams(tab_id=TabId("tab-b"))))
     assert closed.closed is True
-    assert ports.removed == [("/repo", "/wt/tab-b", False)]
+    assert ports.removed == []
+    assert forked.work_session_id is not None
+    assert service.work_sessions.require("proj", forked.work_session_id).worktree == forked.worktree_path
 
 
 def test_tabs_missing_service_reports_method_not_found() -> None:
@@ -568,13 +540,13 @@ def test_host_tabs_open_launch_and_close(tmp_path: Path, monkeypatch: pytest.Mon
     assert _value(first, "ACONSOLE_TAB_TOKEN") == _value(second, "ACONSOLE_TAB_TOKEN")
     _ = (Path(opened.worktree_path) / "extra.txt").write_text("x\n", encoding="utf-8")
     asked = _closed(_call(connection, 5, "tab/close", CloseTabParams(tab_id=opened.id)))
-    assert asked.needs_decision is True
-    assert asked.dirty_summary == "dirty"
+    assert asked.closed
+    assert not asked.needs_decision
     assert Path(opened.worktree_path).is_dir()
     other = _view(_call(connection, 6, "tab/open", _open(title="clean")))
     closed = _closed(_call(connection, 7, "tab/close", CloseTabParams(tab_id=other.id)))
     assert closed.closed is True
-    assert not Path(other.worktree_path).exists()
+    assert Path(other.worktree_path).is_dir()
 
 
 def test_host_tabs_container_paths_and_signals(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:

@@ -328,6 +328,8 @@ def _upsert_tab(
                 id=tab.id,
                 project_id=tab.project_id,
                 workspace_id=workspace_id,
+                work_session_id=tab.work_session_id,
+                isolated=tab.isolated,
                 agent_kind=AgentKind(tab.agent),
                 account_id=account_id,
                 title=tab.title,
@@ -345,6 +347,8 @@ def _upsert_tab(
         )
         return
     row.project_id = tab.project_id
+    row.work_session_id = tab.work_session_id
+    row.isolated = tab.isolated
     row.workspace_id = workspace_id
     row.agent_kind = AgentKind(tab.agent)
     row.account_id = account_id
@@ -387,4 +391,6 @@ def _stored(session: Session, row: Tab) -> StoredTab | None:
         workspace_mode=workspace.mode.value,
         plan_node=row.plan_node_id,
         session=row.agent_session_id,
+        work_session_id=row.work_session_id,
+        isolated=row.isolated,
     )

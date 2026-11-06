@@ -171,7 +171,7 @@ def test_round6_k25_listener_announces_added_tabs() -> None:
     forked = service.fork(TabIdParams(tab_id=opened.id))
     assert events[-1] == TabAdded(tab=forked)
     assert forked.id != opened.id
-    assert ports.created[-1] == ("/repo", str(forked.id), "claude-fork", "HEAD")
+    assert ports.created[-1] == ("/repo", str(forked.id), "s-claude-fork", "HEAD")
 
 
 def test_round6_k25_listener_names_the_changed_fields() -> None:
@@ -353,7 +353,7 @@ def test_round6_k25_restart_stops_the_old_process_and_its_orphans() -> None:
     assert len(ports.stopped) == 3
     assert service.running_count() == 0
     stopped = _last_update(events)
-    assert stopped.changed == frozenset({"started"})
+    assert stopped.changed == frozenset({"started", "status"})
     assert stopped.tab.started is False
     assert stopped.tab.status is not TabStatus.IDLE
 

@@ -13,7 +13,7 @@ import msgspec
 from aconsole.contracts import API_VERSION
 from aconsole.contracts.app import EmptyParams, SnapshotResult, SubscribeParams, SubscribeResult
 from aconsole.contracts.common import ClientRole
-from aconsole.contracts.errors import ErrorObject
+from aconsole.contracts.errors import ErrorData, ErrorObject, ProtocolVersionUnsupportedDetails, error_by_name
 from aconsole.contracts.ipc import (
     CancelParams,
     Envelope,
@@ -50,6 +50,7 @@ _UI_CAPABILITIES = frozenset(
         "notifications.desktop",
         "diff.v1",
         "checkpoints.v1",
+        "work_sessions.v1",
     }
 )
 
@@ -345,6 +346,17 @@ class CoreClient:
             capabilities=_UI_CAPABILITIES,
         )
         result = await self.request("initialize", params, InitializeResult)
+        if "work_sessions.v1" not in result.capabilities:
+            error = error_by_name("PROTOCOL_VERSION_UNSUPPORTED")
+            raise CoreCallError(ErrorObject(
+                code=error.code, message=error.name,
+                data=ErrorData(
+                    reason=error.name, domain="aconsole.ipc", retryable=False,
+                    user_message_key="error.protocol_version_unsupported", user_message_args={},
+                    hint="Restart the core with the same AConsole version as the UI",
+                    details=ProtocolVersionUnsupportedDetails(supported=("work_sessions.v1",)),
+                ),
+            ))
         note = Notification(method="initialized", params=msgspec.Raw(b"{}"))
         await self._send(msgspec.json.encode(note) + b"\n")
         return result

@@ -45,6 +45,8 @@ from aconsole.core.application.services.quota_aggregator import QuotaAggregator
 from aconsole.core.application.services.review import ReviewService
 from aconsole.core.application.services.setup import SetupService
 from aconsole.core.application.services.tabs import TabService
+from aconsole.core.application.services.work_session_git import WorkSessionGit
+from aconsole.core.application.services.work_session_history import WorkSessionHistory
 from aconsole.core.domain.approvals import Approval, ApprovalBook
 from aconsole.core.domain.clock import Clock
 from aconsole.core.domain.errors import DomainError
@@ -92,6 +94,10 @@ from aconsole.core.infrastructure.persistence.repositories.knowledge import Know
 from aconsole.core.infrastructure.persistence.repositories.plans import PlanDatabase
 from aconsole.core.infrastructure.persistence.repositories.tabs import TabDatabase
 from aconsole.core.infrastructure.persistence.repositories.vault_files import VaultFileDatabase
+from aconsole.core.infrastructure.persistence.repositories.work_sessions import (
+    WorkSessionDatabase,
+    WorkSessionHistoryDatabase,
+)
 from aconsole.core.infrastructure.persistence.startup import prepare_database, sqlite_url
 from aconsole.core.infrastructure.persistence.writer import Writer
 from aconsole.core.infrastructure.setup_checks import HostSetupFixes, HostSetupProbe, SetupTokens
@@ -100,6 +106,7 @@ from aconsole.core.infrastructure.vault.sync import VaultSync
 lazy from aconsole.contracts.git import FactReviewView
 lazy from aconsole.core.application.ports.knowledge_store import StoredFact
 lazy from aconsole.core.domain.git_operation import GitOperationRecord
+lazy from aconsole.core.domain.work_session import WorkSession
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -515,6 +522,7 @@ class Daemon:
         self._git_watch: GitWatch = GitWatch(self._git_heard)
         mutations = GitMutations()
         self.git: GitService = GitService(GitStateService(history, lambda: self.tabs), emit=self._from_worker)
+        self.git.state.session_at = self._session_at
         self.git.watcher = self._git_watch
         self.git.state.node_held_by = self._node_held_by
         self.git.operations = GitOperationService(
@@ -524,6 +532,12 @@ class Daemon:
             tab_safety=self._keep_before_change,
             changed=self._git_changed,
         )
+        self.tabs.workspace_lock = self.git.operations.lock_of
+        self.tabs.history = WorkSessionHistory(GitCheckpoints(), history, lambda: datetime.now(UTC))
+        self.tabs.history.actor_context = self._session_actor_context
+        self.git.state.session_by_id = self.tabs.work_sessions.require
+        self.git.state.snapshots = self.tabs.history.records
+        self.tabs.inspect_workspace = self._inspect_session_workspace
         self.git.merges = GitMergeService(
             self.git.state,
             self.git.operations,
@@ -543,6 +557,7 @@ class Daemon:
             publish_facts=self._publish_facts,
             changed=self._git_changed,
         )
+        self.git.cleanup.removed = self._session_workspace_removed
         self.git.rewrite = GitRewriteService(
             self.git.state,
             self.git.operations,
@@ -552,6 +567,12 @@ class Daemon:
             deliver=self._send_to_tab,
             changed=self._git_changed,
         )
+        self.tabs.session_git = WorkSessionGit(
+            sessions=self.tabs.work_sessions, history=self.tabs.history, state=self.git.state,
+            operations=self.git.operations, merges=self.git.merges, writer=mutations,
+            close_tab=self._close_session_worker,
+            now=lambda: datetime.now(UTC),
+        ).dispatch
         self.setup_service: SetupService = setup_service or SetupService(
             probe=HostSetupProbe(), fixes=HostSetupFixes(), tokens=SetupTokens()
         )
@@ -749,7 +770,7 @@ class Daemon:
         try:
             self.vault.use_root(root)
             self.vault.publish_all()
-        except Exception:  # noqa: BLE001 -- logged; the core runs without a vault
+        except Exception:  # noqa: BLE001 -- logged; the thread keeps serving other plans
             _LOG.exception("the vault at %s could not be used", root)
 
     def _plan_changed(self, plan: PlanView) -> None:
@@ -997,6 +1018,37 @@ class Daemon:
     def _node_held_by(self, tab_id: str) -> str | None:
         return self._plans.node_held_by(tab_id)
 
+    def _session_at(self, project_id: str, path: str) -> WorkSession | None:
+        primary = self.tabs.work_sessions.at(project_id, path)
+        if primary is not None:
+            return primary
+        for tab in self.tabs.git_tabs(project_id):
+            if tab.work_session_id and Path(tab.worktree).resolve() == Path(path).resolve():
+                return self.tabs.work_sessions.require(project_id, tab.work_session_id)
+        history = self.tabs.history
+        if history is not None:
+            for record in self.tabs.work_sessions.all(project_id, include_archived=True):
+                if any(row.worktree == path for row in history.records(record.id)):
+                    return record
+        return None
+
+    def _session_actor_context(self, tab_id: str) -> tuple[str, str, str | None]:
+        title, agent, node = self.tabs.actor_context(tab_id)
+        return title, agent, node or self._plans.node_held_by(tab_id)
+
+    def _close_session_worker(self, tab_id: str) -> None:
+        _ = self.tabs.close_tab(CloseTabParams(tab_id=TabId(tab_id)))
+
+    def _session_workspace_removed(self, project_id: str, path: str) -> None:
+        if self._worker is None:
+            self.tabs.archive_removed_workspace(project_id, path)
+        else:
+            _ = self._worker.submit(self.tabs.archive_removed_workspace, project_id, path).result()
+
+    def _inspect_session_workspace(self, project_id: str, path: str) -> tuple[str, str | None]:
+        _root, row = self.git.state.worktree_row(project_id, path)
+        return row.path, row.branch
+
     def _git_heard(self, project_id: str) -> None:
         self.git.heard(project_id)
 
@@ -1004,17 +1056,37 @@ class Daemon:
         return self._plans.facts_to_check(project_id)
 
     def _after_merge(self, record: GitOperationRecord) -> None:
+        if record.source.startswith("refs/aconsole/sessions/"):
+            return
         if record.result_oid is not None:
             self._plans.record_merge(node_id=record.plan_node, tab_id=record.tab_id, oid=record.result_oid)
+            history = self.tabs.history
+            if record.work_session_id is not None and history is not None:
+                session = self.tabs.work_sessions.require(record.project_id, record.work_session_id)
+                accepted = {session.worktree: float("inf")}
+                merges = self.git.merges
+                for point in history.records(record.work_session_id):
+                    if point.kind == "result" and point.oid and merges is not None and merges.landed_from(
+                        record.project_id, point.ref, point.oid,
+                    ) is not None:
+                        accepted[point.worktree] = max(accepted.get(point.worktree, 0), point.sequence)
+                nodes: set[str] = set()
+                for point in history.records(record.work_session_id):
+                    if point.sequence <= accepted.get(point.worktree, 0) and point.kind != "begin" and (
+                        point.plan_node is not None and point.plan_node not in nodes
+                    ):
+                        nodes.add(point.plan_node)
+                        self._plans.record_merge(
+                            node_id=point.plan_node, tab_id=point.actor_tab_id, oid=record.result_oid,
+                        )
 
     def _close_for_cleanup(self, tab_id: str) -> None:
         """A tab whose agent exited. The tabs belong to the tab worker, and its worktree goes separately."""
-        params = CloseTabParams(tab_id=TabId(tab_id), decision="keep")
         worker = self._worker
         if worker is None:
-            _ = self.tabs.close_tab(params)
+            self.tabs.close_for_cleanup(tab_id)
             return
-        _ = worker.submit(self.tabs.close_tab, params).result()
+        _ = worker.submit(self.tabs.close_for_cleanup, tab_id).result()
 
     def _keep_before_change(self, tab_id: str, label: str) -> None:
         """Off the loop. The tab's checkpoint list belongs to the tab worker, so it is written there."""
@@ -1063,7 +1135,7 @@ class Daemon:
                 for cwd, working in await asyncio.to_thread(watch.changes, now):
                     await self._in_worker(lambda cwd=cwd, working=working: self.tabs.codex_turn(cwd, working=working))
                     await self._note_codex_session(cwd, watch.session_in(cwd))
-            except Exception:  # noqa: BLE001 -- the status must never stop the core
+            except Exception:  # noqa: BLE001 -- logged; the next change brings another pass
                 _LOG.exception("cannot read Codex turns")
             await asyncio.sleep(_CODEX_TURN_POLL_S)
 
@@ -1086,7 +1158,7 @@ class Daemon:
                 elif text.strip():
                     # The card keeps showing when it last heard: the numbers look stale rather than wrong.
                     _LOG.warning("claude /usage gave no limits: %.200s", text)
-            except Exception:  # noqa: BLE001 -- limits must never stop the core
+            except Exception:  # noqa: BLE001 -- logged; the next change brings another pass
                 _LOG.exception("cannot read Claude limits")
             await self._limits_wait(self._claude_usage_due, _CLAUDE_POLL_S)
 
@@ -1106,7 +1178,7 @@ class Daemon:
                 elif body:
                     # An error reply, such as a lost login. It says why and holds no credentials.
                     _LOG.warning("Codex gave no limits: %s", body[:_CODEX_REPLY_LOGGED].decode(errors="replace"))
-            except Exception:  # noqa: BLE001 -- limits must never stop the core
+            except Exception:  # noqa: BLE001 -- logged; the next change brings another pass
                 _LOG.exception("cannot read Codex limits")
                 body = b""
             await self._limits_wait(due, codex_poll_delay(body))
@@ -1126,7 +1198,7 @@ class Daemon:
                     self._account_observed(event, source="cursor-dashboard", every_s=_CURSOR_POLL_S)
                 elif body:
                     _LOG.warning("Cursor gave no limits: %s", body[:_CODEX_REPLY_LOGGED].decode(errors="replace"))
-            except Exception:  # noqa: BLE001 -- limits must never stop the core
+            except Exception:  # noqa: BLE001 -- logged; the next change brings another pass
                 _LOG.exception("cannot read Cursor limits")
             # A stopped container or a missing login gives nothing: ask again soon, as for Codex.
             await self._limits_wait(due, _CURSOR_POLL_S if body else _CODEX_RETRY_S)
@@ -1149,7 +1221,7 @@ class Daemon:
                     # Without a Go subscription the refusal comes back every poll: it is logged once.
                     said = body
                     _LOG.warning("OpenCode gave no limits: %s", body[:_CODEX_REPLY_LOGGED].decode(errors="replace"))
-            except Exception:  # noqa: BLE001 -- limits must never stop the core
+            except Exception:  # noqa: BLE001 -- logged; the next change brings another pass
                 _LOG.exception("cannot read OpenCode limits")
             await self._limits_wait(due, _OPENCODE_POLL_S if body else _CODEX_RETRY_S)
 
@@ -1163,7 +1235,7 @@ class Daemon:
         since = tokens_since(event.account, datetime.now(UTC))
         try:
             models = await asyncio.to_thread(log.models, since)
-        except Exception:  # noqa: BLE001 -- the numbers of the limits must get through
+        except Exception:  # noqa: BLE001 -- logged; the thread keeps serving other plans
             _LOG.exception("cannot count tokens")
             return event
         return QuotaUpdated(account=msgspec.structs.replace(event.account, usage=models, usage_since=since))
@@ -1241,6 +1313,15 @@ class Daemon:
         await asyncio.to_thread(self.vault.use_bases, VaultFileDatabase(writer))
         self.tabs.use_store(store)
         self.tabs.use_projects(self._catalog, store)
+        await asyncio.to_thread(self.tabs.work_sessions.use_store, WorkSessionDatabase(writer))
+        if self.tabs.history is not None:
+            await asyncio.to_thread(self.tabs.history.use_store, WorkSessionHistoryDatabase(writer))
+            for project in self._catalog.views():
+                for record in self.tabs.work_sessions.all(str(project.id), include_archived=True):
+                    try:
+                        await asyncio.to_thread(self.tabs.history.recover, record, Path(project.root))
+                    except GitCommandError as exc:
+                        _LOG.warning("session %s history is unavailable: %s", record.id, exc)
         found = await asyncio.to_thread(store.settings)
         self.tabs.note_settings(found.rev, setup_completed=found.setup_completed)
         if found.worktrees_dir is not None:
@@ -1303,7 +1384,7 @@ class Daemon:
                     swept = await writer.submit(self._sweep_once)
                     more = isinstance(swept, SweepResult) and swept.more
                 await self._drop_swept_refs()
-            except Exception:  # noqa: BLE001 -- a failed sweep is retried next period; the core keeps serving
+            except Exception:  # noqa: BLE001 -- logged; the next change brings another pass
                 _LOG.exception("retention sweep failed")
             await asyncio.sleep(self.sweep_every_s)
 

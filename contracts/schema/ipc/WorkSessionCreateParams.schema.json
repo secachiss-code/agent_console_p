@@ -1,0 +1,58 @@
+{
+  "$defs": {
+    "WorkSessionCreateParams": {
+      "properties": {
+        "base_branch": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "existing_worktree": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "project_id": {
+          "type": "string"
+        },
+        "title": {
+          "maxLength": 120,
+          "minLength": 1,
+          "type": "string"
+        },
+        "workspace": {
+          "$ref": "#/$defs/WorkspaceMode",
+          "default": "new_worktree"
+        }
+      },
+      "required": [
+        "project_id",
+        "title"
+      ],
+      "title": "WorkSessionCreateParams",
+      "type": "object"
+    },
+    "WorkspaceMode": {
+      "enum": [
+        "existing_worktree",
+        "main_checkout",
+        "new_worktree"
+      ],
+      "title": "WorkspaceMode"
+    }
+  },
+  "$ref": "#/$defs/WorkSessionCreateParams",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

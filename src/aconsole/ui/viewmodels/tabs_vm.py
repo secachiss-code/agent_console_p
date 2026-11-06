@@ -112,7 +112,10 @@ class TabsViewModel:
 
     def apply_git(self, state: GitStateResult) -> None:
         """Each of this project's tabs says where its worktree stands. The rows follow by notify."""
-        rows = {str(row.tab_id): row for row in state.worktrees if row.tab_id is not None}
+        rows = {
+            str(tab): row for row in state.worktrees
+            for tab in (row.tab_ids or (() if row.tab_id is None else (row.tab_id,)))
+        }
         for at in range(self.model.get_n_items()):
             item = self.model.get_item(at)
             if not isinstance(item, TabItem) or str(item.project_id) != str(state.project_id):
@@ -171,13 +174,17 @@ class TabsViewModel:
             "tab/close", CloseTabParams(tab_id=TabId(tab_id), decision=decision), CloseTabResult,
         )
 
-    async def open(
+    async def open(  # noqa: PLR0913 -- explicit workspace and task context
         self, project_id: ProjectId, agent: AgentKind, *,
         workspace: WorkspaceMode = WorkspaceMode.NEW_WORKTREE, existing_worktree: str | None = None,
+        work_session_id: str | None = None, isolated: bool = False, title: str | None = None,
     ) -> TabView:
         return await self.client.request(
             "tab/open",
-            OpenTabParams(project_id=project_id, agent=agent, workspace=workspace, existing_worktree=existing_worktree),
+            OpenTabParams(
+                project_id=project_id, agent=agent, workspace=workspace, existing_worktree=existing_worktree,
+                work_session_id=work_session_id, isolated=isolated, title=title,
+            ),
             TabView,
         )
 

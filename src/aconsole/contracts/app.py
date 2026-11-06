@@ -122,6 +122,9 @@ class TabView(msgspec.Struct, frozen=True, kw_only=True):
     # What AConsole's MCP tools answered this tab's agent: bytes of text in its context, and the calls.
     mcp_bytes: int | None = None
     mcp_calls: int | None = None
+    work_session_id: str | None = None
+    isolated: bool = False
+    work_session_title: str | None = None
 
 
 class CommandDetail(msgspec.Struct, frozen=True, kw_only=True, tag="command", tag_field="type"):
@@ -268,6 +271,8 @@ class OpenTabParams(msgspec.Struct, frozen=True, kw_only=True):
     fork: bool = False
     title: str | None = None
     start_now: bool = True
+    work_session_id: str | None = None
+    isolated: bool = False
 
 
 class StartedParams(msgspec.Struct, frozen=True, kw_only=True):

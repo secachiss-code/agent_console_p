@@ -7,6 +7,10 @@ from typing import Protocol
 from aconsole.core.domain.checkpoints import Checkpoint
 
 
+class CheckpointStoreError(Exception):
+    """A snapshot could not be captured or materialized."""
+
+
 @dataclass(frozen=True, slots=True, kw_only=True)
 class TreeCapture:
     """One side commit: the non-ignored worktree, not the user's HEAD."""

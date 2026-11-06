@@ -431,7 +431,9 @@ class MainWindow(Adw.ApplicationWindow):
         if project is None:
             self._tab_error(review_text("git.no_project"))
             return
-        pane = GitPane(GitViewModel(self.tabs.client, project), self._tab_error)
+        vm = GitViewModel(self.tabs.client, project)
+        vm.work_session_id = None if tab is None else tab.work_session_id
+        pane = GitPane(vm, self._tab_error, on_resume_tab=self._resume_work_session_tab)
         self.git_pane = pane
         self.plan_page = None
         if tab is None:
@@ -444,6 +446,12 @@ class MainWindow(Adw.ApplicationWindow):
         )
         self.review_page.stack.set_visible_child_name("git")
         self.content_view.set_content(self.review_page)
+
+    def _resume_work_session_tab(self, tab_id: TabId) -> None:
+        previous = self.terminal_pages.get(str(tab_id))
+        self._select_tab(tab_id)
+        if previous is not None:
+            previous.resume_after_handoff()
 
     def _request_git(self, _action: Gio.SimpleAction, _parameter: GLib.Variant | None) -> None:
         self._open_git()
@@ -513,7 +521,7 @@ class MainWindow(Adw.ApplicationWindow):
     async def _close_tab_now(self, tab_id: str, decision: Literal["keep", "remove"] | None) -> None:
         try:
             result = await self.tabs.close(tab_id, decision)
-        except Exception as error:  # noqa: BLE001 -- a refused close stays visible; the tab stays open
+        except Exception as error:  # noqa: BLE001 -- a refusal stays visible; the node stays as the core keeps it
             self._tab_error(tabs_text("tabs.close_error").format(error=error))
             return
         if result.needs_decision:
@@ -826,7 +834,7 @@ class MainWindow(Adw.ApplicationWindow):
             _ = await self.preferences_vm.update(SettingsPatch(setup_completed=False))
             if not self._terminals_disposed:
                 self.show_setup()
-        except Exception:  # noqa: BLE001 -- failure to persist rerun state must remain visible
+        except Exception:  # noqa: BLE001 -- focus reports must not break the window on disconnect
             if not self._terminals_disposed:
                 self.toast_overlay.add_toast(Adw.Toast.new(setup_text("setup.error")))
 
@@ -969,7 +977,7 @@ class MainWindow(Adw.ApplicationWindow):
     async def _refresh_settings(self) -> None:
         try:
             settings = await self.app_vm.client.request("settings/get", EmptyParams(), Settings)
-        except Exception:  # noqa: BLE001 -- preserve the last working keymap when the core is unavailable
+        except Exception:  # noqa: BLE001 -- focus reports must not break the window on disconnect
             _LOG.debug("Could not refresh keyboard settings", exc_info=True)
             return
         self.preferences_vm.accept(settings)

@@ -402,7 +402,7 @@ class _Session:
             server_version="0.0.0",
             server_pid=os.getpid(),
             session_id="01JB2Z00000000000000000099",
-            capabilities=frozenset({"events.v1"}),
+            capabilities=frozenset({"events.v1", "work_sessions.v1"}),
             limits=ProtocolLimits(),
         )
 

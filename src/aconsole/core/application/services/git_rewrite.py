@@ -169,9 +169,11 @@ class GitRewriteService:
     ) -> GitOperationRecord:
         at = self._now()
         tab = self._state.tab_at(project_id, row.path)
+        session = self._state.session_at(project_id, row.path)
         record = GitOperationRecord(
             id=token_hex(_ID_BYTES),
             project_id=project_id,
+            work_session_id=None if session is None else session.id,
             kind=kind,
             status="started",
             mode=None,
@@ -194,7 +196,12 @@ class GitRewriteService:
 
     def _keep_head(self, root: Path, record: GitOperationRecord) -> None:
         """A rebase rewrites what the branch held. This is the way back, whatever comes next."""
-        done = self._writer.keep_ref(root, f"refs/aconsole/before/{record.id}", record.source_oid)
+        prefix = (
+            f"refs/aconsole/sessions/{record.work_session_id}/before"
+            if record.work_session_id is not None
+            else "refs/aconsole/before"
+        )
+        done = self._writer.keep_ref(root, f"{prefix}/{record.id}", record.source_oid)
         if not done.ok:
             message = "old HEAD could not be kept"
             raise GitCommandError(message, detail=done.said)

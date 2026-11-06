@@ -104,6 +104,23 @@ from aconsole.contracts.git import (
 from aconsole.contracts.ipc import InitializeParams, InitializeResult
 from aconsole.contracts.methods import METHODS
 from aconsole.contracts.settings import Settings
+from aconsole.contracts.work_sessions import (
+    WorkSessionCleanupWorkerParams,
+    WorkSessionCreateParams,
+    WorkSessionHandoffParams,
+    WorkSessionHistoryResult,
+    WorkSessionIntegrateParams,
+    WorkSessionIntegratePreviewParams,
+    WorkSessionListParams,
+    WorkSessionListResult,
+    WorkSessionParams,
+    WorkSessionRenameParams,
+    WorkSessionRestoreParams,
+    WorkSessionRestorePreview,
+    WorkSessionRestorePreviewParams,
+    WorkSessionResultParams,
+    WorkSessionView,
+)
 from aconsole.ui.client.core_client import CoreClient
 from aconsole.ui.client.store import CoreStore, Subscription
 
@@ -154,6 +171,21 @@ def _bindings() -> dict[str, Binding]:
         ("diff/file", DiffFileParams, DiffFileResult),
         ("diff/sendComment", SendCommentParams, CommandResult),
         ("git/state", GitStateParams, GitStateResult),
+        ("workSession/handoff", WorkSessionHandoffParams, TabView),
+        ("workSession/history", WorkSessionParams, WorkSessionHistoryResult),
+        ("workSession/restorePreview", WorkSessionRestorePreviewParams, WorkSessionRestorePreview),
+        ("workSession/restore", WorkSessionRestoreParams, WorkSessionHistoryResult),
+        ("workSession/result", WorkSessionResultParams, WorkSessionHistoryResult),
+        ("workSession/integratePreview", WorkSessionIntegratePreviewParams, MergePreviewResult),
+        ("workSession/integrate", WorkSessionIntegrateParams, GitOperationResult),
+        ("workSession/cleanupWorker", WorkSessionCleanupWorkerParams, EmptyResult),
+        ("workSession/create", WorkSessionCreateParams, WorkSessionView),
+        ("workSession/list", WorkSessionListParams, WorkSessionListResult),
+        ("workSession/get", WorkSessionParams, WorkSessionView),
+        ("workSession/rename", WorkSessionRenameParams, WorkSessionView),
+        ("workSession/close", WorkSessionParams, WorkSessionView),
+        ("workSession/resume", WorkSessionParams, WorkSessionView),
+
         ("git/watch", GitWatchParams, EmptyResult),
         ("git/graph", GitGraphParams, GitGraphResult),
         ("git/diffSummary", GitDiffParams, DiffSummaryResult),

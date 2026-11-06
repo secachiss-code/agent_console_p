@@ -158,7 +158,7 @@ class GitDiff:
 
     def _untracked(self, repo: Path) -> tuple[str, ...]:
         raw = self._git_stdout(repo, ("ls-files", "--others", "--exclude-standard", "-z"))
-        return tuple(path for path in raw.split("\0") if path)
+        return tuple(path for path in raw.split("\0") if path and path != ".aconsole/lock")
 
     def _untracked_stats(self, repo: Path, paths: tuple[str, ...]) -> tuple[DiffFileStat, ...]:
         """One row per new file. Lines are counted until the byte cap is spent, so a big tree stays cheap."""

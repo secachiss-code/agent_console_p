@@ -213,6 +213,9 @@ class TerminalPage(Gtk.Overlay):
         if not self._closed and self.worker is None:
             self.worker = spawn_task(self._observe(self.session))
 
+    def resume_after_handoff(self) -> None:
+        self._request_restart(resume=True)
+
     async def _observe(self, session: TerminalSession) -> None:
         if self._closed or session is not self.session:
             return

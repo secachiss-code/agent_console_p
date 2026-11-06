@@ -101,6 +101,23 @@ from aconsole.contracts.ipc import (
 from aconsole.contracts.settings import (
     Settings,
 )
+from aconsole.contracts.work_sessions import (
+    WorkSessionCleanupWorkerParams,
+    WorkSessionCreateParams,
+    WorkSessionHandoffParams,
+    WorkSessionHistoryResult,
+    WorkSessionIntegrateParams,
+    WorkSessionIntegratePreviewParams,
+    WorkSessionListParams,
+    WorkSessionListResult,
+    WorkSessionParams,
+    WorkSessionRenameParams,
+    WorkSessionRestoreParams,
+    WorkSessionRestorePreview,
+    WorkSessionRestorePreviewParams,
+    WorkSessionResultParams,
+    WorkSessionView,
+)
 from aconsole.ui.client.methods import Facade
 
 
@@ -109,6 +126,48 @@ class TypedFacade(Facade):
 
     async def initialize(self, params: InitializeParams) -> InitializeResult:
         return await self.typed("initialize", params, InitializeResult)
+
+    async def work_session_handoff(self, params: WorkSessionHandoffParams) -> TabView:
+        return await self.typed("workSession/handoff", params, TabView)
+
+    async def work_session_history(self, params: WorkSessionParams) -> WorkSessionHistoryResult:
+        return await self.typed("workSession/history", params, WorkSessionHistoryResult)
+
+    async def work_session_restore_preview(self, params: WorkSessionRestorePreviewParams) -> WorkSessionRestorePreview:
+        return await self.typed("workSession/restorePreview", params, WorkSessionRestorePreview)
+
+    async def work_session_restore(self, params: WorkSessionRestoreParams) -> WorkSessionHistoryResult:
+        return await self.typed("workSession/restore", params, WorkSessionHistoryResult)
+
+    async def work_session_result(self, params: WorkSessionResultParams) -> WorkSessionHistoryResult:
+        return await self.typed("workSession/result", params, WorkSessionHistoryResult)
+
+    async def work_session_integrate_preview(self, params: WorkSessionIntegratePreviewParams) -> MergePreviewResult:
+        return await self.typed("workSession/integratePreview", params, MergePreviewResult)
+
+    async def work_session_integrate(self, params: WorkSessionIntegrateParams) -> GitOperationResult:
+        return await self.typed("workSession/integrate", params, GitOperationResult)
+
+    async def work_session_cleanup_worker(self, params: WorkSessionCleanupWorkerParams) -> EmptyResult:
+        return await self.typed("workSession/cleanupWorker", params, EmptyResult)
+
+    async def work_session_create(self, params: WorkSessionCreateParams) -> WorkSessionView:
+        return await self.typed("workSession/create", params, WorkSessionView)
+
+    async def work_session_list(self, params: WorkSessionListParams) -> WorkSessionListResult:
+        return await self.typed("workSession/list", params, WorkSessionListResult)
+
+    async def work_session_get(self, params: WorkSessionParams) -> WorkSessionView:
+        return await self.typed("workSession/get", params, WorkSessionView)
+
+    async def work_session_rename(self, params: WorkSessionRenameParams) -> WorkSessionView:
+        return await self.typed("workSession/rename", params, WorkSessionView)
+
+    async def work_session_close(self, params: WorkSessionParams) -> WorkSessionView:
+        return await self.typed("workSession/close", params, WorkSessionView)
+
+    async def work_session_resume(self, params: WorkSessionParams) -> WorkSessionView:
+        return await self.typed("workSession/resume", params, WorkSessionView)
 
     async def shutdown(self, params: EmptyParams) -> EmptyResult:
         return await self.typed("shutdown", params, EmptyResult)

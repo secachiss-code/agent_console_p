@@ -1,0 +1,38 @@
+{
+  "$defs": {
+    "WorkSessionIntegrateParams": {
+      "properties": {
+        "confirm_token": {
+          "type": "string"
+        },
+        "project_id": {
+          "type": "string"
+        },
+        "sequence": {
+          "type": "integer"
+        },
+        "source_oid": {
+          "type": "string"
+        },
+        "target_oid": {
+          "type": "string"
+        },
+        "work_session_id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "project_id",
+        "work_session_id",
+        "sequence",
+        "source_oid",
+        "target_oid",
+        "confirm_token"
+      ],
+      "title": "WorkSessionIntegrateParams",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/WorkSessionIntegrateParams",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

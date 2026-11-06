@@ -6,7 +6,6 @@ import logging
 import os
 from collections.abc import Callable
 from datetime import UTC, datetime
-from importlib import metadata
 from typing import final
 
 import msgspec
@@ -68,6 +67,7 @@ _SERVER_CAPS = frozenset(
         "diff.v1",
         "checkpoints.v1",
         "git.v1",
+        "work_sessions.v1",
         "terminal.inject",
     },
 )
@@ -81,10 +81,9 @@ OUTBOUND_LIMIT = 1024
 
 
 def _server_version() -> str:
-    try:
-        return metadata.version("aconsole")
-    except metadata.PackageNotFoundError:
-        return "0.0.0"
+    from aconsole import __version__  # noqa: PLC0415 -- lightweight package version
+
+    return __version__
 
 
 @final
@@ -309,7 +308,7 @@ class Connection:
             return (self._err(request.id, exc.name),)
         return (self._ok(request.id, released),)
 
-    def _tab(self, request: Request) -> tuple[bytes, ...]:
+    def _tab(self, request: Request) -> tuple[bytes, ...]:  # noqa: PLR0911 -- typed refusals keep the connection alive
         tabs = self.tabs
         if tabs is None:
             return (self._err(request.id, "METHOD_NOT_FOUND"),)
@@ -321,7 +320,11 @@ class Connection:
             return (self._err(request.id, exc.name),)
         except msgspec.DecodeError:
             return (self._err(request.id, "INVALID_PARAMS"),)
-        except Exception:  # noqa: BLE001 -- a storage failure must answer the request and keep its turn runner alive
+        except DomainError as exc:
+            return (self._err(request.id, exc.name, exc.extra),)
+        except ValueError:
+            return (self._err(request.id, "INVALID_PARAMS"),)
+        except Exception:  # noqa: BLE001 -- answer the request; the connection serves the next one
             _LOG.exception("%s failed", request.method)
             return (self._err(request.id, "INTERNAL_ERROR"),)
         return (self._ok(request.id, result),)

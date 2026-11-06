@@ -12,6 +12,15 @@ if TYPE_CHECKING:
     from aconsole.contracts.errors import ErrorObject
 
 _TEXT: dict[str, tuple[str, str]] = {
+    "WORK_SESSION_NOT_FOUND": ("This task session no longer exists", "Рабочая сессия не найдена"),
+    "WORK_SESSION_ARCHIVED": ("Reopen this archived task before changing it", "Возобновите сессию перед изменением"),
+    "WORK_SESSION_WORKSPACE_CONFLICT": (
+        "This working copy already belongs to a task", "Рабочая копия уже принадлежит сессии",
+    ),
+    "PROTOCOL_VERSION_UNSUPPORTED": (
+        "The UI and core are incompatible. Restart the core with the same AConsole version",
+        "Версии интерфейса и ядра несовместимы. Перезапустите ядро той же версии AConsole",
+    ),
     "SERVER_BUSY": ("The core is busy. Try again in a moment", "Ядро занято. Повторите через минуту"),
     "REQUEST_CANCELLED": ("The request was cancelled", "Запрос отменён"),
     "CONTENT_MODIFIED": ("The data changed meanwhile. Try again", "Данные успели измениться. Повторите"),

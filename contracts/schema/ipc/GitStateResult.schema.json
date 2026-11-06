@@ -142,6 +142,17 @@
         },
         "updated_at": {
           "type": "string"
+        },
+        "work_session_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
         }
       },
       "required": [
@@ -420,6 +431,13 @@
             }
           ]
         },
+        "tab_ids": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
         "tab_status": {
           "anyOf": [
             {
@@ -445,6 +463,17 @@
         },
         "untracked": {
           "type": "integer"
+        },
+        "work_session_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
         }
       },
       "required": [

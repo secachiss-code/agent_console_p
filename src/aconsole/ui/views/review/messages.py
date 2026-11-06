@@ -1,9 +1,54 @@
-# ruff: noqa: RUF001, E501 -- Russian UI text, kept whole so it can be read and translated
 """Bilingual messages of the review page, pending the B11 gettext catalog."""
+# ruff: noqa: RUF001, E501 -- Russian UI text, kept whole so it can be read and translated
 
 import locale
 
 _MESSAGES = {
+    "git.session_active": ("active", "активна"),
+    "git.session_archived": ("archived", "в архиве"),
+    "git.session_removed": ("main copy removed; history retained", "основная копия удалена; история сохранена"),
+    "git.session_shared": ("shared", "общая копия"),
+    "git.session_isolated": ("isolated", "отдельная копия"),
+    "git.session_reopen_hint": ("Reopen this session to permit new work in its saved copies.", "Возобновить сессию для продолжения работы в сохранённых копиях."),
+    "git.merge_session_cleanup": (
+        "Archive the session, stop its agents and remove its main working copy; keep worker copies and history",
+        "Архивировать сессию, остановить агентов и удалить её основную копию; сохранить копии исполнителей и историю",
+    ),
+    "git.block.source_dirty": ("Commit the session's files before merging", "Закоммитьте файлы сессии перед слиянием"),
+    "git.err.not_removable.not_managed": (
+        "This working copy is not managed by AConsole",
+        "Эта рабочая копия не принадлежит AConsole",
+    ),
+    "git.session_project": ("Entire project", "Весь проект"),
+    "git.session_rename": ("Rename task", "Переименовать задачу"),
+    "git.session_handoff": ("Hand off", "Передать управление"),
+    "git.session_result": ("Keep worker result", "Сохранить результат"),
+    "git.session_integrate": ("Accept into session", "Принять в сессию"),
+    "git.session_restore": ("Restore files", "Восстановить файлы"),
+    "git.session_cleanup_worker": ("Remove worker copy", "Удалить копию исполнителя"),
+    "git.session_archive": ("Archive session", "Архивировать сессию"),
+    "git.session_resume": ("Reopen session", "Возобновить сессию"),
+    "git.session_confirm": ("Confirm", "Подтвердить"),
+    "git.session_archive_hint": (
+        "Stop the session's agents and archive it, keeping its working copies and history. Reopening permits new work.",
+        "Остановить агентов и архивировать сессию, сохранив рабочие копии и историю. Возобновление разрешает новую работу.",
+    ),
+    "git.session_handoff_hint": (
+        "Stop the current executor, keep a checkpoint, and start the selected agent. Switching tabs alone does not do this.",
+        "Остановить исполнителя, сохранить снимок и запустить выбранного агента. Переключение вкладки этого не делает.",
+    ),
+    "git.session_result_hint": (
+        "Stop this isolated executor and retain its files as an immutable result for review.",
+        "Остановить изолированного исполнителя и сохранить его файлы как результат для проверки.",
+    ),
+    "git.session_restore_hint": (
+        "Stop session agents and save a safety snapshot, then restore files. HEAD and the staging index stay unchanged.",
+        "Остановить агентов, сохранить защитный снимок и восстановить файлы. HEAD и индекс останутся прежними.",
+    ),
+    "git.session_cleanup_hint": (
+        "Remove this worker copy only if its result was accepted and the copy has no uncommitted or ignored files.",
+        "Удалить копию исполнителя, если результат принят и в копии нет незакоммиченных или игнорируемых файлов.",
+    ),
     "git.title": ("Git & checkpoints", "Git и чекпоинты"),
     "git.open": ("Git & checkpoints", "Git и чекпоинты"),
     "git.back": ("Back to terminal", "К терминалу"),
@@ -171,18 +216,30 @@ _MESSAGES = {
         "Их код изменился после записи. Возможно, они всё ещё верны.",
     ),
     "git.facts_line": ("{title}: {paths}", "{title}: {paths}"),
-    "git.err.git_state_stale": ("Git moved since you looked. Check and try again", "Git изменился. Проверьте и повторите"),
+    "git.err.git_state_stale": (
+        "Git moved since you looked. Check and try again",
+        "Git изменился. Проверьте и повторите",
+    ),
     "git.err.merge_preview_stale": (
         "A branch moved after the preview. Open the merge again",
         "Ветка сдвинулась после предпросмотра. Откройте слияние заново",
     ),
-    "git.err.worktree_busy": ("An agent is working there. Wait for its turn to end", "Там работает агент. Дождитесь конца его хода"),
-    "git.err.git_operation_in_progress": ("Finish or abort the Git operation first", "Сначала завершите или прервите Git-операцию"),
+    "git.err.worktree_busy": (
+        "An agent is working there. Wait for its turn to end",
+        "Там работает агент. Дождитесь конца его хода",
+    ),
+    "git.err.git_operation_in_progress": (
+        "Finish or abort the Git operation first",
+        "Сначала завершите или прервите Git-операцию",
+    ),
     "git.err.merge_conflict": ("The branches conflict", "Ветки конфликтуют"),
     "git.err.merge_mode_unavailable": ("This merge cannot be done now", "Сейчас это слияние невозможно"),
     "git.err.confirm_token_invalid": ("That confirmation ran out. Try again", "Подтверждение устарело. Повторите"),
     "git.err.not_removable.main_checkout": ("The main checkout cannot be removed", "Основной checkout удалить нельзя"),
-    "git.err.not_removable.agent_running": ("Its tab is still open. Stop the agent first", "Вкладка ещё открыта. Сначала остановите агента"),
+    "git.err.not_removable.agent_running": (
+        "Its tab is still open. Stop the agent first",
+        "Вкладка ещё открыта. Сначала остановите агента",
+    ),
     "git.err.not_removable.dirty": ("It has uncommitted files", "В нём есть незакоммиченные файлы"),
     "git.err.not_removable.detached": ("It is on no branch", "Он не на ветке"),
     "git.err.not_removable.not_merged": ("Its commits are not merged yet", "Его коммиты ещё не слиты"),

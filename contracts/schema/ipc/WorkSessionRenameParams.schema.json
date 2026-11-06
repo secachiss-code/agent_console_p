@@ -1,0 +1,28 @@
+{
+  "$defs": {
+    "WorkSessionRenameParams": {
+      "properties": {
+        "project_id": {
+          "type": "string"
+        },
+        "title": {
+          "maxLength": 120,
+          "minLength": 1,
+          "type": "string"
+        },
+        "work_session_id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "project_id",
+        "work_session_id",
+        "title"
+      ],
+      "title": "WorkSessionRenameParams",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/WorkSessionRenameParams",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

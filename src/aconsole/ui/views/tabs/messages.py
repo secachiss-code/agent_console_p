@@ -3,6 +3,13 @@
 import locale
 
 _MESSAGES = {
+    "tabs.new.work_session": ("Task session", "Рабочая сессия"),
+    "tabs.new.task": ("New task", "Новая задача"),
+    "tabs.new.task_title": ("Task title", "Название задачи"),
+    "tabs.new.isolated": ("Isolated executor", "Изолированный исполнитель"),
+    "tabs.new.isolated_hint": (
+        "A separate working copy for parallel work", "Отдельная рабочая копия для параллельной работы",
+    ),
     "tabs.new.workspace": ("Working copy", "Рабочая копия"),
     "tabs.new.new_worktree": ("New working copy", "Новая рабочая копия"),
     "tabs.new.main_checkout": ("Main checkout", "Основная рабочая копия"),

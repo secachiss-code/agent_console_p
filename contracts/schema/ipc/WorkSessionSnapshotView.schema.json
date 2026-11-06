@@ -1,0 +1,120 @@
+{
+  "$defs": {
+    "WorkSessionSnapshotView": {
+      "properties": {
+        "actor_tab_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "actor_title": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "agent": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "created_at": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "head_oid": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "kind": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "oid": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "plan_node": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "previous_oid": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "ref": {
+          "type": "string"
+        },
+        "sequence": {
+          "type": "integer"
+        },
+        "status": {
+          "type": "string"
+        },
+        "worktree": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "sequence",
+        "kind",
+        "actor_tab_id",
+        "worktree",
+        "ref",
+        "head_oid",
+        "oid",
+        "previous_oid",
+        "label",
+        "status",
+        "created_at"
+      ],
+      "title": "WorkSessionSnapshotView",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/WorkSessionSnapshotView",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

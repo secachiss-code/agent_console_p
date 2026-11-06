@@ -66,6 +66,7 @@ BLOCK_SOURCE_BUSY: Final = "source_busy"
 BLOCK_TARGET_BUSY: Final = "target_busy"
 BLOCK_TARGET_DIRTY: Final = "target_dirty"
 BLOCK_IN_PROGRESS: Final = "target_in_progress"
+BLOCK_SOURCE_DIRTY: Final = "source_dirty"
 
 type FollowUp = Callable[[GitOperationRecord], None]
 
@@ -73,6 +74,7 @@ type FollowUp = Callable[[GitOperationRecord], None]
 def view_of(record: GitOperationRecord) -> GitOperationView:
     return GitOperationView(
         id=record.id,
+        work_session_id=record.work_session_id,
         kind=record.kind,
         status=record.status,
         mode=record.mode,
@@ -91,8 +93,9 @@ def view_of(record: GitOperationRecord) -> GitOperationView:
 
 
 def _oid_of(refs: tuple[RefRow, ...], branch: str) -> str:
+    wanted = branch if branch.startswith("refs/aconsole/sessions/") else f"{_HEADS}{branch}"
     for ref in refs:
-        if ref.name == f"{_HEADS}{branch}":
+        if ref.name == wanted:
             return ref.oid
     raise DomainError(code=_BRANCH_UNKNOWN, name="GIT_BRANCH_UNKNOWN", retryable=False, extra=(branch,))
 
@@ -172,12 +175,14 @@ class GitMergeService:
         project = self._state.project(project_id)
         root = Path(project.root)
         refs = self._state.reader.refs(root)
-        target = params.target or self._state.base_name(project_id)
+        rows = self._state.reader.worktrees(root)
+        source_row = _row_on(rows, params.source)
+        session = None if source_row is None else self._state.session_at(project_id, source_row.path)
+        target = params.target or (session.base_branch if session is not None else self._state.base_name(project_id))
         if target is None:
             raise DomainError(code=_BRANCH_UNKNOWN, name="GIT_BRANCH_UNKNOWN", retryable=False)
         source_oid = _oid_of(refs, params.source)
         target_oid = _oid_of(refs, target)
-        rows = self._state.reader.worktrees(root)
         probe = self._state.probe(root, target_oid, source_oid)
         reader = self._state.reader
         already = reader.is_ancestor(root, source_oid, target_oid)
@@ -222,6 +227,15 @@ class GitMergeService:
             rows = reader.worktrees(root)
             source_row = _row_on(rows, params.source)
             target_row = _row_on(rows, params.target)
+            if params.source.startswith("refs/aconsole/sessions/"):
+                session_id = params.source.split("/")[3]
+                session = self._state.session(project_id, session_id)
+                if params.target != session.branch:
+                    raise DomainError(code=3021, name="GIT_WORKTREE_UNKNOWN", retryable=False)
+                self._state.require_active(project_id, session.worktree)
+            for row in (source_row, target_row):
+                if row is not None:
+                    self._state.require_active(project_id, row.path)
             probe = reader.merge_probe(root, target_oid, source_oid)
             already = reader.is_ancestor(root, source_oid, target_oid)
             refusal = _refusal(
@@ -282,7 +296,7 @@ class GitMergeService:
             for record in rewrites:
                 self.settle_rewrite(record)
 
-    def _blockers(  # noqa: PLR0913 -- one judgement, each word its own fact
+    def _blockers(  # noqa: C901, PLR0913 -- one judgement, each word its own fact
         self,
         project_id: str,
         *,
@@ -301,6 +315,10 @@ class GitMergeService:
             found.append(BLOCK_CONFLICT)
         if source_row is not None and self._busy(project_id, source_row):
             found.append(BLOCK_SOURCE_BUSY)
+        if source_row is not None and self._state.session_at(project_id, source_row.path) is not None:
+            source_status = self._state.reader.status(Path(source_row.path))
+            if source_status.staged + source_status.unstaged + source_status.untracked + source_status.conflicted:
+                found.append(BLOCK_SOURCE_DIRTY)
         if target_row is not None:
             if self._busy(project_id, target_row):
                 found.append(BLOCK_TARGET_BUSY)
@@ -312,8 +330,9 @@ class GitMergeService:
         return tuple(found)
 
     def _busy(self, project_id: str, row: WorktreeRow) -> bool:
-        tab = self._state.tab_at(project_id, row.path)
-        return tab is not None and blocks_writes(TabStatus(tab.status.value))
+        return any(
+            blocks_writes(TabStatus(tab.status.value)) for tab in self._state.tabs_at(project_id, row.path)
+        )
 
     def _begin(  # noqa: PLR0913, PLR0917 -- what the journal must know before anything moves
         self,
@@ -326,11 +345,15 @@ class GitMergeService:
     ) -> GitOperationRecord:
         project_id = str(params.project_id)
         tab = None if source_row is None else self._state.tab_at(project_id, source_row.path)
+        session = None if source_row is None else self._state.session_at(project_id, source_row.path)
+        if session is None and params.source.startswith("refs/aconsole/sessions/"):
+            session = self._state.session(project_id, params.source.split("/")[3])
         at = self._now()
         record = GitOperationRecord(
             id=token_hex(_ID_BYTES),
             project_id=project_id,
             kind="merge",
+            work_session_id=None if session is None else session.id,
             status="started",
             mode=params.mode,
             source=params.source,
@@ -356,7 +379,8 @@ class GitMergeService:
         if source is None or params.mode == "fast_forward":
             return text
         repo = Path(self._state.project(str(params.project_id)).root if target is None else target.path)
-        return self._writer.with_trailers(repo, text, self._state.trailers_at(str(params.project_id), source.path))
+        trailers = self._state.merge_trailers_at(str(params.project_id), source.path)
+        return self._writer.with_trailers(repo, text, trailers)
 
     def begin(self, record: GitOperationRecord) -> None:
         """The row is on disk before Git is touched, or Git is not touched."""

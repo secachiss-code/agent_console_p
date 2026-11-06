@@ -43,6 +43,7 @@ def _record(row: Row) -> GitOperationRecord:
     return GitOperationRecord(
         id=row.id,
         project_id=row.project_id,
+        work_session_id=row.work_session_id,
         kind=_KINDS[row.kind],
         status=_STATUSES[row.status],
         mode=None if row.mode is None else _MODES[row.mode],
@@ -75,6 +76,7 @@ class GitOperationDatabase:
                 Row(
                     id=record.id,
                     project_id=record.project_id,
+                    work_session_id=record.work_session_id,
                     kind=record.kind,
                     status=record.status,
                     mode=record.mode,

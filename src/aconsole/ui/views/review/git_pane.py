@@ -37,6 +37,7 @@ from aconsole.ui.views.review.diff_widgets import file_row, hunk_text  # noqa: E
 from aconsole.ui.views.review.git_actions import GitActions  # noqa: E402
 from aconsole.ui.views.review.graph_cell import ROW_HEIGHT, GraphCell  # noqa: E402
 from aconsole.ui.views.review.messages import _ as translate  # noqa: E402
+from aconsole.ui.views.review.session_bar import SessionBar  # noqa: E402 -- GTK imports or an operation error shown to the user
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -141,7 +142,10 @@ def _pill(text: str, kind: str, css: str | None = None) -> Gtk.Label:
 
 
 class GitPane(Gtk.Box):
-    def __init__(self, viewmodel: GitViewModel, on_toast: Callable[[str], None], tab: TabId | None = None) -> None:
+    def __init__(
+        self, viewmodel: GitViewModel, on_toast: Callable[[str], None], tab: TabId | None = None,
+        on_resume_tab: Callable[[TabId], None] | None = None,
+    ) -> None:
         super().__init__(orientation=Gtk.Orientation.VERTICAL)
         self.viewmodel: GitViewModel = viewmodel
         self.toast: Callable[[str], None] = on_toast
@@ -164,6 +168,10 @@ class GitPane(Gtk.Box):
         self.facts_banner: Adw.Banner = Adw.Banner(button_label=translate("git.facts_show"))
         self.append(self.facts_banner)
         self.append(self._build_toolbar())
+        self.sessions: SessionBar = SessionBar(
+            viewmodel, self._session_changed, self._show_session_diff, on_toast, on_resume_tab,
+        )
+        self.append(self.sessions)
         self.append(self._build_body())
         self.git_actions: GitActions = GitActions(self, self.actions, self.commit_slot, self.facts_banner)
         # Stacked, the inspector has half the height: the fixed parts give way so the commit button and diff still show.
@@ -177,6 +185,16 @@ class GitPane(Gtk.Box):
 
     def reload(self) -> None:
         _ = spawn_task(self.refresh())
+
+    def _session_changed(self) -> None:
+        self.scope = None
+        self._version = None
+        self.reload()
+
+    def _show_session_diff(self, source: DiffSource) -> None:
+        self.source = source
+        self.selected_path = None
+        _ = spawn_task(self._load_files())
 
     def _mapped(self, _widget: Gtk.Widget) -> None:
         if self._keep_watch is None:
@@ -296,6 +314,7 @@ class GitPane(Gtk.Box):
         self._generation += 1
         generation = self._generation
         try:
+            await self.sessions.refresh()
             state = await self.viewmodel.state()
             first = await self.viewmodel.graph(self.scope, None)
         except Exception as error:  # noqa: BLE001 -- the page stays open and says what went wrong
@@ -324,13 +343,17 @@ class GitPane(Gtk.Box):
         self._show_meta()
         self.base_label.set_text(state.base_branch or translate("git.empty"))
         self._syncing = True
-        tabs = tuple(row for row in state.worktrees if row.tab_id is not None)
-        wanted: tuple[TabId | None, ...] = (None, *(row.tab_id for row in tabs))
+        known = self.viewmodel.client.store.snapshot
+        titles = {} if known is None else {tab.id: tab.title for tab in known.tabs}
+        members = tuple(dict.fromkeys(
+            tab for row in state.worktrees for tab in (row.tab_ids or (() if row.tab_id is None else (row.tab_id,)))
+        ))
+        wanted: tuple[TabId | None, ...] = (None, *members)
         if wanted != self._scope_tabs:
             self._scope_tabs = wanted
             labels = [
                 translate("git.scope_all"),
-                *(translate("git.scope_tab").format(title=row.tab_title) for row in tabs),
+                *(translate("git.scope_tab").format(title=titles.get(tab, str(tab))) for tab in members),
             ]
             self.scope_choice.set_model(Gtk.StringList.new(labels))
         if self.scope in wanted:
@@ -388,7 +411,7 @@ class GitPane(Gtk.Box):
             else:
                 self.toast(translate("review.load_error").format(error=error))
             return
-        except Exception as error:  # noqa: BLE001 -- a lost core shows here, not in a crash
+        except Exception as error:  # noqa: BLE001 -- the page stays open and says what went wrong
             self.toast(translate("review.load_error").format(error=error))
             return
         finally:
@@ -515,7 +538,7 @@ class GitPane(Gtk.Box):
                     translate("review.too_large") if too_large else translate("review.load_error").format(error=error),
                 )
             return
-        except Exception as error:  # noqa: BLE001 -- a lost core shows here, not in a crash
+        except Exception as error:  # noqa: BLE001 -- the page stays open and says what went wrong
             if generation == self._file_generation:
                 self._show_message(translate("review.load_error").format(error=error))
             return

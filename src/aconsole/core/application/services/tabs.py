@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import contextlib
 import hmac
 import re
+import threading
 from collections.abc import Callable
 from dataclasses import dataclass, replace
 from datetime import datetime
@@ -40,8 +42,21 @@ from aconsole.contracts.app import (
     TerminalLaunchSpec,
 )
 from aconsole.contracts.common import AgentKind, NodeId, ProjectId, TabId, TabStatus, WorkspaceMode
-from aconsole.contracts.events import ProjectsChanged, TabAdded, TabRemoved, TabUpdated, UiEvent
+from aconsole.contracts.events import GitStateUpdated, ProjectsChanged, TabAdded, TabRemoved, TabUpdated, UiEvent
 from aconsole.contracts.settings import Settings, commit_settings
+from aconsole.contracts.work_sessions import (
+    WorkSessionCreateParams,
+    WorkSessionHandoffParams,
+    WorkSessionListParams,
+    WorkSessionListResult,
+    WorkSessionParams,
+    WorkSessionRenameParams,
+    WorkSessionRestoreParams,
+    WorkSessionRestorePreview,
+    WorkSessionRestorePreviewParams,
+    WorkSessionResultParams,
+    WorkSessionView,
+)
 from aconsole.core.application.ports.tab_store import (
     PREFERENCE_KEYS,
     ProjectRecord,
@@ -52,9 +67,13 @@ from aconsole.core.application.ports.tab_store import (
 )
 from aconsole.core.application.services.git_state import GitProject, GitTab
 from aconsole.core.application.services.projects import ProjectCatalog
+from aconsole.core.application.services.work_session_history import WorkSessionHistory
+from aconsole.core.application.services.work_sessions import WorkSessionService, session_view
 from aconsole.core.domain.agent import CAPABILITIES
 from aconsole.core.domain.agent import AgentKind as DomainAgent
 from aconsole.core.domain.clock import Clock
+from aconsole.core.domain.errors import DomainError
+from aconsole.core.domain.work_session import WorkSession
 
 _ZERO: Final = 0
 _ONE: Final = 1
@@ -171,6 +190,20 @@ _HOOK_STATUS: Final = {
 
 TAB_METHODS: Final = frozenset(
     {
+        "workSession/handoff",
+        "workSession/history",
+        "workSession/restorePreview",
+        "workSession/restore",
+        "workSession/result",
+        "workSession/integratePreview",
+        "workSession/integrate",
+        "workSession/cleanupWorker",
+        "workSession/create",
+        "workSession/list",
+        "workSession/get",
+        "workSession/rename",
+        "workSession/close",
+        "workSession/resume",
         "tab/open",
         "tab/launchSpec",
         "terminal/prepareImagePaste",
@@ -216,6 +249,8 @@ class TabPorts(Protocol):
     def stop_in_container(self, name: str, pid: int) -> None: ...
 
     def create_worktree(self, repo: str, tab_id: str, slug: str, base: str) -> tuple[str, str]: ...
+
+    def create_isolated_worktree(self, repo: str, tab_id: str, session_id: str, base: str) -> str: ...
 
     def worktree_state(self, repo: str, dest: str) -> str: ...
 
@@ -296,6 +331,9 @@ class _Tab:
     ingest: str
     sidecar: str
     pid: int | None
+    work_session_id: str | None = None
+    isolated: bool = False
+    needs_process_check: bool = False
     live_sidecar: str = ""
     # What the session has cost at API prices, as the agent reports it. Not kept: the agent says it again.
     cost_usd: float | None = None
@@ -351,6 +389,11 @@ class TabService:
             raise ValueError(message)
         self._clock = clock
         self._ports = ports
+        self.work_sessions = WorkSessionService(clock.now)
+        self.history: WorkSessionHistory | None = None
+        self.workspace_lock: Callable[[str], threading.RLock] = lambda _path: threading.RLock()
+        self.inspect_workspace: Callable[[str, str], tuple[str, str | None]] | None = None
+        self.session_git: Callable[[str, bytes], msgspec.Struct] | None = None
         self._stop_s = stop_s
         self._fork_new = fork_new_worktree
         self._projects: dict[str, ProjectSeed] = {}
@@ -642,6 +685,7 @@ class TabService:
                 branch=tab.branch,
                 plan_id=None,
                 plan_node=tab.plan_node,
+                work_session_id=tab.work_session_id,
             )
             for tab in list(self._tabs.values())
             if tab.project_id == project_id
@@ -708,12 +752,241 @@ class TabService:
 
     def dispatch(self, method: str, raw: bytes) -> msgspec.Struct:
         """Decode one §4.3 call and return its result struct."""
+        if method.startswith("workSession/"):
+            result = self._session_dispatch(method, raw)
+            if method not in {"workSession/list", "workSession/get", "workSession/history"} and "Preview" not in method:
+                project = msgspec.json.decode(raw, type=ProjectIdParams)
+                self._emit(GitStateUpdated(
+                    project_id=project.project_id, revision=f"session:{self._clock.now().isoformat()}",
+                ))
+            return result
         route = self._routes.get(method)
         if route is None:
             raise TabRequestError(_METHOD)
         return route(raw)
 
-    def open_tab(self, params: OpenTabParams) -> TabView:
+    def _session_dispatch(  # noqa: C901, PLR0911, PLR0912 -- one branch per session RPC
+        self, method: str, raw: bytes,
+    ) -> msgspec.Struct:
+        if method == "workSession/result":
+            result = msgspec.json.decode(raw, type=WorkSessionResultParams)
+            tab = self._require(str(result.tab_id))
+            _ = self.work_sessions.require(str(result.project_id), result.work_session_id, active=True)
+            if tab.work_session_id != result.work_session_id or not tab.isolated or self.history is None:
+                message = "an isolated session member is required"
+                raise ValueError(message)
+            self._finish_session_actor(tab, "end")
+            record = self.work_sessions.require(tab.project_id, result.work_session_id, active=True)
+            _ = self.history.capture(record, tab.id, "result", f"Result: {tab.title}", worktree=tab.worktree)
+            return self.history.view(record.id)
+        if method == "workSession/handoff":
+            return self.handoff(msgspec.json.decode(raw, type=WorkSessionHandoffParams))
+        if method in {"workSession/restorePreview", "workSession/restore"}:
+            return self._session_restore(method, raw)
+        if method == "workSession/create":
+            return self.create_work_session(msgspec.json.decode(raw, type=WorkSessionCreateParams))
+        if method == "workSession/list":
+            query = msgspec.json.decode(raw, type=WorkSessionListParams)
+            if str(query.project_id) not in self._projects:
+                raise TabRequestError(_PROJECT)
+            return WorkSessionListResult(sessions=tuple(
+                session_view(row) for row in self.work_sessions.all(
+                    str(query.project_id), include_archived=query.include_archived,
+                )
+            ))
+        if method == "workSession/rename":
+            rename = msgspec.json.decode(raw, type=WorkSessionRenameParams)
+            renamed = self.work_sessions.rename(str(rename.project_id), rename.work_session_id, rename.title)
+            for tab in self._tabs.values():
+                if tab.work_session_id == renamed.id:
+                    _ = self._updated(tab, {"work_session_title"})
+            return session_view(renamed)
+        query = msgspec.json.decode(raw, type=WorkSessionParams)
+        record = self.work_sessions.require(str(query.project_id), query.work_session_id)
+        if method == "workSession/get":
+            return session_view(record)
+        if method == "workSession/history" and self.history is not None:
+            return self.history.view(record.id)
+        if method == "workSession/resume":
+            if self.inspect_workspace is not None:
+                _ = self.inspect_workspace(record.project_id, record.worktree)
+            return session_view(self.work_sessions.resume(record.project_id, record.id))
+        if method == "workSession/close":
+            members = [tab for tab in self._tabs.values() if tab.work_session_id == record.id]
+            for tab in members:
+                self._finish_session_actor(tab, "archive")
+            archived = self.work_sessions.archive(record.project_id, record.id)
+            for tab in members:
+                tab.pid = None
+                tab.running = False
+                tab.status = TabStatus.EXITED
+                self._remember(tab)
+                _ = self._updated(tab, {"started", "status"})
+            return session_view(archived)
+        if self.session_git is not None:
+            return self.session_git(method, raw)
+        raise TabRequestError(_METHOD)
+
+    def handoff(self, params: WorkSessionHandoffParams) -> TabView:
+        record = self.work_sessions.require(str(params.project_id), params.work_session_id, active=True)
+        target = self._require(str(params.to_tab))
+        if target.work_session_id != record.id:
+            raise DomainError(code=3040, name="WORK_SESSION_NOT_FOUND", retryable=False)
+        with self.workspace_lock(target.worktree):
+            members = tuple(tab for tab in self._tabs.values() if tab.work_session_id == record.id
+                            and Path(tab.worktree).resolve() == Path(target.worktree).resolve())
+            active = tuple(tab for tab in members if tab.running or tab.sidecar or tab.live_sidecar)
+            pending = None
+            if self.history is not None:
+                self.history.recover(record)
+                pending = self.history.prepare(
+                    record, active[0].id if len(active) == 1 else None,
+                    "handoff", f"Hand off to {target.title}", worktree=target.worktree,
+                )
+            for tab in members:
+                self._finish_session_actor(tab, "handoff", keep_snapshot=False)
+            if self.history is not None and pending is not None:
+                _ = self.history.complete(pending)
+        return self._view(target)
+
+    def _finish_session_actor(self, tab: _Tab, reason: str, *, keep_snapshot: bool = True) -> None:
+        with self.workspace_lock(tab.worktree):
+            had_process = bool(tab.running or tab.sidecar or tab.live_sidecar)
+            needed_check = tab.needs_process_check
+            tab.sidecar = ""
+            tab.live_sidecar = ""
+            if (had_process or tab.needs_process_check) and not self._stop(tab):
+                tab.pid = None
+                tab.running = False
+                tab.needs_process_check = True
+                tab.status = TabStatus.UNKNOWN
+                self._remember(tab)
+                _ = self._updated(tab, {"started", "status"})
+                raise TabRequestError(_SCAN_FAILED)
+            tab.needs_process_check = False
+            tab.pid = None
+            tab.running = False
+            keep_result = tab.isolated and reason in {"close-tab", "archive"}
+            if keep_snapshot and (had_process or keep_result or needed_check) and (
+                self.history is not None and tab.work_session_id is not None
+            ):
+                record = self.work_sessions.require(tab.project_id, tab.work_session_id)
+                kind = "result" if keep_result else reason
+                actor = None if reason == "recovery" else tab.id
+                _ = self.history.capture(record, actor, kind, f"{kind}: {tab.title}", worktree=tab.worktree)
+            tab.status = TabStatus.EXITED
+            tab.since = self._clock.now()
+            self._remember(tab)
+            _ = self._updated(tab, {"started", "status", "status_since"})
+
+    def _session_restore(self, method: str, raw: bytes) -> msgspec.Struct:
+        preview = msgspec.json.decode(raw, type=WorkSessionRestorePreviewParams) if method.endswith("Preview") else None
+        restore = msgspec.json.decode(raw, type=WorkSessionRestoreParams) if preview is None else None
+        query = preview if preview is not None else restore
+        if query is None or self.history is None:
+            raise TabRequestError(_METHOD)
+        record = self.work_sessions.require(str(query.project_id), query.work_session_id, active=True)
+        snapshot = self.history.require(record.id, query.sequence)
+        if Path(snapshot.worktree).resolve() != Path(record.worktree).resolve():
+            message = "integrate an isolated result instead of restoring it over the primary workspace"
+            raise ValueError(message)
+        if snapshot.oid is None:
+            missing = "CHECKPOINT_NOT_FOUND"
+            raise TabRequestError(missing)
+        key = (record.id, query.sequence, snapshot.oid)
+        if preview is not None:
+            return WorkSessionRestorePreview(
+                sequence=query.sequence, oid=snapshot.oid, confirm_token=self.history.tokens.issue(key),
+            )
+        if restore is None:
+            raise TabRequestError(_METHOD)
+        with self.workspace_lock(record.worktree):
+            self.history.tokens.spend(key, restore.confirm_token)
+            for tab in list(self._tabs.values()):
+                if tab.work_session_id == record.id:
+                    self._finish_session_actor(tab, "before-restore")
+            _ = self.history.capture(record, None, "safety", "Before restoring session files")
+            self.history.materialize(record, query.sequence)
+        return self.history.view(record.id)
+
+    def create_work_session(self, params: WorkSessionCreateParams) -> WorkSessionView:
+        project = self._projects.get(str(params.project_id))
+        if project is None:
+            raise TabRequestError(_PROJECT)
+        title = params.title.strip()
+        if not title:
+            message = "session title is empty"
+            raise ValueError(message)
+        session_id = self._ports.new_id()
+        base = params.base_branch or self._project_base(project.project_id)
+        branch = base
+        if params.workspace is WorkspaceMode.NEW_WORKTREE:
+            slug = re.sub(r"[^A-Za-z0-9_-]+", "-", title).strip("-_")[:30] or "task"
+            dest, branch = self._ports.create_worktree(project.root, session_id, f"s-{slug}", base or _HEAD)
+        elif params.workspace is WorkspaceMode.MAIN_CHECKOUT:
+            dest = project.root
+        elif params.existing_worktree is not None:
+            dest = params.existing_worktree
+        else:
+            raise TabRequestError(_CREATE)
+        if self.inspect_workspace is not None:
+            dest, branch = self.inspect_workspace(project.project_id, dest)
+        now = self._clock.now()
+        record = self.work_sessions.add(WorkSession(
+            id=session_id, project_id=project.project_id, title=title, worktree=dest,
+            branch=branch, base_branch=base, workspace_mode=params.workspace.value,
+            status="active", created_at=now, updated_at=now,
+        ))
+        return session_view(record)
+
+    def _project_base(self, project_id: str) -> str | None:
+        project = self.git_project(project_id)
+        return None if project is None else project.default_branch
+
+    def actor_context(self, tab_id: str) -> tuple[str, str, str | None]:
+        tab = self._require(tab_id)
+        return tab.title, tab.agent.value, tab.plan_node
+
+    def archive_removed_workspace(self, project_id: str, path: str) -> None:
+        record = self.work_sessions.at(project_id, path)
+        if record is not None:
+            _ = self.work_sessions.removed(project_id, record.id)
+
+    def session_checkpoint(self, tab_id: str, label: str, kind: str, *, lock_held: bool = False) -> bool:
+        tab = self._require(tab_id)
+        if tab.work_session_id is None or self.history is None:
+            return False
+        record = self.work_sessions.require(tab.project_id, tab.work_session_id, active=True)
+        with contextlib.nullcontext() if lock_held else self.workspace_lock(tab.worktree):
+            point = self.history.capture(record, tab.id, kind, label, worktree=tab.worktree)
+        self._emit(GitStateUpdated(project_id=ProjectId(tab.project_id), revision=point.ref))
+        return True
+
+    def close_for_cleanup(self, tab_id: str) -> None:
+        """The Git caller holds this workspace's lock. Do not reacquire it on the tab worker."""
+        tab = self._require(tab_id)
+        if tab.running or tab.sidecar or tab.live_sidecar or not self._stop_orphans(tab):
+            raise TabRequestError(_SCAN_FAILED)
+        if self._commands is not None:
+            self._commands.release(tab.agent, tab.id, tab.container)
+        self._forget(tab, drop_worktree=False)
+        del self._tabs[tab.id]
+        if self._focused == tab.id:
+            self._focused = None
+        self._emit(TabRemoved(tab_id=TabId(tab.id)))
+
+    def require_session_writable(self, tab_id: str) -> None:
+        tab = self._require(tab_id)
+        if tab.work_session_id is not None:
+            _ = self.work_sessions.require(tab.project_id, tab.work_session_id, active=True)
+        for member in self._tabs.values():
+            same_path = Path(member.worktree).resolve() == Path(tab.worktree).resolve()
+            if member.id != tab.id and same_path and member.status in {
+                TabStatus.STARTING, TabStatus.WORKING, TabStatus.WAITING_APPROVAL, TabStatus.UNKNOWN,
+            }:
+                raise DomainError(code=3006, name="CHECKPOINT_RESTORE_CONFLICT", retryable=False)
+
+    def open_tab(self, params: OpenTabParams) -> TabView:  # noqa: C901 -- new, shared and isolated workspaces
         """Create the tab and, when asked, the worktree. The process stays stopped."""
         project = self._projects.get(str(params.project_id))
         if project is None:
@@ -725,7 +998,33 @@ class TabService:
         if params.fork:
             _require_fork(params.agent)
         tab_id = self._ports.new_id()
-        dest, branch, created = self._place(params, project, tab_id)
+        if params.isolated and params.work_session_id is None:
+            message = "an isolated executor needs a work session"
+            raise ValueError(message)
+        session = None if params.work_session_id is None else self.work_sessions.require(
+            project.project_id, params.work_session_id, active=True,
+        )
+        if session is None:
+            dest, branch, created = self._place(params, project, tab_id)
+            if self.inspect_workspace is not None:
+                dest, branch = self.inspect_workspace(project.project_id, dest)
+            session = self.work_sessions.at(project.project_id, dest)
+        else:
+            dest, branch, created = session.worktree, session.branch, False
+            if params.isolated:
+                dest = self._ports.create_isolated_worktree(project.root, tab_id, session.id, session.worktree)
+                branch = None
+                created = True
+        if session is None:
+            now = self._clock.now()
+            session = WorkSession(
+                id=f"s-{tab_id}", project_id=project.project_id,
+                title=self._title(params.title, params.agent, tab_id), worktree=dest,
+                branch=branch, base_branch=params.base_branch or self._project_base(project.project_id),
+                workspace_mode=params.workspace.value, status="active", created_at=now, updated_at=now,
+            )
+        elif session.status != "active":
+            raise DomainError(code=3041, name="WORK_SESSION_ARCHIVED", retryable=False)
         detail = None if project.logged_in else _LOGIN
         now = self._clock.now()
         tab = _Tab(
@@ -740,7 +1039,7 @@ class TabService:
             attention=False,
             worktree=dest,
             branch=branch,
-            base=params.base_branch,
+            base=session.base_branch,
             dirty=False,
             plan_node=None if params.plan_node is None else str(params.plan_node),
             session=params.resume_session,
@@ -750,18 +1049,30 @@ class TabService:
             container=project.container or f"agent-{params.agent.value}",
             created_here=created,
             created=now,
-            mode=params.workspace.value,
+            mode=WorkspaceMode.NEW_WORKTREE.value if params.isolated else session.workspace_mode,
             ingest=self._ports.new_secret(),
             sidecar="",
             pid=None,
+            work_session_id=session.id,
+            isolated=params.isolated,
         )
         self._tabs[tab_id] = tab
-        self._remember(tab)
+        try:
+            self._remember(tab)
+            _ = self.work_sessions.add(session)
+        except Exception:
+            del self._tabs[tab_id]
+            raise
         return self._added(tab)
 
     def launch_spec(self, params: TabIdParams) -> TerminalLaunchSpec:
         """A new one-shot sidecar secret and the argv the UI spawns. This is the lazy start."""
         tab = self._require(str(params.tab_id))
+        with self.workspace_lock(tab.worktree):
+            return self._launch_spec(tab)
+
+    def _launch_spec(self, tab: _Tab) -> TerminalLaunchSpec:
+        self._require_session_launch(tab)
         self._ports.ensure_container(tab.container)
         if tab.ingest == "":
             tab.ingest = self._ports.new_secret()
@@ -772,6 +1083,10 @@ class TabService:
         tab.live_sidecar = ""
         if not self._stop_orphans(tab, attempts=_SCAN_ATTEMPTS):
             raise TabRequestError(_SCAN_FAILED)
+        if self.history is not None and tab.work_session_id is not None:
+            record = self.work_sessions.require(tab.project_id, tab.work_session_id, active=True)
+            self.history.recover(record)
+            _ = self.history.capture(record, tab.id, "begin", f"Begin: {tab.title}", worktree=tab.worktree)
         secret = self._ports.new_secret()
         tab.sidecar = secret
         path = self._ports.container_path(tab.container)
@@ -799,6 +1114,21 @@ class TabService:
             env[_ENV_SCREEN] = "1"
         argv = (self._ports.python_bin(), *_SIDECAR, *podman)
         return TerminalLaunchSpec(argv=argv, env=env, cwd=tab.worktree, scrollback_lines=_SCROLLBACK, title=tab.title)
+
+    def _require_session_launch(self, tab: _Tab) -> None:
+        if tab.work_session_id is None:
+            return
+        _ = self.work_sessions.require(tab.project_id, tab.work_session_id, active=True)
+        for other in self._tabs.values():
+            if other.id != tab.id and Path(other.worktree).resolve() == Path(tab.worktree).resolve() and (
+                other.running or other.sidecar or other.live_sidecar
+            ):
+                raise DomainError(code=3025, name="WORKTREE_BUSY", retryable=True)
+        for other in self._tabs.values():
+            if other.id != tab.id and Path(other.worktree).resolve() == Path(tab.worktree).resolve() and (
+                other.needs_process_check
+            ):
+                self._finish_session_actor(other, "recovery")
 
     def _forget_unwritten_session(self, tab: _Tab) -> None:
         """Claude names a session before it has written anything. Resuming that one is an error that ends the tab."""
@@ -878,6 +1208,9 @@ class TabService:
         tab = self._require(str(params.tab_id))
         tab.pid = None
         tab.running = False
+        tab.needs_process_check = True
+        tab.sidecar = ""
+        tab.live_sidecar = ""
         tab.status = TabStatus.EXITED
         tab.status_detail = str(params.wait_status)
         tab.since = self._clock.now()
@@ -889,6 +1222,16 @@ class TabService:
     def close_tab(self, params: CloseTabParams) -> CloseTabResult:
         """Dirty created worktree and no decision asks the UI. Otherwise stop, then maybe remove."""
         tab = self._require(str(params.tab_id))
+        if tab.work_session_id is not None:
+            self._finish_session_actor(tab, "close-tab")
+            if self._commands is not None:
+                self._commands.release(tab.agent, tab.id, tab.container)
+            self._forget(tab, drop_worktree=False)
+            del self._tabs[tab.id]
+            if self._focused == tab.id:
+                self._focused = None
+            self._emit(TabRemoved(tab_id=TabId(tab.id)))
+            return CloseTabResult(closed=True, needs_decision=False, dirty_summary=None)
         summary = self._summary(tab)
         if summary is not None and params.decision is None:
             tab.dirty = True
@@ -917,13 +1260,19 @@ class TabService:
         tab does not go idle: an orphan may still hold the tree, so the restart fails with CONTAINER_START_FAILED.
         """
         tab = self._require(str(params.tab_id))
-        scanned = self._stop(tab)
+        if tab.work_session_id is not None:
+            self._finish_session_actor(tab, "restart")
+            scanned = True
+        else:
+            scanned = self._stop(tab)
         tab.pid = None
         tab.running = False
         if not scanned:
             _ = self._updated(tab, {"started"})
             raise TabRequestError(_SCAN_FAILED)
         tab.status = TabStatus.IDLE
+        tab.sidecar = ""
+        tab.live_sidecar = ""
         tab.since = self._clock.now()
         if not params.resume:
             tab.session = None
@@ -940,7 +1289,7 @@ class TabService:
         created = False
         mode = WorkspaceMode.EXISTING_WORKTREE.value
         if self._fork_new:
-            slug = f"{tab.agent.value}-fork"
+            slug = f"s-{tab.agent.value}-fork"
             dest, branch = self._ports.create_worktree(tab.repo, tab_id, slug, tab.base or _HEAD)
             created = True
             mode = WorkspaceMode.NEW_WORKTREE.value
@@ -961,7 +1310,7 @@ class TabService:
             dirty=False,
             plan_node=tab.plan_node,
             session=tab.session,
-            fork=tab.fork,
+            fork=True,
             running=False,
             repo=tab.repo,
             container=tab.container,
@@ -971,9 +1320,20 @@ class TabService:
             ingest=self._ports.new_secret(),
             sidecar="",
             pid=None,
+            work_session_id=tab.work_session_id if not created else None,
+            isolated=tab.isolated if not created else False,
         )
         self._tabs[tab_id] = copy
+        new_session = copy.work_session_id is None
+        if new_session:
+            copy.work_session_id = f"s-{tab_id}"
         self._remember(copy)
+        if new_session and copy.work_session_id is not None:
+            _ = self.work_sessions.add(WorkSession(
+                id=copy.work_session_id, project_id=copy.project_id, title=copy.title,
+                worktree=copy.worktree, branch=copy.branch, base_branch=copy.base,
+                workspace_mode=copy.mode, status="active", created_at=now, updated_at=now,
+            ))
         return self._added(copy)
 
     def rename(self, params: RenameParams) -> EmptyResult:
@@ -1076,7 +1436,7 @@ class TabService:
             if params.existing_worktree is None:
                 raise TabRequestError(_CREATE)
             return params.existing_worktree, params.base_branch, False
-        slug = params.worktree_name or params.agent.value
+        slug = f"s-{params.worktree_name or params.agent.value}"[:41]
         base = params.base_branch or _HEAD
         dest, branch = self._ports.create_worktree(project.root, tab_id, slug, base)
         return dest, branch, True
@@ -1159,6 +1519,13 @@ class TabService:
         return f"{agent.value}-{tab_id}"[:_TITLE]
 
     def _adopt(self, saved: StoredTab) -> None:
+        if saved.work_session_id is not None and self.work_sessions.at(saved.project_id, saved.worktree) is None:
+            _ = self.work_sessions.add(WorkSession(
+                id=saved.work_session_id, project_id=saved.project_id, title=saved.title,
+                worktree=saved.worktree, branch=saved.branch, base_branch=saved.base_branch,
+                workspace_mode=saved.workspace_mode, status="active",
+                created_at=saved.created_at, updated_at=saved.since,
+            ))
         status = _resting(TabStatus(saved.status))
         current = saved if status.value == saved.status else replace(saved, status=status.value)
         if current is not saved:
@@ -1195,6 +1562,9 @@ class TabService:
             ingest="",
             sidecar="",
             pid=None,
+            work_session_id=saved.work_session_id,
+            isolated=saved.isolated,
+            needs_process_check=True,
         )
 
     def _remember(self, tab: _Tab) -> None:
@@ -1233,6 +1603,8 @@ class TabService:
             workspace_mode=tab.mode,
             plan_node=tab.plan_node,
             session=tab.session,
+            work_session_id=tab.work_session_id,
+            isolated=tab.isolated,
         )
 
     def _view(self, tab: _Tab) -> TabView:
@@ -1265,4 +1637,8 @@ class TabService:
             started=tab.running,
             mcp_bytes=tab.mcp_bytes or None,
             mcp_calls=tab.mcp_calls or None,
+            work_session_title=(None if tab.work_session_id is None else
+                self.work_sessions.require(tab.project_id, tab.work_session_id).title),
+            work_session_id=tab.work_session_id,
+            isolated=tab.isolated,
         )

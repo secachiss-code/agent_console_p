@@ -486,7 +486,12 @@ class GitActions:
         box.append(choice)
         box.append(entry)
         removable = self._removable_after(preview.source)
-        cleanup = Gtk.CheckButton(label=translate("git.merge_cleanup"), active=True, visible=removable is not None)
+        cleanup_label = (
+            "git.merge_session_cleanup"
+            if removable is not None and removable.work_session_id is not None
+            else "git.merge_cleanup"
+        )
+        cleanup = Gtk.CheckButton(label=translate(cleanup_label), active=True, visible=removable is not None)
         self.cleanup_choice = cleanup
         box.append(cleanup)
 
@@ -515,6 +520,8 @@ class GitActions:
             return
         self._host.toast(translate("git.merged").format(oid=short(operation.result_oid)))
         if then_remove is not None:
+            if then_remove.work_session_id is not None:
+                _ = await self._host.viewmodel.archive_session(then_remove.work_session_id)
             await self._cleanup(then_remove, discard_ignored=False)
 
     def _cleanup_dialog(self, row: WorktreeGitState) -> None:

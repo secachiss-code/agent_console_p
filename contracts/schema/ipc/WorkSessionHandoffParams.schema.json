@@ -1,0 +1,26 @@
+{
+  "$defs": {
+    "WorkSessionHandoffParams": {
+      "properties": {
+        "project_id": {
+          "type": "string"
+        },
+        "to_tab": {
+          "type": "string"
+        },
+        "work_session_id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "project_id",
+        "work_session_id",
+        "to_tab"
+      ],
+      "title": "WorkSessionHandoffParams",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/WorkSessionHandoffParams",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

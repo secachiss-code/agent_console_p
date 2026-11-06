@@ -1,0 +1,22 @@
+{
+  "$defs": {
+    "WorkSessionParams": {
+      "properties": {
+        "project_id": {
+          "type": "string"
+        },
+        "work_session_id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "project_id",
+        "work_session_id"
+      ],
+      "title": "WorkSessionParams",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/WorkSessionParams",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

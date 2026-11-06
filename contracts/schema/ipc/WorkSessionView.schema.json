@@ -1,0 +1,85 @@
+{
+  "$defs": {
+    "WorkSessionView": {
+      "properties": {
+        "base_branch": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "branch": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "created_at": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "project_id": {
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "active",
+            "archived"
+          ]
+        },
+        "title": {
+          "type": "string"
+        },
+        "updated_at": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "workspace": {
+          "$ref": "#/$defs/WorkspaceMode"
+        },
+        "workspace_removed": {
+          "default": false,
+          "type": "boolean"
+        },
+        "worktree": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "project_id",
+        "title",
+        "worktree",
+        "branch",
+        "base_branch",
+        "workspace",
+        "status",
+        "created_at",
+        "updated_at"
+      ],
+      "title": "WorkSessionView",
+      "type": "object"
+    },
+    "WorkspaceMode": {
+      "enum": [
+        "existing_worktree",
+        "main_checkout",
+        "new_worktree"
+      ],
+      "title": "WorkspaceMode"
+    }
+  },
+  "$ref": "#/$defs/WorkSessionView",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

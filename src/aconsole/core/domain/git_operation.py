@@ -35,6 +35,7 @@ class GitOperationRecord:
     follow_up_pending: bool
     created_at: datetime
     updated_at: datetime
+    work_session_id: str | None = None
 
     @property
     def open(self) -> bool:

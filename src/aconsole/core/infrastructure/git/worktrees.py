@@ -246,6 +246,23 @@ class Worktrees:
         with contextlib.suppress(WorktreeError, OSError):
             _meta_path(self._git_dir(repo), dest).unlink(missing_ok=True)
 
+    def create_detached(self, request: WorktreeRequest, ref: str, source: Path) -> Path:
+        repo, dest = _locations(request)
+        if _TOKEN.fullmatch(request.tab_id) is None:
+            raise ValueError(_BAD_TAB)
+        base = self._revision(source, "HEAD")
+        _ = self._run(("-C", str(repo), "update-ref", ref, base))
+        _ = self._run(("-C", str(repo), "worktree", "add", "--detach", str(dest), base))
+        try:
+            _ = _copy_included(repo, dest, _patterns(repo))
+            self._write_meta(repo, dest, "", base)
+            self._write_lock(dest, request.tab_id)
+        except OSError:
+            with contextlib.suppress(WorktreeError):
+                _ = self._run(("-C", str(repo), "worktree", "remove", "--force", str(dest)))
+            raise
+        return dest
+
     def locked(self, dest: Path) -> bool:
         """True when the tab lock file is present."""
         return (dest / _LOCK_REL).is_file()

@@ -222,6 +222,11 @@ class GitMutations:
         )
 
     def remove_worktree(self, root: Path, worktree: Path, *, discard_ignored: bool) -> GitDone:
+        try:
+            remove_worktree_file(worktree, ".aconsole/lock")
+        except OSError as exc:
+            message = "runtime worktree lock could not be released"
+            raise GitCommandError(message, detail=str(exc)) from exc
         forced = ("--force",) if discard_ignored else ()
         done = _done(self._git.write(root, "worktree", "remove", *forced, str(worktree)))
         if done.ok:

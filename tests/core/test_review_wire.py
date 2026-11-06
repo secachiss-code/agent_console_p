@@ -139,7 +139,8 @@ def test_prompt_checkpoint_diff_restore_and_restart(tmp_path: Path) -> None:
         assert done.restored
         assert (repo / "a.txt").read_text(encoding="utf-8") == "one\ntwo\n"
         refs = await asyncio.to_thread(_refs, repo)
-        assert len(refs) == 2  # the checkpoint and the safety copy of "changed later"
+        assert len([ref for ref in refs if ref.startswith("refs/aconsole/checkpoints/")]) == 2
+        assert any(ref.startswith("refs/aconsole/sessions/") for ref in refs)
 
         await _stop(daemon, task, client)
 

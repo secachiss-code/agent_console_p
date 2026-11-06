@@ -13,7 +13,7 @@ import tempfile
 from pathlib import Path
 from typing import Final, final
 
-from aconsole.core.application.ports.checkpoint_store import TreeCapture
+from aconsole.core.application.ports.checkpoint_store import CheckpointStoreError, TreeCapture
 from aconsole.core.application.ports.git_repo import GitCommandError
 from aconsole.core.infrastructure.git.runner import GitCall, GitRunner
 from aconsole.core.infrastructure.host_bins import host_binary
@@ -26,7 +26,6 @@ _TIMED_OUT: Final = "git timed out"
 _MISSING: Final = "git binary missing"
 _ABS_GIT: Final = "git binary path must be absolute"
 _ABS_REPO: Final = "repository path must be absolute"
-_NO_HEAD: Final = "repository has no commits"
 _BAD_NUMSTAT: Final = "git numstat line was unreadable"
 # A checkpoint is the core's own ref, not the user's commit: it needs no `user.name`, and a machine without one
 # would otherwise get no checkpoints at all.
@@ -39,7 +38,7 @@ _AUTHOR: Final = {
 
 
 @final
-class CheckpointGitError(Exception):
+class CheckpointGitError(CheckpointStoreError):
     """Git could not capture or restore a checkpoint."""
 
     detail: str
@@ -68,16 +67,17 @@ class GitCheckpoints:
 
     def capture(self, repo: Path, ref: str, message: str) -> TreeCapture:
         _absolute_repo(repo)
-        parent = self._stdout(repo, ("rev-parse", "--verify", "HEAD")).strip()
-        if not parent:
-            raise CheckpointGitError(_NO_HEAD)
+        found = self._runner.read(repo, "rev-parse", "--verify", "--quiet", "HEAD", codes=frozenset({0, 1}))
+        parent = found.text.strip()
+        base = parent or self._stdout(repo, ("hash-object", "-w", "-t", "tree", "--stdin")).strip()
         with tempfile.NamedTemporaryFile(prefix="aconsole-index-") as index:
-            _ = self._stdout(repo, ("read-tree", "HEAD"), index=index.name)
-            _ = self._stdout(repo, ("add", "-A", "--", "."), index=index.name)
+            _ = self._stdout(repo, ("read-tree", base), index=index.name)
+            _ = self._stdout(repo, ("add", "-A", "--", ".", ":(exclude).aconsole/lock"), index=index.name)
             tree = self._stdout(repo, ("write-tree",), index=index.name).strip()
-        commit = self._stdout(repo, ("commit-tree", tree, "-p", parent, "-m", message), author=True).strip()
+        parents = ("-p", parent) if parent else ()
+        commit = self._stdout(repo, ("commit-tree", tree, *parents, "-m", message), author=True).strip()
         _ = self._stdout(repo, ("update-ref", ref, commit))
-        return _capture(self._numstat(repo, parent, commit), self._paths(repo, commit), tree)
+        return _capture(self._numstat(repo, base, commit), self._paths(repo, commit), tree)
 
     def materialize(self, repo: Path, ref: str) -> None:
         _absolute_repo(repo)
@@ -87,6 +87,8 @@ class GitCheckpoints:
         current = set(self._z(repo, ("ls-files", "-c", "-o", "--exclude-standard", "-z")))
         # A tracked child must be checked before an untracked symlink replacing its parent is removed.
         for path in sorted(current - snapshot, reverse=True):
+            if path == ".aconsole/lock":
+                continue
             try:
                 remove_worktree_file(repo, path)
             except OSError as exc:

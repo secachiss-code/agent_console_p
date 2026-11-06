@@ -111,7 +111,7 @@ class GitOperationService:
         )
 
     def commit(self, params: GitCommitParams) -> GitChangeResult:
-        trailers = self._state.trailers_at(str(params.project_id), params.worktree)
+        trailers = self._state.trailers_at(str(params.project_id), params.worktree, params.actor_tab_id)
 
         def commit(repo: Path) -> GitDone:
             return self._writer.commit(repo, self._writer.with_trailers(repo, params.message, trailers))
@@ -163,8 +163,9 @@ class GitOperationService:
         return status
 
     def require_no_agent(self, project_id: str, row: WorktreeRow) -> None:
-        tab = self._state.tab_at(project_id, row.path)
-        require_idle(None if tab is None else TabStatus(tab.status.value))
+        self._state.require_active(project_id, row.path)
+        for tab in self._state.tabs_at(project_id, row.path):
+            require_idle(TabStatus(tab.status.value))
 
     def _change(
         self,

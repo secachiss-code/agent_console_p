@@ -119,7 +119,9 @@ class GitService:
 
     def _read(self, method: str, raw: bytes) -> msgspec.Struct:
         if method == "git/state":
-            return self._state(str(msgspec.json.decode(raw, type=GitStateParams).project_id))
+            params = msgspec.json.decode(raw, type=GitStateParams)
+            state = self._state(str(params.project_id))
+            return state if params.work_session_id is None else self.state.session_state(state, params.work_session_id)
         if method == "git/watch":
             self.keep_watching(str(msgspec.json.decode(raw, type=GitWatchParams).project_id))
             return EmptyResult()

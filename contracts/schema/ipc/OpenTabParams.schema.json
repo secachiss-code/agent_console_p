@@ -41,6 +41,10 @@
           "default": false,
           "type": "boolean"
         },
+        "isolated": {
+          "default": false,
+          "type": "boolean"
+        },
         "plan_node": {
           "anyOf": [
             {
@@ -71,6 +75,17 @@
           "type": "boolean"
         },
         "title": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "work_session_id": {
           "anyOf": [
             {
               "type": "string"

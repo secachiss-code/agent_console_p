@@ -54,7 +54,11 @@ def test_a_clean_rebase_keeps_the_old_head(tmp_path: Path) -> None:
         operation = result.operation
         assert operation.status == "finished", operation.message
         assert git(tree, "rev-parse", "HEAD~1") == onto
-        assert git(repo, "rev-parse", f"refs/aconsole/before/{operation.id}") == old
+        prefix = (
+            f"refs/aconsole/sessions/{operation.work_session_id}/before"
+            if operation.work_session_id is not None else "refs/aconsole/before"
+        )
+        assert git(repo, "rev-parse", f"{prefix}/{operation.id}") == old
 
         stale = RebaseParams(project_id=project, worktree=str(tree), onto_oid=onto, expect_head=old)
         assert await client.error("git/rebase", stale) == "GIT_STATE_STALE"

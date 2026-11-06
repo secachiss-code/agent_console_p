@@ -47,6 +47,8 @@ class StoredTab:
     workspace_mode: str
     plan_node: str | None
     session: str | None
+    work_session_id: str | None = None
+    isolated: bool = False
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)

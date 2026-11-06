@@ -43,6 +43,17 @@
             }
           ],
           "default": null
+        },
+        "work_session_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
         }
       },
       "required": [

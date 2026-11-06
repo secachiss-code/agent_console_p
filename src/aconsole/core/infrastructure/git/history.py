@@ -30,7 +30,7 @@ _LOG_FORMAT: Final = (
      "%(trailers:key=AConsole-Agent,valueonly,separator=%x20)"
 )
 _NODE_FILTER: Final = re.compile(r"[A-Za-z0-9_.:-]{1,64}")
-_REF_ROOTS: Final = ("refs/heads", "refs/tags", "refs/remotes", "refs/aconsole/checkpoints")
+_REF_ROOTS: Final = ("refs/heads", "refs/tags", "refs/remotes", "refs/aconsole/checkpoints", "refs/aconsole/sessions")
 _REMOTE_HEAD: Final = "refs/remotes/origin/HEAD"
 _BRANCH_PREFIX: Final = "refs/heads/"
 _LOCK: Final = ".aconsole/lock"

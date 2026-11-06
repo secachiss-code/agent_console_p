@@ -14,6 +14,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Final, NoReturn, Protocol, final
 
+import msgspec
+
 from aconsole.contracts.app import DiffFileResult, DiffFileView, DiffHunk, DiffLine, DiffSummaryResult
 from aconsole.contracts.common import AgentKind, NodeId, PlanId, ProjectId, TabId, TabStatus
 from aconsole.contracts.git import (
@@ -49,6 +51,7 @@ from aconsole.core.domain.git_state import (
     tab_segment,
 )
 from aconsole.core.domain.tab_status import TabStatus as DomainTabStatus
+from aconsole.core.domain.work_session import WorkSession, WorkSessionSnapshot
 
 _PROJECT_MISSING: Final = 2001
 _TAB_MISSING: Final = 2003
@@ -81,6 +84,7 @@ class GitTab:
     branch: str | None
     plan_id: str | None
     plan_node: str | None
+    work_session_id: str | None = None
 
 
 class GitCatalog(Protocol):
@@ -141,6 +145,9 @@ class GitStateService:
         self._built: dict[str, _Built] = {}
         self.operations: Callable[[str], tuple[GitOperationView, ...]] = lambda _project: ()
         self.node_held_by: Callable[[str], str | None] = lambda _tab: None
+        self.session_at: Callable[[str, str], WorkSession | None] = lambda _project, _path: None
+        self.session_by_id: Callable[[str, str], WorkSession] | None = None
+        self.snapshots: Callable[[str], tuple[WorkSessionSnapshot, ...]] = lambda _session: ()
 
     def project(self, project_id: str) -> GitProject:
         found = self._catalog().git_project(project_id)
@@ -171,28 +178,86 @@ class GitStateService:
                 return root, row
         raise DomainError(code=_WORKTREE_UNKNOWN, name="GIT_WORKTREE_UNKNOWN", retryable=False)
 
+    def session(self, project_id: str, session_id: str) -> WorkSession:
+        if self.session_by_id is None:
+            raise DomainError(code=3040, name="WORK_SESSION_NOT_FOUND", retryable=False)
+        return self.session_by_id(project_id, session_id)
+
+    def session_state(self, state: GitStateResult, session_id: str) -> GitStateResult:
+        record = self.session(str(state.project_id), session_id)
+        base_oid = next((row.oid for row in state.branches if row.name == record.base_branch), None)
+        root = Path(state.root)
+        worktrees = tuple(msgspec.structs.replace(
+            row, ahead=self._between(root, row.head_oid, base_oid)[0],
+            behind=self._between(root, row.head_oid, base_oid)[1],
+            merge=(MergeProbeView(status="not_applicable", source_oid=row.head_oid, target_oid=base_oid)
+                   if row.branch == record.base_branch else self.probe(root, base_oid, row.head_oid)),
+        ) for row in state.worktrees if row.work_session_id == record.id)
+        branches = tuple(row for row in state.branches if row.name in {record.branch, record.base_branch})
+        return msgspec.structs.replace(
+            state, base_branch=record.base_branch,
+            base_oid=base_oid,
+            worktrees=worktrees, branches=branches,
+            operations=tuple(row for row in state.operations if row.work_session_id == record.id),
+        )
+
     def base_name(self, project_id: str) -> str | None:
         """The branch this project's work lands on, if it can be told."""
         project = self.project(project_id)
         root = Path(project.root)
         return self._base_name(project, self._reader.refs(root), root)
 
-    def trailers_at(self, project_id: str, worktree: str) -> tuple[tuple[str, str], ...]:
+    def trailers_at(
+        self, project_id: str, worktree: str, actor: str | None = None,
+    ) -> tuple[tuple[str, str], ...]:
         """What a commit made in this worktree should say about its work."""
-        tab = self.tab_at(project_id, worktree)
+        members = self.tabs_at(project_id, worktree)
+        tab = (
+            next((row for row in members if row.tab_id == actor), None) if actor else self.tab_at(project_id, worktree)
+        )
+        if actor is not None and tab is None:
+            raise DomainError(code=_TAB_MISSING, name="TAB_NOT_FOUND", retryable=False)
+        record = self.session_at(project_id, worktree)
+        session = () if record is None else (("AConsole-Session", record.id),)
         if tab is None:
-            return ()
+            return session
         node = tab.plan_node or self.node_held_by(tab.tab_id)
-        return commit_trailers(node=node, agent=tab.agent.value, tab=tab.tab_id)
+        return (*session, *commit_trailers(node=node, agent=tab.agent.value, tab=tab.tab_id))
 
     def tabs(self, project_id: str) -> tuple[GitTab, ...]:
         return self._catalog().git_tabs(project_id)
 
+    def merge_trailers_at(self, project_id: str, worktree: str) -> tuple[tuple[str, str], ...]:
+        session = self.session_at(project_id, worktree)
+        if session is None:
+            return self.trailers_at(project_id, worktree)
+        points = self.snapshots(session.id)
+        members = tuple(tab for tab in self.tabs(project_id) if tab.work_session_id == session.id)
+        actors = sorted(
+            {point.actor_tab_id for point in points if point.actor_tab_id} | {tab.tab_id for tab in members}
+        )
+        nodes = sorted({point.plan_node for point in points if point.plan_node} | {
+            node for tab in members if (node := tab.plan_node or self.node_held_by(tab.tab_id))
+        })
+        if len(actors) <= 1 and self.tab_at(project_id, worktree) is not None:
+            extra = (("AConsole-Nodes", " ".join(nodes)),) if nodes else ()
+            return (*self.trailers_at(project_id, worktree), *extra)
+        agents = sorted({point.agent for point in points if point.agent} | {tab.agent.value for tab in members})
+        metadata = (("AConsole-Session", session.id), ("AConsole-Participants", " ".join(actors)),
+                    ("AConsole-Agents", " ".join(agents)), ("AConsole-Nodes", " ".join(nodes)))
+        return tuple((key, value) for key, value in metadata if value)
+
     def tab_at(self, project_id: str, worktree: str) -> GitTab | None:
-        for tab in self._catalog().git_tabs(project_id):
-            if _same_path(tab.worktree, worktree):
-                return tab
-        return None
+        members = self.tabs_at(project_id, worktree)
+        return members[0] if len(members) == 1 else None
+
+    def tabs_at(self, project_id: str, worktree: str) -> tuple[GitTab, ...]:
+        return tuple(tab for tab in self.tabs(project_id) if _same_path(tab.worktree, worktree))
+
+    def require_active(self, project_id: str, worktree: str) -> None:
+        record = self.session_at(project_id, worktree)
+        if record is not None and record.status != "active":
+            raise DomainError(code=3041, name="WORK_SESSION_ARCHIVED", retryable=False)
 
     def graph(self, params: GitGraphParams) -> GitGraphResult:
         project_id = str(params.project_id)
@@ -201,12 +266,20 @@ class GitStateService:
         worktrees = self._reader.worktrees(root)
         tabs = self._catalog().git_tabs(project_id)
         base = self._base_name(self.project(project_id), refs, root)
+        session = None if params.work_session_id is None else self.session(project_id, params.work_session_id)
+        if session is not None:
+            base = session.base_branch
         tips = self._tips(params, refs, worktrees, tabs, base)
         version = _hash(*sorted(tips))
         skip = _skip(params.cursor, version)
         rows = self._reader.log(root, tips, skip, params.limit + 1, node=params.plan_node)
         page = rows[: params.limit]
-        decorate = _Decorations(refs, worktrees, tabs, base)
+        snapshot_sessions = {ref.name.split("/")[3] for ref in refs if ref.name.startswith("refs/aconsole/sessions/")}
+        snapshots = (
+            tuple(point for ident in snapshot_sessions for point in self.snapshots(ident))
+            if session is None else self.snapshots(session.id)
+        )
+        decorate = _Decorations(refs, worktrees, tabs, base, snapshots)
         nodes = tuple(decorate.node(row) for row in page)
         following = f"{version}:{skip + len(page)}" if len(rows) > params.limit else None
         return GitGraphResult(version=version, nodes=nodes, next_cursor=following)
@@ -310,8 +383,25 @@ class GitStateService:
         tabs: tuple[GitTab, ...],
         base: str | None,
     ) -> tuple[str, ...]:
+        if params.work_session_id is not None:
+            session = self.session(str(params.project_id), params.work_session_id)
+            wanted = {f"{_HEADS}{name}" for name in (session.branch, session.base_branch) if name}
+            snapshots = self.snapshots(session.id)
+            kept = [ref.oid for ref in refs if ref.name in wanted]
+            kept.extend(
+                row.oid for row in snapshots if row.oid and (params.tab_id is None or row.actor_tab_id == params.tab_id)
+            )
+            kept.extend(row.head for row in worktrees if row.head and any(
+                _same_path(tab.worktree, row.path) and tab.work_session_id == session.id
+                and (params.tab_id is None or tab.tab_id == params.tab_id) for tab in tabs
+            ))
+            return tuple(dict.fromkeys(kept))
         if params.tab_id is None:
             kept = [ref.oid for ref in refs if ref.name.startswith((_HEADS, _CHECKPOINTS))]
+            kept.extend(
+                ref.oid for ref in refs
+                if "/checkpoints/" in ref.name and ref.name.startswith("refs/aconsole/sessions/")
+            )
             kept.extend(row.head for row in worktrees if row.head is not None)
             return tuple(dict.fromkeys(kept))
         tab = next((item for item in tabs if item.tab_id == str(params.tab_id)), None)
@@ -340,7 +430,9 @@ class GitStateService:
         base_oid = None if base is None else heads.get(base)
         tabs = self._catalog().git_tabs(project.project_id)
         statuses = self._statuses(worktrees)
-        views = tuple(self._worktree(root, row, statuses[row.path], tabs, base, base_oid) for row in worktrees)
+        views = tuple(
+            self._worktree(root, row, statuses[row.path], tabs, base, base_oid, project.project_id) for row in worktrees
+        )
         placed = {row.branch: row.path for row in worktrees if row.branch is not None}
         branches = tuple(
             self._branch(root, name, oid, placed.get(name), base_oid) for name, oid in sorted(heads.items())
@@ -404,8 +496,11 @@ class GitStateService:
         tabs: tuple[GitTab, ...],
         base: str | None,
         base_oid: str | None,
+        project_id: str,
     ) -> WorktreeGitState:
-        tab = next((item for item in tabs if _same_path(item.worktree, row.path)), None)
+        members = tuple(item for item in tabs if _same_path(item.worktree, row.path))
+        tab = members[0] if len(members) == 1 else None
+        session = self.session_at(project_id, row.path)
         ahead, behind = self._between(root, row.head, base_oid)
         start = self._reader.start_of(root, Path(row.path))
         if start is None and row.head is not None and base_oid is not None:
@@ -417,7 +512,7 @@ class GitStateService:
             else self.probe(root, base_oid, row.head)
         )
         dirty = status.staged + status.unstaged + status.untracked + status.conflicted > 0
-        busy = tab is not None and blocks_writes(DomainTabStatus(tab.status.value))
+        busy = any(blocks_writes(DomainTabStatus(item.status.value)) for item in members)
         return WorktreeGitState(
             path=row.path,
             is_main=row.is_main,
@@ -442,6 +537,8 @@ class GitStateService:
             index_digest=status.index_digest,
             in_progress=_in_progress(status),
             merge=merge,
+            work_session_id=None if session is None else session.id,
+            tab_ids=tuple(TabId(item.tab_id) for item in members),
         )
 
 
@@ -455,14 +552,18 @@ class _Decorations:
         worktrees: tuple[WorktreeRow, ...],
         tabs: tuple[GitTab, ...],
         base: str | None,
+        snapshots: tuple[WorkSessionSnapshot, ...] = (),
     ) -> None:
         self._tab_by_branch = {tab.branch: tab for tab in tabs if tab.branch is not None}
         self._tab_by_segment = {tab_segment(tab.tab_id): tab for tab in tabs}
         self._base = base
+        self._snapshots = {row.oid: row for row in snapshots if row.oid}
         self._refs: dict[str, list[GitRefView]] = {}
         self._points: dict[str, tuple[str, int, str | None]] = {}
         by_tab: dict[str, list[tuple[int, str]]] = {}
         for ref in refs:
+            if ref.name.startswith("refs/aconsole/sessions/") and "/checkpoints/" not in ref.name:
+                continue
             named = checkpoint_ref_name(ref.name)
             if named is not None:
                 by_tab.setdefault(named.segment, []).append((named.number, ref.oid))
@@ -477,6 +578,8 @@ class _Decorations:
                 self._refs.setdefault(row.head, []).append(GitRefView(name="HEAD", kind="head"))
 
     def _view(self, ref: RefRow) -> GitRefView:
+        if ref.name.startswith("refs/aconsole/sessions/") and "/checkpoints/" in ref.name:
+            return GitRefView(name=f"#{ref.name.rsplit('/', 1)[-1]}", kind="checkpoint")
         named = checkpoint_ref_name(ref.name)
         if named is not None:
             tab = self._tab_by_segment.get(named.segment)
@@ -500,6 +603,7 @@ class _Decorations:
     def node(self, row: CommitRow) -> GitNodeView:
         refs = tuple(self._refs.get(row.oid, ()))
         point = self._points.get(row.oid)
+        snapshot = self._snapshots.get(row.oid)
         tab = None
         if point is not None:
             tab = self._tab_by_segment.get(point[0])
@@ -508,18 +612,24 @@ class _Decorations:
                 tab = self._tab_by_branch.get(ref.name) or tab
         return GitNodeView(
             oid=row.oid,
-            kind="checkpoint" if point is not None else "commit",
+            kind="checkpoint" if point is not None or snapshot is not None else "commit",
             parents=row.parents,
             refs=refs,
             subject=row.subject,
             author=row.author,
             at=row.at,
-            tab_id=None if tab is None else TabId(tab.tab_id),
-            plan_node=_node_of(row, tab),
-            agent=row.agent,
-            checkpoint_id=None if point is None else f"{point[0]}-{point[1]}",
-            turn=None if point is None else point[1],
-            previous_snapshot=None if point is None else point[2],
+            tab_id=(
+                TabId(snapshot.actor_tab_id) if snapshot is not None and snapshot.actor_tab_id is not None
+                else None if tab is None else TabId(tab.tab_id)
+            ),
+            plan_node=NodeId(snapshot.plan_node) if snapshot is not None and snapshot.plan_node else _node_of(row, tab),
+            agent=snapshot.agent if snapshot is not None else row.agent,
+            checkpoint_id=(
+                f"{snapshot.work_session_id}-{snapshot.sequence}" if snapshot is not None
+                else None if point is None else f"{point[0]}-{point[1]}"
+            ),
+            turn=snapshot.sequence if snapshot is not None else None if point is None else point[1],
+            previous_snapshot=snapshot.previous_oid if snapshot is not None else None if point is None else point[2],
         )
 
 

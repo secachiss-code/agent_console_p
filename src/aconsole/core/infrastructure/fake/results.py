@@ -25,7 +25,7 @@ from aconsole.contracts.app import (
     SnapshotResult,
     SubscribeResult,
 )
-from aconsole.contracts.common import TabId
+from aconsole.contracts.common import TabId, WorkspaceMode
 from aconsole.contracts.git import (
     CleanupWorktreeResult,
     FactsToReviewResult,
@@ -42,6 +42,12 @@ from aconsole.contracts.git import (
 from aconsole.contracts.ipc import InitializeResult, ProtocolLimits, ProtocolVersion
 from aconsole.contracts.methods import METHODS
 from aconsole.contracts.settings import Settings
+from aconsole.contracts.work_sessions import (
+    WorkSessionHistoryResult,
+    WorkSessionListResult,
+    WorkSessionRestorePreview,
+    WorkSessionView,
+)
 from aconsole.core.infrastructure.fake.scenarios import (
     AT,
     demo_checkpoints,
@@ -108,13 +114,38 @@ def _samples() -> dict[str, msgspec.Struct]:
             updated_at=AT,
         ),
     )
+    session = WorkSessionView(
+        id="demo-task", project_id=project.id, title="Demo task", worktree=tab.worktree_path,
+        branch=tab.branch, base_branch=project.default_branch, workspace=WorkspaceMode.NEW_WORKTREE,
+        status="active", created_at=AT, updated_at=AT,
+    )
     return {
+        "workSession/create": session,
+        "workSession/list": WorkSessionListResult(sessions=()),
+        "workSession/get": session,
+        "workSession/rename": session,
+        "workSession/close": msgspec.structs.replace(session, status="archived"),
+        "workSession/resume": session,
+        "workSession/handoff": tab,
+        "workSession/history": WorkSessionHistoryResult(snapshots=()),
+        "workSession/result": WorkSessionHistoryResult(snapshots=()),
+        "workSession/restore": WorkSessionHistoryResult(snapshots=()),
+        "workSession/restorePreview": WorkSessionRestorePreview(sequence=1, oid="0" * 40, confirm_token="demo"  # noqa: S106 -- fake preview token
+),
+        "workSession/integratePreview": MergePreviewResult(
+            source="worker", target="task", source_oid="1" * 40, target_oid="0" * 40,
+            probe=MergeProbeView(status="clean", source_oid="1" * 40, target_oid="0" * 40),
+            modes=("merge",), source_dirty=False, target_worktree=tab.worktree_path, blockers=(), confirm_token="demo"  # noqa: S106 -- fake preview token
+,
+        ),
+        "workSession/integrate": operation,
+        "workSession/cleanupWorker": empty,
         "initialize": InitializeResult(
             protocol=ProtocolVersion(major=1, minor=0),
             server_version="0.0.0",
             server_pid=1,
             session_id="01JB2Z00000000000000000099",
-            capabilities=frozenset({"events.v1"}),
+            capabilities=frozenset({"events.v1", "work_sessions.v1"}),
             limits=ProtocolLimits(),
         ),
         "shutdown": empty,

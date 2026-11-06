@@ -247,8 +247,45 @@ from aconsole.contracts.vault import (
     CanvasNode,
     TaskNote,
 )
+from aconsole.contracts.work_sessions import (
+    WorkSessionCleanupWorkerParams,
+    WorkSessionCreateParams,
+    WorkSessionHandoffParams,
+    WorkSessionHistoryResult,
+    WorkSessionIntegrateParams,
+    WorkSessionIntegratePreviewParams,
+    WorkSessionListParams,
+    WorkSessionListResult,
+    WorkSessionParams,
+    WorkSessionRenameParams,
+    WorkSessionRestoreParams,
+    WorkSessionRestorePreview,
+    WorkSessionRestorePreviewParams,
+    WorkSessionResultParams,
+    WorkSessionSnapshotView,
+    WorkSessionView,
+)
 
 STRUCTS: tuple[type[msgspec.Struct], ...] = (
+    WorkSessionResultParams,
+    WorkSessionIntegratePreviewParams,
+    WorkSessionIntegrateParams,
+    WorkSessionCleanupWorkerParams,
+
+    WorkSessionHandoffParams,
+    WorkSessionHistoryResult,
+    WorkSessionRestoreParams,
+    WorkSessionRestorePreview,
+    WorkSessionRestorePreviewParams,
+    WorkSessionSnapshotView,
+
+    WorkSessionView,
+    WorkSessionCreateParams,
+    WorkSessionParams,
+    WorkSessionListParams,
+    WorkSessionListResult,
+    WorkSessionRenameParams,
+
     MergeProbeView,
     WorktreeGitState,
     BranchView,

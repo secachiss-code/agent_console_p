@@ -70,6 +70,8 @@ class WorktreeGitState(msgspec.Struct, frozen=True, kw_only=True):
     index_digest: str
     in_progress: InProgress | None
     merge: MergeProbeView
+    work_session_id: str | None = None
+    tab_ids: tuple[TabId, ...] = ()
 
 
 class BranchView(msgspec.Struct, frozen=True, kw_only=True):
@@ -96,10 +98,12 @@ class GitOperationView(msgspec.Struct, frozen=True, kw_only=True):
     follow_up_pending: bool
     created_at: datetime
     updated_at: datetime
+    work_session_id: str | None = None
 
 
 class GitStateParams(msgspec.Struct, frozen=True, kw_only=True):
     project_id: ProjectId
+    work_session_id: str | None = None
 
 
 class GitStateResult(msgspec.Struct, frozen=True, kw_only=True):
@@ -126,6 +130,7 @@ class GitGraphParams(msgspec.Struct, frozen=True, kw_only=True):
     limit: Limit = 200
     cursor: str | None = None
     plan_node: str | None = None
+    work_session_id: str | None = None
 
 
 class GitRefView(msgspec.Struct, frozen=True, kw_only=True):
@@ -195,6 +200,7 @@ class GitCommitParams(msgspec.Struct, frozen=True, kw_only=True):
     message: Annotated[str, Meta(min_length=1)]
     expect_head: str | None
     expect_index: str
+    actor_tab_id: TabId | None = None
 
 
 class GitChangeResult(msgspec.Struct, frozen=True, kw_only=True):

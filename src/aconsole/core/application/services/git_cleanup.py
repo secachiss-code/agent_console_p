@@ -72,6 +72,7 @@ class GitCleanupService:
         self._publish_facts: Callable[[str, tuple[FactReviewView, ...]], str | None] = publish_facts
         self._changed: Callable[[str], None] = changed
         self._paths: dict[tuple[str, str, str], tuple[str, ...]] = {}
+        self.removed: Callable[[str, str], None] = lambda _project, _path: None
 
     def cleanup(self, params: CleanupWorktreeParams) -> CleanupWorktreeResult:
         project_id = str(params.project_id)
@@ -80,7 +81,7 @@ class GitCleanupService:
             kept = self._check(project_id, root, row, discard_ignored=params.discard_ignored)
             record = self._journalled(project_id, row)
             tab = self._state.tab_at(project_id, row.path)
-            if tab is not None:
+            for tab in self._state.tabs_at(project_id, row.path):
                 self._close_tab(tab.tab_id)
             removed = self._writer.remove_worktree(root, Path(row.path), discard_ignored=params.discard_ignored)
             if not removed.ok:
@@ -91,6 +92,7 @@ class GitCleanupService:
             deleted = False
             if row.branch is not None and row.branch.startswith(_OUR_BRANCHES):
                 deleted = self._writer.delete_branch(root, row.branch).ok
+            self.removed(project_id, row.path)
         self._changed(project_id)
         return CleanupWorktreeResult(removed=True, branch_deleted=deleted, kept_ref=kept)
 
@@ -122,9 +124,11 @@ class GitCleanupService:
     def _journalled(self, project_id: str, row: WorktreeRow) -> GitOperationRecord:
         at = self._now()
         tab = self._state.tab_at(project_id, row.path)
+        session = self._state.session_at(project_id, row.path)
         record = GitOperationRecord(
             id=token_hex(_ID_BYTES),
             project_id=project_id,
+            work_session_id=None if session is None else session.id,
             kind="cleanup",
             status="started",
             mode=None,
@@ -149,8 +153,12 @@ class GitCleanupService:
         """Raise unless this worktree may go. The name of the side ref its commits were kept on, if any."""
         if row.is_main:
             raise _refuse(REASON_MAIN)
-        tab = self._state.tab_at(project_id, row.path)
-        if tab is not None and tab.status.value != _EXITED:
+        session = self._state.session_at(project_id, row.path)
+        if session is not None and session.workspace_mode != "new_worktree":
+            reason = "not_managed"
+            raise _refuse(reason)
+        members = self._state.tabs_at(project_id, row.path)
+        if any(tab.status.value != _EXITED for tab in members):
             raise _refuse(REASON_AGENT)
         repo = Path(row.path)
         status = self._state.reader.status(repo)
@@ -171,7 +179,12 @@ class GitCleanupService:
         landed = self._merges.landed_from(project_id, branch, head)
         if landed is None:
             raise _refuse(REASON_NOT_MERGED)
-        ref = f"refs/aconsole/merged/{landed.id}"
+        prefix = (
+            f"refs/aconsole/sessions/{landed.work_session_id}/merged"
+            if landed.work_session_id is not None
+            else "refs/aconsole/merged"
+        )
+        ref = f"{prefix}/{landed.id}"
         done = self._writer.keep_ref(root, ref, head)
         if not done.ok:
             message = "commits could not be kept"

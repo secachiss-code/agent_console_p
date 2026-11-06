@@ -8,6 +8,14 @@ _GIT = "git.v1"
 _GIT_READ = ("PROJECT_NOT_FOUND", "GIT_COMMAND_FAILED")
 _GIT_WRITE = (*_GIT_READ, "GIT_WORKTREE_UNKNOWN", "GIT_STATE_STALE", "WORKTREE_BUSY", "GIT_OPERATION_IN_PROGRESS")
 _GIT_JOURNALLED = (*_GIT_WRITE, "DATABASE_TRANSACTION_FAILED")
+_SESSIONS = (
+    "PROJECT_NOT_FOUND", "WORK_SESSION_NOT_FOUND", "WORK_SESSION_ARCHIVED",
+    "WORK_SESSION_WORKSPACE_CONFLICT", "CONTAINER_START_FAILED", "WORKTREE_CREATE_FAILED",
+    "WORKTREE_BUSY", "WORKTREE_DIRTY", "GIT_COMMAND_FAILED", "GIT_WORKTREE_UNKNOWN",
+    "GIT_BRANCH_UNKNOWN", "GIT_STATE_STALE", "GIT_OPERATION_IN_PROGRESS", "GIT_OPERATION_NOT_FOUND",
+    "MERGE_PREVIEW_STALE", "MERGE_MODE_UNAVAILABLE", "MERGE_CONFLICT", "WORKTREE_NOT_REMOVABLE",
+    "CHECKPOINT_NOT_FOUND", "CONFIRM_TOKEN_INVALID", "DATABASE_TRANSACTION_FAILED",
+)
 
 
 class Method(msgspec.Struct, frozen=True, kw_only=True):
@@ -28,6 +36,35 @@ METHODS: tuple[Method, ...] = (
         errors=("PROTOCOL_VERSION_UNSUPPORTED", "ALREADY_INITIALIZED", "SIDECAR_TOKEN_INVALID"),
         roles=ALL_ROLES,
     ),
+    Method(name="workSession/handoff", params="WorkSessionHandoffParams", result="TabView",
+           errors=_SESSIONS, capability="work_sessions.v1", long=True),
+    Method(name="workSession/history", params="WorkSessionParams", result="WorkSessionHistoryResult",
+           errors=_SESSIONS, capability="work_sessions.v1", long=True),
+    Method(name="workSession/restorePreview", params="WorkSessionRestorePreviewParams",
+           result="WorkSessionRestorePreview",
+           errors=_SESSIONS, capability="work_sessions.v1", long=True),
+    Method(name="workSession/restore", params="WorkSessionRestoreParams", result="WorkSessionHistoryResult",
+           errors=_SESSIONS, capability="work_sessions.v1", long=True),
+    Method(name="workSession/result", params="WorkSessionResultParams", result="WorkSessionHistoryResult",
+           errors=_SESSIONS, capability="work_sessions.v1", long=True),
+    Method(name="workSession/integratePreview", params="WorkSessionIntegratePreviewParams", result="MergePreviewResult",
+           errors=_SESSIONS, capability="work_sessions.v1", long=True),
+    Method(name="workSession/integrate", params="WorkSessionIntegrateParams", result="GitOperationResult",
+           errors=_SESSIONS, capability="work_sessions.v1", long=True),
+    Method(name="workSession/cleanupWorker", params="WorkSessionCleanupWorkerParams", result="EmptyResult",
+           errors=_SESSIONS, capability="work_sessions.v1", long=True),
+    Method(name="workSession/create", params="WorkSessionCreateParams", result="WorkSessionView",
+           errors=_SESSIONS, capability="work_sessions.v1"),
+    Method(name="workSession/list", params="WorkSessionListParams", result="WorkSessionListResult",
+           errors=_SESSIONS, capability="work_sessions.v1"),
+    Method(name="workSession/get", params="WorkSessionParams", result="WorkSessionView",
+           errors=_SESSIONS, capability="work_sessions.v1"),
+    Method(name="workSession/rename", params="WorkSessionRenameParams", result="WorkSessionView",
+           errors=_SESSIONS, capability="work_sessions.v1"),
+    Method(name="workSession/close", params="WorkSessionParams", result="WorkSessionView",
+           errors=_SESSIONS, capability="work_sessions.v1"),
+    Method(name="workSession/resume", params="WorkSessionParams", result="WorkSessionView",
+           errors=_SESSIONS, capability="work_sessions.v1"),
     Method(name="shutdown", params="EmptyParams", result="EmptyResult", roles=ALL_ROLES),
     Method(name="app/snapshot", params="EmptyParams", result="SnapshotResult"),
     Method(

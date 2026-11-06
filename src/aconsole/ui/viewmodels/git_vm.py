@@ -38,6 +38,7 @@ from aconsole.contracts.git import (
     WorktreeGitState,
     WorktreeOperationParams,
 )
+from aconsole.contracts.work_sessions import WorkSessionParams, WorkSessionView
 from aconsole.ui.client.core_client import CoreClient
 from aconsole.ui.viewmodels.logic.git_lanes import BASE_COLOR, LaneLayout, RowLayout, tab_color
 
@@ -98,7 +99,8 @@ def merge_badges(row: WorktreeGitState) -> tuple[Badge, ...]:
 
 def uncommitted_rows(state: GitStateResult, tab: TabId | None) -> tuple[WorktreeGitState, ...]:
     return tuple(
-        row for row in state.worktrees if row.dirty and row.head_oid is not None and (tab is None or row.tab_id == tab)
+        row for row in state.worktrees if row.dirty and row.head_oid is not None
+        and (tab is None or row.tab_id == tab or tab in row.tab_ids)
     )
 
 
@@ -138,16 +140,22 @@ class GitViewModel:
     def __init__(self, client: CoreClient, project_id: ProjectId) -> None:
         self.client: CoreClient = client
         self.project_id: ProjectId = project_id
+        self.work_session_id: str | None = None
+        self.actor_tab_id: TabId | None = None
 
     async def state(self) -> GitStateResult:
-        return await self.client.request("git/state", GitStateParams(project_id=self.project_id), GitStateResult)
+        return await self.client.request("git/state", GitStateParams(
+            project_id=self.project_id, work_session_id=self.work_session_id,
+        ), GitStateResult)
 
     async def watch(self) -> None:
         """Keep the core's updates for this project coming. No git runs for this."""
         _ = await self.client.request("git/watch", GitWatchParams(project_id=self.project_id), EmptyResult)
 
     async def graph(self, tab: TabId | None, cursor: str | None, limit: int = _PAGE) -> GitGraphResult:
-        params = GitGraphParams(project_id=self.project_id, tab_id=tab, cursor=cursor, limit=limit)
+        params = GitGraphParams(
+            project_id=self.project_id, tab_id=tab, cursor=cursor, limit=limit, work_session_id=self.work_session_id,
+        )
         return await self.client.request("git/graph", params, GitGraphResult)
 
     async def summary(self, source: DiffSource) -> DiffSummaryResult:
@@ -175,6 +183,7 @@ class GitViewModel:
             message=message,
             expect_head=row.head_oid,
             expect_index=row.index_digest,
+            actor_tab_id=self.actor_tab_id if self.actor_tab_id in row.tab_ids else row.tab_id,
         )
         return await self.client.request("git/commit", params, GitChangeResult)
 
@@ -208,6 +217,13 @@ class GitViewModel:
             message=message,
         )
         return await self.client.request("git/mergeWorktree", params, GitOperationResult)
+
+    async def archive_session(self, session_id: str) -> WorkSessionView:
+        return await self.client.request(
+            "workSession/close",
+            WorkSessionParams(project_id=self.project_id, work_session_id=session_id),
+            WorkSessionView,
+        )
 
     async def cleanup(self, worktree: str, *, discard_ignored: bool) -> CleanupWorktreeResult:
         params = CleanupWorktreeParams(project_id=self.project_id, worktree=worktree, discard_ignored=discard_ignored)

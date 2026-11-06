@@ -160,6 +160,19 @@ class HostTabs:
         except WorktreeError as exc:
             raise TabRequestError(_CREATE_FAILED) from exc
 
+    def create_isolated_worktree(self, repo: str, tab_id: str, session_id: str, base: str) -> str:
+        root = Path(repo)
+        dest = self._worktrees / root.name / tab_id
+        try:
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            return str(self._trees.create_detached(
+                WorktreeRequest(repo=root, dest=dest, slug="worker", tab_id=tab_id),
+                f"refs/aconsole/sessions/{session_id}/workers/{tab_id}/start",
+                Path(base),
+            ))
+        except (WorktreeError, ValueError, OSError) as exc:
+            raise _create_failed(exc) from exc
+
     def release_worktree(self, dest: str) -> None:
         self._trees.release(Path(dest))
 

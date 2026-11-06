@@ -86,6 +86,8 @@ class ReviewService:
         target = self._tabs().review_target(tab_id)
         if target is None or not self._tabs().current_settings().checkpoints_enabled:
             return
+        # Keep the legacy tab endpoint usable while the session timeline is the durable task history.
+        _ = self._tabs().session_checkpoint(tab_id, text.splitlines()[0] if text else "prompt", "checkpoint")
         created = self.checkpoints.on_user_prompt(Path(target.worktree), tab_id, text, datetime.now(UTC))
         self._emit(CheckpointCreated(checkpoint=_view(created)))
 
@@ -97,6 +99,7 @@ class ReviewService:
     def keep_before_change(self, tab_id: str, label: str) -> None:
         """A checkpoint for what is about to be replaced. Taken even with checkpoints off: the user can go back."""
         target = self._target(tab_id)
+        _ = self._tabs().session_checkpoint(tab_id, label, "safety", lock_held=True)
         created = self.checkpoints.on_user_prompt(Path(target.worktree), tab_id, label, datetime.now(UTC))
         self._emit(CheckpointCreated(checkpoint=_view(created)))
 
@@ -145,6 +148,7 @@ class ReviewService:
         )
 
     def _restore(self, params: RestoreParams) -> RestoreResult:
+        self._tabs().require_session_writable(self._owner(str(params.checkpoint_id)))
         tab_id = self._owner(str(params.checkpoint_id))
         target = self._target(tab_id)
         result = self.checkpoints.restore(

@@ -889,6 +889,10 @@
         "id": {
           "type": "string"
         },
+        "isolated": {
+          "default": false,
+          "type": "boolean"
+        },
         "last_message": {
           "anyOf": [
             {
@@ -992,6 +996,28 @@
         },
         "title": {
           "type": "string"
+        },
+        "work_session_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "work_session_title": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
         },
         "worktree_dirty": {
           "type": "boolean"

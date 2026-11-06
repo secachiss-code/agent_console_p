@@ -6,7 +6,7 @@ from datetime import datetime
 from enum import StrEnum
 from typing import ClassVar, final
 
-from sqlalchemy import Boolean, Enum, Float, ForeignKey, Index, MetaData, String, Text, UniqueConstraint
+from sqlalchemy import Boolean, Enum, Float, ForeignKey, Index, MetaData, String, Text, UniqueConstraint, column, false
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 from aconsole.core.domain.agent import AgentKind
@@ -142,6 +142,50 @@ class Workspace(Base):
 
 
 @final
+class WorkSessionRow(Base):
+    __tablename__ = "work_sessions"
+    __table_args__ = _table_args(Index(
+        "ix_work_sessions_workspace", "worktree", unique=True, sqlite_where=column("workspace_removed") == false(),
+    ))
+
+    id: Mapped[str] = mapped_column(String(32), primary_key=True)
+    project_id: Mapped[str] = mapped_column(ForeignKey("projects.id", ondelete="CASCADE"), index=True)
+    title: Mapped[str] = mapped_column(String(120))
+    worktree: Mapped[str] = mapped_column(String(4096))
+    workspace_removed: Mapped[bool] = mapped_column(default=False)
+    branch: Mapped[str | None] = mapped_column(String(255))
+    base_branch: Mapped[str | None] = mapped_column(String(255))
+    workspace_mode: Mapped[str] = mapped_column(String(32))
+    status: Mapped[str] = mapped_column(String(24))
+    created_at: Mapped[datetime] = mapped_column()
+    updated_at: Mapped[datetime] = mapped_column()
+
+
+@final
+class WorkSessionSnapshotRow(Base):
+    __tablename__ = "work_session_snapshots"
+
+    work_session_id: Mapped[str] = mapped_column(
+        ForeignKey("work_sessions.id", ondelete="CASCADE"), primary_key=True,
+    )
+    sequence: Mapped[int] = mapped_column(primary_key=True)
+    kind: Mapped[str] = mapped_column(String(32))
+    actor_tab_id: Mapped[str | None] = mapped_column(String(32))
+    actor_title: Mapped[str | None] = mapped_column(String(80))
+    agent: Mapped[str | None] = mapped_column(String(32))
+    plan_node: Mapped[str | None] = mapped_column(String(64))
+    worktree: Mapped[str] = mapped_column(String(4096))
+    ref: Mapped[str] = mapped_column(String(255))
+    head_oid: Mapped[str | None] = mapped_column(String(64))
+    oid: Mapped[str | None] = mapped_column(String(64))
+    tree: Mapped[str | None] = mapped_column(String(64))
+    previous_oid: Mapped[str | None] = mapped_column(String(64))
+    label: Mapped[str] = mapped_column(String(200))
+    status: Mapped[str] = mapped_column(String(24))
+    created_at: Mapped[datetime] = mapped_column()
+
+
+@final
 class Plan(Base):
     __tablename__ = "plans"
     __table_args__ = _table_args(UniqueConstraint("project_id", "title"))
@@ -200,6 +244,8 @@ class Tab(Base):
 
     id: Mapped[str] = mapped_column(String(26), primary_key=True)
     project_id: Mapped[str] = mapped_column(ForeignKey("projects.id", ondelete="CASCADE"))
+    work_session_id: Mapped[str | None] = mapped_column(String(32), index=True)
+    isolated: Mapped[bool] = mapped_column(default=False)
     workspace_id: Mapped[str | None] = mapped_column(ForeignKey("workspaces.id", ondelete="SET NULL"))
     agent_kind: Mapped[AgentKind] = mapped_column(_enum(AgentKind))
     account_id: Mapped[str | None] = mapped_column(ForeignKey("agent_accounts.id"))
@@ -326,6 +372,7 @@ class GitOperationRow(Base):
 
     id: Mapped[str] = mapped_column(String(32), primary_key=True)
     project_id: Mapped[str] = mapped_column(String(64))
+    work_session_id: Mapped[str | None] = mapped_column(String(32), index=True)
     kind: Mapped[str] = mapped_column(String(24))
     status: Mapped[str] = mapped_column(String(24))
     mode: Mapped[str | None] = mapped_column(String(24))

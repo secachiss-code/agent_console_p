@@ -1,0 +1,26 @@
+{
+  "$defs": {
+    "WorkSessionRestorePreview": {
+      "properties": {
+        "confirm_token": {
+          "type": "string"
+        },
+        "oid": {
+          "type": "string"
+        },
+        "sequence": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "sequence",
+        "oid",
+        "confirm_token"
+      ],
+      "title": "WorkSessionRestorePreview",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/WorkSessionRestorePreview",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

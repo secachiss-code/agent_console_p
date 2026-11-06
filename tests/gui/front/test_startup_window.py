@@ -58,16 +58,17 @@ class _App(AConsoleApp):
             self.quit()
 
     async def _drive(self) -> None:
-        await _until(lambda: self.startup_window is not None and self.startup_window.reason_label is not None)
+        await _until(lambda: self.failed and self.startup_page is not None)
         assert self.startup_window is not None
-        assert self.startup_window.reason_label is not None
-        assert self.startup_window.log_label is not None
-        assert self.startup_window.retry_button is not None
+        assert self.startup_page is not None
+        assert self.startup_retry is not None
+        assert self.startup_diagnostics is not None
         assert self.startup_window.get_visible()
-        self.seen["reason"] = self.startup_window.reason_label.get_label()
-        self.seen["log"] = self.startup_window.log_label.get_label()
+        self.seen["reason"] = self.startup_page.get_description() or ""
+        assert self.startup_diagnostics.get_visible()
+        self.seen["log"] = self._startup_error
         assert self.failed
-        self.startup_window.retry_button.emit("clicked")
+        self.startup_retry.emit("clicked")
         await _until(lambda: self.window is not None)
         self.window_after_retry = True
         assert self.startup_window is None

@@ -17,7 +17,7 @@ _CONTROL = re.compile(r"[\x00-\x08\x0b-\x1f\x7f-\x9f]")
 _OID = re.compile(r"[0-9a-f]{40,64}")
 _CHECKPOINT = re.compile(r"refs/aconsole/checkpoints/([^/]+)/([1-9][0-9]*)")
 # The agent may touch files in these. Waiting for input means its turn ended.
-_WRITING = frozenset({TabStatus.STARTING, TabStatus.WORKING, TabStatus.WAITING_APPROVAL})
+_WRITING = frozenset({TabStatus.STARTING, TabStatus.WORKING, TabStatus.WAITING_APPROVAL, TabStatus.UNKNOWN})
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
