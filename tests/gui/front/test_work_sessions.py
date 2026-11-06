@@ -13,8 +13,12 @@ gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
 from gi.repository import Adw, Gtk  # noqa: E402
 
+from aconsole.contracts.app import ProjectAddParams, ProjectView  # noqa: E402
 from aconsole.contracts.work_sessions import WorkSessionCreateParams, WorkSessionParams, WorkSessionView  # noqa: E402
 from aconsole.ui.snapshot import capture_window  # noqa: E402
+from aconsole.ui.viewmodels.tabs_vm import TabsViewModel  # noqa: E402
+from aconsole.ui.views.review.messages import _ as translate  # noqa: E402
+from aconsole.ui.views.tabs.new_tab import NewTabDialog  # noqa: E402
 from tests.gui.front.test_git_pane import _commit, _git, _on_pane, _settled  # noqa: E402
 
 if TYPE_CHECKING:
@@ -54,8 +58,7 @@ def test_session_picker_rename_archive_and_resume(tmp_path: Path, monkeypatch: p
         entry = dialog.get_extra_child()
         assert isinstance(entry, Gtk.Entry)
         entry.set_text("Git session renamed")
-        dialog.emit("response", "confirm")
-        dialog.force_close()
+        await _confirm(dialog)
         await _settled(lambda: not pane.sessions._busy)
         params = WorkSessionParams(project_id=pane.viewmodel.project_id, work_session_id=session.id)
 
@@ -72,8 +75,7 @@ def test_session_picker_rename_archive_and_resume(tmp_path: Path, monkeypatch: p
         pane.sessions.dialog = None
         pane.sessions.buttons["archive"].emit("clicked")
         await _settled(lambda: pane.sessions.dialog is not None)
-        pane.sessions.dialog.emit("response", "confirm")
-        pane.sessions.dialog.force_close()
+        await _confirm(pane.sessions.dialog)
         await status("archived")
         assert await asyncio.to_thread(Path(session.worktree).is_dir)
         await pane.refresh()
@@ -84,12 +86,52 @@ def test_session_picker_rename_archive_and_resume(tmp_path: Path, monkeypatch: p
         pane.sessions.dialog = None
         pane.sessions.buttons["archive"].emit("clicked")
         await _settled(lambda: pane.sessions.dialog is not None)
-        pane.sessions.dialog.emit("response", "confirm")
-        pane.sessions.dialog.force_close()
+        await _confirm(pane.sessions.dialog)
         await status("active")
+        await _switch_project(pane, repo, session)
         assert toasts == []
 
     _on_pane(tmp_path, monkeypatch, repo, check)
+
+
+async def _switch_project(pane: GitPane, repo: Path, session: WorkSessionView) -> None:
+    other = repo.parent / "other"
+    other.mkdir()
+    _ = _git(other, "init", "-q", "-b", "other-base")
+    _ = await pane.viewmodel.client.request("project/add", ProjectAddParams(root=str(other)), ProjectView)
+    _ = await pane.viewmodel.client.pull_snapshot()
+    dialog = NewTabDialog(TabsViewModel(pane.viewmodel.client), lambda _tab: None, lambda _error: None)
+    project = next(row for row in dialog._projects if row.id == session.project_id)
+    dialog.reload(project)
+    await _settled(lambda: any(row.id == session.id for row in dialog._sessions))
+    dialog.session_row.set_selected(1)
+    assert not dialog.workspace_row.get_visible()
+    # Reset selection before indexing the new project's asynchronously loaded session list.
+    target = next(at for at, row in enumerate(dialog._projects) if row.id != project.id)
+    dialog.project_row.set_selected(target)
+    assert dialog.workspace_row.get_visible()
+    assert dialog._sessions == ()
+    assert str(other) in dialog.location.get_label()
+
+
+async def _confirm(dialog: Adw.AlertDialog) -> None:
+    await _settled(dialog.get_mapped)
+    # A mapped dialog may still be entering; let its presentation finish before clicking.
+    await asyncio.sleep(0.3)
+
+    def click(widget: Gtk.Widget) -> bool:
+        if isinstance(widget, Gtk.Button) and widget.get_label() == translate("git.session_confirm"):
+            widget.emit("clicked")
+            return True
+        child = widget.get_first_child()
+        while child is not None:
+            if click(child):
+                return True
+            child = child.get_next_sibling()
+        return False
+
+    assert click(dialog)
+    await _settled(lambda: not dialog.get_mapped())
 
 
 async def _screenshots(window: Adw.ApplicationWindow, output: Path) -> None:

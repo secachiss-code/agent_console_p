@@ -89,6 +89,13 @@ class NewTabDialog(Adw.Dialog):
         _ = self.existing_path.connect("changed", self._workspace_changed)
 
     def _workspace_changed(self, _source: object, _property: object = None) -> None:
+        index = self.project_row.get_selected()
+        project = self._projects[index] if index < len(self._projects) else None
+        if project is not None and self._session_project != str(project.id):
+            self._session_project = str(project.id)
+            self._sessions = ()
+            self.session_row.set_model(Gtk.StringList.new([translate("tabs.new.task")]))
+            _ = spawn_task(self._load_sessions(project))
         session_index = self.session_row.get_selected()
         has_session = 0 < session_index <= len(self._sessions)
         self.workspace_row.set_visible(not has_session)
@@ -97,13 +104,6 @@ class NewTabDialog(Adw.Dialog):
         mode = _WORKSPACES[min(self.workspace_row.get_selected(), len(_WORKSPACES) - 1)]
         existing = mode is WorkspaceMode.EXISTING_WORKTREE
         self.existing_path.set_visible(existing and not has_session)
-        index = self.project_row.get_selected()
-        project = self._projects[index] if index < len(self._projects) else None
-        if project is not None and self._session_project != str(project.id):
-            self._session_project = str(project.id)
-            self._sessions = ()
-            self.session_row.set_model(Gtk.StringList.new([translate("tabs.new.task")]))
-            _ = spawn_task(self._load_sessions(project))
         text = ""
         if project is not None:
             text = f"{project.root}\n{project.default_branch}"
