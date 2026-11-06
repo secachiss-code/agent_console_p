@@ -8,8 +8,8 @@ group is killed on timeout. A create that fails after `worktree add` is rolled b
 A dirty tree, or one with commits ahead of the base, is kept. A tree with ignored
 files (`.venv/`, included copies) is kept unless the caller discards them. A clean
 tree is removed and its branch deleted. If `git worktree remove` refuses after that
-check, the directory and the branch stay; nothing retries with `--force`. `--force`
-is used only to roll back a create or when the caller discards ignored files.
+check, the directory and the branch stay; nothing retries with `--force`. Ignored
+discard keeps Git's own dirty check enabled; `--force` is only for rolling back a create.
 """
 
 import contextlib
@@ -316,7 +316,10 @@ class Worktrees:
 
     def _remove(self, repo: Path, dest: Path, branch: str, base: str, *, ignored: bool) -> CloseResult:
         """Delete a tree git accepts. A refusal leaves the directory and the branch."""
-        remove = ("-C", str(repo), "worktree", "remove", *(("--force",) if ignored else ()), str(dest))
+        # Git removes ignored data normally. Force would also delete late ordinary writes.
+        remove = (
+            "-C", str(repo), "-c", "status.showUntrackedFiles=all", "worktree", "remove", str(dest),
+        )
         try:
             _ = self._run(remove)
         except WorktreeError as exc:

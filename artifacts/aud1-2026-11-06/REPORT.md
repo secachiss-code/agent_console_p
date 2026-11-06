@@ -102,3 +102,25 @@ repository ignore settings cannot hide tracked or untracked submodule work.
 Four config/content regressions and two public cleanup regressions reproduced the
 defect before the fix. The focused state/worktree/cleanup/session suite passed 51
 tests after it. GIT-4 is independent and remains recorded against the baseline.
+
+
+## GIT-4 follow-up
+
+Ordinary cleanup no longer passes `--force` for ignored discard. Git's own
+working-copy check stays enabled, with command-scoped status.showUntrackedFiles=all
+so repo settings cannot suppress a newly arrived untracked file. The writer also
+refuses ignored data without explicit consent at its own boundary. Force used
+for failed-create rollback is separate and unchanged.
+
+Nine new regressions failed before this change: late tracked/untracked changes,
+a nested repo and untracked content hidden by status config in both adapters,
+plus direct writer cleanup of ignored data without consent. After the change,
+54 focused cleanup/session/durability tests pass, including ignored-only removal
+and runtime-lock-only cleanup. There is no automatic force fallback for nested
+repositories or initialized submodules; Git may safely refuse their removal.
+This keeps Git's check, not an atomic guarantee against arbitrary external writes.
+
+Final validation after GIT-3/GIT-4: the complete core/contracts suite passed
+with exit 0. Final hostrun check also exited 0 (ruff, types, architecture and
+contracts). The known ownership substep still emits Not a git repository and
+is not evidence of a valid ownership check. No GUI or live-user-app run occurred.

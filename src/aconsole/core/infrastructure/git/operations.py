@@ -222,13 +222,17 @@ class GitMutations:
         )
 
     def remove_worktree(self, root: Path, worktree: Path, *, discard_ignored: bool) -> GitDone:
+        if not discard_ignored and self.has_ignored(worktree):
+            return GitDone(ok=False, said="ignored files require explicit discard")
         try:
             remove_worktree_file(worktree, ".aconsole/lock")
         except OSError as exc:
             message = "runtime worktree lock could not be released"
             raise GitCommandError(message, detail=str(exc)) from exc
-        forced = ("--force",) if discard_ignored else ()
-        done = _done(self._git.write(root, "worktree", "remove", *forced, str(worktree)))
+        # Ignored-only consent must not bypass Git's check for late ordinary changes.
+        done = _done(self._git.write(
+            root, "-c", "status.showUntrackedFiles=all", "worktree", "remove", str(worktree),
+        ))
         if done.ok:
             common = self._git.read(root, "rev-parse", "--path-format=absolute", "--git-common-dir").text.strip()
             forget_record(Path(common), worktree)
