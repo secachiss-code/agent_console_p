@@ -121,7 +121,7 @@ _SCREEN_QUIET: Final = "screen_quiet"
 _SCREEN_ACTIVE: Final = "screen_active"
 _ENV_SCREEN: Final = "ACONSOLE_SCREEN_WATCH"
 _ASK_SETTLE_S: Final = 2.0
-_CODEX_ID: Final = re.compile(r"^[A-Za-z0-9_-]{1,128}$")
+_CODEX_ID: Final = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$")
 # Changes under a cent are not worth a UI update: a statusline comes after every reply.
 _COST_STEP_USD: Final = 0.01
 _MCP_STEP_BYTES: Final = 4096
@@ -129,6 +129,8 @@ _MCP_STEP_BYTES: Final = 4096
 
 def _launch_command(agent: AgentKind, session: str | None, *, fork: bool) -> tuple[str, ...]:
     """Each agent's own way to resume. Fork is refused earlier for agents that cannot do it."""
+    if session is not None and _CODEX_ID.fullmatch(session) is None:
+        raise TabRequestError(_SESSION)
     if agent is AgentKind.CLAUDE:
         return _claude_command(session, fork=fork)
     if agent is AgentKind.CODEX:
@@ -162,8 +164,8 @@ def _codex_command(session: str | None, *, fork: bool) -> tuple[str, ...]:
     if session is None or _CODEX_ID.fullmatch(session) is None:
         return ("codex",)
     if fork:
-        return ("codex", "fork", session)
-    return ("codex", "resume", session)
+        return ("codex", "fork", "--", session)
+    return ("codex", "resume", "--", session)
 
 
 def _resting(status: TabStatus) -> TabStatus:

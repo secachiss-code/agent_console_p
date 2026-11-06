@@ -13,7 +13,7 @@ from mcp.server.mcpserver import MCPServer
 from mcp.types import Tool, ToolAnnotations
 from pydantic import Field
 
-from aconsole.core.infrastructure.http.auth import bearer_token
+from aconsole.core.infrastructure.http.auth import bearer_token, host_allowed, origin_allowed
 from aconsole.core.infrastructure.mcp.tools import (
     Added,
     Attached,
@@ -95,7 +95,6 @@ class _LeanServer(MCPServer):
         listed = await super().list_tools()
         return [tool.model_copy(update={"input_schema": lean_schema(tool.input_schema)}) for tool in listed]
 
-
 def lean_schema(schema: dict[str, object]) -> dict[str, object]:
     """``schema`` without generated titles, ``null`` alternatives of optional fields, or ``null`` defaults."""
     lean: dict[str, object] = {}
@@ -114,14 +113,12 @@ def lean_schema(schema: dict[str, object]) -> dict[str, object]:
             lean[key] = _lean_any(value)
     return lean
 
-
 def _lean_any(value: object) -> object:
     if isinstance(value, dict):
         return lean_schema(value)  # pyright: ignore[reportUnknownArgumentType]
     if isinstance(value, list):
         return [_lean_any(item) for item in value]  # pyright: ignore[reportUnknownVariableType, reportUnknownArgumentType] -- JSON schema
     return value
-
 
 def build_server(
     board: PlanBoard, context: TabContext, sent: Callable[[str, int], None] | None = None
@@ -134,7 +131,6 @@ def build_server(
     _register(server, board, context, sent)
     return server
 
-
 def http_app(server: MCPServer) -> _App:
     """Streamable HTTP on ``/mcp``, JSON responses, bound to loopback by the caller."""
     return server.streamable_http_app(  # pyright: ignore[reportReturnType] -- Starlette is the ASGI app beside ingest
@@ -143,7 +139,6 @@ def http_app(server: MCPServer) -> _App:
         stateless_http=False,
         host="127.0.0.1",
     )
-
 
 def beside_ingest(ingest: _App, mcp: _App, tokens: TabTokens) -> _App:
     """Serve MCP at ``/mcp`` and leave every other path on the ingest app."""
@@ -169,6 +164,9 @@ class _Beside:
         await self._ingest(scope, receive, send)
 
     async def _mcp_request(self, scope: Mapping[str, object], receive: _Receive, send: _Send) -> None:
+        if not _local_headers(scope.get("headers")):
+            await _forbidden(send)
+            return
         header = _authorization(scope.get("headers"))
         resolved = self._tokens.resolve(header)
         if resolved is None:
@@ -182,7 +180,6 @@ class _Beside:
             await self._mcp(scope, receive, send)
         finally:
             reset()
-
 
 def _register(  # noqa: C901 -- one nested function per MCP tool
     server: MCPServer, board: PlanBoard, context: TabContext, sent: Callable[[str, int], None] | None
@@ -313,7 +310,6 @@ def _register(  # noqa: C901 -- one nested function per MCP tool
             publish(fn, counted)
         )
 
-
 def _authorization(headers: object) -> str | None:
     if not isinstance(headers, list):
         return None
@@ -325,7 +321,6 @@ def _authorization(headers: object) -> str | None:
         if name.lower() == b"authorization":
             return value.decode("latin-1")
     return None
-
 
 def _header_pair(item: object) -> tuple[bytes, bytes] | None:
     if not isinstance(item, tuple) or len(item) != _PAIR:  # pyright: ignore[reportUnknownArgumentType] -- tuple items are Unknown
@@ -346,4 +341,30 @@ async def _unauthorized(send: _Send) -> None:
             "headers": [(b"content-type", b"application/json"), (b"content-length", str(len(body)).encode("ascii"))],
         }
     )
+    await send({"type": "http.response.body", "body": body})
+
+
+def _local_headers(raw: object) -> bool:
+    if not isinstance(raw, list):
+        return True
+    found: dict[bytes, str] = {}
+    for item in raw:  # pyright: ignore[reportUnknownVariableType] -- untyped ASGI headers
+        pair = _header_pair(item)  # pyright: ignore[reportUnknownArgumentType] -- validated ASGI pair
+        if pair is None:
+            return False
+        name, value = pair
+        name = name.lower()
+        if name not in {b"origin", b"host"}:
+            continue
+        if name in found:
+            return False
+        found[name] = value.decode("latin-1")
+    return origin_allowed(found.get(b"origin")) and host_allowed(found.get(b"host"))
+
+
+async def _forbidden(send: _Send) -> None:
+    body = b'{"reason":"INGEST_ORIGIN_FORBIDDEN"}'
+    await send({"type": "http.response.start", "status": 403, "headers": [
+        (b"content-type", b"application/json"), (b"content-length", str(len(body)).encode("ascii")),
+    ]})
     await send({"type": "http.response.body", "body": body})

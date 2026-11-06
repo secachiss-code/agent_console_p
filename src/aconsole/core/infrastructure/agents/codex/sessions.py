@@ -21,7 +21,7 @@ from sqlalchemy.pool import NullPool
 
 from aconsole.contracts.app import SessionInfo, SessionListResult
 
-_ID: Final = re.compile(r"^[A-Za-z0-9_-]{1,128}$")
+_ID: Final = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$")
 _TITLE: Final = 200
 
 
@@ -30,7 +30,7 @@ def resume_argv(session_id: str | None, *, fork: bool) -> tuple[str, ...]:
     if session_id is None or _ID.fullmatch(session_id) is None:
         return ("codex",)
     verb = "fork" if fork else "resume"
-    return ("codex", verb, session_id)
+    return ("codex", verb, "--", session_id)
 
 
 def list_sessions(database: Path, project_root: str) -> SessionListResult:

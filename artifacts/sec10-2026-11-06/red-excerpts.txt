@@ -1,0 +1,115 @@
+Collected 0 items to run in parallel
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF                              [100%]
+=================================== FAILURES ===================================
+______ test_podman_inherits_the_token_by_name_without_exposing_its_value _______
+
+    def test_podman_inherits_the_token_by_name_without_exposing_its_value() -> None:
+        argv = Podman(Path("/usr/bin/podman")).exec_spec(ExecRequest(name="box", command=("true",), env={
+            "ACONSOLE_TAB_TOKEN": _SECRET, "ACONSOLE_TAB": "tab", "PATH": "/bin",
+        }, workdir="/work", user="sas"))
+>       assert _SECRET not in " ".join(argv)
+E       AssertionError: assert 'test-private-token-123' not in '/usr/bin/po...bin box true'
+E         
+E         'test-private-token-123' is contained here:
+E           TAB_TOKEN=test-private-token-123 -e PATH=/bin box true
+
+tests/core/test_launch_security.py:27: AssertionError
+___________ test_runtime_refuses_hostile_session_ids[--help-claude] ____________
+
+agent = <AgentKind.CLAUDE: 'claude'>, session = '--help'
+
+    @pytest.mark.parametrize("agent", list(AgentKind))
+    @pytest.mark.parametrize("session", ["--help", "-x", "../escape", "has space", "a\nb", ""])
+    def test_runtime_refuses_hostile_session_ids(agent: AgentKind, session: str) -> None:
+>       with pytest.raises(TabRequestError):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE TabRequestError
+
+tests/core/test_launch_security.py:35: Failed
+____________ test_runtime_refuses_hostile_session_ids[--help-codex] ____________
+
+agent = <AgentKind.CODEX: 'codex'>, session = '--help'
+
+    @pytest.mark.parametrize("agent", list(AgentKind))
+    @pytest.mark.parametrize("session", ["--help", "-x", "../escape", "has space", "a\nb", ""])
+    def test_runtime_refuses_hostile_session_ids(agent: AgentKind, session: str) -> None:
+>       with pytest.raises(TabRequestError):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE TabRequestError
+
+tests/core/test_launch_security.py:35: Failed
+__________ test_runtime_refuses_hostile_session_ids[--help-opencode] ___________
+
+agent = <AgentKind.OPENCODE: 'opencode'>, session = '--help'
+
+    @pytest.mark.parametrize("agent", list(AgentKind))
+    @pytest.mark.parametrize("session", ["--help", "-x", "../escape", "has space", "a\nb", ""])
+    def test_runtime_refuses_hostile_session_ids(agent: AgentKind, session: str) -> None:
+>       with pytest.raises(TabRequestError):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE TabRequestError
+
+tests/core/test_launch_security.py:35: Failed
+____________ test_runtime_refuses_hostile_session_ids[--help-grok] _____________
+
+agent = <AgentKind.GROK: 'grok'>, session = '--help'
+
+    @pytest.mark.parametrize("agent", list(AgentKind))
+    @pytest.mark.parametrize("session", ["--help", "-x", "../escape", "has space", "a\nb", ""])
+    def test_runtime_refuses_hostile_session_ids(agent: AgentKind, session: str) -> None:
+>       with pytest.raises(TabRequestError):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE TabRequestError
+
+tests/core/test_launch_security.py:35: Failed
+___________ test_runtime_refuses_hostile_session_ids[--help-cursor] ____________
+
+[Middle tracebacks omitted; final failure list follows.]
+
+E               exit 0
+
+tests/core/test_launch_security.py:93: AssertionError
+=========================== short test summary info ============================
+FAILED tests/core/test_launch_security.py::test_podman_inherits_the_token_by_name_without_exposing_its_value
+FAILED tests/core/test_launch_security.py::test_runtime_refuses_hostile_session_ids[--help-claude]
+FAILED tests/core/test_launch_security.py::test_runtime_refuses_hostile_session_ids[--help-codex]
+FAILED tests/core/test_launch_security.py::test_runtime_refuses_hostile_session_ids[--help-opencode]
+FAILED tests/core/test_launch_security.py::test_runtime_refuses_hostile_session_ids[--help-grok]
+FAILED tests/core/test_launch_security.py::test_runtime_refuses_hostile_session_ids[--help-cursor]
+FAILED tests/core/test_launch_security.py::test_runtime_refuses_hostile_session_ids[-x-claude]
+FAILED tests/core/test_launch_security.py::test_runtime_refuses_hostile_session_ids[-x-codex]
+FAILED tests/core/test_launch_security.py::test_runtime_refuses_hostile_session_ids[-x-opencode]
+FAILED tests/core/test_launch_security.py::test_runtime_refuses_hostile_session_ids[-x-grok]
+FAILED tests/core/test_launch_security.py::test_runtime_refuses_hostile_session_ids[-x-cursor]
+FAILED tests/core/test_launch_security.py::test_runtime_refuses_hostile_session_ids[../escape-claude]
+FAILED tests/core/test_launch_security.py::test_runtime_refuses_hostile_session_ids[../escape-codex]
+FAILED tests/core/test_launch_security.py::test_runtime_refuses_hostile_session_ids[../escape-opencode]
+FAILED tests/core/test_launch_security.py::test_runtime_refuses_hostile_session_ids[../escape-grok]
+FAILED tests/core/test_launch_security.py::test_runtime_refuses_hostile_session_ids[../escape-cursor]
+FAILED tests/core/test_launch_security.py::test_runtime_refuses_hostile_session_ids[has space-claude]
+FAILED tests/core/test_launch_security.py::test_runtime_refuses_hostile_session_ids[has space-codex]
+FAILED tests/core/test_launch_security.py::test_runtime_refuses_hostile_session_ids[has space-opencode]
+FAILED tests/core/test_launch_security.py::test_runtime_refuses_hostile_session_ids[has space-grok]
+FAILED tests/core/test_launch_security.py::test_runtime_refuses_hostile_session_ids[has space-cursor]
+FAILED tests/core/test_launch_security.py::test_runtime_refuses_hostile_session_ids[a\nb-claude]
+FAILED tests/core/test_launch_security.py::test_runtime_refuses_hostile_session_ids[a\nb-codex]
+FAILED tests/core/test_launch_security.py::test_runtime_refuses_hostile_session_ids[a\nb-opencode]
+FAILED tests/core/test_launch_security.py::test_runtime_refuses_hostile_session_ids[a\nb-grok]
+FAILED tests/core/test_launch_security.py::test_runtime_refuses_hostile_session_ids[a\nb-cursor]
+FAILED tests/core/test_launch_security.py::test_runtime_refuses_hostile_session_ids[-claude]
+FAILED tests/core/test_launch_security.py::test_runtime_refuses_hostile_session_ids[-codex]
+FAILED tests/core/test_launch_security.py::test_runtime_refuses_hostile_session_ids[-opencode]
+FAILED tests/core/test_launch_security.py::test_runtime_refuses_hostile_session_ids[-grok]
+FAILED tests/core/test_launch_security.py::test_runtime_refuses_hostile_session_ids[-cursor]
+FAILED tests/core/test_launch_security.py::test_codex_positional_session_has_an_option_terminator
+FAILED tests/core/test_launch_security.py::test_launchers_refuse_a_symlink_in_the_home_ancestors[claude]
+FAILED tests/core/test_launch_security.py::test_launchers_refuse_a_symlink_in_the_home_ancestors[codex]
+FAILED tests/core/test_launch_security.py::test_launchers_refuse_a_symlink_in_the_home_ancestors[cursor]
+FAILED tests/core/test_launch_security.py::test_mcp_refuses_foreign_or_ambiguous_origin_and_host[headers0]
+FAILED tests/core/test_launch_security.py::test_mcp_refuses_foreign_or_ambiguous_origin_and_host[headers1]
+FAILED tests/core/test_launch_security.py::test_mcp_refuses_foreign_or_ambiguous_origin_and_host[headers2]
+FAILED tests/core/test_launch_security.py::test_mcp_refuses_foreign_or_ambiguous_origin_and_host[headers3]
+FAILED tests/core/test_launch_security.py::test_mcp_refuses_foreign_or_ambiguous_origin_and_host[headers4]
+FAILED tests/core/test_launch_security.py::test_mcp_refuses_foreign_or_ambiguous_origin_and_host[headers5]
+FAILED tests/core/test_launch_security.py::test_mcp_refuses_foreign_or_ambiguous_origin_and_host[headers6]
+FAILED tests/core/test_launch_security.py::test_generated_hook_scripts_pass_auth_outside_curl_argv

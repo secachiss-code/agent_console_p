@@ -6,10 +6,8 @@ The tab token stays in the environment. ``~/.codex/config.toml`` and ``AGENTS.md
 
 from __future__ import annotations
 
-import os
 import re
 import shlex
-import tempfile
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Final
@@ -17,8 +15,8 @@ from typing import Final
 import msgspec
 
 from aconsole.core.infrastructure.agents.codex.trust import HookTrustCache, verified_hooks
+from aconsole.core.infrastructure.agents.private_files import atomic_write, check_home, private_dir
 
-_DIR_MODE: Final = 0o700
 _FILE_MODE: Final = 0o600
 _SCRIPT_MODE: Final = 0o700
 _PORT_MAX: Final = 65535
@@ -45,25 +43,28 @@ _HOME: Final = "agent home must be a directory"
 _TAB: Final = "tab id must be 1-64 characters of letters, digits, '_' or '-'"
 _PORT: Final = "port must be from 1 to 65535"
 _EMPTY: Final = "tab token must be non-empty"
-_SYMLINK: Final = "refusing to follow a symlink"
-_NOT_DIR: Final = "path exists and is not a directory"
 _QUOTE: Final = "path cannot contain a quote or backslash"
-_SHORT: Final = "short write"
 _HOOK: Final = """#!/bin/sh
-curl -sS --max-time 590 -H "Authorization: Bearer $ACONSOLE_TAB_TOKEN" \\
+curl -sS --max-time 590 -H @/proc/self/fd/3 \\
   --data-binary @- "http://127.0.0.1:$ACONSOLE_PORT/v1/tabs/$ACONSOLE_TAB/codex/hook" \\
-  2>/dev/null || true
+  3<<ACONSOLE_AUTH 2>/dev/null || true
+Authorization: Bearer $ACONSOLE_TAB_TOKEN
+ACONSOLE_AUTH
 exit 0
 """
 _NOTIFY: Final = """#!/bin/sh
 if [ -n "$2" ]; then
-  printf '%s' "$2" | curl -sS -m 2 -H "Authorization: Bearer $ACONSOLE_TAB_TOKEN" \\
+  printf '%s' "$2" | curl -sS -m 2 -H @/proc/self/fd/3 \\
     --data-binary @- "http://127.0.0.1:$ACONSOLE_PORT/v1/tabs/$ACONSOLE_TAB/codex/notify" \\
-    >/dev/null 2>&1 || true
+    3<<ACONSOLE_AUTH >/dev/null 2>&1 || true
+Authorization: Bearer $ACONSOLE_TAB_TOKEN
+ACONSOLE_AUTH
 else
-  curl -sS -m 2 -H "Authorization: Bearer $ACONSOLE_TAB_TOKEN" \\
+  curl -sS -m 2 -H @/proc/self/fd/3 \\
     --data-binary @- "http://127.0.0.1:$ACONSOLE_PORT/v1/tabs/$ACONSOLE_TAB/codex/notify" \\
-    >/dev/null 2>&1 || true
+    3<<ACONSOLE_AUTH >/dev/null 2>&1 || true
+Authorization: Bearer $ACONSOLE_TAB_TOKEN
+ACONSOLE_AUTH
 fi
 exit 0
 """
@@ -210,6 +211,7 @@ def _require_home(agent_home: Path) -> None:
         raise ValueError(_ABS)
     if agent_home.is_symlink() or not agent_home.is_dir():
         raise ValueError(_HOME)
+    check_home(agent_home)
 
 
 def _require_tab(tab_id: str) -> None:
@@ -234,41 +236,8 @@ def _refuse_quote(path: Path) -> None:
 
 
 def _private_dir(path: Path) -> None:
-    if path.is_symlink():
-        raise ValueError(_SYMLINK)
-    if path.exists() and not path.is_dir():
-        raise ValueError(_NOT_DIR)
-    path.mkdir(mode=_DIR_MODE, exist_ok=True)
-    if path.is_symlink() or not path.is_dir():
-        raise ValueError(_SYMLINK)
-    path.chmod(_DIR_MODE)
+    private_dir(path)
 
 
 def _atomic_write(path: Path, payload: bytes, mode: int) -> None:
-    if path.is_symlink():
-        raise ValueError(_SYMLINK)
-    fd, name = tempfile.mkstemp(prefix=".aconsole-", dir=path.parent)
-    temporary = Path(name)
-    try:
-        _write_all(fd, payload)
-        os.fsync(fd)
-        os.fchmod(fd, mode)
-    except (OSError, ValueError):
-        os.close(fd)
-        temporary.unlink(missing_ok=True)
-        raise
-    os.close(fd)
-    try:
-        _ = temporary.replace(path)
-    except OSError:
-        temporary.unlink(missing_ok=True)
-        raise
-
-
-def _write_all(fd: int, payload: bytes) -> None:
-    view = memoryview(payload)
-    while len(view) > 0:
-        written = os.write(fd, view)
-        if written == 0:
-            raise ValueError(_SHORT)
-        view = view[written:]
+    atomic_write(path, payload, mode)

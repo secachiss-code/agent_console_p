@@ -10,7 +10,7 @@ from typing import Protocol, final
 import uvicorn
 
 from aconsole.contracts import API_VERSION
-from aconsole.core.infrastructure.http.auth import Decision, TokenBook, origin_allowed
+from aconsole.core.infrastructure.http.auth import Decision, TokenBook, host_allowed, origin_allowed
 from aconsole.core.infrastructure.http.problem import (
     HttpResponse,
     empty_json,
@@ -99,7 +99,7 @@ class IngestApp:
     async def _http(self, scope: Mapping[str, object], receive: Receive) -> HttpResponse:
         instance = self._next_id()
         headers = _headers(scope.get("headers"))
-        if not origin_allowed(headers.get("origin")):
+        if not origin_allowed(headers.get("origin")) or not host_allowed(headers.get("host")):
             return _problem("INGEST_ORIGIN_FORBIDDEN", instance)
         method = scope.get("method")
         path = scope.get("path")

@@ -152,7 +152,7 @@ class Podman:
             if _ENV_KEY.fullmatch(key) is None or "\n" in value or "\x00" in value:
                 message = "env entry must be one line"
                 raise ValueError(message)
-            argv.extend(("-e", f"{key}={value}"))
+            argv.extend(("-e", key if key == "ACONSOLE_TAB_TOKEN" else f"{key}={value}"))
         argv.append(request.name)
         argv.extend(request.command)
         return tuple(argv)

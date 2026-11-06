@@ -8,6 +8,7 @@ import secrets
 from urllib.parse import urlsplit
 
 _LOCAL = frozenset({"localhost", "127.0.0.1", "::1"})
+_PORT_LIMIT = 65536
 _SCHEMES = frozenset({"http", "https"})
 
 
@@ -21,11 +22,31 @@ def origin_allowed(value: str | None) -> bool:
     """Missing, the literal ``null``, and local http(s) origins are allowed."""
     if value is None or value == "null":
         return True
-    parsed = urlsplit(value)
-    host = parsed.hostname
+    try:
+        parsed = urlsplit(value)
+        host = parsed.hostname
+        _ = parsed.port
+    except ValueError:
+        return False
     if host is None:
         return False
     return parsed.scheme.casefold() in _SCHEMES and host.casefold() in _LOCAL
+
+
+def host_allowed(value: str | None) -> bool:
+    """Only a literal loopback authority; absent Host is left to the HTTP parser."""
+    if value is None:
+        return True
+    try:
+        parsed = urlsplit(f"//{value}")
+        port = parsed.port
+    except ValueError:
+        return False
+    return (
+        parsed.hostname in _LOCAL and parsed.username is None and parsed.password is None
+        and not parsed.path and not parsed.query and not parsed.fragment
+        and (port is None or 0 < port < _PORT_LIMIT)
+    )
 
 
 def bearer_token(header: str | None) -> str | None:

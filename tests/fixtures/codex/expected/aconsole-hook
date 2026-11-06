@@ -1,5 +1,7 @@
 #!/bin/sh
-curl -sS --max-time 590 -H "Authorization: Bearer $ACONSOLE_TAB_TOKEN" \
+curl -sS --max-time 590 -H @/proc/self/fd/3 \
   --data-binary @- "http://127.0.0.1:$ACONSOLE_PORT/v1/tabs/$ACONSOLE_TAB/codex/hook" \
-  2>/dev/null || true
+  3<<ACONSOLE_AUTH 2>/dev/null || true
+Authorization: Bearer $ACONSOLE_TAB_TOKEN
+ACONSOLE_AUTH
 exit 0

@@ -1,11 +1,15 @@
 #!/bin/sh
 if [ -n "$2" ]; then
-  printf '%s' "$2" | curl -sS -m 2 -H "Authorization: Bearer $ACONSOLE_TAB_TOKEN" \
+  printf '%s' "$2" | curl -sS -m 2 -H @/proc/self/fd/3 \
     --data-binary @- "http://127.0.0.1:$ACONSOLE_PORT/v1/tabs/$ACONSOLE_TAB/codex/notify" \
-    >/dev/null 2>&1 || true
+    3<<ACONSOLE_AUTH >/dev/null 2>&1 || true
+Authorization: Bearer $ACONSOLE_TAB_TOKEN
+ACONSOLE_AUTH
 else
-  curl -sS -m 2 -H "Authorization: Bearer $ACONSOLE_TAB_TOKEN" \
+  curl -sS -m 2 -H @/proc/self/fd/3 \
     --data-binary @- "http://127.0.0.1:$ACONSOLE_PORT/v1/tabs/$ACONSOLE_TAB/codex/notify" \
-    >/dev/null 2>&1 || true
+    3<<ACONSOLE_AUTH >/dev/null 2>&1 || true
+Authorization: Bearer $ACONSOLE_TAB_TOKEN
+ACONSOLE_AUTH
 fi
 exit 0

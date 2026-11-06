@@ -7,13 +7,12 @@ nor the token. The user's other servers stay as they are, and a file that cannot
 from __future__ import annotations
 
 import json
-import os
-import tempfile
 from pathlib import Path
 from typing import Final, final
 
+from aconsole.core.infrastructure.agents.private_files import atomic_write, check_home, private_dir, read_bytes
+
 _COMMAND: Final = ("agent",)
-_DIR_MODE: Final = 0o700
 _FILE_MODE: Final = 0o600
 _ENTRY: Final = {
     "url": "http://127.0.0.1:${env:ACONSOLE_PORT}/mcp",
@@ -31,10 +30,11 @@ class CursorLauncher:
     def launch(self, agent_home: Path) -> tuple[str, ...]:
         if not agent_home.is_absolute() or agent_home.is_symlink() or not agent_home.is_dir():
             raise ValueError(_HOME)
+        check_home(agent_home)
         folder = agent_home / ".cursor"
         if folder.is_symlink():
             raise ValueError(_SYMLINK)
-        folder.mkdir(mode=_DIR_MODE, exist_ok=True)
+        private_dir(folder)
         _merge(folder / "mcp.json")
         return _COMMAND
 
@@ -42,7 +42,7 @@ class CursorLauncher:
 def _merge(path: Path) -> None:
     if path.is_symlink():
         raise ValueError(_SYMLINK)
-    document: object = json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
+    document: object = json.loads(read_bytes(path)) if path.exists() else {}
     if not isinstance(document, dict):
         raise ValueError(_NOT_OBJECT)  # noqa: TRY004 -- a bad file, handled like one that is not JSON
     servers: object = document.setdefault("mcpServers", {})  # pyright: ignore[reportUnknownMemberType, reportUnknownVariableType]
@@ -55,13 +55,4 @@ def _merge(path: Path) -> None:
 
 
 def _write(path: Path, payload: bytes) -> None:
-    fd, name = tempfile.mkstemp(prefix=".aconsole-", dir=path.parent)
-    temporary = Path(name)
-    try:
-        with os.fdopen(fd, "wb") as stream:
-            _ = stream.write(payload)
-        temporary.chmod(_FILE_MODE)
-        _ = temporary.replace(path)
-    except OSError:
-        temporary.unlink(missing_ok=True)
-        raise
+    atomic_write(path, payload, _FILE_MODE)

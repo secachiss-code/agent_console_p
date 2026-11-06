@@ -6,6 +6,7 @@ Assistant lines are not decoded. Reading stops at the first prompt line, and nev
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
@@ -30,6 +31,9 @@ def resume_argv(session_id: str | None, *, fork: bool) -> tuple[str, ...]:
     """``claude --resume <id> --fork-session``. Either flag is omitted when it was not asked for."""
     if session_id is None and not fork:
         return ("claude",)
+    if session_id is not None and re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_-]{0,127}", session_id) is None:
+        message = "invalid session id"
+        raise ValueError(message)
     command = ["claude"]
     if session_id is not None:
         command.extend(("--resume", session_id))

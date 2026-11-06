@@ -88,7 +88,7 @@ def test_the_session_of_a_codex_tab_is_kept_for_resume() -> None:
     service.codex_session(opened.worktree_path, "01a1a095-be7c-74a3-ac01-7264329c41af")
     assert service.snapshot().tabs[0].agent_session_id == "01a1a095-be7c-74a3-ac01-7264329c41af"
     spec = service.launch_spec(TabIdParams(tab_id=opened.id))
-    assert "resume 01a1a095-be7c-74a3-ac01-7264329c41af" in " ".join(spec.argv)
+    assert "resume -- 01a1a095-be7c-74a3-ac01-7264329c41af" in " ".join(spec.argv)
 
 
 def test_a_session_that_is_no_plain_word_is_ignored() -> None:
