@@ -1,0 +1,93 @@
+{
+  "audited_commit": "0b7717f",
+  "observations": [
+    {
+      "scenario": "untracked and dangling symlink rollback",
+      "safety_recovers_bytes": true,
+      "safety_recovers_link": true
+    },
+    {
+      "scenario": "write after preflight",
+      "adapter": "worktrees",
+      "discard_ignored": false,
+      "removed": false,
+      "new_untracked_survives": true,
+      "unsafe": false
+    },
+    {
+      "scenario": "write after preflight",
+      "adapter": "mutations",
+      "discard_ignored": false,
+      "removed": false,
+      "new_untracked_survives": true,
+      "unsafe": false
+    },
+    {
+      "scenario": "write after preflight",
+      "adapter": "worktrees",
+      "discard_ignored": true,
+      "removed": true,
+      "new_untracked_survives": false,
+      "unsafe": true
+    },
+    {
+      "scenario": "write after preflight",
+      "adapter": "mutations",
+      "discard_ignored": true,
+      "removed": true,
+      "new_untracked_survives": false,
+      "unsafe": true
+    },
+    {
+      "scenario": "dirty submodule",
+      "config_hides_dirty": false,
+      "reported_unstaged": 1,
+      "removed": false,
+      "unsaved_file_survives": true,
+      "unsafe": false
+    },
+    {
+      "scenario": "dirty submodule",
+      "config_hides_dirty": true,
+      "reported_unstaged": 0,
+      "removed": true,
+      "unsaved_file_survives": false,
+      "unsafe": true
+    },
+    {
+      "scenario": "bare repository",
+      "refused": true,
+      "head_preserved": true
+    },
+    {
+      "scenario": "imported session close/archive",
+      "mode": "main_checkout",
+      "local_data_preserved": true
+    },
+    {
+      "scenario": "imported session close/archive",
+      "mode": "existing_worktree",
+      "local_data_preserved": true
+    },
+    {
+      "scenario": "literal options and foreign index.lock",
+      "filename_is_literal": true,
+      "option_base_refused": true,
+      "real_index_and_lock_preserved": true,
+      "private_snapshot_succeeds": true
+    },
+    {
+      "scenario": "merge conflict and linked worktree",
+      "conflict_refused": true,
+      "head_and_local_changes_preserved": true,
+      "dot_git_is_file": true,
+      "linked_restore_preserves_main": true
+    },
+    {
+      "scenario": "unborn repository checkpoint",
+      "head_remains_unborn": true,
+      "real_index_absent": true,
+      "bytes_restored": true
+    }
+  ]
+}
