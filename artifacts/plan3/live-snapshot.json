@@ -1,0 +1,1505 @@
+{
+  "title": "Устранить риски и утечки AConsole",
+  "goal": "Закрыть подтверждённые риски выполнения кода на хосте и повторного разового ALLOW, обеспечить безопасное управление процессами/worktree, исправить гонку старта core и убрать неограниченный рост ресурсов. Изменения выполнять отдельными проверяемыми узлами; безопасность hostrun и approval проверить особенно тщательно.",
+  "counts": {
+    "pending": 35,
+    "in_progress": 2,
+    "verifying": 22,
+    "blocked": 4,
+    "done": 10,
+    "failed": 2,
+    "cancelled": 0,
+    "total": 75
+  },
+  "nodes": [
+    {
+      "node_id": "node-2",
+      "key": "SEC-1",
+      "title": "Закрыть границу hostrun",
+      "status": "verifying",
+      "ready": false,
+      "objective": "Не допускать исполнения изменяемого checkout-кода на хосте через hostrun check, test и gate; отключить внешние diff/textconv механизмы у hostrun git diff.",
+      "acceptance": [
+        "Агент не может добиться исполнения изменённого tools/check.sh, tools/gate/phase_gate.py или тестового кода с правами host-пользователя.",
+        "hostrun git diff не запускает diff.external или textconv из конфигурации репозитория.",
+        "Проверки hostrun покрывают разрешённые и запрещённые пути исполнения."
+      ],
+      "paths": [
+        "tools/hostrun/server.py",
+        "tools/hostrun/actions.py",
+        "tools/hostrun/policy.example.toml",
+        "tests/hostrun"
+      ],
+      "lease_id": "SEC-1:2",
+      "fence": 2,
+      "expires_at": "2026-11-04T15:37:06.951873+00:00"
+    },
+    {
+      "node_id": "node-3",
+      "key": "SEC-2",
+      "title": "Исправить повторы разового approval",
+      "status": "verifying",
+      "ready": false,
+      "objective": "Развести повторную доставку одного события и новый идентичный вызов инструмента: ранее завершённый разовый ALLOW не должен разрешать независимый повтор.",
+      "acceptance": [
+        "После разового ALLOW новый hook с теми же session/tool/input в пределах TTL не получает автоматический ALLOW.",
+        "Повтор одного и того же события не создаёт лишних запросов, если протокол предоставляет стабильный event id.",
+        "Тесты различают pending-дедупликацию, повтор доставки и независимый повтор действия."
+      ],
+      "paths": [
+        "src/aconsole/core/domain/approvals.py",
+        "src/aconsole/core/application/services/approval_broker.py",
+        "src/aconsole/core/infrastructure/http/approval.py",
+        "tests/core/domain/test_approvals.py"
+      ],
+      "lease_id": "SEC-2:1",
+      "fence": 1,
+      "expires_at": "2026-11-04T14:34:46.253837+00:00"
+    },
+    {
+      "node_id": "node-4",
+      "key": "SYS-1",
+      "title": "Не запускать агента при неудачном orphan scan",
+      "status": "done",
+      "ready": false,
+      "objective": "Сделать запуск нового терминала fail-closed, если приложение не смогло проверить и остановить старые процессы таба.",
+      "acceptance": [
+        "При неудачном orphan scan новый агент не стартует.",
+        "При успешном сканировании сохраняется текущий сценарий запуска.",
+        "Проверки покрывают ошибки Podman и отсутствие старых процессов."
+      ],
+      "paths": [
+        "src/aconsole/core/application/services/tabs.py",
+        "src/aconsole/core/infrastructure/containers/podman.py",
+        "tests/core"
+      ],
+      "fence": 1
+    },
+    {
+      "node_id": "node-5",
+      "key": "SYS-2",
+      "title": "Сохранять ссылку на worktree при отказе удаления",
+      "status": "done",
+      "ready": false,
+      "objective": "Не помечать workspace удалённым и не терять его из приложения, если Git отказался удалить worktree после предварительной проверки.",
+      "acceptance": [
+        "Если удаление возвращает removed=False, путь к worktree остаётся зарегистрированным и доступным после закрытия таба.",
+        "Пользователь получает корректный статус, отличающий удалённый worktree от оставленного.",
+        "Проверки покрывают изменение состояния между предварительным осмотром и удалением."
+      ],
+      "paths": [
+        "src/aconsole/core/application/services/tabs.py",
+        "src/aconsole/core/infrastructure/git/worktrees.py",
+        "src/aconsole/core/infrastructure/persistence/repositories/tabs.py",
+        "tests/core"
+      ],
+      "fence": 1
+    },
+    {
+      "node_id": "node-6",
+      "key": "SYS-3",
+      "title": "Устранить гонку старта core",
+      "status": "done",
+      "ready": false,
+      "objective": "Если lock уже занят, но Unix-сокет ещё не появился, повторять подключение до общего срока ожидания вместо немедленного отказа.",
+      "acceptance": [
+        "Параллельный запуск UI успешно подключается к core, который уже держит lock и ещё поднимает сокет.",
+        "Если core так и не становится доступен, UI возвращает ограниченную по времени диагностируемую ошибку.",
+        "Второй core не стартует, пока lock удерживается."
+      ],
+      "paths": [
+        "src/aconsole/ui/client/core_client.py",
+        "src/aconsole/core/bootstrap.py",
+        "tests/gui/test_core_client.py"
+      ],
+      "fence": 1
+    },
+    {
+      "node_id": "node-7",
+      "key": "MEM-1",
+      "title": "Ограничить рост памяти и очистить обработчики",
+      "status": "done",
+      "ready": false,
+      "objective": "Убирать завершённые VTE-обработчики и ограничить удержание исторических данных в ApprovalBook, EchoBook, OpenCode EventReader и IPC diagnostics.",
+      "acceptance": [
+        "После серии Resume/New Session на одном VTE-виджете остаётся не более одного активного child-exited обработчика.",
+        "Истёкшие записи и закрытые сессии освобождают память; бесконечные списки имеют TTL или верхнюю границу.",
+        "Проверки подтверждают, что очистка не меняет действующие approval, vault echo и session-cost сценарии."
+      ],
+      "paths": [
+        "src/aconsole/ui/views/terminal/session.py",
+        "src/aconsole/core/domain/approvals.py",
+        "src/aconsole/core/application/services/approval_broker.py",
+        "src/aconsole/core/infrastructure/vault/writer.py",
+        "src/aconsole/core/infrastructure/agents/opencode/stream.py",
+        "src/aconsole/core/infrastructure/ipc/server.py",
+        "tests"
+      ],
+      "fence": 1
+    },
+    {
+      "node_id": "node-8",
+      "key": "QA-1",
+      "title": "Проверить исправления и сценарии отказа",
+      "status": "pending",
+      "ready": false,
+      "objective": "Проверить каждый исправленный сценарий, провести обзор изменений безопасности и убедиться, что сохранены ожидаемые пользовательские потоки.",
+      "acceptance": [
+        "Добавлены проверки регрессий для каждого принятого дефекта.",
+        "Проверены ошибки старта/остановки процессов, гонка worktree и повторный hook.",
+        "Security review подтверждает отсутствие исполнения изменяемого checkout-кода на host через разрешённые hostrun actions."
+      ],
+      "fence": 0
+    },
+    {
+      "node_id": "node-9",
+      "key": "SEC-3",
+      "title": "Закрыть оставшиеся host-exec действия",
+      "status": "pending",
+      "ready": false,
+      "objective": "Не исполнять на хосте изменяемый код через core-run, fake-core, ui-run, ui-snapshot и deps-sync; оставить только неизменяемые проверенные команды или перенести действия в контейнер.",
+      "acceptance": [
+        "core-run, fake-core, ui-run, ui-snapshot и deps-sync не запускают код из рабочего checkout на host-пользователе.",
+        "policy.example.toml не выдаёт агентам действий, исполняющих изменяемый код хоста.",
+        "Проверки покрывают каждый закрытый action и сохранение разрешённых сценариев."
+      ],
+      "paths": [
+        "tools/hostrun/server.py",
+        "tools/hostrun/actions.py",
+        "tools/hostrun/policy.example.toml",
+        "tests/hostrun"
+      ],
+      "fence": 0
+    },
+    {
+      "node_id": "node-10",
+      "key": "SEC-4",
+      "title": "Защитить review gate от подделки",
+      "status": "pending",
+      "ready": false,
+      "objective": "Не доверять отчётам и review-записям, которые агент может изменить из контейнера; исключить самоодобрение агентом собственных изменений.",
+      "acceptance": [
+        "Агент не может подделать успешный gate или review через файлы в checkout или state-каталоге.",
+        "agent-claude не может одобрить собственные изменения; approve требует независимого субъекта.",
+        "Проверки покрывают подделку отчёта, повтор review и попытку self-approval."
+      ],
+      "paths": [
+        "tools/hostrun/server.py",
+        "tools/hostrun/actions.py",
+        "tools/hostrun/policy.example.toml",
+        "tests/hostrun"
+      ],
+      "fence": 0
+    },
+    {
+      "node_id": "node-11",
+      "key": "SYS-4",
+      "title": "Проверять фактическую остановку orphan-процессов",
+      "status": "verifying",
+      "ready": false,
+      "objective": "Не подавлять ошибки остановки контейнеров и подтверждать повторным сканированием, что процессы таба действительно завершены.",
+      "acceptance": [
+        "Ошибка stop_in_container не считается успешной остановкой и отражается в результате.",
+        "После остановки выполняется повторное сканирование; оставшиеся процессы блокируют запуск.",
+        "Проверки покрывают ошибку Podman, частичную остановку и успешное завершение."
+      ],
+      "paths": [
+        "src/aconsole/core/application/services/tabs.py",
+        "src/aconsole/core/infrastructure/containers/podman.py",
+        "tests/core"
+      ],
+      "lease_id": "SYS-4:3",
+      "fence": 3,
+      "expires_at": "2026-11-05T18:34:34.587722+00:00"
+    },
+    {
+      "node_id": "node-12",
+      "key": "SEC-5",
+      "title": "Изолировать approval по табам",
+      "status": "pending",
+      "ready": false,
+      "objective": "Учесть tab_id в ключе дедупликации approval, не возвращать завершённые решения другого таба и очищать состояние при закрытии таба.",
+      "acceptance": [
+        "Новый запрос в другом табе с теми же session/tool/input не получает чужой завершённый ALLOW или DENIED.",
+        "Закрытие таба освобождает его pending/settled approval и не влияет на другие табы.",
+        "Тесты покрывают межтабовую изоляцию, TTL и очистку при закрытии."
+      ],
+      "paths": [
+        "src/aconsole/core/domain/approvals.py",
+        "src/aconsole/core/application/services/approval_broker.py",
+        "src/aconsole/core/application/services/tabs.py",
+        "src/aconsole/core/infrastructure/http/approval.py",
+        "tests/core"
+      ],
+      "fence": 0
+    },
+    {
+      "node_id": "node-13",
+      "key": "QA-2",
+      "title": "Проверить дополнительные исправления",
+      "status": "pending",
+      "ready": false,
+      "objective": "Проверить SEC-3, SEC-4, SYS-4 и SEC-5, включая попытки обхода hostrun, подделки review, self-approval и межтабовой утечки approval.",
+      "acceptance": [
+        "Для каждого нового дефекта есть регрессионная проверка.",
+        "Проверены попытки исполнения checkout-кода, подделки gate/review, self-approval и чужого approval.",
+        "Security review подтверждает отсутствие известных обходов в разрешённых actions."
+      ],
+      "paths": [
+        "tools/hostrun",
+        "src/aconsole/core",
+        "tests"
+      ],
+      "fence": 0
+    },
+    {
+      "node_id": "node-14",
+      "key": "CMT-1",
+      "title": "Проверить обязательные коммиты по узлам",
+      "status": "pending",
+      "ready": false,
+      "objective": "Убедиться, что каждый рабочий узел завершён отдельным коммитом с trailer AConsole-Node, нет смешанных коммитов, а история покрывает все изменения.",
+      "acceptance": [
+        "Для каждого рабочего узла есть ровно один коммит с AConsole-Node: <KEY>.",
+        "Нет коммитов, смешивающих несколько узлов, и нет изменений вне узлов.",
+        "QA-узлы не создают отдельных коммитов, если не меняют файлы."
+      ],
+      "fence": 0
+    },
+    {
+      "node_id": "node-18",
+      "key": "AUD-1",
+      "title": "Завершить аудит Git и сохранности данных",
+      "status": "done",
+      "ready": false,
+      "objective": "Аудит этой области оборвался и отчёта нет. Проверить без правок: закрытие вкладки, откат чекпоинта (REL-22: удаляет untracked без снимка), --force, merge и конфликты, опции с ведущим \"-\", необычные репозитории, index.lock при параллельных агентах. Найденное оформить новыми узлами.",
+      "acceptance": [
+        "Есть отчёт с путями и способом воспроизведения для каждой находки.",
+        "Каждый сценарий потери данных проверен на одноразовом репозитории.",
+        "Подтверждённые дефекты добавлены в план новыми узлами."
+      ],
+      "paths": [
+        "src/aconsole/core/infrastructure/git",
+        "src/aconsole/core/application/services/git_state.py",
+        "src/aconsole/core/application/services/tabs.py",
+        "src/aconsole/ui/views/review"
+      ],
+      "fence": 3
+    },
+    {
+      "node_id": "node-19",
+      "key": "AUD-2",
+      "title": "Проверить находки на живом приложении",
+      "status": "blocked",
+      "ready": false,
+      "objective": "Находки сделаны по коду, GUI не запускался, проверяющий этап не проводился. За один проход на реальном окне подтвердить: Ctrl+Shift+C/V, Ctrl+Tab, Ctrl+Q, F1; палитру; закрытие окна при работающем агенте (живы ли процессы); сжимает ли панель согласований терминал; реальные hooks Codex, OpenCode, Cursor. Результат записать в узлы как заметки: что не подтвердилось, снять из работы.",
+      "acceptance": [
+        "По каждому пункту записан результат: подтверждено или нет, с версией CLI.",
+        "Неподтвердившиеся пункты исключены из соответствующих узлов."
+      ],
+      "fence": 1
+    },
+    {
+      "node_id": "node-20",
+      "key": "SEC-6",
+      "title": "Аутентифицировать клиентов IPC-сокета",
+      "status": "verifying",
+      "ready": false,
+      "objective": "Подтверждено кодом и из контейнера: core.sock виден агенту, uid совпадает, allow_peer проверяет только uid, роль берётся из initialize без доказательства (session.py:375-378), nonce уходит подписчикам. Агент может вызвать settings/update и approval/decide. Файловый секрет не поможет: /home/sas и /run/user/1000 смонтированы в контейнер. Вариант для проверки: роли UI и CLI только от процессов в mnt-namespace ядра (SO_PEERCRED pid плюс /proc/<pid>/ns/mnt), контейнеру только роль sidecar с токеном. Закрывает SEC-A-01, SEC-P-05 и требование пользователя: агент не переключает режим согласований.",
+      "acceptance": [
+        "Процесс из контейнера не может вызвать settings/update, approval/decide и подписаться на события с nonce.",
+        "Клиент с неподтверждённой ролью получает ROLE_FORBIDDEN, отказ пишется в лог.",
+        "Sidecar в контейнере и UI на хосте работают как раньше.",
+        "Тест воспроизводит подключение из другого namespace или эквивалентную подмену."
+      ],
+      "paths": [
+        "src/aconsole/core/infrastructure/ipc",
+        "src/aconsole/core/bootstrap.py",
+        "tests/core"
+      ],
+      "lease_id": "SEC-6:3",
+      "fence": 3,
+      "expires_at": "2026-11-05T18:35:38.718298+00:00"
+    },
+    {
+      "node_id": "node-21",
+      "key": "SEC-7",
+      "title": "Убрать хостовые данные из досягаемости агента",
+      "status": "pending",
+      "ready": false,
+      "objective": "Подтверждено из контейнера: /home/sas смонтирован на запись, агенту доступны aconsole.db с настройками, ~/.bashrc и ~/.config/systemd/user. Запрет на переключение режима нельзя обеспечить кодом ядра, пока агент может править базу напрямую, а запись в .bashrc означает выполнение на хосте. AConsole контейнеры не создаёт (README), поэтому нужны проверка и инструкция. Решить вместе с пользователем, какие монтирования оставить; пересоздание контейнеров делает только пользователь.",
+      "acceptance": [
+        "Мастер и health показывают предупреждение, если из контейнера доступны база AConsole или домашний каталог хоста, с готовой инструкцией.",
+        "README описывает рекомендуемую конфигурацию контейнера и её проверку.",
+        "В рекомендуемой конфигурации агент не может записать в базу AConsole и файлы запуска хоста."
+      ],
+      "paths": [
+        "src/aconsole/core/application/services/setup.py",
+        "README.md",
+        "tests/core"
+      ],
+      "fence": 0
+    },
+    {
+      "node_id": "node-22",
+      "key": "SEC-8",
+      "title": "Запретить git исполнять код репозитория на хосте",
+      "status": "verifying",
+      "ready": false,
+      "objective": "Ядро на хосте вызывает git в репозитории, чей .git/config может писать агент. В infrastructure/git нет нейтрализации core.fsmonitor, core.hooksPath, diff.external, textconv, core.sshCommand. Обход: агент пишет core.fsmonitor, ядро выполняет его на хосте вне контейнера (SEC-P-03, SEC-A-03). Отличается от SEC-1: там hostrun и разработка, здесь сам продукт. Все вызовы должны идти через runner.py с безопасными -c и окружением, а hooks явных операций пользователя (commit, merge) разрешаться осознанно.",
+      "acceptance": [
+        "Вредный core.fsmonitor и hooksPath в репозитории не выполняются при опросе статуса, diff и снимках.",
+        "Вызовы git вне общего runner запрещены проверкой.",
+        "Регрессионные тесты покрывают каждый опасный ключ конфигурации.",
+        "Описано поведение hooks при commit и merge из интерфейса."
+      ],
+      "paths": [
+        "src/aconsole/core/infrastructure/git",
+        "tests/core"
+      ],
+      "lease_id": "SEC-8:2",
+      "fence": 2,
+      "expires_at": "2026-11-05T21:19:52.251706+00:00"
+    },
+    {
+      "node_id": "node-23",
+      "key": "SEC-9",
+      "title": "Закрыть обходы классификатора риска",
+      "status": "verifying",
+      "ready": false,
+      "objective": "Подтверждено запуском classify: пустые теги у echo \"$(rm -rf ~)\", echo x > .git/hooks/pre-commit, echo x >> .git/config, sed -i на .git/config, git -c core.fsmonitor=..., GIT_CONFIG_COUNT, echo > .claude/settings.local.json, .codex/config.toml, claude --dangerously-skip-permissions, codex exec --yolo. X=$(rm -rf ~) получает только outside_worktree. Также SEC-A-07 и SEC-A-09. Подрежим «опасные спрашивать» зависит от этого. Классификатор остаётся советчиком, а не единственным барьером: неразобранная команда считается рискованной.",
+      "acceptance": [
+        "Все команды из описания получают теги, тест перечисляет их таблицей.",
+        "Команды, которые разбор не смог понять, считаются рискованными.",
+        "Запись в .git, конфиги агентов и запуск вложенных агентов имеют свой тег.",
+        "Правило «во вкладке» не применяется к команде с подстановкой."
+      ],
+      "paths": [
+        "src/aconsole/core/domain/risk.py",
+        "tests/core/domain"
+      ],
+      "lease_id": "SEC-9:1",
+      "fence": 1,
+      "expires_at": "2026-11-04T16:26:49.477263+00:00"
+    },
+    {
+      "node_id": "node-24",
+      "key": "SEC-10",
+      "title": "Убрать токен из argv и флаги из session id",
+      "status": "done",
+      "ready": false,
+      "objective": "Токен вкладки передаётся в argv podman exec и sidecar (HAR-08, SEC-P-06), session id с ведущим \"-\" становится флагом CLI (SEC-P-07), запись в HOME следует по симлинкам (SEC-P-08), python -m без -P в лаунчере (SEC-P-09), MCP не проверяет Origin и Host (SEC-P-10, API-23). Сначала воспроизвести: эти находки не перепроверялись.",
+      "acceptance": [
+        "Токена нет в командной строке процессов.",
+        "Session id проверяется по формату, перед ним стоит --.",
+        "Запись в HOME не следует по симлинкам наружу.",
+        "/mcp проверяет Origin и Host как ingest."
+      ],
+      "paths": [
+        "src/aconsole/core/infrastructure/agents",
+        "src/aconsole/core/infrastructure/tabs.py",
+        "src/aconsole/core/infrastructure/mcp/server.py",
+        "tests/core"
+      ],
+      "fence": 2
+    },
+    {
+      "node_id": "node-25",
+      "key": "APR-1",
+      "title": "Перенести запрос согласования поверх терминала",
+      "status": "verifying",
+      "ready": false,
+      "objective": "Жалоба пользователя USER-01 и расхождение с DESIGN §2.1 и §1 («магия», «родное, но маковое»): там карточка поверх терминала той же вкладки, в коде add_bottom_bar (window.py:525), высота 320 px, кнопки прокручиваются вместе с содержимым (panel.py). Сделать оверлей в стиле приложения: кнопки всегда видны, детали прокручиваются отдельно, анимация появления 200 мс. Сохранить решения коммита 0fdcfba: карточка не забирает фокус, защита от двойного нажатия. Добавить из DESIGN: для рискованных «Разрешить» включается через 500 мс и не по умолчанию. Запрос другой вкладки виден счётчиком. Перед кодом показать макет пользователю.",
+      "acceptance": [
+        "Кнопки решения видны при любой длине команды и diff без прокрутки.",
+        "Появление запроса не меняет размер терминала и не вызывает перерисовку агента.",
+        "Набор текста в терминале в момент появления запроса не может принять решение.",
+        "Снимки светлой и тёмной темы приняты пользователем.",
+        "Работает в узком окне и с клавиатуры, Orca читает запрос."
+      ],
+      "paths": [
+        "src/aconsole/ui/views/approvals",
+        "src/aconsole/ui/views/window.py",
+        "src/aconsole/ui/style/style.css",
+        "tests/gui"
+      ],
+      "lease_id": "APR-1:2",
+      "fence": 2,
+      "expires_at": "2026-11-04T19:20:10.417952+00:00"
+    },
+    {
+      "node_id": "node-26",
+      "key": "APR-2",
+      "title": "Показывать содержимое Write, Edit и MCP в запросе",
+      "status": "pending",
+      "ready": false,
+      "objective": "Запросы Write, Edit и MCP приходят без пути, содержимого и тегов (SEC-A-04), длинная команда режется на 4000 символов без просмотра остатка (SEC-A-16), запрос остаётся после отмены агентом (SEC-A-18). Решение без этих данных вслепую. DESIGN §2.1: список файлов и свёрнутый diff до 200 строк. Риск для правок считать по путям: .git, конфиги агентов, вне worktree.",
+      "acceptance": [
+        "Запрос правки показывает пути и diff, запрос MCP показывает инструмент и аргументы.",
+        "Запись в .git и конфиги агентов отмечена как рискованная.",
+        "Длинную команду можно прочитать целиком.",
+        "Отменённый агентом запрос исчезает."
+      ],
+      "paths": [
+        "src/aconsole/core/infrastructure/http/approval.py",
+        "src/aconsole/core/domain/approvals.py",
+        "src/aconsole/ui/views/approvals",
+        "tests/core"
+      ],
+      "fence": 0
+    },
+    {
+      "node_id": "node-27",
+      "key": "APR-3",
+      "title": "Включить системные уведомления о запросах",
+      "status": "in_progress",
+      "ready": false,
+      "objective": "В src нет Gio.Notification и send_notification: пользователь не узнает о запросе, если окно свёрнуто (UX-13). Запрос истекает, и агент простаивает. Реализовать DESIGN §6: одно уведомление на эпизод, только если окно или вкладка не в фокусе, отзыв при решении, переход к вкладке по клику.",
+      "acceptance": [
+        "Запрос при неактивном окне даёт уведомление, клик открывает вкладку.",
+        "На один эпизод одно уведомление, при решении оно отзывается.",
+        "При активной вкладке уведомления нет."
+      ],
+      "paths": [
+        "src/aconsole/ui/views/app.py",
+        "src/aconsole/ui/views/window.py",
+        "tests/gui"
+      ],
+      "lease_id": "APR-3:2",
+      "fence": 2,
+      "expires_at": "2026-11-04T20:59:48.761980+00:00"
+    },
+    {
+      "node_id": "node-28",
+      "key": "APR-4",
+      "title": "Модель режимов согласований: глобально и проект",
+      "status": "pending",
+      "ready": false,
+      "objective": "Решение пользователя USER-02. Режимы: спрашивать (сейчас и по умолчанию), разрешать с подрежимами «опасные спрашивать» и «опасные тоже разрешать», запрещать, по сценарию. Сценарий только заглушка: реализация потом, в UI недоступен, в домене ведёт себя как «спрашивать». Уровни: глобальный и проектный, проектный важнее; уровня вкладки нет. Отдельное поле от approvals_mode: тот отвечает за место вопроса, этот за то, кто решает. Порт ApprovalPolicy в application: классификатор даёт теги, решение принимает политика. Только модель, контракт и миграция, применение в APR-5. Трактовку подрежимов подтвердить у пользователя.",
+      "acceptance": [
+        "Режим хранится на обоих уровнях и переживает перезапуск ядра.",
+        "Заглушка сценария ведёт себя как «спрашивать» и покрыта тестом.",
+        "Изменить режим можно только из UI: MCP, ingest и контейнер получают отказ.",
+        "Контракты и golden обновлены, миграция обратима."
+      ],
+      "paths": [
+        "src/aconsole/core/application",
+        "src/aconsole/core/domain/approvals.py",
+        "src/aconsole/contracts/settings.py",
+        "migrations/versions",
+        "tests/core"
+      ],
+      "fence": 0
+    },
+    {
+      "node_id": "node-29",
+      "key": "APR-5",
+      "title": "Применить режимы для Claude Code",
+      "status": "pending",
+      "ready": false,
+      "objective": "Первый адаптер. По отчёту harness-interception: решения PreToolUse и PermissionRequest в демоне, статический permissions.deny и dontAsk в --settings для fail-closed «запрещать», onFailure block (Claude Code 2.1.295+, проверять версию). Закрепить правила запрета на запись в .claude и .git (SEC-A-05, SEC-A-11, SEC-A-12). Автоматические решения пишутся в журнал и видны пользователю. Без предшествующих узлов автоматическое разрешение включать нельзя.",
+      "acceptance": [
+        "Каждый режим и подрежим проверен на реальном Claude Code, версия записана.",
+        "Падение демона в режиме «запрещать» не даёт выполнить вызов.",
+        "Автоматические решения видны в журнале с причиной.",
+        "Правка настроек агентом не отключает выбранный режим, либо это явно показано."
+      ],
+      "paths": [
+        "src/aconsole/core/infrastructure/agents/claude",
+        "src/aconsole/core/infrastructure/http/approval.py",
+        "src/aconsole/core/application/services/approval_broker.py",
+        "tests/core"
+      ],
+      "fence": 0
+    },
+    {
+      "node_id": "node-30",
+      "key": "APR-6",
+      "title": "Перехват и режимы для OpenCode",
+      "status": "pending",
+      "ready": false,
+      "objective": "README называет запросы OpenCode только нативными, но механизмы есть. Вариант O-V2: статика permission через OPENCODE_CONFIG_CONTENT для allow и deny. Вариант O-V1: ответ через API по SSE permission.asked для панели. Сначала проверить на целевой версии, блокирует ли сервер инструмент до ответа и показывает ли TUI такие запросы.",
+      "acceptance": [
+        "Проверка на реальной версии записана в узел.",
+        "Разрешать и запрещать работают статически.",
+        "Спрашивать через панель включён, только если подтверждена блокировка; иначе UI честно говорит о нативном запросе."
+      ],
+      "paths": [
+        "src/aconsole/core/infrastructure/agents/opencode",
+        "tests/core"
+      ],
+      "fence": 0
+    },
+    {
+      "node_id": "node-31",
+      "key": "APR-7",
+      "title": "Перехват и режимы для Codex",
+      "status": "pending",
+      "ready": false,
+      "objective": "Зависит от работающих hooks (HAR-2). Варианты: PermissionRequest и PreToolUse как ask-gate, статика approval_policy и sandbox через -c. Проверить на целевой версии: срабатывает ли PermissionRequest при approval_policy=never, работает ли allow из PreToolUse. В launcher сейчас нет approval_policy и sandbox_mode (SEC-A-05).",
+      "acceptance": [
+        "Проверка на реальной версии записана в узел.",
+        "Режимы применяются там, где подтверждены; покрытие честно указано в UI.",
+        "Режим запрещать не пропускает вызов при падении hook."
+      ],
+      "paths": [
+        "src/aconsole/core/infrastructure/agents/codex",
+        "tests/core"
+      ],
+      "fence": 0
+    },
+    {
+      "node_id": "node-32",
+      "key": "APR-8",
+      "title": "Перехват и режимы для Cursor",
+      "status": "pending",
+      "ready": false,
+      "objective": "Самый неопределённый харнесс. Сначала проверить локально, запускают ли agent и agent -p hooks из ~/.cursor/hooks.json и работает ли failClosed. По результату: U-V1 через hooks либо U-V2 статические правила cli-config.json. Если перехват не подтвердился, режим честно помечается как неприменимый.",
+      "acceptance": [
+        "Проверка на реальной версии записана в узел.",
+        "Для каждого режима указано: работает, частично или неприменимо.",
+        "Настройка не обещает защиту, которой нет."
+      ],
+      "paths": [
+        "src/aconsole/core/infrastructure/agents/cursor",
+        "tests/core"
+      ],
+      "fence": 0
+    },
+    {
+      "node_id": "node-33",
+      "key": "APR-9",
+      "title": "Настройка режимов в окне и честная матрица",
+      "status": "pending",
+      "ready": false,
+      "objective": "Настройки глобально и в проекте. Для каждого харнесса видно, что режим реально даёт в этой версии CLI. Сценарий показан как недоступный. «Опасные тоже разрешать» требует явного подтверждения и постоянного индикатора. Вкладка без hooks сообщает об этом (SEC-A-14). Каждый режим включается в UI только после своего адаптера.",
+      "acceptance": [
+        "Режим меняется на обоих уровнях, проект видит унаследованное значение.",
+        "Неприменимые режимы отключены с объяснением причины.",
+        "Активный автоматический режим виден в окне постоянно."
+      ],
+      "paths": [
+        "src/aconsole/ui/views/setup/preferences.py",
+        "src/aconsole/ui/viewmodels",
+        "tests/gui"
+      ],
+      "fence": 0
+    },
+    {
+      "node_id": "node-34",
+      "key": "HAR-1",
+      "title": "Подключить MCP-сервер ядра к вкладкам Claude",
+      "status": "verifying",
+      "ready": false,
+      "objective": "Claude не получает MCP: в settings вкладки только permissions.allow mcp__aconsole__*, а mcpServers и --mcp-config нет, хотя у OpenCode и Cursor подключение есть. Подтверждено на этой сессии: инструментов mcp__aconsole__ нет, сервер при этом отвечает на прямой запрос с токеном вкладки. Доска планов README для Claude не работает (HAR-03).",
+      "acceptance": [
+        "Новая вкладка Claude видит двенадцать инструментов aconsole.",
+        "Вызов инструмента работает в контексте своей вкладки.",
+        "Тест проверяет итоговый argv и конфигурацию."
+      ],
+      "paths": [
+        "src/aconsole/core/infrastructure/agents/claude/launcher.py",
+        "tests/core"
+      ],
+      "lease_id": "HAR-1:1",
+      "fence": 1,
+      "expires_at": "2026-11-05T18:53:08.189805+00:00"
+    },
+    {
+      "node_id": "node-35",
+      "key": "HAR-2",
+      "title": "Включить hooks Codex и исправить заявленные возможности",
+      "status": "verifying",
+      "ready": false,
+      "objective": "ADR-0002 отключает hooks до доверия, но цепочка доверия не завершена: hooks не устанавливаются, согласования и чекпоинты Codex не работают, а CAPABILITIES[CODEX].approvals=True говорит обратное (HAR-02). Первым шагом сделать флаг и README честными, затем цепочка hooks/list и hooks.state с тестом на фикстуре реальной версии.",
+      "acceptance": [
+        "Capabilities и README совпадают с поведением на каждом шаге.",
+        "На реальном Codex hook доходит до ядра и даёт карточку.",
+        "Если доверие получить нельзя, UI объясняет, что делать."
+      ],
+      "paths": [
+        "src/aconsole/core/infrastructure/agents/codex",
+        "README.md",
+        "tests/core"
+      ],
+      "lease_id": "HAR-2:1",
+      "fence": 1,
+      "expires_at": "2026-11-05T21:42:42.584477+00:00"
+    },
+    {
+      "node_id": "node-36",
+      "key": "HAR-3",
+      "title": "Исправить fork и выбор сессии",
+      "status": "pending",
+      "ready": false,
+      "objective": "Fork копирует сессию исходной вкладки, копия резюмирует ту же сессию (HAR-01). Выбор сессии недостижим: project.sessions всегда пуст, session/list не маршрутизирован (HAR-13). Продолжение и форк недоступны из UI (UX-16), «Продолжить» запускает новую сессию без предупреждения (HAR-30), Cursor: код и README расходятся по resume (HAR-19). Сначала воспроизвести HAR-01.",
+      "acceptance": [
+        "Форк продолжает отдельную сессию, исходная не меняется.",
+        "Список сессий работает на реальном ядре и доступен из новой вкладки.",
+        "Resume недоступен там, где не поддержан, и не запускает молча новую сессию."
+      ],
+      "paths": [
+        "src/aconsole/core/application/services/tabs.py",
+        "src/aconsole/ui/views/tabs",
+        "tests/core"
+      ],
+      "fence": 2
+    },
+    {
+      "node_id": "node-37",
+      "key": "HAR-4",
+      "title": "Сделать статусы вкладок надёжными",
+      "status": "pending",
+      "ready": false,
+      "objective": "ScreenWatch для Cursor стирает хвост экрана при вводе (HAR-04), visible_tail склеивает слова (HAR-05), для OpenCode заявлен, но не включается (HAR-06), OSC 9 даёт WAITING_APPROVAL без карточки (HAR-07), статусы выводятся из текста агента (SEC-A-15). Сначала проверить на реальных CLI; нет фикстур OpenCode и Cursor (HAR-26), их снять.",
+      "acceptance": [
+        "Есть фикстуры с реальным выводом OpenCode и Cursor.",
+        "Статус ожидания не теряется при вводе.",
+        "Статус ожидания без карточки объясняет, где отвечать."
+      ],
+      "paths": [
+        "src/aconsole/core/infrastructure/agents",
+        "tests/core"
+      ],
+      "fence": 1
+    },
+    {
+      "node_id": "node-38",
+      "key": "HAR-5",
+      "title": "Устойчивость sidecar и наблюдателей",
+      "status": "pending",
+      "ready": false,
+      "objective": "CoreLink рвёт связь навсегда после одного таймаута 50 мс (HAR-09), _write_stdout пропускает exited при ошибке (HAR-10), TurnWatch Codex умирает, если контейнер не готов (HAR-12), PID из другого namespace (REL-06). Также обновляет SYS-4. Сначала воспроизвести.",
+      "acceptance": [
+        "Кратковременная задержка не обрывает связь sidecar с ядром.",
+        "Завершение процесса всегда доходит до ядра.",
+        "Наблюдатель Codex переживает поздний старт контейнера."
+      ],
+      "paths": [
+        "src/aconsole/core/infrastructure/agents",
+        "src/aconsole/core/infrastructure",
+        "tests/core"
+      ],
+      "fence": 0
+    },
+    {
+      "node_id": "node-39",
+      "key": "UX-1",
+      "title": "Починить горячие клавиши, которые ничего не делают",
+      "status": "verifying",
+      "ready": false,
+      "objective": "Подтверждено кодом: шорткаты перехватываются в CAPTURE, activate возвращает True, а _handle_action обрабатывает только часть действий. Без обработчика: close-tab, next-tab, previous-tab, tab-1..9, handover, terminal-search, copy, paste, shortcuts, zoom-*, quit. Ctrl+Shift+C/V съедаются до терминала, поэтому его обработчик в page.py их не получает (UX-03, UX-04, DES-07). Действие без обработчика не должно забирать клавишу. Проверка на живом окне в AUD-2.",
+      "acceptance": [
+        "Каждое действие keymap имеет обработчик или удалено из keymap и README.",
+        "Ctrl+Shift+C и V работают в терминале.",
+        "Тест падает при действии без обработчика."
+      ],
+      "paths": [
+        "src/aconsole/ui/views/shortcuts.py",
+        "src/aconsole/ui/views/window.py",
+        "src/aconsole/ui/viewmodels/logic/keymap.py",
+        "tests/gui"
+      ],
+      "lease_id": "UX-1:2",
+      "fence": 2,
+      "expires_at": "2026-11-04T17:47:25.105364+00:00"
+    },
+    {
+      "node_id": "node-40",
+      "key": "UX-2",
+      "title": "Спрашивать перед закрытием окна и вкладки с агентом",
+      "status": "pending",
+      "ready": false,
+      "objective": "Подтверждено кодом: _close_requested сразу скрывает окно и завершает работу, проверки занятых вкладок нет, хотя README и DESIGN её обещают (UX-01, REL-02). Закрытие вкладки при чистом worktree не спрашивает о работающем агенте (UX-08), диалог показывает сырые токены dirty, ahead (UX-07). Ctrl+Q также должен идти этим путём. Судьбу агентов при закрытии уточнить в AUD-2.",
+      "acceptance": [
+        "Закрытие при работающих агентах или ожидающих запросах спрашивает и показывает их число.",
+        "Закрытие вкладки с работающим агентом спрашивает всегда.",
+        "Диалог говорит человеческим языком, что будет потеряно."
+      ],
+      "paths": [
+        "src/aconsole/ui/views/app.py",
+        "src/aconsole/ui/views/window.py",
+        "tests/gui"
+      ],
+      "fence": 0
+    },
+    {
+      "node_id": "node-41",
+      "key": "UX-3",
+      "title": "Подключить палитру к настоящему ядру",
+      "status": "pending",
+      "ready": false,
+      "objective": "Подтверждено: palette/items, palette/execute, palette/resetRanking и session/list есть только в фейковом ядре (API-01, UX-02, HAR-18), поэтому Ctrl+Shift+P не работает в реальном режиме, хотя это заявлено в README. В DESIGN палитра главный путь.",
+      "acceptance": [
+        "Палитра на реальном ядре ищет команды, вкладки, узлы плана, заметки и согласования.",
+        "Ответ укладывается в цель DESIGN: меньше 100 мс.",
+        "Тест идёт через настоящую маршрутизацию ядра."
+      ],
+      "paths": [
+        "src/aconsole/core/bootstrap.py",
+        "src/aconsole/core/application",
+        "src/aconsole/ui/views/palette",
+        "tests/core"
+      ],
+      "fence": 0
+    },
+    {
+      "node_id": "node-42",
+      "key": "UX-4",
+      "title": "Сделать первый запуск и ошибки понятными",
+      "status": "in_progress",
+      "ready": false,
+      "objective": "Ошибка старта молча закрывает приложение, до 20 с пустой экран (UX-05). Ошибки показываются кодами (UX-06). Мастер: английские заголовки, причины в подсказках, Agent Login всегда «!» при любом не-Claude контейнере (UX-09, UX-10, HAR-22), тупик без контейнеров (UX-11), vault и mounts без исправления (UX-18, UX-19), «Позже» отключает мастер навсегда (UX-27), нет CLI или логина не видно (UX-26). Логи не упоминаются (UX-34). Сначала воспроизвести.",
+      "acceptance": [
+        "При ошибке старта пользователь видит причину и путь к логу.",
+        "Каждая непройденная проверка говорит, что сделать, с готовой командой.",
+        "Без контейнеров есть понятный следующий шаг.",
+        "Мастер можно открыть снова."
+      ],
+      "paths": [
+        "src/aconsole/ui/views/setup",
+        "src/aconsole/ui/views/app.py",
+        "src/aconsole/core/application/services/setup.py",
+        "tests/gui"
+      ],
+      "lease_id": "UX-4:2",
+      "fence": 2,
+      "expires_at": "2026-11-04T20:28:41.437893+00:00"
+    },
+    {
+      "node_id": "node-43",
+      "key": "UX-5",
+      "title": "Режимы новой вкладки и управление проектами",
+      "status": "pending",
+      "ready": false,
+      "objective": "Вкладка всегда открывается в новом worktree: нет выбора режима, базовой ветки, узла плана (UX-15), хотя README описывает три режима. Нет прогресса открытия (UX-28). Проект нельзя удалить (UX-23). Отказ с сообщением агенту недоступен (UX-17).",
+      "acceptance": [
+        "Доступны три режима из README и базовая ветка.",
+        "Открытие показывает прогресс и ошибку.",
+        "Проект можно удалить без потери worktree."
+      ],
+      "paths": [
+        "src/aconsole/ui/views/tabs/new_tab.py",
+        "src/aconsole/ui/views/sidebar",
+        "tests/gui"
+      ],
+      "fence": 0
+    },
+    {
+      "node_id": "node-44",
+      "key": "UX-6",
+      "title": "Сверить README и настройки с поведением",
+      "status": "pending",
+      "ready": false,
+      "objective": "README обещает то, чего нет в UI (UX-21, UX-24), пороги квот захардкожены при наличии настроек (UX-22, REL-20), окно настроек теряет правки (UX-35). Выполнять после основных исправлений, чтобы не переписывать дважды. Для каждого расхождения решить: реализовать или убрать обещание.",
+      "acceptance": [
+        "Каждая заявленная в README функция существует или удалена.",
+        "Настройки либо действуют, либо убраны.",
+        "Несохранённые правки не теряются молча."
+      ],
+      "paths": [
+        "README.md",
+        "src/aconsole/ui/views/setup/preferences.py"
+      ],
+      "fence": 0
+    },
+    {
+      "node_id": "node-45",
+      "key": "CORE-1",
+      "title": "Поднимать ядро после падения и показывать потерю связи",
+      "status": "done",
+      "ready": false,
+      "objective": "Подтверждено кодом: _reconnect только переподключается к сокету и не запускает ядро (REL-01), окно при этом молча замирает (DES-10). Токены живых агентов теряются при перезапуске (REL-04, проверить). core.lock освобождается до завершения потоков (REL-03). Дополняет SYS-3.",
+      "acceptance": [
+        "После kill -9 ядра UI поднимает его и восстанавливает вкладки.",
+        "Во время потери связи виден баннер.",
+        "Живые агенты после перезапуска ядра продолжают отправлять hooks."
+      ],
+      "paths": [
+        "src/aconsole/ui/client/core_client.py",
+        "src/aconsole/core/bootstrap.py",
+        "tests/core"
+      ],
+      "fence": 5
+    },
+    {
+      "node_id": "node-46",
+      "key": "CORE-2",
+      "title": "Убрать блокировки из общего потока и event loop",
+      "status": "pending",
+      "ready": false,
+      "objective": "Git-снимки чекпоинтов и approvals делят один worker (BE-01): длинный снимок задерживает ответ на запрос. MCP-инструменты блокируют loop синхронным git и БД (API-15, REL-05). Тяжёлые проверки мастера занимают тот же поток (UX-25), синхронные колбэки через .result() (BE-08). Сначала замерить задержку решения при большом репозитории.",
+      "acceptance": [
+        "Решение по согласованию проходит за заданное время при идущем снимке.",
+        "MCP-инструменты не блокируют loop: есть тест на задержку.",
+        "Замеры до и после записаны."
+      ],
+      "paths": [
+        "src/aconsole/core/bootstrap.py",
+        "src/aconsole/core/infrastructure/mcp/tools.py",
+        "tests/core"
+      ],
+      "fence": 0
+    },
+    {
+      "node_id": "node-47",
+      "key": "CORE-3",
+      "title": "Согласовать запись в БД и состояние в памяти",
+      "status": "done",
+      "ready": false,
+      "objective": "Writer.call по таймауту оставляет задачу в очереди: память откатывается, запись выполняется (BE-04, REL-07). update_settings меняет память до записи и пишет тремя транзакциями (BE-05), что важно для режима согласований. Также BE-06, BE-16, REL-26. Сначала воспроизвести.",
+      "acceptance": [
+        "Таймаут не приводит к расхождению памяти и БД.",
+        "Настройки применяются атомарно.",
+        "Завершение не теряет и не повторяет записи."
+      ],
+      "paths": [
+        "src/aconsole/core/infrastructure/persistence",
+        "src/aconsole/core/application/services/tabs.py",
+        "tests/core"
+      ],
+      "fence": 3
+    },
+    {
+      "node_id": "node-48",
+      "key": "CORE-4",
+      "title": "Исправить MCP: lease между планами и лимиты",
+      "status": "pending",
+      "ready": false,
+      "objective": "lease_id = <key>:<fence> не уникален между планами, claim падает с INTERNAL_ERROR (BE-03): проявится при втором плане проекта. Неограниченные ответы и входы (API-14), kb_add сообщает об успехе без сохранения (API-16), нет сквозного HTTP-теста изоляции вкладок (API-03). plan_get detailed не возвращает зависимости узла, из-за чего агент не видит причину ready=false (замечено при чтении плана).",
+      "acceptance": [
+        "Одинаковые ключи в двух планах можно взять одновременно.",
+        "Ответы и входы имеют лимиты.",
+        "Сквозной тест подтверждает изоляцию вкладок по токену.",
+        "plan_get показывает зависимости."
+      ],
+      "paths": [
+        "src/aconsole/core/infrastructure/mcp",
+        "src/aconsole/core/domain/plan.py",
+        "src/aconsole/core/infrastructure/persistence/repositories/plans.py",
+        "tests/core"
+      ],
+      "fence": 0
+    },
+    {
+      "node_id": "node-49",
+      "key": "CORE-5",
+      "title": "Устойчивость IPC и очереди ingest",
+      "status": "pending",
+      "ready": false,
+      "objective": "Исключение в ветке TURN убивает обработчик (API-02), битый кадр рвёт соединение (API-04), событие больше 16 МиБ молча не отправляется (API-05), snapshot без пагинации может не дать UI стартовать (API-06), таймаут клиента не отменяет работу (API-07), переполнение ingest теряет события и меняет порядок (API-08, HAR-23), версии UI и ядра не сверяются (API-09, QA-14). Сначала воспроизвести.",
+      "acceptance": [
+        "Каждая ошибка клиента получает ответ, соединение не падает.",
+        "Потеря событий обнаруживается и ведёт к resync.",
+        "Несовпадение версий показывается пользователю."
+      ],
+      "paths": [
+        "src/aconsole/core/infrastructure/ipc",
+        "src/aconsole/core/infrastructure/http",
+        "tests/core"
+      ],
+      "fence": 0
+    },
+    {
+      "node_id": "node-50",
+      "key": "CORE-6",
+      "title": "Ограничить рост и настроить логи",
+      "status": "done",
+      "ready": false,
+      "objective": "refs/aconsole/* не удаляются (BE-09, REL-15), стоимость растёт с их числом (BE-13). UsageLog перечитывает все jsonl на каждом опросе (REL-13, HAR-29). Логирование ядра не настроено, лог ротируется только при старте UI (REL-17, REL-18). Сейчас aconsole-db-wal около 15 МБ при базе 327 КБ: проверить контрольные точки WAL. Дополняет MEM-1.",
+      "acceptance": [
+        "Вытесненные refs удаляются, есть тест.",
+        "Опрос логов читает только новое.",
+        "Логи ядра настроены и ротируются.",
+        "WAL не растёт без ограничений."
+      ],
+      "paths": [
+        "src/aconsole/core/infrastructure/git",
+        "src/aconsole/core/infrastructure/persistence",
+        "tests/core"
+      ],
+      "fence": 4
+    },
+    {
+      "node_id": "node-51",
+      "key": "FE-1",
+      "title": "Устранить гонки и устаревшие ответы в UI",
+      "status": "pending",
+      "ready": false,
+      "objective": "Исключение подписчика store.apply запускает переподключение (FE-01), load_more дописывает старую область (FE-03), git-операции не сериализованы (FE-04), load_checkpoints без поколения (FE-05), граф пересоздаётся на каждый heartbeat (FE-06), InjectToTerminal для незапущенной вкладки теряется при ok=True (FE-02). Сначала воспроизвести. Также FE-10, FE-16, FE-17.",
+      "acceptance": [
+        "Исключение подписчика не рвёт соединение.",
+        "Устаревший ответ не меняет экран.",
+        "Текст для незапущенной вкладки доставляется или даёт ошибку."
+      ],
+      "paths": [
+        "src/aconsole/ui/client",
+        "src/aconsole/ui/views/review",
+        "src/aconsole/ui/views/sidebar",
+        "tests/gui"
+      ],
+      "fence": 0
+    },
+    {
+      "node_id": "node-52",
+      "key": "DES-1",
+      "title": "Реальный контроль контраста",
+      "status": "verifying",
+      "ready": false,
+      "objective": "Подтверждено: tools/check.sh вызывает contrast_check без аргументов, и он ничего не проверяет (DES-03, QA-05). Вторичный текст в светлой теме 2.8–3.2:1 (DES-01), пилюли Git (DES-02), рёбра графа (DES-32), терминальная палитра (DES-18). Цифры пересчитать: они не перепроверялись.",
+      "acceptance": [
+        "Гейт проверяет реальные пары цветов обеих тем и падает при нарушении.",
+        "Текст проходит 4.5:1, значимые элементы 3:1."
+      ],
+      "paths": [
+        "tools/contrast_check.py",
+        "tools/check.sh",
+        "src/aconsole/ui/style/style.css",
+        "tests/test_contrast.py"
+      ],
+      "lease_id": "DES-1:1",
+      "fence": 1,
+      "expires_at": "2026-11-04T19:41:52.060425+00:00"
+    },
+    {
+      "node_id": "node-53",
+      "key": "DES-2",
+      "title": "Различимость состояний и доступность",
+      "status": "pending",
+      "ready": false,
+      "objective": "Статусы плана pending, blocked, cancelled неотличимы (DES-04), состояния вкладок только цветом (DES-05, DES-24), кнопки и поля без accessible name (DES-06, DES-26), перестановка вкладок только мышью (DES-08), граф молча обрезан до 30 узлов (DES-27, FE-07), фокус едва заметен (DES-09).",
+      "acceptance": [
+        "Каждое состояние различимо без цвета.",
+        "Все элементы управления озвучиваются и доступны с клавиатуры.",
+        "Обрезка графа явно показана."
+      ],
+      "paths": [
+        "src/aconsole/ui/views/sidebar",
+        "src/aconsole/ui/views/tabs",
+        "src/aconsole/ui/style/style.css",
+        "tests/gui"
+      ],
+      "fence": 0
+    },
+    {
+      "node_id": "node-54",
+      "key": "DES-3",
+      "title": "Единый визуальный язык приложения",
+      "status": "pending",
+      "ready": false,
+      "objective": "Пожелание пользователя: стиль macOS, «магия», единство. Это уже принципы DESIGN §1, но CSS без шкалы: три размера шрифта, семь радиусов, около тридцати отступов (DES-16), мёртвые классы (DES-22), разные пустые состояния (DES-28), все риски одним красным (DES-17). Ввести токены и привести экраны к ним на базе результата APR-1. Эталонные снимки вместо проверки размера файла (DES-31, QA-22). Перед кодом согласовать направление с пользователем.",
+      "acceptance": [
+        "Отступы, радиусы и шрифты заданы токенами.",
+        "Панели и диалоги выглядят как одно приложение, снимки приняты пользователем.",
+        "Снимки сравниваются с эталоном в проверках."
+      ],
+      "paths": [
+        "src/aconsole/ui/style/style.css",
+        "src/aconsole/ui/views",
+        "tests/gui"
+      ],
+      "fence": 0
+    },
+    {
+      "node_id": "node-55",
+      "key": "DES-4",
+      "title": "Локализация и терминология",
+      "status": "pending",
+      "ready": false,
+      "objective": "Семь копий словаря без gettext (DES-12), русский текст из ядра в английском интерфейсе (DES-11, UX-33), нет множественных форм (DES-13), числа и даты по одному формату (DES-14, DES-15), терминология расходится (UX-32). Ядро должно отдавать коды, а UI тексты.",
+      "acceptance": [
+        "Один механизм переводов.",
+        "Ядро не содержит текста для пользователя.",
+        "Счётчики верно склоняются в русском."
+      ],
+      "paths": [
+        "src/aconsole/ui/views",
+        "src/aconsole/contracts",
+        "tests/gui"
+      ],
+      "fence": 0
+    },
+    {
+      "node_id": "node-56",
+      "key": "QA-3",
+      "title": "Проверки на настоящем ядре",
+      "status": "blocked",
+      "ready": false,
+      "objective": "Главный вывод сверки: 1125 core-тестов зелёные (проверено), а палитра, клавиши, MCP для Claude и уведомления не работают, потому что GUI-тесты идут на фейковом ядре и вызывают обработчики напрямую (UX-37). Добавить сквозные сценарии на реальном ядре и сверку METHODS с маршрутизацией (API-13): метод клиента без обработчика ядра должен ронять проверку. Запускать первым из QA: он сразу покажет такие дыры.",
+      "acceptance": [
+        "Проверка падает на методе клиента без маршрута в ядре.",
+        "Сквозные сценарии покрывают вкладку, запрос и решение, план через MCP.",
+        "Проверка запускается в CI."
+      ],
+      "paths": [
+        "tools/check_contracts.py",
+        "tests"
+      ],
+      "fence": 1
+    },
+    {
+      "node_id": "node-57",
+      "key": "QA-4",
+      "title": "CI, сборка и контракты",
+      "status": "blocked",
+      "ready": false,
+      "objective": "Deb нигде не проверяется (QA-04), порог покрытия не применяется (QA-06), проверка владения пропускается без main (QA-07), deb теряет неотслеживаемые модули (QA-08), tools и tests вне линтеров (QA-12), HOME в тестах не изолируется (QA-20), два набора golden (API-10, QA-09), check_breaking сравнивает с HEAD (API-11), разные версии (QA-15, API-18). Тесты падают с AF_UNIX path too long при длинном временном пути: 88 тестов в проверке.",
+      "acceptance": [
+        "CI собирает и ставит deb.",
+        "Порог покрытия действует.",
+        "Один набор golden.",
+        "Тесты работают при длинном пути и не трогают настоящий HOME."
+      ],
+      "paths": [
+        ".github/workflows",
+        "tools",
+        "packaging/build_deb.py",
+        "tests"
+      ],
+      "fence": 2
+    },
+    {
+      "node_id": "node-58",
+      "key": "QA-5",
+      "title": "Гигиена репозитория и лицензия",
+      "status": "blocked",
+      "ready": false,
+      "objective": "Нет LICENSE при публикации deb (QA-13, REL-19): выбор лицензии за пользователем. .aconsole/ не в .gitignore (QA-28), 48 личных путей (QA-23), спайки в продукте (QA-29), экшены пинятся тегами (QA-31), установка: QA-25, QA-27, UX-29.",
+      "acceptance": [
+        "Лицензия выбрана пользователем и добавлена.",
+        ".aconsole/ игнорируется.",
+        "Личных путей нет в отслеживаемых файлах."
+      ],
+      "paths": [
+        ".gitignore",
+        "LICENSE",
+        "install.sh",
+        "packaging",
+        ".github/workflows"
+      ],
+      "fence": 1
+    },
+    {
+      "node_id": "node-59",
+      "key": "QA-6",
+      "title": "Итоговая проверка согласований и выпуска",
+      "status": "pending",
+      "ready": false,
+      "objective": "Сквозная проверка на реальных CLI перед тем, как считать режимы готовыми: матрица харнесс × режим совпадает с поведением, агент не может изменить режим и одобрить себе запрос ни одним из путей, включая файлы.",
+      "acceptance": [
+        "Матрица проверена на реальных версиях.",
+        "Попытки агента изменить режим и одобрить запрос из контейнера не работают.",
+        "Security review пройден."
+      ],
+      "fence": 0
+    },
+    {
+      "node_id": "node-60",
+      "key": "CMT-2",
+      "title": "Проверить коммиты новых узлов",
+      "status": "pending",
+      "ready": false,
+      "objective": "Как CMT-1 для узлов этой редакции плана: один коммит на узел с trailer AConsole-Node, без смешивания.",
+      "acceptance": [
+        "Для каждого рабочего узла есть ровно один коммит с AConsole-Node: <KEY>.",
+        "Нет коммитов, смешивающих узлы."
+      ],
+      "fence": 0
+    },
+    {
+      "node_id": "node-70",
+      "key": "UX-7",
+      "title": "Кнопка приёмки узлов на странице плана",
+      "status": "verifying",
+      "ready": false,
+      "objective": "Перевести узел из verifying в done может только человек, но в окне для этого нет кнопки, а заметок vault у плана нет. Из-за этого узлы на проверке держат свои пути и блокируют задачи ядра. Решение пользователя 2026-11-04: сделать кнопки на странице плана.",
+      "acceptance": [
+        "У узла на проверке видны результат агента и кнопки Принять и Вернуть.",
+        "Принять переводит узел в done, Вернуть возвращает его в очередь.",
+        "Отказ ядра показан пользователю, узел не меняется.",
+        "Агент по-прежнему не может перевести verifying в done."
+      ],
+      "paths": [
+        "src/aconsole/ui/views/sidebar/plan_graph.py",
+        "src/aconsole/ui/views/sidebar/messages.py",
+        "src/aconsole/contracts/app.py",
+        "src/aconsole/core/infrastructure/mcp/tools.py",
+        "contracts/schema",
+        "tests/contracts",
+        "tests/gui/front/test_b4a_plan.py"
+      ],
+      "lease_id": "UX-7:2",
+      "fence": 2,
+      "expires_at": "2026-11-04T18:30:54.782376+00:00"
+    },
+    {
+      "node_id": "node-75",
+      "key": "SEC-11",
+      "title": "Закрыть запуск кода через filter, merge, gpg и git вне runner",
+      "status": "pending",
+      "ready": false,
+      "objective": "Найдено при сверке SEC-8 на реальном git: filter.<имя>.clean и .process из конфигурации репозитория выполняются на хосте при status и diff через GitRunner; gpg.program выполняется при commit. core/infrastructure/tabs.py и mcp/tools.py запускают git в обход runner, а проверка смотрит только каталог infrastructure/git.",
+      "acceptance": [
+        "filter clean, smudge и process из репозитория не выполняются при status и diff.",
+        "merge driver, gpg.program, askpass и редактор из репозитория не выполняются.",
+        "Git на хосте запускается только через runner, проверка охватывает всё ядро."
+      ],
+      "paths": [
+        "src/aconsole/core/infrastructure/git/runner.py",
+        "src/aconsole/core/infrastructure/tabs.py",
+        "src/aconsole/core/infrastructure/mcp/tools.py",
+        "tests/core/test_git_host_exec.py"
+      ],
+      "fence": 1
+    },
+    {
+      "node_id": "node-77",
+      "key": "PLAN-1",
+      "title": "Согласовать готовность узла с блокировкой пересекающихся путей",
+      "status": "verifying",
+      "ready": false,
+      "objective": "Воспроизведено: plan_ready предлагает SEC-6/HAR-1, но node_claim отклоняет PATHS_OVERLAP SEC-8. Готовность должна учитывать те же блокировки путей, что и claim, включая verifying, без снятия блокировок.",
+      "acceptance": [
+        "ready не предлагает pending узел с путями, занятыми in_progress или verifying узлом.",
+        "После освобождения путей узел снова готов.",
+        "Claim продолжает отклонять пересекающиеся пути; независимые узлы остаются доступны."
+      ],
+      "paths": [
+        "src/aconsole/core/domain/plan.py",
+        "tests/contracts/test_plan_ready_paths.py"
+      ],
+      "lease_id": "PLAN-1:1",
+      "fence": 1,
+      "expires_at": "2026-11-04T21:47:00.495359+00:00"
+    },
+    {
+      "node_id": "node-80",
+      "key": "PERF-1",
+      "title": "Восстановить порог framer 64 КиБ за 5 мс",
+      "status": "verifying",
+      "ready": false,
+      "objective": "При выполнении QA-4 test_framer_speed_64kib повторно падает: минимум 6.26 мс в полном наборе и 5.29 мс отдельно при лимите 5 мс. Оптимизировать разбор без изменения существующего теста или порога.",
+      "acceptance": [
+        "hostrun test core -k framer_speed проходит три раза подряд без изменения теста и лимита.",
+        "Регрессии sidecar проходят; побайтное поведение и обработка разбиений сохраняются."
+      ],
+      "paths": [
+        "src/aconsole/sidecar/framer.py"
+      ],
+      "lease_id": "PERF-1:1",
+      "fence": 1,
+      "expires_at": "2026-11-04T22:10:57.315940+00:00"
+    },
+    {
+      "node_id": "node-83",
+      "key": "AUD-3",
+      "title": "Воспроизвести риски Git и записать отчёт без изменения исходников",
+      "status": "verifying",
+      "ready": false,
+      "owner": "codex",
+      "objective": "Read-only часть AUD-1: проверить restore/checkpoint safety, закрытие worktree, force, конфликты merge, имена с ведущим дефисом, симлинки и index.lock на новых временных репозиториях. Исходники и существующие тесты не менять; результат записать в artifacts/aud1-2026-11-05. Подтверждённые дефекты оформить отдельными узлами.",
+      "acceptance": [
+        "Отчёт содержит исходные пути, команды и результаты.",
+        "Подтверждённые дефекты добавлены в план отдельными узлами."
+      ],
+      "paths": [
+        "artifacts/aud1-2026-11-05"
+      ],
+      "lease_id": "AUD-3:1",
+      "fence": 1,
+      "expires_at": "2026-11-05T18:15:14.088225+00:00"
+    },
+    {
+      "node_id": "node-84",
+      "key": "REL-1",
+      "title": "Не удалять файлы за пределами worktree через симлинк каталога",
+      "status": "verifying",
+      "ready": false,
+      "owner": "codex",
+      "objective": "AUD-3 подтвердил: checkpoint materialize и GitMutations.restore_file удаляют repo/sub/victim.txt через Path.unlink, если sub заменён симлинком на внешний каталог. Checkpoint restore возвращает restored=True, а safety ref содержит только сам симлинк и не сохраняет удалённые внешние байты. Использовать операции, не следующие по симлинкам родителей, во всех путях удаления при restore.",
+      "acceptance": [
+        "Restore checkpoint и restoreFile не меняют ничего за пределами worktree при подмене родителя симлинком.",
+        "Проверки охватывают оба входа и обычный restore.",
+        "При невозможности безопасного восстановления возвращается диагностируемый отказ."
+      ],
+      "paths": [
+        "src/aconsole/core/infrastructure/git/checkpoints.py",
+        "src/aconsole/core/infrastructure/git/operations.py",
+        "tests/core"
+      ],
+      "lease_id": "REL-1:1",
+      "fence": 1,
+      "expires_at": "2026-11-05T18:27:18.447516+00:00"
+    },
+    {
+      "node_id": "node-85",
+      "key": "REL-2",
+      "title": "Сохранять ignored-файлы внутри .aconsole при закрытии worktree",
+      "status": "verifying",
+      "ready": false,
+      "owner": "codex",
+      "objective": "AUD-3 подтвердил: при .gitignore='.aconsole/' и .aconsole/notes.txt, status выдаёт '!! .aconsole/', _status_ignored исключает каталог целиком, state='clean', close без discard удаляет worktree и notes.txt. Игнорировать только служебный lock, а не весь каталог.",
+      "acceptance": [
+        "Ignored файлы .aconsole кроме lock требуют явного discard.",
+        "Без discard данные и worktree остаются.",
+        "Один служебный lock не создаёт ложного предупреждения."
+      ],
+      "paths": [
+        "src/aconsole/core/infrastructure/git/worktrees.py",
+        "tests/core/test_worktrees.py"
+      ],
+      "lease_id": "REL-2:1",
+      "fence": 1,
+      "expires_at": "2026-11-05T18:34:34.415470+00:00"
+    },
+    {
+      "node_id": "node-86",
+      "key": "REL-3",
+      "title": "Удалять лишние dangling symlink при восстановлении чекпоинта",
+      "status": "pending",
+      "ready": false,
+      "owner": "codex",
+      "objective": "AUD-3 подтвердил: untracked broken symlink после snapshot остаётся после успешного restore, потому что materialize использует Path.is_file() и пропускает dangling symlink.",
+      "acceptance": [
+        "После restore лишний broken symlink отсутствует.",
+        "Страховочный checkpoint позволяет восстановить прежний симлинк.",
+        "Не нарушается защита от перехода за пределы worktree."
+      ],
+      "paths": [
+        "src/aconsole/core/infrastructure/git/checkpoints.py",
+        "tests/core/test_checkpoints_git.py"
+      ],
+      "fence": 0
+    },
+    {
+      "node_id": "node-105",
+      "key": "GIT-1",
+      "title": "Проверить неизменность результатов WorkSession и согласовать продолжение после 0.1.1",
+      "status": "verifying",
+      "ready": false,
+      "owner": "codex",
+      "objective": "Коммиты82eaa78/af92e2e/e36ce9c добавили WorkSession и integrate/cleanup. Проверить, что integration использует записанный immutable oid, а подмена refs/aconsole/sessions после result не позволяет принять другое дерево или удалить данные. Сверить REL-1/REL-2/CORE-1/HAR-2 с новыми путями и записать порядок продолжения.",
+      "acceptance": [
+        "Подмена result ref после фиксации не меняет принимаемый результат и не разрешает опасную очистку.",
+        "Preview и integrate проверены через публичный RPC на временном Git-репозитории.",
+        "Регрессии restore, ignored-файлов и WorkSession проходят; обзор новых коммитов и дальнейший порядок записаны."
+      ],
+      "paths": [
+        "src/aconsole/core/application/services/work_session_git.py",
+        "tests/core/test_work_session_result_integrity.py",
+        "artifacts/plan-reconciliation-0.1.1"
+      ],
+      "lease_id": "GIT-1:1",
+      "fence": 1,
+      "expires_at": "2026-11-06T15:30:41.392474+00:00"
+    },
+    {
+      "node_id": "node-106",
+      "key": "REL-4",
+      "title": "Проверить обновление UI при ядре без work_sessions.v1",
+      "status": "verifying",
+      "ready": false,
+      "owner": "codex",
+      "objective": "Новый CoreClient._handshake отвергает старое ядро до возврата server_pid, а UI вызывает replace_daemon только после start_daemon. Артефакты перезапусков сохраняют failed: stop timeout и capability mismatch. Воспроизвести upgrade-path и исправить без потери агентов/данных и принудительного уничтожения живого ядра.",
+      "acceptance": [
+        "Старое ядро без work_sessions.v1 безопасно обновляется либо даёт понятный проверяемый отказ.",
+        "Несовместимые UI/core не продолжают работу по новой схеме.",
+        "Тесты используют отдельные процессы и данные, не перезапускают приложение пользователя."
+      ],
+      "paths": [
+        "src/aconsole/ui/client/core_client.py",
+        "tests/core/test_core_upgrade.py"
+      ],
+      "lease_id": "REL-4:1",
+      "fence": 1,
+      "expires_at": "2026-11-06T17:44:08.750564+00:00"
+    },
+    {
+      "node_id": "node-108",
+      "key": "GIT-2",
+      "title": "Восстанавливать историю WorkSession по записанному OID, а не изменяемому ref",
+      "status": "verifying",
+      "ready": false,
+      "owner": "codex",
+      "objective": "В новом WorkSessionHistory.materialize target.oid зафиксирован в БД, но GitCheckpoints.materialize вызывается с target.ref. Смена ref может применить другое дерево при restore даже после preview, связанного с записанным OID. Воспроизвести через public restore RPC и закрепить восстановление за immutable OID.",
+      "acceptance": [
+        "Подмена snapshot ref до или после restorePreview не подменяет применяемое дерево.",
+        "Restore сохраняет HEAD, индекс и safety snapshot текущего состояния.",
+        "Тест проходит через публичный RPC на временном репозитории."
+      ],
+      "paths": [
+        "src/aconsole/core/application/services/work_session_history.py",
+        "tests/core/test_work_session_restore_integrity.py"
+      ],
+      "lease_id": "GIT-2:1",
+      "fence": 1,
+      "expires_at": "2026-11-06T15:34:33.940792+00:00"
+    },
+    {
+      "node_id": "node-112",
+      "key": "GIT-3",
+      "title": "Не доверять настройкам скрытия dirty-состояния подмодулей",
+      "status": "verifying",
+      "ready": false,
+      "owner": "codex",
+      "objective": "AUD-1 на0b7717f: .git/config submodule.sub.ignore=all скрывает unsaved content в initialized submodule, GitHistory.status.unstaged=0; Worktrees.close(discard_ignored=True) удаляет worktree вместе с этими данными. Status safety checks должны явно учитывать dirty/untracked submodules независимо от конфигурации; проверить оба status-пути и cleanup.",
+      "acceptance": [
+        "Dirty и untracked-файлы подмодуля не скрываются настройками submodule.*.ignore/diff.ignoreSubmodules.",
+        "Очистка с discard_ignored не удаляет несохранённую работу подмодуля.",
+        "Регрессия воспроизводит исходный дефект на локальных временных репозиториях без сети."
+      ],
+      "paths": [
+        "src/aconsole/core/infrastructure/git/history.py",
+        "src/aconsole/core/infrastructure/git/worktrees.py",
+        "tests/core/test_submodule_cleanup_safety.py"
+      ],
+      "lease_id": "GIT-3:1",
+      "fence": 1,
+      "expires_at": "2026-11-06T16:17:04.287122+00:00"
+    },
+    {
+      "node_id": "node-113",
+      "key": "GIT-4",
+      "title": "Не применять blanket --force при согласии удалить только ignored-файлы",
+      "status": "verifying",
+      "ready": false,
+      "owner": "codex",
+      "objective": "AUD-1 на0b7717f: если новый untracked-файл появляется между preflight и Git remove, Worktrees.close и GitMutations.remove_worktree при discard_ignored=True удаляют его через --force. Без forced удаления Git отказывает и файл остаётся. Реализовать scoped discard ignored без bypass dirty-проверки Git, не обещая изоляцию от всех внешних писателей.",
+      "acceptance": [
+        "Discard ignored не превращается в разрешение удалить новые обычные dirty/untracked-файлы.",
+        "Контролируемая запись непосредственно перед remove сохраняет файл и даёт отказ в обоих адаптерах.",
+        "Nested repositories/submodules и собственный runtime lock обрабатываются безопасно; явный discard действительно удаляет разрешённые ignored-данные."
+      ],
+      "paths": [
+        "src/aconsole/core/infrastructure/git/worktrees.py",
+        "src/aconsole/core/infrastructure/git/operations.py",
+        "tests/core/test_cleanup_discard_race.py"
+      ],
+      "lease_id": "GIT-4:1",
+      "fence": 1,
+      "expires_at": "2026-11-06T16:25:45.476379+00:00"
+    },
+    {
+      "node_id": "node-124",
+      "key": "PLAN-2",
+      "title": "Актуализировать граф и порядок продолжения AConsole",
+      "status": "failed",
+      "ready": false,
+      "owner": "codex",
+      "objective": "По запросу пользователя 2026-11-06 сверить граф plan-1 с коммитами и проверками, привязать актуальные результаты SEC-10/CORE-6/REL-4, отразить подтверждённые зависимости и оставшиеся блокировки. Не подменять человеческую приёмку verifying узлов и не снимать чужие lease. Зафиксировать снимок и проверяемый порядок продолжения.",
+      "acceptance": [
+        "Статусы и коммиты сверены; реализованные узлы переданы на человеческую проверку.",
+        "Граф содержит реальные зависимости, а блокировки путей и порядок дальнейших работ записаны отдельно.",
+        "Подтверждённые изменения плана сохранены через штатные инструменты; отчёт не утверждает приёмку человеком."
+      ],
+      "paths": [
+        "artifacts/plan-refresh-2026-11-06"
+      ],
+      "fence": 2
+    },
+    {
+      "node_id": "node-125",
+      "key": "PERF-2",
+      "title": "Проверить превышение задержки writer tick в полном наборе",
+      "status": "failed",
+      "ready": false,
+      "owner": "codex",
+      "objective": "В окончательном общем прогоне SEC-10 после согласованной правки старого expectation единственный отказ — tests/core/test_persistence_b.py::test_persistence_b_tick: max=0.006125119 при пороге 0.005, p50=0.00000447, p99=0.00001031, n=506529. На предыдущем полном прогоне этот тест проходил. Отделить чувствительность к нагрузке от проблемы writer/event loop; порог и существующую проверку не ослаблять. Это отдельное наблюдение, не доказательство причины в SEC-10.",
+      "acceptance": [
+        "Повторные измерения отдельно и в полном наборе записаны с условиями нагрузки.",
+        "При подтверждённой причине внесено отдельное исправление без изменения порога и удаления теста.",
+        "Полный набор проходит либо измеренный внешний фактор документирован без ложного успешного результата."
+      ],
+      "paths": [
+        "src/aconsole/core/infrastructure/persistence/writer.py",
+        "tests/core/test_persistence_b.py",
+        "artifacts/perf2"
+      ],
+      "fence": 1
+    },
+    {
+      "node_id": "node-131",
+      "key": "CORE-7",
+      "title": "Разрешить повтор failed-узла через штатный MCP",
+      "status": "pending",
+      "ready": false,
+      "owner": "codex",
+      "objective": "При продолжении PERF-2 на main cf52b8a: node_claim(node-125) возвращает NODE_TRANSITION_INVALID pending; node_update(status=pending,fence=1) возвращает LEASE_STALE_FENCE 1. Domain Plan.transition разрешает FAILED->PENDING только с fence=None после освобождения lease, а MCP schema требует fence:int. Нужен штатный путь retry без записи в БД и без ослабления fence активной lease.",
+      "acceptance": [
+        "Освобождённый failed-узел возвращается в pending и снова берётся через публичные MCP tools.",
+        "Чужой либо устаревший fence активной lease отклоняется.",
+        "Регрессионный тест проходит через MCP API и сохраняет изоляцию табов."
+      ],
+      "paths": [
+        "src/aconsole/core/infrastructure/mcp/tools.py",
+        "src/aconsole/core/infrastructure/mcp/server.py",
+        "tests/core/test_mcp_retry.py"
+      ],
+      "fence": 0
+    },
+    {
+      "node_id": "node-132",
+      "key": "PERF-3",
+      "title": "Разобрать отказ ожидания сокета в полном core-прогоне",
+      "status": "pending",
+      "ready": false,
+      "owner": "codex",
+      "objective": "Полный hostrun test core на main cf52b8a 2026-11-06 exit1 (249257 мс): единственный отказ test_core_recovery.py::test_core_keeps_its_lock_until_a_slow_writer_has_stopped при _connect до writer.post. wait_for_socket после 100 итераций с sleep(0.01) выбрасывает socket did not appear. PERF-2 в этом прогоне проходит. Повторить отдельно и в наборе; установить причину, не увеличивать timeout ради зелёного результата.",
+      "acceptance": [
+        "Результаты отдельных повторов и полного набора сохранены.",
+        "Причина установлена либо отсутствие воспроизведения указано явно.",
+        "Существующие проверки остановки writer, удержания lock и timeout не ослаблены."
+      ],
+      "paths": [
+        "src/aconsole/core/bootstrap.py",
+        "tests/core/test_core_recovery.py",
+        "tests/core/conftest.py",
+        "artifacts/perf3"
+      ],
+      "fence": 0
+    },
+    {
+      "node_id": "node-134",
+      "key": "PERF-4",
+      "title": "Проверить границы fault injection recovery без изменения занятых файлов",
+      "status": "done",
+      "ready": false,
+      "owner": "codex",
+      "objective": "Продолжение PERF-3: создать самостоятельный диагностический сценарий в artifacts/perf3. Сравнить исходную проверку с переносом _WAIT_S=.03 после подключения клиента. Исходные reserved код и тесты не менять. Сохранить patch-кандидат, результаты и ограничения; это эксперимент, не замена полного core и не закрытие PERF-3.",
+      "acceptance": [
+        "Диагностический сценарий сохраняет исходные assertions shutdown, timeout и lock.",
+        "Оригинальная проверка воспроизводит отказ, кандидат исполняется отдельно не менее трёх раз.",
+        "Patch-кандидат и результаты сохранены в main; исходный тест не изменён."
+      ],
+      "paths": [
+        "artifacts/perf3"
+      ],
+      "fence": 1
+    },
+    {
+      "node_id": "node-140",
+      "key": "PLAN-3",
+      "title": "Применить завершение по проверкам и освободить просроченные verifying",
+      "status": "pending",
+      "ready": false,
+      "owner": "codex",
+      "objective": "По решению пользователя kb-127 и вопросу о10готовыхузлах: явная политика checked completion в ядре должна позволять владельцу узла завершать in_progress/verifying с результатами обязательных проверок, включая legacy review_required=true. Старые ручные правила сохранить для явно ручной политики. Просроченный verifying в checked-политике возвращается в pending для повторной проверки новым исполнителем, без автоматического done. Отдельно сохранить правдивую сверку статусов/коммитов.",
+      "acceptance": [
+        "Включённая daemon-политика допускает done с evidence после проверок и освобождает пути/зависимости.",
+        "Без evidence завершение отвергается; активный чужой fence и владелец защищены.",
+        "Просроченный verifying может быть взят заново, а до повторной проверки не становится done.",
+        "Рестарт и отказ записи сохраняют выбранную политику и проверяемые статусы; ручная политика совместима со старыми тестами.",
+        "Сверка объясняет фактический счётчик без ложного массового приёма узлов."
+      ],
+      "paths": [
+        "src/aconsole/core/domain/plan.py",
+        "src/aconsole/core/infrastructure/mcp/tools.py",
+        "src/aconsole/core/bootstrap.py",
+        "tests/core/test_checked_completion.py",
+        "artifacts/plan3"
+      ],
+      "fence": 0
+    }
+  ],
+  "revision": "a919f9.4"
+}

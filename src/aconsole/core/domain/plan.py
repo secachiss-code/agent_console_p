@@ -311,7 +311,8 @@ def _lease_over(node: Node, at: datetime) -> bool:
 class Plan:
     """One plan. Blocking edges are a DAG. A node has at most one lease holder."""
 
-    def __init__(self) -> None:
+    def __init__(self, *, checked_completion: bool = False) -> None:
+        self._checked_completion: bool = checked_completion
         self._nodes: dict[str, Node] = {}
         self._blockers: dict[str, tuple[str, ...]] = {}
         self._parents: dict[str, str | None] = {}
@@ -437,7 +438,7 @@ class Plan:
         expired: list[str] = []
         for key in tuple(self._nodes):
             node = self._nodes[key]
-            if _lease_over(node, at):
+            if self._lease_over(node, at):
                 self._nodes[key] = self._clear_holder(node, NodeStatus.PENDING)
                 expired.append(key)
         return tuple(expired)
@@ -523,8 +524,13 @@ class Plan:
     def _dependents(self, key: str) -> tuple[str, ...]:
         return tuple(sorted(node for node, blockers in self._blockers.items() if key in blockers))
 
+    def _rule(self, source: NodeStatus, target: NodeStatus, role: Role) -> _Rule | None:
+        if self._checked_completion and role is Role.AGENT and source in _LEASED and target is NodeStatus.DONE:
+            return _both(evidence=True)
+        return _RULES.get((source, target))
+
     def _check_rule(self, node: Node, move: Move) -> None:
-        rule = _RULES.get((node.status, move.to))
+        rule = self._rule(node.status, move.to, move.role)
         review = bool(rule is not None and rule.review_blocks and node.review_required)
         if rule is None or move.role not in rule.roles or review:
             allowed = self._allowed(node, move.role)
@@ -538,8 +544,9 @@ class Plan:
 
     def _allowed(self, node: Node, role: Role) -> frozenset[NodeStatus]:
         found: set[NodeStatus] = set()
-        for (source, target), rule in _RULES.items():
-            if source is not node.status or role not in rule.roles:
+        for source, target in _RULES:
+            rule = self._rule(source, target, role)
+            if rule is None or source is not node.status or role not in rule.roles:
                 continue
             if rule.review_blocks and node.review_required:
                 continue
@@ -564,15 +571,20 @@ class Plan:
                 return other.key
         return None
 
+    def _lease_over(self, node: Node, at: datetime) -> bool:
+        if self._checked_completion and node.status is NodeStatus.VERIFYING:
+            return node.lease_expires_at is not None and at >= node.lease_expires_at
+        return _lease_over(node, at)
+
     def _require_fence(self, node: Node, fence: int | None, at: datetime) -> None:
-        if node.lease_expires_at is None or _lease_over(node, at):
+        if node.lease_expires_at is None or self._lease_over(node, at):
             self._expire_if_due(node, at)
             raise _fail(_LEASE_EXPIRED, "LEASE_EXPIRED")
         if fence != node.fence:
             raise _fail(_STALE_FENCE, "LEASE_STALE_FENCE", (str(node.fence),))
 
     def _expire_if_due(self, node: Node, at: datetime) -> None:
-        if _lease_over(node, at):
+        if self._lease_over(node, at):
             self._nodes[node.key] = self._clear_holder(node, NodeStatus.PENDING)
 
     def _apply(self, node: Node, move: Move) -> Node:

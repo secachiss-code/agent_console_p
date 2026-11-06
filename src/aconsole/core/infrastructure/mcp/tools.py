@@ -353,7 +353,8 @@ class CodeGraph(Protocol):
 class PlanBoard:
     """Plans, knowledge, and handovers for one core process. Plans are also kept in a `PlanStore`."""
 
-    def __init__(self, now: Callable[[], datetime] | None = None) -> None:
+    def __init__(self, now: Callable[[], datetime] | None = None, *, checked_completion: bool = False) -> None:
+        self._checked_completion: bool = checked_completion
         self._now: Callable[[], datetime] = now if now is not None else _clock
         self._lock: threading.RLock = threading.RLock()
         self._seq: int = 0
@@ -375,7 +376,7 @@ class PlanBoard:
         with self._lock:
             self._store = store
             for saved in store.load():
-                self._plans[saved.id] = _restored(saved)
+                self._plans[saved.id] = _restored(saved, checked_completion=self._checked_completion)
                 self._saved[saved.id] = saved
                 self._seq = max(self._seq, _number(saved.id), *(_number(node.id) for node in saved.nodes))
 
@@ -601,7 +602,7 @@ class PlanBoard:
         if saved is None:
             _ = self._plans.pop(plan_id, None)
         else:
-            self._plans[plan_id] = _restored(saved)
+            self._plans[plan_id] = _restored(saved, checked_completion=self._checked_completion)
 
     def _state(self, stored: _Stored) -> StoredPlan:
         layers = {key: layer for key, layer, _position in stored.dag.layout()}
@@ -1097,11 +1098,17 @@ class PlanBoard:
             nodes=nodes,
         )
 
+    def _expire_checked(self, stored: _Stored) -> _Stored:
+        """An abandoned verification returns to the queue; evidence never turns it green by itself."""
+        if self._checked_completion and stored.dag.expire_leases(self._now()):
+            self._commit(stored)
+        return stored
+
     def _owned(self, ctx: TabContext, plan_id: str) -> _Stored:
         stored = self._plans.get(plan_id)
         if stored is None or stored.project_id != ctx.project_id:
             _stop("PLAN_NOT_FOUND", f"no plan {plan_id}")
-        return stored
+        return self._expire_checked(stored)
 
     def _ready_plan(self, ctx: TabContext, plan_id: str | None) -> _Stored:
         if plan_id is not None:
@@ -1112,10 +1119,10 @@ class PlanBoard:
             for meta in stored.meta.values():
                 node = stored.dag.get(meta.key)
                 if node.tab_id == ctx.tab_id and node.lease_id is not None:
-                    return stored
+                    return self._expire_checked(stored)
         for stored in reversed(tuple(self._plans.values())):
             if stored.project_id == ctx.project_id:
-                return stored
+                return self._expire_checked(stored)
         return _stop("PLAN_NOT_FOUND", "this tab has no plan")
 
     def _node(self, ctx: TabContext, node_id: str) -> tuple[_Stored, _Meta]:
@@ -1124,7 +1131,7 @@ class PlanBoard:
                 continue
             for meta in stored.meta.values():
                 if meta.node_id == node_id:
-                    return stored, meta
+                    return self._expire_checked(stored), meta
         return _stop("NODE_NOT_FOUND", f"no node {node_id}")
 
     def _by_title(self, project_id: str, title: str) -> _Stored | None:
@@ -1140,7 +1147,7 @@ class PlanBoard:
             project_id=project_id,
             title=title,
             goal=goal,
-            dag=Plan(),
+            dag=Plan(checked_completion=self._checked_completion),
             meta={},
             deps={},
             updated_at=self._now(),
@@ -1258,8 +1265,8 @@ def _after_restart(item: StoredNode) -> NodeStatus:
     return status
 
 
-def _restored(saved: StoredPlan) -> _Stored:
-    dag = Plan()
+def _restored(saved: StoredPlan, *, checked_completion: bool = False) -> _Stored:
+    dag = Plan(checked_completion=checked_completion)
     meta: dict[str, _Meta] = {}
     deps: dict[str, tuple[str, ...]] = {}
     for item in saved.nodes:

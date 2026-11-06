@@ -589,7 +589,7 @@ class Daemon:
         self._tokens: TokenBook = TokenBook()
         self._recovery: _Recovery | None = None
         self._recovery_path: Path = self.socket.with_suffix(".recovery.json")
-        self._plans: PlanBoard = PlanBoard()
+        self._plans: PlanBoard = PlanBoard(checked_completion=True)
         self._plans.on_changed = self._plan_changed
         # Off the loop and off the tab worker: files can be slow, and an edit must not wait for a tab call.
         self._vault_thread: ThreadPoolExecutor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="aconsole-vault")

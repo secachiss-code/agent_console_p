@@ -1,0 +1,199 @@
+Collected 0 items to run in parallel
+FFFFFFFFF                                                                [100%]
+=================================== FAILURES ===================================
+_________ test_checked_completion_requires_fresh_evidence[None-False] __________
+
+verify_first = False, evidence = None
+
+    @pytest.mark.parametrize("verify_first", [False, True])
+    @pytest.mark.parametrize("evidence", [None, "hostrun test core: PASS"])
+    def test_checked_completion_requires_fresh_evidence(*, verify_first: bool, evidence: str | None) -> None:
+        clock = _Clock()
+>       plan = Plan(checked_completion=True)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: Plan.__init__() got an unexpected keyword argument 'checked_completion'
+
+tests/core/test_checked_completion.py:37: TypeError
+__________ test_checked_completion_requires_fresh_evidence[None-True] __________
+
+verify_first = True, evidence = None
+
+    @pytest.mark.parametrize("verify_first", [False, True])
+    @pytest.mark.parametrize("evidence", [None, "hostrun test core: PASS"])
+    def test_checked_completion_requires_fresh_evidence(*, verify_first: bool, evidence: str | None) -> None:
+        clock = _Clock()
+>       plan = Plan(checked_completion=True)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: Plan.__init__() got an unexpected keyword argument 'checked_completion'
+
+tests/core/test_checked_completion.py:37: TypeError
+_ test_checked_completion_requires_fresh_evidence[hostrun test core: PASS-False] _
+
+verify_first = False, evidence = 'hostrun test core: PASS'
+
+    @pytest.mark.parametrize("verify_first", [False, True])
+    @pytest.mark.parametrize("evidence", [None, "hostrun test core: PASS"])
+    def test_checked_completion_requires_fresh_evidence(*, verify_first: bool, evidence: str | None) -> None:
+        clock = _Clock()
+>       plan = Plan(checked_completion=True)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: Plan.__init__() got an unexpected keyword argument 'checked_completion'
+
+tests/core/test_checked_completion.py:37: TypeError
+_ test_checked_completion_requires_fresh_evidence[hostrun test core: PASS-True] _
+
+verify_first = True, evidence = 'hostrun test core: PASS'
+
+    @pytest.mark.parametrize("verify_first", [False, True])
+    @pytest.mark.parametrize("evidence", [None, "hostrun test core: PASS"])
+    def test_checked_completion_requires_fresh_evidence(*, verify_first: bool, evidence: str | None) -> None:
+        clock = _Clock()
+>       plan = Plan(checked_completion=True)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: Plan.__init__() got an unexpected keyword argument 'checked_completion'
+
+tests/core/test_checked_completion.py:37: TypeError
+_____ test_checked_completion_expired_verification_returns_for_rechecking ______
+
+    def test_checked_completion_expired_verification_returns_for_rechecking() -> None:
+        clock = _Clock()
+>       plan = Plan(checked_completion=True)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: Plan.__init__() got an unexpected keyword argument 'checked_completion'
+
+tests/core/test_checked_completion.py:64: TypeError
+____________ test_explicit_manual_policy_keeps_review_and_its_lease ____________
+
+    def test_explicit_manual_policy_keeps_review_and_its_lease() -> None:
+        clock = _Clock()
+>       plan = Plan(checked_completion=False)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: Plan.__init__() got an unexpected keyword argument 'checked_completion'
+
+tests/core/test_checked_completion.py:87: TypeError
+______ test_checked_completion_restores_and_releases_old_verifying_paths _______
+
+    def test_checked_completion_restores_and_releases_old_verifying_paths() -> None:
+        clock = _Clock()
+        store = _Store()
+        original = PlanBoard(now=clock)
+        original.use_store(store)
+        made = original.create(_context("tab-a"), "Restored", "goal", [
+            NodeIn(key="A-1", title="First", objective="do", review_required=True, paths=["src/a.py"]),
+            NodeIn(key="B-1", title="Second", objective="do", paths=["src/a.py"]),
+        ])
+        node_id = made.nodes[0].node_id
+        claim = original.claim(_context("tab-a"), node_id)
+        original.update(_context("tab-a"), node_id, claim.fence, "verifying", None, "old result")
+        clock.moment += timedelta(minutes=16)
+>       checked = PlanBoard(now=clock, checked_completion=True)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: PlanBoard.__init__() got an unexpected keyword argument 'checked_completion'
+
+tests/core/test_checked_completion.py:135: TypeError
+____________ test_checked_completion_survives_failed_write_rollback ____________
+
+    def test_checked_completion_survives_failed_write_rollback() -> None:
+        clock = _Clock()
+        store = _Store()
+>       board = PlanBoard(now=clock, checked_completion=True)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: PlanBoard.__init__() got an unexpected keyword argument 'checked_completion'
+
+tests/core/test_checked_completion.py:148: TypeError
+_ test_daemon_checked_completion_updates_live_plan_count_and_survives_restart __
+
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-22/test_daemon_checked_completion0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x4b8ce5a48b0>
+
+    def test_daemon_checked_completion_updates_live_plan_count_and_survives_restart(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        home = tmp_path / "home"
+        home.mkdir()
+        monkeypatch.setenv("FAKE_HOME", str(home))
+        repo = _git_repo(tmp_path / "repo")
+
+        async def scenario() -> None:
+            daemon = _daemon(tmp_path)
+            task = asyncio.create_task(daemon.serve())
+            client = await _connect(daemon.socket)
+            try:
+                project = await client.call("project/add", ProjectAddParams(root=str(repo)), ProjectView)
+                tab = await client.call("tab/open", _open(project.id), TabView)
+                spec = await client.call("tab/launchSpec", TabIdParams(tab_id=tab.id), TerminalLaunchSpec)
+                _path, config = _config(spec.argv)
+                session = _Mcp(config, spec.env)
+                await asyncio.to_thread(session.start)
+
+                async def call(name: str, arguments: dict[str, object]) -> dict[str, object]:
+                    result = await asyncio.to_thread(session.request, "tools/call", {"name": name, "arguments": arguments})
+                    assert not result.get("isError", False), result
+                    return _content(result)
+
+                made = await call("plan_create", {"title": "Checked", "goal": "goal", "nodes": [{
+                    "key": "A-1", "title": "First", "objective": "do", "review_required": True,
+                }]})
+                plan_id = made["plan_id"]
+                assert isinstance(plan_id, str)
+                nodes = made["nodes"]
+                assert isinstance(nodes, list)
+                assert isinstance(nodes[0], dict)
+                node_id = nodes[0]["node_id"]
+                claim = await call("node_claim", {"node_id": node_id})
+                await call("node_update", {
+                    "node_id": node_id, "fence": claim["fence"], "status": "done", "evidence": "mandatory checks PASS",
+                })
+                view = await client.call("plan/get", PlanIdParams(plan_id=PlanId(plan_id)), PlanView)
+                assert (view.done, view.total) == (1, 1)
+                assert view.nodes[0].status.value == "done"
+            finally:
+                await _stop(daemon, task, client)
+            again = _daemon(tmp_path, serve_ingest=False)
+            second_task = asyncio.create_task(again.serve())
+            second_client = await _connect(again.socket)
+            try:
+                kept = await second_client.call("plan/get", PlanIdParams(plan_id=PlanId(plan_id)), PlanView)
+                assert (kept.done, kept.total) == (1, 1)
+            finally:
+                await _stop(again, second_task, second_client)
+
+>       asyncio.run(scenario())
+
+tests/core/test_checked_completion.py:218:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+../../.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py:205: in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py:128: in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/base_events.py:724: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+tests/core/test_checked_completion.py:201: in scenario
+    await call("node_update", {
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+name = 'node_update'
+arguments = {'node_id': 'node-2', 'fence': 1, 'status': 'done', 'evidence': 'mandatory checks PASS'}
+
+    async def call(name: str, arguments: dict[str, object]) -> dict[str, object]:
+        result = await asyncio.to_thread(session.request, "tools/call", {"name": name, "arguments": arguments})
+>       assert not result.get("isError", False), result
+E       AssertionError: {'content': [{'text': 'NODE_TRANSITION_INVALID: NODE_TRANSITION_INVALID blocked, failed, pending, verifying. Next: cal...ITION_INVALID blocked, failed, pending, verifying', 'hint': 'call plan_get, then node_update with an allowed status'}}}
+E       assert not True
+E        +  where True = <built-in method get of dict object at 0x4b8d0b91f80>('isError', False)
+E        +    where <built-in method get of dict object at 0x4b8d0b91f80> = {'content': [{'text': 'NODE_TRANSITION_INVALID: NODE_TRANSITION_INVALID blocked, failed, pending, verifying. Next: cal...ITION_INVALID blocked, failed, pending, verifying', 'hint': 'call plan_get, then node_update with an allowed status'}}}.get
+
+tests/core/test_checked_completion.py:188: AssertionError
+=========================== short test summary info ============================
+FAILED tests/core/test_checked_completion.py::test_checked_completion_requires_fresh_evidence[None-False]
+FAILED tests/core/test_checked_completion.py::test_checked_completion_requires_fresh_evidence[None-True]
+FAILED tests/core/test_checked_completion.py::test_checked_completion_requires_fresh_evidence[hostrun test core: PASS-False]
+FAILED tests/core/test_checked_completion.py::test_checked_completion_requires_fresh_evidence[hostrun test core: PASS-True]
+FAILED tests/core/test_checked_completion.py::test_checked_completion_expired_verification_returns_for_rechecking
+FAILED tests/core/test_checked_completion.py::test_explicit_manual_policy_keeps_review_and_its_lease
+FAILED tests/core/test_checked_completion.py::test_checked_completion_restores_and_releases_old_verifying_paths
+FAILED tests/core/test_checked_completion.py::test_checked_completion_survives_failed_write_rollback
+FAILED tests/core/test_checked_completion.py::test_daemon_checked_completion_updates_live_plan_count_and_survives_restart
