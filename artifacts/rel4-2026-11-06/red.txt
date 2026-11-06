@@ -1,0 +1,146 @@
+Collected 0 items to run in parallel
+FFF                                                                      [100%]
+=================================== FAILURES ===================================
+________ test_legacy_refusal_disconnects_without_spawning_or_signalling ________
+
+    def test_legacy_refusal_disconnects_without_spawning_or_signalling() -> None:
+        async def scenario() -> None:
+            async with _old_core() as running:
+                await _legacy_refusal_disconnects_without_spawning_or_signalling(running)
+    
+>       asyncio.run(scenario())
+
+tests/core/test_core_upgrade.py:159: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+../../.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py:205: in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py:128: in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/base_events.py:724: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+tests/core/test_core_upgrade.py:157: in scenario
+    await _legacy_refusal_disconnects_without_spawning_or_signalling(running)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+old_core = (PosixPath('/tmp/ac-upgrade-giebjne9'), <Process 191650>, <Process 191649>)
+
+    async def _legacy_refusal_disconnects_without_spawning_or_signalling(
+        old_core: tuple[Path, asyncio.subprocess.Process, asyncio.subprocess.Process],
+    ) -> None:
+        runtime, process, agent = old_core
+        socket, lock = core_paths(runtime)
+        marker = runtime / "replacement-started"
+        argv = [sys.executable, "-c", "from pathlib import Path; import sys; Path(sys.argv[1]).touch()", str(marker)]
+        client = CoreClient(str(socket))
+        try:
+            with pytest.raises(CoreCallError, match="incompatible|несовместим") as caught:
+                _ = await asyncio.wait_for(client.start_daemon(argv, runtime=runtime), timeout=2)
+            assert caught.value.error.message == "PROTOCOL_VERSION_UNSUPPORTED"
+            assert not caught.value.error.data.retryable
+>           assert client._writer is None
+E           assert <StreamWriter transport=<_SelectorSocketTransport fd=16 read=polling write=<idle, bufsize=0>> reader=<StreamReader lim...ture pending cb=[Task.task_wakeup()]> transport=<_SelectorSocketTransport fd=16 read=polling write=<idle, bufsize=0>>>> is None
+E            +  where <StreamWriter transport=<_SelectorSocketTransport fd=16 read=polling write=<idle, bufsize=0>> reader=<StreamReader lim...ture pending cb=[Task.task_wakeup()]> transport=<_SelectorSocketTransport fd=16 read=polling write=<idle, bufsize=0>>>> = <aconsole.ui.client.core_client.CoreClient object at 0x206c1b5f610>._writer
+
+tests/core/test_core_upgrade.py:101: AssertionError
+________ test_explicit_retry_can_connect_after_capability_is_available _________
+
+    def test_explicit_retry_can_connect_after_capability_is_available() -> None:
+        async def scenario() -> None:
+            async with _old_core() as running:
+                await _explicit_retry_can_connect_after_capability_is_available(running)
+    
+>       asyncio.run(scenario())
+
+tests/core/test_core_upgrade.py:167: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+../../.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py:205: in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py:128: in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/base_events.py:724: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+tests/core/test_core_upgrade.py:165: in scenario
+    await _explicit_retry_can_connect_after_capability_is_available(running)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+old_core = (PosixPath('/tmp/ac-upgrade-uzb7ghgb'), <Process 191654>, <Process 191653>)
+
+    async def _explicit_retry_can_connect_after_capability_is_available(
+        old_core: tuple[Path, asyncio.subprocess.Process, asyncio.subprocess.Process],
+    ) -> None:
+        runtime, process, agent = old_core
+        socket, _lock = core_paths(runtime)
+        client = CoreClient(str(socket))
+        try:
+            with pytest.raises(CoreCallError):
+                _ = await client.connect()
+            (runtime / "compatible").touch()
+            result = await client.connect()
+            assert result.server_pid == process.pid
+            assert "work_sessions.v1" in result.capabilities
+            assert process.returncode is None and agent.returncode is None
+        finally:
+            await client.close()
+        await asyncio.sleep(0.05)
+>       assert _events(runtime) == ["initialize", "disconnected", "initialize", "initialized", "disconnected"]
+E       AssertionError: assert ['initialize'...disconnected'] == ['initialize'...disconnected']
+E         
+E         At index 1 diff: 'initialize' != 'disconnected'
+E         Use -v to get more diff
+
+tests/core/test_core_upgrade.py:130: AssertionError
+_________ test_replacement_timeout_preserves_legacy_core_and_its_agent _________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x206c1c1c6d0>
+
+    def test_replacement_timeout_preserves_legacy_core_and_its_agent(monkeypatch: pytest.MonkeyPatch) -> None:
+        async def scenario() -> None:
+            async with _old_core() as running:
+                await _replacement_timeout_preserves_legacy_core_and_its_agent(running, monkeypatch)
+    
+>       asyncio.run(scenario())
+
+tests/core/test_core_upgrade.py:175: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+../../.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py:205: in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py:128: in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/base_events.py:724: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+tests/core/test_core_upgrade.py:173: in scenario
+    await _replacement_timeout_preserves_legacy_core_and_its_agent(running, monkeypatch)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+old_core = (PosixPath('/tmp/ac-upgrade-wr5eisx7'), <Process 191658>, <Process 191657>)
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x206c1c1c6d0>
+
+    async def _replacement_timeout_preserves_legacy_core_and_its_agent(
+        old_core: tuple[Path, asyncio.subprocess.Process, asyncio.subprocess.Process],
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        runtime, process, agent = old_core
+        socket, lock = core_paths(runtime)
+        client = CoreClient(str(socket))
+        monkeypatch.setattr("aconsole.ui.client.core_client._READY_DEADLINE_S", 0.1)
+        try:
+            with pytest.raises(CoreCallError):
+                _ = await asyncio.wait_for(client.replace_daemon(process.pid, ["unused"], runtime=runtime), timeout=2)
+>           assert client._writer is None
+E           assert <StreamWriter transport=<_SelectorSocketTransport fd=16 read=polling write=<idle, bufsize=0>> reader=<StreamReader lim...ture pending cb=[Task.task_wakeup()]> transport=<_SelectorSocketTransport fd=16 read=polling write=<idle, bufsize=0>>>> is None
+E            +  where <StreamWriter transport=<_SelectorSocketTransport fd=16 read=polling write=<idle, bufsize=0>> reader=<StreamReader lim...ture pending cb=[Task.task_wakeup()]> transport=<_SelectorSocketTransport fd=16 read=polling write=<idle, bufsize=0>>>> = <aconsole.ui.client.core_client.CoreClient object at 0x206c1c1e4d0>._writer
+
+tests/core/test_core_upgrade.py:144: AssertionError
+=========================== short test summary info ============================
+FAILED tests/core/test_core_upgrade.py::test_legacy_refusal_disconnects_without_spawning_or_signalling
+FAILED tests/core/test_core_upgrade.py::test_explicit_retry_can_connect_after_capability_is_available
+FAILED tests/core/test_core_upgrade.py::test_replacement_timeout_preserves_legacy_core_and_its_agent

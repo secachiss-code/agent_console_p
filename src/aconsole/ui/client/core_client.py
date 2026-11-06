@@ -173,7 +173,13 @@ class CoreClient:
     async def connect(self) -> InitializeResult:
         self._closing = False
         await self._open_socket()
-        return await self._handshake()
+        try:
+            return await self._handshake()
+        except (CoreCallError, msgspec.DecodeError):
+            # A refused handshake is terminal until the user explicitly retries.
+            # Disconnect only: the daemon may still own live agents and data.
+            await self._disconnect()
+            raise
 
     async def start_daemon(self, argv: list[str], *, runtime: Path | None = None) -> InitializeResult:
         """Connect, or spawn ``argv`` when the core lock is free.
@@ -235,21 +241,33 @@ class CoreClient:
         return await self.start_daemon(argv, runtime=runtime)
 
     async def close(self) -> None:
+        await self._disconnect()
+        if self._process is not None and self._process.returncode is None and not self.keep_daemon:
+            _ = self._process.terminate()
+            _ = await self._process.wait()
+
+    async def _disconnect(self) -> None:
+        """Release client resources without signalling a possibly incompatible daemon."""
         self._closing = True
-        tasks = tuple(task for task in (self._read_task, self._reconnect_task, self._resync_task) if task is not None)
+        current = asyncio.current_task()
+        tasks = tuple(task for task in (self._read_task, self._reconnect_task, self._resync_task)
+                      if task is not None and task is not current)
+        self._read_task = None
+        self._reconnect_task = None
+        self._resync_task = None
+        writer = self._writer
+        self._writer = None
+        self._reader = None
         for task in tasks:
             _ = task.cancel()
-        writer = self._writer
         if writer is not None:
             writer.close()
-            await writer.wait_closed()
+            with contextlib.suppress(OSError):
+                await writer.wait_closed()
         for task in tasks:
             with contextlib.suppress(asyncio.CancelledError, ConnectionError, CoreCallError, CoreTimeoutError, OSError):
                 await task
         self._drain_pending()
-        if self._process is not None and self._process.returncode is None and not self.keep_daemon:
-            _ = self._process.terminate()
-            _ = await self._process.wait()
 
     def _drain_pending(self) -> None:
         pending = tuple(self._pending.values())
