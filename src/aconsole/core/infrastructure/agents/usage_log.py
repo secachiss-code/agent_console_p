@@ -8,11 +8,14 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 from typing import Final, final
+
+import msgspec
 
 from aconsole.contracts.app import ModelUsageView
 
@@ -35,41 +38,176 @@ class UsageEvent:
     cache_write_tokens: int
 
 
+_CHUNK_BYTES: Final = 64 * 1024
+_MAX_LINE_BYTES: Final = 2 * 1024 * 1024
+
+
+class _TokenInfo(msgspec.Struct):
+    total_token_usage: dict[str, object] | None = None
+    last_token_usage: dict[str, object] | None = None
+
+
+class _CodexPayload(msgspec.Struct):
+    type: str = ""
+    model: str | None = None
+    info: _TokenInfo | None = None
+
+
+class _CodexLine(msgspec.Struct):
+    type: str = ""
+    timestamp: str | None = None
+    payload: _CodexPayload | None = None
+
+
+def _codex_line(line: bytes) -> _CodexLine | None:
+    if b'"turn_context"' not in line and b'"token_count"' not in line:
+        return None
+    try:
+        return msgspec.json.decode(line, type=_CodexLine)
+    except msgspec.DecodeError:
+        return None
+
+
+@final
+class _UsageParser:
+    def __init__(self, *, codex: bool) -> None:
+        self.codex = codex
+        self.model = _UNKNOWN_MODEL
+        self.total: object = None
+
+    def feed(self, line: bytes) -> UsageEvent | None:
+        if not self.codex:
+            return _claude_event(_line(line)) if b'"usage"' in line and b'"assistant"' in line else None
+        return self._codex(line)
+
+    def _codex(self, line: bytes) -> UsageEvent | None:
+        document = _codex_line(line)
+        if document is None:
+            return None
+        payload = document.payload
+        if payload is None:
+            return None
+        if document.type == "turn_context":
+            if payload.model:
+                self.model = payload.model[:_MODEL_CHARS]
+            return None
+        info = payload.info
+        if payload.type != "token_count" or info is None or info.last_token_usage is None:
+            return None
+        at = _moment(document.timestamp)
+        if at is None or info.total_token_usage == self.total:
+            return None
+        self.total = info.total_token_usage
+        return _codex_event(at, self.model, info.last_token_usage)
+
+    def preview(self, line: bytes) -> UsageEvent | None:
+        model, total = self.model, self.total
+        try:
+            return self.feed(line)
+        finally:
+            self.model, self.total = model, total
+
+
+@final
+class _UsageCursor:
+    def __init__(self, *, codex: bool) -> None:
+        self.parser = _UsageParser(codex=codex)
+        self.stamp: tuple[int, int, int, int] | None = None
+        self.offset = 0
+        self.tail = b""
+        self.discarding = False
+        self.events: list[UsageEvent] = []
+
+    def append(self, data: bytes) -> None:
+        parts = (self.tail + data).split(b"\n")
+        self.tail = parts.pop()
+        if self.discarding:
+            if not parts:
+                self.tail = b""
+                return
+            parts = parts[1:]
+            self.discarding = False
+        for line in parts:
+            if len(line) <= _MAX_LINE_BYTES:
+                event = self.parser.feed(line)
+                if event is not None:
+                    self.events.append(event)
+        if len(self.tail) > _MAX_LINE_BYTES:
+            self.tail = b""
+            self.discarding = True
+            _LOG.warning("oversized session log line skipped")
+
+
 @final
 class UsageLog:
-    """The `*.jsonl` files under one folder, added up by model since a moment."""
+    """Tail known CLI logs; retain model/dedup state and an incomplete trailing line."""
 
     def __init__(self, folder: Callable[[], Path | None], read: Callable[[Path], Iterable[UsageEvent]]) -> None:
         self._folder = folder
         self._read = read
-        self._files: dict[Path, tuple[tuple[int, int], tuple[UsageEvent, ...]]] = {}
+        self._files: dict[Path, _UsageCursor] = {}
+        self._since: datetime | None = None
 
     def models(self, since: datetime) -> tuple[ModelUsageView, ...]:
-        """Most used first. Empty when the folder cannot be found."""
         folder = self._folder()
         if folder is None:
+            self._files.clear()
             return ()
-        files: dict[Path, tuple[tuple[int, int], tuple[UsageEvent, ...]]] = {}
+        if self._since is not None and since < self._since:
+            # A wider requested window legitimately requires reading older history again.
+            self._files.clear()
+        self._since = since
+        files: dict[Path, _UsageCursor] = {}
+        events: list[UsageEvent] = []
         for path in folder.rglob("*.jsonl"):
-            kept = self._current(path, since)
-            if kept is not None:
-                files[path] = kept
+            cursor = self._current(path, since)
+            if cursor is not None:
+                files[path] = cursor
+                events.extend(cursor.events)
+                if cursor.tail and not cursor.discarding:
+                    provisional = cursor.parser.preview(cursor.tail)
+                    if provisional is not None and provisional.at >= since:
+                        events.append(provisional)
         self._files = files
-        return _totals(event for _, events in files.values() for event in events if event.at >= since)
+        return _totals(events)
 
-    def _current(self, path: Path, since: datetime) -> tuple[tuple[int, int], tuple[UsageEvent, ...]] | None:
+    def _current(self, path: Path, since: datetime) -> _UsageCursor | None:
         try:
             status = path.stat()
             if status.st_mtime < since.timestamp():
                 return None
-            stamp = (status.st_size, status.st_mtime_ns)
-            cached = self._files.get(path)
-            if cached is not None and cached[0] == stamp:
-                return cached
-            return stamp, tuple(self._read(path))
+            stamp = (status.st_dev, status.st_ino, status.st_size, status.st_mtime_ns)
+            cursor = self._files.get(path)
+            if cursor is not None and cursor.stamp == stamp:
+                cursor.events = [event for event in cursor.events if event.at >= since]
+                return cursor
+            if (cursor is None or cursor.stamp is None or cursor.stamp[:2] != stamp[:2]
+                    or status.st_size <= cursor.offset):
+                cursor = _UsageCursor(codex=self._read is codex_events)
+            if self._read not in {claude_events, codex_events}:
+                # Preserve the callback contract for custom readers with their own formats.
+                cursor.events = [event for event in self._read(path) if event.at >= since]
+            else:
+                self._append_file(path, cursor, status)
+                cursor.events = [event for event in cursor.events if event.at >= since]
+            cursor.stamp = stamp
         except OSError:
             _LOG.warning("cannot read the session log %s", path.name, exc_info=True)
             return None
+        return cursor
+
+    @staticmethod
+    def _append_file(path: Path, cursor: _UsageCursor, status: os.stat_result) -> None:
+        with path.open("rb") as stream:
+            _ = stream.seek(cursor.offset)
+            left = status.st_size - cursor.offset
+            while left > 0:
+                data = stream.read(min(left, _CHUNK_BYTES))
+                if not data:
+                    break
+                cursor.offset += len(data)
+                left -= len(data)
+                cursor.append(data)
 
 
 def _totals(events: Iterable[UsageEvent]) -> tuple[ModelUsageView, ...]:
@@ -125,31 +263,13 @@ def _claude_event(document: dict[str, object] | None) -> UsageEvent | None:
 
 
 def codex_events(path: Path) -> Iterable[UsageEvent]:
-    """`turn_context` names the model; a `token_count` whose total moved adds its last reply. Input includes cached."""
-    model = _UNKNOWN_MODEL
-    total: object = None
+    """The same stateful decoder used by incremental reads, exposed for standalone readers."""
+    parser = _UsageParser(codex=True)
     with path.open("rb") as lines:
         for line in lines:
-            if b'"turn_context"' not in line and b'"token_count"' not in line:
-                continue
-            document = _line(line)
-            payload = document.get("payload") if document is not None else None
-            if document is None or not isinstance(payload, dict):
-                continue
-            if document.get("type") == "turn_context":
-                named = payload.get("model")  # pyright: ignore[reportUnknownMemberType, reportUnknownVariableType]
-                model = named[:_MODEL_CHARS] if isinstance(named, str) and named else model
-                continue
-            info = payload.get("info")  # pyright: ignore[reportUnknownMemberType, reportUnknownVariableType]
-            if payload.get("type") != "token_count" or not isinstance(info, dict):  # pyright: ignore[reportUnknownMemberType]
-                continue
-            seen = info.get("total_token_usage")  # pyright: ignore[reportUnknownMemberType, reportUnknownVariableType]
-            last = info.get("last_token_usage")  # pyright: ignore[reportUnknownMemberType, reportUnknownVariableType]
-            at = _moment(document.get("timestamp"))
-            if seen == total or not isinstance(last, dict) or at is None:
-                continue
-            total = seen  # pyright: ignore[reportUnknownVariableType]
-            yield _codex_event(at, model, last)  # pyright: ignore[reportUnknownArgumentType]
+            event = parser.feed(line)
+            if event is not None:
+                yield event
 
 
 def _codex_event(at: datetime, model: str, last: dict[str, object]) -> UsageEvent:

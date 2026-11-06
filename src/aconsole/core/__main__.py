@@ -21,6 +21,7 @@ from aconsole.core.bootstrap import (
 )
 from aconsole.core.infrastructure.fake.server import FakeCore
 from aconsole.core.infrastructure.persistence.startup import default_database
+from aconsole.core.infrastructure.runtime_logging import configure_logging
 
 _SCENARIO_ONLY = 2
 _WITH_SOCKET = 4
@@ -66,6 +67,7 @@ def _serve(argv: list[str]) -> int:
     if message is not None:
         _ = sys.stderr.write(f"{message}\n")
         return EXIT_REFUSED
+    _ = configure_logging()
     return asyncio.run(run_with_signals(serve_daemon(socket_path)))
 
 

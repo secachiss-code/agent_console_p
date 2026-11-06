@@ -64,6 +64,7 @@ from aconsole.core.infrastructure.git.checkpoints import GitCheckpoints
 from aconsole.core.infrastructure.git.diff import GitDiff
 from aconsole.core.infrastructure.git.history import GitHistory
 from aconsole.core.infrastructure.git.operations import GitMutations
+from aconsole.core.infrastructure.git.retention import drain_ref_deletions
 from aconsole.core.infrastructure.git.watch import GitWatch
 from aconsole.core.infrastructure.http.app import IngestApp, serve_config
 from aconsole.core.infrastructure.http.approval import handle_permission
@@ -85,13 +86,14 @@ from aconsole.core.infrastructure.knowledge import KnowledgeService
 from aconsole.core.infrastructure.mcp.server import TabTokens, beside_ingest, build_server, http_app
 from aconsole.core.infrastructure.mcp.tools import PlanBoard, TabContext
 from aconsole.core.infrastructure.persistence.cleanup import SweepResult, sweep
-from aconsole.core.infrastructure.persistence.engine import write_engine
+from aconsole.core.infrastructure.persistence.engine import checkpoint_wal, write_engine
 from aconsole.core.infrastructure.persistence.models import ApprovalStatus
 from aconsole.core.infrastructure.persistence.repositories.catalog import ApprovalRecord, ApprovalRepository
 from aconsole.core.infrastructure.persistence.repositories.checkpoints import CheckpointDatabase
 from aconsole.core.infrastructure.persistence.repositories.git_operations import GitOperationDatabase
 from aconsole.core.infrastructure.persistence.repositories.knowledge import KnowledgeDatabase
 from aconsole.core.infrastructure.persistence.repositories.plans import PlanDatabase
+from aconsole.core.infrastructure.persistence.repositories.ref_deletions import RefDeletionQueue
 from aconsole.core.infrastructure.persistence.repositories.tabs import TabDatabase
 from aconsole.core.infrastructure.persistence.repositories.vault_files import VaultFileDatabase
 from aconsole.core.infrastructure.persistence.repositories.work_sessions import (
@@ -1307,7 +1309,9 @@ class Daemon:
         if writer is None:
             return
         store = TabDatabase(writer)
-        self.review.checkpoints.use_journal(CheckpointDatabase(writer))
+        checkpoints = CheckpointDatabase(writer)
+        self.review.checkpoints.use_journal(checkpoints)
+        self.review.checkpoints.protected_ref = checkpoints.is_session_ref
         await asyncio.to_thread(self._plans.use_store, PlanDatabase(writer))
         await asyncio.to_thread(self._plans.use_knowledge, KnowledgeDatabase(writer))
         await asyncio.to_thread(self.vault.use_bases, VaultFileDatabase(writer))
@@ -1384,15 +1388,23 @@ class Daemon:
                     swept = await writer.submit(self._sweep_once)
                     more = isinstance(swept, SweepResult) and swept.more
                 await self._drop_swept_refs()
+                if self._engine is not None:
+                    status = await asyncio.to_thread(checkpoint_wal, self._engine, truncate=True)
+                    if status.busy:
+                        _LOG.warning("WAL checkpoint deferred while a reader is active")
             except Exception:  # noqa: BLE001 -- logged; the next change brings another pass
                 _LOG.exception("retention sweep failed")
             await asyncio.sleep(self.sweep_every_s)
 
     async def _drop_swept_refs(self) -> None:
-        """Refs of rows the sweep removed. A closed tab's refs stay listed: its worktree may be gone."""
-        refs = tuple(self.dropped_refs)
+        """Outbox survives a restart even after the owning tab or workspace disappears."""
+        writer = self._writer
+        if writer is None:
+            return
+        refs = await self._in_worker(lambda: drain_ref_deletions(RefDeletionQueue(writer)))
         if refs:
-            self.dropped_refs[:] = await self._in_worker(lambda: self.review.forget_refs(refs))
+            _ = await self._in_worker(lambda: self.review.forget_refs(refs))
+        self.dropped_refs.clear()
 
     def _sweep_once(self, session: Session) -> object:
         return sweep(session, now=datetime.now(UTC), drop_ref=self.dropped_refs.append)

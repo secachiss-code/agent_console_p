@@ -536,3 +536,13 @@ class Setting(Base):
     key: Mapped[str] = mapped_column(String(64), primary_key=True)
     value: Mapped[dict[str, object]] = mapped_column(JsonObject)
     rev: Mapped[int] = mapped_column()
+
+
+@final
+class GitRefDeletion(Base):
+    """Outlives deleted checkpoint/tab rows until the Git deletion is acknowledged."""
+
+    __tablename__ = "git_ref_deletions"
+
+    repo_path: Mapped[str] = mapped_column(String(4096), primary_key=True)
+    git_ref: Mapped[str] = mapped_column(String(255), primary_key=True)

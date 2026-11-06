@@ -14,6 +14,7 @@ from aconsole.core.domain.clock import Clock
 from aconsole.core.domain.ids import new_ulid
 from aconsole.core.domain.workspace import path_segment
 from aconsole.core.infrastructure.persistence.models import Checkpoint as Row
+from aconsole.core.infrastructure.persistence.models import WorkSessionSnapshotRow
 from aconsole.core.infrastructure.persistence.writer import Writer
 
 
@@ -52,6 +53,14 @@ class CheckpointDatabase:
             )
 
         _ = self._writer.call(add)
+
+    def is_session_ref(self, ref: str) -> bool:
+        def check(session: Session) -> object:
+            return session.scalar(select(WorkSessionSnapshotRow.ref).where(
+                WorkSessionSnapshotRow.ref == ref,
+            ).limit(1)) is not None
+
+        return self._writer.call(check) is True
 
     def delete(self, tab_id: str, numbers: tuple[int, ...]) -> None:
         def remove(session: Session) -> None:

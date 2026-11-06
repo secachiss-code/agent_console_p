@@ -14,6 +14,8 @@ from aconsole.core.infrastructure.persistence.models import (
     Approval,
     Checkpoint,
     EventLog,
+    GitRefDeletion,
+    Project,
     QuotaHistory,
     Setting,
     Tab,
@@ -51,6 +53,7 @@ def sweep(session: Session, *, now: datetime, drop_ref: Callable[[str], None]) -
     refs: list[str] = []
 
     def dropped(ref: str) -> None:
+        _queue_ref(session, ref)
         refs.append(ref)
         drop_ref(ref)
 
@@ -140,3 +143,15 @@ def _trim_closed_tabs(session: Session, now: datetime, dropped: Callable[[str], 
             dropped(ref)
         session.delete(tab)
     return len(tabs)
+
+
+
+def _queue_ref(session: Session, ref: str) -> None:
+    """Store the repository before cascade deletion removes its tab/workspace context."""
+    if not ref.startswith("refs/aconsole/checkpoints/"):
+        return
+    repo = session.scalar(select(Project.root_path).join(Tab, Tab.project_id == Project.id).join(
+        Checkpoint, Checkpoint.tab_id == Tab.id,
+    ).where(Checkpoint.git_ref == ref).limit(1))
+    if repo is not None and session.get(GitRefDeletion, (repo, ref)) is None:
+        session.add(GitRefDeletion(repo_path=repo, git_ref=ref))

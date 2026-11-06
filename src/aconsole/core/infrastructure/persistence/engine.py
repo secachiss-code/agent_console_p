@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import sqlite3
+from dataclasses import dataclass
 from pathlib import Path
 
 from alembic import command
@@ -26,7 +27,8 @@ _PRAGMAS = (
     "PRAGMA foreign_keys=ON",
     "PRAGMA busy_timeout=5000",
     "PRAGMA optimize=0x10002",
-    "PRAGMA wal_autocheckpoint=4000",
+    "PRAGMA wal_autocheckpoint=1000",
+    "PRAGMA journal_size_limit=4194304",
 )
 _WRITE_POOL = 1
 _READ_POOL = 4
@@ -106,3 +108,38 @@ def _on_connect(dbapi_connection: sqlite3.Connection, _record: object) -> None:
 
 def _on_begin(connection: Connection) -> None:
     begin_immediate(connection)
+
+
+
+@dataclass(frozen=True)
+class WalCheckpoint:
+    busy: bool
+    pages: int
+    checkpointed: int
+
+
+def checkpoint_wal(engine: Engine, *, truncate: bool = False) -> WalCheckpoint:
+    """Outside a transaction; never wait for a reader or interrupt it to shrink WAL."""
+    pooled = engine.raw_connection()
+    try:
+        connection = pooled.driver_connection
+        if not isinstance(connection, sqlite3.Connection):
+            message = "WAL maintenance requires SQLite"
+            raise TypeError(message)
+        _ = connection.execute("PRAGMA busy_timeout=0")
+        try:
+            mode = "TRUNCATE" if truncate else "PASSIVE"
+            cursor = connection.execute(f"PRAGMA wal_checkpoint({mode})")
+            row: object = cursor.fetchone()  # pyright: ignore[reportAny] -- sqlite3 row is validated below
+        finally:
+            _ = connection.execute("PRAGMA busy_timeout=5000")
+        if row is None:
+            return WalCheckpoint(busy=False, pages=0, checkpointed=0)
+        match row:
+            case (int(busy), int(pages), int(done)):
+                return WalCheckpoint(busy=bool(busy), pages=pages, checkpointed=done)
+            case _:
+                message = "SQLite returned an invalid checkpoint result"
+                raise ValueError(message)
+    finally:
+        pooled.close()

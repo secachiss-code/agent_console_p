@@ -184,6 +184,7 @@ def serve_config(app: object, *, port: int, host: str = _HOST) -> uvicorn.Config
         host=host,
         port=port,
         access_log=False,
+        log_config=None,
         log_level="warning",
         lifespan="on",
     )

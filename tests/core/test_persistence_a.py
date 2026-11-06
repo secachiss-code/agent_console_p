@@ -90,3 +90,38 @@ def test_migrations_are_found_in_a_package_and_in_a_checkout(tmp_path: Path) -> 
     packaged = tmp_path / "site" / "aconsole" / "_migrations"
     packaged.mkdir()
     assert migrations_dir(module) == packaged
+
+def test_wal_pinned_reader_is_not_interrupted_and_compacts_after_release(tmp_path: Path) -> None:
+    import time
+
+    from aconsole.core.infrastructure.persistence.engine import checkpoint_wal
+    from aconsole.core.infrastructure.persistence.models import Setting
+
+    database = tmp_path / "reader.db"
+    url = f"sqlite:///{database}"
+    migrate(url, "head")
+    engine = write_engine(url)
+    reader = sqlite3.connect(database)
+    try:
+        with Session(engine) as session:
+            session.add(Setting(key="before", value={"data": "old"}, rev=1))
+            session.commit()
+        _ = checkpoint_wal(engine, truncate=True)
+        _ = reader.execute("BEGIN")
+        assert reader.execute("SELECT count(*) FROM settings").fetchone()[0] == 1
+        with Session(engine) as session:
+            session.add(Setting(key="after", value={"data": "new"}, rev=1))
+            session.commit()
+        started = time.monotonic()
+        status = checkpoint_wal(engine, truncate=True)
+        assert time.monotonic() - started < 1
+        assert status.busy
+        assert reader.execute("SELECT count(*) FROM settings").fetchone()[0] == 1
+        reader.rollback()
+        assert not checkpoint_wal(engine, truncate=True).busy
+        assert database.with_name(database.name + "-wal").stat().st_size == 0
+        with Session(engine) as session:
+            assert session.get(Setting, "after") is not None
+    finally:
+        reader.close()
+        engine.dispose()

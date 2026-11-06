@@ -1,5 +1,6 @@
 """Checkpoint list for one tab. Git is a port; this module does not import it."""
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -32,6 +33,7 @@ class CheckpointService:
 
     def __init__(self, store: CheckpointStore, *, keep: int = 100, journal: CheckpointJournal | None = None) -> None:
         self._store = store
+        self.protected_ref: Callable[[str], bool] = lambda _ref: False
         self._keep = keep
         self._logs = {}
         self._journal = journal
@@ -91,10 +93,10 @@ class CheckpointService:
     def forget(self, tab_id: str, repo: Path, numbers: tuple[int, ...]) -> None:
         """The retention sweep removed these rows: drop their refs, and the list the core holds."""
         log = self._log(tab_id)
-        known = {item.number: item for item in log.items()}
         for number in numbers:
-            if number in known:
-                self._store.delete(repo, known[number].ref)
+            ref = checkpoint_ref(tab_id, number)
+            if not self.protected_ref(ref):
+                self._store.delete(repo, ref)
         log.forget(frozenset(numbers))
 
     def _log(self, tab_id: str) -> CheckpointLog:
@@ -108,7 +110,8 @@ class CheckpointService:
 
     def _drop(self, repo: Path, tab_id: str, dropped: tuple[Checkpoint, ...]) -> None:
         for item in dropped:
-            self._store.delete(repo, item.ref)
+            if not self.protected_ref(item.ref):
+                self._store.delete(repo, item.ref)
         if dropped and self._journal is not None:
             self._journal.delete(tab_id, tuple(item.number for item in dropped))
 
