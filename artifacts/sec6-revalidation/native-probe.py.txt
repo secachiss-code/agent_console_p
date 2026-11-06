@@ -1,0 +1,22 @@
+"""Read-only negative namespace probe: initialize only, no privileged RPC."""
+import json
+import os
+import socket
+
+results = []
+for role in ('ui', 'cli'):
+    request = {'jsonrpc': '2.0', 'id': 1, 'method': 'initialize', 'params': {
+        'protocol': [{'major': 1, 'minor': 0}, {'major': 1, 'minor': 0}],
+        'role': role, 'client_name': 'sec6-negative-namespace-check', 'client_version': '1',
+        'pid': os.getpid(), 'capabilities': ['events.v1', 'approvals.inline'],
+    }}
+    with socket.socket(socket.AF_UNIX) as connection:
+        connection.settimeout(3)
+        connection.connect('/run/user/1000/aconsole/core.sock')
+        connection.sendall(json.dumps(request).encode() + b'\n')
+        with connection.makefile('rb') as stream:
+            raw = stream.readline(65536)
+            result = json.loads(raw) if raw else {}
+    assert not raw or result.get('error', {}).get('message') == 'ROLE_FORBIDDEN', result
+    results.append({'requested_role': role, 'reason': result['error']['message'] if raw else 'connection_closed_before_initialize_reply', 'privileged_rpc_sent': False})
+print(json.dumps({'agent_uid': os.getuid(), 'checks': results}))

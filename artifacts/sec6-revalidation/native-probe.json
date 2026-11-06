@@ -1,0 +1,20 @@
+{
+  "agent_uid": 1000,
+  "checks": [
+    {
+      "requested_role": "ui",
+      "reason": "connection_closed_before_initialize_reply",
+      "privileged_rpc_sent": false
+    },
+    {
+      "requested_role": "cli",
+      "reason": "connection_closed_before_initialize_reply",
+      "privileged_rpc_sent": false
+    }
+  ],
+  "installed_guard_sha256": {
+    "core/infrastructure/ipc/server.py": "1d75c427696bc4d5acb1db4af2464af182aa25ab7b4d76fe9f6c7dd17ef62e78",
+    "core/infrastructure/ipc/session.py": "1f69d15efad6656215f0d44c1124566f391da8d0b61dab29004936d0b75547bb"
+  },
+  "bootstrap_client_ast_matches_main": true
+}

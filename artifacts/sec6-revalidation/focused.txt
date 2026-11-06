@@ -1,0 +1,2 @@
+hostrun test core tests/core/test_ipc_a.py
+exit 0; 14 passed
