@@ -1,0 +1,100 @@
+Collected 0 items to run in parallel
+F.                                                                       [100%]
+python 3.15.1 gil=False
+Task exception was never retrieved
+future: <Task finished name='Task-3' coro=<Daemon.serve() done, defined at /home/sas/Projects/sp_aconsole_prototype/src/aconsole/core/bootstrap.py:663> exception=TimeoutError('writer did not start the job before its deadline')>
+Traceback (most recent call last):
+  File "/home/sas/Projects/sp_aconsole_prototype/src/aconsole/core/bootstrap.py", line 681, in serve
+    await self._restore_tabs()
+  File "/home/sas/Projects/sp_aconsole_prototype/src/aconsole/core/bootstrap.py", line 1315, in _restore_tabs
+    await asyncio.to_thread(self._plans.use_store, PlanDatabase(writer))
+  File "/home/sas/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/threads.py", line 26, in to_thread
+    return await loop.run_in_executor(None, func_call)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/sas/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/concurrent/futures/thread.py", line 86, in run
+    result = ctx.run(self.task)
+  File "/home/sas/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/concurrent/futures/thread.py", line 73, in run
+    return fn(*args, **kwargs)
+  File "/home/sas/Projects/sp_aconsole_prototype/src/aconsole/core/infrastructure/mcp/tools.py", line 376, in use_store
+    for saved in store.load():
+                 ~~~~~~~~~~^^
+  File "/home/sas/Projects/sp_aconsole_prototype/src/aconsole/core/infrastructure/persistence/repositories/plans.py", line 56, in load
+    _ = self._writer.call(collect)
+  File "/home/sas/Projects/sp_aconsole_prototype/src/aconsole/core/infrastructure/persistence/writer.py", line 114, in call
+    raise TimeoutError(message) from None
+TimeoutError: writer did not start the job before its deadline
+
+=================================== FAILURES ===================================
+___________ test_core_keeps_its_lock_until_a_slow_writer_has_stopped ___________
+
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-13/test_core_keeps_its_lock_until0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x282b027dc10>
+
+    def test_core_keeps_its_lock_until_a_slow_writer_has_stopped(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        from aconsole.core.infrastructure.persistence import writer as writer_module
+
+        monkeypatch.setattr(writer_module, "_WAIT_S", 0.03)
+
+        async def scenario() -> None:
+            daemon = _daemon(tmp_path, serve_ingest=False)
+            task = asyncio.create_task(daemon.serve())
+            client = await _connect(daemon.socket)
+            entered, release = threading.Event(), threading.Event()
+            writer = daemon._writer
+            assert writer is not None
+
+            def work(_session: object) -> None:
+                entered.set()
+                assert release.wait(2)
+
+            writer.post(work)
+            assert await asyncio.to_thread(entered.wait, 1)
+            daemon.request_stop()
+            try:
+                with pytest.raises(TimeoutError):
+                    await asyncio.wait_for(asyncio.shield(task), timeout=0.15)
+                assert lock_held(daemon.lock_path)
+            finally:
+                release.set()
+                await _stop(daemon, task, client)
+            assert not lock_held(daemon.lock_path)
+
+>       asyncio.run(scenario())
+
+tests/core/test_core_recovery.py:255:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+../../.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py:205: in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py:128: in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/base_events.py:724: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+tests/core/test_core_recovery.py:234: in scenario
+    client = await _connect(daemon.socket)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/core/test_wire.py:109: in _connect
+    await wait_for_socket(socket)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+path = PosixPath('/tmp/pytest-of-root/pytest-13/test_core_keeps_its_lock_until0/xdg-runtime/ac-wire-eeps_its_lock_until0.sock')
+
+    async def wait_for_socket(path: Path) -> None:
+        """Poll until the daemon has bound its socket. Fails after about a second."""
+        for _ in range(100):
+            if await asyncio.to_thread(path.exists):
+                return
+            await asyncio.sleep(0.01)
+        message = "socket did not appear"
+>       raise RuntimeError(message)
+E       RuntimeError: socket did not appear
+
+tests/core/conftest.py:152: RuntimeError
+------------------------------ Captured log call -------------------------------
+WARNING  aconsole.core.bootstrap:bootstrap.py:1433 waiting for the database writer before releasing the core lock
+=========================== short test summary info ============================
+FAILED tests/core/test_core_recovery.py::test_core_keeps_its_lock_until_a_slow_writer_has_stopped

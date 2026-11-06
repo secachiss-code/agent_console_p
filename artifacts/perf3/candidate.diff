@@ -1,0 +1,7 @@
+--- a/tests/core/test_core_recovery.py
++++ b/tests/core/test_core_recovery.py
+@@ -229,2 +228,0 @@
+-    monkeypatch.setattr(writer_module, "_WAIT_S", 0.03)
+-
+@@ -234,0 +233 @@
++        monkeypatch.setattr(writer_module, "_WAIT_S", 0.03)
