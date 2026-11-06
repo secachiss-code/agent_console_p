@@ -83,7 +83,10 @@ class GitHistory:
         return name.removeprefix("refs/remotes/origin/")
 
     def status(self, worktree: Path) -> StatusRow:
-        raw = self._git.read(worktree, "status", "--porcelain=v2", "-z", "--branch", "--untracked-files=all").text
+        raw = self._git.read(
+            worktree, "status", "--porcelain=v2", "-z", "--branch",
+            "--untracked-files=all", "--ignore-submodules=none",
+        ).text
         return _status(raw, _in_progress(worktree))
 
     def ahead_behind(self, root: Path, left: str, right: str) -> tuple[int, int]:

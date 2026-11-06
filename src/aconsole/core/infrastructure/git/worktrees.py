@@ -352,7 +352,10 @@ class Worktrees:
         return "refused"
 
     def _status(self, dest: Path) -> str:
-        return self._run(("-C", str(dest), "status", "--porcelain", "--untracked-files=all", "--ignored=traditional"))
+        return self._run((
+            "-C", str(dest), "status", "--porcelain", "--untracked-files=all",
+            "--ignored=traditional", "--ignore-submodules=none",
+        ))
 
     def prune(self, repo: Path) -> tuple[str, ...]:
         """Drop stale git worktree entries and records whose directory is gone."""

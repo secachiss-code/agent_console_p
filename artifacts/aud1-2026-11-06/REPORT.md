@@ -7,10 +7,16 @@ local Git repositories, isolated HOME/XDG, and a fake container only for session
 ## Reproduction and evidence
 
 ```sh
-HOSTRUN_CWD=/home/sas/Projects/sp_aconsole_prototype hostrun test core artifacts/aud1-2026-11-06/test_disposable_audit.py
+mkdir -p .aconsole-dev/aud1-replay
+cp artifacts/aud1-2026-11-06/reproduce.py.txt .aconsole-dev/aud1-replay/test_audit.py
+HOSTRUN_CWD=/home/sas/Projects/sp_aconsole_prototype hostrun test core .aconsole-dev/aud1-replay/test_audit.py
 ```
 
 Thirteen probes completed. `observations.json` preserves the baseline results.
+The raw diagnostic is stored as text, like the previous audit reproducer. Replay
+it in the ignored scratch directory above; fresh observations are written there,
+so replay never overwrites the committed baseline. Original execution used the
+same probe as artifacts/aud1-2026-11-06/test_disposable_audit.py at baseline.
 The probe intentionally RECORDS unsafe outcomes: pytest exit 0 means the audit
 ran, not that its observations are all safe. Two unsafe mechanisms were reproduced;
 three observations show lost bytes because one mechanism has two adapter entries.
@@ -87,3 +93,12 @@ SEC-11 remains pending: the live claim is still rejected because UX-7 reserves a
 overlapping file. Do not bypass that lock or mark verifying nodes accepted. Fix
 GIT-3 first (deterministic data loss without a race), then GIT-4; retain the raw
 baseline observations so later fixes do not rewrite the evidence.
+
+
+## GIT-3 follow-up
+
+Safety status commands now explicitly request `--ignore-submodules=none`, so
+repository ignore settings cannot hide tracked or untracked submodule work.
+Four config/content regressions and two public cleanup regressions reproduced the
+defect before the fix. The focused state/worktree/cleanup/session suite passed 51
+tests after it. GIT-4 is independent and remains recorded against the baseline.
