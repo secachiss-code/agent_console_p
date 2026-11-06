@@ -148,7 +148,10 @@ class WorkSessionHistory:
 
     def materialize(self, session: WorkSession, sequence: int) -> None:
         target = self.require(session.id, sequence)
-        self._snapshots.materialize(Path(session.worktree), target.ref)
+        oid = target.oid
+        if oid is None:
+            raise DomainError(code=3005, name="CHECKPOINT_NOT_FOUND", retryable=False)
+        self._snapshots.materialize(Path(session.worktree), oid)
 
     def _save(self, record: WorkSessionSnapshot) -> None:
         if self._store is not None:
