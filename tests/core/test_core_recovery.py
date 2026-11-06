@@ -226,12 +226,11 @@ def test_core_keeps_its_lock_until_a_slow_writer_has_stopped(
 ) -> None:
     from aconsole.core.infrastructure.persistence import writer as writer_module
 
-    monkeypatch.setattr(writer_module, "_WAIT_S", 0.03)
-
     async def scenario() -> None:
         daemon = _daemon(tmp_path, serve_ingest=False)
         task = asyncio.create_task(daemon.serve())
         client = await _connect(daemon.socket)
+        monkeypatch.setattr(writer_module, "_WAIT_S", 0.03)
         entered, release = threading.Event(), threading.Event()
         writer = daemon._writer
         assert writer is not None
