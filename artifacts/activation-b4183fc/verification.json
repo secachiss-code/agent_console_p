@@ -1,0 +1,25 @@
+{
+  "old_pid": 21227,
+  "new_pid": 174617,
+  "first_activated_pid": 174407,
+  "core_executable": "/opt/aconsole/core/bin/python3.15t",
+  "server_version": "0.1.1",
+  "tab_count_before": 1,
+  "tab_count_after": 1,
+  "native_session_ids_preserved": true,
+  "missing_agent_processes": [],
+  "done_before": 10,
+  "done_after": 13,
+  "total": 75,
+  "completed_nodes": {
+    "CORE-7": "done",
+    "PERF-3": "done",
+    "PLAN-3": "done"
+  },
+  "installed_source_hashes": {
+    "core/bootstrap.py": "7ea4df3e58a2b5ef2cbf7ec99d9b1987a857794cbadd1628414025147305f32d",
+    "core/domain/plan.py": "9c6dbfd7f349cba1f0d40da55bf6aced71e3f7891ec1f1ce6aff50a08d709bec",
+    "core/infrastructure/mcp/tools.py": "9666859ce20d09071fd5509b725089b7a856aecbc5945c4d768303030a167f18",
+    "core/infrastructure/mcp/server.py": "43a8eacdf4c3325f160f5bbdca344e5698a14d9c33cc0b03b671c14f5e5d1ea9"
+  }
+}

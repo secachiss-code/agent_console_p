@@ -1,0 +1,10 @@
+{
+  "pending": 56,
+  "in_progress": 0,
+  "verifying": 0,
+  "blocked": 4,
+  "done": 13,
+  "failed": 2,
+  "cancelled": 0,
+  "total": 75
+}
