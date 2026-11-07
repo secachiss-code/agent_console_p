@@ -19,7 +19,7 @@ from aconsole.contracts.app import (
     ReorderParams,
     TabView,
 )
-from aconsole.contracts.common import AgentKind, ProjectId, TabId, WorkspaceMode
+from aconsole.contracts.common import AgentKind, NodeId, ProjectId, TabId, WorkspaceMode
 from aconsole.contracts.events import QuotaUpdated, TabAdded, TabRemoved, TabUpdated, UiEvent
 from aconsole.contracts.git import GitStateResult
 from aconsole.ui.client.core_client import CoreClient
@@ -189,12 +189,14 @@ class TabsViewModel:
         workspace: WorkspaceMode = WorkspaceMode.NEW_WORKTREE, existing_worktree: str | None = None,
         work_session_id: str | None = None, isolated: bool = False, title: str | None = None,
         resume_session: str | None = None,
+        base_branch: str | None = None, plan_node: NodeId | None = None,
     ) -> TabView:
         return await self.client.request(
             "tab/open",
             OpenTabParams(
                 project_id=project_id, agent=agent, workspace=workspace, existing_worktree=existing_worktree,
                 work_session_id=work_session_id, isolated=isolated, title=title, resume_session=resume_session,
+                base_branch=base_branch, plan_node=plan_node,
             ),
             TabView,
         )
@@ -204,6 +206,9 @@ class TabsViewModel:
 
     async def add_project(self, root: str) -> ProjectView:
         return await self.client.request("project/add", ProjectAddParams(root=root), ProjectView)
+
+    async def remove_project(self, project_id: ProjectId) -> None:
+        _ = await self.client.request("project/remove", ProjectIdParams(project_id=project_id), EmptyResult)
 
     async def rename(self, tab_id: str, title: str) -> None:
         if not title.strip() or len(title) > MAX_TAB_TITLE_LENGTH:

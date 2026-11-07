@@ -22,8 +22,10 @@ class ApprovalsViewModel:
     def __init__(self, client: CoreClient) -> None:
         self.client: CoreClient = client
 
-    async def decide(self, view: ApprovalView, decision: ApprovalDecision, scope: ApprovalScope) -> AppliedResult:
-        params = DecideParams(approval_id=view.id, nonce=view.nonce, decision=decision, scope=scope)
+    async def decide(
+        self, view: ApprovalView, decision: ApprovalDecision, scope: ApprovalScope, *, message: str | None = None,
+    ) -> AppliedResult:
+        params = DecideParams(approval_id=view.id, nonce=view.nonce, decision=decision, scope=scope, message=message)
         return await self.client.request("approval/decide", params, AppliedResult)
 
     async def release(self, view: ApprovalView) -> ReleasedResult:

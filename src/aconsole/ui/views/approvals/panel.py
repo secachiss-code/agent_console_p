@@ -148,6 +148,11 @@ class ApprovalCard(Gtk.Box):
                 label=translate("approvals.allow_session"), tooltip_text=translate("approvals.allow_session_tip"),
             )
             self.append(self.session_check)
+        self.deny_message: Gtk.Entry = Gtk.Entry(
+            placeholder_text=translate("approvals.deny_message"),
+            tooltip_text=translate("approvals.deny_message"), max_length=4000,
+        )
+        self.append(self.deny_message)
         self.append(self._buttons())
         self.tick(datetime.now(UTC))
         self.details.update_property(
@@ -426,7 +431,8 @@ class ApprovalPanel(Gtk.Box):
         if decision == ApprovalDecision.ALLOW and card.view.expires_at <= now:
             self._toast(translate("approvals.closed"))
             return
-        self._send(card, self.viewmodel.decide(card.view, decision, scope))
+        message = card.deny_message.get_text().strip() if decision is ApprovalDecision.DENY else ""
+        self._send(card, self.viewmodel.decide(card.view, decision, scope, message=message or None))
 
     def release(self, card: ApprovalCard) -> None:
         self._send(card, self.viewmodel.release(card.view))

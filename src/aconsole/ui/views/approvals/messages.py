@@ -4,6 +4,7 @@
 import locale
 
 _MESSAGES = {
+    "approvals.deny_message": ("Message if denied (optional)", "Пояснение при отказе (необязательно)"),
     "approvals.title.command": ("{agent} wants to run a command", "{agent} хочет выполнить команду"),
     "approvals.title.edit": ("{agent} wants to edit files: {count}", "{agent} хочет изменить файлы: {count}"),
     "approvals.title.tool": ("{agent} wants to use {tool}", "{agent} хочет использовать {tool}"),

@@ -1,0 +1,20 @@
+{
+  "node": "UX-5",
+  "base": "c764b0243f0ae50fa7e12ec65e33fdc06703eb62",
+  "core_targeted": {"passed": 40, "failed": 0, "seconds": 9.90},
+  "gtk_final": {"passed": 46, "failed": 0, "warnings": 4, "seconds": 14.51},
+  "basedpyright": {"errors": 0, "warnings": 0},
+  "ruff": "PASS",
+  "diff_check": "PASS",
+  "screenshots_reviewed": 12,
+  "native_model_conversations_started": 0,
+  "user_projects_removed": 0,
+  "notes": [
+    "Three workspace modes already existed; added base branch and active-plan node selection",
+    "Public RPC test preserves kept worktree and uncommitted file across removal, restart and re-add",
+    "GUI verifies cancellation sends no RPC and confirmation retains its original project",
+    "Approval denial message uses existing wire schema; allow semantics unchanged",
+    "First new core fixture needed an initial commit before worktree creation",
+    "docs/design/DESIGN.md is absent; screenshots verified for layout, translation and themes"
+  ]
+}

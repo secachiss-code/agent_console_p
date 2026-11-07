@@ -10,7 +10,14 @@ gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
 from gi.repository import Adw, Gio, GLib, Gtk  # noqa: E402
 
-from aconsole.contracts.app import AgentInfo, ProjectView, SessionInfo, SessionListParams, SessionListResult  # noqa: E402
+from aconsole.contracts.app import (  # noqa: E402
+    AgentInfo,
+    PlanNodeView,
+    ProjectView,
+    SessionInfo,
+    SessionListParams,
+    SessionListResult,
+)
 from aconsole.contracts.common import TabId, WorkspaceMode  # noqa: E402
 from aconsole.contracts.work_sessions import WorkSessionListParams, WorkSessionListResult, WorkSessionView  # noqa: E402 -- GTK imports or an operation error shown to the user
 from aconsole.ui.bootstrap import spawn_task  # noqa: E402
@@ -31,6 +38,8 @@ class NewTabDialog(Adw.Dialog):
         self._projects: tuple[ProjectView, ...] = ()
         self._agents: tuple[AgentInfo, ...] = ()
         self._opening: bool = False
+        self._context_project: str | None = None
+        self._nodes: tuple[PlanNodeView, ...] = ()
         self._native_sessions: tuple[SessionInfo, ...] = ()
         self._native_context: tuple[str, str] | None = None
         self._native_generation: int = 0
@@ -66,8 +75,17 @@ class NewTabDialog(Adw.Dialog):
         )
         group.add(self.isolated_row)
         self._build_workspace(group)
+        self.base_branch: Adw.EntryRow = Adw.EntryRow(title=translate("tabs.new.base_branch"))
+        self.node_row: Adw.ComboRow = Adw.ComboRow(title=translate("tabs.new.plan_node"))
+        group.add(self.base_branch)
+        group.add(self.node_row)
         _ = self.session_row.connect("notify::selected", self._workspace_changed)
+        self._build_dialog(group)
+        self.reload()
+
+    def _build_dialog(self, group: Adw.PreferencesGroup) -> None:
         body = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+        self.body: Gtk.Box = body
         body.add_css_class("ac-new-tab-body")
         body.append(group)
         body.append(self.add_project_button)
@@ -76,12 +94,16 @@ class NewTabDialog(Adw.Dialog):
         self.open_button.add_css_class("suggested-action")
         _ = self.open_button.connect("clicked", self._open)
         header = Adw.HeaderBar()
+        self.spinner: Gtk.Spinner = Gtk.Spinner(visible=False)
+        header.pack_end(self.spinner)
         header.pack_end(self.open_button)
         toolbar = Adw.ToolbarView()
         toolbar.add_top_bar(header)
-        toolbar.set_content(body)
+        toolbar.set_content(Gtk.ScrolledWindow(
+            child=body, hscrollbar_policy=Gtk.PolicyType.NEVER,
+            propagate_natural_height=True, max_content_height=600,
+        ))
         self.set_child(toolbar)
-        self.reload()
 
     def _build_workspace(self, group: Adw.PreferencesGroup) -> None:
         self.workspace_row: Adw.ComboRow = Adw.ComboRow(
@@ -100,6 +122,17 @@ class NewTabDialog(Adw.Dialog):
     def _workspace_changed(self, _source: object, _property: object = None) -> None:
         index = self.project_row.get_selected()
         project = self._projects[index] if index < len(self._projects) else None
+        context = None if project is None else str(project.id)
+        if context != self._context_project:
+            self._context_project = context
+            self.base_branch.set_text("" if project is None else project.default_branch)
+            snapshot = self._tabs.client.store.snapshot
+            self._nodes = tuple(node for plan in (() if snapshot is None else snapshot.plans)
+                if project is not None and plan.project_id == project.id and plan.status == "active"
+                for node in plan.nodes)
+            self.node_row.set_model(Gtk.StringList.new([
+                translate("tabs.new.no_node"), *(f"{node.key}: {node.title}" for node in self._nodes),
+            ]))
         if project is not None and self._session_project != str(project.id):
             self._session_project = str(project.id)
             self._sessions = ()
@@ -114,6 +147,7 @@ class NewTabDialog(Adw.Dialog):
         mode = _WORKSPACES[min(self.workspace_row.get_selected(), len(_WORKSPACES) - 1)]
         existing = mode is WorkspaceMode.EXISTING_WORKTREE
         self.existing_path.set_visible(existing and not has_session)
+        self.base_branch.set_visible(mode is WorkspaceMode.NEW_WORKTREE and not has_session)
         text = ""
         if project is not None:
             text = f"{project.root}\n{project.default_branch}"
@@ -185,6 +219,11 @@ class NewTabDialog(Adw.Dialog):
         ]))
 
     def reload(self, selected: ProjectView | None = None) -> None:
+        self._opening = False
+        self.body.set_sensitive(True)
+        self.spinner.stop()
+        self.spinner.set_visible(False)
+        self.open_button.set_label(translate("tabs.new.open"))
         self._native_context = None
         snapshot = self._tabs.client.store.snapshot
         self._projects = snapshot.projects if snapshot is not None else ()
@@ -235,6 +274,10 @@ class NewTabDialog(Adw.Dialog):
         mode = _WORKSPACES[min(self.workspace_row.get_selected(), len(_WORKSPACES) - 1)]
         path = self.existing_path.get_text().strip() if mode is WorkspaceMode.EXISTING_WORKTREE else None
         self._opening = True
+        self.body.set_sensitive(False)
+        self.spinner.set_visible(True)
+        self.spinner.start()
+        self.open_button.set_label(translate("tabs.new.opening"))
         self.open_button.set_sensitive(False)
         _ = spawn_task(self._open_tab(project, agent, mode, path))
 
@@ -244,9 +287,14 @@ class NewTabDialog(Adw.Dialog):
             session = self._sessions[index - 1] if 0 < index <= len(self._sessions) else None
             native_index = self.native_session_row.get_selected()
             native = self._native_sessions[native_index - 1] if 0 < native_index <= len(self._native_sessions) else None
+            node_index = self.node_row.get_selected()
+            node = self._nodes[node_index - 1] if 0 < node_index <= len(self._nodes) else None
             tab = await self._tabs.open(
                 project.id, agent.kind, workspace=mode, existing_worktree=path,
                 resume_session=None if native is None else native.session_id,
+                base_branch=self.base_branch.get_text().strip() or None
+                if session is None and mode is WorkspaceMode.NEW_WORKTREE else None,
+                plan_node=None if node is None else node.id,
                 work_session_id=None if session is None else session.id,
                 isolated=session is not None and self.isolated_row.get_active(),
                 title=self.task_title.get_text().strip() or None if session is None else None,
@@ -254,6 +302,12 @@ class NewTabDialog(Adw.Dialog):
         except Exception as error:  # noqa: BLE001 -- not a repository: say so and keep the dialog
             self._on_error(translate("tabs.new.error").format(error=error))
             self._opening = False
+            self.body.set_sensitive(True)
+            self.spinner.stop()
+            self.spinner.set_visible(False)
+            self.open_button.set_label(translate("tabs.new.open"))
+            self.hint.set_label(translate("tabs.new.error").format(error=error))
+            self.hint.set_visible(True)
             self._workspace_changed(self.workspace_row)
             return
         _ = self.close()

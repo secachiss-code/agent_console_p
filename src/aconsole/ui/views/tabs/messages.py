@@ -4,6 +4,18 @@ import locale
 
 # ruff: noqa: RUF001 -- Russian UI text
 _MESSAGES = {
+    "tabs.new.base_branch": ("Base branch", "Базовая ветка"),
+    "tabs.new.plan_node": ("Plan node", "Узел плана"),
+    "tabs.new.no_node": ("No node", "Без узла"),
+    "tabs.new.opening": ("Opening…", "Открытие…"),
+    "tabs.project.remove": ("Remove project from list", "Убрать проект из списка"),
+    "tabs.project.close_tabs": ("Close this project's tabs first", "Сначала закройте вкладки проекта"),
+    "tabs.project.remove_heading": ("Remove {name} from the list?", "Убрать {name} из списка?"),
+    "tabs.project.remove_body": (
+        "The repository, working copies and their files will stay on disk. You can add the project again.",
+        "Репозиторий, рабочие копии и их файлы останутся на диске. Проект можно добавить снова.",
+    ),
+    "tabs.project.remove_error": ("Could not remove the project: {error}", "Не удалось убрать проект: {error}"),
     "tabs.stop_heading": ("Stop the agent and close the tab?", "Остановить агента и закрыть вкладку?"),
     "tabs.stop_body": ("Unfinished commands will stop. The working copy will be checked before closing.",
                        "Незавершённая команда будет прервана. Перед закрытием приложение проверит рабочую копию."),
