@@ -1,6 +1,9 @@
 # Copy to ~/.config/aconsole-hostrun/policy.toml
 # Named actions only. The server never accepts a raw command line.
-# check, test, and gate run inside the devtools container: the host process is podman.
+# All actions executing checkout code run inside devtools: the host process is podman.
+# This includes deps-sync/build backends, core-run, fake-core, ui-run and ui-snapshot.
+# fake-core start/stop and PID validation both run in the devtools PID namespace.
+# Desktop actions forward display variables; devtools needs the matching display mounts.
 # git diff passes --no-ext-diff and --no-textconv, so repo diff drivers do not run.
 # Paths: ~ is this user's home, @REPO@ this checkout, @REPO_PARENT@ the directory holding it.
 

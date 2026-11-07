@@ -25,7 +25,7 @@ import time
 import tomllib
 import tempfile
 from collections.abc import Callable, Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import UTC, datetime
 from http.server import BaseHTTPRequestHandler
 from pathlib import Path
@@ -38,6 +38,7 @@ _NAME = re.compile(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,63}\Z")
 _ENV_ALLOW = frozenset(
     {
         "DISPLAY",
+        "XAUTHORITY",
         "LANG",
         "LC_ALL",
         "LC_CTYPE",
@@ -1162,6 +1163,16 @@ def serve(policy: Policy, *, resolve_peer: Callable[[int], str | None] = resolve
 
 def main() -> None:
     ensure_not_root()
+    if sys.argv[1:2] == ["--container-fake"]:
+        if len(sys.argv) != 7:
+            raise SystemExit("invalid container fake-core command")
+        repo, runtime, side, operation, scenario = sys.argv[2:]
+        policy = replace(load_policy(_EXAMPLE), state_dir=runtime)
+        plan = actions.container_fake_plan([operation, scenario], repo, 30, runtime, side)
+        code = Application(policy).run_plan(
+            plan, cwd=repo, write=sys.stdout.buffer.write, container=side,
+        )
+        raise SystemExit(code)
     serve(load_policy(policy_path()))
 
 

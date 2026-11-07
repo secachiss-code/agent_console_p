@@ -9,6 +9,7 @@ import signal
 import socket
 import subprocess
 import sys
+import tempfile
 import threading
 import time
 from pathlib import Path
@@ -178,7 +179,8 @@ def test_default_paths_stay_inside_the_suite(tmp_path: Path) -> None:
         runtime_dir=str(tmp_path / "rt"),
         side="agent-cursor",
     )
-    assert fake.steps[0].argv[-2:] == ("--socket", str(tmp_path / "rt" / "demo.sock"))
+    assert fake.mode == "exec"
+    assert fake.steps[-1].argv[-4:] == (str(tmp_path / "rt"), "agent-cursor", "start", "demo")
     assert fake.side == "agent-cursor"
     gate = actions.build_plan("gate", ["R0c"], repo, str(repo), 30)
     assert f"{repo}/tools/gate/phase_gate.py" in gate.steps[-1].argv
@@ -585,7 +587,7 @@ def test_deps_sync_interpreters(tmp_path: Path) -> None:
     repo.mkdir()
     core = actions.build_plan("deps-sync", ["core"], repo, str(repo), 30)
     ui = actions.build_plan("deps-sync", ["ui"], repo, str(repo), 30)
-    assert core.steps[0].argv == (
+    assert _devtools_command(core.steps[-1].argv, str(repo)) == (
         actions._UV,
         "venv",
         "--no-project",
@@ -595,11 +597,11 @@ def test_deps_sync_interpreters(tmp_path: Path) -> None:
         "--allow-existing",
         str(repo / ".venv-core"),
     )
-    assert ui.steps[0].argv[5] == "3.15+gil"
-    assert "3.15t" not in ui.steps[0].argv
+    assert _devtools_command(ui.steps[-1].argv, str(repo))[5] == "3.15+gil"
+    assert "3.15t" not in ui.steps[-1].argv
     _ = (repo / "pyproject.toml").write_text("[project]\nname='x'\nversion='0'\n", encoding="utf-8")
     synced = actions.build_plan("deps-sync", ["core"], repo, str(repo), 30)
-    assert synced.steps[1].argv == (
+    assert _devtools_command(synced.steps[-1].argv, str(repo)) == (
         actions._UV,
         "sync",
         "--locked",
@@ -607,9 +609,9 @@ def test_deps_sync_interpreters(tmp_path: Path) -> None:
         "--python",
         "3.15t",
     )
-    assert ("UV_PROJECT_ENVIRONMENT", str(repo / ".venv-core")) in synced.steps[1].env
+    assert f"UV_PROJECT_ENVIRONMENT={repo}/.venv-core" in synced.steps[-1].argv
     synced_ui = actions.build_plan("deps-sync", ["ui"], repo, str(repo), 30)
-    assert synced_ui.steps[1].argv == (
+    assert _devtools_command(synced_ui.steps[-1].argv, str(repo)) == (
         actions._UV,
         "sync",
         "--locked",
@@ -619,7 +621,7 @@ def test_deps_sync_interpreters(tmp_path: Path) -> None:
         "--python",
         "3.15+gil",
     )
-    assert ("UV_PROJECT_ENVIRONMENT", str(repo / ".venv-ui")) in synced_ui.steps[1].env
+    assert f"UV_PROJECT_ENVIRONMENT={repo}/.venv-ui" in synced_ui.steps[-1].argv
     core_test = actions.build_plan("test", ["core", "-k", "smoke"], repo, str(repo), 30).steps[-1]
     assert "PYTHON_GIL=0" in core_test.argv
     ui_test = actions.build_plan("test", ["ui"], repo, str(repo), 30).steps[-1]
@@ -940,3 +942,125 @@ def test_git_diff_does_not_run_repo_diff_drivers(tmp_path: Path) -> None:
 def _git(repo: Path, *args: str) -> None:
     completed = subprocess.run(("git", "-C", str(repo), *args), check=False, capture_output=True, text=True)
     assert completed.returncode == 0, completed.stderr
+
+
+@pytest.mark.parametrize(("action", "args"), [
+    ("deps-sync", ["core"]), ("deps-sync", ["ui"]),
+    ("core-run", []), ("ui-run", []), ("ui-run", ["--spike"]),
+    ("ui-run", ["--fake", "demo"]), ("ui-snapshot", ["--spike"]),
+    ("ui-snapshot", ["--scenario", "demo", "--view", "plan", "--theme", "dark",
+                     "--size", "1280x800", "--out", "docs/ui/demo.png"]),
+    ("fake-core", ["start", "demo"]), ("fake-core", ["stop", "demo"]),
+])
+def test_remaining_checkout_actions_only_execute_podman(tmp_path: Path, action: str, args: list[str]) -> None:
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    (repo / "pyproject.toml").write_text("[project]\nname='untrusted'\nversion='0'\n")
+    plan = actions.build_plan(action, args, repo, str(repo), 30, runtime_dir=str(tmp_path / "runtime"),
+                              side="agent-cursor")
+    assert plan.mode == "exec"
+    assert plan.steps[0].argv == ("podman", "start", "devtools")
+    for step in plan.steps[1:]:
+        assert step.argv[0] == "podman"
+        assert step.env == ()
+        command = _devtools_command(step.argv, str(repo))
+        assert command
+        assert "HOSTRUN_CONTAINER=agent-cursor" in step.argv
+    if action == "fake-core":
+        assert command[1:] == (f"{repo}/tools/hostrun/server.py", "--container-fake", str(repo),
+                               str(tmp_path / "runtime"), "agent-cursor", *args)
+    if action.startswith("ui-"):
+        for key in ("DISPLAY", "WAYLAND_DISPLAY", "XDG_RUNTIME_DIR", "XAUTHORITY"):
+            assert key in plan.steps[-1].argv
+
+
+@pytest.mark.parametrize(("action", "args"), [
+    ("core-run", ["--eval"]), ("deps-sync", ["core; touch marker"]),
+    ("ui-run", ["--fake", "../escape"]), ("ui-snapshot", ["--out", "/escape.png"]),
+    ("fake-core", ["start", "../escape"]), ("fake-core", ["exec", "demo"]),
+])
+def test_remaining_checkout_actions_keep_argument_validation(tmp_path: Path, action: str, args: list[str]) -> None:
+    with pytest.raises(actions.ActionError):
+        actions.build_plan(action, args, tmp_path, str(tmp_path), 30)
+
+
+@pytest.mark.parametrize("operation", ["start", "stop"])
+def test_container_fake_entry_uses_container_lifecycle(tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+                                                     operation: str) -> None:
+    policy = _policy(tmp_path)
+    runtime = str(tmp_path / "runtime")
+    monkeypatch.setattr(sys, "argv", ["server.py", "--container-fake", policy.repo,
+                                     runtime, "agent-cursor", operation, "demo"])
+    monkeypatch.setattr(server, "ensure_not_root", lambda: None)
+    monkeypatch.setattr(server, "load_policy", lambda _path: policy)
+    seen = []
+
+    def run(app: server.Application, plan: actions.Plan, *, cwd: str,
+            write: Callable[[bytes], None], container: str) -> int:
+        del write
+        seen.append((app.policy.state_dir, plan, cwd, container))
+        return 7
+
+    monkeypatch.setattr(server.Application, "run_plan", run)
+    with pytest.raises(SystemExit) as caught:
+        server.main()
+    assert caught.value.code == 7
+    state, plan, cwd, side = seen[0]
+    assert state == runtime
+    assert cwd == policy.repo
+    assert side == "agent-cursor"
+    assert plan.mode == ("fake-start" if operation == "start" else "fake-stop")
+    assert plan.steps[0].argv == (f"{policy.repo}/.venv-core/bin/python", "-m", "aconsole.core",
+                                 "--fake", "demo", "--socket", f"{runtime}/demo.sock")
+
+
+@pytest.mark.parametrize(("action", "args"), [
+    ("core-run", []), ("deps-sync", ["core"]), ("ui-run", ["--fake", "demo"]),
+    ("ui-snapshot", ["--spike"]), ("fake-core", ["start", "demo"]),
+    ("fake-core", ["stop", "demo"]),
+])
+def test_remaining_actions_dispatch_only_container_commands(running: Running, monkeypatch: pytest.MonkeyPatch,
+                                                            action: str, args: list[str]) -> None:
+    seen = _capture_exec(monkeypatch)
+    status, body = _post(running[0].socket_path, {"action": action, "args": args})
+    assert status == 200
+    assert b"__EXIT__ 0" in body
+    assert len(seen) >= 2
+    assert all(argv[0] == "podman" for argv in seen)
+
+
+def test_container_fake_lifecycle_starts_and_stops_a_real_process(tmp_path: Path) -> None:
+    policy = _policy(tmp_path)
+    repo = Path(policy.repo)
+    python = repo / ".venv-core/bin/python"
+    python.parent.mkdir(parents=True)
+    python.symlink_to(sys.executable)
+    package = repo / "aconsole"
+    package.mkdir()
+    (package / "__init__.py").touch()
+    (package / "core.py").write_text(
+        "import socket, sys, time\ns = socket.socket(socket.AF_UNIX)\n"
+        "s.bind(sys.argv[-1])\ntime.sleep(60)\n",
+    )
+    with tempfile.TemporaryDirectory(prefix="hf-", dir="/tmp") as runtime:
+        app = server.Application(policy)
+        start = actions.container_fake_plan(["start", "demo"], str(repo), 30, runtime, "agent-cursor")
+        output = []
+        pid = None
+        try:
+            assert app.run_plan(start, cwd=str(repo), write=output.append, container="agent-cursor") == 0
+            pid_file = Path(policy.state_dir) / "fake-core/agent-cursor-demo.pid"
+            pid = int(pid_file.read_text())
+            assert Path(start.socket_path).exists()
+            assert app.run_plan(start, cwd=str(repo), write=output.append, container="agent-cursor") == 0
+            assert b"already running" in b"".join(output)
+            stop = actions.container_fake_plan(["stop", "demo"], str(repo), 30, runtime, "agent-cursor")
+            assert app.run_plan(stop, cwd=str(repo), write=output.append) == 0
+            assert not pid_file.exists()
+            assert server._cmdline(pid) in (None, [])
+        finally:
+            if pid is not None:
+                with contextlib.suppress(ProcessLookupError):
+                    os.kill(pid, signal.SIGKILL)
+                with contextlib.suppress(ChildProcessError):
+                    os.waitpid(pid, 0)

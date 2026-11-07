@@ -212,20 +212,24 @@ def build_plan(
             side=side,
         )
     if action == "deps-sync":
-        return Plan(mode="exec", steps=_deps_sync(args, repo), timeout_s=timeout_s)
+        return Plan(mode="exec", steps=_deps_sync(args, repo, side), timeout_s=timeout_s)
     if action == "test":
         return Plan(mode="exec", steps=_test(args, repo, side), timeout_s=timeout_s)
     if action == "ui-snapshot":
-        return Plan(mode="exec", steps=(_ui_snapshot(args, repo),), timeout_s=timeout_s)
+        return Plan(mode="exec",
+                    steps=_in_devtools(repo, _ui_snapshot(args, repo).argv, side=side, desktop=True),
+                    timeout_s=timeout_s)
     if action == "ui-run":
-        return Plan(mode="exec", steps=(_ui_run(args, repo),), timeout_s=timeout_s)
+        return Plan(mode="exec",
+                    steps=_in_devtools(repo, _ui_run(args, repo).argv, side=side, desktop=True),
+                    timeout_s=timeout_s)
     if action == "fake-core":
         return _fake_core(args, repo, timeout_s, runtime_dir or f"{repo}/.fake-runtime", side)
     if action == "core-run":
         _no_args(args, "core-run")
         return Plan(
             mode="exec",
-            steps=(Step(argv=(_core_python(repo), "-m", "aconsole.core"), env=_gil_off()),),
+            steps=_in_devtools(repo, (_core_python(repo), "-m", "aconsole.core"), _gil_off(), side=side),
             timeout_s=timeout_s,
         )
     if action == "podman-ps":
@@ -284,7 +288,7 @@ def _ui_python(repo: str) -> str:
     return f"{repo}/.venv-ui/bin/python"
 
 
-def _deps_sync(args: list[str], repo: str) -> tuple[Step, ...]:
+def _deps_sync(args: list[str], repo: str, side: str = "") -> tuple[Step, ...]:
     """Create the venv with the interpreter profile, then sync if a project exists.
 
     Multithreaded core: `uv venv --python 3.15t` → `.venv-core`.
@@ -312,7 +316,7 @@ def _deps_sync(args: list[str], repo: str) -> tuple[Step, ...]:
     )
     project = Path(repo) / "pyproject.toml"
     if not project.is_file():
-        return (create,)
+        return _in_devtools(repo, create.argv, side=side)
     sync_argv = [_UV, "sync", "--locked"]
     if args[0] == "ui":
         sync_argv.extend(["--group", "ui"])
@@ -321,7 +325,8 @@ def _deps_sync(args: list[str], repo: str) -> tuple[Step, ...]:
         argv=tuple(sync_argv),
         env=(("UV_PROJECT_ENVIRONMENT", venv),),
     )
-    return (create, sync)
+    return (*_in_devtools(repo, create.argv, side=side),
+            *_in_devtools(repo, sync.argv, sync.env, side=side)[1:])
 
 
 _SUITES: dict[str, tuple[str, ...]] = {
@@ -342,6 +347,7 @@ def _in_devtools(
     *,
     side: str = "",
     gate: bool = False,
+    desktop: bool = False,
 ) -> tuple[Step, ...]:
     """Run one command in devtools. The host process is podman, not the checkout's interpreter or shell."""
     argv = ["podman", "exec", "--workdir", repo]
@@ -349,6 +355,9 @@ def _in_devtools(
         argv.extend(("-e", f"{key}={value}"))
     if side:
         argv.extend(("-e", f"HOSTRUN_CONTAINER={side}"))
+    if desktop:
+        for key in ("DISPLAY", "WAYLAND_DISPLAY", "XDG_RUNTIME_DIR", "XDG_CURRENT_DESKTOP", "XAUTHORITY"):
+            argv.extend(("-e", key))
     argv.append(_DEVTOOLS)
     argv.extend(command)
     return (_START_DEVTOOLS, Step(argv=tuple(argv), gate=gate))
@@ -430,6 +439,15 @@ def _ui_run(args: list[str], repo: str) -> Step:
 
 
 def _fake_core(args: list[str], repo: str, timeout_s: float, runtime_dir: str, side: str) -> Plan:
+    # Validate using the same builder as the container-side lifecycle command.
+    local = container_fake_plan(args, repo, timeout_s, runtime_dir, side)
+    command = (_core_python(repo), f"{repo}/tools/hostrun/server.py", "--container-fake",
+               repo, runtime_dir, side, *args)
+    return Plan(mode="exec", steps=_in_devtools(repo, command, _gil_off(), side=side), timeout_s=timeout_s,
+                scenario=local.scenario, repo=repo, socket_path=local.socket_path, side=side)
+
+
+def container_fake_plan(args: list[str], repo: str, timeout_s: float, runtime_dir: str, side: str) -> Plan:
     if len(args) != 2 or args[0] not in {"start", "stop"} or _SCENARIO.fullmatch(args[1]) is None:
         raise ActionError(400, "fake-core expects start or stop and a scenario")
     socket_path = f"{runtime_dir}/{args[1]}.sock"
