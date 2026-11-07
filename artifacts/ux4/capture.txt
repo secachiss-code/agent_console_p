@@ -1,11 +1,12 @@
 import asyncio
+from dataclasses import replace
 import sys
 import tempfile
 from pathlib import Path
 import gi
 gi.require_version('Gtk','4.0')
 gi.require_version('Adw','1')
-from gi.repository import Adw, GLib
+from gi.repository import Adw, GLib, Gtk
 from aconsole.contracts.app import CheckResult, ChecksResult
 from aconsole.core.infrastructure.fake.server import FakeCore
 from aconsole.ui.bootstrap import run_app, spawn_task
@@ -20,6 +21,7 @@ checks=tuple(CheckResult(id=key,title=key,ok=False,severity='warning',detail='ag
 ])
 class Preview(AConsoleApp):
     def do_activate(self):
+        Gtk.Settings.get_default().set_property("gtk-enable-animations", False)
         Adw.StyleManager.get_default().set_color_scheme(Adw.ColorScheme.FORCE_DARK if sys.argv[2]=='dark' else Adw.ColorScheme.FORCE_LIGHT)
         if sys.argv[1]=='startup':
             self._show_startup()
@@ -31,7 +33,8 @@ class Preview(AConsoleApp):
             async def request(method,params,result_type):
                 if method=='setup/checks':
                     return ChecksResult(checks=checks)
-                return await original(method,params,result_type)
+                result = await original(method,params,result_type)
+                return replace(result, theme=sys.argv[2]) if method=="settings/get" else result
             self.client.request=request
             super().do_activate()
             spawn_task(self.ready())
@@ -57,14 +60,16 @@ class Preview(AConsoleApp):
             try:
                 capture_window(target,Path(sys.argv[4]))
             except Exception as error:
-                self.failed=True
-                print('capture failed:',error,flush=True)
+                print('capture retry:',error,flush=True)
+                GLib.timeout_add(100,self.capture)
+                return
             spawn_task(self._finish())
         handle=clock.connect('after-paint',painted)
         target.queue_draw()
         return False
 
 with tempfile.TemporaryDirectory(prefix='ux4-preview-') as directory:
+    Path(sys.argv[4]).unlink(missing_ok=True)
     path=str(Path(directory)/'core.sock')
     fake=FakeCore(path,'empty')
     fake.start()
