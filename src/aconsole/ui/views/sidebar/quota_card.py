@@ -29,6 +29,7 @@ class QuotaCard(Gtk.Button):
         self.details_dialog: QuotaDialog | None = None
         self._timer: int | None = None
         self._display: str = "used"
+        self._thresholds: tuple[float, float] = (80, 95)
         self.rows: Gtk.Box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
         self.summary_label: Gtk.Label = Gtk.Label(xalign=1)
         self.summary_label.add_css_class("ac-summary-detail")
@@ -44,6 +45,11 @@ class QuotaCard(Gtk.Button):
             return
         self._display = display
         self._rebuild(self._accounts)
+
+    def set_thresholds(self, warn: float, critical: float) -> None:
+        if (warn, critical) != self._thresholds:
+            self._thresholds = (warn, critical)
+            self._rebuild(self._accounts)
 
     def set_accounts(self, accounts: tuple[AccountView, ...]) -> None:
         if accounts == self._accounts and self.rows.get_first_child() is not None:
@@ -70,7 +76,7 @@ class QuotaCard(Gtk.Button):
             # A line each, whatever their number: one bar and the time to its reset. The details are one click away.
             lines = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
             for account in accounts:
-                line = AccountLine(account, display=self._display)
+                line = AccountLine(account, display=self._display, thresholds=self._thresholds)
                 self.account_lines.append(line)
                 lines.append(line)
             self.rows.append(lines)
@@ -115,7 +121,7 @@ class QuotaCard(Gtk.Button):
             self.details_dialog.present(parent)
             return self.details_dialog
         dialog = QuotaDialog(
-            self._accounts, self.tabs, self._display, on_refresh=self.on_refresh,
+            self._accounts, self.tabs, self._display, on_refresh=self.on_refresh, thresholds=self._thresholds,
         )
         self.details_dialog = dialog
         dialog.present(parent)
@@ -124,6 +130,7 @@ class QuotaCard(Gtk.Button):
     def _sync_details(self) -> None:
         if self.details_dialog is not None and self.details_dialog.get_visible():
             self.details_dialog.set_display(self._display)
+            self.details_dialog.set_thresholds(self._thresholds)
             self.details_dialog.update_accounts(self._accounts, self.tabs)
 
     def _mapped(self, _widget: Gtk.Widget) -> None:

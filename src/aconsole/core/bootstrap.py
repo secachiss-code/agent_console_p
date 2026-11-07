@@ -26,7 +26,7 @@ import msgspec
 import uvicorn
 
 from aconsole.contracts.app import AccountView, AppSnapshot, CloseTabParams, CommandResult, HealthResult, PlanView
-from aconsole.contracts.common import AccountId, AgentKind, ClientRole, TabId
+from aconsole.contracts.common import AccountId, AgentKind, ClientRole, QuotaLevel, TabId
 from aconsole.contracts.errors import ErrorData, ErrorObject, MessageTooLargeDetails, error_by_name
 from aconsole.contracts.events import Notify, PlanUpdated, QuotaUpdated, TabAdded, TabRemoved, TabUpdated, UiEvent
 from aconsole.contracts.ipc import InitializeParams, Notification, ProtocolLimits, Request, ResponseErr
@@ -52,6 +52,7 @@ from aconsole.core.application.services.work_session_history import WorkSessionH
 from aconsole.core.domain.approvals import Approval, ApprovalBook
 from aconsole.core.domain.clock import Clock
 from aconsole.core.domain.errors import DomainError
+from aconsole.core.domain.quota import quota_level
 from aconsole.core.infrastructure.agents.claude.limits import ClaudeLimits
 from aconsole.core.infrastructure.agents.codex.limits import CodexLimits
 from aconsole.core.infrastructure.agents.codex.turns import TurnWatch
@@ -601,7 +602,9 @@ class Daemon:
         self.vault.on_edit = self._vault_edited
         self._plans.note_ref = self.vault.note_ref
         self.vault_default: Path | None = None
-        code_graph = CodeGraphIndex(ExtractorRunner(), self._project_root)
+        code_graph = CodeGraphIndex(
+            ExtractorRunner(), self._project_root, languages=lambda: self.tabs.current_settings().codegraph_languages,
+        )
         self._plans.code_graph = code_graph
         self.knowledge: KnowledgeService = KnowledgeService(self._plans, self.vault, code_graph)
         self.palette: PaletteService = PaletteService(
@@ -640,6 +643,7 @@ class Daemon:
         self._codex_tokens: UsageLog = UsageLog(lambda: self._log_folder(_CODEX_CONTAINER, _CODEX_LOGS), codex_events)
         self._limits_events: dict[str, asyncio.Event] = {}
         self._accounts: dict[str, AccountView] = {}
+        self._quota_thresholds: tuple[float, float] = (80, 95)
         self._account_sent: dict[str, float] = {}
         self._claude_usage_due: asyncio.Event = asyncio.Event()
         self._notices: set[asyncio.Task[None]] = set()
@@ -769,6 +773,19 @@ class Daemon:
 
     def _use_vault(self, settings: Settings) -> None:
         self._to_vault(self._switch_vault, self._vault_root(settings))
+        loop = self._loop
+        if loop is not None:
+            _ = loop.call_soon_threadsafe(
+                self._use_quota_thresholds, settings.quota_warn_pct, settings.quota_critical_pct,
+            )
+
+    def _use_quota_thresholds(self, warn: float, critical: float) -> None:
+        if (warn, critical) == self._quota_thresholds:
+            return
+        self._quota_thresholds = (warn, critical)
+        self._account_sent.clear()
+        for account in tuple(self._accounts.values()):
+            self._account_observed(QuotaUpdated(account=account))
 
     def _stop_vault(self) -> None:
         """Queued notes finish before the writer stops: their synced state goes through it."""
@@ -1288,6 +1305,13 @@ class Daemon:
                 ),
             )
         account = event.account
+        warn, critical = self._quota_thresholds
+        now_at = datetime.now(UTC)
+        account = msgspec.structs.replace(account, quota=tuple(msgspec.structs.replace(window, level=QuotaLevel(
+            quota_level(used_pct=window.used_pct, resets_at=window.resets_at, now=now_at,
+                warn_pct=warn, critical_pct=critical).value,
+        )) for window in account.quota))
+        event = QuotaUpdated(account=account)
         key = str(account.id)
         previous = self._accounts.get(key)
         now = time.monotonic()

@@ -39,7 +39,7 @@ class ApprovalAlerts:
 
     def update(
         self, approvals: tuple[ApprovalView, ...], titles: Mapping[str, str], *,
-        window_active: bool, active_tab_id: TabId | None = None,
+        window_active: bool, active_tab_id: TabId | None = None, notify_when: str = "unfocused",
     ) -> None:
         first: dict[TabId, ApprovalView] = {}
         for view in approvals:
@@ -48,7 +48,7 @@ class ApprovalAlerts:
             self._hide(self._episodes.pop(tab_id))
         for tab_id, view in first.items():
             episode = self._episodes.get(tab_id) or self._begin(tab_id)
-            if window_active and tab_id == active_tab_id:
+            if notify_when == "never" or (notify_when != "always" and window_active and tab_id == active_tab_id):
                 self._hide(episode)
                 continue
             if not episode.rang:

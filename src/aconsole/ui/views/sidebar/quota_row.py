@@ -42,18 +42,20 @@ def _reset_tooltip(window: QuotaWindowView) -> str | None:
 class QuotaRow(Gtk.Box):
     """One window on one line: its name, a bar, its money or percent, and the countdown."""
 
-    def __init__(self, window: QuotaWindowView, *, display: str = "used") -> None:
+    def __init__(
+        self, window: QuotaWindowView, *, display: str = "used", thresholds: tuple[float, float] = (80, 95),
+    ) -> None:
         super().__init__(spacing=8)
         self.window: QuotaWindowView = window
         self.add_css_class("ac-quota-row")
-        self.add_css_class(f"ac-quota-{quota_level(window.used_pct)}")
+        self.add_css_class(f"ac-quota-{quota_level(window.used_pct, warn=thresholds[0], critical=thresholds[1])}")
         self.key_label: Gtk.Label = Gtk.Label(label=window_name(window), xalign=0)
         self.key_label.add_css_class("ac-quota-key")
         self.level_bar: Gtk.LevelBar = Gtk.LevelBar(min_value=0, max_value=1, hexpand=True)
         shown = shown_percent(window.used_pct, display)
         self.level_bar.set_value(shown / 100 if shown is not None else 0)
-        self.level_bar.add_offset_value("low", 0.8)
-        self.level_bar.add_offset_value("high", 0.95)
+        self.level_bar.add_offset_value("low", thresholds[0] / 100)
+        self.level_bar.add_offset_value("high", thresholds[1] / 100)
         self.level_bar.set_visible(window.used_pct is not None)
         if window.used_pct is None:
             self.set_tooltip_text(translate("quota.unknown.copy"))
@@ -110,18 +112,20 @@ def _short_name(window: QuotaWindowView) -> str:
 class WindowLine(Gtk.Box):
     """One window in the sidebar: what it is, a bar, its percent, and the time until it resets."""
 
-    def __init__(self, window: QuotaWindowView, *, display: str = "used") -> None:
+    def __init__(
+        self, window: QuotaWindowView, *, display: str = "used", thresholds: tuple[float, float] = (80, 95),
+    ) -> None:
         super().__init__(spacing=6)
         self.window: QuotaWindowView = window
-        level = quota_level(window.used_pct)
+        level = quota_level(window.used_pct, warn=thresholds[0], critical=thresholds[1])
         self.add_css_class(f"ac-quota-{level}")
         shown = shown_percent(window.used_pct, display) or 0.0
         self.key_label: Gtk.Label = Gtk.Label(label=_short_name(window), xalign=0)
         self.key_label.set_width_chars(4)
         self.key_label.add_css_class("ac-quota-key")
         self.level_bar: Gtk.LevelBar = Gtk.LevelBar(min_value=0, max_value=1, hexpand=True, valign=Gtk.Align.CENTER)
-        self.level_bar.add_offset_value("low", 0.8)
-        self.level_bar.add_offset_value("high", 0.95)
+        self.level_bar.add_offset_value("low", thresholds[0] / 100)
+        self.level_bar.add_offset_value("high", thresholds[1] / 100)
         self.level_bar.set_value(shown / 100)
         self.level_bar.add_css_class(f"ac-quota-{level}")
         self.percent_label: Gtk.Label = Gtk.Label(
@@ -145,7 +149,9 @@ class WindowLine(Gtk.Box):
 class AccountLine(Gtk.Box):
     """One account: its name beside a line for each of its windows. The details are one click away."""
 
-    def __init__(self, account: AccountView, *, display: str = "used") -> None:
+    def __init__(
+        self, account: AccountView, *, display: str = "used", thresholds: tuple[float, float] = (80, 95),
+    ) -> None:
         super().__init__(spacing=6)
         self.account: AccountView = account
         self.add_css_class("ac-account-line")
@@ -160,7 +166,7 @@ class AccountLine(Gtk.Box):
         if shown:
             rows = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2, hexpand=True)
             for window in shown:
-                line = WindowLine(window, display=display)
+                line = WindowLine(window, display=display, thresholds=thresholds)
                 self.windows.append(line)
                 rows.append(line)
             self.append(rows)

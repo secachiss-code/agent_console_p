@@ -81,6 +81,9 @@ def commit_settings(current: Settings, patch: SettingsPatch) -> Settings:
         setup_completed=_keep(patch.setup_completed, current.setup_completed),
         quota_display=_keep(patch.quota_display, current.quota_display),
     )
+    if merged.quota_warn_pct > merged.quota_critical_pct:
+        message = "quota warning threshold exceeds critical threshold"
+        raise ValueError(message)
     if merged == current:
         return current
     return msgspec.structs.replace(merged, rev=current.rev + 1)

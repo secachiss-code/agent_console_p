@@ -27,13 +27,13 @@ def shown_percent(used: float | None, display: str) -> float | None:
     return max(0.0, 100.0 - used)
 
 
-def quota_level(value: float | None) -> str:
-    """Classify usage using the design's warning and critical thresholds."""
+def quota_level(value: float | None, *, warn: float = _WARNING_PERCENT, critical: float = _CRITICAL_PERCENT) -> str:
+    """Classify used quota with the configured warning and critical thresholds."""
     if value is None:
         return "unknown"
-    if value >= _CRITICAL_PERCENT:
+    if value >= critical:
         return "critical"
-    if value >= _WARNING_PERCENT:
+    if value >= warn:
         return "warn"
     return "ok"
 

@@ -32,10 +32,12 @@ class QuotaDialog(Adw.Dialog):
         display: str = "used",
         *,
         on_refresh: Callable[[], Awaitable[None]] | None = None,
+        thresholds: tuple[float, float] = (80, 95),
     ) -> None:
         title = translate("quota.title_left" if display == "remaining" else "quota.title")
         super().__init__(title=title, content_width=_WIDTH)
         self._display: str = display
+        self._thresholds: tuple[float, float] = thresholds
         self._accounts: tuple[AccountView, ...] = ()
         self._tab_signature: tuple[tuple[str, str | None, str, float | None, int | None], ...] = ()
         self._tabs: tuple[TabView, ...] = ()
@@ -146,6 +148,12 @@ class QuotaDialog(Adw.Dialog):
         note.set_max_width_chars(42)
         self.info_box.append(note)
 
+    def set_thresholds(self, thresholds: tuple[float, float]) -> None:
+        if thresholds != self._thresholds:
+            self._thresholds = thresholds
+            while (child := self.content.get_first_child()) is not None:
+                self.content.remove(child)
+
     def set_display(self, display: str) -> None:
         """Empty the content: the next `update_accounts` rebuilds it with the new choice."""
         if display != self._display:
@@ -197,7 +205,7 @@ class QuotaDialog(Adw.Dialog):
             heading.append(plan)
         group.append(heading)
         for window in account.quota:
-            row = QuotaRow(window, display=self._display)
+            row = QuotaRow(window, display=self._display, thresholds=self._thresholds)
             self.window_rows.append(row)
             group.append(row)
             if window.used_pct is None and window.spent_usd is None:

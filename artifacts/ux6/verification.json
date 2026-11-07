@@ -1,0 +1,52 @@
+{
+  "node": "UX-6",
+  "base": "944376a7cea3a72e2373d470de6c1f7ff65d8731",
+  "full_core_contracts_before_language_delta": {
+    "passed": 1454,
+    "failed": 0,
+    "warnings": 12,
+    "seconds": 257.93,
+    "junit": "core-final.xml"
+  },
+  "codegraph_and_rpc_delta": {
+    "passed": 30,
+    "failed": 0,
+    "seconds": 18.07
+  },
+  "gtk_final": {
+    "passed": 77,
+    "failed": 0,
+    "warnings": 1,
+    "seconds": 9.26
+  },
+  "failed_area_retry": {
+    "passed": 70,
+    "failed": 0,
+    "seconds": 21.76
+  },
+  "basedpyright": {
+    "errors": 0,
+    "warnings": 0
+  },
+  "ruff": "PASS",
+  "diff_check": "PASS",
+  "screenshots_reviewed": 9,
+  "first_full_run": {
+    "passed": 1450,
+    "failed": 4,
+    "seconds": 247.73,
+    "junit": "core-results.xml",
+    "notes": [
+      "Added native transcript to recovery fixture",
+      "ProcessLookupError in /proc disappearance helper is treated as gone",
+      "palette max151.505ms exceeded unchanged100ms limit",
+      "writer max6.478ms exceeded unchanged5ms limit; PERF-2 remains separate"
+    ]
+  },
+  "limits": [
+    "No live model conversation or user settings modified",
+    "Csharp remains reserved metadata; no automatic C# indexer",
+    "No docs/design/DESIGN.md; no mockup equivalence claimed",
+    "Successful performance retries do not close PERF-2"
+  ]
+}

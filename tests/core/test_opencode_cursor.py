@@ -681,5 +681,5 @@ def _gone(pid: int) -> bool:
     """Exited or a zombie. The process may vanish between two looks at /proc: that is gone too."""
     try:
         return "Z" in Path(f"/proc/{pid}/stat").read_text(encoding="utf-8").split()[2]
-    except FileNotFoundError:
+    except (FileNotFoundError, ProcessLookupError):
         return True

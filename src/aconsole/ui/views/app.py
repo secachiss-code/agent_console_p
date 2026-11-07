@@ -247,6 +247,10 @@ class AConsoleApp(Adw.Application):
             self._close_now(window)
 
     def _close_now(self, window: Gtk.Window) -> None:
+        if window is self.window and self.window is not None:
+            preferences = self.window.preferences_dialog
+            if preferences is not None and preferences.protect_close():
+                return
         window.set_visible(False)
         if self._opening_task is not None and not self._opening_task.done():
             _ = self._opening_task.cancel()

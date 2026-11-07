@@ -48,11 +48,16 @@ class CodeGraphIndex:
         *,
         clock: Callable[[], float] = time.monotonic,
         ttl_s: float = _TTL_S,
+        languages: Callable[[], frozenset[str]] | None = None,
     ) -> None:
         self._runner: Runner = runner
         self._root_of: Callable[[str], Path | None] = root_of
         self._clock: Callable[[], float] = clock
         self._ttl_s: float = ttl_s
+        self._languages: Callable[[], frozenset[str]] = languages or (
+            lambda: frozenset({"python", "rust", "typescript", "csharp"})
+        )
+        self._cached_languages: dict[Path, frozenset[str]] = {}
         self._cache: dict[Path, _Cached] = {}
         self._lock: threading.Lock = threading.Lock()
         self._builds: dict[Path, threading.Lock] = {}
@@ -64,17 +69,19 @@ class CodeGraphIndex:
         root = self._root_of(project_id)
         if root is None:
             raise DomainError(code=_UNKNOWN_PROJECT, name="IMPACT_TARGET_UNKNOWN", retryable=False)
+        enabled = self._languages()
         with self._lock:
             building = self._builds.setdefault(root, threading.Lock())
         # Callers that ask while a graph is being built wait for it instead of building their own.
         with building:
             with self._lock:
                 found = self._cache.get(root)
-                if found is not None and self._clock() < found.until:
+                if found is not None and self._clock() < found.until and self._cached_languages.get(root) == enabled:
                     return found
-            built = _indexed(self._build(root), self._clock() + self._ttl_s)
+            built = _indexed(self._build(root, enabled), self._clock() + self._ttl_s)
             with self._lock:
                 self._cache[root] = built
+                self._cached_languages[root] = enabled
             return built
 
     def resolve(self, project_id: str, target: str) -> str | None:
@@ -102,13 +109,15 @@ class CodeGraphIndex:
             cached.users[kinds] = reversed_edges
         return reversed_edges
 
-    def _build(self, root: Path) -> ExtractorGraph:
+    def _build(self, root: Path, enabled: frozenset[str]) -> ExtractorGraph:
         # A Python project with a `package.json` for its docs is still a Python project.
         if any((root / marker).is_file() for marker in _PYTHON_MARKERS):
-            return scan_python(root)
+            return scan_python(root) if "python" in enabled else ExtractorGraph(version=1, nodes=(), edges=())
         language = next((name for marker, name in _MARKERS if (root / marker).is_file()), None)
         if language is None:
-            return scan_python(root)
+            return scan_python(root) if "python" in enabled else ExtractorGraph(version=1, nodes=(), edges=())
+        if {"rust-metadata": "rust", "ts": "typescript"}[language] not in enabled:
+            return ExtractorGraph(version=1, nodes=(), edges=())
         run = self._runner.run(language, ".", cwd=root)
         if run.graph is not None:
             return run.graph

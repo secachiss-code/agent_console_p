@@ -115,6 +115,14 @@ def test_restart_keeps_the_endpoint_and_token_without_relaunching_a_tab(
     home.mkdir()
     monkeypatch.setenv("FAKE_HOME", str(home))
 
+    from aconsole.core.infrastructure.agents.claude.sessions import project_key
+    from tests.core.test_claude_sessions import _write
+
+    # _post_hook reports session "s"; token recovery must resume a written conversation.
+    transcript = home / ".claude" / "projects" / project_key(str(repo)) / "s.jsonl"
+    transcript.parent.mkdir(parents=True)
+    _write(transcript, "s", "recovery fixture", cwd=str(repo), mtime=1700000000)
+
     async def scenario() -> None:
         daemon = _daemon(tmp_path)
         task = asyncio.create_task(daemon.serve())

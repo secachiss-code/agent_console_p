@@ -362,7 +362,7 @@ class MainWindow(Adw.ApplicationWindow):
         self._sync_quota_header()
         self._follow_git_project()
         critical = any(
-            quota_level(window.used_pct) == "critical"
+            self._quota_level(window.used_pct) == "critical"
             for account in self._summary_vm.accounts for window in account.quota
         )
         self.quota_banner.set_revealed(critical)
@@ -827,6 +827,7 @@ class MainWindow(Adw.ApplicationWindow):
                 # Before mapping there is no user-visible selection to notify about.
                 self.approval_alerts.update(
                     snapshot.approvals, titles, window_active=self.is_active(),
+                    notify_when="unfocused" if self._terminal_settings is None else self._terminal_settings.notify_when,
                     active_tab_id=TabId(str(selected.tab_id)) if isinstance(selected, TabItem) else None,
                 )
 
@@ -1021,7 +1022,7 @@ class MainWindow(Adw.ApplicationWindow):
             self.quota_section.set_detail("")
             return
         peak = max(known)
-        shown = {"critical": "error", "warn": "warning"}.get(quota_level(peak))
+        shown = {"critical": "error", "warn": "warning"}.get(self._quota_level(peak))
         if self.quota_card.display == "remaining":
             text = translate("quota.peak_left").format(pct=round(100 - peak))
         else:
@@ -1041,13 +1042,20 @@ class MainWindow(Adw.ApplicationWindow):
             return
         self.preferences_vm.accept(settings)
 
+    def _quota_level(self, value: float | None) -> str:
+        settings = self._terminal_settings
+        return quota_level(value, warn=80 if settings is None else settings.quota_warn_pct,
+            critical=95 if settings is None else settings.quota_critical_pct)
+
     def _apply_preferences(self, settings: Settings) -> None:
         if self._terminals_disposed or settings.rev < self._settings_revision:
             return
         self._settings_revision = settings.rev
         self._terminal_settings = settings
+        self.quota_card.set_thresholds(settings.quota_warn_pct, settings.quota_critical_pct)
         self.quota_card.set_display(settings.quota_display)
-        self._sync_quota_header()
+        self._update_summary()
+        self._sync_approvals(self.tabs.client.store)
         self._apply_code_font(settings.terminal_font)
         _ = self.app_vm.apply_overrides(settings.keymap_overrides)
         for page in self.terminal_pages.values():

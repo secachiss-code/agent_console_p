@@ -34,7 +34,27 @@ class PreferencesDialog(Adw.PreferencesDialog):
         self._generation: int = 0
         self._shown: Settings | None = None
         self._unsubscribe: Callable[[], None] | None = None
+        self._close_prompt: Adw.AlertDialog | None = None
+        self._close_after_save: bool = False
+        self.set_can_close(False)
+        _ = self.connect("close-attempt", self._close_attempt)
         page = Adw.PreferencesPage()
+        self.page: Adw.PreferencesPage = page
+        self._build_terminal(page)
+        self._build_appearance(page)
+        page.add(self._build_approvals())
+        actions = Adw.PreferencesGroup()
+        self.save_button: Gtk.Button = Gtk.Button(label=translate("prefs.apply"))
+        self.save_button.add_css_class("suggested-action")
+        _ = self.save_button.connect("clicked", self._save_clicked)
+        actions.add(self.save_button)
+        self.status_label: Gtk.Label = Gtk.Label(xalign=0, wrap=True)
+        actions.add(self.status_label)
+        page.add(actions)
+        self.add(page)
+        _ = self.connect("closed", self._closed)
+
+    def _build_terminal(self, page: Adw.PreferencesPage) -> None:
         terminal = Adw.PreferencesGroup(title=translate("prefs.terminal"))
         self.font_entry: Adw.EntryRow = Adw.EntryRow(title=translate("prefs.font"))
         self.font_entry.set_tooltip_text(translate("prefs.font_tip"))
@@ -50,6 +70,8 @@ class PreferencesDialog(Adw.PreferencesDialog):
         self._add_spin(terminal, self.font_size, "prefs.font_size")
         self._add_spin(terminal, self.scrollback, "prefs.scrollback")
         page.add(terminal)
+
+    def _build_appearance(self, page: Adw.PreferencesPage) -> None:
         appearance = Adw.PreferencesGroup(title=translate("prefs.appearance"))
         self.theme: Adw.ComboRow = Adw.ComboRow(
             title=translate("prefs.theme"),
@@ -61,18 +83,11 @@ class PreferencesDialog(Adw.PreferencesDialog):
             model=Gtk.StringList.new([translate(f"prefs.quota_{display}") for display in _QUOTA_DISPLAYS]),
         )
         appearance.add(self.quota_display)
+        self.quota_warn: Gtk.SpinButton = Gtk.SpinButton.new_with_range(0, 100, 1)
+        self.quota_critical: Gtk.SpinButton = Gtk.SpinButton.new_with_range(0, 100, 1)
+        self._add_spin(appearance, self.quota_warn, "prefs.quota_warn")
+        self._add_spin(appearance, self.quota_critical, "prefs.quota_critical")
         page.add(appearance)
-        page.add(self._build_approvals())
-        actions = Adw.PreferencesGroup()
-        self.save_button: Gtk.Button = Gtk.Button(label=translate("prefs.apply"))
-        self.save_button.add_css_class("suggested-action")
-        _ = self.save_button.connect("clicked", self._save_clicked)
-        actions.add(self.save_button)
-        self.status_label: Gtk.Label = Gtk.Label(xalign=0, wrap=True)
-        actions.add(self.status_label)
-        page.add(actions)
-        self.add(page)
-        _ = self.connect("closed", self._closed)
 
     def _build_approvals(self) -> Adw.PreferencesGroup:
         group = Adw.PreferencesGroup(title=translate("prefs.approvals"))
@@ -120,6 +135,7 @@ class PreferencesDialog(Adw.PreferencesDialog):
             self._unsubscribe = self.viewmodel.subscribe(self._show_settings)
         self.save_button.set_sensitive(False)
         self.loading = True
+        self.page.set_sensitive(False)
         self.present(parent)
         self.worker = spawn_task(self._load(self._generation))
 
@@ -132,6 +148,7 @@ class PreferencesDialog(Adw.PreferencesDialog):
         finally:
             if self._active and generation == self._generation:
                 self.loading = False
+                self.page.set_sensitive(self._shown is not None)
                 self.save_button.set_sensitive(self._shown is not None)
 
     def _show_settings(self, settings: Settings) -> None:
@@ -153,9 +170,16 @@ class PreferencesDialog(Adw.PreferencesDialog):
             self.approvals_mode.set_selected(_APPROVAL_MODES.index(settings.approvals_mode))
         if previous is None or self.approval_hold.get_value_as_int() == previous.approval_hold_seconds:
             self.approval_hold.set_value(settings.approval_hold_seconds)
+        self._show_thresholds(settings, previous)
         self._shown = settings
         if dirty:
             self.status_label.set_label(translate("prefs.updated_draft"))
+
+    def _show_thresholds(self, settings: Settings, previous: Settings | None) -> None:
+        if previous is None or self.quota_warn.get_value() == previous.quota_warn_pct:
+            self.quota_warn.set_value(settings.quota_warn_pct)
+        if previous is None or self.quota_critical.get_value() == previous.quota_critical_pct:
+            self.quota_critical.set_value(settings.quota_critical_pct)
 
     def save(self) -> None:
         if self.loading or self._shown is None or (self.worker is not None and not self.worker.done()):
@@ -180,6 +204,10 @@ class PreferencesDialog(Adw.PreferencesDialog):
             terminal_font_size=size if size != shown.terminal_font_size else msgspec.UNSET,
             scrollback_lines=scrollback if scrollback != shown.scrollback_lines else msgspec.UNSET,
             theme=theme if theme != shown.theme else msgspec.UNSET,
+            quota_warn_pct=self.quota_warn.get_value()
+            if self.quota_warn.get_value() != shown.quota_warn_pct else msgspec.UNSET,
+            quota_critical_pct=self.quota_critical.get_value()
+            if self.quota_critical.get_value() != shown.quota_critical_pct else msgspec.UNSET,
         )
 
     async def _save(self, patch: SettingsPatch, generation: int) -> None:
@@ -187,16 +215,63 @@ class PreferencesDialog(Adw.PreferencesDialog):
             if patch != SettingsPatch():
                 _ = await self.viewmodel.update(patch)
             if self._active and generation == self._generation:
-                self.status_label.set_label(translate("prefs.saved"))
+                dirty = self._shown is not None and self._changes(self._shown) != SettingsPatch()
+                self.status_label.set_label(translate("prefs.unsaved" if dirty else "prefs.saved"))
+                if self._close_after_save and not dirty:
+                    self.force_close()
         except Exception:  # noqa: BLE001 -- never publish an unconfirmed settings patch
             if self._active and generation == self._generation:
                 self.status_label.set_label(translate("prefs.error"))
         finally:
+            self._close_after_save = False
             if self._active and generation == self._generation:
                 self.save_button.set_sensitive(True)
 
     def _save_clicked(self, _button: Gtk.Button) -> None:
         self.save()
+
+    def protect_close(self) -> bool:
+        """Route application exit through the draft decision before the window can disappear."""
+        dirty = self._shown is not None and self._changes(self._shown) != SettingsPatch()
+        saving = not self.loading and self.worker is not None and not self.worker.done()
+        if self._active and (dirty or saving):
+            _ = self.close()
+            return True
+        return False
+
+    def _close_attempt(self, _dialog: Adw.Dialog) -> None:
+        if not self.loading and self.worker is not None and not self.worker.done():
+            self.status_label.set_label(translate("prefs.saving"))
+            return
+        if self._shown is None or self._changes(self._shown) == SettingsPatch():
+            self.force_close()
+            return
+        if self._close_prompt is not None:
+            return
+        prompt = Adw.AlertDialog(heading=translate("prefs.unsaved"), body=translate("prefs.close_body"))
+        self._close_prompt = prompt
+        for response, key in (("cancel", "prefs.keep_editing"), ("discard", "prefs.discard"), ("save", "prefs.apply")):
+            prompt.add_response(response, translate(key))
+        prompt.set_response_appearance("discard", Adw.ResponseAppearance.DESTRUCTIVE)
+        prompt.set_response_appearance("save", Adw.ResponseAppearance.SUGGESTED)
+        prompt.set_default_response("cancel")
+        prompt.set_close_response("cancel")
+        _ = prompt.connect("response", self._close_response)
+        prompt.present(self)
+
+    def _close_response(self, prompt: Adw.AlertDialog, response: str) -> None:
+        if self._close_prompt is not prompt:
+            return
+        self._close_prompt = None
+        if response == "discard":
+            _ = GLib.idle_add(self._discard_after_prompt)
+        elif response == "save":
+            self._close_after_save = True
+            self.save()
+
+    def _discard_after_prompt(self) -> bool:
+        self.force_close()
+        return GLib.SOURCE_REMOVE
 
     def _closed(self, _dialog: Adw.Dialog) -> None:
         self._active = False

@@ -57,3 +57,16 @@ def test_answers_match_the_graph_and_repeat_from_the_cache(tmp_path: Path) -> No
     first = index.dependents("p")
     assert index.dependents("p") is first
     assert index.dependents("p", frozenset({"no such kind"})) == {}
+
+
+def test_language_changes_invalidate_cached_graphs_immediately(tmp_path: Path) -> None:
+    index = _index(_project(tmp_path))
+    enabled = [frozenset({"python"})]
+    index._languages = lambda: enabled[0]
+    first = index.graph("p")
+    assert first.nodes
+    enabled[0] = frozenset()
+    assert index.graph("p").nodes == ()
+    assert index.dependents("p") == {}
+    enabled[0] = frozenset({"python"})
+    assert index.graph("p") == first

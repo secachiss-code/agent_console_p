@@ -63,6 +63,22 @@ def test_an_active_window_does_not_ring() -> None:
     assert bell.posted == []
 
 
+def test_notification_policy_always_never_and_live_change() -> None:
+    bell = _Bell()
+    view = _request(_FIRST)
+    bell.alerts.update((view,), {}, window_active=True, active_tab_id=_FIRST, notify_when="always")
+    assert len(bell.posted) == 1
+    bell.alerts.update((view,), {}, window_active=False, notify_when="never")
+    assert bell.withdrawn == [bell.posted[0].id]
+    bell.alerts.update((view,), {}, window_active=False, notify_when="always")
+    assert len(bell.posted) == 1, "the same episode must not ring again"
+    bell.alerts.update((), {}, window_active=False, notify_when="never")
+    bell.alerts.update((_request(_SECOND),), {}, window_active=False, notify_when="never")
+    assert len(bell.posted) == 1
+    bell.alerts.update((_request(_SECOND),), {}, window_active=False, notify_when="always")
+    assert len(bell.posted) == 2
+
+
 def test_an_inactive_tab_rings_in_an_active_window() -> None:
     bell = _Bell()
     bell.see(_request(_FIRST), _request(_SECOND), active=True)

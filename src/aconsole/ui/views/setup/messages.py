@@ -4,6 +4,13 @@
 import locale
 
 _MESSAGES = {
+    "prefs.quota_warn": ("Warning at used quota, %", "Предупреждение при использовании, %"),
+    "prefs.quota_critical": ("Critical at used quota, %", "Критический уровень при использовании, %"),
+    "prefs.unsaved": ("Unsaved preferences", "Несохранённые настройки"),
+    "prefs.close_body": ("Apply your changes before closing?", "Применить изменения перед закрытием?"),
+    "prefs.keep_editing": ("Keep editing", "Продолжить редактирование"),
+    "prefs.discard": ("Discard changes", "Отменить изменения"),
+    "prefs.saving": ("Saving preferences…", "Сохранение настроек…"),
     "quit.heading": ("Close AConsole?", "Закрыть AConsole?"),
     "quit.counts": ("Running agents: {agents}. Pending requests: {approvals}.",
                     "Работающих агентов: {agents}. Ожидающих запросов: {approvals}."),
@@ -166,8 +173,8 @@ _MESSAGES = {
         "Настройки изменились в другом окне. Ваши правки сохранены; проверьте их перед применением.",
     ),
     "prefs.error": (
-        "Could not save preferences. Reopen preferences and try again.",
-        "Не удалось сохранить настройки. Откройте настройки заново и повторите попытку.",
+        "Could not save preferences. Your edits are kept; try applying again.",
+        "Не удалось сохранить настройки. Ваши правки сохранены; повторите применение.",
     ),
     "prefs.load_error": ("Could not load preferences", "Не удалось загрузить настройки"),
 }
