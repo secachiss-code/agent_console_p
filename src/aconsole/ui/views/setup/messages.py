@@ -4,6 +4,13 @@
 import locale
 
 _MESSAGES = {
+    "health.isolation": ("Container isolation", "Изоляция контейнеров"),
+    "health.isolation_unknown": (
+        "Isolation has not been verified. Check container mounts before trusting approval restrictions.",
+        "Изоляция не проверена. Проверьте монтирования контейнеров перед использованием ограничений согласований.",
+    ),
+    "health.isolation_loading": ("Checking container mounts…", "Проверяем монтирования контейнеров…"),
+    "health.isolation_check": ("Check container mounts", "Проверить монтирования контейнеров"),
     "startup.loading": ("Connecting to core…", "Подключаемся к ядру…"),
     "startup.failed": ("Could not start AConsole", "Не удалось запустить AConsole"),
     "startup.retry": ("Retry", "Повторить"),

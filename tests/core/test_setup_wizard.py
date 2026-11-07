@@ -50,7 +50,12 @@ from aconsole.core.bootstrap import Daemon
 from aconsole.core.domain.errors import DomainError
 from aconsole.core.infrastructure.containers.login import LOGIN_SHELL
 from aconsole.core.infrastructure.ipc.framing import decode_envelope, encode_line
-from aconsole.core.infrastructure.setup_checks import HostSetupFixes, HostSetupProbe, SetupEnvironment
+from aconsole.core.infrastructure.setup_checks import (
+    HostSetupFixes,
+    HostSetupProbe,
+    SetupEnvironment,
+    SystemSetupEnvironment,
+)
 from tests.core.conftest import wait_for_socket
 
 _AT = datetime(2026, 10, 31, 12, 0, tzinfo=UTC)
@@ -63,6 +68,7 @@ _CHECK_IDS = (
     "storage",
     "worktree_storage_mounts",
     "devtools_graph_tools",
+    "container_isolation",
     "notifications",
 )
 _ROOT = Path(__file__).resolve().parents[2]
@@ -122,6 +128,8 @@ class _FakeSetupEnvironment(SetupEnvironment):
             return self.list_succeeds, "\n".join(self.containers)
         if argv in self.failed_argv:
             return False, "simulated probe failure"
+        if argv[:2] == ("podman", "inspect"):
+            return True, "[]"
         if argv[-1:] == ("--version",):
             return True, f"{argv[-2]} 1.2.3"
         if argv[-3:] == ("claude", "auth", "status"):
@@ -151,6 +159,8 @@ class _FakeSetupEnvironment(SetupEnvironment):
             self.failed_argv.add(("podman", "exec", "agent-claude", "test", "-d", str(worktrees)))
         elif category == "devtools_graph_tools":
             self.failed_argv.add(("podman", "exec", "devtools", "dotnet", "--version"))
+        elif category == "container_isolation":
+            self.failed_argv.add(("podman", "inspect", "--format", "{{json .Mounts}}", "agent-claude"))
         elif category == "notifications":
             self.variables.pop("DBUS_SESSION_BUS_ADDRESS", None)
         else:
@@ -239,7 +249,7 @@ def _checks(*, fail: frozenset[str] = frozenset()) -> tuple[CheckResult, ...]:
     )
 
 
-def test_host_setup_probe_reports_all_eight_categories_from_fake_environment(tmp_path: Path) -> None:
+def test_host_setup_probe_reports_all_categories_from_fake_environment(tmp_path: Path) -> None:
     environment = _FakeSetupEnvironment(tmp_path)
 
     checks = HostSetupProbe(environment).run_checks()
@@ -297,7 +307,8 @@ def test_no_containers_fails_one_check_and_says_what_to_run(tmp_path: Path) -> N
     checks = {check.id: check for check in HostSetupProbe(environment).run_checks()}
 
     assert [check_id for check_id, check in checks.items() if not check.ok] == ["agent_containers"]
-    assert "distrobox create" in (checks["agent_containers"].command or "")
+    assert checks["agent_containers"].command == "podman create --help"
+    assert "README" in checks["agent_containers"].detail
 
 
 @pytest.mark.parametrize("category", _CHECK_IDS)
@@ -830,3 +841,101 @@ def _fake_tools(home: Path) -> tuple[Path, Path]:
     _ = fake_sudo.write_text(sudo_source, encoding="utf-8")
     fake_sudo.chmod(0o755)
     return executable, fake_sudo
+
+
+@pytest.mark.parametrize("relative", [".", ".bashrc", ".config/systemd/user", ".local/share/aconsole/aconsole.db",
+                                      ".local/share/aconsole/aconsole.db-wal", ".containers/hostrun", ".aws"])
+@pytest.mark.parametrize("writable", [False, True])
+def test_isolation_warns_on_sensitive_host_mounts(tmp_path: Path, relative: str, *, writable: bool) -> None:
+    class Mounted(_FakeSetupEnvironment):
+        def run(self, argv: tuple[str, ...]) -> tuple[bool, str]:
+            if argv[:2] == ("podman", "inspect"):
+                return True, msgspec.json.encode([{
+                    "Source": str(tmp_path / relative), "Destination": "/exposed", "RW": writable,
+                }]).decode()
+            return super().run(argv)
+
+    check = HostSetupProbe(Mounted(tmp_path)).isolation_check()
+    assert not check.ok
+    assert check.severity == "warning"
+    assert "devtools" in check.detail
+    assert "agent-claude" in check.detail
+    assert "README" in check.detail
+    assert check.fix_id is None
+    assert check.command
+
+
+@pytest.mark.parametrize("raw", ["{", "null", "{}", '[{"Source":"relative","Destination":"/x","RW":true}]'])
+def test_isolation_does_not_claim_safety_without_valid_metadata(tmp_path: Path, raw: str) -> None:
+    class Unknown(_FakeSetupEnvironment):
+        def run(self, argv: tuple[str, ...]) -> tuple[bool, str]:
+            return (True, raw) if argv[:2] == ("podman", "inspect") else super().run(argv)
+
+    check = HostSetupProbe(Unknown(tmp_path)).isolation_check()
+    assert not check.ok
+    assert "unknown" in check.detail
+
+
+def test_isolation_allows_only_worktree_and_vault_binds(tmp_path: Path) -> None:
+    class Isolated(_FakeSetupEnvironment):
+        def run(self, argv: tuple[str, ...]) -> tuple[bool, str]:
+            if argv[:2] == ("podman", "inspect"):
+                return True, msgspec.json.encode([
+                    {"Source": str(tmp_path / part), "Destination": str(tmp_path / part), "RW": True}
+                    for part in (".local/share/aconsole/worktrees", "Obsidian/AConsole")
+                ]).decode()
+            return super().run(argv)
+
+    check = HostSetupProbe(Isolated(tmp_path)).isolation_check()
+    assert check.ok
+    assert "not an isolation guarantee" in check.detail
+
+
+def test_isolation_uses_custom_xdg_database_path(tmp_path: Path) -> None:
+    class Custom(_FakeSetupEnvironment):
+        def run(self, argv: tuple[str, ...]) -> tuple[bool, str]:
+            if argv[:2] == ("podman", "inspect"):
+                return True, msgspec.json.encode([{
+                    "Source": str(tmp_path / "custom/aconsole/aconsole.db"), "Destination": "/db", "RW": True,
+                }]).decode()
+            return super().run(argv)
+
+    env = Custom(tmp_path)
+    env.variables["XDG_DATA_HOME"] = str(tmp_path / "custom")
+    assert not HostSetupProbe(env).isolation_check().ok
+
+
+def test_isolation_probe_never_executes_a_container_profile(tmp_path: Path) -> None:
+    env = _FakeSetupEnvironment(tmp_path)
+    assert HostSetupProbe(env).isolation_check().ok
+    assert all(call[:2] in {("podman", "inspect"), ("podman", "ps")} for call in env.raw_calls)
+
+
+def test_isolation_detects_a_bind_source_symlink(tmp_path: Path) -> None:
+    (tmp_path / ".config").mkdir()
+    alias = tmp_path / "alias"
+    alias.symlink_to(tmp_path / ".config", target_is_directory=True)
+
+    class Alias(_FakeSetupEnvironment):
+        def run(self, argv: tuple[str, ...]) -> tuple[bool, str]:
+            if argv[:2] == ("podman", "inspect"):
+                return True, msgspec.json.encode([{
+                    "Source": str(alias), "Destination": "/elsewhere", "RW": True,
+                }]).decode()
+            return super().run(argv)
+
+    assert not HostSetupProbe(Alias(tmp_path)).isolation_check().ok
+
+
+@pytest.mark.parametrize("command", ["inspect", "ps"])
+def test_large_container_metadata_is_unknown_instead_of_truncated(
+    command: str, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def run(*_args: object, **_kwargs: object) -> subprocess.CompletedProcess[str]:
+        return subprocess.CompletedProcess(args=("podman", command), returncode=0,
+                                           stdout="agent-safe\n" * 7000, stderr="")
+
+    monkeypatch.setattr(subprocess, "run", run)
+    ok, detail = SystemSetupEnvironment().run(("podman", command))
+    assert not ok
+    assert "exceeded" in detail

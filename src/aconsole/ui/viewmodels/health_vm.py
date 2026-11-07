@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 
-from aconsole.contracts.app import EmptyParams, HealthResult
+from aconsole.contracts.app import CheckResult, ChecksResult, EmptyParams, HealthResult
 from aconsole.ui.client.core_client import CoreCallError, CoreClient, CoreTimeoutError
 
 
@@ -29,3 +29,12 @@ class HealthViewModel:
             resyncs=self._client.resync_count,
             reconnects=max(0, self._client.connects - 1),
         )
+
+
+    async def load_isolation(self) -> CheckResult | None:
+        """Run setup diagnostics only on request, outside the two-second health poll."""
+        try:
+            result = await self._client.request("setup/checks", EmptyParams(), ChecksResult)
+        except ConnectionError, CoreCallError, CoreTimeoutError, OSError:
+            return None
+        return next((check for check in result.checks if check.id == "container_isolation"), None)

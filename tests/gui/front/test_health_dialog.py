@@ -10,7 +10,7 @@ gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
 from gi.repository import Adw, Gtk  # noqa: E402
 
-from aconsole.contracts.app import HealthResult  # noqa: E402
+from aconsole.contracts.app import CheckResult, HealthResult  # noqa: E402
 from aconsole.core.infrastructure.fake.server import FakeCore  # noqa: E402
 from aconsole.ui.client.core_client import CoreClient  # noqa: E402
 from aconsole.ui.viewmodels.health_vm import HealthFacts, HealthViewModel  # noqa: E402
@@ -105,3 +105,21 @@ def test_the_view_model_reports_a_core_that_is_gone() -> None:
         return await HealthViewModel(client).load()
 
     assert asyncio.run(run()).core is None
+
+
+@pytest.mark.parametrize("ok", [False, True, None])
+def test_health_shows_isolation_result_and_reenables_check(*, ok: bool | None) -> None:
+    class Diagnostics(HealthViewModel):
+        async def load_isolation(self) -> CheckResult | None:
+            return None if ok is None else CheckResult(
+                id="container_isolation", title="Container isolation", ok=ok,
+                severity="info" if ok else "warning", detail="mount diagnostics", fix_id=None,
+                requires_confirmation=False,
+            )
+
+    dialog = HealthDialog(Diagnostics(CoreClient("unused")))
+    asyncio.run(dialog.refresh_isolation())
+    assert dialog.isolation_button.get_sensitive()
+    assert dialog.isolation_label.has_css_class("warning") is (ok is not True)
+    if ok is not None:
+        assert dialog.isolation_label.get_label() == "mount diagnostics"

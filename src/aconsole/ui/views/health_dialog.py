@@ -65,6 +65,16 @@ class HealthDialog(Adw.Dialog):
             self.values[key] = value
         page = Adw.PreferencesPage()
         page.add(group)
+        isolation = Adw.PreferencesGroup(title=translate("health.isolation"))
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+        self.isolation_label: Gtk.Label = Gtk.Label(label=translate("health.isolation_unknown"), wrap=True, xalign=0)
+        self.isolation_label.add_css_class("warning")
+        box.append(self.isolation_label)
+        self.isolation_button: Gtk.Button = Gtk.Button(label=translate("health.isolation_check"))
+        _ = self.isolation_button.connect("clicked", self._check_isolation)
+        box.append(self.isolation_button)
+        isolation.add(box)
+        page.add(isolation)
         toolbar = Adw.ToolbarView()
         toolbar.add_top_bar(Adw.HeaderBar())
         toolbar.set_content(page)
@@ -83,6 +93,22 @@ class HealthDialog(Adw.Dialog):
 
     async def refresh(self) -> None:
         self.show_facts(await self._viewmodel.load())
+
+    def _check_isolation(self, _button: Gtk.Button) -> None:
+        _ = spawn_task(self.refresh_isolation())
+
+    async def refresh_isolation(self) -> None:
+        self.isolation_button.set_sensitive(False)
+        self.isolation_label.set_label(translate("health.isolation_loading"))
+        try:
+            check = await self._viewmodel.load_isolation()
+            self.isolation_label.set_label(translate("health.isolation_unknown") if check is None else check.detail)
+            if check is None or not check.ok:
+                self.isolation_label.add_css_class("warning")
+            else:
+                self.isolation_label.remove_css_class("warning")
+        finally:
+            self.isolation_button.set_sensitive(True)
 
     def _tick(self) -> bool:
         _ = spawn_task(self.refresh())

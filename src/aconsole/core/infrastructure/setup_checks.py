@@ -49,7 +49,12 @@ class SystemSetupEnvironment:
             result = subprocess.run(argv, capture_output=True, text=True, timeout=10, check=False)  # noqa: S603 -- fixed argv
         except (OSError, subprocess.TimeoutExpired) as exc:
             return False, str(exc)
-        return result.returncode == 0, (result.stdout or result.stderr).strip()[-400:]
+        metadata = argv[:2] in {("podman", "inspect"), ("podman", "ps")}
+        limit = 65536 if metadata else 400
+        output = (result.stdout or result.stderr).strip()
+        if metadata and len(output) > limit:
+            return False, "Container mount metadata exceeded the diagnostic limit"
+        return result.returncode == 0, output[-limit:]
 
     def is_dir(self, path: Path) -> bool:
         return path.is_dir()
@@ -98,8 +103,9 @@ class HostSetupProbe:
             _check("host_dependencies", not missing_tools,
                    ", ".join(missing_tools) if missing_tools else "podman and distrobox",
                    command=f"sudo apt install {' '.join(missing_tools)}"),
-            _check("agent_containers", bool(names), ", ".join(names) if names else "agent-claude",
-                   command="distrobox create --yes --name agent-claude --image ubuntu:24.04"),
+            _check("agent_containers", bool(names), ", ".join(names) if names else
+                   "No agent containers. See README: Container isolation (SEC-7) before creating one.",
+                   command="podman create --help"),
             _check("agent_login", not no_login,
                    ", ".join(no_login) if no_login else "Claude is checked here; other agents show their state above",
                    command=_login_command(no_login)),
@@ -116,9 +122,73 @@ class HostSetupProbe:
             _check("devtools_graph_tools", not no_graph,
                    ", ".join(no_graph) if no_graph else "Python, Cargo, .NET and Node in devtools",
                    command="distrobox enter devtools"),
+            self.isolation_check(names, listed=listed),
             _check("notifications", notifications, "notify-send and session D-Bus",
                    command="sudo apt install libnotify-bin"),
         )
+
+
+    def isolation_check(self, names: tuple[str, ...] | None = None, *, listed: bool = True) -> CheckResult:
+        """Read engine metadata without executing an agent profile or modifying a container."""
+        if names is None:
+            listed, detail = self._env.run(("podman", "ps", "-a", "--format", "{{.Names}}"))
+            names = tuple(name for name in detail.splitlines() if name.startswith("agent-") or name == "devtools")
+        findings: list[str] = []
+        sensitive = _host_sensitive_paths(self._env)
+        if not listed:
+            findings.append("Container list unavailable; isolation is unknown")
+        # Devtools executes checkout code too; inspect it even when called from the wizard.
+        for name in dict.fromkeys((*names, "devtools")):
+            ok, raw = self._env.run(("podman", "inspect", "--format", "{{json .Mounts}}", name))
+            try:
+                mounts = msgspec.json.decode(raw, type=tuple[_HostMount, ...]) if ok else None
+            except msgspec.DecodeError:
+                mounts = None
+            if mounts is None:
+                findings.append(f"{name}: mount metadata unavailable; isolation is unknown")
+                continue
+            for mount in mounts:
+                source = Path(mount.source)
+                if not source.is_absolute() or not Path(mount.destination).is_absolute():
+                    findings.append(f"{name}: invalid mount metadata; isolation is unknown")
+                    continue
+                try:
+                    source = source.resolve()
+                except (OSError, RuntimeError, ValueError):
+                    findings.append(f"{name}: unresolved mount source; isolation is unknown")
+                    continue
+                if any(source.is_relative_to(path) or path.is_relative_to(source)
+                       for path in sensitive):
+                    mode = "writable" if mount.writable else "read-only"
+                    findings.append(f"{name}: {source} -> {mount.destination} ({mode})")
+        instruction = ("Use a separate container HOME; bind only worktrees and vault, without host HOME, "
+                       "AConsole database, startup files, host sockets or host-exec integration. "
+                       "See README: Container isolation (SEC-7). Recreate containers manually after reviewing mounts.")
+        return _check("container_isolation", not findings,
+                      "; ".join(findings) + ". " + instruction if findings else
+                      "No sensitive host binds detected; this is a metadata check, not an isolation guarantee.",
+                      command="podman inspect --format '{{json .Mounts}}' " +
+                      " ".join(shlex.quote(name) for name in dict.fromkeys((*names, "devtools"))))
+
+
+class _HostMount(msgspec.Struct, frozen=True, kw_only=True):
+    source: str = msgspec.field(name="Source")
+    destination: str = msgspec.field(name="Destination")
+    writable: bool = msgspec.field(name="RW")
+
+
+def _host_sensitive_paths(env: SetupEnvironment) -> tuple[Path, ...]:
+    home = env.home
+    data = Path(env.environ("XDG_DATA_HOME") or home / ".local/share")
+    config = Path(env.environ("XDG_CONFIG_HOME") or home / ".config")
+    state = Path(env.environ("XDG_STATE_HOME") or home / ".local/state")
+    return tuple(path.resolve() for path in (
+        data / "aconsole/aconsole.db", data / "aconsole/aconsole.db-wal", data / "aconsole/aconsole.db-shm",
+        config, state / "aconsole-hostrun", home / ".containers/hostrun", home / ".containers/host-bins",
+        home / ".local/bin", home / ".bashrc", home / ".profile", home / ".bash_profile", home / ".zshrc",
+        home / ".ssh", home / ".aws",
+        Path(env.environ("XDG_RUNTIME_DIR") or f"/run/user/{os.getuid()}"),
+    ))
 
 
 def _login_command(names: tuple[str, ...]) -> str | None:
@@ -135,7 +205,7 @@ def _recreate_command(names: tuple[str, ...]) -> str | None:
     if not names:
         return None
     name = shlex.quote(names[0])
-    return f'distrobox create --yes --clone {name} --name {name}-new --volume "$HOME:$HOME"'
+    return f"podman inspect --format '{{{{json .Mounts}}}}' {name}"
 
 
 def _in_container(env: SetupEnvironment, name: str, *command: str) -> tuple[str, ...]:

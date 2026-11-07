@@ -1,0 +1,58 @@
+import os
+from pathlib import Path
+import subprocess
+import sys
+import tempfile
+
+ROOT = Path(__file__).resolve().parents[2]
+PYTHON = sys.executable
+
+if len(sys.argv) > 1:
+    import gi
+    gi.require_version('Gtk', '4.0')
+    gi.require_version('Adw', '1')
+    from gi.repository import Gtk, Adw, GLib
+    from aconsole.ui.client.core_client import CoreClient
+    from aconsole.ui.viewmodels.health_vm import HealthViewModel
+    from aconsole.ui.views.health_dialog import HealthDialog
+    from aconsole.ui.snapshot import capture_window
+    class Preview(HealthDialog):
+        def _mapped(self, widget):
+            pass
+        def _unmapped(self, widget):
+            pass
+    app = Adw.Application(application_id='io.aconsole.Sec7Preview')
+    def activate(app):
+        dark = sys.argv[1] == 'dark'
+        Adw.StyleManager.get_default().set_color_scheme(Adw.ColorScheme.FORCE_DARK if dark else Adw.ColorScheme.FORCE_LIGHT)
+        win = Adw.ApplicationWindow(application=app, default_width=int(sys.argv[2]), default_height=800)
+        win.set_content(Gtk.Box())
+        win.present()
+        dialog = Preview(HealthViewModel(CoreClient('unused')))
+        dialog.isolation_label.set_label('agent-claude: /home/user -> /home/user (writable). Use a separate container HOME; bind only worktrees and vault, without host HOME, AConsole database, startup files, host sockets or host-exec integration. See README: Container isolation (SEC-7). Recreate containers manually after reviewing mounts.')
+        content = dialog.get_child()
+        dialog.set_child(None)
+        win.set_content(content)
+        win.set_size_request(int(sys.argv[2]), 800)
+        def capture():
+            capture_window(win, Path(sys.argv[3]))
+            print('captured', sys.argv[3], flush=True)
+            app.quit()
+            return False
+        GLib.timeout_add(1500, capture)
+        GLib.timeout_add_seconds(10, lambda: app.quit())
+    app.connect('activate', activate)
+    app.run([])
+else:
+    with tempfile.TemporaryDirectory(prefix='sec7-broadway-') as runtime:
+        env = dict(os.environ, XDG_RUNTIME_DIR=runtime, GDK_BACKEND='broadway', BROADWAY_DISPLAY=':99', GSK_RENDERER='cairo', GTK_A11Y='none', PYTHONPATH=str(ROOT/'src'))
+        env.pop('DISPLAY', None)
+        server = subprocess.Popen(['/usr/bin/gtk4-broadwayd', '--address=127.0.0.1', '--port=18999', ':99'], env=env)
+        try:
+            output = ROOT/'artifacts/sec7/ui'
+            output.mkdir(parents=True, exist_ok=True)
+            for theme,width,name in [('light',1280,'health-light'),('dark',1280,'health-dark'),('light',700,'health-narrow')]:
+                subprocess.run([PYTHON,__file__,theme,str(width),str(output/(name+'.png'))],env=env,cwd=ROOT,timeout=20,check=True)
+        finally:
+            server.terminate()
+            server.wait(timeout=5)
