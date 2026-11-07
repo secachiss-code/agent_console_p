@@ -1,0 +1,36 @@
+{
+  "base_commit": "ddb1024fd31711aaea970461e03af235d89238c2",
+  "suite": {
+    "tests": [
+      "tests/hostrun",
+      "tests/core/test_tabs.py",
+      "tests/core/test_tabs_restore.py",
+      "tests/core/test_round6_k25.py",
+      "tests/core/domain/test_approvals.py",
+      "tests/core/test_approval_hold.py",
+      "tests/core/test_approval_tab_isolation.py",
+      "tests/core/test_approval_window.py",
+      "tests/core/test_ingest_http.py",
+      "tests/core/test_approval_native.py",
+      "tests/core/test_codex_watch_recovery.py"
+    ],
+    "passed": 457,
+    "skipped": 1,
+    "seconds": 45.86,
+    "runner": "devtools, current worktree PYTHONPATH, .venv-core Python3.15"
+  },
+  "skip": "tests/hostrun/test_allowlist.py::test_client_lists_match_known_actions; linked docs/plan absent",
+  "source_sha256": {
+    "tools/hostrun/actions.py": "133b8142ee86f5a291fe66bd38f9a878ba5c2f23988abbb56c95109da54ace20",
+    "tools/hostrun/server.py": "e4e6625b23ebf2a770fd1178bc275dc69f46602fd83937c4b6a2ddf707f432de",
+    "tools/hostrun/policy.example.toml": "52781a5ed118cecccaab0370f3df111543ae902b9e85ab2f2644c69f568d3d01",
+    "src/aconsole/core/domain/approvals.py": "a7499d3f13d6ae1a17ae05ec5eec3436427b7f672a987baa7130d202a7417bd1",
+    "src/aconsole/core/application/services/approval_broker.py": "7baccaf2e62ec90c6b2bd052a17b33a8939d14a6a5cc7ef3c54d10dd1e4308c5",
+    "src/aconsole/core/application/services/tabs.py": "30ee7c087b3a51730ef53e3a009de2f7d33f102732c3c3f7368d80059be1e9f9",
+    "src/aconsole/core/bootstrap.py": "0e3cd8e394a27175e08df9b490c2fd1cc721486e6f14e838454fc080781b7e75",
+    "src/aconsole/core/infrastructure/containers/podman.py": "c092ad309ed4ee10a724fa9f392331ecce1f9a3795575fcd0eff62fc2b649787"
+  },
+  "production_changed": false,
+  "live_hostrun_restarted": false,
+  "live_containers_modified": false
+}
