@@ -1,0 +1,24 @@
+import json
+import subprocess
+import sys
+import tempfile
+from pathlib import Path
+sys.path.insert(0, str(Path.cwd()))
+sys.path.insert(0, str(Path.cwd()/'tools/hostrun'))
+from tools.hostrun import actions, server
+with tempfile.TemporaryDirectory(prefix='qa1-hostrun-git-') as folder:
+    root=Path(folder); repo=root/'repo'; repo.mkdir()
+    marker=root/'executed'
+    def git(*args):
+        return subprocess.run(['git','-C',str(repo),*args],capture_output=True,check=True)
+    git('init','-q'); git('config','user.name','QA');git('config','user.email','qa@example.invalid')
+    (repo/'f').write_text('old\n');git('add','f');git('commit','-qm','base')
+    (repo/'f').write_text('changed length\n')
+    driver=root/'filter.sh'; driver.write_text('#!/bin/sh\nprintf executed >> "'+str(marker)+'"\ncat\n');driver.chmod(0o700)
+    git('config','filter.evil.clean',str(driver));(repo/'.gitattributes').write_text('f filter=evil\n')
+    # The former host argv; run this probe ONLY inside devtools.
+    argv=('git','-C',str(repo),'diff','--no-ext-diff','--no-textconv')
+    chunks=[]
+    import time
+    code=server.execute_argv(argv,cwd=str(repo),env=server.base_env(),deadline=time.monotonic()+5,output_limit=100000,written=[0],write=chunks.append)
+    print(json.dumps({'action':'git diff','argv':argv,'exit_code':code,'filter_executed':marker.exists(),'output_has_change':b'changed length' in b''.join(chunks)}))

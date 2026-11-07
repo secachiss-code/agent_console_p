@@ -920,7 +920,9 @@ def test_git_diff_does_not_run_repo_diff_drivers(tmp_path: Path) -> None:
     _git(repo, "config", "diff.evil.textconv", str(driver))
     _ = (repo / "note.txt").write_text("after\n", encoding="utf-8")
     plan = actions.build_plan("git", ["diff"], repo, str(repo), 30)
-    argv = plan.steps[0].argv
+    assert plan.steps[0].argv == ("podman", "start", "devtools")
+    # Run the inner Git command only in the isolated test runner, never on the user's host.
+    argv = _devtools_command(plan.steps[1].argv, str(repo))
     assert argv == ("git", "-C", str(repo), "diff", "--no-ext-diff", "--no-textconv")
     chunks: list[bytes] = []
     code = server.execute_argv(
@@ -1064,3 +1066,79 @@ def test_container_fake_lifecycle_starts_and_stops_a_real_process(tmp_path: Path
                     os.kill(pid, signal.SIGKILL)
                 with contextlib.suppress(ChildProcessError):
                     os.waitpid(pid, 0)
+
+
+@pytest.mark.parametrize("args", [["status"], ["diff"], ["log"], ["worktree", "list"], ["rev-parse", "HEAD"]])
+def test_git_actions_dispatch_only_container_commands(
+    running: Running, monkeypatch: pytest.MonkeyPatch, args: list[str],
+) -> None:
+    policy, _holder = running
+    seen = _capture_exec(monkeypatch, output=b"container Git output\n")
+    status, body = _post(policy.socket_path, {"action": "git", "args": args})
+    assert status == 200
+    assert b"container Git output" in body
+    assert seen[0] == ("podman", "start", "devtools")
+    command = _devtools_command(seen[1], policy.repo)
+    expected = tuple(args) if args != ["diff"] else ("diff", "--no-ext-diff", "--no-textconv")
+    assert command == ("git", "-C", policy.repo, *expected)
+    assert all(argv[0] == "podman" for argv in seen)
+
+
+def test_git_start_failure_has_no_host_fallback(
+    running: Running, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    policy, _holder = running
+    seen: list[tuple[str, ...]] = []
+
+    def fail(argv: tuple[str, ...], **_kwargs: object) -> int:
+        seen.append(argv)
+        return 125
+
+    monkeypatch.setattr(server, "execute_argv", fail)
+    status, body = _post(policy.socket_path, {"action": "git", "args": ["status"]})
+    assert status == 200
+    assert b"__EXIT__ 125" in body
+    assert seen == [("podman", "start", "devtools")]
+
+
+@pytest.mark.parametrize(("verb", "driver"), [("diff", "filter"), ("status", "fsmonitor")])
+def test_git_config_programs_are_confined_to_inner_command(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, verb: str, driver: str,
+) -> None:
+    """Run only inside devtools: emulate Podman dispatch and exercise actual Git configuration."""
+    policy = _policy(tmp_path)
+    repo = Path(policy.repo)
+    _git(repo, "init", "-q")
+    _ = (repo / "f").write_text("old\n")
+    _git(repo, "add", "f")
+    _git(repo, "commit", "-qm", "base")
+    _ = (repo / "f").write_text("changed length\n")
+    marker = tmp_path / "inner-driver-ran"
+    script = tmp_path / "driver.sh"
+    tail = "cat\n" if driver == "filter" else "printf 'token\\0'\n"
+    script.write_text(f"#!/bin/sh\nprintf ran >> '{marker}'\n{tail}")
+    script.chmod(0o700)
+    if driver == "filter":
+        (repo / ".gitattributes").write_text("f filter=evil\n")
+        _git(repo, "config", "filter.evil.clean", str(script))
+    else:
+        _git(repo, "config", "core.fsmonitor", str(script))
+    seen: list[tuple[str, ...]] = []
+
+    def container_execute(argv: tuple[str, ...], **_kwargs: object) -> int:
+        seen.append(argv)
+        assert argv[0] == "podman", "repository Git must never be a host command"
+        if argv[:2] == ("podman", "start"):
+            assert not marker.exists()
+            return 0
+        assert not marker.exists()
+        command = _devtools_command(argv, str(repo))
+        done = subprocess.run(command, capture_output=True, check=False, env=server.base_env())
+        return done.returncode
+
+    monkeypatch.setattr(server, "execute_argv", container_execute)
+    plan = actions.build_plan("git", [verb], repo, str(repo), 30)
+    result = server.Application(policy).run_plan(plan, cwd=str(repo), write=lambda _data: None)
+    assert result == 0
+    assert marker.exists(), "this fixture must exercise an actually executable Git driver"
+    assert len(seen) == 2

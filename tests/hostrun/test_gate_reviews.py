@@ -31,6 +31,26 @@ TASK = "A9.3"
 PATH = "tools/gate/shell_guard.py"
 
 
+@pytest.fixture(autouse=True)
+def isolated_review_git(monkeypatch: pytest.MonkeyPatch) -> None:
+    """This suite runs in devtools. Emulate the outer Podman dispatch, run real Git here."""
+    original = subprocess.run
+
+    def run(
+        argv: list[str] | tuple[str, ...], *args: object, **kwargs: object,
+    ) -> subprocess.CompletedProcess[bytes] | subprocess.CompletedProcess[str]:
+        if argv[:3] == ["podman", "start", "devtools"]:
+            return subprocess.CompletedProcess(argv, 0, stdout=b"", stderr=b"")
+        if argv[:2] == ["podman", "exec"]:
+            assert argv[2] == "--workdir"
+            assert argv[4:7] == ["-e", "GIT_LITERAL_PATHSPECS=1", "devtools"]
+            kwargs["env"] = {**kwargs["env"], "GIT_LITERAL_PATHSPECS": "1"}
+            return original(argv[7:], *args, **kwargs)
+        return original(argv, *args, **kwargs)
+
+    monkeypatch.setattr(subprocess, "run", run)
+
+
 def _policy(tmp: Path) -> server.Policy:
     projects = tmp / "Projects"
     repo = projects / "app"
@@ -753,3 +773,33 @@ def test_old_approval_plan_cannot_bypass_dispatch_validation(tmp_path: Path) -> 
     assert code == 1
     assert b"independent review" in output
     assert not _review_path(policy, TASK).exists()
+
+
+def test_review_git_dispatches_only_podman(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    seen: list[list[str]] = []
+
+    def capture(argv: list[str], **_kwargs: object) -> subprocess.CompletedProcess[bytes]:
+        seen.append(argv)
+        return subprocess.CompletedProcess(argv, 0, stdout=b"review result", stderr=b"")
+
+    monkeypatch.setattr(subprocess, "run", capture)
+    repo = str(tmp_path)
+    assert server._review_git(repo, "diff", "--no-ext-diff", "--no-textconv") == b"review result"
+    assert seen == [
+        ["podman", "start", "devtools"],
+        ["podman", "exec", "--workdir", repo, "-e", "GIT_LITERAL_PATHSPECS=1", "devtools",
+         "git", "-C", repo, "diff", "--no-ext-diff", "--no-textconv"],
+    ]
+
+
+def test_review_git_container_failure_has_no_host_fallback(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    seen: list[list[str]] = []
+
+    def fail(argv: list[str], **_kwargs: object) -> subprocess.CompletedProcess[bytes]:
+        seen.append(argv)
+        raise subprocess.CalledProcessError(125, argv)
+
+    monkeypatch.setattr(subprocess, "run", fail)
+    with pytest.raises(subprocess.CalledProcessError):
+        server._review_git(str(tmp_path), "rev-parse", "HEAD")
+    assert seen == [["podman", "start", "devtools"]]

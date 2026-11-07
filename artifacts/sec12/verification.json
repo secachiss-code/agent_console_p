@@ -1,0 +1,24 @@
+{
+  "base_commit": "5a96265e",
+  "baseline_probe": {
+    "action": "git diff",
+    "exit_code": 0,
+    "filter_executed": true,
+    "output_has_change": true,
+    "location": "temporary repository inside devtools"
+  },
+  "qa1_suite": {
+    "passed": 515,
+    "skipped": 1,
+    "seconds": 44.73
+  },
+  "followup_hostrun_and_session_cost": {
+    "passed": 168,
+    "seconds": 24.38
+  },
+  "ruff_forced": {
+    "preexisting_or_unchanged_line_diagnostics": 43,
+    "changed_line_diagnostics": 0
+  },
+  "live_service_restarted": false
+}

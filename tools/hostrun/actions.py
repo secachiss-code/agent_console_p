@@ -242,7 +242,8 @@ def build_plan(
     if action == "distrobox-dry-run":
         return Plan(mode="exec", steps=(_distrobox(args),), timeout_s=timeout_s)
     if action == "git":
-        return Plan(mode="exec", steps=(_git(args, cwd),), timeout_s=timeout_s)
+        return Plan(mode="exec", steps=_in_devtools(str(cwd), _git(args, cwd).argv, side=side),
+                    timeout_s=timeout_s)
     if action == "gate":
         return Plan(
             mode="exec",

@@ -58,9 +58,15 @@ _REPO = Path(__file__).resolve().parents[2]
 
 
 def _review_git(repo: str, *args: str) -> bytes:
+    # Even a read-only Git command can execute filters or fsmonitor from repository config.
+    # Start and run Git in devtools; never fall back to host Git when the container fails.
+    subprocess.run(
+        ["podman", "start", "devtools"], capture_output=True, check=True, timeout=30, env=base_env(),
+    )
     result = subprocess.run(
-        ["git", "-C", repo, *args], capture_output=True, check=True, timeout=30,
-        env={**base_env(), "GIT_LITERAL_PATHSPECS": "1"},
+        ["podman", "exec", "--workdir", repo, "-e", "GIT_LITERAL_PATHSPECS=1", "devtools",
+         "git", "-C", repo, *args],
+        capture_output=True, check=True, timeout=30, env=base_env(),
     )
     return result.stdout
 
