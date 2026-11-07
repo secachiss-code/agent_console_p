@@ -109,3 +109,50 @@ def test_a_checkpoint_needs_no_user_name(tmp_path: Path, monkeypatch: pytest.Mon
     made = CheckpointService(GitCheckpoints()).on_user_prompt(repo, "tab-1", "work", _AT)
     assert _show(repo, made.ref, "a.txt") == "changed\n"
     assert _git(repo, ("log", "-1", "--format=%an", made.ref)).strip() == "AConsole"
+
+
+@pytest.mark.parametrize("external", [False, True])
+def test_restore_removes_dangling_symlink_and_safety_restores_it(tmp_path: Path, *, external: bool) -> None:
+    repo = tmp_path / "repo"
+    _commit_base(repo)
+    service = CheckpointService(GitCheckpoints())
+    made = service.on_user_prompt(repo, "tab-1", "before link", _AT)
+    head = _git(repo, ("rev-parse", "HEAD"))
+    index = (repo / ".git/index").read_bytes()
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    external_file = outside / "sentinel.txt"
+    external_file.write_text("preserve\n", encoding="utf-8")
+    target = str(outside / "missing") if external else "missing"
+    link = repo / "extra-link"
+    link.symlink_to(target)
+    ignored = repo / "secret.txt"
+    ignored.symlink_to(target)
+    assert link.is_symlink()
+    assert not link.exists()
+    preview = service.preview("tab-1", made.id, now=_AT)
+    result = service.restore(
+        CheckpointRestore(
+            repo=repo, tab_id="tab-1", checkpoint_id=made.id,
+            confirm=preview.confirm_token, status=TabStatus.IDLE, at=_AT,
+        )
+    )
+    assert result.restored
+    assert not link.is_symlink()
+    assert ignored.is_symlink()
+    safety = next(item for item in service.list("tab-1") if item.id == result.safety_checkpoint)
+    preview = service.preview("tab-1", safety.id, now=_AT)
+    restored = service.restore(
+        CheckpointRestore(
+            repo=repo, tab_id="tab-1", checkpoint_id=safety.id,
+            confirm=preview.confirm_token, status=TabStatus.IDLE, at=_AT,
+        )
+    )
+    assert restored.restored
+    assert link.is_symlink()
+    assert not link.exists()
+    assert str(link.readlink()) == target
+    assert external_file.read_text(encoding="utf-8") == "preserve\n"
+    assert not (outside / "missing").exists()
+    assert _git(repo, ("rev-parse", "HEAD")) == head
+    assert (repo / ".git/index").read_bytes() == index
