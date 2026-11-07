@@ -67,6 +67,8 @@ METHODS: tuple[Method, ...] = (
            errors=_SESSIONS, capability="work_sessions.v1"),
     Method(name="shutdown", params="EmptyParams", result="EmptyResult", roles=ALL_ROLES),
     Method(name="app/snapshot", params="EmptyParams", result="SnapshotResult"),
+    Method(name="app/snapshotChunk", params="SnapshotChunkParams", result="SnapshotChunkResult",
+           errors=("RESYNC_REQUIRED", "MESSAGE_TOO_LARGE"), capability="snapshot.chunks.v1"),
     Method(
         name="events/subscribe",
         params="SubscribeParams",

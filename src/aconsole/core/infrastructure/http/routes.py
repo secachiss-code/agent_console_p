@@ -155,17 +155,19 @@ class IngestQueue:
         self._coalesced: dict[str, IngestItem] = {}
         self._lost: dict[str, int] = {}
         self._resync: set[str] = set()
+        self._applied_loss: dict[str, int] = {}
 
     @property
     def depth(self) -> int:
         return len(self._items)
 
     def push(self, item: IngestItem) -> None:
-        if len(self._items) < self._limit:
+        if len(self._items) < self._limit and not self._coalesced:
             self._items.append(item)
             return
         self._lost[item.tab_id] = self._lost.get(item.tab_id, 0) + 1
         self._resync.add(item.tab_id)
+        _ = self._coalesced.pop(item.tab_id, None)
         self._coalesced[item.tab_id] = item
 
     def lost(self, tab_id: str) -> int:
@@ -176,6 +178,10 @@ class IngestQueue:
 
     def coalesced(self, tab_id: str) -> IngestItem | None:
         return self._coalesced.get(tab_id)
+
+    def take_applied_loss(self, tab_id: str) -> int:
+        """Loss attached to the latest overflow item, to report only after the consumer applies it."""
+        return self._applied_loss.pop(tab_id, 0)
 
     def pop(self) -> IngestItem | None:
         """The oldest queued item. When the queue is empty, the latest overflow item of one tab.
@@ -189,6 +195,7 @@ class IngestQueue:
             return None
         tab_id = next(iter(self._coalesced))
         item = self._coalesced.pop(tab_id)
-        _ = self._lost.pop(tab_id, None)
+        lost = self._lost.pop(tab_id, 0)
+        self._applied_loss[tab_id] = self._applied_loss.get(tab_id, 0) + lost
         self._resync.discard(tab_id)
         return item

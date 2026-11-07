@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import os
+import threading
 from collections.abc import Callable
 from datetime import UTC, datetime
 from typing import final
@@ -20,6 +21,7 @@ from aconsole.contracts.app import (
     QuitCheckResult,
     ReleaseParams,
     ScreenTextReplyParams,
+    SnapshotChunkParams,
     SnapshotResult,
     SubscribeParams,
     SubscribeResult,
@@ -54,6 +56,7 @@ from aconsole.core.application.services.tabs import SETTINGS_METHODS, TAB_METHOD
 from aconsole.core.domain.errors import DomainError
 from aconsole.core.infrastructure.ipc.framing import decode_envelope, encode_line
 from aconsole.core.infrastructure.ipc.ring import EventRing
+from aconsole.core.infrastructure.ipc.snapshot_chunks import SnapshotChunks
 from aconsole.core.infrastructure.knowledge import KNOWLEDGE_METHODS, KnowledgeService
 
 _LOG = logging.getLogger(__name__)
@@ -68,6 +71,7 @@ _SERVER_CAPS = frozenset(
         "checkpoints.v1",
         "git.v1",
         "work_sessions.v1",
+        "snapshot.chunks.v1",
         "terminal.inject",
     },
 )
@@ -103,6 +107,7 @@ class Connection:
         knowledge: KnowledgeService | None = None,
         git: GitService | None = None,
         host_namespace: bool = False,
+        frame_limit: int | None = None,
     ) -> None:
         self.ring = ring
         self.outbound_limit = outbound_limit
@@ -132,18 +137,29 @@ class Connection:
         self.inflight: set[int] = set()
         self._queued = 0
         self._encoder = msgspec.json.Encoder()
-        self._limits = ProtocolLimits()
+        self._limits = ProtocolLimits() if frame_limit is None else ProtocolLimits(max_message_bytes=frame_limit)
+        self._chunks = SnapshotChunks(self._limits.max_message_bytes)
+        self._queue_lock = threading.Lock()
+        self._queued_requests: set[int] = set()
+        self._cancelled_requests: set[int] = set()
 
     def receive(self, line: bytes) -> tuple[bytes, ...]:
         try:
             envelope = decode_envelope(line)
         except msgspec.DecodeError:
             return (self._err(None, "PARSE_ERROR"),)
-        if isinstance(envelope, Notification):
-            return self._notification(envelope)
-        if not isinstance(envelope, Request):
-            return (self._err(None, "INVALID_REQUEST"),)
-        return self._request(envelope)
+        try:
+            if isinstance(envelope, Notification):
+                return self._notification(envelope)
+            if not isinstance(envelope, Request):
+                return (self._err(None, "INVALID_REQUEST"),)
+            return self._request(envelope)
+        except Exception:  # noqa: BLE001 -- every request gets a bounded diagnostic; the stream remains usable
+            _LOG.exception("IPC handler failed: %s", getattr(envelope, "method", "?"))
+            if isinstance(envelope, Notification):
+                return ()
+            request_id = envelope.id if isinstance(envelope, Request) else None
+            return (self._err(request_id, "INTERNAL_ERROR"),)
 
     def push_event(self, event: UiEvent, at: datetime) -> tuple[bytes, ...]:
         """Number the event and queue it, or send one backpressure resync."""
@@ -166,6 +182,14 @@ class Connection:
         self._queued += 1
         return (self._event(item),)
 
+    def admit(self, request_id: int) -> bool:
+        """Register work before it waits for a worker, so timeout cancellation can prevent side effects."""
+        with self._queue_lock:
+            if request_id in self._queued_requests or len(self._queued_requests) >= self._limits.max_inflight_requests:
+                return False
+            self._queued_requests.add(request_id)
+            return True
+
     def busy(self, request_id: int) -> bytes:
         """The refusal for a request the daemon has no room to run."""
         return self._err(request_id, "SERVER_BUSY")
@@ -175,6 +199,11 @@ class Connection:
         self._queued = 0
 
     def _request(self, request: Request) -> tuple[bytes, ...]:
+        with self._queue_lock:
+            self._queued_requests.discard(request.id)
+            if request.id in self._cancelled_requests:
+                self._cancelled_requests.discard(request.id)
+                return ()  # The cancellation response was already sent; do not execute queued work.
         if request.method == "initialize":
             return self._initialize(request)
         if not self.ready:
@@ -221,7 +250,7 @@ class Connection:
         if request.method in KNOWLEDGE_METHODS and self.knowledge is not None:
             return self._service(request, self.knowledge.dispatch)
         served = TAB_METHODS | SETTINGS_METHODS
-        if request.method == _SNAPSHOT or (self.tabs is not None and request.method in served):
+        if request.method in {_SNAPSHOT, "app/snapshotChunk"} or (self.tabs is not None and request.method in served):
             return self._tab(request)
         return (self._err(request.id, "METHOD_NOT_FOUND"),)
 
@@ -314,6 +343,8 @@ class Connection:
             return (self._err(request.id, "METHOD_NOT_FOUND"),)
         if request.method == _SNAPSHOT:
             return self._snapshot(request, tabs)
+        if request.method == "app/snapshotChunk":
+            return self._snapshot_chunk(request, tabs)
         try:
             result = tabs.dispatch(request.method, bytes(request.params))
         except TabRequestError as exc:
@@ -334,6 +365,19 @@ class Connection:
             _ = msgspec.json.decode(request.params, type=EmptyParams)
         except msgspec.DecodeError:
             return (self._err(request.id, "INVALID_PARAMS"),)
+        return (self._ok(request.id, self._snapshot_result(tabs)),)
+
+    def _snapshot_chunk(self, request: Request, tabs: TabService) -> tuple[bytes, ...]:
+        try:
+            query = msgspec.json.decode(request.params, type=SnapshotChunkParams)
+            result = self._snapshot_result(tabs) if query.cursor is None else None
+            return (self._ok(request.id, self._chunks.read(query, result)),)
+        except DomainError as exc:
+            return (self._err(request.id, exc.name),)
+        except msgspec.DecodeError, ValueError:
+            return (self._err(request.id, "INVALID_PARAMS"),)
+
+    def _snapshot_result(self, tabs: TabService) -> SnapshotResult:
         snapshot = tabs.snapshot()
         if self.approval_hold is not None and "approvals.inline" in self.capabilities:
             snapshot = msgspec.structs.replace(snapshot, approvals=self.approval_hold.pending_views())
@@ -341,8 +385,7 @@ class Connection:
             snapshot = msgspec.structs.replace(
                 snapshot, plans=self.knowledge.board.views(), vault_ok=self.knowledge.vault_ok(),
             )
-        result = SnapshotResult(snapshot=snapshot, seq=self.ring.current_seq)
-        return (self._ok(request.id, result),)
+        return SnapshotResult(snapshot=snapshot, seq=self.ring.current_seq)
 
     def _notification(self, note: Notification) -> tuple[bytes, ...]:
         if note.method.startswith(_SIDECAR_PREFIX):
@@ -355,7 +398,13 @@ class Connection:
             params = msgspec.json.decode(note.params, type=CancelParams)
         except msgspec.DecodeError:
             return ()
-        if params.id not in self.inflight:
+        with self._queue_lock:
+            queued = params.id in self._queued_requests
+            if queued:
+                if params.id in self._cancelled_requests:
+                    return ()
+                self._cancelled_requests.add(params.id)
+        if not queued and params.id not in self.inflight:
             return ()
         self.inflight.discard(params.id)
         return (self._err(params.id, "REQUEST_CANCELLED"),)
@@ -423,7 +472,11 @@ class Connection:
             return (self._err(request.id, "RESYNC_REQUIRED"),)
         self.subscribed = True
         frames = [self._ok(request.id, SubscribeResult(current_seq=self.ring.current_seq))]
-        frames.extend(self._event(item) for item in replay if self._visible(item))
+        for item in replay:
+            if self.paused:
+                break
+            if self._visible(item):
+                frames.append(self._event(item))
         self._queued += len(replay)
         return tuple(frames)
 
@@ -457,7 +510,16 @@ class Connection:
 
     def _event(self, item: EventEnvelope) -> bytes:
         note = Notification(method="$/event", params=msgspec.Raw(self._encoder.encode(item)))
-        return encode_line(self._encoder, note)
+        encoded = encode_line(self._encoder, note)
+        if len(encoded) <= self._limits.max_message_bytes + 1:
+            return encoded
+        self.paused = True
+        self._queued = 0
+        _LOG.warning("event %d exceeds the transport limit; requesting resync", item.seq)
+        replacement = EventEnvelope(seq=item.seq, at=item.at, event=ResyncRequired(reason="backpressure"))
+        return encode_line(self._encoder, Notification(
+            method="$/event", params=msgspec.Raw(self._encoder.encode(replacement)),
+        ))
 
 
 def _negotiate(low: ProtocolVersion, high: ProtocolVersion) -> ProtocolVersion | None:

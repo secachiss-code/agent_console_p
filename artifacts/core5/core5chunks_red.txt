@@ -1,0 +1,385 @@
+Collected 0 items to run in parallel
+FFFFFF                                                                   [100%]
+=================================== FAILURES ===================================
+_________ test_client_loads_a_large_utf8_snapshot_without_reconnecting _________
+
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-19/test_client_loads_a_large_utf80')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x24c932a8d50>
+
+    def test_client_loads_a_large_utf8_snapshot_without_reconnecting(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+        _inflate(monkeypatch)
+
+        async def scenario() -> None:
+            daemon = _daemon(tmp_path, serve_ingest=False)
+            daemon._frame_limit = 16 * 1024
+            serving = asyncio.create_task(daemon.serve())
+            ipc = await _connect(daemon.socket)
+            client = CoreClient(str(daemon.socket))
+            try:
+                _ = await client.connect()
+                snapshot, _ = await client.pull_snapshot()
+                assert snapshot.snapshot.agents[0].display_name == _LABEL
+                assert client.store.snapshot is not None
+                assert client.store.snapshot.agents[0].display_name == _LABEL
+                assert client.connects == 1
+                assert not client.store.reconnecting
+            finally:
+                await client.close()
+                await _stop(daemon, serving, ipc)
+>       asyncio.run(scenario())
+
+tests/core/test_snapshot_chunks.py:67:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+../../.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py:205: in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py:128: in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/base_events.py:724: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+tests/core/test_snapshot_chunks.py:58: in scenario
+    snapshot, _ = await client.pull_snapshot()
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/aconsole/ui/client/core_client.py:316: in pull_snapshot
+    snapshot = await self.request("app/snapshot", EmptyParams(), SnapshotResult)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <aconsole.ui.client.core_client.CoreClient object at 0x24c9370f610>
+method = 'app/snapshot', params = EmptyParams()
+result_type = <class 'aconsole.contracts.app.SnapshotResult'>
+
+    async def request[T: msgspec.Struct](
+        self,
+        method: str,
+        params: msgspec.Struct,
+        result_type: type[T],
+    ) -> T:
+        request_id = self._next_id
+        self._next_id += 1
+        loop = asyncio.get_running_loop()
+        future: asyncio.Future[Envelope] = loop.create_future()
+        self._pending[request_id] = future
+        timeout = self.timeout_for(method)
+        body = Request(
+            id=request_id,
+            method=method,
+            params=msgspec.Raw(msgspec.json.encode(params)),
+            timeout_ms=int(timeout * _MS_PER_S),
+        )
+        try:
+            await self._send(msgspec.json.encode(body) + b"\n")
+            envelope = await self._wait(future, request_id, method, timeout)
+        finally:
+            _ = self._pending.pop(request_id, None)
+            if future.done() and not future.cancelled():
+                _ = future.exception()
+            elif not future.done():
+                _ = future.cancel()
+        if isinstance(envelope, ResponseErr):
+>           raise CoreCallError(envelope.error)
+E           aconsole.ui.client.core_client.CoreCallError: The core could not do this (MESSAGE_TOO_LARGE). Details are in /tmp/pytest-of-root/pytest-19/state0/aconsole/core.log
+
+src/aconsole/ui/client/core_client.py:309: CoreCallError
+------------------------------ Captured log call -------------------------------
+WARNING  aconsole.core.bootstrap:bootstrap.py:1575 reply to app/snapshot is 96454 bytes, over the limit
+___________ test_chunks_are_frozen_bounded_and_reject_stale_cursors ____________
+
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-19/test_chunks_are_frozen_bounded0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x24c9c296e10>
+
+    def test_chunks_are_frozen_bounded_and_reject_stale_cursors(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+        _inflate(monkeypatch)
+
+        async def scenario() -> None:
+            daemon = _daemon(tmp_path, serve_ingest=False)
+            daemon._frame_limit = 16 * 1024
+            serving = asyncio.create_task(daemon.serve())
+            client = await _connect(daemon.socket)
+            try:
+                reply = await client.raw("app/snapshotChunk", _Query())
+                assert isinstance(reply, ResponseOk), reply
+                first = msgspec.json.decode(reply.result, type=_Chunk)
+                assert first.next_cursor is not None
+                data = bytearray(base64.b64decode(first.data, validate=True))
+                cursor = first.next_cursor
+                while cursor is not None:
+                    reply = await client.raw("app/snapshotChunk", _Query(cursor=cursor))
+                    assert isinstance(reply, ResponseOk), reply
+                    chunk = msgspec.json.decode(reply.result, type=_Chunk)
+                    assert chunk.seq == first.seq
+                    assert chunk.total_bytes == first.total_bytes
+                    raw = base64.b64decode(chunk.data, validate=True)
+                    assert 0 < len(raw) <= 1024
+                    data.extend(raw)
+                    assert len(data) <= first.total_bytes
+                    assert chunk.next_cursor != cursor
+                    cursor = chunk.next_cursor
+                assert len(data) == first.total_bytes
+                snapshot = msgspec.json.decode(data, type=AppSnapshot)
+                assert snapshot.agents[0].display_name == _LABEL
+                refused = await client.raw("app/snapshotChunk", _Query(cursor=first.next_cursor))
+                assert isinstance(refused, ResponseErr)
+                assert refused.error.message == "RESYNC_REQUIRED"
+            finally:
+                await _stop(daemon, serving, client)
+>       asyncio.run(scenario())
+
+tests/core/test_snapshot_chunks.py:105:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+../../.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py:205: in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py:128: in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/base_events.py:724: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    async def scenario() -> None:
+        daemon = _daemon(tmp_path, serve_ingest=False)
+        daemon._frame_limit = 16 * 1024
+        serving = asyncio.create_task(daemon.serve())
+        client = await _connect(daemon.socket)
+        try:
+            reply = await client.raw("app/snapshotChunk", _Query())
+>           assert isinstance(reply, ResponseOk), reply
+E           AssertionError: ResponseErr(jsonrpc='2.0', id=2, error=ErrorObject(code=-32601, message='METHOD_NOT_FOUND', data=ErrorData(reason='MET...sole.ipc', retryable=False, user_message_key='error.method_not_found', user_message_args={}, hint=None, details=None)))
+E           assert False
+E            +  where False = isinstance(ResponseErr(jsonrpc='2.0', id=2, error=ErrorObject(code=-32601, message='METHOD_NOT_FOUND', data=ErrorData(reason='MET...sole.ipc', retryable=False, user_message_key='error.method_not_found', user_message_args={}, hint=None, details=None))), ResponseOk)
+
+tests/core/test_snapshot_chunks.py:80: AssertionError
+___________ test_invalid_chunk_limits_do_not_close_the_connection[0] ___________
+
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-19/test_invalid_chunk_limits_do_n0')
+limit = 0
+
+    @pytest.mark.parametrize("limit", [0, -1, 1048577])
+    def test_invalid_chunk_limits_do_not_close_the_connection(tmp_path: Path, limit: int) -> None:
+        async def scenario() -> None:
+            daemon = _daemon(tmp_path, serve_ingest=False)
+            serving = asyncio.create_task(daemon.serve())
+            client = await _connect(daemon.socket)
+            try:
+                answer = await client.raw("app/snapshotChunk", _Query(max_bytes=limit))
+                assert isinstance(answer, ResponseErr)
+                assert answer.error.message == "INVALID_PARAMS"
+                assert (await client.snapshot()).api_version
+            finally:
+                await _stop(daemon, serving, client)
+>       asyncio.run(scenario())
+
+tests/core/test_snapshot_chunks.py:121:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+../../.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py:205: in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py:128: in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/base_events.py:724: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    async def scenario() -> None:
+        daemon = _daemon(tmp_path, serve_ingest=False)
+        serving = asyncio.create_task(daemon.serve())
+        client = await _connect(daemon.socket)
+        try:
+            answer = await client.raw("app/snapshotChunk", _Query(max_bytes=limit))
+            assert isinstance(answer, ResponseErr)
+>           assert answer.error.message == "INVALID_PARAMS"
+E           AssertionError: assert 'METHOD_NOT_FOUND' == 'INVALID_PARAMS'
+E
+E             - INVALID_PARAMS
+E             + METHOD_NOT_FOUND
+
+tests/core/test_snapshot_chunks.py:117: AssertionError
+__________ test_invalid_chunk_limits_do_not_close_the_connection[-1] ___________
+
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-19/test_invalid_chunk_limits_do_n1')
+limit = -1
+
+    @pytest.mark.parametrize("limit", [0, -1, 1048577])
+    def test_invalid_chunk_limits_do_not_close_the_connection(tmp_path: Path, limit: int) -> None:
+        async def scenario() -> None:
+            daemon = _daemon(tmp_path, serve_ingest=False)
+            serving = asyncio.create_task(daemon.serve())
+            client = await _connect(daemon.socket)
+            try:
+                answer = await client.raw("app/snapshotChunk", _Query(max_bytes=limit))
+                assert isinstance(answer, ResponseErr)
+                assert answer.error.message == "INVALID_PARAMS"
+                assert (await client.snapshot()).api_version
+            finally:
+                await _stop(daemon, serving, client)
+>       asyncio.run(scenario())
+
+tests/core/test_snapshot_chunks.py:121:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+../../.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py:205: in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py:128: in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/base_events.py:724: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    async def scenario() -> None:
+        daemon = _daemon(tmp_path, serve_ingest=False)
+        serving = asyncio.create_task(daemon.serve())
+        client = await _connect(daemon.socket)
+        try:
+            answer = await client.raw("app/snapshotChunk", _Query(max_bytes=limit))
+            assert isinstance(answer, ResponseErr)
+>           assert answer.error.message == "INVALID_PARAMS"
+E           AssertionError: assert 'METHOD_NOT_FOUND' == 'INVALID_PARAMS'
+E
+E             - INVALID_PARAMS
+E             + METHOD_NOT_FOUND
+
+tests/core/test_snapshot_chunks.py:117: AssertionError
+________ test_invalid_chunk_limits_do_not_close_the_connection[1048577] ________
+
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-19/test_invalid_chunk_limits_do_n2')
+limit = 1048577
+
+    @pytest.mark.parametrize("limit", [0, -1, 1048577])
+    def test_invalid_chunk_limits_do_not_close_the_connection(tmp_path: Path, limit: int) -> None:
+        async def scenario() -> None:
+            daemon = _daemon(tmp_path, serve_ingest=False)
+            serving = asyncio.create_task(daemon.serve())
+            client = await _connect(daemon.socket)
+            try:
+                answer = await client.raw("app/snapshotChunk", _Query(max_bytes=limit))
+                assert isinstance(answer, ResponseErr)
+                assert answer.error.message == "INVALID_PARAMS"
+                assert (await client.snapshot()).api_version
+            finally:
+                await _stop(daemon, serving, client)
+>       asyncio.run(scenario())
+
+tests/core/test_snapshot_chunks.py:121:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+../../.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py:205: in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py:128: in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/base_events.py:724: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    async def scenario() -> None:
+        daemon = _daemon(tmp_path, serve_ingest=False)
+        serving = asyncio.create_task(daemon.serve())
+        client = await _connect(daemon.socket)
+        try:
+            answer = await client.raw("app/snapshotChunk", _Query(max_bytes=limit))
+            assert isinstance(answer, ResponseErr)
+>           assert answer.error.message == "INVALID_PARAMS"
+E           AssertionError: assert 'METHOD_NOT_FOUND' == 'INVALID_PARAMS'
+E
+E             - INVALID_PARAMS
+E             + METHOD_NOT_FOUND
+
+tests/core/test_snapshot_chunks.py:117: AssertionError
+_____________ test_client_timeout_cancels_a_queued_settings_write ______________
+
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-19/test_client_timeout_cancels_a_0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x24c9c339a10>
+
+    def test_client_timeout_cancels_a_queued_settings_write(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+        async def scenario() -> None:
+            async with _running(tmp_path, monkeypatch) as core:
+                client = CoreClient(str(core.daemon.socket))
+                entered, release = threading.Event(), threading.Event()
+
+                def delayed(_self: SetupService) -> ChecksResult:
+                    entered.set()
+                    _ = release.wait(2)
+                    return ChecksResult(checks=())
+
+                monkeypatch.setattr(SetupService, "checks", delayed)
+                _ = await client.connect()
+                settings = await core.client.call("settings/get", EmptyParams(), Settings)
+                checking = asyncio.create_task(core.client.call("setup/checks", EmptyParams(), ChecksResult))
+                try:
+                    assert await asyncio.to_thread(entered.wait, 3)
+                    client.timeout_s = 0.05
+                    before = time.perf_counter()
+                    with pytest.raises(CoreCallError) as error:
+                        _ = await client.request("settings/update", SettingsUpdateParams(
+                            rev=settings.rev, patch=SettingsPatch(approvals_mode="native"),
+                        ), Settings)
+                    assert error.value.error.message == "REQUEST_CANCELLED"
+                    assert time.perf_counter() - before < 0.5
+                    release.set()
+                    await checking
+                    current = await core.client.call("settings/get", EmptyParams(), Settings)
+                    assert current.rev == settings.rev
+                    assert current.approvals_mode == settings.approvals_mode
+                finally:
+                    release.set()
+                    await checking
+                    await client.close()
+>       asyncio.run(scenario())
+
+tests/core/test_queued_cancellation.py:56:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+../../.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py:205: in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py:128: in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/base_events.py:724: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+tests/core/test_queued_cancellation.py:42: in scenario
+    _ = await client.request("settings/update", SettingsUpdateParams(
+src/aconsole/ui/client/core_client.py:301: in request
+    envelope = await self._wait(future, request_id, method, timeout)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <aconsole.ui.client.core_client.CoreClient object at 0x24c93d544d0>
+future = <Future cancelled>, request_id = 2, method = 'settings/update'
+limit_s = 0.05
+
+    async def _wait(
+        self,
+        future: asyncio.Future[Envelope],
+        request_id: int,
+        method: str,
+        limit_s: float,
+    ) -> Envelope:
+        try:
+            return await asyncio.wait_for(asyncio.shield(future), limit_s)
+        except TimeoutError:
+            await self._send(_cancel_frame(request_id))
+            try:
+                return await asyncio.wait_for(future, _CANCEL_GRACE_S)
+            except TimeoutError:
+                _ = self._pending.pop(request_id, None)
+>               raise CoreTimeoutError(method) from None
+E               aconsole.ui.client.core_client.CoreTimeoutError: settings/update
+
+src/aconsole/ui/client/core_client.py:355: CoreTimeoutError
+=========================== short test summary info ============================
+FAILED tests/core/test_snapshot_chunks.py::test_client_loads_a_large_utf8_snapshot_without_reconnecting
+FAILED tests/core/test_snapshot_chunks.py::test_chunks_are_frozen_bounded_and_reject_stale_cursors
+FAILED tests/core/test_snapshot_chunks.py::test_invalid_chunk_limits_do_not_close_the_connection[0]
+FAILED tests/core/test_snapshot_chunks.py::test_invalid_chunk_limits_do_not_close_the_connection[-1]
+FAILED tests/core/test_snapshot_chunks.py::test_invalid_chunk_limits_do_not_close_the_connection[1048577]
+FAILED tests/core/test_queued_cancellation.py::test_client_timeout_cancels_a_queued_settings_write

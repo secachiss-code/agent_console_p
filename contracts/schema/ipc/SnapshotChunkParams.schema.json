@@ -1,0 +1,31 @@
+{
+  "$defs": {
+    "SnapshotChunkParams": {
+      "properties": {
+        "cursor": {
+          "anyOf": [
+            {
+              "maxLength": 128,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "max_bytes": {
+          "default": 1048576,
+          "maximum": 1048576,
+          "minimum": 1,
+          "type": "integer"
+        }
+      },
+      "required": [],
+      "title": "SnapshotChunkParams",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/SnapshotChunkParams",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

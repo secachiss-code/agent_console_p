@@ -234,6 +234,18 @@ class EmptyResult(msgspec.Struct, frozen=True, kw_only=True):
     pass
 
 
+class SnapshotChunkParams(msgspec.Struct, frozen=True, kw_only=True):
+    cursor: Annotated[str, msgspec.Meta(max_length=128)] | None = None
+    max_bytes: Annotated[int, msgspec.Meta(ge=1, le=1048576)] = 1048576
+
+
+class SnapshotChunkResult(msgspec.Struct, frozen=True, kw_only=True):
+    data: str
+    next_cursor: str | None
+    seq: int
+    total_bytes: int
+
+
 class SnapshotResult(msgspec.Struct, frozen=True, kw_only=True):
     snapshot: AppSnapshot
     seq: int

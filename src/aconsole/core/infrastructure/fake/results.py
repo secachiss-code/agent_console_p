@@ -1,5 +1,7 @@
 """One sample of every METHODS result, so the fake answers with the real type."""
 
+import base64
+
 import msgspec
 
 from aconsole.contracts.app import (
@@ -22,6 +24,7 @@ from aconsole.contracts.app import (
     RestorePreviewResult,
     RestoreResult,
     SessionListResult,
+    SnapshotChunkResult,
     SnapshotResult,
     SubscribeResult,
 )
@@ -150,6 +153,10 @@ def _samples() -> dict[str, msgspec.Struct]:
         ),
         "shutdown": empty,
         "app/snapshot": SnapshotResult(snapshot=snap, seq=0),
+        "app/snapshotChunk": SnapshotChunkResult(
+            data=base64.b64encode(msgspec.json.encode(snap)).decode("ascii"),
+            next_cursor=None, seq=0, total_bytes=len(msgspec.json.encode(snap)),
+        ),
         "events/subscribe": SubscribeResult(current_seq=0),
         "events/unsubscribe": empty,
         "project/add": project,

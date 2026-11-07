@@ -11,7 +11,14 @@ from pathlib import Path
 import msgspec
 
 from aconsole.contracts import API_VERSION
-from aconsole.contracts.app import EmptyParams, SnapshotResult, SubscribeParams, SubscribeResult
+from aconsole.contracts.app import (
+    EmptyParams,
+    SnapshotChunkParams,
+    SnapshotChunkResult,
+    SnapshotResult,
+    SubscribeParams,
+    SubscribeResult,
+)
 from aconsole.contracts.common import ClientRole
 from aconsole.contracts.errors import ErrorData, ErrorObject, ProtocolVersionUnsupportedDetails, error_by_name
 from aconsole.contracts.ipc import (
@@ -29,6 +36,7 @@ from aconsole.contracts.ipc import (
 )
 from aconsole.contracts.methods import method_by_name
 from aconsole.ui.client.error_text import core_log_path, error_text
+from aconsole.ui.client.snapshot_chunks import MAX_SNAPSHOT_CHUNKS, SnapshotAssembly
 from aconsole.ui.client.store import CoreStore
 
 _LOG = logging.getLogger(__name__)
@@ -51,6 +59,7 @@ _UI_CAPABILITIES = frozenset(
         "diff.v1",
         "checkpoints.v1",
         "work_sessions.v1",
+        "snapshot.chunks.v1",
     }
 )
 
@@ -144,6 +153,7 @@ class CoreClient:
         self.connects = 0
         self.resyncs = 0
         self.resync_count = 0
+        self._snapshot_chunks: bool = False
         self._reader = None
         self._writer = None
         self._pending = {}
@@ -312,8 +322,24 @@ class CoreClient:
             raise ConnectionError(message)
         return msgspec.json.decode(envelope.result, type=result_type)
 
+    async def _load_snapshot(self) -> SnapshotResult:
+        try:
+            return await self.request("app/snapshot", EmptyParams(), SnapshotResult)
+        except CoreCallError as exc:
+            if exc.error.message != "MESSAGE_TOO_LARGE" or not self._snapshot_chunks:
+                raise
+        assembly = SnapshotAssembly()
+        for _ in range(MAX_SNAPSHOT_CHUNKS):
+            chunk = await self.request(
+                "app/snapshotChunk", SnapshotChunkParams(cursor=assembly.cursor), SnapshotChunkResult,
+            )
+            if assembly.add(chunk):
+                return assembly.finish()
+        message = "too many snapshot chunks"
+        raise ConnectionError(message)
+
     async def pull_snapshot(self) -> tuple[SnapshotResult, SubscribeResult]:
-        snapshot = await self.request("app/snapshot", EmptyParams(), SnapshotResult)
+        snapshot = await self._load_snapshot()
         self.store.apply_snapshot(snapshot.snapshot, snapshot.seq)
         subscribed = await self.request(
             "events/subscribe",
@@ -375,6 +401,7 @@ class CoreClient:
                     details=ProtocolVersionUnsupportedDetails(supported=("work_sessions.v1",)),
                 ),
             ))
+        self._snapshot_chunks = "snapshot.chunks.v1" in result.capabilities
         note = Notification(method="initialized", params=msgspec.Raw(b"{}"))
         await self._send(msgspec.json.encode(note) + b"\n")
         return result
