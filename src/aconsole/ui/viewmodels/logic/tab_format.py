@@ -30,6 +30,7 @@ class TabPresentation:
     spinning: bool
     attention: bool
     waiting_minutes: int | None
+    status_note: str = ""
 
 
 def session_cost(tab: TabView) -> str:
@@ -56,4 +57,5 @@ def format_tab(tab: TabView, _accounts: tuple[AccountView, ...], now: datetime) 
             max(0, int((now - tab.status_since).total_seconds()) // 60)
             if tab.status in (TabStatus.WAITING_APPROVAL, TabStatus.WAITING_INPUT) else None
         ),
+        status_note="tabs.status.answer_in_terminal" if tab.status_detail == "ANSWER_IN_TERMINAL" else "",
     )

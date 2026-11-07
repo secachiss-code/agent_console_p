@@ -58,6 +58,10 @@ _MESSAGES = {
     "tabs.status.idle": ("Idle", "Свободен"),
     "tabs.status.working": ("Working", "Работает"),
     "tabs.status.waiting_approval": ("Waiting for approval", "Ждёт подтверждения"),
+    "tabs.status.answer_in_terminal": (
+        "Answer in the terminal. There is no approval card for this request.",
+        "Ответьте в терминале. Карточки согласования для этого запроса нет.",
+    ),
     "tabs.status.waiting_input": ("Waiting for input", "Ждёт ввода"),
     "tabs.status.error": ("Error", "Ошибка"),
     "tabs.status.exited": ("Finished", "Завершён"),

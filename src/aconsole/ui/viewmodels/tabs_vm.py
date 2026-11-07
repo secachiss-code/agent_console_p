@@ -46,6 +46,7 @@ class TabItem(GObject.Object):
     spinning: object = gproperty(bool, False)  # noqa: FBT003 -- GObject property default is positional
     attention: object = gproperty(bool, False)  # noqa: FBT003 -- GObject property default is positional
     waiting_minutes: object = gproperty(int, -1)
+    status_note: object = gproperty(str, "")
     git_line: object = gproperty(str, "")
     git_warning: object = gproperty(bool, False)  # noqa: FBT003 -- GObject property default is positional
 
@@ -63,6 +64,7 @@ class TabItem(GObject.Object):
             ("status-code", tab.status.value),
             ("spinning", display.spinning), ("attention", display.attention),
             ("waiting-minutes", display.waiting_minutes if display.waiting_minutes is not None else -1),
+            ("status-note", display.status_note),
         )
         for name, value in values:
             if self.get_property(name) != value:

@@ -215,6 +215,9 @@ class TabRow(Gtk.Box):
         self.close_button.set_tooltip_text(translate("tabs.close"))
         self.status_label.set_label("")
         status = translate(f"tabs.status.{item.status_code or 'unknown'}")
+        note = str(item.status_note)
+        if note:
+            status = f"{status}. {translate(note)}"
         if self._status_class is not None:
             self.status_label.remove_css_class(self._status_class)
         self._status_class = f"ac-status-{item.status_code or 'unknown'}"

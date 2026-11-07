@@ -57,6 +57,7 @@ def test_codex_waits_for_the_user_until_new_lines_appear() -> None:
     assert status() is TabStatus.WORKING
     service.agent_notice(str(opened.id), "Approval requested: rm -rf build")
     assert status() is TabStatus.WAITING_APPROVAL
+    assert service.snapshot().tabs[0].status_detail == "ANSWER_IN_TERMINAL"
     service.codex_turn(cwd, working=True)
     assert status() is TabStatus.WAITING_APPROVAL, "lines written right after asking do not end the wait"
     service._clock = FrozenClock(start + timedelta(seconds=3))  # pyright: ignore[reportPrivateUsage]
