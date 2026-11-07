@@ -69,6 +69,19 @@ class _ClipboardApp(AConsoleApp):
 
             page.clipboard.prepare = prepare
             clipboard = page.get_clipboard()
+            if self.mode == "copy":
+                clipboard.set("previous clipboard content")
+                page.terminal.feed(b"copy shortcut sentinel\r\n")
+                await asyncio.sleep(0.1)
+                page.terminal.select_all()
+                assert page.terminal.get_has_selection()
+                keyboard.press(Gdk.KEY_c, control=True, shift=True)
+                await asyncio.sleep(0.1)
+                copied = await asyncio.wait_for(page.clipboard._text(clipboard), timeout=2)
+                assert copied is not None
+                assert "copy shortcut sentinel" in copied
+                assert self.received == b""
+                return
             texture = Gdk.Texture.new_from_bytes(GLib.Bytes.new(png()))
             if self.mode in {"image", "cancel"}:
                 clipboard.set(texture)
@@ -130,7 +143,7 @@ class _ClipboardApp(AConsoleApp):
             self.quit()
 
 
-@pytest.mark.parametrize("mode", ["text", "image", "mixed", "empty", "cancel"])
+@pytest.mark.parametrize("mode", ["text", "image", "mixed", "empty", "cancel", "copy"])
 def test_real_clipboard_shortcuts(running_app: str, tmp_path: Path, mode: str) -> None:
     app = _ClipboardApp(CoreClient(running_app), tmp_path, mode)
     assert run_app(lambda: app, ["aconsole-test-clipboard"]) == 0

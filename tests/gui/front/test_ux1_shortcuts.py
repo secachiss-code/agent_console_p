@@ -8,14 +8,18 @@ from types import SimpleNamespace
 from typing import TYPE_CHECKING
 
 import gi
+import pytest
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
 gi.require_version("Vte", "3.91")
 from gi.repository import GLib, Gtk, Vte  # noqa: E402
 
-from aconsole.ui.viewmodels.logic.keymap import DEFAULT_BINDINGS  # noqa: E402
+from aconsole.ui.client.core_client import CoreClient  # noqa: E402
+from aconsole.ui.viewmodels.app_vm import AppViewModel  # noqa: E402
+from aconsole.ui.viewmodels.logic.keymap import DEFAULT_BINDINGS, BindingSpec  # noqa: E402
 from aconsole.ui.views import window as window_module  # noqa: E402
+from aconsole.ui.views.shortcuts import ShortcutManager  # noqa: E402
 from aconsole.ui.views.shortcuts_dialog import ACTION_TITLES  # noqa: E402
 from aconsole.ui.views.terminal.search import TerminalSearchBar  # noqa: E402
 from aconsole.ui.views.window import MainWindow  # noqa: E402
@@ -53,6 +57,21 @@ def test_an_action_unknown_to_the_window_takes_no_key() -> None:
     stub = _Stub()
     stub.action_handlers = dict  # type: ignore[method-assign]
     assert MainWindow._handle_action(stub, "palette") is False  # type: ignore[arg-type]
+
+
+@pytest.mark.parametrize("handled", [False, True])
+def test_capture_callback_returns_whether_the_action_was_handled(*, handled: bool) -> None:
+    viewmodel = AppViewModel(CoreClient("unused"))
+    if handled:
+        viewmodel.action_handler = lambda _action: True
+    window = Gtk.Window()
+    manager = ShortcutManager(window, viewmodel)
+    try:
+        action = manager._make_action(BindingSpec("palette", ("<Control><Shift>p",)))
+        assert action.activate(Gtk.ShortcutActionFlags.EXCLUSIVE, window, None) is handled
+    finally:
+        manager.close()
+        window.destroy()
 
 
 def test_handlers_named_in_the_table_exist_on_the_window() -> None:
