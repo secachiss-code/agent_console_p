@@ -45,8 +45,8 @@ class _Bell:
         self.withdrawn: list[str] = []
         self.alerts: ApprovalAlerts = ApprovalAlerts(self.posted.append, self.withdrawn.append)
 
-    def see(self, *views: ApprovalView, active: bool = False) -> None:
-        self.alerts.update(views, {"tab-first": "One"}, window_active=active)
+    def see(self, *views: ApprovalView, active: bool = False, selected: TabId | None = _FIRST) -> None:
+        self.alerts.update(views, {"tab-first": "One"}, window_active=active, active_tab_id=selected)
 
 
 def test_a_request_in_an_inactive_window_rings_once_with_the_tab() -> None:
@@ -61,6 +61,29 @@ def test_an_active_window_does_not_ring() -> None:
     bell = _Bell()
     bell.see(_request(_FIRST), active=True)
     assert bell.posted == []
+
+
+def test_an_inactive_tab_rings_in_an_active_window() -> None:
+    bell = _Bell()
+    bell.see(_request(_FIRST), _request(_SECOND), active=True)
+    assert [alert.tab_id for alert in bell.posted] == [_SECOND]
+    bell.see(_request(_FIRST), _request(_SECOND), active=True)
+    assert len(bell.posted) == 1
+
+
+def test_switching_to_a_notified_tab_withdraws_without_repeating_its_episode() -> None:
+    bell = _Bell()
+    bell.see(_request(_SECOND), active=True)
+    bell.see(_request(_SECOND), active=True, selected=_SECOND)
+    assert bell.withdrawn == [bell.posted[0].id]
+    bell.see(_request(_SECOND), active=True)
+    assert len(bell.posted) == 1
+
+
+def test_an_active_window_without_a_selected_tab_does_not_hide_requests() -> None:
+    bell = _Bell()
+    bell.see(_request(_FIRST), active=True, selected=None)
+    assert [alert.tab_id for alert in bell.posted] == [_FIRST]
 
 
 def test_a_decision_withdraws_and_the_next_request_is_a_new_episode() -> None:
@@ -194,6 +217,24 @@ class _WindowApp(AConsoleApp):
         selected = window.selection.get_selected_item()
         assert selected is not None
         assert str(selected.tab_id) == str(tab)
+        # A new request in a different tab must ring even while the window is active.
+        other_index = next(
+            index for index in range(window.selection.get_n_items())
+            if getattr(window.selection.get_item(index), "tab_id", None) != tab
+        )
+        window.selection.set_selected(other_index)
+        window.is_active = lambda: True  # type: ignore[method-assign]
+        before = len(self.sent)
+        view = next(view for view in snapshot.approvals if view.tab_id == tab)
+        store.apply_snapshot(msgspec.structs.replace(snapshot, approvals=(view,)), store.seq + 1)
+        assert len(self.sent) == before + 1
+        other_tab_alert = self.sent[-1]
+        window._sync_approvals(store)
+        assert len(self.sent) == before + 1
+        self.activate_action(OPEN_APPROVAL_ACTION, GLib.Variant("s", str(tab)))
+        await asyncio.sleep(0.05)
+        assert other_tab_alert in self.gone
+        assert len(self.sent) == before + 1
 
 
 @pytest.mark.parametrize("core", ["waiting"], indirect=True)

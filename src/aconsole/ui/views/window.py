@@ -766,10 +766,12 @@ class MainWindow(Adw.ApplicationWindow):
                 titles,
                 TabId(str(selected.tab_id)) if isinstance(selected, TabItem) else None,
             )
-            if not self._snapshot_mode:
-                # While the window is still opening it is not yet active, and nobody has left it.
-                seen = self.is_active() or not self.get_mapped()
-                self.approval_alerts.update(snapshot.approvals, titles, window_active=seen)
+            if not self._snapshot_mode and self.get_mapped():
+                # Before mapping there is no user-visible selection to notify about.
+                self.approval_alerts.update(
+                    snapshot.approvals, titles, window_active=self.is_active(),
+                    active_tab_id=TabId(str(selected.tab_id)) if isinstance(selected, TabItem) else None,
+                )
 
     def _activity_changed(self, _object: object, _property: object) -> None:
         self._sync_approvals(self.tabs.client.store)

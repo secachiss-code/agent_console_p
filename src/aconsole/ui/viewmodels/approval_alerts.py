@@ -1,7 +1,7 @@
 """When a request for a decision reaches the system's notifications. No GTK here.
 
 An episode is the time a tab has at least one open request. It gets one notification at most: more
-requests in the same episode do not ring again. A person who comes back to the window sees the card,
+requests in the same episode do not ring again. A person who comes back to the tab in an active window sees the card,
 so the notification goes away and the episode does not ring again either.
 """
 
@@ -37,7 +37,10 @@ class ApprovalAlerts:
         self._episodes: dict[TabId, _Episode] = {}
         self._count: int = 0
 
-    def update(self, approvals: tuple[ApprovalView, ...], titles: Mapping[str, str], *, window_active: bool) -> None:
+    def update(
+        self, approvals: tuple[ApprovalView, ...], titles: Mapping[str, str], *,
+        window_active: bool, active_tab_id: TabId | None = None,
+    ) -> None:
         first: dict[TabId, ApprovalView] = {}
         for view in approvals:
             _ = first.setdefault(view.tab_id, view)
@@ -45,7 +48,7 @@ class ApprovalAlerts:
             self._hide(self._episodes.pop(tab_id))
         for tab_id, view in first.items():
             episode = self._episodes.get(tab_id) or self._begin(tab_id)
-            if window_active:
+            if window_active and tab_id == active_tab_id:
                 self._hide(episode)
                 continue
             if not episode.rang:
