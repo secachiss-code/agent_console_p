@@ -443,7 +443,7 @@ class PlanBoard:
                     at=now,
                     tab_id=_HUMAN_TAB if target is NodeStatus.IN_PROGRESS else None,
                     fence=stored.dag.get(meta.key).fence if stored.dag.get(meta.key).lease_expires_at else None,
-                    evidence=note,
+                    evidence=note if target is not NodeStatus.PENDING else None,
                     note=note,
                 )
             )

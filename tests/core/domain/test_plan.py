@@ -43,6 +43,7 @@ SPEC: dict[NodeStatus, dict[NodeStatus, str]] = {
     NodeStatus.VERIFYING: {
         NodeStatus.IN_PROGRESS: BOTH,
         NodeStatus.DONE: HUMAN,
+        NodeStatus.PENDING: HUMAN,
         NodeStatus.FAILED: BOTH,
         NodeStatus.CANCELLED: HUMAN,
     },

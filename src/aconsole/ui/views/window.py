@@ -375,24 +375,22 @@ class MainWindow(Adw.ApplicationWindow):
             self.content_view.set_content(self.plan_page)
 
     def _decide_node(self, node_id: NodeId, accept: bool) -> None:  # noqa: FBT001 -- the plan page's callback
-        _ = spawn_task(self._set_node_decision(node_id, accept=accept))
+        _ = spawn_task(self._set_node_decision(node_id, accept=accept, page=self.plan_page))
 
-    async def _set_node_decision(self, node_id: NodeId, *, accept: bool) -> None:
-        """Accepting ends the node. Sending back puts it in the queue again, through the one step the board allows."""
-        moves = (
-            ((NodeStatus.DONE, None),)
-            if accept
-            else ((NodeStatus.FAILED, translate("plan.sent_back_note")), (NodeStatus.PENDING, None))
-        )
+    async def _set_node_decision(self, node_id: NodeId, *, accept: bool, page: PlanGraph | None = None) -> None:
+        """One human decision is one persisted transition, including returning work to the queue."""
+        page = self.plan_page if page is None else page
+        status = NodeStatus.DONE if accept else NodeStatus.PENDING
+        note = None if accept else translate("plan.sent_back_note")
         try:
-            for status, note in moves:
-                _ = await self.tabs.client.request(
-                    "plan/setNodeStatus", SetNodeStatusParams(node_id=node_id, status=status, note=note), PlanNodeView,
-                )
+            _ = await self.tabs.client.request(
+                "plan/setNodeStatus", SetNodeStatusParams(node_id=node_id, status=status, note=note), PlanNodeView,
+            )
         except Exception as error:  # noqa: BLE001 -- a refusal stays visible; the node stays as the core keeps it
             self._tab_error(translate("plan.decision_error").format(error=error))
-            if self.plan_page is not None:
-                self.plan_page.decision_failed()
+        finally:
+            if page is not None:
+                page.decision_finished(node_id)
 
     def _close_plan(self) -> None:
         self._show_selected_terminal()

@@ -1,0 +1,29 @@
+{
+  "node": "UX-7",
+  "base": "eb1fd523788bc6cc4e9537dc0b89d98378090343",
+  "core_targeted_and_contracts": {
+    "passed": 111,
+    "failed": 0,
+    "seconds": 14.23
+  },
+  "gtk": {
+    "passed": 42,
+    "failed": 0,
+    "seconds": 10.54,
+    "warnings": 5
+  },
+  "basedpyright": {
+    "errors": 0,
+    "warnings": 0
+  },
+  "ruff": "PASS",
+  "diff_check": "PASS",
+  "screenshots_reviewed": 9,
+  "policy": "PLAN-3/kb-127 checked completion preserved; manual policy rejects MCP agent done and direct send-back",
+  "limits": [
+    "Full common core suite not rerun for this node",
+    "One existing test client teardown unraisable warning observed",
+    "No user plan review performed; only temporary daemon/test state",
+    "docs/design/DESIGN.md absent"
+  ]
+}

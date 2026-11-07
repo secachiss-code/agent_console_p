@@ -97,6 +97,7 @@ _RULES: dict[tuple[NodeStatus, NodeStatus], _Rule] = {
     (NodeStatus.IN_PROGRESS, NodeStatus.CANCELLED): _human(),
     (NodeStatus.VERIFYING, NodeStatus.IN_PROGRESS): _both(),
     (NodeStatus.VERIFYING, NodeStatus.DONE): _human(),
+    (NodeStatus.VERIFYING, NodeStatus.PENDING): _human(),
     (NodeStatus.VERIFYING, NodeStatus.FAILED): _both(),
     (NodeStatus.VERIFYING, NodeStatus.CANCELLED): _human(),
     (NodeStatus.BLOCKED, NodeStatus.PENDING): _both(),

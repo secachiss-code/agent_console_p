@@ -41,6 +41,7 @@ class PlanGraph(Gtk.Box):
         self._on_decide: Callable[[NodeId, bool], None] | None = on_decide
         self._hovered: NodeId | None = None
         self._selected: NodeId | None = None
+        self._pending_decisions: set[NodeId] = set()
         self._nodes: dict[NodeId, PlanNodeView] = {node.id: node for node in shown_nodes(plan.nodes)}
         self._positions: dict[NodeId, PlanNodePosition] = {
             position.node_id: position for position in layout_plan(tuple(self._nodes.values()))
@@ -134,10 +135,14 @@ class PlanGraph(Gtk.Box):
         scroll = Gtk.ScrolledWindow(hexpand=True, vexpand=True)
         scroll.set_child(overlay)
         self.append(scroll)
-        self.append(self._build_details())
+        # Review stays beside the heading, above the window's bottom approval overlay.
+        self.insert_child_after(self._build_details(), self.get_first_child())
 
     def _build_details(self) -> Gtk.Box:
-        self.details_label: Gtk.Label = Gtk.Label(label=translate("plan.select_node"), xalign=0, yalign=0, wrap=True)
+        self.details_label: Gtk.Label = Gtk.Label(
+            label=translate("plan.select_node"), xalign=0, yalign=0, wrap=True,
+            wrap_mode=Pango.WrapMode.WORD_CHAR, selectable=True,
+        )
         self.details_label.add_css_class("ac-plan-details-text")
         self.details_label.set_hexpand(True)
         # A fixed height: hovering a node never moves the graph, and a long report scrolls by itself.
@@ -187,15 +192,26 @@ class PlanGraph(Gtk.Box):
 
     def _decide(self, _button: Gtk.Button, accept: bool) -> None:  # noqa: FBT001 -- a GObject signal argument
         node = self._nodes.get(self._selected) if self._selected is not None else None
-        if node is not None and node.status is NodeStatus.VERIFYING and self._on_decide is not None:
+        if (node is not None and node.status is NodeStatus.VERIFYING and
+                node.id not in self._pending_decisions and self._on_decide is not None):
+            self._pending_decisions.add(node.id)
             self.accept_button.set_sensitive(False)
             self.send_back_button.set_sensitive(False)
             self._on_decide(node.id, accept)
 
     def decision_failed(self) -> None:
         """The core refused: the node is as it was, so the buttons work again."""
-        self.accept_button.set_sensitive(True)
-        self.send_back_button.set_sensitive(True)
+        if self._selected is not None:
+            self.decision_finished(self._selected)
+
+    def decision_finished(self, node_id: NodeId) -> None:
+        self._pending_decisions.discard(node_id)
+        self._sync_decision_buttons()
+
+    def _sync_decision_buttons(self) -> None:
+        enabled = self._selected not in self._pending_decisions
+        self.accept_button.set_sensitive(enabled)
+        self.send_back_button.set_sensitive(enabled)
 
     def set_hovered(self, node_id: NodeId | None) -> None:
         node = self._nodes.get(node_id) if node_id is not None else None
@@ -217,6 +233,7 @@ class PlanGraph(Gtk.Box):
         deciding = selected is not None and selected.status is NodeStatus.VERIFYING and self._on_decide is not None
         self.accept_button.set_visible(deciding)
         self.send_back_button.set_visible(deciding)
+        self._sync_decision_buttons()
         if selected is None:
             self.details_label.set_label(translate("plan.select_node"))
         else:
