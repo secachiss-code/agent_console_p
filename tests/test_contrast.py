@@ -87,3 +87,22 @@ def test_the_command_line_fails_when_a_pair_fails() -> None:
 def test_no_text_is_faded_where_the_gate_cannot_see_it() -> None:
     views = _STYLE.parents[1] / "views"
     assert [str(path) for path in views.rglob("*.py") if "fgalpha" in path.read_text(encoding="utf-8")] == []
+
+
+@pytest.mark.parametrize("regression", [False, True])
+def test_default_invocation_checks_css_instead_of_silently_passing(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str], *, regression: bool,
+) -> None:
+    sheet = tmp_path / "style.css"
+    css = _STYLE.read_text(encoding="utf-8")
+    if regression:
+        css += "\n.contrast-regression { color: #bbbbbb; }\n"
+    sheet.write_text(css, encoding="utf-8")
+    monkeypatch.setattr(contrast_check, "_STYLE", sheet)
+    assert contrast_check.main([]) == (1 if regression else 0)
+    output = capsys.readouterr().out
+    assert "contrast_check:" in output
+    if regression:
+        assert "light: .contrast-regression" in output
+    else:
+        assert "0 below the minimum" in output

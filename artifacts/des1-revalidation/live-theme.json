@@ -1,0 +1,760 @@
+{
+  "libadwaita": [
+    1,
+    5,
+    0
+  ],
+  "themes": {
+    "light": {
+      "accent_bg_color": [
+        0.2078431397676468,
+        0.5176470875740051,
+        0.8941176533699036,
+        1.0
+      ],
+      "accent_color": [
+        0.10980392247438431,
+        0.4431372582912445,
+        0.8470588326454163,
+        1.0
+      ],
+      "accent_fg_color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "card_bg_color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "card_fg_color": [
+        0.0,
+        0.0,
+        0.0,
+        0.800000011920929
+      ],
+      "destructive_bg_color": [
+        0.8784313797950745,
+        0.10588235408067703,
+        0.1411764770746231,
+        1.0
+      ],
+      "destructive_fg_color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "dialog_bg_color": [
+        0.9803921580314636,
+        0.9803921580314636,
+        0.9803921580314636,
+        1.0
+      ],
+      "error_bg_color": [
+        0.8784313797950745,
+        0.10588235408067703,
+        0.1411764770746231,
+        1.0
+      ],
+      "error_color": [
+        0.7529411911964417,
+        0.10980392247438431,
+        0.1568627506494522,
+        1.0
+      ],
+      "error_fg_color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "headerbar_bg_color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "headerbar_fg_color": [
+        0.0,
+        0.0,
+        0.0,
+        0.800000011920929
+      ],
+      "popover_bg_color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "popover_fg_color": [
+        0.0,
+        0.0,
+        0.0,
+        0.800000011920929
+      ],
+      "sidebar_backdrop_color": [
+        0.9490196108818054,
+        0.9490196108818054,
+        0.9490196108818054,
+        1.0
+      ],
+      "sidebar_bg_color": [
+        0.9215686321258545,
+        0.9215686321258545,
+        0.9215686321258545,
+        1.0
+      ],
+      "sidebar_fg_color": [
+        0.0,
+        0.0,
+        0.0,
+        0.800000011920929
+      ],
+      "success_bg_color": [
+        0.18039216101169586,
+        0.7607843279838562,
+        0.4941176474094391,
+        1.0
+      ],
+      "success_color": [
+        0.10588235408067703,
+        0.5215686559677124,
+        0.32549020648002625,
+        1.0
+      ],
+      "success_fg_color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "view_bg_color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "view_fg_color": [
+        0.0,
+        0.0,
+        0.0,
+        0.800000011920929
+      ],
+      "warning_bg_color": [
+        0.8980392217636108,
+        0.6470588445663452,
+        0.03921568766236305,
+        1.0
+      ],
+      "warning_color": [
+        0.6117647290229797,
+        0.4313725531101227,
+        0.0117647061124444,
+        1.0
+      ],
+      "warning_fg_color": [
+        0.0,
+        0.0,
+        0.0,
+        0.800000011920929
+      ],
+      "window_bg_color": [
+        0.9803921580314636,
+        0.9803921580314636,
+        0.9803921580314636,
+        1.0
+      ],
+      "window_fg_color": [
+        0.0,
+        0.0,
+        0.0,
+        0.800000011920929
+      ]
+    },
+    "dark": {
+      "accent_bg_color": [
+        0.2078431397676468,
+        0.5176470875740051,
+        0.8941176533699036,
+        1.0
+      ],
+      "accent_color": [
+        0.47058823704719543,
+        0.6823529601097107,
+        0.929411768913269,
+        1.0
+      ],
+      "accent_fg_color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "card_bg_color": [
+        1.0,
+        1.0,
+        1.0,
+        0.07999999821186066
+      ],
+      "card_fg_color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "destructive_bg_color": [
+        0.7529411911964417,
+        0.10980392247438431,
+        0.1568627506494522,
+        1.0
+      ],
+      "destructive_fg_color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "dialog_bg_color": [
+        0.21960784494876862,
+        0.21960784494876862,
+        0.21960784494876862,
+        1.0
+      ],
+      "error_bg_color": [
+        0.7529411911964417,
+        0.10980392247438431,
+        0.1568627506494522,
+        1.0
+      ],
+      "error_color": [
+        1.0,
+        0.48235294222831726,
+        0.38823530077934265,
+        1.0
+      ],
+      "error_fg_color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "headerbar_bg_color": [
+        0.1882352977991104,
+        0.1882352977991104,
+        0.1882352977991104,
+        1.0
+      ],
+      "headerbar_fg_color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "popover_bg_color": [
+        0.21960784494876862,
+        0.21960784494876862,
+        0.21960784494876862,
+        1.0
+      ],
+      "popover_fg_color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "sidebar_backdrop_color": [
+        0.16470588743686676,
+        0.16470588743686676,
+        0.16470588743686676,
+        1.0
+      ],
+      "sidebar_bg_color": [
+        0.1882352977991104,
+        0.1882352977991104,
+        0.1882352977991104,
+        1.0
+      ],
+      "sidebar_fg_color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "success_bg_color": [
+        0.14901961386203766,
+        0.6352941393852234,
+        0.4117647111415863,
+        1.0
+      ],
+      "success_color": [
+        0.5607843399047852,
+        0.9411764740943909,
+        0.6431372761726379,
+        1.0
+      ],
+      "success_fg_color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "view_bg_color": [
+        0.11764705926179886,
+        0.11764705926179886,
+        0.11764705926179886,
+        1.0
+      ],
+      "view_fg_color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "warning_bg_color": [
+        0.8039215803146362,
+        0.5764706134796143,
+        0.03529411926865578,
+        1.0
+      ],
+      "warning_color": [
+        0.9725490212440491,
+        0.8941176533699036,
+        0.3607843220233917,
+        1.0
+      ],
+      "warning_fg_color": [
+        0.0,
+        0.0,
+        0.0,
+        0.800000011920929
+      ],
+      "window_bg_color": [
+        0.1411764770746231,
+        0.1411764770746231,
+        0.1411764770746231,
+        1.0
+      ],
+      "window_fg_color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ]
+    }
+  },
+  "measured": [
+    {
+      "theme": "light",
+      "what": ".dim-label",
+      "ratio": 5.554396466203574,
+      "minimum": 4.5
+    },
+    {
+      "theme": "light",
+      "what": ".ac-app-title",
+      "ratio": 5.554396466203574,
+      "minimum": 4.5
+    },
+    {
+      "theme": "light",
+      "what": ".ac-tabs row:selected",
+      "ratio": 8.737943488684474,
+      "minimum": 4.5
+    },
+    {
+      "theme": "light",
+      "what": ".ac-tab-subtitle",
+      "ratio": 5.554396466203574,
+      "minimum": 4.5
+    },
+    {
+      "theme": "light",
+      "what": ".ac-tab-wait",
+      "ratio": 5.554396466203574,
+      "minimum": 4.5
+    },
+    {
+      "theme": "light",
+      "what": ".ac-tab-section",
+      "ratio": 5.554396466203574,
+      "minimum": 4.5
+    },
+    {
+      "theme": "light",
+      "what": ".ac-section-header .caption-heading",
+      "ratio": 5.554396466203574,
+      "minimum": 4.5
+    },
+    {
+      "theme": "light",
+      "what": ".ac-section-detail",
+      "ratio": 5.554396466203574,
+      "minimum": 4.5
+    },
+    {
+      "theme": "light",
+      "what": ".ac-section-detail.warning",
+      "ratio": 5.162386673922076,
+      "minimum": 4.5
+    },
+    {
+      "theme": "light",
+      "what": ".ac-section-detail.error",
+      "ratio": 7.060219503274286,
+      "minimum": 4.5
+    },
+    {
+      "theme": "light",
+      "what": ".ac-section-chevron",
+      "ratio": 5.554396466203574,
+      "minimum": 4.5
+    },
+    {
+      "theme": "light",
+      "what": ".ac-git-card-icon",
+      "ratio": 5.554396466203574,
+      "minimum": 4.5
+    },
+    {
+      "theme": "light",
+      "what": ".ac-summary-detail",
+      "ratio": 5.554396466203574,
+      "minimum": 4.5
+    },
+    {
+      "theme": "light",
+      "what": ".ac-summary-card .caption-heading",
+      "ratio": 5.554396466203574,
+      "minimum": 4.5
+    },
+    {
+      "theme": "light",
+      "what": ".ac-quota-key",
+      "ratio": 5.554396466203574,
+      "minimum": 4.5
+    },
+    {
+      "theme": "light",
+      "what": ".ac-quota-panel-heading",
+      "ratio": 5.554396466203574,
+      "minimum": 4.5
+    },
+    {
+      "theme": "light",
+      "what": ".ac-plan-done",
+      "ratio": 5.911043842503965,
+      "minimum": 4.5
+    },
+    {
+      "theme": "light",
+      "what": ".ac-plan-in_progress, .ac-plan-verifying",
+      "ratio": 6.1723455543642105,
+      "minimum": 4.5
+    },
+    {
+      "theme": "light",
+      "what": ".ac-plan-failed",
+      "ratio": 8.025504117982925,
+      "minimum": 4.5
+    },
+    {
+      "theme": "light",
+      "what": ".ac-plan-ready",
+      "ratio": 4.769475540685683,
+      "minimum": 4.5
+    },
+    {
+      "theme": "light",
+      "what": ".ac-approval-risk",
+      "ratio": 5.787628642131955,
+      "minimum": 4.5
+    },
+    {
+      "theme": "light",
+      "what": "window text",
+      "ratio": 12.283542449930112,
+      "minimum": 4.5
+    },
+    {
+      "theme": "light",
+      "what": "sidebar text",
+      "ratio": 11.23058009895412,
+      "minimum": 4.5
+    },
+    {
+      "theme": "light",
+      "what": "popover text",
+      "ratio": 12.634654909146729,
+      "minimum": 4.5
+    },
+    {
+      "theme": "light",
+      "what": "suggested button",
+      "ratio": 5.280214671815333,
+      "minimum": 4.5
+    },
+    {
+      "theme": "light",
+      "what": "destructive button",
+      "ratio": 4.825692616593783,
+      "minimum": 4.5
+    },
+    {
+      "theme": "light",
+      "what": "status: waiting",
+      "ratio": 3.1613172715337283,
+      "minimum": 3.0
+    },
+    {
+      "theme": "light",
+      "what": "status: working",
+      "ratio": 4.000771837878421,
+      "minimum": 3.0
+    },
+    {
+      "theme": "light",
+      "what": "status: idle",
+      "ratio": 3.891597549731714,
+      "minimum": 3.0
+    },
+    {
+      "theme": "light",
+      "what": "status: error",
+      "ratio": 5.123681277425421,
+      "minimum": 3.0
+    },
+    {
+      "theme": "light",
+      "what": "status: exited or unknown",
+      "ratio": 3.5905050072193823,
+      "minimum": 3.0
+    },
+    {
+      "theme": "light",
+      "what": "focus ring",
+      "ratio": 4.569490776434187,
+      "minimum": 3.0
+    },
+    {
+      "theme": "light",
+      "what": "bar: warning",
+      "ratio": 3.7921140241498272,
+      "minimum": 3.0
+    },
+    {
+      "theme": "light",
+      "what": "bar: critical",
+      "ratio": 5.123681277425421,
+      "minimum": 3.0
+    },
+    {
+      "theme": "dark",
+      "what": ".dim-label",
+      "ratio": 6.629043398316602,
+      "minimum": 4.5
+    },
+    {
+      "theme": "dark",
+      "what": ".ac-app-title",
+      "ratio": 6.629043398316602,
+      "minimum": 4.5
+    },
+    {
+      "theme": "dark",
+      "what": ".ac-tabs row:selected",
+      "ratio": 7.189005956899371,
+      "minimum": 4.5
+    },
+    {
+      "theme": "dark",
+      "what": ".ac-tab-subtitle",
+      "ratio": 6.629043398316602,
+      "minimum": 4.5
+    },
+    {
+      "theme": "dark",
+      "what": ".ac-tab-wait",
+      "ratio": 6.629043398316602,
+      "minimum": 4.5
+    },
+    {
+      "theme": "dark",
+      "what": ".ac-tab-section",
+      "ratio": 6.629043398316602,
+      "minimum": 4.5
+    },
+    {
+      "theme": "dark",
+      "what": ".ac-section-header .caption-heading",
+      "ratio": 6.629043398316602,
+      "minimum": 4.5
+    },
+    {
+      "theme": "dark",
+      "what": ".ac-section-detail",
+      "ratio": 6.629043398316602,
+      "minimum": 4.5
+    },
+    {
+      "theme": "dark",
+      "what": ".ac-section-detail.warning",
+      "ratio": 8.111092995690228,
+      "minimum": 4.5
+    },
+    {
+      "theme": "dark",
+      "what": ".ac-section-detail.error",
+      "ratio": 5.488218535606353,
+      "minimum": 4.5
+    },
+    {
+      "theme": "dark",
+      "what": ".ac-section-chevron",
+      "ratio": 6.629043398316602,
+      "minimum": 4.5
+    },
+    {
+      "theme": "dark",
+      "what": ".ac-git-card-icon",
+      "ratio": 6.629043398316602,
+      "minimum": 4.5
+    },
+    {
+      "theme": "dark",
+      "what": ".ac-summary-detail",
+      "ratio": 6.629043398316602,
+      "minimum": 4.5
+    },
+    {
+      "theme": "dark",
+      "what": ".ac-summary-card .caption-heading",
+      "ratio": 6.629043398316602,
+      "minimum": 4.5
+    },
+    {
+      "theme": "dark",
+      "what": ".ac-quota-key",
+      "ratio": 6.629043398316602,
+      "minimum": 4.5
+    },
+    {
+      "theme": "dark",
+      "what": ".ac-quota-panel-heading",
+      "ratio": 6.629043398316602,
+      "minimum": 4.5
+    },
+    {
+      "theme": "dark",
+      "what": ".ac-plan-done",
+      "ratio": 9.802581720215358,
+      "minimum": 4.5
+    },
+    {
+      "theme": "dark",
+      "what": ".ac-plan-in_progress, .ac-plan-verifying",
+      "ratio": 10.282668481472074,
+      "minimum": 4.5
+    },
+    {
+      "theme": "dark",
+      "what": ".ac-plan-failed",
+      "ratio": 7.862130924436916,
+      "minimum": 4.5
+    },
+    {
+      "theme": "dark",
+      "what": ".ac-plan-ready",
+      "ratio": 7.205051634336735,
+      "minimum": 4.5
+    },
+    {
+      "theme": "dark",
+      "what": ".ac-approval-risk",
+      "ratio": 4.562169545003273,
+      "minimum": 4.5
+    },
+    {
+      "theme": "dark",
+      "what": "window text",
+      "ratio": 15.522910096409824,
+      "minimum": 4.5
+    },
+    {
+      "theme": "dark",
+      "what": "sidebar text",
+      "ratio": 13.198111680155437,
+      "minimum": 4.5
+    },
+    {
+      "theme": "dark",
+      "what": "popover text",
+      "ratio": 11.725786007793092,
+      "minimum": 4.5
+    },
+    {
+      "theme": "dark",
+      "what": "suggested button",
+      "ratio": 5.280214671815333,
+      "minimum": 4.5
+    },
+    {
+      "theme": "dark",
+      "what": "destructive button",
+      "ratio": 6.108139509377426,
+      "minimum": 4.5
+    },
+    {
+      "theme": "dark",
+      "what": "status: waiting",
+      "ratio": 3.5020059001935806,
+      "minimum": 3.0
+    },
+    {
+      "theme": "dark",
+      "what": "status: working",
+      "ratio": 5.704047901917884,
+      "minimum": 3.0
+    },
+    {
+      "theme": "dark",
+      "what": "status: idle",
+      "ratio": 9.5328268027771,
+      "minimum": 3.0
+    },
+    {
+      "theme": "dark",
+      "what": "status: error",
+      "ratio": 5.194622195701813,
+      "minimum": 3.0
+    },
+    {
+      "theme": "dark",
+      "what": "status: exited or unknown",
+      "ratio": 5.827379844354332,
+      "minimum": 3.0
+    },
+    {
+      "theme": "dark",
+      "what": "focus ring",
+      "ratio": 6.708794781621638,
+      "minimum": 3.0
+    },
+    {
+      "theme": "dark",
+      "what": "bar: warning",
+      "ratio": 10.208547250682148,
+      "minimum": 3.0
+    },
+    {
+      "theme": "dark",
+      "what": "bar: critical",
+      "ratio": 5.194622195701813,
+      "minimum": 3.0
+    }
+  ],
+  "failures": []
+}

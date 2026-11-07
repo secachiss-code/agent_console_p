@@ -1,0 +1,77 @@
+import os
+from pathlib import Path
+import subprocess
+import sys
+import tempfile
+
+ROOT = Path(__file__).resolve().parents[2]
+if sys.argv[1:] == ['--probe']:
+    sys.path.insert(0, str(ROOT/'tools'))
+    import contrast_check
+    import gi
+    gi.require_version('Gtk', '4.0')
+    gi.require_version('Adw', '1')
+    from gi.repository import Adw, Gdk, GLib, Gtk
+    import json
+    Adw.init()
+    display = Gdk.Display.get_default()
+    provider = Gtk.CssProvider()
+    names = sorted(contrast_check.LIGHT_THEME)
+    provider.load_from_string(''.join(f'.probe-{n} {{ color: @{n}; }}' for n in names))
+    Gtk.StyleContext.add_provider_for_display(display, provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+    box = Gtk.Box()
+    labels = {}
+    for n in names:
+        label = Gtk.Label(label=n)
+        label.add_css_class(f'probe-{n}')
+        labels[n] = label
+        box.append(label)
+    window = Gtk.Window(child=box)
+    window.present()
+    manager = Adw.StyleManager.get_default()
+    themes = {}
+    for name, scheme in [('light', Adw.ColorScheme.FORCE_LIGHT), ('dark', Adw.ColorScheme.FORCE_DARK)]:
+        manager.set_color_scheme(scheme)
+        for _ in range(200):
+            GLib.MainContext.default().iteration(False)
+        themes[name] = {}
+        for n,label in labels.items():
+            c = label.get_color()
+            themes[name][n] = (c.red,c.green,c.blue,c.alpha)
+    failures = contrast_check.check_css((ROOT/'src/aconsole/ui/style/style.css').read_text(), themes=themes)
+    output = ROOT/'artifacts/des1-revalidation'
+    output.mkdir(parents=True, exist_ok=True)
+    defined, rules = contrast_check.parse_css((ROOT/'src/aconsole/ui/style/style.css').read_text())
+    measured = []
+    for theme, observed in themes.items():
+        colors = contrast_check._colors(observed, defined)
+        for rule in rules:
+            if 'color' not in rule.declarations:
+                continue
+            fg = contrast_check.resolve(rule.declarations['color'], colors)
+            fg = (*fg[:3], fg[3] * float(rule.declarations.get('opacity', 1)))
+            ratio = min(contrast_check._ratio(contrast_check.over(fg, bg), bg)
+                        for bg in (contrast_check._paint(layers, colors)
+                                   for layers in contrast_check._surfaces_of(rule, rules)))
+            measured.append({'theme':theme,'what':rule.selector,'ratio':ratio,'minimum':4.5})
+        for pairs, minimum in [(contrast_check._THEME_TEXT,4.5),(contrast_check._GRAPHICS,3.0)]:
+            for what, foreground, background in pairs:
+                bg = contrast_check.resolve(background,colors)
+                fg = contrast_check.resolve(foreground,colors)
+                measured.append({'theme':theme,'what':what,'ratio':contrast_check._ratio(contrast_check.over(fg,bg),bg),'minimum':minimum})
+    data = {'libadwaita': [Adw.get_major_version(),Adw.get_minor_version(),Adw.get_micro_version()], 'themes':themes, 'measured':measured, 'failures':[str(f) for f in failures]}
+    (output/'live-theme.json').write_text(json.dumps(data,indent=2)+'\n')
+    print('LIVE_THEME',data['libadwaita'],'FAILURES',data['failures'],flush=True)
+    window.destroy()
+    raise SystemExit(bool(failures))
+else:
+    with tempfile.TemporaryDirectory(prefix='des1-broadway-') as runtime:
+        env = dict(os.environ, XDG_RUNTIME_DIR=runtime, GDK_BACKEND='broadway', BROADWAY_DISPLAY=':99', GSK_RENDERER='cairo', GTK_A11Y='none', PYTHONPATH=str(ROOT/'src'))
+        env.pop('DISPLAY',None)
+        server = subprocess.Popen(['/usr/bin/gtk4-broadwayd','--address=127.0.0.1','--port=18999',':99'],env=env)
+        try:
+            subprocess.run([sys.executable,'-m','pytest','-o','addopts=','-q','-ra',str(ROOT/'tests/gui/front/test_contrast_table.py')],env=env,cwd=ROOT,timeout=45,check=True)
+            subprocess.run([sys.executable,__file__,'--probe'],env=env,cwd=ROOT,timeout=20,check=True)
+        finally:
+            server.terminate()
+            server.wait(timeout=5)
