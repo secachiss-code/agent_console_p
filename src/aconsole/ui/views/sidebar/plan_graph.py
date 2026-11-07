@@ -49,11 +49,36 @@ class PlanGraph(Gtk.Box):
         self.append(self._build_heading())
         self._setup_canvas()
 
+    def update(self, plan: PlanView) -> bool:
+        """Update state without replacing buttons, scroll or focus when the graph geometry is unchanged."""
+        def geometry(node: PlanNodeView) -> tuple[object, ...]:
+            return node.id, node.key, node.title, node.layer, node.depends_on
+
+        nodes = {node.id: node for node in shown_nodes(plan.nodes)}
+        if (plan.id != self.plan.id or
+                tuple(map(geometry, nodes.values())) != tuple(map(geometry, self._nodes.values()))):
+            return False
+        for key, node in nodes.items():
+            button = self.node_buttons[key]
+            button.remove_css_class(f"ac-plan-{self._nodes[key].status.value}")
+            button.add_css_class(f"ac-plan-{node.status.value}")
+            if node.ready:
+                button.add_css_class("ac-plan-ready")
+            else:
+                button.remove_css_class("ac-plan-ready")
+        self.plan = plan
+        self._nodes = nodes
+        self._title_label.set_text(plan.title)
+        self._summary_label.set_text(translate("plan.card.progress").format(done=plan.done, total=plan.total))
+        self.set_hovered(self._hovered)
+        return True
+
     def _build_heading(self) -> Gtk.Box:
         heading = Gtk.Box(spacing=12)
         heading.add_css_class("ac-plan-heading")
         text = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2, hexpand=True)
         title = Gtk.Label(label=self.plan.title, xalign=0, ellipsize=Pango.EllipsizeMode.END)
+        self._title_label: Gtk.Label = title
         title.add_css_class("title-2")
         text.append(title)
         progress = translate("plan.card.progress").format(done=self.plan.done, total=self.plan.total)
@@ -61,6 +86,7 @@ class PlanGraph(Gtk.Box):
         if hidden > 0:
             progress = f"{progress} · {translate('plan.hidden').format(count=hidden)}"
         summary = Gtk.Label(label=progress, xalign=0, ellipsize=Pango.EllipsizeMode.END)
+        self._summary_label: Gtk.Label = summary
         summary.add_css_class("ac-summary-detail")
         text.append(summary)
         # On the left: the top right corner may hold the floating window buttons.

@@ -78,6 +78,11 @@ class ReviewService:
             base = self._bind(str(detail.tab_id), detail.base)
             return self._diff.file(str(detail.tab_id), detail.path, base, max_lines=detail.max_lines)
         comment = msgspec.json.decode(raw, type=SendCommentParams)
+        return self._send_comment(comment)
+
+    def _send_comment(self, comment: SendCommentParams) -> CommandResult:
+        if not self._target(str(comment.tab_id)).started:
+            return CommandResult(ok=False, toast="Сначала запустите агента во вкладке")
         _ = self._bind(str(comment.tab_id), None)
         return self._diff.send_comment(str(comment.tab_id), comment.path, comment.hunk_id, comment.text)
 
@@ -93,6 +98,8 @@ class ReviewService:
 
     def send_text(self, tab_id: str, message: str) -> CommandResult:
         """Text for one tab's agent, waiting its turn when the agent is busy."""
+        if not self._target(tab_id).started:
+            return CommandResult(ok=False, toast="Сначала запустите агента во вкладке")
         _ = self._bind(tab_id, None)
         return self._diff.send_text(tab_id, message)
 

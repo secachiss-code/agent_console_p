@@ -6,6 +6,7 @@ dialog states what that preview said. The core checks everything again, so a ref
 
 from __future__ import annotations
 
+import asyncio
 from typing import TYPE_CHECKING, Final, Protocol
 from urllib.parse import quote
 
@@ -111,6 +112,8 @@ def refusal_text(error: CoreCallError) -> str:
 class GitActions:
     def __init__(self, host: GitHost, bar: Gtk.FlowBox, commit_slot: Gtk.Box, banner: Adw.Banner) -> None:
         self._host: GitHost = host
+        self._busy: bool = False
+        self._operation_lock: asyncio.Lock = asyncio.Lock()
         self._bar: Gtk.FlowBox = bar
         self.banner: Adw.Banner = banner
         self._note_path: str | None = None
@@ -198,7 +201,7 @@ class GitActions:
         state = self._host.state
         flags = row_flags(row, None if state is None else state.base_branch)
         self.commit_counts.set_text(translate("git.commit_counts").format(count=0 if row is None else row.staged))
-        self.commit_button.set_sensitive(flags.can_commit and bool(self._message()))
+        self.commit_button.set_sensitive(not self._busy and flags.can_commit and bool(self._message()))
 
     def _message_changed(self, _buffer: Gtk.TextBuffer) -> None:
         self._update_commit()
@@ -315,9 +318,19 @@ class GitActions:
         _ = spawn_task(self._guarded(work))
 
     async def _guarded(self, work: Coroutine[object, object, None]) -> None:
+        try:
+            async with self._operation_lock:
+                self._busy = True
+                await self._perform(work)
+        finally:
+            work.close()
+
+    async def _perform(self, work: Coroutine[object, object, None]) -> None:
         """One at a time, and whatever the answer, the page shows what is true now."""
         self._bar.set_sensitive(False)
         self.commit_button.set_sensitive(False)
+        for button in self.file_actions.values():
+            button.set_sensitive(False)
         self._parent_of(self.spinner).set_visible(True)
         self.spinner.set_visible(True)
         self.spinner.start()
@@ -328,6 +341,9 @@ class GitActions:
         except Exception as error:  # noqa: BLE001 -- a lost core shows here, not in a crash
             self._host.toast(translate("review.load_error").format(error=error))
         finally:
+            self._busy = False
+            for button in self.file_actions.values():
+                button.set_sensitive(True)
             self.spinner.stop()
             self._parent_of(self.spinner).set_visible(False)
             self._bar.set_sensitive(True)

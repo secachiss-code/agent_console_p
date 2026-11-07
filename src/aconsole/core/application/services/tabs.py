@@ -352,6 +352,7 @@ class ReviewTarget:
     worktree: str
     status: TabStatus
     base_branch: str | None
+    started: bool
 
 
 def _preferences_of(settings: Settings) -> dict[str, object]:
@@ -663,7 +664,7 @@ class TabService:
         tab = self._tabs.get(tab_id)
         if tab is None:
             return None
-        return ReviewTarget(worktree=tab.worktree, status=tab.status, base_branch=tab.base)
+        return ReviewTarget(worktree=tab.worktree, status=tab.status, base_branch=tab.base, started=tab.running)
 
     def git_project(self, project_id: str) -> GitProject | None:
         """Any thread: a read of what this book holds."""

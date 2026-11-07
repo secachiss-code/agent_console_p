@@ -1,5 +1,6 @@
 """In-memory snapshot the UI reads. Event handlers only update this model."""
 
+import logging
 from collections.abc import Callable
 from typing import final
 
@@ -22,6 +23,8 @@ from aconsole.contracts.events import (
     UiEvent,
 )
 from aconsole.contracts.ipc import EventEnvelope
+
+_LOG = logging.getLogger(__name__)
 
 CONNECTING_BANNER = "Подключение к ядру…"
 
@@ -94,7 +97,10 @@ class CoreStore:
 
     def _notify_connection(self) -> None:
         for callback in tuple(self._connection_listeners):
-            callback(self)
+            try:
+                callback(self)
+            except Exception:  # noqa: BLE001 -- a UI subscriber must not break IPC or other subscribers
+                _LOG.exception("CoreStore subscriber failed")
 
     def subscribe(self, callback: Callable[[UiEvent, CoreStore], None]) -> None:
         """Call `callback(event, store)` after every applied event, for the life of the store."""
@@ -138,11 +144,17 @@ class CoreStore:
 
     def _notify(self, event: UiEvent) -> None:
         for callback in tuple(self._listeners):
-            callback(event, self)
+            try:
+                callback(event, self)
+            except Exception:  # noqa: BLE001 -- a UI subscriber must not break IPC or other subscribers
+                _LOG.exception("CoreStore event subscriber failed")
 
     def _notify_snapshot(self) -> None:
         for callback in tuple(self._snapshot_listeners):
-            callback(self)
+            try:
+                callback(self)
+            except Exception:  # noqa: BLE001 -- a UI subscriber must not break IPC or other subscribers
+                _LOG.exception("CoreStore subscriber failed")
 
     def _apply_tab(self, event: UiEvent) -> None:
         snapshot = self.snapshot

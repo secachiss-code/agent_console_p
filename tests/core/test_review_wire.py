@@ -25,6 +25,7 @@ from aconsole.contracts.app import (
     RestoreResult,
     SendCommentParams,
     SettingsUpdateParams,
+    StartedParams,
     TabIdParams,
     TabView,
     TerminalLaunchSpec,
@@ -195,6 +196,7 @@ def test_comment_waits_for_a_working_tab_and_reaches_its_terminal(tmp_path: Path
             _open(project.id),
             TabView,
         )
+        _ = await daemon._in_worker(lambda: daemon.tabs.started(StartedParams(tab_id=tab.id, pid=123)))
         _ = await daemon._in_worker(lambda: daemon.tabs.apply_hook(str(tab.id), "UserPromptSubmit"))
         sent = await client.call(
             "diff/sendComment",

@@ -1,0 +1,37 @@
+{
+  "base_commit": "ea0aa57bf00f3ae34c83fc2bddf7b83a5282f6bd",
+  "baseline_failures": {
+    "controlled_ui_races": 3,
+    "unstarted_terminal_delivery": 1
+  },
+  "core_regressions": {
+    "passed": 52,
+    "seconds": 13.72
+  },
+  "native_gui_suite": {
+    "passed": 51,
+    "seconds": 36.7,
+    "warnings": 3
+  },
+  "final_controlled_ui_races": {
+    "passed": 6,
+    "seconds": 0.21,
+    "overlaps_gui_suite": true
+  },
+  "strict_types": {
+    "errors": 0,
+    "warnings": 0
+  },
+  "ruff": "passed",
+  "diff_check": "passed",
+  "screenshot_views": [
+    "review",
+    "git",
+    "plan-graph"
+  ],
+  "screenshot_variants": [
+    "light1280x800",
+    "dark1280x800",
+    "light700x800"
+  ]
+}

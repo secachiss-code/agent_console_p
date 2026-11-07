@@ -350,7 +350,8 @@ class MainWindow(Adw.ApplicationWindow):
         self.plan_card.set_plan(plan)
         if self.plan_page is not None and plan != self.plan_page.plan:
             if plan is not None and plan.id == self.plan_page.plan.id:
-                self._open_plan(plan.id)
+                if not self.plan_page.update(plan):
+                    self._open_plan(plan.id)
             else:
                 self._show_selected_terminal()
         self.plan_section.set_detail(f"{plan.done}/{plan.total}" if plan is not None else "")

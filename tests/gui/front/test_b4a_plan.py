@@ -365,3 +365,22 @@ def test_without_a_decision_handler_no_step_offers_to_be_accepted() -> None:
         assert not graph.accept_button.get_visible()
 
     _in_gtk_context(check)
+
+
+def test_heartbeat_keeps_plan_buttons_and_selection() -> None:
+    def check() -> None:
+        plan = _demo_plan()
+        graph = PlanGraph(plan, lambda: None)
+        node = plan.nodes[0]
+        graph.set_hovered(node.id)
+        buttons = dict(graph.node_buttons)
+        changed = msgspec.structs.replace(node, evidence="latest evidence", priority=node.priority + 1)
+        updated = msgspec.structs.replace(plan, nodes=(changed, *plan.nodes[1:]))
+        assert graph.update(updated)
+        assert graph.node_buttons == buttons
+        assert graph._selected == node.id
+        assert "latest evidence" in graph.details_label.get_text()
+        topology = msgspec.structs.replace(changed, layer=changed.layer + 1)
+        assert not graph.update(msgspec.structs.replace(updated, nodes=(topology, *plan.nodes[1:])))
+
+    _in_gtk_context(check)

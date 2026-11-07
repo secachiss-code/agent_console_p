@@ -40,6 +40,7 @@ class ReviewPage(Gtk.Box):
         self._toast: Callable[[str], None] = on_toast
         self._generation: int = 0
         self._file_generation: int = 0
+        self._checkpoint_generation: int = 0
         self._file_paths: list[str] = []
         self.selected_path: str | None = None
         self._comment_drafts: dict[tuple[str, str], str] = {}
@@ -245,10 +246,15 @@ class ReviewPage(Gtk.Box):
         self._toast(result.toast or translate("review.comment_sent"))
 
     async def load_checkpoints(self) -> None:
+        self._checkpoint_generation += 1
+        generation = self._checkpoint_generation
         try:
             points = await self.viewmodel.checkpoints()
         except Exception as error:  # noqa: BLE001 -- the page stays open and says what went wrong
-            self._show_checkpoints_message(translate("review.load_error").format(error=error))
+            if generation == self._checkpoint_generation:
+                self._show_checkpoints_message(translate("review.load_error").format(error=error))
+            return
+        if generation != self._checkpoint_generation:
             return
         self.checkpoint_list.remove_all()
         if not points:

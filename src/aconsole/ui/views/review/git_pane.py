@@ -159,6 +159,7 @@ class GitPane(Gtk.Box):
         self._loading: bool = False
         self._generation: int = 0
         self._file_generation: int = 0
+        self._list_generation: int = 0
         self._file_paths: list[str] = []
         self._syncing: bool = False
         self.selected_key: str | None = None
@@ -184,6 +185,7 @@ class GitPane(Gtk.Box):
         self.reload()
 
     def reload(self) -> None:
+        self._generation += 1
         _ = spawn_task(self.refresh())
 
     def _session_changed(self) -> None:
@@ -401,9 +403,14 @@ class GitPane(Gtk.Box):
         if cursor is None or self._loading:
             return
         self._loading = True
+        context = (self._generation, self.scope, self._version, self._cursor)
         try:
             page = await self.viewmodel.graph(self.scope, cursor)
+            if context != (self._generation, self.scope, self._version, self._cursor):
+                return
         except CoreCallError as error:
+            if context != (self._generation, self.scope, self._version, self._cursor):
+                return
             if error.error.message == "GIT_SNAPSHOT_STALE":
                 self.toast(translate("git.stale"))
                 self._version = None
@@ -412,7 +419,8 @@ class GitPane(Gtk.Box):
                 self.toast(translate("review.load_error").format(error=error))
             return
         except Exception as error:  # noqa: BLE001 -- the page stays open and says what went wrong
-            self.toast(translate("review.load_error").format(error=error))
+            if context == (self._generation, self.scope, self._version, self._cursor):
+                self.toast(translate("review.load_error").format(error=error))
             return
         finally:
             self._loading = False
@@ -481,6 +489,8 @@ class GitPane(Gtk.Box):
         self.inspect_meta.set_visible(bool(parts))
 
     def _clear_inspector(self) -> None:
+        self._list_generation += 1
+        self._file_generation += 1
         self.source = None
         self.inspect_meta.set_visible(False)
         self.mode_choice.set_visible(False)
@@ -493,18 +503,20 @@ class GitPane(Gtk.Box):
         source = self.source
         if source is None:
             return
+        self._list_generation += 1
         self._file_generation += 1
-        generation = self._file_generation
+        generation = self._list_generation
         try:
             summary = await self.viewmodel.summary(source)
         except Exception as error:  # noqa: BLE001 -- the page stays open and says what went wrong
-            if generation == self._file_generation:
+            if generation == self._list_generation and source == self.source:
                 self._show_message(translate("review.load_error").format(error=error))
             return
-        if generation == self._file_generation:
+        if generation == self._list_generation and source == self.source:
             self._show_files(summary.files)
 
     def _show_files(self, files: tuple[DiffFileView, ...]) -> None:
+        self._file_generation += 1
         previous = self.selected_path
         self.file_list.remove_all()
         self._file_paths = [item.path for item in files]
@@ -532,17 +544,17 @@ class GitPane(Gtk.Box):
         try:
             detail = await self.viewmodel.file(source, path)
         except CoreCallError as error:
-            if generation == self._file_generation:
+            if generation == self._file_generation and source == self.source and path == self.selected_path:
                 too_large = error.error.message == "DIFF_TOO_LARGE"
                 self._show_message(
                     translate("review.too_large") if too_large else translate("review.load_error").format(error=error),
                 )
             return
         except Exception as error:  # noqa: BLE001 -- the page stays open and says what went wrong
-            if generation == self._file_generation:
+            if generation == self._file_generation and source == self.source and path == self.selected_path:
                 self._show_message(translate("review.load_error").format(error=error))
             return
-        if generation == self._file_generation:
+        if generation == self._file_generation and source == self.source and path == self.selected_path:
             self._show_diff(detail)
 
     def _clear_diff(self) -> None:
@@ -550,6 +562,7 @@ class GitPane(Gtk.Box):
             self.diff_box.remove(child)
 
     def _show_message(self, text: str) -> None:
+        self._file_generation += 1
         self._clear_diff()
         label = Gtk.Label(label=text, wrap=True, vexpand=True)
         label.add_css_class("dim-label")
