@@ -40,6 +40,8 @@ if TYPE_CHECKING:
 _READ: Final = 65536
 _STATS_S: Final = 10.0
 _CONNECT_S: Final = 0.05
+_LINK_PENDING_BYTES: Final = 262144
+_LINK_DRAIN_S: Final = 0.5
 _USAGE: Final = "usage: python -m aconsole.sidecar -- COMMAND [ARG...]\n"
 _SOCKET: Final = "ACONSOLE_SOCKET"
 _TAB: Final = "ACONSOLE_TAB"
@@ -139,12 +141,13 @@ def fcntl_ioctl(fd: int, request: int, packed: bytes) -> bytes:
 
 @final
 class CoreLink:
-    """Best-effort unix client. A failure clears the socket and returns."""
+    """Bounded nonblocking writes. Backpressure retains the unsent suffix of each frame."""
 
     _sock: socket.socket | None
 
     def __init__(self, path: str | None, tab_id: str | None, proof: str | None) -> None:
         self._sock = None
+        self._pending = bytearray()
         if path is None or tab_id is None or proof is None or path == "":
             return
         sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
@@ -154,22 +157,60 @@ class CoreLink:
         except OSError:
             sock.close()
             return
+        sock.settimeout(0.0)
         self._sock = sock
         self.send(initialize(tab_id, proof, os.getpid()))
 
     def send(self, payload: bytes) -> None:
-        """Write one frame. Drop the link on any error."""
+        """Queue one frame without making the terminal wait for the core."""
+        if self._sock is None:
+            return
+        if len(self._pending) + len(payload) > _LINK_PENDING_BYTES:
+            self._discard()
+            return
+        self._pending.extend(payload)
+        self.flush()
+
+    def flush(self) -> None:
+        """Retry pending bytes in order, stopping when the socket would block."""
         sock = self._sock
         if sock is None:
             return
-        try:
-            sock.sendall(payload)
-        except OSError:
-            self.close()
+        while self._pending:
+            try:
+                written = sock.send(self._pending)
+            except (BlockingIOError, TimeoutError):
+                return
+            except InterruptedError:
+                continue
+            except OSError:
+                self._discard()
+                return
+            if written == 0:
+                self._discard()
+                return
+            del self._pending[:written]
 
     def close(self) -> None:
+        """Give final lifecycle frames a bounded chance to drain, then release the socket."""
+        deadline = time.monotonic() + _LINK_DRAIN_S
+        try:
+            while self._sock is not None and self._pending:
+                self.flush()
+                if not self._pending:
+                    break
+                remaining = deadline - time.monotonic()
+                if remaining <= 0:
+                    break
+                with contextlib.suppress(InterruptedError):
+                    _ = select.select([], [self._sock], [], remaining)
+        finally:
+            self._discard()
+
+    def _discard(self) -> None:
         sock = self._sock
         self._sock = None
+        self._pending.clear()
         if sock is not None:
             sock.close()
 
@@ -195,6 +236,7 @@ def _pump(pid: int, fd: int, link: CoreLink, watch: ScreenWatch | NoWatch) -> in
 
     try:
         while exit_code is None and signal_number is None:
+            link.flush()
             now = time.monotonic()
             readable = _select(fd if pty_open else None, stdin_fd if stdin_open else None)
             if pty_open and fd in readable:
@@ -214,20 +256,34 @@ def _pump(pid: int, fd: int, link: CoreLink, watch: ScreenWatch | NoWatch) -> in
                 link.send(stats(framer.bytes_out, framer.frames, framer.frames_timed_out, framer.max_frame_bytes))
                 last_stats = now
             exit_code, signal_number = _wait(pid)
+    except OSError:
+        # The outer terminal went away. Stop and reap the child before announcing its exit.
+        exit_code, signal_number = _stop_child(pid)
     finally:
-        restore_signals()
-        restore_pty()
-        restore_stdin()
-        _emit(_drain_fd(fd, framer), framer, link)
-        _emit(framer.finish(), framer, link)
-        os.close(fd)
-        link.send(exited(exit_code, signal_number))
-        link.close()
+        _finish_pump(fd, framer, link, (restore_signals, restore_pty, restore_stdin), (exit_code, signal_number))
     if signal_number is not None:
         return _SIGNAL_EXIT_BASE + signal_number
     if exit_code is None:
         return _UNCAUGHT
     return exit_code
+
+
+def _finish_pump(
+    fd: int, framer: Framer, link: CoreLink,
+    restorers: tuple[Callable[[], None], ...], result: tuple[int | None, int | None],
+) -> None:
+    try:
+        for restore in restorers:
+            with contextlib.suppress(OSError):
+                restore()
+        with contextlib.suppress(OSError):
+            _emit(_drain_fd(fd, framer), framer, link)
+            _emit(framer.finish(), framer, link)
+    finally:
+        with contextlib.suppress(OSError):
+            os.close(fd)
+        link.send(exited(*result))
+        link.close()
 
 
 def _forward(stdin_fd: int, fd: int, pid: int, *, hang_up: bool, typed: Callable[[bytes], None]) -> bool:
@@ -395,6 +451,24 @@ def _wait(pid: int) -> tuple[int | None, int | None]:
     if os.WIFSIGNALED(status):
         return None, os.WTERMSIG(status)
     return _UNCAUGHT, None
+
+
+def _stop_child(pid: int) -> tuple[int | None, int | None]:
+    _hang_up(pid)
+    deadline = time.monotonic() + _HANGUP_GRACE_S
+    while True:
+        code, signum = _wait(pid)
+        if code is not None or signum is not None:
+            return code, signum
+        if time.monotonic() >= deadline:
+            break
+        time.sleep(0.01)
+    with contextlib.suppress(ProcessLookupError):
+        os.killpg(pid, signal.SIGKILL)
+    _, status = os.waitpid(pid, 0)
+    if os.WIFSIGNALED(status):
+        return None, os.WTERMSIG(status)
+    return os.WEXITSTATUS(status), None
 
 
 def _reap(pid: int) -> None:

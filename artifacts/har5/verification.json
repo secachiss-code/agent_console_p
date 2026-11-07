@@ -1,0 +1,21 @@
+{
+  "baseline": {
+    "failed": 5,
+    "passed": 1,
+    "seconds": 3.82
+  },
+  "regression_suite": {
+    "passed": 83,
+    "seconds": 13.34
+  },
+  "final_exit_status_check": {
+    "passed": 6,
+    "seconds": 0.45
+  },
+  "typecheck": {
+    "errors": 0,
+    "warnings": 0
+  },
+  "ruff": "passed",
+  "diff_check": "passed"
+}

@@ -1137,16 +1137,18 @@ class Daemon:
 
     async def _watch_codex_turns(self) -> None:
         """Codex hooks are not trusted (ADR-0002), and notify only says that a turn ended."""
-        home = await asyncio.to_thread(self._host.agent_home, _CODEX_CONTAINER)
-        if home is None:
-            return
-        watch = TurnWatch(home / ".codex" / "sessions")
+        watch: TurnWatch | None = None
         while True:
             try:
+                if watch is None:
+                    home = await asyncio.to_thread(self._host.agent_home, _CODEX_CONTAINER)
+                    if home is not None:
+                        watch = TurnWatch(home / ".codex" / "sessions")
                 now = datetime.now(UTC).astimezone()
-                for cwd, working in await asyncio.to_thread(watch.changes, now):
+                changes = () if watch is None else await asyncio.to_thread(watch.changes, now)
+                for cwd, working in changes:
                     await self._in_worker(lambda cwd=cwd, working=working: self.tabs.codex_turn(cwd, working=working))
-                    await self._note_codex_session(cwd, watch.session_in(cwd))
+                    await self._note_codex_session(cwd, watch.session_in(cwd) if watch is not None else None)
             except Exception:  # noqa: BLE001 -- logged; the next change brings another pass
                 _LOG.exception("cannot read Codex turns")
             await asyncio.sleep(_CODEX_TURN_POLL_S)
@@ -1644,7 +1646,7 @@ class Daemon:
         connection = Connection(
             self._ring, tabs=self.tabs, approval_hold=self.approvals, setup_service=self.setup_service,
             review=self.review, knowledge=self.knowledge, git=self.git,
-            host_namespace=same_mnt_namespace(pid), palette=self.palette,
+            host_namespace=same_mnt_namespace(pid), palette=self.palette, peer_pid=pid,
         )
         connection.on_agent_notice = self._agent_notice
         connection.on_screen_signal = self._screen_signal

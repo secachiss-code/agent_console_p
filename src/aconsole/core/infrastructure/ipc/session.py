@@ -105,6 +105,7 @@ class Connection:
         git: GitService | None = None,
         host_namespace: bool = False,
         palette: PaletteService | None = None,
+        peer_pid: int | None = None,
     ) -> None:
         self.ring = ring
         self.outbound_limit = outbound_limit
@@ -129,7 +130,8 @@ class Connection:
         self.quota_refresh: Callable[[], None] | None = None
         self._sidecar_tab: str | None = None
         self.sidecar_claim: tuple[str, str] | None = None
-        self.peer_pid: int | None = None
+        # SO_PEERCRED is expressed in the core's PID namespace; initialize.pid is not.
+        self.peer_pid = peer_pid
         # UI and CLI are accepted only from the core's mount namespace. A container stays a sidecar.
         self.host_namespace = host_namespace
         self.inflight: set[int] = set()
@@ -415,7 +417,6 @@ class Connection:
         if claimed:
             self._sidecar_tab = str(params.tab_id)
             self.sidecar_claim = (str(params.tab_id), params.sidecar_token)
-            self.peer_pid = params.pid
         return claimed
 
     def _subscribe(self, request: Request) -> tuple[bytes, ...]:

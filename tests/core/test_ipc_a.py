@@ -8,9 +8,9 @@ import os
 import stat
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 import msgspec
+import pytest
 from hypothesis import given
 from hypothesis import strategies as st
 
@@ -37,9 +37,6 @@ from aconsole.core.infrastructure.ipc.ring import EventRing
 from aconsole.core.infrastructure.ipc.server import IpcServer, allow_peer, note_peer, same_mnt_namespace
 from aconsole.core.infrastructure.ipc.session import OUTBOUND_LIMIT, Connection
 from aconsole.core.infrastructure.tabs import default_tabs
-
-if TYPE_CHECKING:
-    import pytest
 
 _WHEN = datetime(2026, 10, 26, tzinfo=UTC)
 _ENCODER = msgspec.json.Encoder()
@@ -216,14 +213,15 @@ def test_outside_the_core_namespace_cannot_take_a_host_role(caplog: pytest.LogCa
         assert blocked.error.message == "NOT_INITIALIZED"
 
 
-def test_sidecar_outside_the_namespace_keeps_its_token_and_cannot_decide() -> None:
+@pytest.mark.parametrize("peer_pid", [None, 4242])
+def test_sidecar_outside_the_namespace_keeps_its_token_and_cannot_decide(peer_pid: int | None) -> None:
     proof = "shown-to-the-test"
 
     class _Tokens:
         def claim_sidecar(self, tab_id: str, offered: str) -> bool:
             return tab_id == "tab-1" and offered == proof
 
-    connection = Connection(EventRing(), tabs=_Tokens())  # pyright: ignore[reportArgumentType] -- only the token claim is used
+    connection = Connection(EventRing(), tabs=_Tokens(), peer_pid=peer_pid)  # pyright: ignore[reportArgumentType] -- only the token claim is used
     params = InitializeParams(
         protocol=(ProtocolVersion(major=1, minor=0), ProtocolVersion(major=1, minor=0)),
         role=ClientRole.SIDECAR,
@@ -238,6 +236,7 @@ def test_sidecar_outside_the_namespace_keeps_its_token_and_cannot_decide() -> No
     ready = decode_envelope(connection.receive(body)[0])
     assert isinstance(ready, ResponseOk)
     assert connection.role is ClientRole.SIDECAR
+    assert connection.peer_pid == peer_pid, "a container PID cannot replace the kernel peer PID"
     for request_id, method in ((2, "settings/update"), (3, "approval/decide"), (4, "events/subscribe")):
         frame = connection.receive(_line(Request(id=request_id, method=method, params=msgspec.Raw(b"{}"))))
         blocked = decode_envelope(frame[0])

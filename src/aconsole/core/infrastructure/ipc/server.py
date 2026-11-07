@@ -118,7 +118,7 @@ class IpcServer:
             writer.close()
             await writer.wait_closed()
             return
-        connection = Connection(self.ring, tabs=self.tabs, host_namespace=same_mnt_namespace(pid))
+        connection = Connection(self.ring, tabs=self.tabs, host_namespace=same_mnt_namespace(pid), peer_pid=pid)
         try:
             while True:
                 try:
