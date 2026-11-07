@@ -498,6 +498,9 @@ class Daemon:
             notify=self._approval_notify, audit=self._approval_audit, now=lambda: datetime.now(UTC))
         self._host: HostTabs = HostTabs(socket_path=str(socket)) if host is None else host
         self.tabs: TabService = TabService(Clock(), self._host, listener=self._from_worker)
+        # The loop consumes immutable policy and loop-published paths without queueing behind tab/Git work.
+        self._permission_settings: Settings = self.tabs.current_settings()
+        self._permission_worktrees: dict[str, str] = {}
         self.tabs.on_ingest = self._ingest_minted
         self._catalog: ProjectCatalog = ProjectCatalog(
             HostRepos(), new_id=self._host.new_id, now=lambda: datetime.now(UTC),
@@ -597,6 +600,7 @@ class Daemon:
         self.vault.on_edit = self._vault_edited
         self._plans.note_ref = self.vault.note_ref
         self.vault_default: Path | None = None
+        self.tabs.on_settings_changed = self._use_vault
         code_graph = CodeGraphIndex(ExtractorRunner(), self._project_root)
         self._plans.code_graph = code_graph
         self.knowledge: KnowledgeService = KnowledgeService(self._plans, self.vault, code_graph)
@@ -761,6 +765,7 @@ class Daemon:
         return Path(settings.vault_path) if settings.vault_path else self.vault_default
 
     def _use_vault(self, settings: Settings) -> None:
+        self._permission_settings = settings
         self._to_vault(self._switch_vault, self._vault_root(settings))
 
     def _stop_vault(self) -> None:
@@ -776,7 +781,7 @@ class Daemon:
             _LOG.exception("the vault at %s could not be used", root)
 
     def _plan_changed(self, plan: PlanView) -> None:
-        """Any thread: MCP tools run on the loop, `plan/setNodeStatus` on the worker."""
+        """Any thread: MCP and IPC plan writes may arrive from different workers."""
         self._to_vault(self._publish_notes, str(plan.id))
         loop = self._loop
         if loop is not None and not loop.is_closed():
@@ -791,6 +796,7 @@ class Daemon:
 
     def _register_tab(self, tab: TabView, token: str) -> None:
         tab_id = str(tab.id)
+        self._permission_worktrees[tab_id] = tab.worktree_path
         if self._recovery is not None and self._recovery.tokens.get(tab_id) != token:
             self._recovery.tokens[tab_id] = token
             _write_recovery(self._recovery_path, self._recovery)
@@ -832,15 +838,14 @@ class Daemon:
             _LOG.error("approval audit failed: %s", future.exception())
 
     async def _permission(self, item: IngestItem) -> HttpResponse:
-        settings = await self._in_worker(self.tabs.current_settings)
+        settings = self._permission_settings
         if settings.approvals_mode == "native" or not self._has_approval_ui() or self._stop_requested:
             return json_response(empty_json())
-        snapshot = await self._in_worker(self.tabs.snapshot)
-        tab = next((tab for tab in snapshot.tabs if str(tab.id) == item.tab_id), None)
-        if tab is None or not self._has_approval_ui() or self._stop_requested:
+        worktree = self._permission_worktrees.get(item.tab_id)
+        if worktree is None:
             return json_response(empty_json())
         return await handle_permission(
-            item, self.approvals, hold_seconds=settings.approval_hold_seconds, worktree=tab.worktree_path,
+            item, self.approvals, hold_seconds=settings.approval_hold_seconds, worktree=worktree,
         )
 
     def _has_approval_ui(self) -> bool:
@@ -849,9 +854,12 @@ class Daemon:
 
     def _publish(self, event: UiEvent, live: int, token: str | None) -> None:
         """Number the event once, send it to every subscribed connection, and keep tokens and liveness current."""
+        if isinstance(event, (TabAdded, TabUpdated)):
+            self._permission_worktrees[str(event.tab.id)] = event.tab.worktree_path
         if isinstance(event, TabAdded) and token is not None:
             self._register_tab(event.tab, token)
         if isinstance(event, TabRemoved):
+            _ = self._permission_worktrees.pop(str(event.tab_id), None)
             self.approvals.drop_tab(str(event.tab_id))
             self._tokens.drop(str(event.tab_id))
             self._mcp_tokens.drop(str(event.tab_id))

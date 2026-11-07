@@ -253,6 +253,8 @@ def publish(fn: Callable[..., object], sent: Callable[[int], None] | None = None
     """Keep the success return type as the tool schema, and surface ``_ToolError`` as the result.
 
     ``sent`` hears the bytes of text each answer puts in the agent's context.
+    Keep this wrapper synchronous: the pinned MCP SDK dispatches it with its bounded thread worker,
+    preserving the bearer ContextVar and waiting for synchronous work before cancellation completes.
     """
     signature = inspect.signature(fn, eval_str=True)
 

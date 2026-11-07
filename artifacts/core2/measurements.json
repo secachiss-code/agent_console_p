@@ -1,0 +1,34 @@
+{
+  "before": {
+    "git_capture": {
+      "seconds": 0.17957094499979576,
+      "limit_seconds": 0.25
+    },
+    "approval_during_checkpoint": {
+      "seconds": 1.4058228620006048,
+      "limit_seconds": 0.25
+    },
+    "loop_during_mcp": {
+      "seconds": 0.004179376999672968,
+      "limit_seconds": 0.25
+    }
+  },
+  "after": {
+    "git_capture": {
+      "seconds": 0.23130878300071345,
+      "limit_seconds": 0.25
+    },
+    "approval_during_checkpoint": {
+      "seconds": 0.0031944969996402506,
+      "limit_seconds": 0.25
+    },
+    "loop_during_mcp": {
+      "seconds": 0.002364965999731794,
+      "limit_seconds": 0.25
+    },
+    "approval_during_setup": {
+      "seconds": 0.004747870001665433,
+      "limit_seconds": 0.25
+    }
+  }
+}
