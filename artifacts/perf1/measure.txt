@@ -1,0 +1,18 @@
+import cProfile
+import importlib.util
+import json
+import pstats
+import statistics
+from pathlib import Path
+import aconsole.sidecar.framer as module
+root=Path.cwd()
+spec=importlib.util.spec_from_file_location('framer_speed',root/'tests/core/test_framer_speed.py')
+test=importlib.util.module_from_spec(spec);spec.loader.exec_module(test)
+payload=test._payload()
+runs=[test._once(payload)*1000 for _ in range(40)]
+print(json.dumps({'module':module.__file__,'ms':runs,'min':min(runs),'median':statistics.median(runs),'max':max(runs)},indent=2),flush=True)
+prof=cProfile.Profile()
+prof.enable()
+for _ in range(20):test._parse(payload)
+prof.disable()
+pstats.Stats(prof).sort_stats('cumtime').print_stats(16)

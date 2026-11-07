@@ -1,0 +1,48 @@
+{
+  "base_commit": "01c5cbdecf82655b54b4a01913bd31100a863201",
+  "implementation_commit": "0263d4b1414056add0b266e93320f91661b2c34d",
+  "hostrun_speed_runs": [
+    {
+      "command": "hostrun test core -k framer_speed",
+      "exit_code": 0,
+      "passed": 1,
+      "python": "3.15.1",
+      "gil": false
+    },
+    {
+      "command": "hostrun test core -k framer_speed",
+      "exit_code": 0,
+      "passed": 1,
+      "python": "3.15.1",
+      "gil": false
+    },
+    {
+      "command": "hostrun test core -k framer_speed",
+      "exit_code": 0,
+      "passed": 1,
+      "python": "3.15.1",
+      "gil": false
+    }
+  ],
+  "current_worktree_regressions": {
+    "passed": 42,
+    "seconds": 2.91,
+    "tests": [
+      "tests/core/test_framer_speed.py",
+      "tests/core/test_sidecar.py",
+      "tests/core/test_round6_k24.py",
+      "tests/core/test_sidecar_resilience.py"
+    ]
+  },
+  "cpu_measurement_ms": {
+    "runs": 40,
+    "min": 2.2221639999999847,
+    "median": 2.6192029999999935,
+    "max": 2.8316020000000024,
+    "profile_enabled": false
+  },
+  "source_sha256": {
+    "src/aconsole/sidecar/framer.py": "50d97734b67691cc4f38e905100618c9f58391f108cb6e4241db4f4204037a06",
+    "tests/core/test_framer_speed.py": "4b74b47d2cd503b6ce07d1d440df5bde1ecd0db8dfbecf1243f7088c366e39d8"
+  }
+}
