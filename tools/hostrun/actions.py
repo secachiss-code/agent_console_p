@@ -253,6 +253,8 @@ def build_plan(
             gate_id=args[0] if len(args) == 1 else "",
         )
     if action == "gate-review":
+        if args[:1] == ["approve"]:
+            raise ActionError(403, "agent review approval is disabled; independent review is required")
         if (len(args) not in (3, 4) or args[0] not in ("inspect", "approve")
                 or len(args) != (3 if args[0] == "inspect" else 4)
                 or _TASK.fullmatch(args[1]) is None
@@ -491,7 +493,7 @@ def _gate(args: list[str], repo: str, side: str) -> tuple[Step, ...]:
     tool = f"{repo}/tools/gate/phase_gate.py"
     if args == ["--audit", "core"]:
         command = (_core_python(repo), tool, "--audit", "core")
-        return _in_devtools(repo, command, _gil_off(), side=side)
+        return _in_devtools(repo, command, _gil_off(), side=side, gate=True)
     if len(args) != 1 or _TASK.fullmatch(args[0]) is None:
         raise ActionError(400, "gate expects a task id or --audit core")
     command = (_core_python(repo), tool, args[0])

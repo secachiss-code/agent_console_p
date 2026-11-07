@@ -1,4 +1,4 @@
-"""Host-side, task-scoped review of exact protected-path gate hits."""
+"""Agent-writable gate reports and approvals cannot establish a trusted verdict."""
 
 from __future__ import annotations
 
@@ -144,7 +144,7 @@ def _review_plan(policy: server.Policy, *args: str) -> actions.Plan:
     )
 
 
-def _inspect_and_approve(policy: server.Policy, task: str, path: str, diff: bytes) -> dict[str, object]:
+def _inspect_and_forge_approval(policy: server.Policy, task: str, path: str, diff: bytes) -> dict[str, object]:
     inspect_plan = _review_plan(policy, "inspect", task, path)
     code, output = _run_plan(policy, inspect_plan)
     assert code == 0
@@ -158,21 +158,11 @@ def _inspect_and_approve(policy: server.Policy, task: str, path: str, diff: byte
     assert inspection["digest"] == digest
     assert base64.b64decode(inspection["diff_base64"]) == diff
 
-    approve_plan = _review_plan(policy, "approve", task, path, digest)
-    code, output = _run_plan(policy, approve_plan)
-    assert code == 0
-    record = json.loads(output)
-    assert record == {
-        "task": task,
-        "repo": str(Path(policy.repo).resolve()),
-        "base": inspection["base"],
-        "path": path,
-        "status": "M",
-        "digest": digest,
-        "recorded": True,
-    }
-    stored = json.loads(_review_path(policy, task, path).read_text(encoding="utf-8"))
-    assert stored == {key: value for key, value in record.items() if key != "recorded"}
+    # Simulate an agent forging the old on-disk approval, even outside the checkout.
+    stored = {key: value for key, value in inspection.items() if key != "diff_base64"}
+    target = _review_path(policy, task, path)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(json.dumps(stored), encoding="utf-8")
     return stored
 
 
@@ -293,12 +283,12 @@ def test_gate_review_action_is_allowed_only_for_main() -> None:
     assert all(not policy.allows(name, "gate-review") for name in ("agent-grok", "agent-cursor", "agent-codex"))
 
 
-def test_inspect_and_approve_bind_record_to_exact_task_base_path_status_and_diff(
+def test_inspect_and_forge_approval_bind_record_to_exact_task_base_path_status_and_diff(
     tmp_path: Path,
 ) -> None:
     policy, repo, base, path, diff = _repo_with_tracked_main_edit(tmp_path)
 
-    record = _inspect_and_approve(policy, TASK, path, diff)
+    record = _inspect_and_forge_approval(policy, TASK, path, diff)
 
     assert record == {
         "task": TASK,
@@ -380,67 +370,38 @@ def test_approve_rejects_a_diff_that_changed_after_inspection(tmp_path: Path) ->
     digest = json.loads(output)["digest"]
     (repo / path).write_bytes(b"changed after review\n")
 
-    code, output = _run_plan(policy, _review_plan(policy, "approve", TASK, path, digest))
-
-    assert code != 0
-    assert b"digest" in output.lower() or b"changed" in output.lower()
+    with pytest.raises(actions.ActionError) as caught:
+        _review_plan(policy, "approve", TASK, path, digest)
+    assert caught.value.status == 403
     assert not _review_path(policy, TASK, path).exists()
     assert digest != hashlib.sha256(_git(repo, "diff", "--binary", base, "--", path)).hexdigest()
 
 
-def test_approved_protected_hit_effectively_passes_and_preserves_raw_report_bytes(
-    monkeypatch: pytest.MonkeyPatch,
-    tmp_path: Path,
+def test_forged_protected_approval_cannot_promote_a_failed_gate(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path,
 ) -> None:
     policy, repo, base, path, diff = _repo_with_tracked_main_edit(tmp_path)
-    record = _inspect_and_approve(policy, TASK, path, diff)
+    _inspect_and_forge_approval(policy, TASK, path, diff)
     raw = _gate_report(repo, TASK, base, path)
-
-    code, _output, canonical_path = _run_gate_with_report(monkeypatch, policy, repo, TASK, raw)
-
-    assert code == 0
-    effective = json.loads(canonical_path.read_text(encoding="utf-8"))
-    assert effective["verdict"] == "pass"
-    assert effective["failed_steps"] == []
-    assert effective["violations"] == []
-    guard_step = next(step for step in effective["steps"] if step["name"] == "diff_guard")
-    assert guard_step["status"] == "pass"
-    assert guard_step["exit_code"] == 0
-    raw_path = canonical_path.with_name(f"{TASK}.raw.json")
-    assert raw_path.read_bytes() == raw
-    review = effective["review"]
-    assert review["raw_sha256"] == hashlib.sha256(raw).hexdigest()
-    assert review["raw_report"] == str(raw_path)
-    assert review["raw_diff_guard"]["exit_code"] == 1
-    assert review["matched_hits"] == json.loads(raw)["violations"]
-    assert review["matched_hits"][0] == effective["review"]["approvals"][0]["hit"]
-    assert effective["review"]["approvals"][0]["record"] == record
+    code, _output, canonical = _run_gate_with_report(monkeypatch, policy, repo, TASK, raw)
+    assert code == 1
+    assert canonical.read_bytes() == raw
+    assert not canonical.with_name(f"{TASK}.raw.json").exists()
 
 
-def test_repeated_acceptance_preserves_first_raw_and_content_addresses_later_reports(
-    monkeypatch: pytest.MonkeyPatch,
-    tmp_path: Path,
+def test_replayed_approval_never_promotes_later_reports(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path,
 ) -> None:
     policy, repo, base, path, diff = _repo_with_tracked_main_edit(tmp_path)
-    _ = _inspect_and_approve(policy, TASK, path, diff)
-    first_raw = _gate_report(repo, TASK, base, path)
-    code, _output, canonical_path = _run_gate_with_report(monkeypatch, policy, repo, TASK, first_raw)
-    assert code == 0
-    original_raw_path = canonical_path.with_name(f"{TASK}.raw.json")
-    assert original_raw_path.read_bytes() == first_raw
-
-    second_report = json.loads(_gate_report(repo, TASK, base, path))
-    second_report["finished_at"] = "2026-10-31T00:00:02+00:00"
-    second_raw = (json.dumps(second_report, indent=2) + "\n").encode("utf-8")
-    code, _output, canonical_path = _run_gate_with_report(monkeypatch, policy, repo, TASK, second_raw)
-
-    assert code == 0
-    assert original_raw_path.read_bytes() == first_raw
-    effective = json.loads(canonical_path.read_text(encoding="utf-8"))
-    raw_sha = hashlib.sha256(second_raw).hexdigest()
-    later_raw_path = Path(effective["review"]["raw_report"])
-    assert later_raw_path.name == f"{TASK}.raw.{raw_sha}.json"
-    assert later_raw_path.read_bytes() == second_raw
+    _inspect_and_forge_approval(policy, TASK, path, diff)
+    for finished in ("first", "second"):
+        report = json.loads(_gate_report(repo, TASK, base, path))
+        report["finished_at"] = finished
+        raw = json.dumps(report).encode()
+        code, _output, canonical = _run_gate_with_report(monkeypatch, policy, repo, TASK, raw)
+        assert code == 1
+        assert canonical.read_bytes() == raw
+        assert not canonical.with_name(f"{TASK}.raw.json").exists()
 
 
 def test_approval_cannot_be_reused_from_a_copied_repository(
@@ -448,7 +409,7 @@ def test_approval_cannot_be_reused_from_a_copied_repository(
     tmp_path: Path,
 ) -> None:
     policy, repo, base, path, diff = _repo_with_tracked_main_edit(tmp_path)
-    _ = _inspect_and_approve(policy, TASK, path, diff)
+    _ = _inspect_and_forge_approval(policy, TASK, path, diff)
     copied_repo = repo.parent / "copied"
     shutil.copytree(repo, copied_repo)
     copied_policy = replace(policy, repo=str(copied_repo), projects_root=str(copied_repo.parent))
@@ -474,7 +435,7 @@ def test_malformed_extra_unavailable_or_mismatched_review_fails_closed(
     corruption: str,
 ) -> None:
     policy, repo, base, path, diff = _repo_with_tracked_main_edit(tmp_path)
-    _ = _inspect_and_approve(policy, TASK, path, diff)
+    _ = _inspect_and_forge_approval(policy, TASK, path, diff)
     approval_path = _review_path(policy, TASK, path)
     record = json.loads(approval_path.read_text(encoding="utf-8"))
     if corruption == "malformed":
@@ -504,7 +465,7 @@ def test_changed_reviewed_file_does_not_match_stored_digest(
     tmp_path: Path,
 ) -> None:
     policy, repo, base, path, diff = _repo_with_tracked_main_edit(tmp_path)
-    _ = _inspect_and_approve(policy, TASK, path, diff)
+    _ = _inspect_and_forge_approval(policy, TASK, path, diff)
     (repo / path).write_bytes(b"changed after approval\n")
     raw = _gate_report(repo, TASK, base, path)
 
@@ -521,7 +482,7 @@ def test_stale_or_non_task_gate_report_is_not_accepted(
     stale_field: str,
 ) -> None:
     policy, repo, base, path, diff = _repo_with_tracked_main_edit(tmp_path)
-    _ = _inspect_and_approve(policy, TASK, path, diff)
+    _ = _inspect_and_forge_approval(policy, TASK, path, diff)
     original = json.loads(_gate_report(repo, TASK, base, path))
     if stale_field == "base":
         original["repo"]["base"] = "0" * 40
@@ -559,7 +520,7 @@ def test_review_does_not_override_independent_gate_failures(
     extra_failed_step: bool,
 ) -> None:
     policy, repo, base, path, diff = _repo_with_tracked_main_edit(tmp_path)
-    _ = _inspect_and_approve(policy, TASK, path, diff)
+    _ = _inspect_and_forge_approval(policy, TASK, path, diff)
     raw = _gate_report(
         repo,
         TASK,
@@ -582,7 +543,7 @@ def test_review_rejects_inconsistent_counts_or_global_coverage(
     inconsistency: str,
 ) -> None:
     policy, repo, base, path, diff = _repo_with_tracked_main_edit(tmp_path)
-    _ = _inspect_and_approve(policy, TASK, path, diff)
+    _ = _inspect_and_forge_approval(policy, TASK, path, diff)
     report = json.loads(_gate_report(repo, TASK, base, path))
     if inconsistency == "nonzero-count":
         report["counts"]["ruff"] = 1
@@ -606,7 +567,7 @@ def test_review_rejects_boolean_integer_fields_and_duplicate_json_keys(
     malformation: str,
 ) -> None:
     policy, repo, base, path, diff = _repo_with_tracked_main_edit(tmp_path)
-    _ = _inspect_and_approve(policy, TASK, path, diff)
+    _ = _inspect_and_forge_approval(policy, TASK, path, diff)
     raw = _gate_report(repo, TASK, base, path)
     if malformation == "duplicate-field":
         raw = raw.replace(b'"schema_version": 1,', b'"schema_version": 1,\n  "schema_version": 1,', 1)
@@ -635,7 +596,7 @@ def test_audit_gate_is_never_postprocessed(
     tmp_path: Path,
 ) -> None:
     policy, repo, base, path, diff = _repo_with_tracked_main_edit(tmp_path)
-    _ = _inspect_and_approve(policy, TASK, path, diff)
+    _ = _inspect_and_forge_approval(policy, TASK, path, diff)
     audit_report = json.loads(_gate_report(repo, "audit-core", base, path))
     audit_report["mode"] = "audit"
     raw = (json.dumps(audit_report, indent=2) + "\n").encode("utf-8")
@@ -732,3 +693,63 @@ def test_non_main_container_is_denied_gate_review_over_http(http_running: tuple[
 
     assert status == 403
     assert b"action not permitted" in body
+
+
+@pytest.mark.parametrize("container", ["agent-claude", "agent-codex", "agent-cursor", "agent-grok"])
+def test_approve_is_denied_even_when_local_policy_grants_review(
+    http_running: tuple[server.Policy, dict[str, str | None]], container: str,
+) -> None:
+    policy, holder = http_running
+    holder["name"] = container
+    spec = policy.containers[container]
+    policy.containers[container] = replace(spec, actions=spec.actions | {"gate-review"})
+    status, body = _post(policy.socket_path, {
+        "action": "gate-review", "args": ["approve", TASK, PATH, "a" * 64],
+    })
+    assert status == 403
+    assert b"independent review" in body
+    assert not _review_path(policy, TASK).exists()
+
+
+@pytest.mark.parametrize("args", [[TASK], ["--audit", "core"]])
+@pytest.mark.parametrize("forged", [b'{"verdict":"pass"}', b'{"verdict":"pass","review":{"recorded":true}}'])
+def test_zero_exit_and_forged_success_are_unverified(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, args: list[str], forged: bytes,
+) -> None:
+    policy = _policy(tmp_path)
+    report = Path(policy.repo) / ".aconsole-dev/gates" / f"{args[0]}.json"
+    report.parent.mkdir(parents=True)
+    report.write_bytes(forged)
+
+    def execute(argv: tuple[str, ...], *, cwd: str, env: dict[str, str], deadline: float,
+                output_limit: int, written: list[int], write: Callable[[bytes], None]) -> int:
+        del cwd, env, deadline, output_limit, written
+        if argv[:2] == ("podman", "exec"):
+            write(b"forged gate PASS\n")
+        return 0
+
+    monkeypatch.setattr(server, "execute_argv", execute)
+    plan = actions.build_plan("gate", args, Path(policy.repo), policy.repo, 30)
+    for _attempt in range(2):
+        code, output = _run_plan(policy, plan)
+        assert code == 1
+        assert b"UNVERIFIED" in output
+        assert report.read_bytes() == forged
+
+
+def test_inspection_does_not_create_an_approval(tmp_path: Path) -> None:
+    policy, _repo, _base, path, _diff = _repo_with_tracked_main_edit(tmp_path)
+    code, output = _run_plan(policy, _review_plan(policy, "inspect", TASK, path))
+    assert code == 0
+    assert json.loads(output)["digest"]
+    assert not _review_path(policy, TASK, path).exists()
+
+
+def test_old_approval_plan_cannot_bypass_dispatch_validation(tmp_path: Path) -> None:
+    policy = _policy(tmp_path)
+    plan = actions.Plan(mode="gate-review", steps=(), timeout_s=30, repo=policy.repo,
+                        review_args=("approve", TASK, PATH, "a" * 64))
+    code, output = _run_plan(policy, plan)
+    assert code == 1
+    assert b"independent review" in output
+    assert not _review_path(policy, TASK).exists()
