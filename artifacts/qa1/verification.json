@@ -1,0 +1,31 @@
+{
+  "baseline_commit": "5a96265e",
+  "security_fix_commit": "37728b85",
+  "initial_suite": {
+    "passed": 490,
+    "skipped": 1,
+    "seconds": 37.07
+  },
+  "final_suite": {
+    "passed": 515,
+    "skipped": 1,
+    "seconds": 44.73
+  },
+  "hostrun_and_session_cost_followup": {
+    "passed": 168,
+    "seconds": 24.38,
+    "overlaps_final_suite": true
+  },
+  "work_session_cleanup_recovery_sidecar": {
+    "passed": 35,
+    "seconds": 21.23
+  },
+  "vte_adapter": {
+    "passed": 13,
+    "seconds": 0.46,
+    "warnings": 1
+  },
+  "found_defect": "SEC-12",
+  "live_service_restarted": false,
+  "sec7_isolation_verified": false
+}
