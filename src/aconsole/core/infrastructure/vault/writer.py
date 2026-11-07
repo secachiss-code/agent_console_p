@@ -12,6 +12,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from io import StringIO
 from pathlib import Path
+from threading import Lock
 from typing import Protocol
 
 from ruamel.yaml import YAML
@@ -114,24 +115,28 @@ class EchoBook:
     def __init__(self, ttl: timedelta = _TTL) -> None:
         self._ttl: timedelta = ttl
         self._seen: dict[Path, _Echo] = {}
+        self._lock: Lock = Lock()
 
     def remember(self, path: Path, text: str, now: datetime) -> None:
         """Record the hashes of ``text`` until ``now + ttl``."""
-        self._prune(now)
-        front, body = split_note(text)
-        self._seen[path] = _Echo(front=_digest(front), body=_digest(body), until=now + self._ttl)
+        with self._lock:
+            self._prune(now)
+            front, body = split_note(text)
+            self._seen[path] = _Echo(front=_digest(front), body=_digest(body), until=now + self._ttl)
 
     def is_echo(self, path: Path, text: str, now: datetime) -> bool:
         """True when ``text`` is a write this book still remembers."""
-        self._prune(now)
-        found = self._seen.get(path)
-        if found is None:
-            return False
-        front, body = split_note(text)
-        return found.front == _digest(front) and found.body == _digest(body)
+        with self._lock:
+            self._prune(now)
+            found = self._seen.get(path)
+            if found is None:
+                return False
+            front, body = split_note(text)
+            return found.front == _digest(front) and found.body == _digest(body)
 
     def __len__(self) -> int:
-        return len(self._seen)
+        with self._lock:
+            return len(self._seen)
 
     def _prune(self, now: datetime) -> None:
         stale = [path for path, item in self._seen.items() if now > item.until]
