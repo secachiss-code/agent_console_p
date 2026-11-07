@@ -4,6 +4,15 @@
 import locale
 
 _MESSAGES = {
+    "quit.heading": ("Close AConsole?", "Закрыть AConsole?"),
+    "quit.counts": ("Running agents: {agents}. Pending requests: {approvals}.",
+                    "Работающих агентов: {agents}. Ожидающих запросов: {approvals}."),
+    "quit.unknown": ("Could not check running agents. They may still be working.",
+                     "Не удалось проверить агентов. Они могут продолжать работу."),
+    "quit.effect": ("Work may be interrupted. Pending requests will no longer be visible. Working copies remain.",
+                    "Работа может прерваться. Запросы больше не будут видны. Рабочие копии сохранятся."),
+    "quit.cancel": ("Stay", "Остаться"),
+    "quit.close": ("Close application", "Закрыть приложение"),
     "health.isolation": ("Container isolation", "Изоляция контейнеров"),
     "health.isolation_unknown": (
         "Isolation has not been verified. Check container mounts before trusting approval restrictions.",

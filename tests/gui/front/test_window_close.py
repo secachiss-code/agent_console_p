@@ -1,4 +1,4 @@
-"""Closing the window ends the whole process, whatever state the window is in."""
+"""Closing after confirmation ends the whole process, whatever state the window is in."""
 
 from __future__ import annotations
 
@@ -55,8 +55,15 @@ _DRIVER = textwrap.dedent(
         def close_it(self):
             log("close")
             self.window.close()
+            GLib.timeout_add(50, self.confirm_close)
             # libadwaita gives the first close to an open dialog; the next one closes the window.
             return GLib.SOURCE_CONTINUE if state == "dialog" else GLib.SOURCE_REMOVE
+
+        def confirm_close(self):
+            if self._quit_dialog is not None:
+                self._quit_dialog.emit("response", "close")
+                return GLib.SOURCE_REMOVE
+            return GLib.SOURCE_CONTINUE
 
     with tempfile.TemporaryDirectory() as directory:
         client = CoreClient(str(Path(directory) / "core.sock"))

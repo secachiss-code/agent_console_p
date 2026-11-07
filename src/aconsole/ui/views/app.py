@@ -17,6 +17,7 @@ gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
 from gi.repository import Adw, Gdk, Gio, GLib, Gtk  # noqa: E402
 
+from aconsole.contracts.app import EmptyParams, QuitCheckResult  # noqa: E402
 from aconsole.contracts.common import TabId  # noqa: E402
 from aconsole.ui.bootstrap import spawn_task  # noqa: E402
 from aconsole.ui.client.core_age import core_is_older_than_code  # noqa: E402
@@ -70,6 +71,8 @@ class AConsoleApp(Adw.Application):
         self.failed: bool = False
         self._starting: bool = False
         self._finishing: bool = False
+        self._quit_checking: bool = False
+        self._quit_dialog: Adw.AlertDialog | None = None
 
     @override
     def do_startup(self) -> None:
@@ -200,12 +203,53 @@ class AConsoleApp(Adw.Application):
             self.release()
 
     def _close_requested(self, window: Gtk.Window) -> bool:
-        # The window goes at once; stopping the core must never be what the user is left looking at.
+        if self._finishing:
+            return True
+        if window is self.window:
+            if self._quit_dialog is not None:
+                self._quit_dialog.present(window)
+            elif not self._quit_checking:
+                self._quit_checking = True
+                _ = spawn_task(self._confirm_quit(window))
+        else:
+            self._close_now(window)
+        return True
+
+    async def _confirm_quit(self, window: Gtk.Window) -> None:
+        try:
+            result = await self.client.request("app/quitCheck", EmptyParams(), QuitCheckResult)
+        except Exception:  # noqa: BLE001 -- unknown process state requires explicit confirmation
+            result = None
+        finally:
+            self._quit_checking = False
+        if self._finishing:
+            return
+        if result is not None and not result.busy_tabs and not result.pending_approvals:
+            self._close_now(window)
+            return
+        body = translate("quit.unknown") if result is None else translate("quit.counts").format(
+            agents=len(result.busy_tabs), approvals=result.pending_approvals,
+        )
+        dialog = Adw.AlertDialog(heading=translate("quit.heading"), body=body + "\n\n" + translate("quit.effect"))
+        dialog.add_response("cancel", translate("quit.cancel"))
+        dialog.add_response("close", translate("quit.close"))
+        dialog.set_default_response("cancel")
+        dialog.set_close_response("cancel")
+        dialog.set_response_appearance("close", Adw.ResponseAppearance.DESTRUCTIVE)
+        _ = dialog.connect("response", self._quit_decided, window)
+        self._quit_dialog = dialog
+        dialog.present(window)
+
+    def _quit_decided(self, _dialog: Adw.AlertDialog, response: str, window: Gtk.Window) -> None:
+        self._quit_dialog = None
+        if response == "close":
+            self._close_now(window)
+
+    def _close_now(self, window: Gtk.Window) -> None:
         window.set_visible(False)
         if self._opening_task is not None and not self._opening_task.done():
             _ = self._opening_task.cancel()
         _ = spawn_task(self._finish())
-        return True
 
     def _capture(self) -> None:
         request = self.snapshot_request

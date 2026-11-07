@@ -1,0 +1,44 @@
+import sys
+from pathlib import Path
+from types import SimpleNamespace
+import gi
+gi.require_version('Gtk','4.0')
+gi.require_version('Adw','1')
+from gi.repository import Adw, GLib, Gtk
+from aconsole.ui.views.app import AConsoleApp
+from aconsole.ui.views.window import MainWindow
+from aconsole.ui.client.core_client import CoreClient
+from aconsole.ui.bootstrap import run_app, spawn_task
+from aconsole.ui.snapshot import capture_window
+from aconsole.contracts.app import QuitCheckResult
+from aconsole.contracts.common import TabId
+
+class Preview(AConsoleApp):
+    def do_activate(self):
+        Adw.StyleManager.get_default().set_color_scheme(Adw.ColorScheme.FORCE_DARK if sys.argv[2]=='dark' else Adw.ColorScheme.FORCE_LIGHT)
+        win=Adw.ApplicationWindow(application=self,default_width=int(sys.argv[3]),default_height=800,title='AConsole')
+        win.set_content(Gtk.Label(label='AConsole'))
+        self.window=win
+        win.present()
+        async def request(*args):
+            return QuitCheckResult(busy_tabs=(TabId('tab'),TabId('other')),pending_approvals=3)
+        self.client.request=request
+        if sys.argv[1]=='quit':
+            spawn_task(self._confirm_quit(win))
+        else:
+            win._closing_tab_dialogs={}
+            win._checking_tab_close=set()
+            win._stop_tab_decided=lambda *args:None
+            win.tabs=SimpleNamespace(client=SimpleNamespace(request=request,store=SimpleNamespace(snapshot=None)))
+            spawn_task(MainWindow._close_tab_now(win,'tab',None))
+        def capture():
+            target=win.get_visible_dialog()
+            if target is None:
+                return True
+            capture_window(target,Path(sys.argv[4]))
+            self.quit()
+            return False
+        GLib.timeout_add(500,capture)
+        GLib.timeout_add_seconds(12,self.quit)
+
+raise SystemExit(run_app(lambda:Preview(CoreClient('unused')),['aconsole-ux2-preview']))

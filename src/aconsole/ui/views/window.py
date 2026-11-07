@@ -18,6 +18,7 @@ from aconsole.contracts.app import (  # noqa: E402
     EmptyResult,
     PaletteQuery,
     PlanNodeView,
+    QuitCheckResult,
     SetNodeStatusParams,
 )
 from aconsole.contracts.common import ApprovalDecision, NodeId, NodeStatus, PlanId, ProjectId, TabId  # noqa: E402
@@ -461,6 +462,8 @@ class MainWindow(Adw.ApplicationWindow):
             self._open_review(parameter.get_string())
 
     def _install_tab_actions(self) -> None:
+        self._closing_tab_dialogs: dict[str, Adw.AlertDialog] = {}
+        self._checking_tab_close: set[str] = set()
         toggle = Gio.SimpleAction.new("toggle-sidebar", None)
         _ = toggle.connect("activate", self._toggle_sidebar)
         self.add_action(toggle)
@@ -518,7 +521,33 @@ class MainWindow(Adw.ApplicationWindow):
     def _close_tab(self, tab_id: str) -> None:
         _ = spawn_task(self._close_tab_now(tab_id, None))
 
-    async def _close_tab_now(self, tab_id: str, decision: Literal["keep", "remove"] | None) -> None:
+    async def _close_tab_now(
+        self, tab_id: str, decision: Literal["keep", "remove"] | None, *, agent_confirmed: bool = False,
+    ) -> None:
+        if decision is None and not agent_confirmed:
+            if tab_id in self._closing_tab_dialogs or tab_id in self._checking_tab_close:
+                return
+            self._checking_tab_close.add(tab_id)
+            try:
+                check = await self.tabs.client.request("app/quitCheck", EmptyParams(), QuitCheckResult)
+                running = TabId(tab_id) in check.busy_tabs
+            except Exception:  # noqa: BLE001 -- an unknown process must not be stopped without confirmation
+                running = True
+            finally:
+                self._checking_tab_close.discard(tab_id)
+            snapshot = self.tabs.client.store.snapshot
+            pending = snapshot is not None and any(str(view.tab_id) == tab_id for view in snapshot.approvals)
+            if running or pending:
+                dialog = Adw.AlertDialog(heading=tabs_text("tabs.stop_heading"), body=tabs_text("tabs.stop_body"))
+                dialog.add_response("cancel", tabs_text("tabs.close_cancel"))
+                dialog.add_response("close", tabs_text("tabs.stop_close"))
+                dialog.set_default_response("cancel")
+                dialog.set_close_response("cancel")
+                dialog.set_response_appearance("close", Adw.ResponseAppearance.DESTRUCTIVE)
+                self._closing_tab_dialogs[tab_id] = dialog
+                _ = dialog.connect("response", self._stop_tab_decided, tab_id)
+                dialog.present(self)
+                return
         try:
             result = await self.tabs.close(tab_id, decision)
         except Exception as error:  # noqa: BLE001 -- a refusal stays visible; the node stays as the core keeps it
@@ -527,7 +556,9 @@ class MainWindow(Adw.ApplicationWindow):
         if result.needs_decision:
             dialog = Adw.AlertDialog(
                 heading=tabs_text("tabs.close_heading"),
-                body=result.dirty_summary or tabs_text("tabs.close_body"),
+                body=tabs_text(f"tabs.reason.{result.dirty_summary}") if result.dirty_summary in {
+                    "dirty", "ahead", "ignored", "kept",
+                } else tabs_text("tabs.close_body"),
             )
             dialog.add_response("cancel", tabs_text("tabs.close_cancel"))
             dialog.add_response("keep", tabs_text("tabs.close_keep"))
@@ -539,7 +570,15 @@ class MainWindow(Adw.ApplicationWindow):
             dialog.present(self)
             return
         if result.closed and result.dirty_summary:
-            self._tab_error(tabs_text("tabs.close_kept").format(reason=result.dirty_summary))
+            reason = tabs_text(f"tabs.reason.{result.dirty_summary}") if result.dirty_summary in {
+                "dirty", "ahead", "ignored", "kept",
+            } else tabs_text("tabs.close_body")
+            self._tab_error(tabs_text("tabs.close_kept").format(reason=reason))
+
+    def _stop_tab_decided(self, _dialog: Adw.AlertDialog, response: str, tab_id: str) -> None:
+        _ = self._closing_tab_dialogs.pop(tab_id, None)
+        if response == "close":
+            _ = spawn_task(self._close_tab_now(tab_id, None, agent_confirmed=True))
 
     def _close_decided(self, _dialog: Adw.AlertDialog, response: str, tab_id: str) -> None:
         if response == "keep":

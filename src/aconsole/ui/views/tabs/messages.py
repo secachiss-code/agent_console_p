@@ -2,7 +2,21 @@
 
 import locale
 
+# ruff: noqa: RUF001 -- Russian UI text
 _MESSAGES = {
+    "tabs.stop_heading": ("Stop the agent and close the tab?", "Остановить агента и закрыть вкладку?"),
+    "tabs.stop_body": ("Unfinished commands will stop. The working copy will be checked before closing.",
+                       "Незавершённая команда будет прервана. Перед закрытием приложение проверит рабочую копию."),
+    "tabs.stop_close": ("Stop and close", "Остановить и закрыть"),
+    "tabs.reason.dirty": (
+        "The working copy contains uncommitted changes.", "В рабочей копии есть незаписанные изменения.",
+    ),
+    "tabs.reason.ahead": ("The working copy contains commits not merged into the base branch.",
+                          "В рабочей копии есть коммиты, не слитые в базовую ветку."),
+    "tabs.reason.ignored": ("The working copy contains ignored files that would be removed.",
+                            "В рабочей копии есть игнорируемые файлы, которые будут удалены."),
+    "tabs.reason.kept": ("The working copy was kept because removal could not be completed.",
+                         "Рабочая копия сохранена: удалить её не удалось."),
     "tabs.new.work_session": ("Task session", "Рабочая сессия"),
     "tabs.new.task": ("New task", "Новая задача"),
     "tabs.new.task_title": ("Task title", "Название задачи"),
@@ -38,11 +52,11 @@ _MESSAGES = {
     "tabs.new.open": ("Open", "Открыть"),
     "tabs.new.no_agents": ("No agents are available", "Нет доступных агентов"),
     "tabs.new.no_projects": ("Add a project to open a tab", "Добавьте проект, чтобы открыть вкладку"),
-    "tabs.new.error": ("Could not open the tab: {error}", "Не удалось открыть вкладку: {error}"),  # noqa: RUF001 -- Russian UI text
-    "tabs.new.project_error": ("Could not add the project: {error}", "Не удалось добавить проект: {error}"),  # noqa: RUF001 -- Russian UI text
-    "tabs.close_error": ("Could not close the tab: {error}", "Не удалось закрыть вкладку: {error}"),  # noqa: RUF001 -- Russian UI text
+    "tabs.new.error": ("Could not open the tab: {error}", "Не удалось открыть вкладку: {error}"),
+    "tabs.new.project_error": ("Could not add the project: {error}", "Не удалось добавить проект: {error}"),
+    "tabs.close_error": ("Could not close the tab: {error}", "Не удалось закрыть вкладку: {error}"),
     "tabs.close_heading": ("Keep the working copy?", "Оставить рабочую копию?"),
-    "tabs.close_body": ("The tab has its own working copy", "У вкладки есть своя рабочая копия"),  # noqa: RUF001 -- Russian UI text
+    "tabs.close_body": ("The tab has its own working copy", "У вкладки есть своя рабочая копия"),
     "tabs.close_cancel": ("Cancel", "Отмена"),
     "tabs.close_keep": ("Keep", "Оставить"),
     "tabs.close_remove": ("Remove", "Удалить"),
@@ -52,7 +66,7 @@ _MESSAGES = {
     ),
     "tabs.reorder_error": (
         "Could not finish reordering. Tab order may have changed",
-        "Не удалось завершить перестановку. Порядок вкладок мог измениться",  # noqa: RUF001 -- Russian UI text
+        "Не удалось завершить перестановку. Порядок вкладок мог измениться",
     ),
     "tabs.status.starting": ("Starting", "Запускается"),
     "tabs.status.idle": ("Idle", "Свободен"),
