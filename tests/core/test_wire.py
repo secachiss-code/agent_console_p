@@ -105,9 +105,9 @@ class _Client:
         return (await self.call("app/snapshot", EmptyParams(), SnapshotResult)).snapshot
 
 
-async def _connect(socket: Path) -> _Client:
+async def _connect(socket: Path, *, stream_limit: int = 65536) -> _Client:
     await wait_for_socket(socket)
-    reader, writer = await asyncio.open_unix_connection(socket)
+    reader, writer = await asyncio.open_unix_connection(socket, limit=stream_limit)
     client = _Client(reader, writer)
     params = InitializeParams(
         protocol=(ProtocolVersion(major=1, minor=0), ProtocolVersion(major=1, minor=0)),

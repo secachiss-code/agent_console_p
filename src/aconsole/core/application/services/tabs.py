@@ -489,7 +489,7 @@ class TabService:
         for saved in store.load_open():
             self._adopt(saved)
 
-    def snapshot(self) -> AppSnapshot:
+    def snapshot(self, *, include_runtime_details: bool = True) -> AppSnapshot:
         """The tabs the core would hand to `app/snapshot`, in display order."""
         ordered = sorted(self._tabs.values(), key=_by_order)
         stored = self._stored_settings()
@@ -498,8 +498,8 @@ class TabService:
             api_version=API_VERSION,
             projects=() if catalog is None else catalog.views(),
             active_project=None if catalog is None else catalog.active,
-            agents=self._agents() if self._agents is not None else (),
-            accounts=self._accounts() if self._accounts is not None else (),
+            agents=self._agents() if include_runtime_details and self._agents is not None else (),
+            accounts=self._accounts() if include_runtime_details and self._accounts is not None else (),
             tabs=tuple(self._view(tab) for tab in ordered),
             approvals=(),
             plans=(),

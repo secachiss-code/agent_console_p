@@ -1,0 +1,12 @@
+{
+  "tests_passed": 36,
+  "items": 403,
+  "plan_nodes": 200,
+  "requests": 10,
+  "median_ms": 4.87,
+  "max_ms": 14.66,
+  "each_response_limit_ms": 100,
+  "basedpyright_errors": 0,
+  "basedpyright_warnings": 0,
+  "observer_thread_errors": 0
+}

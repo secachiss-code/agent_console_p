@@ -19,12 +19,13 @@ from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from enum import Enum, auto
 from pathlib import Path
+from threading import Lock
 from typing import TYPE_CHECKING, override
 
 import msgspec
 import uvicorn
 
-from aconsole.contracts.app import AccountView, CloseTabParams, CommandResult, HealthResult
+from aconsole.contracts.app import AccountView, AppSnapshot, CloseTabParams, CommandResult, HealthResult, PlanView
 from aconsole.contracts.common import AccountId, AgentKind, ClientRole, TabId
 from aconsole.contracts.errors import ErrorData, ErrorObject, MessageTooLargeDetails, error_by_name
 from aconsole.contracts.events import Notify, PlanUpdated, QuotaUpdated, TabAdded, TabRemoved, TabUpdated, UiEvent
@@ -40,6 +41,7 @@ from aconsole.core.application.services.git_merge import GitMergeService
 from aconsole.core.application.services.git_ops import GitOperationService
 from aconsole.core.application.services.git_rewrite import GitRewriteService
 from aconsole.core.application.services.git_state import GitStateService
+from aconsole.core.application.services.palette import PaletteService
 from aconsole.core.application.services.projects import ProjectCatalog
 from aconsole.core.application.services.quota_aggregator import QuotaAggregator
 from aconsole.core.application.services.review import ReviewService
@@ -589,6 +591,8 @@ class Daemon:
         self._tokens: TokenBook = TokenBook()
         self._recovery: _Recovery | None = None
         self._recovery_path: Path = self.socket.with_suffix(".recovery.json")
+        self._palette_plans: dict[str, PlanView] = {}
+        self._palette_plan_lock: Lock = Lock()
         self._plans: PlanBoard = PlanBoard(checked_completion=True)
         self._plans.on_changed = self._plan_changed
         # Off the loop and off the tab worker: files can be slow, and an edit must not wait for a tab call.
@@ -600,6 +604,9 @@ class Daemon:
         code_graph = CodeGraphIndex(ExtractorRunner(), self._project_root)
         self._plans.code_graph = code_graph
         self.knowledge: KnowledgeService = KnowledgeService(self._plans, self.vault, code_graph)
+        self.palette: PaletteService = PaletteService(
+            self._palette_snapshot, self._palette_note_uri, self.vault.note_ref,
+        )
         self._mcp_tokens: TabTokens = TabTokens()
         self._mcp: MCPServer = build_server(
             self._plans,
@@ -777,6 +784,8 @@ class Daemon:
 
     def _plan_changed(self, plan: PlanView) -> None:
         """Any thread: MCP tools run on the loop, `plan/setNodeStatus` on the worker."""
+        with self._palette_plan_lock:
+            self._palette_plans[str(plan.id)] = plan
         self._to_vault(self._publish_notes, str(plan.id))
         loop = self._loop
         if loop is not None and not loop.is_closed():
@@ -1314,6 +1323,9 @@ class Daemon:
         self.review.checkpoints.use_journal(checkpoints)
         self.review.checkpoints.protected_ref = checkpoints.is_session_ref
         await asyncio.to_thread(self._plans.use_store, PlanDatabase(writer))
+        restored_plans = await asyncio.to_thread(self._plans.views)
+        with self._palette_plan_lock:
+            self._palette_plans.update((str(plan.id), plan) for plan in restored_plans)
         await asyncio.to_thread(self._plans.use_knowledge, KnowledgeDatabase(writer))
         await asyncio.to_thread(self.vault.use_bases, VaultFileDatabase(writer))
         self.tabs.use_store(store)
@@ -1360,6 +1372,21 @@ class Daemon:
         self._writer = writer
         self._sweeper = asyncio.create_task(self._sweep_loop(writer))
         self._health = asyncio.create_task(self._health_loop())
+
+    def _palette_snapshot(self) -> AppSnapshot:
+        with self._palette_plan_lock:
+            plans = tuple(self._palette_plans.values())
+        return msgspec.structs.replace(
+            self.tabs.snapshot(include_runtime_details=False), plans=plans,
+            approvals=self.approvals.pending_views(), vault_ok=self.vault.root is not None,
+        )
+
+    def _palette_note_uri(self, note: str) -> str:
+        path = self.vault.resolve(note)
+        if path is None:
+            message = "note is no longer available"
+            raise ValueError(message)
+        return path.as_uri()
 
     def health(self) -> HealthResult:
         """What a slow or failing core looks like from outside: the writer's backlog, its failures, and IPC times."""
@@ -1617,7 +1644,7 @@ class Daemon:
         connection = Connection(
             self._ring, tabs=self.tabs, approval_hold=self.approvals, setup_service=self.setup_service,
             review=self.review, knowledge=self.knowledge, git=self.git,
-            host_namespace=same_mnt_namespace(pid),
+            host_namespace=same_mnt_namespace(pid), palette=self.palette,
         )
         connection.on_agent_notice = self._agent_notice
         connection.on_screen_signal = self._screen_signal

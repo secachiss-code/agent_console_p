@@ -48,6 +48,7 @@ from aconsole.contracts.ipc import (
 from aconsole.core.application.ports.git_repo import GitCommandError
 from aconsole.core.application.services.approval_broker import ApprovalHold
 from aconsole.core.application.services.git import GIT_METHODS, GitService
+from aconsole.core.application.services.palette import PALETTE_METHODS, PaletteService
 from aconsole.core.application.services.review import REVIEW_METHODS, ReviewService
 from aconsole.core.application.services.setup import SetupService
 from aconsole.core.application.services.tabs import SETTINGS_METHODS, TAB_METHODS, TabRequestError, TabService
@@ -103,6 +104,7 @@ class Connection:
         knowledge: KnowledgeService | None = None,
         git: GitService | None = None,
         host_namespace: bool = False,
+        palette: PaletteService | None = None,
     ) -> None:
         self.ring = ring
         self.outbound_limit = outbound_limit
@@ -113,6 +115,7 @@ class Connection:
         self.review = review
         self.knowledge = knowledge
         self.git = git
+        self.palette = palette
         self.capabilities: frozenset[str] = frozenset()
         self.ready = False
         self.paused = False
@@ -214,6 +217,8 @@ class Connection:
             return self._setup(request, self.setup_service)
         if request.method in _APP_METHODS and self.tabs is not None:
             return self._app(request, self.tabs)
+        if request.method in PALETTE_METHODS and self.palette is not None:
+            return self._service(request, self.palette.dispatch)
         if request.method in REVIEW_METHODS and self.review is not None:
             return self._service(request, self.review.dispatch)
         if request.method in GIT_METHODS and self.git is not None:
