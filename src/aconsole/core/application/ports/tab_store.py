@@ -60,6 +60,8 @@ class TabDirectory:
     setup_completed: bool = False
     approvals_mode: str = "inline"
     approval_hold_seconds: int = 540
+    approval_policy: str = "ask"
+    approval_dangerous: str = "ask"
     preferences: dict[str, object] = field(default_factory=dict[str, object])
 
 
@@ -72,6 +74,8 @@ class ProjectRecord:
     root: str
     default_branch: str
     created_at: datetime
+    approval_policy: str | None = None
+    approval_dangerous: str | None = None
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -90,6 +94,10 @@ class ProjectStore(Protocol):
         ...
 
     def save_active_project(self, project_id: str | None) -> None: ...
+
+    def save_project_policy(self, project_id: str, policy: str | None, dangerous: str | None) -> bool:
+        """Store the override. False when the project row does not exist. None clears it."""
+        ...
 
 
 class TabStore(Protocol):

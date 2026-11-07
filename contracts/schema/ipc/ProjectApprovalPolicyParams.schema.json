@@ -1,0 +1,39 @@
+{
+  "$defs": {
+    "ProjectApprovalPolicyParams": {
+      "description": "Set or clear one project's override. `inherit` drops it so the global choice applies.",
+      "properties": {
+        "approval_dangerous": {
+          "default": "ask",
+          "enum": [
+            "allow",
+            "ask"
+          ]
+        },
+        "approval_policy": {
+          "default": "ask",
+          "enum": [
+            "allow",
+            "ask",
+            "deny",
+            "scenario"
+          ]
+        },
+        "inherit": {
+          "default": false,
+          "type": "boolean"
+        },
+        "project_id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "project_id"
+      ],
+      "title": "ProjectApprovalPolicyParams",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/ProjectApprovalPolicyParams",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

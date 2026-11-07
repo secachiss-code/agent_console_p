@@ -39,6 +39,7 @@ from aconsole.contracts.app import (
     PreparedImagePaste,
     PrepareImagePasteParams,
     ProjectAddParams,
+    ProjectApprovalPolicyParams,
     ProjectIdParams,
     ProjectView,
     QuitCheckResult,
@@ -194,6 +195,9 @@ class TypedFacade(Facade):
 
     async def project_set_active(self, params: ProjectIdParams) -> EmptyResult:
         return await self.typed("project/setActive", params, EmptyResult)
+
+    async def project_set_approval_policy(self, params: ProjectApprovalPolicyParams) -> ProjectView:
+        return await self.typed("project/setApprovalPolicy", params, ProjectView)
 
     async def tab_open(self, params: OpenTabParams) -> TabView:
         return await self.typed("tab/open", params, TabView)

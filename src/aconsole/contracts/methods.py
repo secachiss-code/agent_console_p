@@ -85,6 +85,13 @@ METHODS: tuple[Method, ...] = (
     Method(name="project/remove", params="ProjectIdParams", result="EmptyResult", errors=("TAB_STATE_CONFLICT",)),
     Method(name="project/setActive", params="ProjectIdParams", result="EmptyResult", errors=("PROJECT_NOT_FOUND",)),
     Method(
+        name="project/setApprovalPolicy",
+        params="ProjectApprovalPolicyParams",
+        result="ProjectView",
+        errors=("PROJECT_NOT_FOUND", "ROLE_FORBIDDEN"),
+        roles=("ui",),
+    ),
+    Method(
         name="tab/open",
         params="OpenTabParams",
         result="TabView",

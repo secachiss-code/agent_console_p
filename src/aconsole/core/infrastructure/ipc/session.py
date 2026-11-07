@@ -21,6 +21,7 @@ from aconsole.contracts.app import (
     QuitCheckResult,
     ReleaseParams,
     ScreenTextReplyParams,
+    SettingsUpdateParams,
     SnapshotChunkParams,
     SnapshotResult,
     SubscribeParams,
@@ -218,6 +219,14 @@ class Connection:
             return (self._err(request.id, "ROLE_FORBIDDEN"),)
         if request.method == "terminal/prepareImagePaste" and self.role is not ClientRole.UI:
             return (self._err(request.id, "ROLE_FORBIDDEN"),)
+        if request.method == "project/setApprovalPolicy" and self.role is not ClientRole.UI:
+            return (self._err(request.id, "ROLE_FORBIDDEN"),)
+        if (
+            request.method == "settings/update"
+            and self.role is not ClientRole.UI
+            and _sets_approval_policy(bytes(request.params))
+        ):
+            return (self._err(request.id, "ROLE_FORBIDDEN"),)
         if request.method == "events/subscribe":
             self.paused = False
             self._queued = 0
@@ -255,7 +264,9 @@ class Connection:
         return (self._err(request.id, "METHOD_NOT_FOUND"),)
 
     def _service(  # noqa: PLR0911 -- one answer per kind of refusal
-        self, request: Request, dispatch: Callable[[str, bytes], msgspec.Struct],
+        self,
+        request: Request,
+        dispatch: Callable[[str, bytes], msgspec.Struct],
     ) -> tuple[bytes, ...]:
         try:
             result = dispatch(request.method, bytes(request.params))
@@ -383,7 +394,9 @@ class Connection:
             snapshot = msgspec.structs.replace(snapshot, approvals=self.approval_hold.pending_views())
         if self.knowledge is not None:
             snapshot = msgspec.structs.replace(
-                snapshot, plans=self.knowledge.board.views(), vault_ok=self.knowledge.vault_ok(),
+                snapshot,
+                plans=self.knowledge.board.views(),
+                vault_ok=self.knowledge.vault_ok(),
             )
         return SnapshotResult(snapshot=snapshot, seq=self.ring.current_seq)
 
@@ -520,6 +533,19 @@ class Connection:
         return encode_line(self._encoder, Notification(
             method="$/event", params=msgspec.Raw(self._encoder.encode(replacement)),
         ))
+
+
+def _sets_approval_policy(raw: bytes) -> bool:
+    """True when the patch names who decides. Other settings stay open to every host role."""
+    try:
+        params = msgspec.json.decode(raw, type=SettingsUpdateParams)
+    except msgspec.DecodeError:
+        return False
+    patch = params.patch
+    return not isinstance(patch.approval_policy, msgspec.UnsetType) or not isinstance(
+        patch.approval_dangerous,
+        msgspec.UnsetType,
+    )
 
 
 def _negotiate(low: ProtocolVersion, high: ProtocolVersion) -> ProtocolVersion | None:

@@ -2,10 +2,24 @@
   "$defs": {
     "SettingsPatch": {
       "properties": {
+        "approval_dangerous": {
+          "enum": [
+            "allow",
+            "ask"
+          ]
+        },
         "approval_hold_seconds": {
           "maximum": 540,
           "minimum": 30,
           "type": "integer"
+        },
+        "approval_policy": {
+          "enum": [
+            "allow",
+            "ask",
+            "deny",
+            "scenario"
+          ]
         },
         "approvals_mode": {
           "enum": [

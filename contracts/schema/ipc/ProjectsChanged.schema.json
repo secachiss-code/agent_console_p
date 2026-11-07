@@ -2,6 +2,36 @@
   "$defs": {
     "ProjectView": {
       "properties": {
+        "approval_dangerous": {
+          "anyOf": [
+            {
+              "enum": [
+                "allow",
+                "ask"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "approval_policy": {
+          "anyOf": [
+            {
+              "enum": [
+                "allow",
+                "ask",
+                "deny",
+                "scenario"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
         "default_branch": {
           "type": "string"
         },

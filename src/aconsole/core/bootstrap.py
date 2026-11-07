@@ -41,6 +41,7 @@ from aconsole.contracts.ipc import InitializeParams, Notification, ProtocolLimit
 from aconsole.core.application.ports.events import EventSink
 from aconsole.core.application.ports.git_repo import GitCommandError
 from aconsole.core.application.services.approval_broker import ApprovalHold
+from aconsole.core.application.services.approval_policy import ApprovalPolicyBook
 from aconsole.core.application.services.checkpoints import CheckpointService
 from aconsole.core.application.services.diff import DiffService
 from aconsole.core.application.services.git import GitService
@@ -1348,6 +1349,9 @@ class Daemon:
         await asyncio.to_thread(self.vault.use_bases, VaultFileDatabase(writer))
         self.tabs.use_store(store)
         self.tabs.use_projects(self._catalog, store)
+        policy = ApprovalPolicyBook()
+        await asyncio.to_thread(policy.attach, store)
+        self.tabs.use_policy(policy)
         await asyncio.to_thread(self.tabs.work_sessions.use_store, WorkSessionDatabase(writer))
         if self.tabs.history is not None:
             await asyncio.to_thread(self.tabs.history.use_store, WorkSessionHistoryDatabase(writer))

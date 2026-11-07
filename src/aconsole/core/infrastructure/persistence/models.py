@@ -112,6 +112,9 @@ class Project(Base):
     vault_folder: Mapped[str | None] = mapped_column(String(1024))
     languages: Mapped[list[str]] = mapped_column(JsonList)
     created_at: Mapped[datetime] = mapped_column()
+    # Null inherits the global approval policy stored in the settings document.
+    approval_policy: Mapped[str | None] = mapped_column(String(16), nullable=True)
+    approval_dangerous: Mapped[str | None] = mapped_column(String(16), nullable=True)
 
 
 @final

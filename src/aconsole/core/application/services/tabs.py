@@ -10,7 +10,7 @@ from collections.abc import Callable
 from dataclasses import dataclass, replace
 from datetime import datetime
 from pathlib import Path
-from typing import Final, Protocol, final
+from typing import Final, Literal, Protocol, final
 
 import msgspec
 
@@ -29,6 +29,7 @@ from aconsole.contracts.app import (
     PreparedImagePaste,
     PrepareImagePasteParams,
     ProjectAddParams,
+    ProjectApprovalPolicyParams,
     ProjectIdParams,
     ProjectView,
     RenameParams,
@@ -65,12 +66,19 @@ from aconsole.core.application.ports.tab_store import (
     TabDirectory,
     TabStore,
 )
+from aconsole.core.application.services.approval_policy import ApprovalPolicyBook
 from aconsole.core.application.services.git_state import GitProject, GitTab
 from aconsole.core.application.services.projects import ProjectCatalog
 from aconsole.core.application.services.work_session_history import WorkSessionHistory
 from aconsole.core.application.services.work_sessions import WorkSessionService, session_view
 from aconsole.core.domain.agent import CAPABILITIES
 from aconsole.core.domain.agent import AgentKind as DomainAgent
+from aconsole.core.domain.approval_policy import (
+    ApprovalPolicyChoice,
+    ApprovalPolicyMode,
+    DangerousSubmode,
+    PolicyOrigin,
+)
 from aconsole.core.domain.clock import Clock
 from aconsole.core.domain.errors import DomainError
 from aconsole.core.domain.work_session import WorkSession
@@ -220,6 +228,7 @@ TAB_METHODS: Final = frozenset(
         "project/add",
         "project/remove",
         "project/setActive",
+        "project/setApprovalPolicy",
     }
 )
 
@@ -354,6 +363,22 @@ class ReviewTarget:
     base_branch: str | None
 
 
+def _settings_policy(value: str) -> Literal["ask", "allow", "deny", "scenario"]:
+    if value == "allow":
+        return "allow"
+    if value == "deny":
+        return "deny"
+    if value == "scenario":
+        return "scenario"
+    return "ask"
+
+
+def _settings_dangerous(value: str) -> Literal["ask", "allow"]:
+    if value == "allow":
+        return "allow"
+    return "ask"
+
+
 def _preferences_of(settings: Settings) -> dict[str, object]:
     """The keys the store keeps as they are, in JSON types."""
     plain: dict[str, object] = msgspec.to_builtins(settings)  # pyright: ignore[reportAny] -- a struct gives a dict
@@ -408,6 +433,9 @@ class TabService:
         self.on_settings_changed: Callable[[Settings], None] | None = None
         self._approvals_mode: str = "inline"
         self._approval_hold_seconds: int = 540
+        self._approval_policy: str = "ask"
+        self._approval_dangerous: str = "ask"
+        self._policy: ApprovalPolicyBook | None = None
         self._setup_completed = False
         self._preferences: dict[str, object] = {}
         self._failing_checks = 0
@@ -435,6 +463,7 @@ class TabService:
             "project/add": self._route_project_add,
             "project/remove": self._route_project_remove,
             "project/setActive": self._route_project_active,
+            "project/setApprovalPolicy": self._route_project_policy,
             "settings/get": self._route_settings_get,
             "settings/update": self._route_settings_update,
         }
@@ -467,6 +496,10 @@ class TabService:
     def use_store(self, store: TabStore) -> None:
         """Persist later changes. Existing in-memory tabs are written by `reload` or the next edit."""
         self._store = store
+
+    def use_policy(self, book: ApprovalPolicyBook) -> None:
+        """Keep the in-memory policy aligned with settings and project writes."""
+        self._policy = book
 
     def note_settings(self, rev: int, *, setup_completed: bool = False) -> None:
         """Remember the settings revision and wizard flag the snapshot reports."""
@@ -707,6 +740,8 @@ class TabService:
             setup_completed=found.setup_completed,
             approvals_mode="native" if found.approvals_mode == "native" else "inline",
             approval_hold_seconds=found.approval_hold_seconds,
+            approval_policy=_settings_policy(found.approval_policy),
+            approval_dangerous=_settings_dangerous(found.approval_dangerous),
         )
         return _with_preferences(base, found.preferences)
 
@@ -725,13 +760,21 @@ class TabService:
                 worktrees_dir=nxt.worktrees_dir or None, rev=nxt.rev,
                 setup_completed=nxt.setup_completed, approvals_mode=nxt.approvals_mode,
                 approval_hold_seconds=nxt.approval_hold_seconds, preferences=preferences,
+                approval_policy=nxt.approval_policy, approval_dangerous=nxt.approval_dangerous,
             ))
         self._settings_rev = nxt.rev
         self._worktrees_dir = nxt.worktrees_dir or None
         self._setup_completed = nxt.setup_completed
         self._approvals_mode = nxt.approvals_mode
         self._approval_hold_seconds = nxt.approval_hold_seconds
+        self._approval_policy = nxt.approval_policy
+        self._approval_dangerous = nxt.approval_dangerous
         self._preferences = preferences
+        if self._policy is not None:
+            self._policy.remember_global(ApprovalPolicyChoice(
+                mode=ApprovalPolicyMode(nxt.approval_policy),
+                dangerous=DangerousSubmode(nxt.approval_dangerous),
+            ))
         if self.on_settings_changed is not None:
             self.on_settings_changed(nxt)
         return nxt
@@ -742,6 +785,7 @@ class TabService:
             return TabDirectory(
                 worktrees_dir=self._worktrees_dir, rev=self._settings_rev, setup_completed=self._setup_completed,
                 approvals_mode=self._approvals_mode, approval_hold_seconds=self._approval_hold_seconds,
+                approval_policy=self._approval_policy, approval_dangerous=self._approval_dangerous,
                 preferences=self._preferences)
         return store.settings()
 
@@ -1178,6 +1222,22 @@ class TabService:
         self._projects_changed(catalog)
         return EmptyResult()
 
+    def set_project_approval_policy(self, params: ProjectApprovalPolicyParams) -> ProjectView:
+        """Store one project's override, or clear it when `inherit` is set. The UI is the only caller."""
+        catalog = self._require_catalog()
+        project_id = str(params.project_id)
+        if not catalog.known(project_id):
+            raise TabRequestError(_PROJECT)
+        choice = None if params.inherit else ApprovalPolicyChoice(
+            mode=ApprovalPolicyMode(params.approval_policy),
+            dangerous=DangerousSubmode(params.approval_dangerous),
+        )
+        _ = catalog.set_approval_policy(project_id, choice, origin=PolicyOrigin.UI)
+        if self._policy is not None:
+            self._policy.remember_project(project_id, choice)
+        self._projects_changed(catalog)
+        return next(view for view in catalog.views() if str(view.id) == project_id)
+
     def set_active_project(self, params: ProjectIdParams) -> EmptyResult:
         catalog = self._require_catalog()
         if not catalog.known(str(params.project_id)):
@@ -1394,6 +1454,9 @@ class TabService:
 
     def _route_project_active(self, raw: bytes) -> EmptyResult:
         return self.set_active_project(msgspec.json.decode(raw, type=ProjectIdParams))
+
+    def _route_project_policy(self, raw: bytes) -> ProjectView:
+        return self.set_project_approval_policy(msgspec.json.decode(raw, type=ProjectApprovalPolicyParams))
 
     def _route_open(self, raw: bytes) -> TabView:
         return self.open_tab(msgspec.json.decode(raw, type=OpenTabParams))

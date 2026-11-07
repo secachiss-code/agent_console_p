@@ -86,9 +86,13 @@ def read_settings(session: Session) -> TabDirectory:
     completed = raw_done if isinstance(raw_done, bool) else False
     mode = row.value.get("approvals_mode")
     hold = row.value.get("approval_hold_seconds")
+    policy = row.value.get("approval_policy")
+    dangerous = row.value.get("approval_dangerous")
     return TabDirectory(worktrees_dir=directory, rev=row.rev, setup_completed=completed,
         approvals_mode=mode if mode in ("inline", "native") else "inline",
         approval_hold_seconds=hold if isinstance(hold, int) and 30 <= hold <= 540 else 540,  # noqa: PLR2004
+        approval_policy=policy if policy in ("ask", "allow", "deny", "scenario") else "ask",
+        approval_dangerous=dangerous if dangerous in ("ask", "allow") else "ask",
         preferences={key: row.value[key] for key in PREFERENCE_KEYS if key in row.value})
 
 
@@ -114,6 +118,7 @@ def load_projects(session: Session) -> StoredProjects:
             ProjectRecord(
                 id=row.id, name=row.name, root=row.root_path, default_branch=row.default_branch,
                 created_at=row.created_at,
+                approval_policy=row.approval_policy, approval_dangerous=row.approval_dangerous,
             )
             for row in rows
         ),
@@ -134,6 +139,16 @@ def remove_project(session: Session, project_id: str) -> None:
     row = session.get(Project, project_id)
     if row is not None:
         session.delete(row)
+
+
+def write_project_policy(session: Session, project_id: str, policy: str | None, dangerous: str | None) -> bool:
+    """Store the override. False when the project row does not exist. None clears it."""
+    row = session.get(Project, project_id)
+    if row is None:
+        return False
+    row.approval_policy = policy
+    row.approval_dangerous = dangerous
+    return True
 
 
 def save_active_project(session: Session, project_id: str | None) -> None:
@@ -170,6 +185,12 @@ class TabDatabase:
     def save_active_project(self, project_id: str | None) -> None:
         _ = self._writer.call(lambda session: save_active_project(session, project_id))
 
+    def save_project_policy(self, project_id: str, policy: str | None, dangerous: str | None) -> bool:
+        found = self._writer.call(lambda session: write_project_policy(session, project_id, policy, dangerous))
+        if not isinstance(found, bool):
+            raise TypeError(_BAD_RESULT)
+        return found
+
     def remove(self, tab_id: str, *, closed_at: datetime, drop_worktree: bool) -> None:
         _ = self._writer.call(lambda session: remove_tab(session, tab_id, closed_at, drop_worktree=drop_worktree))
 
@@ -198,6 +219,8 @@ class TabDatabase:
                 "setup_completed": settings.setup_completed,
                 "approvals_mode": settings.approvals_mode,
                 "approval_hold_seconds": settings.approval_hold_seconds,
+                "approval_policy": settings.approval_policy,
+                "approval_dangerous": settings.approval_dangerous,
             }
             if row is None:
                 session.add(Setting(key=SETTINGS_KEY, value=values, rev=settings.rev))
