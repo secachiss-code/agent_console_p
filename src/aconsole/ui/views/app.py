@@ -127,7 +127,8 @@ class AConsoleApp(Adw.Application):
         self._startup_error = f"{error}\n{core_log_path()}"
         if self.startup_page is not None:
             self.startup_page.set_title(translate("startup.failed"))
-            self.startup_page.set_description(str(error))
+            log = translate("startup.log").format(path=core_log_path())
+            self.startup_page.set_description(f"{error}\n\n{log}")
         for button in (self.startup_retry, self.startup_diagnostics):
             if button is not None:
                 button.set_visible(True)

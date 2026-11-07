@@ -1,0 +1,77 @@
+import asyncio
+import sys
+import tempfile
+from pathlib import Path
+import gi
+gi.require_version('Gtk','4.0')
+gi.require_version('Adw','1')
+from gi.repository import Adw, GLib
+from aconsole.contracts.app import CheckResult, ChecksResult
+from aconsole.core.infrastructure.fake.server import FakeCore
+from aconsole.ui.bootstrap import run_app, spawn_task
+from aconsole.ui.client.core_client import CoreClient
+from aconsole.ui.views.app import AConsoleApp
+from aconsole.ui.snapshot import capture_window
+
+checks=tuple(CheckResult(id=key,title=key,ok=False,severity='warning',detail='agent-example: /home/user',fix_id=None,requires_confirmation=False,command=command) for key,command in [
+    ('container_isolation',"podman inspect --format '{{json .Mounts}}' agent-example"),
+    ('agent_containers','podman create --help'),
+    ('worktree_storage_mounts',"podman inspect --format '{{json .Mounts}}' agent-example"),
+])
+class Preview(AConsoleApp):
+    def do_activate(self):
+        Adw.StyleManager.get_default().set_color_scheme(Adw.ColorScheme.FORCE_DARK if sys.argv[2]=='dark' else Adw.ColorScheme.FORCE_LIGHT)
+        if sys.argv[1]=='startup':
+            self._show_startup()
+            self.startup_window.set_default_size(int(sys.argv[3]),800)
+            self._show_startup_error(OSError('Не удалось подключиться к ядру: сокет недоступен'))
+            GLib.timeout_add(500,self.capture)
+        else:
+            original=self.client.request
+            async def request(method,params,result_type):
+                if method=='setup/checks':
+                    return ChecksResult(checks=checks)
+                return await original(method,params,result_type)
+            self.client.request=request
+            super().do_activate()
+            spawn_task(self.ready())
+    async def ready(self):
+        for _ in range(100):
+            if self.window is not None:
+                self.window.set_default_size(int(sys.argv[3]),800)
+                if self.window.setup_wizard is None:
+                    self.window.show_setup()
+                wizard=self.window.setup_wizard
+                if wizard is not None and not wizard.loading:
+                    Adw.StyleManager.get_default().set_color_scheme(Adw.ColorScheme.FORCE_DARK if sys.argv[2]=='dark' else Adw.ColorScheme.FORCE_LIGHT)
+                    await asyncio.sleep(0.5)
+                    self.capture()
+                    return
+            await asyncio.sleep(0.05)
+        raise RuntimeError('wizard not ready')
+    def capture(self):
+        target=self.startup_window if sys.argv[1]=='startup' else self.window.setup_wizard
+        clock=target.get_frame_clock()
+        def painted(clock):
+            clock.disconnect(handle)
+            try:
+                capture_window(target,Path(sys.argv[4]))
+            except Exception as error:
+                self.failed=True
+                print('capture failed:',error,flush=True)
+            spawn_task(self._finish())
+        handle=clock.connect('after-paint',painted)
+        target.queue_draw()
+        return False
+
+with tempfile.TemporaryDirectory(prefix='ux4-preview-') as directory:
+    path=str(Path(directory)/'core.sock')
+    fake=FakeCore(path,'empty')
+    fake.start()
+    try:
+        result=run_app(lambda:Preview(CoreClient(path)),['aconsole-ux4-preview'])
+    finally:
+        fake.stop()
+    if not Path(sys.argv[4]).is_file():
+        raise RuntimeError('screenshot missing')
+    raise SystemExit(result)

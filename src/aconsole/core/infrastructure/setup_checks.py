@@ -98,7 +98,9 @@ class HostSetupProbe:
             tool for tool in ("python3", "cargo", "dotnet", "node")
             if not env.run(_in_container(env, "devtools", tool, "--version"))[0]
         )
-        notifications = env.which("notify-send") is not None and bool(env.environ("DBUS_SESSION_BUS_ADDRESS"))
+        notification_program = env.which("notify-send") is not None
+        notification_bus = bool(env.environ("DBUS_SESSION_BUS_ADDRESS"))
+        notifications = notification_program and notification_bus
         return (
             _check("host_dependencies", not missing_tools,
                    ", ".join(missing_tools) if missing_tools else "podman and distrobox",
@@ -123,8 +125,11 @@ class HostSetupProbe:
                    ", ".join(no_graph) if no_graph else "Python, Cargo, .NET and Node in devtools",
                    command="distrobox enter devtools"),
             self.isolation_check(names, listed=listed),
-            _check("notifications", notifications, "notify-send and session D-Bus",
-                   command="sudo apt install libnotify-bin"),
+            _check("notifications", notifications,
+                   "notify-send and session D-Bus" if notifications else
+                   "notify-send missing" if not notification_program else "Session D-Bus unavailable",
+                   command="sudo apt install libnotify-bin" if not notification_program else
+                   "systemctl --user status dbus.service"),
         )
 
 

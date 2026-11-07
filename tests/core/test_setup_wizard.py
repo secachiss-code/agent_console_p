@@ -939,3 +939,21 @@ def test_large_container_metadata_is_unknown_instead_of_truncated(
     ok, detail = SystemSetupEnvironment().run(("podman", command))
     assert not ok
     assert "exceeded" in detail
+
+
+
+def test_missing_notification_bus_does_not_recommend_reinstalling_notify_send(tmp_path: Path) -> None:
+    env = _FakeSetupEnvironment(tmp_path)
+    env.variables.pop("DBUS_SESSION_BUS_ADDRESS")
+    check = next(item for item in HostSetupProbe(env).run_checks() if item.id == "notifications")
+    assert not check.ok
+    assert check.command == "systemctl --user status dbus.service"
+    assert "D-Bus" in check.detail
+
+
+def test_missing_notify_send_names_the_install_command(tmp_path: Path) -> None:
+    env = _FakeSetupEnvironment(tmp_path)
+    env.available.discard("notify-send")
+    check = next(item for item in HostSetupProbe(env).run_checks() if item.id == "notifications")
+    assert not check.ok
+    assert check.command == "sudo apt install libnotify-bin"

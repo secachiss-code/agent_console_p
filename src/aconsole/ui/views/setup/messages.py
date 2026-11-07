@@ -77,8 +77,8 @@ _MESSAGES = {
     "setup.copied": ("Command copied", "Команда скопирована"),
     "setup.log": ("Logs: {path}", "Журнал: {path}"),
     "setup.no_agents": (
-        "No agent is ready. Create a container with the command on the first step, then run setup again.",
-        "Ни один агент не готов. Создайте контейнер командой с первого шага и запустите мастер заново.",
+        "No agent is ready. Configure an isolated container using README, then run setup again.",
+        "Ни один агент не готов. Настройте изолированный контейнер по README и запустите мастер заново.",
     ),
     "setup.check.host_dependencies": ("Host programs", "Программы на компьютере"),
     "setup.check.agent_containers": ("Agent containers", "Контейнеры агентов"),
@@ -87,11 +87,12 @@ _MESSAGES = {
     "setup.check.storage": ("Notes folder", "Папка заметок"),
     "setup.check.worktree_storage_mounts": ("Folders in containers", "Папки в контейнерах"),
     "setup.check.devtools_graph_tools": ("Code graph tools", "Инструменты графа кода"),
+    "setup.check.container_isolation": ("Container isolation", "Изоляция контейнеров"),
     "setup.check.notifications": ("Notifications", "Уведомления"),
     "setup.reason.host_dependencies": ("Not installed: {detail}. Install it:", "Не установлено: {detail}. Установите:"),
     "setup.reason.agent_containers": (
-        "No agent container yet. AConsole does not create them. Create one, for example:",
-        "Контейнеров агентов пока нет. AConsole их не создаёт. Создайте, например:",
+        "No agent container yet. Choose isolated mounts using README before creating one. Command reference:",
+        "Контейнеров агентов пока нет. Перед созданием выберите изолированные папки по README. Справка по команде:",
     ),
     "setup.reason.agent_login": ("Not signed in: {detail}. Sign in:", "Нет входа в аккаунт: {detail}. Войдите:"),
     "setup.reason.agent_versions": (
@@ -103,16 +104,22 @@ _MESSAGES = {
         "Папки нет: {detail}. Создайте её здесь на шаге «Изменения» или выполните:",
     ),
     "setup.reason.worktree_storage_mounts": (
-        "These containers do not see the working folders: {detail}. Copy the container with your home attached:",
-        "Эти контейнеры не видят рабочие папки: {detail}. Сделайте копию контейнера с домашней папкой:",
+        "Containers cannot see working folders: {detail}. Inspect mounts; provide only worktrees and vault:",
+        "Контейнеры не видят рабочие папки: {detail}. Проверьте монтирования; оставьте только рабочие копии и vault:",
     ),
     "setup.reason.devtools_graph_tools": (
         "Missing in devtools: {detail}. The code graph then covers fewer languages. Install them there:",
         "В контейнере devtools нет: {detail}. Граф кода покроет меньше языков. Установите их там:",
     ),
+    "setup.reason.container_isolation": (
+        ("Host data may be exposed, or isolation is unknown. Use a separate HOME and only worktrees/vault. "
+        "See README: Container isolation. Findings: {detail}"),
+        ("Данные хоста могут быть доступны, либо изоляция неизвестна. Нужен отдельный HOME, "
+        "доступ только к рабочим копиям и vault. См. README: Container isolation. Результат: {detail}"),
+    ),
     "setup.reason.notifications": (
-        "Without this there are no desktop notifications about requests. Install:",
-        "Без этого не будет системных уведомлений о запросах. Установите:",
+        "Desktop notifications need notify-send and a desktop D-Bus session. Missing: {detail}. Check or install:",
+        "Для уведомлений нужны notify-send и сеанс D-Bus. Недоступно: {detail}. Проверьте или установите:",
     ),
     "startup.starting": ("Starting AConsole…", "Запускаем AConsole…"),
     "startup.log": ("Log: {path}", "Журнал: {path}"),

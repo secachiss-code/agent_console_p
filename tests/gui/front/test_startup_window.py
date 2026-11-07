@@ -101,6 +101,7 @@ def test_a_failed_start_says_why_and_can_be_retried() -> None:
         raise app.problem
     assert "the socket is not there" in app.seen["reason"]
     assert str(core_log_path()) in app.seen["log"]
+    assert str(core_log_path()) in app.seen["reason"]
     assert app.window_after_retry
 
 
