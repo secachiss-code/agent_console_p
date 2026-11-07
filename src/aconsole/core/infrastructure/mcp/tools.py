@@ -18,7 +18,7 @@ from contextvars import ContextVar
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import ClassVar, Literal, NoReturn, Protocol
+from typing import Annotated, ClassVar, Literal, NoReturn, Protocol
 
 import pydantic_core
 from mcp.types import CallToolResult, TextContent
@@ -53,6 +53,10 @@ _REVISIONS = 16
 # What one `plan_get` showed: whether it was detailed, and each node as it read.
 type _Shown = tuple[bool, dict[str, str]]
 _DIFF = 4000
+# Bound the UTF-8 tool text, including answers assembled from many stored records.
+_REPLY_BYTES = 256 * 1024
+type _ItemText = Annotated[str, Field(max_length=2000)]
+type _KeyText = Annotated[str, Field(max_length=10)]
 _GIT_RUNNER = GitRunner(timeout_s=5.0)
 _LINE = re.compile(r"^(.+)#L(\d+)-(\d+)$")
 _URL = re.compile(r"^https?://\S+$")
@@ -68,16 +72,16 @@ class NodeIn(_Frozen):
     key: str = Field(pattern=r"^[A-Z]{1,4}-\d{1,4}$")
     title: str = Field(min_length=3, max_length=120)
     objective: str = Field(max_length=2000)
-    depends_on: list[str] = Field(default_factory=list)
-    parent: str | None = None
-    related: list[str] = Field(default_factory=list)
+    depends_on: list[_KeyText] = Field(default_factory=list, max_length=100)
+    parent: _KeyText | None = None
+    related: list[_KeyText] = Field(default_factory=list, max_length=100)
     owner_agent: Literal["claude", "codex"] | None = None
-    paths: list[str] = Field(default_factory=list)
-    acceptance: list[str] = Field(default_factory=list)
-    test_cmd: str | None = None
+    paths: list[_ItemText] = Field(default_factory=list, max_length=100)
+    acceptance: list[_ItemText] = Field(default_factory=list, max_length=100)
+    test_cmd: _ItemText | None = None
     review_required: bool = False
-    output_format: str | None = None
-    boundaries: str | None = None
+    output_format: _ItemText | None = None
+    boundaries: _ItemText | None = None
 
 
 class NodeRef(_Frozen):
@@ -103,6 +107,7 @@ class NodeBrief(_Frozen):
     status: str
     ready: bool
     owner: str | None = None
+    depends_on: list[str] = Field(default_factory=list)
     objective: str | None = None
     acceptance: list[str] = Field(default_factory=list)
     paths: list[str] = Field(default_factory=list)
@@ -276,7 +281,10 @@ def compact(result: BaseModel) -> CallToolResult:
     the same answer goes beside it, and the tools publish no output schema.
     """
     lean = result.model_dump(mode="json", exclude_defaults=True, exclude_none=True)
-    return CallToolResult(content=[TextContent(type="text", text=pydantic_core.to_json(lean).decode())])
+    encoded = pydantic_core.to_json(lean)
+    if len(encoded) > _REPLY_BYTES:
+        _stop("RESPONSE_TOO_LARGE", "the tool answer exceeds 256 KiB")
+    return CallToolResult(content=[TextContent(type="text", text=encoded.decode())])
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -820,6 +828,9 @@ class PlanBoard:
         _require_tab(ctx)
         with self._lock:
             stored, meta = self._node(ctx, node_id)
+            current = stored.dag.get(meta.key)
+            if current.status in _HELD and current.tab_id != ctx.tab_id:
+                _stop("LEASE_HELD", "the active lease belongs to another tab")
             try:
                 _ = stored.dag.heartbeat(meta.key, fence=fence, at=self._now())
             except DomainError as exc:
@@ -913,7 +924,10 @@ class PlanBoard:
             return Impact(layers=layers, truncated=truncated, canvas_note=note)
 
     def _code(
-        self, project_id: str, target: str, kinds: list[str] | None,
+        self,
+        project_id: str,
+        target: str,
+        kinds: list[str] | None,
     ) -> tuple[str | None, dict[str, tuple[str, ...]]]:
         """A failing extractor leaves the facts the board has. The tool's answer is still useful."""
         graph = self.code_graph
@@ -921,7 +935,8 @@ class PlanBoard:
             return None, {}
         try:
             return graph.resolve(project_id, target), graph.dependents(
-                project_id, None if kinds is None else frozenset(kinds),
+                project_id,
+                None if kinds is None else frozenset(kinds),
             )
         except DomainError as exc:
             _LOG.warning("no code graph for project %s: %s", project_id, exc)
@@ -1147,7 +1162,7 @@ class PlanBoard:
             project_id=project_id,
             title=title,
             goal=goal,
-            dag=Plan(checked_completion=self._checked_completion),
+            dag=Plan(checked_completion=self._checked_completion, lease_namespace=plan_id),
             meta={},
             deps={},
             updated_at=self._now(),
@@ -1266,7 +1281,7 @@ def _after_restart(item: StoredNode) -> NodeStatus:
 
 
 def _restored(saved: StoredPlan, *, checked_completion: bool = False) -> _Stored:
-    dag = Plan(checked_completion=checked_completion)
+    dag = Plan(checked_completion=checked_completion, lease_namespace=saved.id)
     meta: dict[str, _Meta] = {}
     deps: dict[str, tuple[str, ...]] = {}
     for item in saved.nodes:
@@ -1407,6 +1422,7 @@ def _brief(stored: _Stored, meta: _Meta, *, detailed: bool) -> NodeBrief:
         return brief
     return brief.model_copy(
         update={
+            "depends_on": list(stored.deps[meta.key]),
             "objective": meta.objective,
             "acceptance": list(meta.acceptance),
             "paths": list(meta.paths),
@@ -1528,6 +1544,7 @@ def _git(worktree: Path | None, *args: str) -> str:
 
 
 _CODES: dict[str, int] = {
+    "RESPONSE_TOO_LARGE": -32000,
     "INTERNAL_ERROR": -32603,
     "INGEST_UNAUTHORIZED": 1001,
     "PATH_NOT_ALLOWED": 2011,
@@ -1546,6 +1563,7 @@ _CODES: dict[str, int] = {
 }
 
 _HINTS: dict[str, str] = {
+    "RESPONSE_TOO_LARGE": "use concise output, a revision, or a narrower query; no answer was truncated",
     "INTERNAL_ERROR": "nothing was saved; retry, and read the core log if it keeps failing",
     "INGEST_UNAUTHORIZED": "open a tab and pass Authorization: Bearer <tab token>",
     "PATH_NOT_ALLOWED": "call kb_add with source path#Lx-Ly that exists in the worktree, or an https URL",

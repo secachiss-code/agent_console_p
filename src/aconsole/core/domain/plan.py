@@ -311,7 +311,8 @@ def _lease_over(node: Node, at: datetime) -> bool:
 class Plan:
     """One plan. Blocking edges are a DAG. A node has at most one lease holder."""
 
-    def __init__(self, *, checked_completion: bool = False) -> None:
+    def __init__(self, *, checked_completion: bool = False, lease_namespace: str = "") -> None:
+        self._lease_prefix: str = f"{lease_namespace}:" if lease_namespace else ""
         self._checked_completion: bool = checked_completion
         self._nodes: dict[str, Node] = {}
         self._blockers: dict[str, tuple[str, ...]] = {}
@@ -344,7 +345,12 @@ class Plan:
         return self._nodes[spec.key]
 
     def restore(
-        self, node: Node, *, depends_on: tuple[str, ...], parent: str | None, related: tuple[str, ...],
+        self,
+        node: Node,
+        *,
+        depends_on: tuple[str, ...],
+        parent: str | None,
+        related: tuple[str, ...],
     ) -> None:
         """A node as a store kept it. The caller adds a plan's nodes in full: this checks nothing."""
         self._nodes[node.key] = node
@@ -597,7 +603,7 @@ class Plan:
                 status=move.to,
                 fence=fence,
                 tab_id=move.tab_id,
-                lease_id=f"{node.key}:{fence}",
+                lease_id=f"{self._lease_prefix}{node.key}:{fence}",
                 lease_expires_at=move.at + _LEASE,
                 worktree_id=node.worktree_id or move.tab_id,
                 evidence=evidence,
