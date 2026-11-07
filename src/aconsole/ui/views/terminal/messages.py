@@ -30,6 +30,8 @@ _MESSAGES = {
     "terminal.retry": ("Retry starting the session", "Повторить запуск сессии"),
     "terminal.ended": ("Session ended", "Сессия завершена"),
     "terminal.ended_code": ("Session ended with code {code}", "Сессия завершена с кодом {code}"),
+    "terminal.resume_unavailable": ("No saved conversation, or this agent does not support resume. Choose a new session.",
+                                    "Нет сохранённой сессии или агент не поддерживает продолжение. Выберите новую сессию."),
     "terminal.resume": ("Resume", "Возобновить"),
     "terminal.new": ("New", "Новая"),
     "terminal.close": ("Close", "Закрыть"),

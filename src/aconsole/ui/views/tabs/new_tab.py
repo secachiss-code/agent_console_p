@@ -10,7 +10,7 @@ gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
 from gi.repository import Adw, Gio, GLib, Gtk  # noqa: E402
 
-from aconsole.contracts.app import AgentInfo, ProjectView  # noqa: E402
+from aconsole.contracts.app import AgentInfo, ProjectView, SessionInfo, SessionListParams, SessionListResult  # noqa: E402
 from aconsole.contracts.common import TabId, WorkspaceMode  # noqa: E402
 from aconsole.contracts.work_sessions import WorkSessionListParams, WorkSessionListResult, WorkSessionView  # noqa: E402 -- GTK imports or an operation error shown to the user
 from aconsole.ui.bootstrap import spawn_task  # noqa: E402
@@ -31,6 +31,9 @@ class NewTabDialog(Adw.Dialog):
         self._projects: tuple[ProjectView, ...] = ()
         self._agents: tuple[AgentInfo, ...] = ()
         self._opening: bool = False
+        self._native_sessions: tuple[SessionInfo, ...] = ()
+        self._native_context: tuple[str, str] | None = None
+        self._native_generation: int = 0
         self._sessions: tuple[WorkSessionView, ...] = ()
         self._session_project: str | None = None
         self.project_row: Adw.ComboRow = Adw.ComboRow(title=translate("tabs.new.project"))
@@ -45,6 +48,12 @@ class NewTabDialog(Adw.Dialog):
         group = Adw.PreferencesGroup()
         group.add(self.project_row)
         group.add(self.agent_row)
+        self.native_session_row: Adw.ComboRow = Adw.ComboRow(
+            title=translate("tabs.new.cli_session"), model=Gtk.StringList.new([translate("tabs.new.cli_new")]),
+        )
+        group.add(self.native_session_row)
+        _ = self.native_session_row.connect("notify::selected", self._native_selected)
+        _ = self.agent_row.connect("notify::selected", self._workspace_changed)
         self.session_row: Adw.ComboRow = Adw.ComboRow(
             title=translate("tabs.new.work_session"), model=Gtk.StringList.new([translate("tabs.new.task")]),
         )
@@ -96,6 +105,7 @@ class NewTabDialog(Adw.Dialog):
             self._sessions = ()
             self.session_row.set_model(Gtk.StringList.new([translate("tabs.new.task")]))
             _ = spawn_task(self._load_sessions(project))
+        self._refresh_native(project)
         session_index = self.session_row.get_selected()
         has_session = 0 < session_index <= len(self._sessions)
         self.workspace_row.set_visible(not has_session)
@@ -116,6 +126,50 @@ class NewTabDialog(Adw.Dialog):
         has_path = has_session or not existing or bool(self.existing_path.get_text().strip())
         self.open_button.set_sensitive(bool(project and self._agents and has_path) and not self._opening)
 
+    def _refresh_native(self, project: ProjectView | None) -> None:
+        index = self.agent_row.get_selected()
+        agent = self._agents[index] if index < len(self._agents) else None
+        supported = agent is not None and "resume" in agent.capabilities
+        self.native_session_row.set_visible(supported)
+        context = None if project is None or agent is None else (str(project.id), agent.kind.value)
+        if context == self._native_context:
+            return
+        self._native_context = context
+        self._native_generation += 1
+        self._native_sessions = ()
+        self.native_session_row.set_model(Gtk.StringList.new([translate("tabs.new.cli_new")]))
+        self.native_session_row.set_subtitle("")
+        if supported and project is not None and agent is not None:
+            _ = spawn_task(self._load_native(project, agent, self._native_generation))
+
+    async def _load_native(self, project: ProjectView, agent: AgentInfo, generation: int) -> None:
+        try:
+            result = await self._tabs.client.request(
+                "session/list", SessionListParams(project_id=project.id, agent=agent.kind), SessionListResult,
+            )
+        except Exception:  # noqa: BLE001 -- creation of a new session remains available
+            if generation == self._native_generation:
+                self.native_session_row.set_subtitle(translate("tabs.new.cli_error"))
+            return
+        if generation != self._native_generation:
+            return
+        self._native_sessions = result.sessions
+        self.native_session_row.set_model(Gtk.StringList.new([
+            translate("tabs.new.cli_new"), *(row.title for row in result.sessions),
+        ]))
+        self.native_session_row.set_subtitle(translate("tabs.new.cli_empty") if not result.sessions else "")
+
+    def _native_selected(self, _source: object, _property: object = None) -> None:
+        index = self.native_session_row.get_selected()
+        if not 0 < index <= len(self._native_sessions):
+            return
+        session = self._native_sessions[index - 1]
+        match = next((at + 1 for at, row in enumerate(self._sessions) if row.worktree == session.cwd), 0)
+        self.session_row.set_selected(match)
+        self.workspace_row.set_selected(_WORKSPACES.index(WorkspaceMode.EXISTING_WORKTREE))
+        self.existing_path.set_text(session.cwd)
+        self._workspace_changed(self.native_session_row)
+
     async def _load_sessions(self, project: ProjectView) -> None:
         try:
             result = await self._tabs.client.request(
@@ -131,6 +185,7 @@ class NewTabDialog(Adw.Dialog):
         ]))
 
     def reload(self, selected: ProjectView | None = None) -> None:
+        self._native_context = None
         snapshot = self._tabs.client.store.snapshot
         self._projects = snapshot.projects if snapshot is not None else ()
         self._agents = tuple(agent for agent in snapshot.agents if agent.available) if snapshot is not None else ()
@@ -187,8 +242,11 @@ class NewTabDialog(Adw.Dialog):
         try:
             index = self.session_row.get_selected()
             session = self._sessions[index - 1] if 0 < index <= len(self._sessions) else None
+            native_index = self.native_session_row.get_selected()
+            native = self._native_sessions[native_index - 1] if 0 < native_index <= len(self._native_sessions) else None
             tab = await self._tabs.open(
                 project.id, agent.kind, workspace=mode, existing_worktree=path,
+                resume_session=None if native is None else native.session_id,
                 work_session_id=None if session is None else session.id,
                 isolated=session is not None and self.isolated_row.get_active(),
                 title=self.task_title.get_text().strip() or None if session is None else None,

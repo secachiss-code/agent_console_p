@@ -20,6 +20,8 @@ from aconsole.contracts.app import (  # noqa: E402
     PlanNodeView,
     QuitCheckResult,
     SetNodeStatusParams,
+    TabIdParams,
+    TabView,
 )
 from aconsole.contracts.common import ApprovalDecision, NodeId, NodeStatus, PlanId, ProjectId, TabId  # noqa: E402
 from aconsole.contracts.events import CheckpointCreated, GitStateUpdated, InjectToTerminal, SettingsChanged, UiEvent  # noqa: E402
@@ -462,6 +464,18 @@ class MainWindow(Adw.ApplicationWindow):
         if parameter is not None:
             self._open_review(parameter.get_string())
 
+    def _request_fork(self, _action: Gio.SimpleAction, parameter: GLib.Variant | None) -> None:
+        if parameter is not None:
+            _ = spawn_task(self._fork_tab(TabId(parameter.get_string())))
+
+    async def _fork_tab(self, tab_id: TabId) -> None:
+        try:
+            tab = await self.app_vm.client.request("tab/fork", TabIdParams(tab_id=tab_id), TabView)
+        except Exception as error:  # noqa: BLE001 -- the original tab remains selected and unchanged
+            self.toast_overlay.add_toast(Adw.Toast.new(str(error)))
+            return
+        self._select_tab(tab.id)
+
     def _install_tab_actions(self) -> None:
         self._closing_tab_dialogs: dict[str, Adw.AlertDialog] = {}
         self._checking_tab_close: set[str] = set()
@@ -475,6 +489,9 @@ class MainWindow(Adw.ApplicationWindow):
         self.close_tab_action.set_enabled(True)
         _ = self.close_tab_action.connect("activate", self._request_close_tab)
         self.add_action(self.close_tab_action)
+        fork = Gio.SimpleAction.new("fork-tab", GLib.VariantType.new("s"))
+        _ = fork.connect("activate", self._request_fork)
+        self.add_action(fork)
         review = Gio.SimpleAction.new("open-review", GLib.VariantType.new("s"))
         _ = review.connect("activate", self._request_review)
         self.add_action(review)

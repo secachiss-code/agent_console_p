@@ -36,6 +36,7 @@ class TabItem(GObject.Object):
 
     tab_id: object = gproperty(str, "")
     project_id: object = gproperty(str, "")
+    session_id: object = gproperty(str, "")
     title: object = gproperty(str, "")
     section_key: object = gproperty(str, "")
     section_title: object = gproperty(str, "")
@@ -57,6 +58,7 @@ class TabItem(GObject.Object):
     def apply(self, tab: TabView, accounts: tuple[AccountView, ...]) -> None:
         display = format_tab(tab, accounts, datetime.now(UTC))
         values: tuple[tuple[str, object], ...] = (
+            ("session-id", tab.agent_session_id or ""),
             ("title", display.title), ("project-id", str(tab.project_id)), ("section-key", display.section_key),
             ("section-title", display.section_title), ("subtitle", display.subtitle),
             ("detail", display.detail), ("status-symbol", display.status_symbol),
@@ -174,16 +176,25 @@ class TabsViewModel:
             "tab/close", CloseTabParams(tab_id=TabId(tab_id), decision=decision), CloseTabResult,
         )
 
+    def can_fork(self, tab_id: str | None) -> bool:
+        snapshot = self.client.store.snapshot
+        tab = None if snapshot is None else next((row for row in snapshot.tabs if str(row.id) == tab_id), None)
+        agent = None if snapshot is None or tab is None else next(
+            (row for row in snapshot.agents if row.kind is tab.agent), None,
+        )
+        return tab is not None and bool(tab.agent_session_id) and agent is not None and "fork" in agent.capabilities
+
     async def open(  # noqa: PLR0913 -- explicit workspace and task context
         self, project_id: ProjectId, agent: AgentKind, *,
         workspace: WorkspaceMode = WorkspaceMode.NEW_WORKTREE, existing_worktree: str | None = None,
         work_session_id: str | None = None, isolated: bool = False, title: str | None = None,
+        resume_session: str | None = None,
     ) -> TabView:
         return await self.client.request(
             "tab/open",
             OpenTabParams(
                 project_id=project_id, agent=agent, workspace=workspace, existing_worktree=existing_worktree,
-                work_session_id=work_session_id, isolated=isolated, title=title,
+                work_session_id=work_session_id, isolated=isolated, title=title, resume_session=resume_session,
             ),
             TabView,
         )

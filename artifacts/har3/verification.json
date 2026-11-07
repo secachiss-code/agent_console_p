@@ -1,0 +1,22 @@
+{
+  "node": "HAR-3",
+  "base": "60275c63fca52fc26420d347a7f4ba7dd36fa079",
+  "core_contracts": {"passed": 1451, "failed": 0, "warnings": 12, "seconds": 257.02},
+  "gui": {"passed": 58, "failed": 0, "warnings": 3, "seconds": 15.94},
+  "targeted_retry_including_writer": {"passed": 18, "failed": 0, "seconds": 21.06},
+  "basedpyright": {"errors": 0, "warnings": 0},
+  "ruff": "PASS",
+  "diff_check": "PASS",
+  "screenshots_reviewed": 9,
+  "first_full_run": {
+    "passed": 1448,
+    "failed": 3,
+    "notes": "Two stale fixtures corrected; writer max 6.371ms exceeded unchanged 5ms limit. Isolated retry and final full run passed. PERF-2 observation retained."
+  },
+  "limits": [
+    "No paid/live model conversation launched",
+    "OpenCode discovery requires a running server created by this core",
+    "Migration cannot reconstruct a pending-fork flag already lost by an older version",
+    "docs/design/DESIGN.md is absent"
+  ]
+}

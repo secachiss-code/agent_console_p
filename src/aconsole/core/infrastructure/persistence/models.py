@@ -259,6 +259,7 @@ class Tab(Base):
     context_used_pct: Mapped[float | None] = mapped_column(Float)
     session_cost_usd: Mapped[float | None] = mapped_column(Float)
     agent_session_id: Mapped[str | None] = mapped_column(String(64))
+    fork_pending: Mapped[bool] = mapped_column(default=False, server_default="0")
     closed_at: Mapped[datetime | None] = mapped_column()
     created_at: Mapped[datetime] = mapped_column()
     updated_at: Mapped[datetime] = mapped_column()

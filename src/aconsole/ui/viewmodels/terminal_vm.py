@@ -27,6 +27,15 @@ class TerminalViewModel:
         self._client: CoreClient = client
         self._tab_id: TabId = tab_id
 
+    def can_resume(self) -> bool:
+        snapshot = self._client.store.snapshot
+        tab = None if snapshot is None else next((row for row in snapshot.tabs if row.id == self._tab_id), None)
+        agent = None if snapshot is None or tab is None else next(
+            (row for row in snapshot.agents if row.kind is tab.agent), None,
+        )
+        return (tab is not None and tab.agent_session_id is not None and
+                agent is not None and "resume" in agent.capabilities)
+
     async def prepare_image(self, png: bytes) -> str:
         result = await self._client.request(
             "terminal/prepareImagePaste", PrepareImagePasteParams(tab_id=self._tab_id, png=png), PreparedImagePaste,

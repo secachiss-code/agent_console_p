@@ -1,0 +1,111 @@
+import asyncio
+import sys
+import tempfile
+from datetime import UTC, datetime
+from pathlib import Path
+import gi
+import msgspec
+gi.require_version('Gtk','4.0')
+gi.require_version('Adw','1')
+from gi.repository import Adw, Gtk
+from aconsole.contracts.app import SessionInfo, SessionListResult
+from aconsole.contracts.common import AgentKind
+from aconsole.core.infrastructure.fake.server import FakeCore
+from aconsole.ui.bootstrap import run_app, spawn_task
+from aconsole.ui.client.core_client import CoreClient
+from aconsole.ui.snapshot import capture_window
+from aconsole.ui.views.app import AConsoleApp, SnapshotRequest
+from aconsole.ui.views.tabs.new_tab import NewTabDialog
+from aconsole.ui.views.tabs.row import TabRow
+
+class Preview(AConsoleApp):
+    def do_activate(self):
+        super().do_activate()
+        spawn_task(self.ready())
+    def _capture(self):
+        pass
+    async def ready(self):
+        for _ in range(100):
+            if self.window is not None:
+                break
+            await asyncio.sleep(.05)
+        else:
+            raise RuntimeError('window unavailable')
+        self.target=self.window
+        if sys.argv[1]=='new-tab':
+            self.dialog=NewTabDialog(self.window.tabs,lambda _tab:None,lambda error:print(error))
+            self.dialog.present(self.window)
+            for _ in range(100):
+                if self.dialog._native_sessions:break
+                await asyncio.sleep(.05)
+            self.dialog.native_session_row.set_selected(1)
+            self.target=self.dialog
+        elif sys.argv[1]=='fork-menu':
+            row=TabRow(self.window.tabs)
+            row.bind_item(self.window.tabs.model.get_item(0))
+            box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL,halign=Gtk.Align.START,valign=Gtk.Align.START)
+            box.set_margin_top(120);box.set_margin_start(32)
+            row.set_size_request(320,-1);box.append(row)
+            self.preview=Adw.ApplicationWindow(application=self,default_width=int(sys.argv[3]),default_height=800,content=box)
+            self.preview.present();self.target=self.preview
+            await asyncio.sleep(.2)
+            popover=row.menu_button.get_popover()
+            popover.set_autohide(False)
+            row.menu_button.popup()
+            self.target=popover
+        else:
+            snapshot=self.client.store.snapshot
+            page=self.window._terminal_page(str(snapshot.tabs[0].id))
+            if page.get_parent() is None:
+                self.window.content_view.set_content(page)
+            page.resume_button.set_sensitive(page.viewmodel.can_resume())
+            page.ended_revealer.set_reveal_child(True)
+        await asyncio.sleep(.5)
+        self.attempts=0
+        self.capture()
+    def capture(self):
+        clock=self.target.get_frame_clock()
+        def painted(clock):
+            clock.disconnect(handle)
+            try:
+                capture_window(self.target,Path(sys.argv[4]))
+            except RuntimeError:
+                self.attempts+=1
+                if self.attempts<20:
+                    self.capture();return
+                self.failed=True
+            spawn_task(self._finish())
+        handle=clock.connect('after-paint',painted)
+        self.target.queue_draw()
+
+with tempfile.TemporaryDirectory(prefix='har3-preview-') as directory:
+    path=str(Path(directory)/'core.sock')
+    fake=FakeCore(path,'demo');fake.start()
+    output=Path(sys.argv[4]);output.unlink(missing_ok=True)
+    def factory():
+        client=CoreClient(path)
+        original=client.request
+        async def request(method,params,result_type):
+            if method=='session/list':
+                snapshot=client.store.snapshot
+                project=next(row for row in snapshot.projects if row.id==params.project_id)
+                at=datetime.now(UTC)
+                return SessionListResult(sessions=(SessionInfo(session_id='demo-saved-session',title='Сохранённая беседа',started_at=at,updated_at=at,cwd=project.root,branch='main',preview=None),))
+            result=await original(method,params,result_type)
+            if method=='app/snapshot':
+                agents=tuple(msgspec.structs.replace(agent,capabilities=agent.capabilities|{'resume','fork'}) for agent in result.snapshot.agents)
+                tabs=result.snapshot.tabs
+                first=msgspec.structs.replace(tabs[0],agent_session_id='demo-source-session')
+                if sys.argv[1]=='terminal-ended':
+                    first=msgspec.structs.replace(first,agent_session_id=None,started=False)
+                return msgspec.structs.replace(result,snapshot=msgspec.structs.replace(result.snapshot,agents=agents,tabs=(first,*tabs[1:])))
+            return result
+        client.request=request
+        snapshot=SnapshotRequest(view='window',theme=sys.argv[2],width=int(sys.argv[3]),height=800,out=output)
+        return Preview(client,snapshot=snapshot)
+    try:
+        result=run_app(factory,['aconsole-har3-preview'])
+    finally:
+        fake.stop()
+    if not output.is_file():raise RuntimeError('snapshot missing')
+    raise SystemExit(result)

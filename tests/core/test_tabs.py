@@ -209,6 +209,7 @@ def test_tabs_started_exited_restart_and_fork_share_the_tree() -> None:
     assert kept.started is False
     cleared = _view(_call(connection, 6, "tab/restart", RestartParams(tab_id=TabId("tab-a"), resume=False)))
     assert cleared.agent_session_id is None
+    service.reported_session("tab-a", "parent-session")
     forked = _view(_call(connection, 7, "tab/fork", _tab("tab-a")))
     assert forked.id == TabId("tab-b")
     assert forked.worktree_path == opened.worktree_path
@@ -417,7 +418,7 @@ def test_tabs_rename_reorder_focus_and_main_checkout() -> None:
     assert unseen is not None
     assert unseen.attention is True
     # Restart leaves the tab idle, and idle never needs the user.
-    cleared = _view(_call(connection, 9, "tab/restart", RestartParams(tab_id=TabId("tab-a"), resume=True)))
+    cleared = _view(_call(connection, 9, "tab/restart", RestartParams(tab_id=TabId("tab-a"), resume=False)))
     assert cleared.status is TabStatus.IDLE
     assert cleared.attention is False
     long_title = "x" * 100
@@ -496,6 +497,7 @@ def test_tabs_fork_can_create_a_new_worktree() -> None:
     service, ports = _service(_seed(), fork_new=True)
     connection = _ready(service)
     _ = _view(_call(connection, 2, "tab/open", _open()))
+    service.reported_session("tab-a", "parent-session")
     forked = _view(_call(connection, 3, "tab/fork", _tab("tab-a")))
     assert forked.worktree_path == "/wt/tab-b"
     assert forked.branch == "ac/s-claude-fork-tab-b"
@@ -855,7 +857,7 @@ def _opened(service: TabService, agent: AgentKind, *, session: str | None = None
 
 @pytest.mark.parametrize(
     ("agent", "expected"),
-    [(AgentKind.OPENCODE, ("opencode", "-s", "s1")), (AgentKind.CURSOR, ("agent", "--resume", "s1"))],
+    [(AgentKind.OPENCODE, ("opencode", "-s", "s1"))],
 )
 def test_new_agents_resume_with_their_own_flags(agent: AgentKind, expected: tuple[str, ...]) -> None:
     seed = ProjectSeed(project_id="proj", root="/repo", container="box", sessions=frozenset({"s1"}))
@@ -882,15 +884,14 @@ class _Transcripts:
         return self.written
 
 
-def test_a_session_claude_never_wrote_starts_anew_and_is_forgotten() -> None:
+def test_a_missing_claude_session_is_refused_without_a_silent_new_session() -> None:
     seed = ProjectSeed(project_id="proj", root="/repo", container="box", sessions=frozenset({"s1"}))
     service, _ports = _service(seed)
     service.use_commands(_Transcripts(written=False))
     tab = _opened(service, AgentKind.CLAUDE, session="s1")
-    spec = service.launch_spec(TabIdParams(tab_id=TabId(tab)))
-    assert spec.argv[-1] == "claude"
-    assert "--resume" not in spec.argv
-    assert service._tabs[tab].session is None
+    with pytest.raises(TabRequestError, match="SESSION_NOT_FOUND"):
+        service.launch_spec(TabIdParams(tab_id=TabId(tab)))
+    assert service._tabs[tab].session == "s1"
 
 
 def test_a_session_claude_wrote_is_resumed() -> None:

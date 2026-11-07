@@ -34,6 +34,9 @@ from aconsole.contracts.app import (
     RenameParams,
     ReorderParams,
     RestartParams,
+    SessionInfo,
+    SessionListParams,
+    SessionListResult,
     SettingsUpdateParams,
     SetupState,
     StartedParams,
@@ -138,7 +141,9 @@ def _launch_command(agent: AgentKind, session: str | None, *, fork: bool) -> tup
     if agent is AgentKind.OPENCODE:
         return ("opencode",) if session is None else ("opencode", "-s", session)
     if agent is AgentKind.CURSOR:
-        return ("agent",) if session is None else ("agent", "--resume", session)
+        if session is not None:
+            raise TabRequestError(_UNAVAILABLE)
+        return ("agent",)
     return (agent.value,)
 
 
@@ -207,6 +212,7 @@ TAB_METHODS: Final = frozenset(
         "workSession/close",
         "workSession/resume",
         "tab/open",
+        "session/list",
         "tab/launchSpec",
         "terminal/prepareImagePaste",
         "tab/started",
@@ -289,6 +295,8 @@ class AgentCommands(Protocol):
     def release(self, agent: AgentKind, tab_id: str, container: str) -> None: ...
 
     def session_exists(self, agent: AgentKind, session: str, container: str) -> bool: ...
+
+    def list_sessions(self, agent: AgentKind, root: str, container: str) -> SessionListResult: ...
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -423,6 +431,7 @@ class TabService:
         self._commands: AgentCommands | None = None
         self._routes: dict[str, Callable[[bytes], msgspec.Struct]] = {
             "tab/open": self._route_open,
+            "session/list": self._route_sessions,
             "tab/launchSpec": self._route_launch,
             "terminal/prepareImagePaste": self._route_image_paste,
             "tab/started": self._route_started,
@@ -566,6 +575,7 @@ class TabService:
         if tab.session == session or _CODEX_ID.fullmatch(session) is None:
             return
         tab.session = session
+        tab.fork = False
         self._remember(tab)
         _ = self._updated(tab, {"agent_session_id"})
 
@@ -989,17 +999,59 @@ class TabService:
             }:
                 raise DomainError(code=3006, name="CHECKPOINT_RESTORE_CONFLICT", retryable=False)
 
-    def open_tab(self, params: OpenTabParams) -> TabView:  # noqa: C901 -- new, shared and isolated workspaces
+    def sessions(self, params: SessionListParams) -> SessionListResult:
+        project = self._projects.get(str(params.project_id))
+        if project is None:
+            raise TabRequestError(_PROJECT)
+        capabilities = CAPABILITIES.get(DomainAgent(params.agent.value))
+        if capabilities is None or not capabilities.resume or self._commands is None:
+            return SessionListResult(sessions=())
+        roots = {project.root, *(row.worktree for row in self.work_sessions.all(project.project_id))}
+        found: dict[str, SessionInfo] = {}
+        container = project.container or f"agent-{params.agent.value}"
+        for root in sorted(roots):
+            for item in self._commands.list_sessions(params.agent, root, container).sessions:
+                if (_CODEX_ID.fullmatch(item.session_id) is not None and
+                        Path(item.cwd).resolve() == Path(root).resolve()):
+                    found[item.session_id] = item
+        return SessionListResult(sessions=tuple(sorted(
+            found.values(), key=lambda item: (item.updated_at, item.session_id), reverse=True,
+        )))
+
+    def _route_sessions(self, raw: bytes) -> SessionListResult:
+        return self.sessions(msgspec.json.decode(raw, type=SessionListParams))
+
+    def _validate_native_session(self, params: OpenTabParams, project: ProjectSeed) -> None:
+        if params.fork:
+            _require_fork(params.agent)
+            if params.resume_session is None:
+                raise TabRequestError(_SESSION)
+        if params.resume_session is None:
+            return
+        capabilities = CAPABILITIES.get(DomainAgent(params.agent.value))
+        if capabilities is None or not capabilities.resume:
+            raise TabRequestError(_UNAVAILABLE)
+        if params.resume_session in project.sessions:
+            return
+        catalog = self.sessions(SessionListParams(project_id=params.project_id, agent=params.agent))
+        found = next((item for item in catalog.sessions if item.session_id == params.resume_session), None)
+        if found is None:
+            raise TabRequestError(_SESSION)
+        if not params.fork:
+            root = project.root if params.workspace is WorkspaceMode.MAIN_CHECKOUT else params.existing_worktree
+            if params.work_session_id is not None:
+                root = self.work_sessions.require(project.project_id, params.work_session_id, active=True).worktree
+            if root is None or Path(root).resolve() != Path(found.cwd).resolve():
+                raise TabRequestError(_SESSION)
+
+    def open_tab(self, params: OpenTabParams) -> TabView:
         """Create the tab and, when asked, the worktree. The process stays stopped."""
         project = self._projects.get(str(params.project_id))
         if project is None:
             raise TabRequestError(_PROJECT)
         if not project.available or (not project.container and self._agent_missing(params.agent)):
             raise TabRequestError(_UNAVAILABLE)
-        if params.resume_session is not None and params.resume_session not in project.sessions:
-            raise TabRequestError(_SESSION)
-        if params.fork:
-            _require_fork(params.agent)
+        self._validate_native_session(params, project)
         tab_id = self._ports.new_id()
         if params.isolated and params.work_session_id is None:
             message = "an isolated executor needs a work session"
@@ -1075,6 +1127,7 @@ class TabService:
             return self._launch_spec(tab)
 
     def _launch_spec(self, tab: _Tab) -> TerminalLaunchSpec:
+        self._require_written_session(tab)
         self._require_session_launch(tab)
         self._ports.ensure_container(tab.container)
         if tab.ingest == "":
@@ -1093,7 +1146,6 @@ class TabService:
         secret = self._ports.new_secret()
         tab.sidecar = secret
         path = self._ports.container_path(tab.container)
-        self._forget_unwritten_session(tab)
         command = _launch_command(tab.agent, tab.session, fork=tab.fork)
         wired = self._wired_command(tab)
         if wired is not None:
@@ -1133,15 +1185,12 @@ class TabService:
             ):
                 self._finish_session_actor(other, "recovery")
 
-    def _forget_unwritten_session(self, tab: _Tab) -> None:
-        """Claude names a session before it has written anything. Resuming that one is an error that ends the tab."""
+    def _require_written_session(self, tab: _Tab) -> None:
+        """Refuse an unwritten Claude session instead of silently starting a different conversation."""
         commands = self._commands
         if commands is None or tab.session is None or commands.session_exists(tab.agent, tab.session, tab.container):
             return
-        tab.session = None
-        tab.fork = False
-        self._remember(tab)
-        _ = self._updated(tab, {"agent_session_id"})
+        raise TabRequestError(_SESSION)
 
     def _wired_command(self, tab: _Tab) -> tuple[str, ...] | None:
         commands = self._commands
@@ -1263,6 +1312,13 @@ class TabService:
         tab does not go idle: an orphan may still hold the tree, so the restart fails with CONTAINER_START_FAILED.
         """
         tab = self._require(str(params.tab_id))
+        if params.resume:
+            capabilities = CAPABILITIES.get(DomainAgent(tab.agent.value))
+            if capabilities is None or not capabilities.resume:
+                raise TabRequestError(_UNAVAILABLE)
+            if tab.session is None:
+                raise TabRequestError(_SESSION)
+            self._require_written_session(tab)
         if tab.work_session_id is not None:
             self._finish_session_actor(tab, "restart")
             scanned = True
@@ -1279,6 +1335,7 @@ class TabService:
         tab.since = self._clock.now()
         if not params.resume:
             tab.session = None
+            tab.fork = False
         _ = self._refresh_attention(tab)
         self._remember(tab)
         return self._updated(tab, {"started", "status", "status_since", "attention", "agent_session_id"})
@@ -1286,6 +1343,8 @@ class TabService:
     def fork(self, params: TabIdParams) -> TabView:
         tab = self._require(str(params.tab_id))
         _require_fork(tab.agent)
+        if tab.session is None:
+            raise TabRequestError(_SESSION)
         tab_id = self._ports.new_id()
         dest = tab.worktree
         branch = tab.branch
@@ -1555,7 +1614,7 @@ class TabService:
             dirty=saved.dirty,
             plan_node=saved.plan_node,
             session=saved.session,
-            fork=False,
+            fork=saved.fork_pending,
             running=False,
             repo=saved.project_root,
             container=saved.container,
@@ -1606,6 +1665,7 @@ class TabService:
             workspace_mode=tab.mode,
             plan_node=tab.plan_node,
             session=tab.session,
+            fork_pending=tab.fork,
             work_session_id=tab.work_session_id,
             isolated=tab.isolated,
         )
@@ -1634,7 +1694,7 @@ class TabService:
             plan_node_title=None,
             context_used_pct=None,
             session_cost_usd=tab.cost_usd,
-            agent_session_id=tab.session,
+            agent_session_id=None if tab.fork else tab.session,
             pending_approvals=0,
             checkpoints=0,
             started=tab.running,

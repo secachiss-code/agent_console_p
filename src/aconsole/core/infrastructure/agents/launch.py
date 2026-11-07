@@ -7,13 +7,17 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Final, final
 
+from aconsole.contracts.app import SessionListResult
 from aconsole.contracts.common import AgentKind
 from aconsole.core.domain.agent import CAPABILITIES
 from aconsole.core.domain.agent import AgentKind as DomainAgent
+from aconsole.core.infrastructure.agents.claude import sessions as claude_sessions
 from aconsole.core.infrastructure.agents.claude.launcher import ClaudeLauncher, ClaudeTab
+from aconsole.core.infrastructure.agents.codex import sessions as codex_sessions
 from aconsole.core.infrastructure.agents.codex.launcher import CodexLauncher, CodexTab
 from aconsole.core.infrastructure.agents.codex.trust import HookTrustCache
 from aconsole.core.infrastructure.agents.cursor.launcher import CursorLauncher
+from aconsole.core.infrastructure.agents.opencode import sessions as opencode_sessions
 from aconsole.core.infrastructure.agents.opencode.launcher import OpenCodeLauncher
 from aconsole.core.infrastructure.agents.opencode.stream import EventStream
 
@@ -50,6 +54,7 @@ class HostAgentCommands:
         self._opencode = OpenCodeLauncher()
         self._opencode_heard = opencode_heard
         self._streams: dict[str, EventStream] = {}
+        self._servers: dict[str, tuple[int, str]] = {}
 
     def command(self, agent: AgentKind, tab_id: str, token: str, container: str, port: str) -> tuple[str, ...] | None:
         """`claude --settings …`, `codex -c …`, or the OpenCode server script. None means run the plain command."""
@@ -121,6 +126,25 @@ class HostAgentCommands:
         except (OSError, ValueError):
             _LOG.warning("cannot remove hooks for tab %s", tab_id, exc_info=True)
 
+    def list_sessions(self, agent: AgentKind, root: str, container: str) -> SessionListResult:
+        """Read the CLI's metadata, or ask only OpenCode servers this core created."""
+        if agent is AgentKind.OPENCODE:
+            found = {
+                item.session_id: item for port, token in self._servers.values()
+                for item in opencode_sessions.list_sessions(port, token, root).sessions
+            }
+            return SessionListResult(sessions=tuple(sorted(
+                found.values(), key=lambda item: (item.updated_at, item.session_id), reverse=True,
+            )))
+        home = self._home_of(container)
+        if home is None:
+            return SessionListResult(sessions=())
+        if agent is AgentKind.CLAUDE:
+            return claude_sessions.list_sessions(home, root)
+        if agent is AgentKind.CODEX:
+            return codex_sessions.list_sessions(home / ".codex" / "state_5.sqlite", root)
+        return SessionListResult(sessions=())
+
     def session_exists(self, agent: AgentKind, session: str, container: str) -> bool:
         """False only when Claude has no transcript of it: it writes one at the first message, not at the start.
 
@@ -138,13 +162,14 @@ class HostAgentCommands:
             return True
 
     def stop_streams(self) -> None:
-        for tab_id in tuple(self._streams):
+        for tab_id in tuple(self._servers.keys() | self._streams.keys()):
             self._stop_stream(tab_id)
 
     def _open_opencode(self, tab_id: str, token: str, ingest_port: int) -> tuple[str, ...]:
         """A new terminal is a new server on a new port, so an older stream of this tab has nothing left to read."""
         launch = self._opencode.launch(ingest_port)
         self._stop_stream(tab_id)
+        self._servers[tab_id] = (launch.server_port, token)
         heard = self._opencode_heard
         if heard is not None:
             stream = EventStream(launch.server_port, token, lambda body: heard(tab_id, body))
@@ -153,6 +178,7 @@ class HostAgentCommands:
         return launch.argv
 
     def _stop_stream(self, tab_id: str) -> None:
+        _ = self._servers.pop(tab_id, None)
         stream = self._streams.pop(tab_id, None)
         if stream is not None:
             stream.stop()

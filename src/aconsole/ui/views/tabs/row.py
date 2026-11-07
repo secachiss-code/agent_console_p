@@ -89,6 +89,9 @@ class TabRow(Gtk.Box):
         rename = Gio.SimpleAction.new("rename", None)
         _ = rename.connect("activate", self._begin_rename)
         actions.add_action(rename)
+        self._fork_action: Gio.SimpleAction = Gio.SimpleAction.new("fork", None)
+        _ = self._fork_action.connect("activate", self._fork)
+        actions.add_action(self._fork_action)
         self.insert_action_group("tab-row", actions)
         context = Gtk.GestureClick()
         context.set_button(3)
@@ -134,6 +137,7 @@ class TabRow(Gtk.Box):
         self.close_button.set_action_name("win.request-close-tab")
         menu = Gio.Menu()
         menu.append(translate("tabs.rename"), "tab-row.rename")
+        menu.append(translate("tabs.fork"), "tab-row.fork")
         review = Gio.MenuItem.new(review_text("review.open"), None)
         review.set_action_and_target_value("win.open-review", GLib.Variant("s", self.tab_id))
         menu.append_item(review)
@@ -165,6 +169,10 @@ class TabRow(Gtk.Box):
             self.title_label.stop_editing(False)  # noqa: FBT003 -- cancel the recycled row's edit
         self.title_label.set_editable(False)
 
+    def _fork(self, _action: Gio.SimpleAction, _parameter: GLib.Variant | None) -> None:
+        if self.tab_id is not None:
+            _ = self.activate_action("win.fork-tab", GLib.Variant("s", self.tab_id))
+
     def _begin_rename(self, _action: Gio.SimpleAction, _parameter: GLib.Variant | None) -> None:
         if self._item is not None:
             self.title_label.set_editable(True)
@@ -195,6 +203,7 @@ class TabRow(Gtk.Box):
         item = self._item
         if item is None:
             return
+        self._fork_action.set_enabled(self.tabs.can_fork(self.tab_id))
         if not self.title_label.get_editing():
             self.title_label.set_text(str(item.title))
         subtitle = str(item.subtitle)

@@ -67,7 +67,8 @@ def _names(reader: EventReader, *events: bytes) -> list[str]:
 def test_capabilities_match_the_plan() -> None:
     for kind in (DomainAgent.OPENCODE, DomainAgent.CURSOR):
         names = CAPABILITIES[kind].names()
-        assert {"resume", "mcp_http"} <= names
+        assert "mcp_http" in names
+        assert ("resume" in names) is (kind is DomainAgent.OPENCODE)
         assert not {"fork", "hooks"} & names
     assert "limits" in CAPABILITIES[DomainAgent.CURSOR].names()
 

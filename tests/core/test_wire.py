@@ -263,6 +263,14 @@ def test_tab_runs_claude_with_hooks_and_a_hook_moves_it(tmp_path: Path, monkeypa
     home.mkdir()
     monkeypatch.setenv("FAKE_HOME", str(home))
 
+    # The hook reports session "s". A real resume requires the corresponding transcript.
+    from aconsole.core.infrastructure.agents.claude.sessions import project_key
+    from tests.core.test_claude_sessions import _write
+
+    transcript = home / ".claude" / "projects" / project_key(str(repo)) / "s.jsonl"
+    transcript.parent.mkdir(parents=True)
+    _write(transcript, "s", "fixture prompt", cwd=str(repo), mtime=1700000000)
+
     async def scenario() -> tuple[TerminalLaunchSpec, TabStatus, TerminalLaunchSpec, int]:
         daemon = _daemon(tmp_path)
         task = asyncio.create_task(daemon.serve())

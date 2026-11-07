@@ -173,6 +173,7 @@ def test_a_diff_goes_to_the_named_tab_at_the_size_it_said(tmp_path: Path) -> Non
             "tab/open", msgspec.structs.replace(_open(project), workspace=WorkspaceMode.NEW_WORKTREE), TabView
         )
         daemon.tabs._tabs[str(tab.id)].status = TabStatus.IDLE
+        daemon.tabs._tabs[str(tab.id)].running = True
         source = DiffSource(kind="between", oid=tip, against=first)
         preview = await client.call(
             "git/sendDiffPreview",

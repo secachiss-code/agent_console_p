@@ -203,6 +203,8 @@ class TerminalPage(Gtk.Overlay):
             ("terminal.resume", self._resume), ("terminal.new", self._new_session), ("terminal.close", self._close_tab),
         ):
             button = Gtk.Button(label=translate(key))
+            if key == "terminal.resume":
+                self.resume_button: Gtk.Button = button
             button.add_css_class("suggested-action" if key == "terminal.resume" else "flat")
             _ = button.connect("clicked", callback)
             self.ended_actions.append(button)
@@ -288,6 +290,9 @@ class TerminalPage(Gtk.Overlay):
             code = session.exit_code
             ended = translate("terminal.ended")
             self.ended_title.set_label(translate("terminal.ended_code").format(code=code) if code else ended)
+            can_resume = self.viewmodel.can_resume()
+            self.resume_button.set_sensitive(can_resume)
+            self.resume_button.set_tooltip_text(None if can_resume else translate("terminal.resume_unavailable"))
             self.ended_revealer.set_reveal_child(True)
         except asyncio.CancelledError:
             raise

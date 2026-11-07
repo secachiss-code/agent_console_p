@@ -168,6 +168,7 @@ def test_round6_k25_listener_announces_added_tabs() -> None:
     service, ports, events = _service(fork_new=True)
     opened = service.open_tab(_open())
     assert events == [TabAdded(tab=opened)]
+    service.reported_session(str(opened.id), "parent-session")
     forked = service.fork(TabIdParams(tab_id=opened.id))
     assert events[-1] == TabAdded(tab=forked)
     assert forked.id != opened.id
@@ -188,7 +189,7 @@ def test_round6_k25_listener_names_the_changed_fields() -> None:
     assert _last_update(events).changed == frozenset({"title"})
     _ = service.reorder(ReorderParams(tab_id=tab, order=3))
     assert _last_update(events).changed == frozenset({"order"})
-    _ = service.restart(RestartParams(tab_id=tab, resume=True))
+    _ = service.restart(RestartParams(tab_id=tab, resume=False))
     assert _last_update(events).changed == frozenset(
         {"started", "status", "status_since", "attention", "agent_session_id"},
     )
@@ -331,7 +332,7 @@ def test_round6_k25_restart_stops_the_old_process_and_its_orphans() -> None:
     tab = opened.id
     _ = service.started(StartedParams(tab_id=tab, pid=_PID))
     ports.orphan_pids = (_ORPHAN,)
-    restarted = service.restart(RestartParams(tab_id=tab, resume=True))
+    restarted = service.restart(RestartParams(tab_id=tab, resume=False))
     assert ports.stopped == [_PID, _ORPHAN]
     assert ports.pauses == [_STOP_S]
     assert ports.scans == [("agentbox", str(tab)), ("agentbox", str(tab))]
@@ -348,7 +349,7 @@ def test_round6_k25_restart_stops_the_old_process_and_its_orphans() -> None:
     _ = service.apply_hook(str(tab), "UserPromptSubmit")
     ports.orphan_error = TabRequestError("CONTAINER_START_FAILED")
     with pytest.raises(TabRequestError, match="CONTAINER_START_FAILED"):
-        _ = service.restart(RestartParams(tab_id=tab, resume=True))
+        _ = service.restart(RestartParams(tab_id=tab, resume=False))
     assert ports.stopped[-1] == _PID + 1
     assert len(ports.stopped) == 3
     assert service.running_count() == 0
