@@ -1,0 +1,53 @@
+import argparse,os,secrets,struct,subprocess,sys,tempfile,time,tarfile
+from pathlib import Path
+root=Path(__file__).resolve().parents[2]
+output=root/'artifacts/qa4-recheck'
+parser=argparse.ArgumentParser();parser.add_argument('--baseline',action='store_true');parser.add_argument('--full-ui',action='store_true');options=parser.parse_args()
+options.checkout_ref='5ce55295' if options.baseline else ''
+options.desktop=False
+options.a11y_default=False
+label='locale-before' if options.baseline else 'full-ui' if options.full_ui else 'locale-after'
+with tempfile.TemporaryDirectory(prefix='perf7-xvfb-') as directory:
+    temp=Path(directory)
+    checkout=root
+    if options.checkout_ref:
+        sha=subprocess.check_output(['git','rev-parse','--verify',options.checkout_ref+'^{commit}'],cwd=root,text=True).strip()
+        archive=temp/'checkout.tar'
+        subprocess.run(['git','archive','--format=tar','--output='+str(archive),sha],cwd=root,check=True)
+        checkout=temp/'checkout'
+        checkout.mkdir()
+        with tarfile.open(archive) as held:
+            held.extractall(checkout,filter='data')
+        (output/(label+'-checkout.txt')).write_text(sha+'\n')
+    server=None
+    if not options.desktop:
+        subprocess.run(['/usr/bin/apt-get','download','xvfb'],cwd=temp,timeout=90,check=True)
+        packages=list(temp.glob('xvfb_*.deb')); assert len(packages)==1
+        subprocess.run(['/usr/bin/dpkg-deb','-x',str(packages[0]),str(temp/'package')],timeout=20,check=True)
+        number=next(n for n in range(101,120) if not Path(f'/tmp/.X11-unix/X{n}').exists())
+        display=str(number).encode();cookie=secrets.token_bytes(16);auth=temp/'Xauthority'
+        auth.write_bytes(struct.pack('>HH',65535,0)+struct.pack('>H',len(display))+display+struct.pack('>H',18)+b'MIT-MAGIC-COOKIE-1'+struct.pack('>H',16)+cookie)
+        auth.chmod(0o600)
+        server=subprocess.Popen([str(temp/'package/usr/bin/Xvfb'),f':{number}','-screen','0','1280x800x24','-nolisten','tcp','-auth',str(auth)])
+    try:
+        if server is not None:
+            for _ in range(100):
+                if Path(f'/tmp/.X11-unix/X{number}').exists():break
+                if server.poll() is not None:raise RuntimeError('Xvfb failed')
+                time.sleep(.05)
+        env=dict(os.environ,GDK_BACKEND='x11',GTK_A11Y='test',PYTHONPATH=str(checkout/'src')+':'+str(output),
+            XDG_STATE_HOME=str(temp/'state'),XDG_CONFIG_HOME=str(temp/'config'),XDG_CACHE_HOME=str(temp/'cache'))
+        if options.a11y_default: env.pop('GTK_A11Y',None)
+        if not options.desktop: env.update(DISPLAY=f':{number}',XAUTHORITY=str(auth))
+        if options.desktop and not env.get('DISPLAY'): raise RuntimeError('no desktop DISPLAY')
+        env.pop('WAYLAND_DISPLAY',None);env.pop('BROADWAY_DISPLAY',None)
+        tests=['tests/gui/front/test_b4b_quota.py::test_the_sidebar_shows_every_window_of_an_account_shortest_first']
+        if options.full_ui:tests=['tests/gui','tests/ui','tests/smoke','--deselect','tests/gui/front/test_git_scale_ui.py::test_scrolling_a_long_history']
+        args=['-q','-o','addopts=','--junitxml='+str(output/(label+'.xml')),*tests]
+        command=[sys.executable,'-c',"import locale,pytest; locale.getlocale=lambda:('en_US','UTF-8'); raise SystemExit(pytest.main("+repr(args)+"))"]
+        with (output/(label+'.log')).open('w') as stream:
+            result=subprocess.run(command,env=env,cwd=checkout,timeout=360,stdout=stream,stderr=subprocess.STDOUT)
+        print((output/(label+'.log')).read_text()[-1800:])
+        raise SystemExit(result.returncode)
+    finally:
+        if server is not None:server.terminate();server.wait(timeout=5)

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="1" failures="0" skipped="0" tests="1" time="0.095" timestamp="2026-11-08T21:47:30.373214+03:00" hostname="somovasnbook14"><testcase classname="tests.ui.test_b7_rank" name="test_rank_2000_under_16ms" time="0.002"><error message="failed on setup with &quot;ModuleNotFoundError: No module named 'rapidfuzz'&quot;">item = &lt;Function test_rank_2000_under_16ms&gt;
+
+    def pytest_runtest_setup(item: pytest.Function) -&gt; None:
+        global record, original, module  # noqa: PLW0603 -- pytest setup and teardown deliberately share this diagnostic record
+        if item.name != "test_rank_2000_under_16ms":
+            return
+&gt;       from aconsole.ui.viewmodels.logic import rank  # noqa: PLC0415 -- load the optional diagnostic only when its target test runs
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+artifacts/perf6/measure.py:46: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    """Deterministic local ranking of palette items."""
+    
+    from collections.abc import Sequence
+    
+    import msgspec
+&gt;   from rapidfuzz.fuzz import WRatio
+E   ModuleNotFoundError: No module named 'rapidfuzz'
+
+src/aconsole/ui/viewmodels/logic/rank.py:6: ModuleNotFoundError</error></testcase></testsuite></testsuites>

@@ -1,0 +1,20 @@
+import argparse,os,subprocess,sys,tempfile,tarfile
+from pathlib import Path
+root=Path(__file__).resolve().parents[2]
+parser=argparse.ArgumentParser();parser.add_argument('--baseline',action='store_true');parser.add_argument('--full-core',action='store_true');options=parser.parse_args()
+label='long-before' if options.baseline else 'long-core' if options.full_core else 'long-after'
+with tempfile.TemporaryDirectory(prefix='qa4-baseline-') as directory:
+    checkout=root
+    if options.baseline:
+        checkout=Path(directory)/'checkout';checkout.mkdir()
+        archive=Path(directory)/'source.tar'
+        subprocess.run(['git','archive','--output='+str(archive),'5ce55295'],cwd=root,check=True)
+        with tarfile.open(archive) as source:source.extractall(checkout,filter='data')
+    tests=['tests/core','tests/contracts','tests/gate','tests/hostrun','tests/smoke','tests/test_package.py','tests/test_packaging.py','tests/test_contrast.py','tests/test_build_guards.py','tests/test_socket_paths.py'] if options.full_core else ['tests/core/test_ipc_b.py::test_ipc_b_socket_mode','tests/test_build_guards.py','tests/test_socket_paths.py']
+    if options.baseline:tests=tests[:1]
+    command=[sys.executable,'-m','pytest','-q','-x',*tests,'--basetemp=/tmp/ac-qa4-long-'+'x'*96,'--junitxml='+str(root/'artifacts/qa4-recheck'/(label+'.xml'))]
+    env=dict(os.environ,PYTHONPATH=str(checkout/'src'))
+    with (root/'artifacts/qa4-recheck'/(label+'.log')).open('w') as stream:
+        result=subprocess.run(command,cwd=checkout,env=env,stdout=stream,stderr=subprocess.STDOUT,timeout=600)
+    print((root/'artifacts/qa4-recheck'/(label+'.log')).read_text()[-2000:])
+    raise SystemExit(result.returncode)

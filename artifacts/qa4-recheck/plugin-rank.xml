@@ -1,0 +1,1 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="0" skipped="0" tests="1" time="0.058" timestamp="2026-11-08T21:48:04.649293+03:00" hostname="somovasnbook14"><testcase classname="tests.ui.test_b7_rank" name="test_rank_2000_under_16ms" time="0.023" /></testsuite></testsuites>

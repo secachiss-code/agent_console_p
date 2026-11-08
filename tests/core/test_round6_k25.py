@@ -53,6 +53,7 @@ from aconsole.core.infrastructure.ipc.framing import decode_envelope, encode_lin
 from aconsole.core.infrastructure.ipc.ring import EventRing
 from aconsole.core.infrastructure.ipc.session import Connection
 from tests.core.conftest import FakeTabPorts, use_fake_tabs, wait_for_socket
+from tests.socket_paths import short_socket_path
 
 if TYPE_CHECKING:
     from collections.abc import AsyncGenerator, Callable
@@ -598,7 +599,7 @@ class _Core:
 
 @contextlib.asynccontextmanager
 async def _running(root: Path, *, idle_s: float) -> AsyncGenerator[_Core]:
-    sock = root / "core.sock"
+    sock = short_socket_path(root / "core.sock")
     daemon = Daemon(sock, idle_s=idle_s)
     daemon.serve_ingest = True
     ports = use_fake_tabs(daemon, root)
@@ -622,7 +623,7 @@ async def _until(ready: Callable[[], bool]) -> None:
 
 async def _permission_flow(root: Path) -> None:
     async with _running(root, idle_s=30) as core:
-        ui = await _connect_ui(root / "core.sock")
+        ui = await _connect_ui(short_socket_path(root / "core.sock"))
         try:
             opened = await _open_tab(ui)
             added = await ui.event_of(TabAdded)
@@ -657,7 +658,7 @@ def test_round6_k25_permission_hook_reaches_the_ui_over_http(tmp_path: Path) -> 
 
 async def _running_tab_holds_the_daemon(root: Path) -> int:
     async with _running(root, idle_s=0.3) as core:
-        first = await _connect_ui(root / "core.sock")
+        first = await _connect_ui(short_socket_path(root / "core.sock"))
         opened = await _open_tab(first)
         started = await first.call("tab/started", StartedParams(tab_id=opened.id, pid=_PID))
         assert isinstance(started, ResponseOk)
@@ -665,7 +666,7 @@ async def _running_tab_holds_the_daemon(root: Path) -> int:
         # The tab is running, so the core stays up after its last client leaves, far past the 0.3 s idle window.
         await asyncio.sleep(0.6)
         assert not core.task.done()
-        second = await _connect_ui(root / "core.sock")
+        second = await _connect_ui(short_socket_path(root / "core.sock"))
         exited = await second.call("tab/exited", ExitedParams(tab_id=opened.id, wait_status=0))
         assert isinstance(exited, ResponseOk)
         await second.close()
@@ -678,7 +679,7 @@ def test_round6_k25_running_tab_holds_the_daemon_until_it_exits(tmp_path: Path) 
 
 async def _slow_close_leaves_the_loop_free(root: Path) -> None:
     async with _running(root, idle_s=30) as core:
-        ui = await _connect_ui(root / "core.sock")
+        ui = await _connect_ui(short_socket_path(root / "core.sock"))
         try:
             opened = await _open_tab(ui)
             started = await ui.call("tab/started", StartedParams(tab_id=opened.id, pid=_PID))

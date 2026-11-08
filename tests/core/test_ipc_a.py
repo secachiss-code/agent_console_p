@@ -37,6 +37,7 @@ from aconsole.core.infrastructure.ipc.ring import EventRing
 from aconsole.core.infrastructure.ipc.server import IpcServer, allow_peer, note_peer, same_mnt_namespace
 from aconsole.core.infrastructure.ipc.session import OUTBOUND_LIMIT, Connection
 from aconsole.core.infrastructure.tabs import default_tabs
+from tests.socket_paths import short_socket_path
 
 _WHEN = datetime(2026, 10, 26, tzinfo=UTC)
 _ENCODER = msgspec.json.Encoder()
@@ -249,7 +250,7 @@ def _notice(name: str) -> Notify:
 
 
 async def _socket(path: Path) -> tuple[int, int, list[int]]:
-    sock = path / "aconsole" / "core.sock"
+    sock = short_socket_path(path / "aconsole" / "core.sock")
     server = IpcServer(sock, tabs=default_tabs(socket_path=str(sock)))
     await server.start()
     try:

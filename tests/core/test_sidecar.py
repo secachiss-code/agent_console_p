@@ -30,6 +30,7 @@ from aconsole.sidecar.framer import LIMIT, Framer, Signal
 from aconsole.sidecar.ipc import exited, initialize, started, stats
 from aconsole.sidecar.ipc import signal as encode_signal
 from aconsole.sidecar.main import CoreLink, exchange, main, resize, winsize
+from tests.socket_paths import short_socket_path
 
 _BSU = b"\x1b[?2026h"
 _ESU = b"\x1b[?2026l"
@@ -257,12 +258,12 @@ def test_sidecar_usage_resize_and_closed_socket(tmp_path: Path) -> None:
         os.close(fd)
         _ = os.waitpid(pid, 0)
 
-    missing = CoreLink(str(tmp_path / "missing.sock"), "tab-1", "shown-to-user")
+    missing = CoreLink(str(short_socket_path(tmp_path / "missing.sock")), "tab-1", "shown-to-user")
     assert missing.send(b"nope\n") is None
     blank = CoreLink("", None, None)
     assert blank.send(b"nope\n") is None
 
-    path = str(tmp_path / "s.sock")
+    path = str(short_socket_path(tmp_path / "s.sock"))
     server = _serve(path)
     link = CoreLink(path, "tab-1", "shown-to-user")
     accepted = server.accept()
@@ -281,7 +282,7 @@ def test_sidecar_main_notifies_core_and_forwards_signals(monkeypatch: pytest.Mon
     import aconsole.sidecar.main as sidecar_main
 
     monkeypatch.setattr(sidecar_main, "_STATS_S", 0.0)
-    path = str(tmp_path / "core.sock")
+    path = str(short_socket_path(tmp_path / "core.sock"))
     server = _serve(path)
     env = {
         "ACONSOLE_SOCKET": path,

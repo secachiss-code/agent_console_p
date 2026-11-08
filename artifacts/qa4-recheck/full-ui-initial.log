@@ -1,0 +1,406 @@
+Collected 0 items to run in parallel
+........................................................................ [ 14%]
+........................................................................ [ 29%]
+......................................................................FF [ 43%]
+F.....FF................................................................ [ 58%]
+........................................................................ [ 73%]
+........................................................................ [ 87%]
+...........................................................              [100%]
+python 3.15.1 gil=True
+
+=================================== FAILURES ===================================
+______ test_new_tab_passes_workspace_base_and_plan_context[new_worktree] _______
+
+mode = <WorkspaceMode.NEW_WORKTREE: 'new_worktree'>
+
+    @pytest.mark.parametrize("mode", list(WorkspaceMode))
+    def test_new_tab_passes_workspace_base_and_plan_context(mode: WorkspaceMode) -> None:
+        async def scenario(app: _TabsTestApp) -> None:
+            snapshot = demo_snapshot()
+            project = snapshot.projects[0]
+            plan = msgspec.structs.replace(snapshot.plans[0], project_id=project.id)
+            snapshot = msgspec.structs.replace(snapshot, plans=(plan,), active_project=project.id)
+            client, tabs = _model(snapshot)
+            calls = []
+            opened = []
+            errors = []
+            pending = asyncio.get_running_loop().create_future()
+    
+            async def request(method: str, params: msgspec.Struct, _result: type[msgspec.Struct]) -> msgspec.Struct:
+                if method == "workSession/list":
+                    return WorkSessionListResult(sessions=())
+                if method == "session/list":
+                    return SessionListResult(sessions=())
+                assert method == "tab/open"
+                calls.append(params)
+                return await pending
+    
+            client.request = request
+            dialog = NewTabDialog(tabs, opened.append, errors.append)
+            assert app.window is not None
+            dialog.present(app.window)
+            modes = (WorkspaceMode.NEW_WORKTREE, WorkspaceMode.MAIN_CHECKOUT, WorkspaceMode.EXISTING_WORKTREE)
+            dialog.workspace_row.set_selected(modes.index(mode))
+            dialog.existing_path.set_text("/repo/existing")
+            dialog.base_branch.set_text("release/next")
+            dialog.node_row.set_selected(1)
+            assert dialog.base_branch.get_visible() == (mode is WorkspaceMode.NEW_WORKTREE)
+            dialog.open_button.emit("clicked")
+            await _until(lambda: bool(calls))
+            assert not dialog.body.get_sensitive()
+            assert dialog.spinner.get_visible()
+            assert not dialog.open_button.get_sensitive()
+            dialog.open_button.emit("clicked")
+            assert len(calls) == 1
+            assert calls[0].workspace is mode
+            assert calls[0].plan_node == plan.nodes[0].id
+            assert calls[0].base_branch == ("release/next" if mode is WorkspaceMode.NEW_WORKTREE else None)
+            assert calls[0].existing_worktree == ("/repo/existing" if mode is WorkspaceMode.EXISTING_WORKTREE else None)
+            pending.set_exception(RuntimeError("branch does not exist"))
+            await _until(lambda: not dialog._opening)
+            assert dialog.body.get_sensitive()
+            assert not dialog.spinner.get_visible()
+            assert "branch does not exist" in dialog.hint.get_label()
+            assert len(errors) == 1
+            assert not opened
+            assert dialog.base_branch.get_text() == "release/next"
+            assert dialog.open_button.get_sensitive()
+            dialog.close()
+            await client.close()
+    
+>       _run_ui(scenario)
+
+tests/gui/front/test_new_tab_options.py:81: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+scenario = <function test_new_tab_passes_workspace_base_and_plan_context.<locals>.scenario at 0x770d269540f0>
+
+    def _run_ui(scenario: Callable[[_TabsTestApp], Awaitable[None]]) -> None:
+        app = _TabsTestApp(scenario)
+        assert run_app(lambda: app, ["aconsole-b2-tabs-test"]) == 0
+>       assert app.error is None, repr(app.error)
+E       AssertionError: TimeoutError()
+E       assert TimeoutError() is None
+E        +  where TimeoutError() = <test_b2_tabs._TabsTestApp object at 0x770d26952000 (tests+gui+front+test_b2_tabs+_TabsTestApp at 0xaebebf00)>.error
+
+tests/gui/front/test_b2_tabs.py:67: AssertionError
+______ test_new_tab_passes_workspace_base_and_plan_context[main_checkout] ______
+
+mode = <WorkspaceMode.MAIN_CHECKOUT: 'main_checkout'>
+
+    @pytest.mark.parametrize("mode", list(WorkspaceMode))
+    def test_new_tab_passes_workspace_base_and_plan_context(mode: WorkspaceMode) -> None:
+        async def scenario(app: _TabsTestApp) -> None:
+            snapshot = demo_snapshot()
+            project = snapshot.projects[0]
+            plan = msgspec.structs.replace(snapshot.plans[0], project_id=project.id)
+            snapshot = msgspec.structs.replace(snapshot, plans=(plan,), active_project=project.id)
+            client, tabs = _model(snapshot)
+            calls = []
+            opened = []
+            errors = []
+            pending = asyncio.get_running_loop().create_future()
+    
+            async def request(method: str, params: msgspec.Struct, _result: type[msgspec.Struct]) -> msgspec.Struct:
+                if method == "workSession/list":
+                    return WorkSessionListResult(sessions=())
+                if method == "session/list":
+                    return SessionListResult(sessions=())
+                assert method == "tab/open"
+                calls.append(params)
+                return await pending
+    
+            client.request = request
+            dialog = NewTabDialog(tabs, opened.append, errors.append)
+            assert app.window is not None
+            dialog.present(app.window)
+            modes = (WorkspaceMode.NEW_WORKTREE, WorkspaceMode.MAIN_CHECKOUT, WorkspaceMode.EXISTING_WORKTREE)
+            dialog.workspace_row.set_selected(modes.index(mode))
+            dialog.existing_path.set_text("/repo/existing")
+            dialog.base_branch.set_text("release/next")
+            dialog.node_row.set_selected(1)
+            assert dialog.base_branch.get_visible() == (mode is WorkspaceMode.NEW_WORKTREE)
+            dialog.open_button.emit("clicked")
+            await _until(lambda: bool(calls))
+            assert not dialog.body.get_sensitive()
+            assert dialog.spinner.get_visible()
+            assert not dialog.open_button.get_sensitive()
+            dialog.open_button.emit("clicked")
+            assert len(calls) == 1
+            assert calls[0].workspace is mode
+            assert calls[0].plan_node == plan.nodes[0].id
+            assert calls[0].base_branch == ("release/next" if mode is WorkspaceMode.NEW_WORKTREE else None)
+            assert calls[0].existing_worktree == ("/repo/existing" if mode is WorkspaceMode.EXISTING_WORKTREE else None)
+            pending.set_exception(RuntimeError("branch does not exist"))
+            await _until(lambda: not dialog._opening)
+            assert dialog.body.get_sensitive()
+            assert not dialog.spinner.get_visible()
+            assert "branch does not exist" in dialog.hint.get_label()
+            assert len(errors) == 1
+            assert not opened
+            assert dialog.base_branch.get_text() == "release/next"
+            assert dialog.open_button.get_sensitive()
+            dialog.close()
+            await client.close()
+    
+>       _run_ui(scenario)
+
+tests/gui/front/test_new_tab_options.py:81: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+scenario = <function test_new_tab_passes_workspace_base_and_plan_context.<locals>.scenario at 0x770d2698b480>
+
+    def _run_ui(scenario: Callable[[_TabsTestApp], Awaitable[None]]) -> None:
+        app = _TabsTestApp(scenario)
+        assert run_app(lambda: app, ["aconsole-b2-tabs-test"]) == 0
+>       assert app.error is None, repr(app.error)
+E       AssertionError: TimeoutError()
+E       assert TimeoutError() is None
+E        +  where TimeoutError() = <test_b2_tabs._TabsTestApp object at 0x770d0eff7800 (tests+gui+front+test_b2_tabs+_TabsTestApp at 0x8baf6dd0)>.error
+
+tests/gui/front/test_b2_tabs.py:67: AssertionError
+____ test_new_tab_passes_workspace_base_and_plan_context[existing_worktree] ____
+
+mode = <WorkspaceMode.EXISTING_WORKTREE: 'existing_worktree'>
+
+    @pytest.mark.parametrize("mode", list(WorkspaceMode))
+    def test_new_tab_passes_workspace_base_and_plan_context(mode: WorkspaceMode) -> None:
+        async def scenario(app: _TabsTestApp) -> None:
+            snapshot = demo_snapshot()
+            project = snapshot.projects[0]
+            plan = msgspec.structs.replace(snapshot.plans[0], project_id=project.id)
+            snapshot = msgspec.structs.replace(snapshot, plans=(plan,), active_project=project.id)
+            client, tabs = _model(snapshot)
+            calls = []
+            opened = []
+            errors = []
+            pending = asyncio.get_running_loop().create_future()
+    
+            async def request(method: str, params: msgspec.Struct, _result: type[msgspec.Struct]) -> msgspec.Struct:
+                if method == "workSession/list":
+                    return WorkSessionListResult(sessions=())
+                if method == "session/list":
+                    return SessionListResult(sessions=())
+                assert method == "tab/open"
+                calls.append(params)
+                return await pending
+    
+            client.request = request
+            dialog = NewTabDialog(tabs, opened.append, errors.append)
+            assert app.window is not None
+            dialog.present(app.window)
+            modes = (WorkspaceMode.NEW_WORKTREE, WorkspaceMode.MAIN_CHECKOUT, WorkspaceMode.EXISTING_WORKTREE)
+            dialog.workspace_row.set_selected(modes.index(mode))
+            dialog.existing_path.set_text("/repo/existing")
+            dialog.base_branch.set_text("release/next")
+            dialog.node_row.set_selected(1)
+            assert dialog.base_branch.get_visible() == (mode is WorkspaceMode.NEW_WORKTREE)
+            dialog.open_button.emit("clicked")
+            await _until(lambda: bool(calls))
+            assert not dialog.body.get_sensitive()
+            assert dialog.spinner.get_visible()
+            assert not dialog.open_button.get_sensitive()
+            dialog.open_button.emit("clicked")
+            assert len(calls) == 1
+            assert calls[0].workspace is mode
+            assert calls[0].plan_node == plan.nodes[0].id
+            assert calls[0].base_branch == ("release/next" if mode is WorkspaceMode.NEW_WORKTREE else None)
+            assert calls[0].existing_worktree == ("/repo/existing" if mode is WorkspaceMode.EXISTING_WORKTREE else None)
+            pending.set_exception(RuntimeError("branch does not exist"))
+            await _until(lambda: not dialog._opening)
+            assert dialog.body.get_sensitive()
+            assert not dialog.spinner.get_visible()
+            assert "branch does not exist" in dialog.hint.get_label()
+            assert len(errors) == 1
+            assert not opened
+            assert dialog.base_branch.get_text() == "release/next"
+            assert dialog.open_button.get_sensitive()
+            dialog.close()
+            await client.close()
+    
+>       _run_ui(scenario)
+
+tests/gui/front/test_new_tab_options.py:81: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+scenario = <function test_new_tab_passes_workspace_base_and_plan_context.<locals>.scenario at 0x770d269ac0f0>
+
+    def _run_ui(scenario: Callable[[_TabsTestApp], Awaitable[None]]) -> None:
+        app = _TabsTestApp(scenario)
+        assert run_app(lambda: app, ["aconsole-b2-tabs-test"]) == 0
+>       assert app.error is None, repr(app.error)
+E       AssertionError: TimeoutError()
+E       assert TimeoutError() is None
+E        +  where TimeoutError() = <test_b2_tabs._TabsTestApp object at 0x770d0ef89540 (tests+gui+front+test_b2_tabs+_TabsTestApp at 0xadd79fc0)>.error
+
+tests/gui/front/test_b2_tabs.py:67: AssertionError
+_____________ test_closing_dirty_preferences_can_cancel_or_discard _____________
+
+    def test_closing_dirty_preferences_can_cancel_or_discard() -> None:
+        async def scenario(app: _TabsTestApp) -> None:
+            client, _tabs = _model(demo_snapshot())
+            settings = Settings(rev=1, vault_path="", worktrees_dir="")
+    
+            async def request(_method: str, _params: msgspec.Struct, _result: type[msgspec.Struct]) -> msgspec.Struct:
+                return settings
+    
+            client.request = request
+            dialog = PreferencesDialog(PreferencesViewModel(client))
+            assert app.window is not None
+            app.window.set_default_size(800, 800)
+            app.window.present()
+            dialog.open(app.window)
+            await _until(lambda: not dialog.loading)
+            await _until(dialog.get_mapped)
+            dialog.font_entry.set_text("Draft font")
+            quitting = AConsoleApp(client)
+            quitting.window = app.window
+            app.window.preferences_dialog = dialog
+            quitting._close_now(app.window)
+            assert app.window.get_visible(), "application exit must not silently lose the draft"
+            assert dialog._active
+            prompt = dialog._close_prompt
+            assert prompt is not None
+            await _answer(prompt, "cancel")
+            await _until(lambda: dialog._close_prompt is None)
+            assert dialog.font_entry.get_text() == "Draft font"
+            dialog.close()
+            prompt = dialog._close_prompt
+            assert prompt is not None
+            await _answer(prompt, "discard")
+            await _until(lambda: not dialog._active)
+            await client.close()
+    
+>       _run_ui(scenario)
+
+tests/gui/front/test_preferences_drafts.py:92: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+scenario = <function test_closing_dirty_preferences_can_cancel_or_discard.<locals>.scenario at 0x770d0c06a140>
+
+    def _run_ui(scenario: Callable[[_TabsTestApp], Awaitable[None]]) -> None:
+        app = _TabsTestApp(scenario)
+        assert run_app(lambda: app, ["aconsole-b2-tabs-test"]) == 0
+>       assert app.error is None, repr(app.error)
+E       AssertionError: AssertionError('GTK wait failed at 89')
+E       assert AssertionError('GTK wait failed at 89') is None
+E        +  where AssertionError('GTK wait failed at 89') = <test_b2_tabs._TabsTestApp object at 0x770d26ce6a40 (tests+gui+front+test_b2_tabs+_TabsTestApp at 0xb0106790)>.error
+
+tests/gui/front/test_b2_tabs.py:67: AssertionError
+_ test_close_save_failure_retains_draft_and_late_save_cannot_claim_new_edits_saved _
+
+    def test_close_save_failure_retains_draft_and_late_save_cannot_claim_new_edits_saved() -> None:  # noqa: PLR0915 -- failure, late response, then confirmed close
+        async def scenario(app: _TabsTestApp) -> None:
+            client, _tabs = _model(demo_snapshot())
+            settings = Settings(rev=1, vault_path="", worktrees_dir="")
+            pending = asyncio.get_running_loop().create_future()
+            patches = []
+    
+            async def request(method: str, params: msgspec.Struct, _result: type[msgspec.Struct]) -> msgspec.Struct:
+                if method == "settings/get":
+                    return settings
+                patches.append(params.patch)
+                return await pending
+    
+            client.request = request
+            dialog = PreferencesDialog(PreferencesViewModel(client))
+            assert app.window is not None
+            app.window.set_default_size(800, 800)
+            app.window.present()
+            dialog.open(app.window)
+            await _until(lambda: not dialog.loading)
+            await _until(dialog.get_mapped)
+            dialog.font_entry.set_text("First draft")
+            dialog.close()
+            prompt = dialog._close_prompt
+            assert prompt is not None
+            await _answer(prompt, "save")
+            await _until(lambda: bool(patches))
+            pending.set_exception(RuntimeError("save failed"))
+            assert dialog.worker is not None
+            await dialog.worker
+            assert dialog._active
+            assert dialog.font_entry.get_text() == "First draft"
+            pending = asyncio.get_running_loop().create_future()
+            dialog.close()
+            prompt = dialog._close_prompt
+            assert prompt is not None
+            await _answer(prompt, "save")
+            await _until(lambda: len(patches) == 2)
+            dialog.font_entry.set_text("Newer draft")
+            pending.set_result(commit_settings(settings, patches[-1]))
+            assert dialog.worker is not None
+            await dialog.worker
+            assert dialog._active
+            assert dialog.font_entry.get_text() == "Newer draft"
+            assert dialog._changes(dialog.viewmodel.settings) == SettingsPatch(terminal_font="Newer draft")
+            pending = asyncio.get_running_loop().create_future()
+            dialog.close()
+            prompt = dialog._close_prompt
+            assert prompt is not None
+            await _answer(prompt, "save")
+            await _until(lambda: len(patches) == 3)
+            pending.set_result(commit_settings(dialog.viewmodel.settings, patches[-1]))
+            assert dialog.worker is not None
+            await dialog.worker
+            await _until(lambda: not dialog._active)
+            await client.close()
+    
+>       _run_ui(scenario)
+
+tests/gui/front/test_preferences_drafts.py:152: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+scenario = <function test_close_save_failure_retains_draft_and_late_save_cannot_claim_new_edits_saved.<locals>.scenario at 0x770d0c068510>
+
+    def _run_ui(scenario: Callable[[_TabsTestApp], Awaitable[None]]) -> None:
+        app = _TabsTestApp(scenario)
+        assert run_app(lambda: app, ["aconsole-b2-tabs-test"]) == 0
+>       assert app.error is None, repr(app.error)
+E       AssertionError: AssertionError('GTK wait failed at 132')
+E       assert AssertionError('GTK wait failed at 132') is None
+E        +  where AssertionError('GTK wait failed at 132') = <test_b2_tabs._TabsTestApp object at 0x770d07af53c0 (tests+gui+front+test_b2_tabs+_TabsTestApp at 0xafbd9940)>.error
+
+tests/gui/front/test_b2_tabs.py:67: AssertionError
+=============================== warnings summary ===============================
+../../../../../../Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/events.py:803
+  /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/events.py:803: DeprecationWarning: 'asyncio.AbstractEventLoopPolicy' is deprecated and slated for removal in Python 3.16
+    AbstractEventLoopPolicy = getattr(asyncio, "AbstractEventLoopPolicy", object)
+
+tests/gui/front/test_clipboard_routing.py::test_real_clipboard_shortcuts[text]
+  /home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/gui/front/test_clipboard_routing.py:146: DeprecationWarning: Vte.Pty.close is deprecated
+    pty.close()
+
+tests/gui/front/test_contrast_table.py: 400 warnings
+tests/gui/front/test_ux1_shortcuts.py: 6 warnings
+  /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/events.py:890: DeprecationWarning: 'asyncio.get_event_loop_policy' is deprecated and slated for removal in Python 3.16
+    if not isinstance(_get_event_loop_policy(), GLibEventLoopPolicy):
+
+tests/gui/front/test_contrast_table.py::test_the_table_is_the_floor_theme_and_the_dim_label_is_readable
+  /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/overrides/GLib.py:631: RuntimeWarning: coroutine 'HealthDialog.refresh' was never awaited
+    return super().iteration(may_block)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/gui/front/test_des2_accessibility.py::test_every_plan_state_is_visible_and_updates_on_heartbeat
+  /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/_pytest/runner.py:180: RuntimeWarning: coroutine 'MainWindow._renew_git_watch' was never awaited
+    del sys.last_exc  # type:ignore[attr-defined]
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/gui/front/test_git_actions.py::test_stage_commit_and_file_buttons_in_the_inspector
+  /home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/src/aconsole/ui/views/review/graph_cell.py:113: DeprecationWarning: Gtk.Widget.get_style_context is deprecated
+    _found, background = self.get_style_context().lookup_color("view_bg_color")
+
+tests/gui/front/test_git_actions.py::test_stage_commit_and_file_buttons_in_the_inspector
+  /home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/src/aconsole/ui/views/review/graph_cell.py:113: DeprecationWarning: Gtk.StyleContext.lookup_color is deprecated
+    _found, background = self.get_style_context().lookup_color("view_bg_color")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/gui/front/test_new_tab_options.py::test_new_tab_passes_workspace_base_and_plan_context[new_worktree]
+FAILED tests/gui/front/test_new_tab_options.py::test_new_tab_passes_workspace_base_and_plan_context[main_checkout]
+FAILED tests/gui/front/test_new_tab_options.py::test_new_tab_passes_workspace_base_and_plan_context[existing_worktree]
+FAILED tests/gui/front/test_preferences_drafts.py::test_closing_dirty_preferences_can_cancel_or_discard
+FAILED tests/gui/front/test_preferences_drafts.py::test_close_save_failure_retains_draft_and_late_save_cannot_claim_new_edits_saved
+5 failed, 486 passed, 1 deselected, 412 warnings in 207.19s (0:03:27)

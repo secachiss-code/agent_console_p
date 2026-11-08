@@ -14,6 +14,7 @@ from aconsole.ui.client.core_client import CoreClient
 from aconsole.ui.viewmodels.approvals_vm import ApprovalsViewModel
 from tests.core.conftest import wait_for_socket
 from tests.core.test_approval_hold import _post_daemon_permission_hook, _seed_daemon_tab
+from tests.socket_paths import short_socket_path
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -32,7 +33,7 @@ def _run(tmp_path: Path, decide: ApprovalDecision | None) -> bytes:
     async def scenario() -> bytes:
         database = tmp_path / "aconsole.db"
         _seed_daemon_tab(database, tmp_path, _TAB)
-        daemon = Daemon(tmp_path / "core.sock", idle_s=30, database=database)
+        daemon = Daemon(short_socket_path(tmp_path / "core.sock"), idle_s=30, database=database)
         daemon.serve_ingest = True
         daemon._tokens.register(_TAB, _TOKEN)
         serving = asyncio.create_task(daemon.serve())

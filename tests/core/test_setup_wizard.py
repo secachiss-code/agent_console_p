@@ -58,6 +58,7 @@ from aconsole.core.infrastructure.setup_checks import (
     SystemSetupEnvironment,
 )
 from tests.core.conftest import wait_for_socket
+from tests.socket_paths import short_socket_path
 
 _AT = datetime(2026, 10, 31, 12, 0, tzinfo=UTC)
 _ENCODER = msgspec.json.Encoder()
@@ -527,7 +528,7 @@ def test_setup_methods_use_production_ipc_and_keep_completion_separate(tmp_path:
 async def _setup_methods_use_production_ipc_and_keep_completion_separate(tmp_path: Path) -> None:
     service, probe, fixes = _service(tmp_path, checks=_checks(fail=frozenset({"storage"})), tokens=("ipc-token",))
     daemon = Daemon(
-        tmp_path / "core.sock",
+        short_socket_path(tmp_path / "core.sock"),
         idle_s=30,
         database=tmp_path / "aconsole.db",
         setup_service=service,

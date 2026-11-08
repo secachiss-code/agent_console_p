@@ -40,6 +40,7 @@ from aconsole.core.infrastructure.ipc.framing import decode_envelope, encode_lin
 from aconsole.core.infrastructure.ipc.ring import EventRing
 from aconsole.core.infrastructure.ipc.session import Connection
 from tests.core.conftest import use_fake_tabs, wait_for_socket
+from tests.socket_paths import short_socket_path
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -94,7 +95,7 @@ def test_ipc_b_serve_argv(tmp_path: Path) -> None:
     assert parse_serve(["--serve", "--socket"]) is None
     assert parse_serve(["--serve", "--socket", "--allow-gil"]) is None
     assert parse_serve(["--serve", "--extra"]) is None
-    socket = tmp_path / "core.sock"
+    socket = short_socket_path(tmp_path / "core.sock")
     assert parse_serve(["--serve", "--socket", str(socket), "--allow-gil"]) == (socket, True)
     assert parse_serve(["--serve", "--allow-gil", "--socket", str(socket)]) == (socket, True)
     bare = parse_serve(["--serve"])
@@ -114,10 +115,10 @@ def test_ipc_b_gil_refusal(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, caps
     assert empty is not None
     assert "(none)" in empty
     monkeypatch.setattr(sys, "_is_gil_enabled", lambda: True)
-    code = main(["--serve", "--socket", str(tmp_path / "core.sock")])
+    code = main(["--serve", "--socket", str(short_socket_path(tmp_path / "core.sock"))])
     assert code == 1
     assert "GIL is enabled" in capsys.readouterr().err
-    assert not (tmp_path / "core.sock").exists()
+    assert not (short_socket_path(tmp_path / "core.sock")).exists()
 
 
 def test_ipc_b_usage() -> None:
@@ -137,7 +138,7 @@ def test_ipc_b_negative_tabs(tmp_path: Path) -> None:
 
 
 def test_ipc_b_exits_when_idle(tmp_path: Path) -> None:
-    sock = tmp_path / "aconsole" / "core.sock"
+    sock = short_socket_path(tmp_path / "aconsole" / "core.sock")
     assert asyncio.run(Daemon(sock, idle_s=0.05).serve()) == 0
     assert not sock.exists()
     assert asyncio.run(Daemon(sock, idle_s=0.05).serve()) == 0
@@ -180,7 +181,7 @@ def test_ipc_b_bad_initialize_does_not_hold(tmp_path: Path) -> None:
 
 
 def test_ipc_b_second_process_leaves_the_socket(tmp_path: Path) -> None:
-    sock = tmp_path / "aconsole" / "core.sock"
+    sock = short_socket_path(tmp_path / "aconsole" / "core.sock")
     first = subprocess.Popen(
         [sys.executable, "-m", "aconsole.core", "--serve", "--allow-gil", "--socket", str(sock)],
         stdout=subprocess.PIPE,
@@ -220,7 +221,7 @@ def test_ipc_b_second_process_leaves_the_socket(tmp_path: Path) -> None:
 
 
 async def _modes(tmp_path: Path) -> tuple[int, int, int]:
-    sock = tmp_path / "aconsole" / "core.sock"
+    sock = short_socket_path(tmp_path / "aconsole" / "core.sock")
     daemon = Daemon(sock, idle_s=30)
     task = asyncio.create_task(daemon.serve())
     await wait_for_socket(sock)
@@ -233,7 +234,7 @@ async def _modes(tmp_path: Path) -> tuple[int, int, int]:
 
 
 async def _holds(tmp_path: Path) -> int:
-    sock = tmp_path / "core.sock"
+    sock = short_socket_path(tmp_path / "core.sock")
     daemon = Daemon(sock, idle_s=0.4)
     task = asyncio.create_task(daemon.serve())
     await wait_for_socket(sock)
@@ -252,7 +253,7 @@ async def _holds(tmp_path: Path) -> int:
 
 async def _sidecar(tmp_path: Path) -> int:
     """A sidecar needs the one-shot token of `tab/launchSpec`. It does not count as a holder."""
-    sock = tmp_path / "core.sock"
+    sock = short_socket_path(tmp_path / "core.sock")
     daemon = Daemon(sock, idle_s=0.25)
     _ = use_fake_tabs(daemon, tmp_path)
     opened = daemon.tabs.open_tab(
@@ -295,7 +296,7 @@ async def _handshake(
 
 
 async def _tabs(tmp_path: Path) -> int:
-    sock = tmp_path / "core.sock"
+    sock = short_socket_path(tmp_path / "core.sock")
     daemon = Daemon(sock, idle_s=0.25, live_tabs=1)
     task = asyncio.create_task(daemon.serve())
     await wait_for_socket(sock)
@@ -306,7 +307,7 @@ async def _tabs(tmp_path: Path) -> int:
 
 
 async def _reject(tmp_path: Path) -> int:
-    sock = tmp_path / "core.sock"
+    sock = short_socket_path(tmp_path / "core.sock")
     daemon = Daemon(sock, idle_s=30)
     task = asyncio.create_task(daemon.serve())
     await wait_for_socket(sock)
@@ -319,7 +320,7 @@ async def _reject(tmp_path: Path) -> int:
 
 
 async def _oversize(tmp_path: Path) -> str:
-    sock = tmp_path / "core.sock"
+    sock = short_socket_path(tmp_path / "core.sock")
     daemon = Daemon(sock, idle_s=30, frame_limit=_LIMIT)
     task = asyncio.create_task(daemon.serve())
     await wait_for_socket(sock)
@@ -336,7 +337,7 @@ async def _oversize(tmp_path: Path) -> str:
 
 
 async def _bad_init(tmp_path: Path) -> int:
-    sock = tmp_path / "core.sock"
+    sock = short_socket_path(tmp_path / "core.sock")
     daemon = Daemon(sock, idle_s=0.25)
     task = asyncio.create_task(daemon.serve())
     await wait_for_socket(sock)
@@ -395,7 +396,7 @@ def test_other_namespace_cannot_initialize_as_the_host(
 
 
 async def _other_namespace(tmp_path: Path) -> tuple[str, str, str, str, str]:
-    sock = tmp_path / "core.sock"
+    sock = short_socket_path(tmp_path / "core.sock")
     daemon = Daemon(sock, idle_s=30)
     task = asyncio.create_task(daemon.serve())
     await wait_for_socket(sock)
@@ -430,7 +431,7 @@ def test_server_reports_itself_and_only_what_it_serves() -> None:
 
 
 async def _reply_over_limit(tmp_path: Path) -> tuple[int | None, str]:
-    sock = tmp_path / "core.sock"
+    sock = short_socket_path(tmp_path / "core.sock")
     daemon = Daemon(sock, idle_s=30, frame_limit=600)
     task = asyncio.create_task(daemon.serve())
     await wait_for_socket(sock)

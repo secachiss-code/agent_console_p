@@ -12,6 +12,8 @@ import msgspec
 import pytest
 from sqlalchemy import select
 
+from tests.socket_paths import short_socket_path
+
 if TYPE_CHECKING:
     from sqlalchemy.orm import Session
 
@@ -757,7 +759,7 @@ def _host(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> tuple[TabService, 
     monkeypatch.delenv("PODMAN_FAKE_ORPHANS", raising=False)
     host = HostTabs(
         bins=HostBins(git=_GIT, podman=_PODMAN, shell=_SHELL),
-        socket_path=str(tmp_path / "core.sock"),
+        socket_path=str(short_socket_path(tmp_path / "core.sock")),
         ingest_port="9",
         worktrees_dir=tmp_path / "worktrees",
     )

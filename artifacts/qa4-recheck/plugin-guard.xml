@@ -1,0 +1,1 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="0" skipped="0" tests="1" time="0.906" timestamp="2026-11-08T21:48:05.722479+03:00" hostname="somovasnbook14"><testcase classname="tests.core.test_git_host_exec" name="test_external_diff_and_textconv_do_not_run" time="0.835" /></testsuite></testsuites>

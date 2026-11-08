@@ -7,6 +7,8 @@ from typing import TYPE_CHECKING
 import gi
 import pytest
 
+from tests.socket_paths import short_socket_path
+
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
 from gi.repository import Adw, Gdk, Gtk  # noqa: E402
@@ -212,7 +214,7 @@ def test_snapshot_connection_error_exits_without_a_window(tmp_path: Path) -> Non
     from aconsole.ui.views.app import AConsoleApp
 
     request = SnapshotRequest(view="window", theme="light", width=700, height=800, out=tmp_path / "failed.png")
-    app = AConsoleApp(CoreClient(str(tmp_path / "missing-core.sock")), request)
+    app = AConsoleApp(CoreClient(str(short_socket_path(tmp_path / "missing-core.sock"))), request)
     assert run_app(lambda: app, ["aconsole-test-error"]) == 0
     assert app.failed
     assert app.window is None
@@ -255,7 +257,7 @@ def test_startup_error_offers_retry_and_opens_the_window(running_app: str, tmp_p
             _ = spawn_task(self._finish())
             return GLib.SOURCE_REMOVE
 
-    app = _RetryApp(CoreClient(str(tmp_path / "missing.sock")))
+    app = _RetryApp(CoreClient(str(short_socket_path(tmp_path / "missing.sock"))))
     watchdog = GLib.timeout_add(8000, app._timeout)
     try:
         assert run_app(lambda: app, ["aconsole-retry-test"]) == 0
@@ -274,7 +276,7 @@ def test_startup_connection_error_says_so_and_exits_once_closed(tmp_path: Path) 
     from aconsole.ui.client.core_client import CoreClient
     from aconsole.ui.views.app import AConsoleApp
 
-    app = AConsoleApp(CoreClient(str(tmp_path / "missing-core.sock")))
+    app = AConsoleApp(CoreClient(str(short_socket_path(tmp_path / "missing-core.sock"))))
     stayed: list[bool] = []
 
     def look_and_close() -> bool:

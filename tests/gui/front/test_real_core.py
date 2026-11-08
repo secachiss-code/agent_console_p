@@ -14,6 +14,7 @@ from aconsole.ui.client.core_client import CoreClient
 from aconsole.ui.views import app as app_module
 from aconsole.ui.views.app import AConsoleApp, SnapshotRequest
 from tests.gui.core_daemon import core_command
+from tests.socket_paths import short_socket_path
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -37,7 +38,7 @@ def test_window_opens_on_the_real_core(tmp_path: Path, monkeypatch: pytest.Monke
     _ = subprocess.run(["/usr/bin/git", "init", "-q", str(repo)], check=True)
     monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path / "data"))
     monkeypatch.setenv("XDG_STATE_HOME", str(tmp_path / "state"))
-    socket = tmp_path / "aconsole" / "core.sock"
+    socket = short_socket_path(tmp_path / "aconsole" / "core.sock")
     out = tmp_path / "real.png"
     client = CoreClient(str(socket))
     command = core_command(socket)
@@ -65,8 +66,8 @@ def test_window_replaces_a_core_older_than_the_code(tmp_path: Path, monkeypatch:
     repo = tmp_path / "repo"
     repo.mkdir()
     _ = subprocess.run(["/usr/bin/git", "init", "-q", str(repo)], check=True)
-    socket = tmp_path / "aconsole" / "core.sock"
-    socket.parent.mkdir()
+    socket = short_socket_path(tmp_path / "aconsole" / "core.sock")
+    socket.parent.mkdir(exist_ok=True)
     command = core_command(socket)
     old = subprocess.Popen(command)
     deadline = time.monotonic() + 20

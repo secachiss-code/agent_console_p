@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from tests.socket_paths import short_socket_path
+
 import contextlib
 import json
 import os
@@ -46,7 +48,7 @@ def _policy(tmp: Path) -> server.Policy:
     return server.Policy(
         projects_root=str(root),
         repo=str(repo),
-        socket_path=str(tmp / "hostrun.sock"),
+        socket_path=str(short_socket_path(tmp / "hostrun.sock")),
         audit_path=str(tmp / "audit.jsonl"),
         state_dir=str(tmp / "state"),
         output_limit_bytes=example.output_limit_bytes,
@@ -202,7 +204,7 @@ def test_example_policy_names_no_machine() -> None:
     policy = server.load_policy(ROOT / "tools" / "hostrun" / "policy.example.toml")
     assert policy.repo == str(ROOT)
     assert policy.projects_root == str(ROOT.parent)
-    assert policy.socket_path == str(Path.home() / ".containers" / "hostrun" / "hostrun.sock")
+    assert policy.socket_path == str(short_socket_path(Path.home() / ".containers" / "hostrun" / "hostrun.sock"))
 
 
 def test_example_policy_binds_every_container_to_the_main_checkout() -> None:
@@ -829,7 +831,7 @@ def test_conformance_and_devtools_reject_bad_input_over_http(running: Running) -
 def test_fake_start_step_carries_hostrun_container(tmp_path: Path) -> None:
     policy = _policy(tmp_path)
     env_file = tmp_path / "container-env"
-    sock = tmp_path / "demo.sock"
+    sock = short_socket_path(tmp_path / "demo.sock")
     # The stub writes HOSTRUN_CONTAINER, creates the socket the server waits for, then sleeps briefly.
     stub = (
         'printf "%s" "$HOSTRUN_CONTAINER" > "$1"; : > "$2"; sleep 3',

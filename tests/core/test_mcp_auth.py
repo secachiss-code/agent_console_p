@@ -10,6 +10,7 @@ import pytest
 from aconsole.core.bootstrap import Daemon
 from aconsole.core.infrastructure.mcp.server import TabTokens, beside_ingest
 from aconsole.core.infrastructure.mcp.tools import TabContext
+from tests.socket_paths import short_socket_path
 
 if TYPE_CHECKING:
     from collections.abc import Awaitable, Callable, MutableMapping
@@ -90,7 +91,7 @@ def _sample(schema: dict[str, object]) -> object:
 
 def test_the_daemon_refuses_every_tool_without_a_tab(tmp_path: Path) -> None:
     async def scenario() -> None:
-        daemon = Daemon(tmp_path / "core.sock", idle_s=30, database=None)
+        daemon = Daemon(short_socket_path(tmp_path / "core.sock"), idle_s=30, database=None)
         tools = await daemon._mcp.list_tools()
         assert tools
         created = await daemon._mcp.call_tool("plan_create", {"title": "t", "goal": "g"})

@@ -54,6 +54,7 @@ from aconsole.core.infrastructure.persistence.models import ApprovalStatus, Proj
 from aconsole.core.infrastructure.persistence.repositories.catalog import ApprovalRepository
 from aconsole.core.infrastructure.persistence.startup import prepare_database, sqlite_url
 from tests.core.conftest import wait_for_socket
+from tests.socket_paths import short_socket_path
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -469,7 +470,7 @@ async def _start_daemon(tmp_path: Path) -> tuple[Daemon, str, asyncio.Task[int]]
     database = tmp_path / "aconsole.db"
     tab_id = "01JBF5SW7QNZ2X5QR8M6K9H000"
     _seed_daemon_tab(database, tmp_path, tab_id)
-    daemon = Daemon(tmp_path / "core.sock", idle_s=30, database=database)
+    daemon = Daemon(short_socket_path(tmp_path / "core.sock"), idle_s=30, database=database)
     daemon.serve_ingest = True
     daemon._tokens.register(tab_id, "test-tab-token")
     serving = asyncio.create_task(daemon.serve())

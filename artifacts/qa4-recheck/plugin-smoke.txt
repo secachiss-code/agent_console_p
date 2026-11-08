@@ -1,0 +1,18 @@
+"""Run the reformatted diagnostic plugins against their original tests, outside measured full suites."""
+import os,subprocess,sys
+from pathlib import Path
+root=Path(__file__).resolve().parents[2]
+out=root/'artifacts/qa4-recheck'
+cases=[
+ ('tick','artifacts/perf2','recheck_measure','tests/core/test_persistence_b.py::test_persistence_b_tick',{'ACONSOLE_PERF2_LOG':str(out/'tick.jsonl')}),
+ ('rank','artifacts/perf6','measure','tests/ui/test_b7_rank.py::test_rank_2000_under_16ms',{'ACONSOLE_PERF6_LOG':str(out/'rank.jsonl')}),
+ ('guard','artifacts/sec11/exec-boundary','guard_plugin','tests/core/test_git_host_exec.py::test_external_diff_and_textconv_do_not_run',{}),
+]
+for name,path,plugin,test,extra in cases:
+ env=dict(os.environ,PYTHONPATH=str(root/'src')+':'+str(root/path),**extra)
+ python=str(root/'.venv-ui/bin/python') if name=='rank' else sys.executable
+ command=[python,'-m','pytest','-q','-p',plugin,test,'--junitxml='+str(out/('plugin-'+name+'.xml'))]
+ with (out/('plugin-'+name+'.log')).open('w') as stream:
+  result=subprocess.run(command,cwd=root,env=env,stdout=stream,stderr=subprocess.STDOUT,timeout=90)
+ print(name,result.returncode)
+ if result.returncode:raise SystemExit(result.returncode)

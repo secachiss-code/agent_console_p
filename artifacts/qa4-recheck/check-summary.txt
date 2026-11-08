@@ -1,0 +1,12 @@
+ruff
+All checks passed!
+basedpyright
+
+0 errors, 0 warnings, 0 notes
+import-linter: 6 kept, 0 broken
+check_no_js: pass
+check_no_raw_sql: pass
+contrast_check: 0 below minimum
+check_contracts: 10 checks passed; docs not linked, 2 skipped
+api_floor_check: clean; banned fixture rejected
+exit 0

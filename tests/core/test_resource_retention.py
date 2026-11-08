@@ -14,6 +14,7 @@ from sqlalchemy.orm import Session
 from aconsole.core.infrastructure.agents.usage_log import UsageLog, claude_events, codex_events
 from aconsole.core.infrastructure.persistence.engine import migrate, write_engine
 from tests.core.git_helpers import commit, git, new_repo
+from tests.socket_paths import short_socket_path
 
 if TYPE_CHECKING:
     import pytest
@@ -266,7 +267,7 @@ def test_real_entrypoint_configures_logging_without_requiring_ui(
         return 0
 
     monkeypatch.setattr(entry, "run_with_signals", serve)
-    assert entry.main(["--serve", "--socket", str(tmp_path / "core.sock"), "--allow-gil"]) == 0
+    assert entry.main(["--serve", "--socket", str(short_socket_path(tmp_path / "core.sock")), "--allow-gil"]) == 0
     assert configured == [True]
 
 

@@ -1,0 +1,23 @@
+{
+  "artifacts/main-merge/measure.py": {
+    "removed_or_changed_original_literals": []
+  },
+  "artifacts/perf2/recheck_measure.py": {
+    "removed_or_changed_original_literals": []
+  },
+  "artifacts/perf5/measure.py": {
+    "removed_or_changed_original_literals": []
+  },
+  "artifacts/perf6/measure.py": {
+    "removed_or_changed_original_literals": []
+  },
+  "artifacts/perf7/measure.py": {
+    "removed_or_changed_original_literals": []
+  },
+  "artifacts/qa7/probe.py": {
+    "removed_or_changed_original_literals": []
+  },
+  "artifacts/sec11/exec-boundary/guard_plugin.py": {
+    "removed_or_changed_original_literals": []
+  }
+}

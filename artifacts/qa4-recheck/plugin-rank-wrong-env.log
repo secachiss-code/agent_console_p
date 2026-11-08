@@ -1,0 +1,28 @@
+Collected 0 items to run in parallel
+E                                                                        [100%]
+==================================== ERRORS ====================================
+_________________ ERROR at setup of test_rank_2000_under_16ms __________________
+
+item = <Function test_rank_2000_under_16ms>
+
+    def pytest_runtest_setup(item: pytest.Function) -> None:
+        global record, original, module  # noqa: PLW0603 -- pytest setup and teardown deliberately share this diagnostic record
+        if item.name != "test_rank_2000_under_16ms":
+            return
+>       from aconsole.ui.viewmodels.logic import rank  # noqa: PLC0415 -- load the optional diagnostic only when its target test runs
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+artifacts/perf6/measure.py:46: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    """Deterministic local ranking of palette items."""
+    
+    from collections.abc import Sequence
+    
+    import msgspec
+>   from rapidfuzz.fuzz import WRatio
+E   ModuleNotFoundError: No module named 'rapidfuzz'
+
+src/aconsole/ui/viewmodels/logic/rank.py:6: ModuleNotFoundError
+=========================== short test summary info ============================
+ERROR tests/ui/test_b7_rank.py::test_rank_2000_under_16ms - ModuleNotFoundErr...

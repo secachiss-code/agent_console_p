@@ -44,6 +44,7 @@ from aconsole.core.infrastructure.persistence.startup import (
 )
 from aconsole.core.infrastructure.persistence.writer import Writer
 from aconsole.core.infrastructure.tabs import default_tabs
+from tests.socket_paths import short_socket_path
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterator
@@ -235,7 +236,7 @@ def test_round6_k22_without_drained_backpressure_fires() -> None:
 
 
 async def _drain_calls(path: Path, calls: list[int]) -> int:
-    sock = path / "aconsole" / "core.sock"
+    sock = short_socket_path(path / "aconsole" / "core.sock")
     server = IpcServer(sock, tabs=default_tabs(socket_path=str(sock)))
     await server.start()
     try:
@@ -388,7 +389,7 @@ def _read_rows(path: Path) -> tuple[list[str], list[str]]:
 
 def test_round6_k22_daemon_creates_database_and_exits(tmp_path: Path) -> None:
     database = tmp_path / "data" / "aconsole.db"
-    daemon = Daemon(tmp_path / "aconsole" / "core.sock", idle_s=0.2, database=database)
+    daemon = Daemon(short_socket_path(tmp_path / "aconsole" / "core.sock"), idle_s=0.2, database=database)
     assert asyncio.run(daemon.serve()) == 0
     assert _tables(database) >= _TABLES
     assert {"tabs", "events"} <= _tables(database)
@@ -399,7 +400,7 @@ def test_round6_k22_daemon_sweep_runs(tmp_path: Path) -> None:
     database = tmp_path / "data" / "aconsole.db"
     now = datetime.now(UTC)
     _seed(database, now)
-    daemon = Daemon(tmp_path / "aconsole" / "core.sock", idle_s=0.5, database=database)
+    daemon = Daemon(short_socket_path(tmp_path / "aconsole" / "core.sock"), idle_s=0.5, database=database)
     assert asyncio.run(daemon.serve()) == 0
     tabs, quota = _read_rows(database)
     assert tabs == ["tab-recent"]

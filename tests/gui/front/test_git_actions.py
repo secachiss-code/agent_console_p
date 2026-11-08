@@ -6,6 +6,8 @@ from typing import TYPE_CHECKING
 
 import gi
 
+from tests.socket_paths import short_socket_path
+
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
 
@@ -232,7 +234,7 @@ def test_a_tab_shows_its_branch_node_and_size() -> None:
 
 
 def test_the_sidebar_item_follows_git_state(tmp_path: Path) -> None:
-    tabs = TabsViewModel(CoreClient(str(tmp_path / "unused.sock")))
+    tabs = TabsViewModel(CoreClient(str(short_socket_path(tmp_path / "unused.sock"))))
     item = TabItem("t1", "one")
     item.set_property("project-id", "p1")
     tabs.store.append(item)

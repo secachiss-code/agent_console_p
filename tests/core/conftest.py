@@ -11,6 +11,7 @@ import pytest
 
 from aconsole.core.application.services.tabs import ProjectSeed, TabRequestError, TabService
 from aconsole.core.domain.clock import Clock
+from tests.socket_paths import short_runtime_path
 
 if TYPE_CHECKING:
     import threading
@@ -27,12 +28,12 @@ type ExecCall = tuple[str, tuple[str, ...], dict[str, str], str]
 
 @pytest.fixture(autouse=True)
 def _isolated_home(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    """The database, sockets, and worktrees of every core test land under `tmp_path`.
+    """Keep data and worktrees under `tmp_path`, with a private short runtime socket directory.
 
     Subprocesses inherit the environment, so `aconsoled --serve` started by a test writes there too.
     """
     monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path / "xdg-data"))
-    monkeypatch.setenv("XDG_RUNTIME_DIR", str(tmp_path / "xdg-runtime"))
+    monkeypatch.setenv("XDG_RUNTIME_DIR", str(short_runtime_path(tmp_path / "xdg-runtime")))
 
 
 @final

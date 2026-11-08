@@ -29,30 +29,8 @@ if "$py" "$root/tools/api_floor_check.py" "$root/tests/fixtures/ui_banned"; then
 fi
 
 container="${HOSTRUN_CONTAINER:-}"
-ui_path() {
-  case "$1" in
-    tests/ui/test_spike.py) return 1 ;;
-    src/aconsole/ui/viewmodels/*|src/aconsole/ui/views/*|src/aconsole/ui/style/*|\
-    src/aconsole/ui/resources/*|src/aconsole/ui/po/*|src/aconsole/ui/AGENTS.md|\
-    src/aconsole/__main__.py|tests/ui/*|tests/gui/front/*|docs/ui/B[0-9]/*|docs/ui/B[0-9][0-9]/*|\
-    stubs/*|tools/ui_snapshot.py|docs/plan/front/execplans/*|docs/contracts/requests/*) return 0 ;;
-    *) return 1 ;;
-  esac
-}
-
 if [ -n "$container" ]; then
-  printf '%s\n' ownership
-  for path in $(git -C "$root" diff --name-only main...HEAD); do
-    if [ "$container" = "agent-codex" ]; then
-      if ! ui_path "$path"; then
-        printf 'ownership: %s\n' "$path" >&2
-        fail=1
-      fi
-    elif ui_path "$path"; then
-      printf 'ownership: %s\n' "$path" >&2
-      fail=1
-    fi
-  done
+  run ownership "$py" "$root/tools/check_ownership.py" "$root" "$container"
 fi
 
 exit "$fail"

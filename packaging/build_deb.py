@@ -137,12 +137,20 @@ def _copy_distributions(venv: Path, site: Path, wanted: frozenset[str]) -> None:
 
 
 def _copy_app(site: Path) -> None:
-    """Tracked files only, so a checkout's leftovers never ship. Their times stay: the UI compares them to the core."""
-    listed = subprocess.run(
-        ("git", "ls-files", "src/aconsole", "migrations"),  # noqa: S607 -- Git by name
+    """Ship a tracked source manifest, refusing to silently omit new application files."""
+    untracked = subprocess.run(
+        ("git", "ls-files", "--others", "--exclude-standard", "-z", "--", "src/aconsole", "migrations"),  # noqa: S607 -- Git by name
         cwd=ROOT, check=True, capture_output=True, text=True,
     ).stdout
-    for line in listed.splitlines():
+    if untracked:
+        names = ", ".join(name for name in untracked.split("\0") if name)
+        message = f"untracked application files would be omitted; add them to Git before building: {names}"
+        raise SystemExit(message)
+    listed = subprocess.run(
+        ("git", "ls-files", "-z", "--", "src/aconsole", "migrations"),  # noqa: S607 -- Git by name
+        cwd=ROOT, check=True, capture_output=True, text=True,
+    ).stdout
+    for line in filter(None, listed.split("\0")):
         source = ROOT / line
         parts = Path(line).parts[1:]
         relative = Path(*parts) if line.startswith("src/") else Path("aconsole", "_migrations", *parts)

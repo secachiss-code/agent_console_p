@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from tests.socket_paths import short_socket_path
+
 import base64
 import hashlib
 import json
@@ -63,7 +65,7 @@ def _policy(tmp: Path) -> server.Policy:
     return server.Policy(
         projects_root=str(projects),
         repo=str(repo),
-        socket_path=str(tmp / "hostrun.sock"),
+        socket_path=str(short_socket_path(tmp / "hostrun.sock")),
         audit_path=str(tmp / "audit.jsonl"),
         state_dir=str(tmp / "host-state"),
         output_limit_bytes=example.output_limit_bytes,

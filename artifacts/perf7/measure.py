@@ -1,118 +1,198 @@
+# Standalone filesystem-loaded pytest plugin, not a Python package.
+# ruff: noqa: INP001
 """Observe the unchanged scale test; optional profiling is a separate diagnostic run."""
+
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Awaitable, Callable
+
+    import pytest
+    from gi.repository import Adw, Gdk, Gtk
+
+    from aconsole.contracts.git import GitNodeView, GitStateResult
+    from aconsole.ui.viewmodels.git_vm import GraphRow
+    from aconsole.ui.views.review.git_pane import GitPane, _RowWidget
+
+
 import cProfile
 import gc
 import json
 import os
-from pathlib import Path
 import time
+from pathlib import Path
 
 
-def read(path):
+def read(path: str | Path) -> str | None:
     try:
         return Path(path).read_text().strip()
     except OSError:
         return None
 
 
-def pytest_runtest_call(item):
-    if item.name != 'test_scrolling_a_long_history':
+def pytest_runtest_call(item: pytest.Function) -> None:  # noqa: C901, PLR0915 -- keep timing callbacks and their cleanup together in this standalone probe
+    if item.name != "test_scrolling_a_long_history":
         return
-    from tests.gui.front import test_git_scale_ui as test
-    original = test._on_pane
-    label_stats={}
-    if os.environ.get('ACONSOLE_PERF7_PROFILE'):
-        from aconsole.ui.views.review.git_pane import _RowWidget
-        show_row = _RowWidget.show_row
-        def record_row(widget, row, state):
-            key='mapped' if widget.get_mapped() else 'unmapped'
-            label_stats[key]=label_stats.get(key,0)+1
-            return show_row(widget,row,state)
-        item._request.getfixturevalue('monkeypatch').setattr(_RowWidget,'show_row',record_row)
-    if os.environ.get('ACONSOLE_PERF7_LABELS'):
-        from aconsole.ui.views.review.git_pane import _RowWidget
-        show_node=_RowWidget._show_node
-        class Proxy:
-            def __init__(self, widget, name):
-                self.widget=widget
-                self.name=name
-            def __getattr__(self, key):
-                method=getattr(self.widget,key)
-                def timed(*args,**kwargs):
-                    start=time.perf_counter_ns()
-                    try:return method(*args,**kwargs)
-                    finally:
-                        stat=label_stats.setdefault(self.name+'.'+key,[0,0])
-                        stat[0]+=1;stat[1]+=time.perf_counter_ns()-start
-                return timed
-        def show(self,node,state):
-            if not isinstance(self.title,Proxy):
-                self.title=Proxy(self.title,'title')
-                self.when=Proxy(self.when,'when')
-            return show_node(self,node,state)
-        item._request.getfixturevalue('monkeypatch').setattr(_RowWidget,'_show_node',show)
+    from tests.gui.front import test_git_scale_ui as test  # noqa: PLC0415 -- load the optional diagnostic only when its target test runs
 
-    def on_pane(tmp_path, monkeypatch, repo, check):
-        async def observed(pane, toasts, window):
-            data = dict(gtk_version=[test.Gtk.get_major_version(),test.Gtk.get_minor_version(),test.Gtk.get_micro_version()],a11y=os.environ.get('GTK_A11Y'),display=os.environ.get('DISPLAY'),renderer=window.get_renderer().__gtype__.name,
-                python=os.sys.version, gtk_env={k:v for k,v in os.environ.items()
-                    if k.startswith(('GSK_', 'GDK_', 'LIBGL_', 'LP_'))},
-                cpu_count=os.cpu_count(), affinity=sorted(os.sched_getaffinity(0)),
-                cpu_max=read('/sys/fs/cgroup/cpu.max'),
-                cpu_stat_before=read('/sys/fs/cgroup/cpu.stat'),
-                load_before=os.getloadavg(), proc_before=read('/proc/self/status'),
-                frames=[], gc=[], phases=[])
-            phase_handles=[]
-            if os.environ.get('ACONSOLE_PERF7_PHASES'):
-                clock=window.get_frame_clock()
-                def phase(name):
-                    def record(clock):
-                        data['phases'].append(dict(name=name,wall=time.perf_counter_ns(),
-                            cpu=time.process_time_ns(),thread=time.thread_time_ns(),
-                            frame=clock.get_frame_counter(),rows=pane.store.get_n_items(),
-                            scroll=pane.scroller.get_vadjustment().get_value()))
+    original = test._on_pane  # noqa: SLF001 -- observe the original private fixture without editing its workload
+    label_stats = {}
+    if os.environ.get("ACONSOLE_PERF7_PROFILE"):
+        from aconsole.ui.views.review.git_pane import _RowWidget  # noqa: PLC0415 -- load the optional diagnostic only when its target test runs
+
+        show_row = _RowWidget.show_row
+
+        def record_row(widget: Gtk.Widget, row: GraphRow, state: GitStateResult | None) -> None:
+            key = "mapped" if widget.get_mapped() else "unmapped"
+            label_stats[key] = label_stats.get(key, 0) + 1
+            return show_row(widget, row, state)
+
+        item.funcargs["monkeypatch"].setattr(_RowWidget, "show_row", record_row)
+    if os.environ.get("ACONSOLE_PERF7_LABELS"):
+        from aconsole.ui.views.review.git_pane import _RowWidget  # noqa: PLC0415 -- load the optional diagnostic only when its target test runs
+
+        show_node = _RowWidget._show_node  # noqa: SLF001 -- observe the original private fixture without editing its workload
+
+        class Proxy:
+            def __init__(self, widget: Gtk.Widget, name: str) -> None:
+                self.widget = widget
+                self.name = name
+
+            def __getattr__(self, key: str) -> Callable[..., object]:
+                method = getattr(self.widget, key)
+
+                def timed(*args: object, **kwargs: object) -> object:
+                    start = time.perf_counter_ns()
+                    try:
+                        return method(*args, **kwargs)
+                    finally:
+                        stat = label_stats.setdefault(self.name + "." + key, [0, 0])
+                        stat[0] += 1
+                        stat[1] += time.perf_counter_ns() - start
+
+                return timed
+
+        def show(self: _RowWidget, node: GitNodeView, state: GitStateResult | None) -> None:
+            if not isinstance(self.title, Proxy):
+                self.title = Proxy(self.title, "title")
+                self.when = Proxy(self.when, "when")
+            return show_node(self, node, state)
+
+        item.funcargs["monkeypatch"].setattr(_RowWidget, "_show_node", show)
+
+    def on_pane(  # noqa: C901 -- keep timing callbacks and their cleanup together in this standalone probe
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+        repo: Path,
+        check: Callable[[GitPane, list[str], Adw.ApplicationWindow], Awaitable[None]],
+    ) -> None:
+        async def observed(pane: GitPane, toasts: list[str], window: Adw.ApplicationWindow) -> None:  # noqa: C901 -- keep timing callbacks and their cleanup together in this standalone probe
+            data = {
+                "gtk_version": [
+                    test.Gtk.get_major_version(),
+                    test.Gtk.get_minor_version(),
+                    test.Gtk.get_micro_version(),
+                ],
+                "a11y": os.environ.get("GTK_A11Y"),
+                "display": os.environ.get("DISPLAY"),
+                "renderer": window.get_renderer().__gtype__.name,
+                "python": os.sys.version,
+                "gtk_env": {k: v for k, v in os.environ.items() if k.startswith(("GSK_", "GDK_", "LIBGL_", "LP_"))},
+                "cpu_count": os.cpu_count(),
+                "affinity": sorted(os.sched_getaffinity(0)),
+                "cpu_max": read("/sys/fs/cgroup/cpu.max"),
+                "cpu_stat_before": read("/sys/fs/cgroup/cpu.stat"),
+                "load_before": os.getloadavg(),
+                "proc_before": read("/proc/self/status"),
+                "frames": [],
+                "gc": [],
+                "phases": [],
+            }
+            phase_handles = []
+            if os.environ.get("ACONSOLE_PERF7_PHASES"):
+                clock = window.get_frame_clock()
+
+                def phase(name: str) -> Callable[[Gdk.FrameClock], None]:
+                    def record(clock: Gdk.FrameClock) -> None:
+                        data["phases"].append(
+                            {
+                                "name": name,
+                                "wall": time.perf_counter_ns(),
+                                "cpu": time.process_time_ns(),
+                                "thread": time.thread_time_ns(),
+                                "frame": clock.get_frame_counter(),
+                                "rows": pane.store.get_n_items(),
+                                "scroll": pane.scroller.get_vadjustment().get_value(),
+                            }
+                        )
+
                     return record
-                for name in ('before-paint','update','layout','paint','after-paint'):
-                    connect=clock.connect if name=='before-paint' else clock.connect_after
-                    phase_handles.append((clock,connect(name,phase(name))))
-            data['refresh_info']=window.get_frame_clock().get_refresh_info(0)
-            started=time.perf_counter()
-            cpu=time.process_time()
-            thread=time.thread_time()
-            last=[started,cpu,thread]
-            sampling_marker=os.environ.get('ACONSOLE_NATIVE_STACK_MARKER')
-            marker_written=False
-            def tick(widget, clock):
+
+                for name in ("before-paint", "update", "layout", "paint", "after-paint"):
+                    connect = clock.connect if name == "before-paint" else clock.connect_after
+                    phase_handles.append((clock, connect(name, phase(name))))
+            data["refresh_info"] = window.get_frame_clock().get_refresh_info(0)
+            started = time.perf_counter()
+            cpu = time.process_time()
+            thread = time.thread_time()
+            last = [started, cpu, thread]
+            sampling_marker = os.environ.get("ACONSOLE_NATIVE_STACK_MARKER")
+            marker_written = False
+
+            def tick(_widget: Gtk.Widget, _clock: Gdk.FrameClock) -> bool:
                 nonlocal marker_written
-                if sampling_marker and not marker_written and pane.scroller.get_vadjustment().get_value()>0:
+                if sampling_marker and not marker_written and pane.scroller.get_vadjustment().get_value() > 0:
                     Path(sampling_marker).touch()
-                    marker_written=True
-                now=[time.perf_counter(),time.process_time(),time.thread_time()]
-                data['frames'].append(dict(at=now[0]-started,
-                    wall=now[0]-last[0],cpu=now[1]-last[1],thread=now[2]-last[2],
-                    rows=pane.store.get_n_items(),scroll=pane.scroller.get_vadjustment().get_value()))
-                last[:]=now
+                    marker_written = True
+                now = [time.perf_counter(), time.process_time(), time.thread_time()]
+                data["frames"].append(
+                    {
+                        "at": now[0] - started,
+                        "wall": now[0] - last[0],
+                        "cpu": now[1] - last[1],
+                        "thread": now[2] - last[2],
+                        "rows": pane.store.get_n_items(),
+                        "scroll": pane.scroller.get_vadjustment().get_value(),
+                    }
+                )
+                last[:] = now
                 return True
-            def collection(phase,info):
-                data['gc'].append(dict(phase=phase,at=time.perf_counter()-started,**info))
-            handle=pane.list_view.add_tick_callback(tick)
+
+            def collection(phase: str, info: dict[str, int]) -> None:
+                data["gc"].append(dict(phase=phase, at=time.perf_counter() - started, **info))
+
+            handle = pane.list_view.add_tick_callback(tick)
             gc.callbacks.append(collection)
-            profile=cProfile.Profile() if os.environ.get('ACONSOLE_PERF7_PROFILE') else None
+            profile = cProfile.Profile() if os.environ.get("ACONSOLE_PERF7_PROFILE") else None
             try:
-                if profile: profile.enable()
-                await check(pane,toasts,window)
+                if profile:
+                    profile.enable()
+                await check(pane, toasts, window)
             finally:
                 if profile:
                     profile.disable()
-                    profile.dump_stats(os.environ['ACONSOLE_PERF7_PROFILE'])
-                if sampling_marker: Path(sampling_marker).unlink(missing_ok=True)
-                for clock,handle in phase_handles: clock.disconnect(handle)
+                    profile.dump_stats(os.environ["ACONSOLE_PERF7_PROFILE"])
+                if sampling_marker:
+                    Path(sampling_marker).unlink(missing_ok=True)  # noqa: ASYNC240 -- diagnostic filesystem work is outside the measured workload
+                for clock, handle in phase_handles:
+                    clock.disconnect(handle)
                 gc.callbacks.remove(collection)
                 pane.list_view.remove_tick_callback(handle)
-                data.update(label_stats=label_stats,cpu_stat_after=read('/sys/fs/cgroup/cpu.stat'),
-                    load_after=os.getloadavg(),proc_after=read('/proc/self/status'),
-                    rows=pane.store.get_n_items(),wall=time.perf_counter()-started,
-                    cpu=time.process_time()-cpu,thread=time.thread_time()-thread)
-                Path(os.environ['ACONSOLE_PERF7_LOG']).write_text(json.dumps(data)+'\n')
-        return original(tmp_path,monkeypatch,repo,observed)
-    monkeypatch = item._request.getfixturevalue('monkeypatch')
-    monkeypatch.setattr(test,'_on_pane',on_pane)
+                data.update(
+                    label_stats=label_stats,
+                    cpu_stat_after=read("/sys/fs/cgroup/cpu.stat"),
+                    load_after=os.getloadavg(),
+                    proc_after=read("/proc/self/status"),
+                    rows=pane.store.get_n_items(),
+                    wall=time.perf_counter() - started,
+                    cpu=time.process_time() - cpu,
+                    thread=time.thread_time() - thread,
+                )
+                Path(os.environ["ACONSOLE_PERF7_LOG"]).write_text(json.dumps(data) + "\n")  # noqa: ASYNC240 -- diagnostic filesystem work is outside the measured workload
+
+        return original(tmp_path, monkeypatch, repo, observed)
+
+    monkeypatch = item.funcargs["monkeypatch"]
+    monkeypatch.setattr(test, "_on_pane", on_pane)

@@ -3,12 +3,9 @@
 from __future__ import annotations
 
 import tempfile
-from typing import TYPE_CHECKING
+from pathlib import Path
 
 import pytest
-
-if TYPE_CHECKING:
-    from pathlib import Path
 
 
 @pytest.fixture(autouse=True)
@@ -33,11 +30,14 @@ def _isolated_ui_state(tmp_path_factory: pytest.TempPathFactory, monkeypatch: py
 
 def pytest_configure(config: pytest.Config) -> None:
     """Isolate HOME before collection, including modules that cache paths on import."""
-    directory = tempfile.TemporaryDirectory(prefix="aconsole-test-home-")
+    directory = tempfile.TemporaryDirectory(prefix="aconsole-test-home-", dir="/tmp")
     environment = pytest.MonkeyPatch()
     environment.setenv("HOME", directory.name)
     environment.setenv("XDG_CONFIG_HOME", f"{directory.name}/.config")
     environment.setenv("XDG_CACHE_HOME", f"{directory.name}/.cache")
     environment.setenv("XDG_DATA_HOME", f"{directory.name}/.local/share")
+    sockets = Path(directory.name) / "s"
+    sockets.mkdir(mode=0o700)
+    environment.setenv("ACONSOLE_TEST_SOCKET_DIR", str(sockets))
     config.add_cleanup(directory.cleanup)
     config.add_cleanup(environment.undo)

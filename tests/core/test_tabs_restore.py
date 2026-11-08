@@ -46,6 +46,7 @@ from aconsole.core.infrastructure.persistence.repositories.tabs import SETTINGS_
 from aconsole.core.infrastructure.persistence.startup import prepare_database, sqlite_url
 from aconsole.core.infrastructure.persistence.writer import Writer
 from tests.core.conftest import FakeTabPorts, wait_for_socket
+from tests.socket_paths import short_socket_path
 
 _ENCODER = msgspec.json.Encoder()
 _GIT = "/usr/bin/git"
@@ -177,7 +178,7 @@ async def _restart(tmp_path: Path) -> tuple[tuple[TabView, ...], tuple[TabView, 
     repo = tmp_path / "repo"
     _init_repo(repo)
     database = tmp_path / "aconsole.db"
-    sock = tmp_path / "core.sock"
+    sock = short_socket_path(tmp_path / "core.sock")
     first, secret = await _open_three(sock, database, repo)
     second, events = await _read_back(sock, database)
     kept = tuple(sorted(first, key=lambda tab: tab.title))
@@ -251,7 +252,7 @@ async def _from_settings(tmp_path: Path) -> tuple[Path, Path, str]:
     database = tmp_path / "aconsole.db"
     directory = tmp_path / "from-settings"
     _seed_dir(database, directory)
-    sock = tmp_path / "core.sock"
+    sock = short_socket_path(tmp_path / "core.sock")
     daemon = Daemon(sock, idle_s=30, database=database)
     daemon.tabs.add_project(ProjectSeed(project_id="proj", root=str(repo), container="agentbox"))
     task = asyncio.create_task(daemon.serve())

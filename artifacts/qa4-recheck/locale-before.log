@@ -1,0 +1,123 @@
+Collected 0 items to run in parallel
+FFFF                                                                     [100%]
+=================================== FAILURES ===================================
+_ test_the_sidebar_shows_every_window_of_an_account_shortest_first[claude-windows0-expected0] _
+
+agent = <AgentKind.CLAUDE: 'claude'>, windows = ('7d', '5h', 'budget')
+expected = ['5 ч', '7 д']
+
+    @pytest.mark.parametrize(
+        ("agent", "windows", "expected"),
+        [
+            (AgentKind.CLAUDE, ("7d", "5h", "budget"), ["5 ч", "7 д"]),
+            (AgentKind.CODEX, ("5h", "7d"), ["5 ч", "7 д"]),
+            (AgentKind.CURSOR, ("auto", "api", "budget"), ["31 день", "API"]),
+            (AgentKind.OPENCODE, ("month", "5h", "week"), ["5 ч", "Нед", "Мес"]),  # noqa: RUF001 -- Russian text
+        ],
+    )
+    def test_the_sidebar_shows_every_window_of_an_account_shortest_first(
+        agent: AgentKind, windows: tuple[str, ...], expected: list[str],
+    ) -> None:
+        quota = tuple(_sidebar_window(key, 10.0, period_days=31 if key in {"auto", "api"} else None) for key in windows)
+        account = AccountView(id=AccountId("a"), agent=agent, plan_label="Pro", quota=quota)
+        line = AccountLine(account)
+>       assert [window.key_label.get_text() for window in line.windows] == expected
+E       AssertionError: assert ['5 h', '7 d'] == ['5 ч', '7 д']
+E         
+E         At index 0 diff: '5 h' != '5 ч'
+E         Use -v to get more diff
+
+tests/gui/front/test_b4b_quota.py:180: AssertionError
+_ test_the_sidebar_shows_every_window_of_an_account_shortest_first[codex-windows1-expected1] _
+
+agent = <AgentKind.CODEX: 'codex'>, windows = ('5h', '7d')
+expected = ['5 ч', '7 д']
+
+    @pytest.mark.parametrize(
+        ("agent", "windows", "expected"),
+        [
+            (AgentKind.CLAUDE, ("7d", "5h", "budget"), ["5 ч", "7 д"]),
+            (AgentKind.CODEX, ("5h", "7d"), ["5 ч", "7 д"]),
+            (AgentKind.CURSOR, ("auto", "api", "budget"), ["31 день", "API"]),
+            (AgentKind.OPENCODE, ("month", "5h", "week"), ["5 ч", "Нед", "Мес"]),  # noqa: RUF001 -- Russian text
+        ],
+    )
+    def test_the_sidebar_shows_every_window_of_an_account_shortest_first(
+        agent: AgentKind, windows: tuple[str, ...], expected: list[str],
+    ) -> None:
+        quota = tuple(_sidebar_window(key, 10.0, period_days=31 if key in {"auto", "api"} else None) for key in windows)
+        account = AccountView(id=AccountId("a"), agent=agent, plan_label="Pro", quota=quota)
+        line = AccountLine(account)
+>       assert [window.key_label.get_text() for window in line.windows] == expected
+E       AssertionError: assert ['5 h', '7 d'] == ['5 ч', '7 д']
+E         
+E         At index 0 diff: '5 h' != '5 ч'
+E         Use -v to get more diff
+
+tests/gui/front/test_b4b_quota.py:180: AssertionError
+_ test_the_sidebar_shows_every_window_of_an_account_shortest_first[cursor-windows2-expected2] _
+
+agent = <AgentKind.CURSOR: 'cursor'>, windows = ('auto', 'api', 'budget')
+expected = ['31 день', 'API']
+
+    @pytest.mark.parametrize(
+        ("agent", "windows", "expected"),
+        [
+            (AgentKind.CLAUDE, ("7d", "5h", "budget"), ["5 ч", "7 д"]),
+            (AgentKind.CODEX, ("5h", "7d"), ["5 ч", "7 д"]),
+            (AgentKind.CURSOR, ("auto", "api", "budget"), ["31 день", "API"]),
+            (AgentKind.OPENCODE, ("month", "5h", "week"), ["5 ч", "Нед", "Мес"]),  # noqa: RUF001 -- Russian text
+        ],
+    )
+    def test_the_sidebar_shows_every_window_of_an_account_shortest_first(
+        agent: AgentKind, windows: tuple[str, ...], expected: list[str],
+    ) -> None:
+        quota = tuple(_sidebar_window(key, 10.0, period_days=31 if key in {"auto", "api"} else None) for key in windows)
+        account = AccountView(id=AccountId("a"), agent=agent, plan_label="Pro", quota=quota)
+        line = AccountLine(account)
+>       assert [window.key_label.get_text() for window in line.windows] == expected
+E       AssertionError: assert ['31 days', 'API'] == ['31 день', 'API']
+E         
+E         At index 0 diff: '31 days' != '31 день'
+E         Use -v to get more diff
+
+tests/gui/front/test_b4b_quota.py:180: AssertionError
+_ test_the_sidebar_shows_every_window_of_an_account_shortest_first[opencode-windows3-expected3] _
+
+agent = <AgentKind.OPENCODE: 'opencode'>, windows = ('month', '5h', 'week')
+expected = ['5 ч', 'Нед', 'Мес']
+
+    @pytest.mark.parametrize(
+        ("agent", "windows", "expected"),
+        [
+            (AgentKind.CLAUDE, ("7d", "5h", "budget"), ["5 ч", "7 д"]),
+            (AgentKind.CODEX, ("5h", "7d"), ["5 ч", "7 д"]),
+            (AgentKind.CURSOR, ("auto", "api", "budget"), ["31 день", "API"]),
+            (AgentKind.OPENCODE, ("month", "5h", "week"), ["5 ч", "Нед", "Мес"]),  # noqa: RUF001 -- Russian text
+        ],
+    )
+    def test_the_sidebar_shows_every_window_of_an_account_shortest_first(
+        agent: AgentKind, windows: tuple[str, ...], expected: list[str],
+    ) -> None:
+        quota = tuple(_sidebar_window(key, 10.0, period_days=31 if key in {"auto", "api"} else None) for key in windows)
+        account = AccountView(id=AccountId("a"), agent=agent, plan_label="Pro", quota=quota)
+        line = AccountLine(account)
+>       assert [window.key_label.get_text() for window in line.windows] == expected
+E       AssertionError: assert ['5 h', 'Wk', 'Mo'] == ['5 ч', 'Нед', 'Мес']
+E         
+E         At index 0 diff: '5 h' != '5 ч'
+E         Use -v to get more diff
+
+tests/gui/front/test_b4b_quota.py:180: AssertionError
+=============================== warnings summary ===============================
+../../../home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/events.py:803
+  /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/events.py:803: DeprecationWarning: 'asyncio.AbstractEventLoopPolicy' is deprecated and slated for removal in Python 3.16
+    AbstractEventLoopPolicy = getattr(asyncio, "AbstractEventLoopPolicy", object)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/gui/front/test_b4b_quota.py::test_the_sidebar_shows_every_window_of_an_account_shortest_first[claude-windows0-expected0]
+FAILED tests/gui/front/test_b4b_quota.py::test_the_sidebar_shows_every_window_of_an_account_shortest_first[codex-windows1-expected1]
+FAILED tests/gui/front/test_b4b_quota.py::test_the_sidebar_shows_every_window_of_an_account_shortest_first[cursor-windows2-expected2]
+FAILED tests/gui/front/test_b4b_quota.py::test_the_sidebar_shows_every_window_of_an_account_shortest_first[opencode-windows3-expected3]
+4 failed, 1 warning in 0.58s

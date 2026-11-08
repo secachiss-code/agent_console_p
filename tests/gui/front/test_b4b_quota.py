@@ -163,17 +163,24 @@ def _sidebar_window(key: str, used: float, *, period_days: int | None = None) ->
 
 
 @pytest.mark.parametrize(
-    ("agent", "windows", "expected"),
+    ("language", "agent", "windows", "expected"),
     [
-        (AgentKind.CLAUDE, ("7d", "5h", "budget"), ["5 ч", "7 д"]),
-        (AgentKind.CODEX, ("5h", "7d"), ["5 ч", "7 д"]),
-        (AgentKind.CURSOR, ("auto", "api", "budget"), ["31 день", "API"]),
-        (AgentKind.OPENCODE, ("month", "5h", "week"), ["5 ч", "Нед", "Мес"]),  # noqa: RUF001 -- Russian text
+        ("ru_RU", AgentKind.CLAUDE, ("7d", "5h", "budget"), ["5 ч", "7 д"]),
+        ("ru_RU", AgentKind.CODEX, ("5h", "7d"), ["5 ч", "7 д"]),
+        ("ru_RU", AgentKind.CURSOR, ("auto", "api", "budget"), ["31 день", "API"]),
+        ("ru_RU", AgentKind.OPENCODE, ("month", "5h", "week"), ["5 ч", "Нед", "Мес"]),  # noqa: RUF001 -- Russian text
+        ("en_US", AgentKind.CLAUDE, ("7d", "5h", "budget"), ["5 h", "7 d"]),
+        ("en_US", AgentKind.CODEX, ("5h", "7d"), ["5 h", "7 d"]),
+        ("en_US", AgentKind.CURSOR, ("auto", "api", "budget"), ["31 days", "API"]),
+        ("en_US", AgentKind.OPENCODE, ("month", "5h", "week"), ["5 h", "Wk", "Mo"]),
     ],
 )
 def test_the_sidebar_shows_every_window_of_an_account_shortest_first(
-    agent: AgentKind, windows: tuple[str, ...], expected: list[str],
+    monkeypatch: pytest.MonkeyPatch, language: str, agent: AgentKind, windows: tuple[str, ...], expected: list[str],
 ) -> None:
+    from aconsole.ui import i18n
+
+    monkeypatch.setattr(i18n.locale, "getlocale", lambda: (language, "UTF-8"))
     quota = tuple(_sidebar_window(key, 10.0, period_days=31 if key in {"auto", "api"} else None) for key in windows)
     account = AccountView(id=AccountId("a"), agent=agent, plan_label="Pro", quota=quota)
     line = AccountLine(account)

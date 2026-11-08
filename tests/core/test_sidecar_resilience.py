@@ -13,6 +13,7 @@ import pytest
 
 from aconsole.sidecar import main as sidecar
 from aconsole.sidecar.ipc import exited
+from tests.socket_paths import short_socket_path
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -126,7 +127,7 @@ def test_closed_stdout_reports_exit_and_reaps_child(
 
 
 def test_dead_peer_does_not_hold_the_terminal(tmp_path: Path) -> None:
-    path = str(tmp_path / "core.sock")
+    path = str(short_socket_path(tmp_path / "core.sock"))
     with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as server:
         server.bind(path)
         server.listen(1)
@@ -142,7 +143,7 @@ def test_dead_peer_does_not_hold_the_terminal(tmp_path: Path) -> None:
 def test_real_socket_recovers_after_more_than_the_old_timeout(tmp_path: Path) -> None:
     from aconsole.sidecar.ipc import signal as encode_signal
 
-    path = str(tmp_path / "slow.sock")
+    path = str(short_socket_path(tmp_path / "slow.sock"))
     with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as server:
         server.bind(path)
         server.listen(1)
@@ -175,7 +176,7 @@ def test_real_socket_recovers_after_more_than_the_old_timeout(tmp_path: Path) ->
 
 
 def test_stalled_core_has_bounded_queue_and_shutdown(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    path = str(tmp_path / "stalled.sock")
+    path = str(short_socket_path(tmp_path / "stalled.sock"))
     monkeypatch.setattr(sidecar, "_LINK_DRAIN_S", 0.01)
     with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as server:
         server.bind(path)

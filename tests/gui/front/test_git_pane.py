@@ -10,6 +10,8 @@ from typing import TYPE_CHECKING
 
 import gi
 
+from tests.socket_paths import short_socket_path
+
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
 from gi.repository import Adw, GLib, Gtk  # noqa: E402
@@ -70,8 +72,8 @@ def _on_pane(
 ) -> None:
     monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path / "data"))
     monkeypatch.setenv("XDG_STATE_HOME", str(tmp_path / "state"))
-    socket = tmp_path / "s" / "core.sock"
-    socket.parent.mkdir()
+    socket = short_socket_path(tmp_path / "s" / "core.sock")
+    socket.parent.mkdir(exist_ok=True)
     socket.parent.chmod(0o700)
     command = core_command(socket)
     daemon = subprocess.Popen(command, env=dict(os.environ))

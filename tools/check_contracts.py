@@ -29,16 +29,42 @@ def check_schema_regen(repo: Path) -> list[str]:
     return problems
 
 
+def _contract_base(repo: Path) -> str | None:
+    """Resolve an explicit CI base, or the branch point/previous main commit locally."""
+    explicit = os.environ.get("ACONSOLE_CONTRACT_BASE")
+    candidates = [explicit] if explicit else ["origin/main", "main", "HEAD^"]
+    for reference in candidates:
+        resolved = subprocess.run(
+            ["git", "rev-parse", "--verify", "--end-of-options", f"{reference}^{{commit}}"],
+            cwd=repo, capture_output=True, text=True, check=False,
+        )
+        if resolved.returncode != 0:
+            continue
+        base = subprocess.run(
+            ["git", "merge-base", "HEAD", resolved.stdout.strip()],
+            cwd=repo, capture_output=True, text=True, check=False,
+        )
+        head = subprocess.run(
+            ["git", "rev-parse", "HEAD"], cwd=repo, capture_output=True, text=True, check=False,
+        )
+        if base.returncode == 0 and (explicit or base.stdout != head.stdout):
+            return base.stdout.strip()
+    return None
+
+
 def check_breaking(repo: Path) -> list[str]:
+    paths = sorted((repo / "contracts" / "schema").rglob("*.schema.json"))
+    if not paths:
+        return []
+    base = _contract_base(repo)
+    if base is None:
+        return ["contract baseline unavailable; fetch history or set ACONSOLE_CONTRACT_BASE"]
     problems: list[str] = []
-    for path in sorted((repo / "contracts" / "schema").rglob("*.schema.json")):
+    for path in paths:
         relative = path.relative_to(repo).as_posix()
         previous = subprocess.run(
-            ["git", "show", f"HEAD:{relative}"],
-            cwd=repo,
-            capture_output=True,
-            text=True,
-            check=False,
+            ["git", "show", f"{base}:{relative}"],
+            cwd=repo, capture_output=True, text=True, check=False,
         )
         if previous.returncode != 0:
             continue

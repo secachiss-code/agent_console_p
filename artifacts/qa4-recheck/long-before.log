@@ -1,0 +1,49 @@
+Collected 0 items to run in parallel
+F                                                                        [100%]
+=================================== FAILURES ===================================
+____________________________ test_ipc_b_socket_mode ____________________________
+
+tmp_path = PosixPath('/tmp/ac-qa4-long-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx/test_ipc_b_socket_mode0')
+
+    def test_ipc_b_socket_mode(tmp_path: Path) -> None:
+>       mode, directory, lock_mode = asyncio.run(_modes(tmp_path))
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/core/test_ipc_b.py:147: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/home/sas/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py:205: in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+/home/sas/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py:128: in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/sas/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/base_events.py:724: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+tests/core/test_ipc_b.py:226: in _modes
+    await wait_for_socket(sock)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('/tmp/ac-qa4-long-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx/test_ipc_b_socket_mode0/aconsole/core.sock')
+
+    async def wait_for_socket(path: Path) -> None:
+        """Poll until the daemon has bound its socket. Fails after about a second."""
+        for _ in range(100):
+            if await asyncio.to_thread(path.exists):
+                return
+            await asyncio.sleep(0.01)
+        message = "socket did not appear"
+>       raise RuntimeError(message)
+E       RuntimeError: socket did not appear
+
+tests/core/conftest.py:152: RuntimeError
+=========================== short test summary info ============================
+FAILED tests/core/test_ipc_b.py::test_ipc_b_socket_mode - RuntimeError: socke...
+Task exception was never retrieved
+future: <Task finished name='Task-2' coro=<Daemon.serve() done, defined at /tmp/qa4-baseline-76kam9ye/checkout/src/aconsole/core/bootstrap.py:690> exception=OSError('AF_UNIX path too long')>
+Traceback (most recent call last):
+  File "/tmp/qa4-baseline-76kam9ye/checkout/src/aconsole/core/bootstrap.py", line 711, in serve
+  File "/tmp/qa4-baseline-76kam9ye/checkout/src/aconsole/core/bootstrap.py", line 1586, in _listen
+  File "/home/sas/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/streams.py", line 113, in start_unix_server
+  File "/home/sas/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/unix_events.py", line 311, in create_unix_server
+OSError: AF_UNIX path too long

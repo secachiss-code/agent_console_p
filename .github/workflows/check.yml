@@ -16,6 +16,8 @@ jobs:
       UV_LOCKED: "1"
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: astral-sh/setup-uv@v6
         with:
           version: "0.13.7"
@@ -30,6 +32,8 @@ jobs:
           UV_PROJECT_ENVIRONMENT=.venv-core uv sync --python 3.15t
           UV_PROJECT_ENVIRONMENT=.venv-ui uv sync --group ui --python 3.15+gil
       - name: Lint, types, layers, contracts
+        env:
+          ACONSOLE_CONTRACT_BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
         run: tools/check.sh
       - name: Core tests
         env:
@@ -37,6 +41,7 @@ jobs:
         run: >
           .venv-core/bin/python -m pytest tests/core tests/contracts tests/gate tests/hostrun tests/smoke
           tests/test_package.py tests/test_packaging.py tests/test_contrast.py
+          tests/test_build_guards.py tests/test_socket_paths.py
           --cov=aconsole --cov-branch --cov-report= --cov-fail-under=0
           -p no:cacheprovider --basetemp=/tmp/ac-core
       - name: Interface tests

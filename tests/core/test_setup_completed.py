@@ -7,6 +7,8 @@ from typing import TYPE_CHECKING
 
 import msgspec
 
+from tests.socket_paths import short_socket_path
+
 if TYPE_CHECKING:
     from pathlib import Path
 
@@ -35,7 +37,7 @@ def test_setup_completed_survives_restart_and_a_failed_check(tmp_path: Path) -> 
 
 async def _finish(tmp_path: Path) -> tuple[tuple[bool, bool, bool, bool], int, int, tuple[int, int], Settings]:
     database = tmp_path / "aconsole.db"
-    sock = tmp_path / "core.sock"
+    sock = short_socket_path(tmp_path / "core.sock")
     daemon = Daemon(sock, idle_s=30, database=database)
     task = asyncio.create_task(daemon.serve())
     await wait_for_socket(sock)
