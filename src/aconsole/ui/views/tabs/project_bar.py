@@ -37,12 +37,18 @@ class ProjectBar(Gtk.Box):
         )
         _ = self.projects.connect("notify::selected", self._project_chosen)
         self.search: Gtk.SearchEntry = Gtk.SearchEntry(placeholder_text=translate("tabs.search"))
+        self.search.update_property(
+            [Gtk.AccessibleProperty.LABEL], [GObject.Value(GObject.TYPE_STRING, translate("tabs.search"))],
+        )
         _ = self.search.connect("search-changed", self._search_changed)
         project_row = Gtk.Box(spacing=6)
         self.projects.set_hexpand(True)
         project_row.append(self.projects)
         self.remove_button: Gtk.Button = Gtk.Button(
             icon_name="list-remove-symbolic", tooltip_text=translate("tabs.project.remove"),
+        )
+        self.remove_button.update_property(
+            [Gtk.AccessibleProperty.LABEL], [GObject.Value(GObject.TYPE_STRING, translate("tabs.project.remove"))],
         )
         _ = self.remove_button.connect("clicked", self._confirm_remove)
         project_row.append(self.remove_button)

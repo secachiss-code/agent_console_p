@@ -6,7 +6,7 @@ import gi
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
-from gi.repository import GLib, Gtk  # noqa: E402
+from gi.repository import GLib, GObject, Gtk  # noqa: E402
 
 from aconsole.contracts.app import AccountView, TabView  # noqa: E402
 from aconsole.ui.views.quota_dialog import QuotaDialog  # noqa: E402
@@ -18,6 +18,9 @@ class QuotaCard(Gtk.Button):
     def __init__(self, *, with_heading: bool = True) -> None:
         """Under a `SummarySection` the section names the card, and the time of the numbers goes last."""
         super().__init__()
+        self.update_property(
+            [Gtk.AccessibleProperty.LABEL], [GObject.Value(GObject.TYPE_STRING, translate("quota.title"))],
+        )
         self._with_heading: bool = with_heading
         self.add_css_class("flat")
         self.add_css_class("ac-summary-section")

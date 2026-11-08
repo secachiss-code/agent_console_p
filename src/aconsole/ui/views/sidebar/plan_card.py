@@ -5,7 +5,7 @@ from collections.abc import Callable
 import gi
 
 gi.require_version("Gtk", "4.0")
-from gi.repository import Gtk, Pango  # noqa: E402
+from gi.repository import GObject, Gtk, Pango  # noqa: E402
 
 from aconsole.contracts.app import PlanView  # noqa: E402
 from aconsole.contracts.common import PlanId  # noqa: E402
@@ -16,6 +16,9 @@ class PlanCard(Gtk.Button):
     def __init__(self, on_activate: Callable[[PlanId], None], *, with_heading: bool = True) -> None:
         """Under a `SummarySection` the section says "Plan", so the card starts with the plan's name."""
         super().__init__()
+        self.update_property(
+            [Gtk.AccessibleProperty.LABEL], [GObject.Value(GObject.TYPE_STRING, translate("plan.card.title"))],
+        )
         self.add_css_class("flat")
         self.add_css_class("ac-summary-section")
         self.plan_id: PlanId | None = None
@@ -66,6 +69,11 @@ class PlanCard(Gtk.Button):
             ready = ", ".join(node.key for node in plan.nodes if node.ready)
             self.detail_label.set_label(translate("plan.ready").format(nodes=ready) if ready else plan.goal)
         self.set_tooltip_text(self.detail_label.get_label())
+        self.update_property(
+            [Gtk.AccessibleProperty.LABEL],
+            [GObject.Value(GObject.TYPE_STRING, ": ".join((translate("plan.card.title"),
+                self.title_label.get_label(), self.progress_label.get_label(), self.detail_label.get_label())))],
+        )
 
     def _activate(self, _button: Gtk.Button) -> None:
         if self.plan_id is not None:

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
+
 import gi
 
 gi.require_version("Gtk", "4.0")
@@ -52,6 +54,7 @@ class TabRow(Gtk.Box):
         super().__init__(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
         self.add_css_class("ac-tab-row")
         self.tabs: TabsViewModel = tabs
+        self.on_move: Callable[[str, int], bool] | None = None
         self.tab_id: str | None = None
         self._item: TabItem | None = None
         self._notify: int | None = None
@@ -85,14 +88,7 @@ class TabRow(Gtk.Box):
         text.append(self.git_label)
         self.append(text)
         self._setup_trailing()
-        actions = Gio.SimpleActionGroup()
-        rename = Gio.SimpleAction.new("rename", None)
-        _ = rename.connect("activate", self._begin_rename)
-        actions.add_action(rename)
-        self._fork_action: Gio.SimpleAction = Gio.SimpleAction.new("fork", None)
-        _ = self._fork_action.connect("activate", self._fork)
-        actions.add_action(self._fork_action)
-        self.insert_action_group("tab-row", actions)
+        self._setup_actions()
         context = Gtk.GestureClick()
         context.set_button(3)
         _ = context.connect("pressed", self._popup_menu)
@@ -101,12 +97,29 @@ class TabRow(Gtk.Box):
         _ = self.context_keys.connect("key-pressed", self._context_key)
         self.add_controller(self.context_keys)
 
+    def _setup_actions(self) -> None:
+        actions = Gio.SimpleActionGroup()
+        rename = Gio.SimpleAction.new("rename", None)
+        _ = rename.connect("activate", self._begin_rename)
+        actions.add_action(rename)
+        self._fork_action: Gio.SimpleAction = Gio.SimpleAction.new("fork", None)
+        _ = self._fork_action.connect("activate", self._fork)
+        actions.add_action(self._fork_action)
+        for name, direction in (("move-up", -1), ("move-down", 1)):
+            action = Gio.SimpleAction.new(name, None)
+            _ = action.connect("activate", self._move, direction)
+            actions.add_action(action)
+        self.insert_action_group("tab-row", actions)
+
     def _setup_trailing(self) -> None:
         self.close_button: Gtk.Button = Gtk.Button(icon_name="window-close-symbolic")
         self.close_button.add_css_class("flat")
         self.close_button.add_css_class("ac-tab-close")
         self.close_button.set_valign(Gtk.Align.CENTER)
         self.close_button.set_tooltip_text(translate("tabs.close"))
+        self.close_button.update_property(
+            [Gtk.AccessibleProperty.LABEL], [GObject.Value(GObject.TYPE_STRING, translate("tabs.close"))],
+        )
         self.waiting_label: Gtk.Label = Gtk.Label()
         self.waiting_label.add_css_class("numeric")
         self.waiting_label.add_css_class("ac-tab-wait")
@@ -120,7 +133,8 @@ class TabRow(Gtk.Box):
         self.menu_button: Gtk.MenuButton = Gtk.MenuButton()
         self.menu_button.set_direction(Gtk.ArrowType.NONE)
         self.menu_button.set_always_show_arrow(False)
-        self.menu_button.set_focusable(False)
+        self.menu_button.set_icon_name("view-more-symbolic")
+        self.menu_button.set_focusable(True)
         self.menu_button.add_css_class("ac-tab-menu-anchor")
         self.menu_button.set_valign(Gtk.Align.CENTER)
         self.menu_button.set_tooltip_text(translate("tabs.menu"))
@@ -138,6 +152,8 @@ class TabRow(Gtk.Box):
         menu = Gio.Menu()
         menu.append(translate("tabs.rename"), "tab-row.rename")
         menu.append(translate("tabs.fork"), "tab-row.fork")
+        menu.append(translate("tabs.move_up"), "tab-row.move-up")
+        menu.append(translate("tabs.move_down"), "tab-row.move-down")
         review = Gio.MenuItem.new(review_text("review.open"), None)
         review.set_action_and_target_value("win.open-review", GLib.Variant("s", self.tab_id))
         menu.append_item(review)
@@ -168,6 +184,10 @@ class TabRow(Gtk.Box):
         if self.title_label.get_editing():
             self.title_label.stop_editing(False)  # noqa: FBT003 -- cancel the recycled row's edit
         self.title_label.set_editable(False)
+
+    def _move(self, _action: Gio.SimpleAction, _parameter: GLib.Variant | None, direction: int) -> None:
+        if self.tab_id is not None and self.on_move is not None:
+            _ = self.on_move(self.tab_id, direction)
 
     def _fork(self, _action: Gio.SimpleAction, _parameter: GLib.Variant | None) -> None:
         if self.tab_id is not None:
@@ -206,10 +226,15 @@ class TabRow(Gtk.Box):
         self._fork_action.set_enabled(self.tabs.can_fork(self.tab_id))
         if not self.title_label.get_editing():
             self.title_label.set_text(str(item.title))
+        status = translate(f"tabs.status.{item.status_code or 'unknown'}")
         subtitle = str(item.subtitle)
         detail = str(item.detail)
-        self.subtitle_label.set_label(" · ".join(value for value in (subtitle, detail) if value))
+        self.subtitle_label.set_label(" · ".join(value for value in (status, subtitle, detail) if value))
         self.subtitle_label.set_tooltip_text(self.subtitle_label.get_label())
+        self.update_property(
+            [Gtk.AccessibleProperty.LABEL],
+            [GObject.Value(GObject.TYPE_STRING, f"{item.title}: {self.subtitle_label.get_label()}")],
+        )
         git_line = str(item.git_line)
         self.git_label.set_label(git_line)
         self.git_label.set_tooltip_text(git_line or None)
@@ -221,9 +246,7 @@ class TabRow(Gtk.Box):
         minutes = int(str(item.waiting_minutes))
         self.waiting_label.set_visible(minutes >= 0)
         self.waiting_label.set_label(_wait_text(minutes) if minutes >= 0 else "")
-        self.close_button.set_tooltip_text(translate("tabs.close"))
         self.status_label.set_label("")
-        status = translate(f"tabs.status.{item.status_code or 'unknown'}")
         if self._status_class is not None:
             self.status_label.remove_css_class(self._status_class)
         self._status_class = f"ac-status-{item.status_code or 'unknown'}"

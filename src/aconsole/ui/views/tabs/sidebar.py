@@ -63,6 +63,10 @@ class TabSidebar(Gtk.Stack):
         self.tab_list: Gtk.ListView = Gtk.ListView(model=self.selection, factory=factory)
         self.tab_list.add_css_class("navigation-sidebar")
         self.tab_list.add_css_class("ac-tabs")
+        self.reorder_keys: Gtk.EventControllerKey = Gtk.EventControllerKey()
+        self.reorder_keys.set_propagation_phase(Gtk.PropagationPhase.CAPTURE)
+        _ = self.reorder_keys.connect("key-pressed", self._reorder_key)
+        self.tab_list.add_controller(self.reorder_keys)
         self.tab_list.set_tooltip_text(translate("tabs.list"))
         self.tab_list.update_property(
             [Gtk.AccessibleProperty.LABEL], [GObject.Value(GObject.TYPE_STRING, translate("tabs.list"))],
@@ -154,6 +158,7 @@ class TabSidebar(Gtk.Stack):
 
     def _row_setup(self, _factory: Gtk.SignalListItemFactory, item: Gtk.ListItem) -> None:
         row = TabRow(self.tabs)
+        row.on_move = self.move_tab
         source = Gtk.DragSource()
         source.set_actions(Gdk.DragAction.MOVE)
         _ = source.connect("prepare", self._drag_prepare, row)
@@ -209,6 +214,29 @@ class TabSidebar(Gtk.Stack):
         return isinstance(value, str) and row.tab_id is not None and self.handle_drop(
             value, row.tab_id, after=y >= row.get_height() / 2,
         )
+
+    def _reorder_key(
+        self, _controller: Gtk.EventControllerKey, keyval: int, _keycode: int, state: Gdk.ModifierType,
+    ) -> bool:
+        modifiers = state & Gtk.accelerator_get_default_mod_mask()
+        if modifiers != Gdk.ModifierType.ALT_MASK or keyval not in (Gdk.KEY_Up, Gdk.KEY_Down):
+            return False
+        item = self.selection.get_selected_item()
+        if isinstance(item, TabItem):
+            _ = self.move_tab(str(item.tab_id), -1 if keyval == Gdk.KEY_Up else 1)
+        return True
+
+    def move_tab(self, source_id: str, direction: int) -> bool:
+        """Move one visible neighbour within the same section, using the drag reorder path."""
+        rows = [self._sorted.get_item(index) for index in range(self._sorted.get_n_items())]
+        source = next((row for row in rows if isinstance(row, TabItem) and str(row.tab_id) == source_id), None)
+        if source is None:
+            return False
+        target_index = rows.index(source) + direction
+        if not 0 <= target_index < len(rows):
+            return False
+        target = rows[target_index]
+        return isinstance(target, TabItem) and self.handle_drop(source_id, str(target.tab_id), after=direction > 0)
 
     def handle_drop(self, source_id: str, target_id: str, *, after: bool) -> bool:
         if self.pending_reorder is not None and not self.pending_reorder.done():

@@ -29,7 +29,7 @@ def layout_plan(nodes: tuple[PlanNodeView, ...]) -> tuple[PlanNodePosition, ...]
         ordered = [item[2] for item in sorted(scored, key=lambda item: (item[0], item[1]))]
         for rank, node in enumerate(ordered):
             ranks[node.id] = rank
-            positions.append(PlanNodePosition(node.id, layer * 160 + 12, rank * 64 + 12))
+            positions.append(PlanNodePosition(node.id, layer * 160 + 12, rank * 84 + 12))
     return tuple(positions)
 
 

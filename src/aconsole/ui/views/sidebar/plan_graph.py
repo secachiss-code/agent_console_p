@@ -9,7 +9,7 @@ import cairo
 import gi
 
 gi.require_version("Gtk", "4.0")
-from gi.repository import Gdk, GLib, Gtk, Pango  # noqa: E402
+from gi.repository import Gdk, GLib, GObject, Gtk, Pango  # noqa: E402
 
 from aconsole.contracts.app import PlanNodeView, PlanView  # noqa: E402
 from aconsole.contracts.common import NodeId, NodeStatus, TabId  # noqa: E402
@@ -18,7 +18,7 @@ from aconsole.ui.viewmodels.logic.quota_fmt import agent_name  # noqa: E402
 from aconsole.ui.views.sidebar.messages import _ as translate  # noqa: E402
 
 _NODE_WIDTH = 128
-_NODE_HEIGHT = 44
+_NODE_HEIGHT = 64
 _MIN_BEND = 12.0
 _PORT_RADIUS = 2.5
 _FULL_TURN = 2 * math.pi
@@ -63,6 +63,7 @@ class PlanGraph(Gtk.Box):
             button = self.node_buttons[key]
             button.remove_css_class(f"ac-plan-{self._nodes[key].status.value}")
             button.add_css_class(f"ac-plan-{node.status.value}")
+            self._label_node(button, node)
             if node.ready:
                 button.add_css_class("ac-plan-ready")
             else:
@@ -110,15 +111,12 @@ class PlanGraph(Gtk.Box):
         for node_id, node in self._nodes.items():
             button = Gtk.Button()
             label = Gtk.Label(ellipsize=Pango.EllipsizeMode.END, max_width_chars=16, justify=Gtk.Justification.CENTER)
-            # The key is a reference, the title is what is read: the title carries the weight.
-            key = f'<span size="small">{GLib.markup_escape_text(node.key)}</span>'
-            name = f'<span weight="600">{GLib.markup_escape_text(node.title)}</span>'
-            label.set_markup(f"{key}\n{name}")
-            label.set_tooltip_text(f"{node.key} {node.title}")
             button.set_child(label)
+            self._label_node(button, node)
             button.set_size_request(_NODE_WIDTH, _NODE_HEIGHT)
             button.add_css_class("ac-plan-node")
             button.add_css_class(f"ac-plan-{node.status.value}")
+            self._label_node(button, node)
             if node.ready:
                 button.add_css_class("ac-plan-ready")
             _ = button.connect("clicked", self._node_clicked, node_id)
@@ -137,6 +135,20 @@ class PlanGraph(Gtk.Box):
         self.append(scroll)
         # Review stays beside the heading, above the window's bottom approval overlay.
         self.insert_child_after(self._build_details(), self.get_first_child())
+
+    @staticmethod
+    def _label_node(button: Gtk.Button, node: PlanNodeView) -> None:
+        status = translate(f"plan.status.{node.status.value}")
+        label = button.get_child()
+        if isinstance(label, Gtk.Label):
+            key = GLib.markup_escape_text(node.key)
+            title = GLib.markup_escape_text(node.title)
+            label.set_markup(f"<small>{key}</small>\n<b>{title}</b>\n<small>{GLib.markup_escape_text(status)}</small>")
+        name = f"{node.key}: {node.title} — {status}"
+        button.set_tooltip_text(name)
+        button.update_property(
+            [Gtk.AccessibleProperty.LABEL], [GObject.Value(GObject.TYPE_STRING, name)],
+        )
 
     def _build_details(self) -> Gtk.Box:
         self.details_label: Gtk.Label = Gtk.Label(

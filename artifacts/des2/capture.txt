@@ -1,0 +1,83 @@
+import asyncio
+import sys
+import tempfile
+from pathlib import Path
+import gi
+import msgspec
+gi.require_version('Gtk','4.0')
+gi.require_version('Adw','1')
+from gi.repository import Gtk
+from aconsole.contracts.common import NodeId, NodeStatus
+from aconsole.core.infrastructure.fake.server import FakeCore
+from aconsole.ui.bootstrap import run_app, spawn_task
+from aconsole.ui.client.core_client import CoreClient
+from aconsole.ui.snapshot import capture_window
+from aconsole.ui.views.app import AConsoleApp, SnapshotRequest
+
+class Preview(AConsoleApp):
+    def do_activate(self):
+        super().do_activate()
+        spawn_task(self.ready())
+    def _capture(self):
+        pass
+    async def ready(self):
+        for _ in range(100):
+            if self.window is not None:
+                break
+            await asyncio.sleep(.05)
+        else:
+            raise RuntimeError('window unavailable')
+        self.target=self.window
+        snapshot=self.client.store.snapshot
+        if sys.argv[1]=='plan-states':
+            plan=snapshot.plans[0]
+            self.window._open_plan(plan.id)
+            self.window.plan_page.close_button.grab_focus()
+        await asyncio.sleep(.5)
+        if sys.argv[1]=='tab-states' and int(sys.argv[3]) < 800:
+            self.window.split.set_show_sidebar(True)
+            await asyncio.sleep(.5)
+        self.attempts=0
+        self.capture()
+    def capture(self):
+        clock=self.target.get_frame_clock()
+        def painted(clock):
+            clock.disconnect(handle)
+            try:
+                capture_window(self.target,Path(sys.argv[4]))
+            except RuntimeError:
+                self.attempts+=1
+                if self.attempts<20:
+                    self.capture();return
+                self.failed=True
+            spawn_task(self._finish())
+        handle=clock.connect('after-paint',painted)
+        self.target.queue_draw()
+
+with tempfile.TemporaryDirectory(prefix='des2-preview-') as directory:
+    path=str(Path(directory)/'core.sock')
+    fake=FakeCore(path,'demo');fake.start()
+    output=Path(sys.argv[4]);output.unlink(missing_ok=True)
+    def factory():
+        client=CoreClient(path)
+        original=client.request
+        async def request(method,params,result_type):
+            result=await original(method,params,result_type)
+            if method=='app/snapshot':
+                plans=result.snapshot.plans
+                plan=plans[0]
+                nodes=tuple(msgspec.structs.replace(plan.nodes[0],id=NodeId('status-'+status.value),
+                    key='DES-'+str(i+1),title='Проверка состояния',status=status,ready=False,layer=i//4,
+                    depends_on=()) for i,status in enumerate(NodeStatus))
+                plan=msgspec.structs.replace(plan,nodes=nodes,total=len(nodes),done=1)
+                return msgspec.structs.replace(result,snapshot=msgspec.structs.replace(result.snapshot,approvals=(),plans=(plan,*plans[1:])))
+            return result
+        client.request=request
+        snapshot=SnapshotRequest(view='window',theme=sys.argv[2],width=int(sys.argv[3]),height=800,out=output)
+        return Preview(client,snapshot=snapshot)
+    try:
+        result=run_app(factory,['aconsole-des2-preview'])
+    finally:
+        fake.stop()
+    if not output.is_file():raise RuntimeError('snapshot missing')
+    raise SystemExit(result)

@@ -55,7 +55,7 @@ def test_b4a_plan_layout_uses_layers_upstream_barycenters_and_key_ties() -> None
     assert by_id["tie-a"].x == 172
     assert by_id["right"].x == 172
     assert by_id["source-a"].y == 12
-    assert by_id["source-b"].y == 76
+    assert by_id["source-b"].y == 96
     assert by_id["tie-a"].y < by_id["tie-b"].y
     assert by_id["tie-b"].y < by_id["middle"].y
     assert by_id["middle"].y < by_id["right"].y

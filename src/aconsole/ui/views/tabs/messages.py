@@ -60,6 +60,8 @@ _MESSAGES = {
                            "Сохранённых сессий нет. Для OpenCode нужен работающий сервер."),
     "tabs.new": ("New tab", "Новая вкладка"),
     "tabs.menu": ("Tab menu", "Меню вкладки"),
+    "tabs.move_up": ("Move up (Alt+Up)", "Выше (Alt+↑)"),
+    "tabs.move_down": ("Move down (Alt+Down)", "Ниже (Alt+↓)"),
     "tabs.rename": ("Rename", "Переименовать"),
     "tabs.close": ("Close…", "Закрыть…"),
     "tabs.wait_minutes": ("{minutes} min", "{minutes} мин"),

@@ -51,6 +51,7 @@ class SummarySection(Gtk.Box):
 
     def set_title(self, title: str) -> None:
         self.title_label.set_label(title.upper())
+        self._show(folded=self.folded)
 
     def set_detail(self, text: str, level: str | None = None) -> None:
         self.detail_label.set_label(text)
