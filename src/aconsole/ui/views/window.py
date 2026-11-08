@@ -32,6 +32,7 @@ from aconsole.ui.viewmodels.approval_alerts import Alert, ApprovalAlerts  # noqa
 from aconsole.ui.viewmodels.approvals_vm import ApprovalsViewModel  # noqa: E402
 from aconsole.ui.viewmodels.git_vm import GitViewModel, git_summary  # noqa: E402
 from aconsole.ui.viewmodels.health_vm import HealthViewModel  # noqa: E402
+from aconsole.ui.viewmodels.logic.approval_modes import automatic_banner_key, effective_policy  # noqa: E402
 from aconsole.ui.viewmodels.logic.fonts import ZOOM_DEFAULT, css_font_family, font_families, zoomed  # noqa: E402
 from aconsole.ui.viewmodels.logic.quota_fmt import quota_level  # noqa: E402
 from aconsole.ui.viewmodels.review_vm import ReviewViewModel  # noqa: E402
@@ -332,6 +333,8 @@ class MainWindow(Adw.ApplicationWindow):
         self.quota_banner.set_button_label(translate("quota.details"))
         _ = self.quota_banner.connect("button-clicked", self._quota_details)
         content.add_top_bar(self.quota_banner)
+        self.policy_banner: Adw.Banner = Adw.Banner()
+        content.add_top_bar(self.policy_banner)
 
     def _connection_details(self, _banner: Adw.Banner) -> None:
         self._open_health()
@@ -362,7 +365,7 @@ class MainWindow(Adw.ApplicationWindow):
             for account in self._summary_vm.accounts for window in account.quota
         )
         self.quota_banner.set_revealed(critical)
-        self.end_island.set_margin_top(_ISLAND_MARGIN + (_BANNER_HEIGHT if critical else 0))
+        self._place_end_island(quota_critical=critical)
 
     def _open_plan(self, plan_id: PlanId) -> None:
         plan = self._summary_vm.plan
@@ -997,6 +1000,31 @@ class MainWindow(Adw.ApplicationWindow):
             schemes = {"system": Adw.ColorScheme.DEFAULT, "light": Adw.ColorScheme.FORCE_LIGHT,
                        "dark": Adw.ColorScheme.FORCE_DARK}
             Adw.StyleManager.get_default().set_color_scheme(schemes[settings.theme])
+        self._place_end_island(quota_critical=self.quota_banner.get_revealed())
+
+    def _place_end_island(self, *, quota_critical: bool) -> None:
+        policy = self._sync_policy_banner()
+        bars = (1 if quota_critical else 0) + (1 if policy else 0)
+        self.end_island.set_margin_top(_ISLAND_MARGIN + _BANNER_HEIGHT * bars)
+
+    def _sync_policy_banner(self) -> bool:
+        settings = self.preferences_vm.settings
+        if settings is None:
+            self.policy_banner.set_revealed(False)
+            return False
+        project = self.preferences_vm.active_project()
+        mode, dangerous = effective_policy(
+            settings.approval_policy, settings.approval_dangerous,
+            None if project is None else project.approval_policy,
+            None if project is None else project.approval_dangerous,
+        )
+        key = automatic_banner_key(mode, dangerous)
+        if key is None:
+            self.policy_banner.set_revealed(False)
+            return False
+        self.policy_banner.set_title(setup_text(key))
+        self.policy_banner.set_revealed(True)
+        return True
 
 
 def _git_alone(pane: GitPane, on_close: Callable[[], None]) -> Gtk.Box:

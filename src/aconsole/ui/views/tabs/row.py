@@ -199,7 +199,11 @@ class TabRow(Gtk.Box):
             self.title_label.set_text(str(item.title))
         subtitle = str(item.subtitle)
         detail = str(item.detail)
-        self.subtitle_label.set_label(" · ".join(value for value in (subtitle, detail) if value))
+        parts = [value for value in (subtitle, detail) if value]
+        hooks = str(item.hooks_note)
+        if hooks:
+            parts.append(translate(hooks))
+        self.subtitle_label.set_label(" · ".join(parts))
         self.subtitle_label.set_tooltip_text(self.subtitle_label.get_label())
         git_line = str(item.git_line)
         self.git_label.set_label(git_line)

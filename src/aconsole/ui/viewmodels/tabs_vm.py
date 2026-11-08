@@ -7,6 +7,7 @@ from gi.repository import Gio, GObject
 
 from aconsole.contracts.app import (
     AccountView,
+    AgentInfo,
     CloseTabParams,
     CloseTabResult,
     EmptyResult,
@@ -47,6 +48,7 @@ class TabItem(GObject.Object):
     attention: object = gproperty(bool, False)  # noqa: FBT003 -- GObject property default is positional
     waiting_minutes: object = gproperty(int, -1)
     status_note: object = gproperty(str, "")
+    hooks_note: object = gproperty(str, "")
     git_line: object = gproperty(str, "")
     git_warning: object = gproperty(bool, False)  # noqa: FBT003 -- GObject property default is positional
 
@@ -55,8 +57,8 @@ class TabItem(GObject.Object):
         self.set_property("tab-id", tab_id)
         self.set_property("title", title)
 
-    def apply(self, tab: TabView, accounts: tuple[AccountView, ...]) -> None:
-        display = format_tab(tab, accounts, datetime.now(UTC))
+    def apply(self, tab: TabView, accounts: tuple[AccountView, ...], agents: tuple[AgentInfo, ...] = ()) -> None:
+        display = format_tab(tab, accounts, datetime.now(UTC), agents)
         values: tuple[tuple[str, object], ...] = (
             ("title", display.title), ("project-id", str(tab.project_id)), ("section-key", display.section_key),
             ("section-title", display.section_title), ("subtitle", display.subtitle),
@@ -64,7 +66,7 @@ class TabItem(GObject.Object):
             ("status-code", tab.status.value),
             ("spinning", display.spinning), ("attention", display.attention),
             ("waiting-minutes", display.waiting_minutes if display.waiting_minutes is not None else -1),
-            ("status-note", display.status_note),
+            ("status-note", display.status_note), ("hooks-note", display.hooks_note),
         )
         for name, value in values:
             if self.get_property(name) != value:
@@ -136,7 +138,7 @@ class TabsViewModel:
         if snapshot is not None:
             for tab in sorted(snapshot.tabs, key=lambda tab: tab.order):
                 item = TabItem(str(tab.id), tab.title)
-                item.apply(tab, snapshot.accounts)
+                item.apply(tab, snapshot.accounts, snapshot.agents)
                 items.append(item)
         self._store.replace(items)
 
@@ -164,7 +166,7 @@ class TabsViewModel:
         if [row.get_property("tab-id") for row in rows] != [str(tab.id) for tab in ordered]:
             return False
         for row, tab in zip(rows, ordered, strict=True):
-            row.apply(tab, snapshot.accounts)
+            row.apply(tab, snapshot.accounts, snapshot.agents)
         return True
 
     def refresh_times(self) -> None:

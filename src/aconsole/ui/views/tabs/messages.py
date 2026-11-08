@@ -66,6 +66,10 @@ _MESSAGES = {
     "tabs.status.error": ("Error", "Ошибка"),
     "tabs.status.exited": ("Finished", "Завершён"),
     "tabs.status.unknown": ("Unknown status", "Статус неизвестен"),
+    "tabs.no_hooks": (
+        "No hooks: requests stay in the agent's terminal",
+        "Нет hooks: запросы остаются в терминале агента",
+    ),
 }
 
 

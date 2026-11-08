@@ -5,6 +5,7 @@ from collections.abc import Callable
 from datetime import datetime
 
 from aconsole.contracts.app import (
+    AgentInfo,
     ApplyFixParams,
     CheckResult,
     ChecksResult,
@@ -14,6 +15,7 @@ from aconsole.contracts.app import (
     FixPreview,
     OpenTabParams,
     ProjectAddParams,
+    ProjectApprovalPolicyParams,
     ProjectIdParams,
     ProjectView,
     SettingsUpdateParams,
@@ -124,6 +126,19 @@ class PreferencesViewModel:
     async def load(self) -> Settings:
         async with self._lock:
             return await self._load()
+
+    def agents(self) -> tuple[AgentInfo, ...]:
+        snapshot = self._client.store.snapshot
+        return () if snapshot is None else snapshot.agents
+
+    def active_project(self) -> ProjectView | None:
+        snapshot = self._client.store.snapshot
+        if snapshot is None or snapshot.active_project is None:
+            return None
+        return next((project for project in snapshot.projects if project.id == snapshot.active_project), None)
+
+    async def set_project_policy(self, params: ProjectApprovalPolicyParams) -> ProjectView:
+        return await self._client.request("project/setApprovalPolicy", params, ProjectView)
 
     async def update(self, patch: SettingsPatch) -> Settings:
         async with self._lock:
