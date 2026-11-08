@@ -1,0 +1,2502 @@
+{
+  "run": 42511858717,
+  "sha": "ffd440b23adfcda0b0005bedd80170db2219563c",
+  "core": "1982 passed, 1 skipped",
+  "ui": "491 passed, 1 deselected",
+  "coverage": "88% < 90%; package step skipped",
+  "files": [
+    {
+      "path": "src/aconsole/ui/views/window.py",
+      "stmts": 859,
+      "miss": 196,
+      "branches": 194,
+      "partial": 38,
+      "cov": "73%",
+      "missing": "158, 300, 307->312, 309->307, 315-316, 324-326, 351, 359, 367-369, 384->exit, 403->exit, 411-428, 432-461, 464-467, 470, 473-474, 477-478, 481-486, 516-517, 537, 540-542, 545-546, 549, 556, 561-562, 580-582, 584-598, 600-603, 608, 611-614, 624->exit, 697, 704-708, 711-716, 723-726, 729-734, 751-752, 755, 758-761, 764-765, 790-791, 795, 798->exit, 802, 807-814, 822->exit, 848->exit, 877, 881, 884->886, 889->891, 894-897, 900-908, 913, 916->918, 927-937, 940-943, 949, 951, 953, 955-957, 959-962, 990->exit, 1004->exit, 1016, 1017->1022, 1025, 1038, 1063, 1100-1102, 1107-1125"
+    },
+    {
+      "path": "src/aconsole/core/bootstrap.py",
+      "stmts": 1273,
+      "miss": 129,
+      "branches": 314,
+      "partial": 50,
+      "cov": "88%",
+      "missing": "222-224, 343-345, 379-383, 489-490, 677->exit, 687->exit, 698, 701, 719->723, 773, 784-785, 794->exit, 816-817, 825->exit, 832->exit, 864, 876, 884, 915, 919-920, 922->exit, 983, 1000-1001, 1004-1005, 1008, 1015-1025, 1035-1037, 1041-1048, 1051-1053, 1056-1058, 1063, 1090->1094, 1105, 1122->exit, 1139-1140, 1148-1149, 1154-1158, 1164-1165, 1184-1185, 1192->1196, 1206->exit, 1221-1223, 1225, 1234, 1241-1243, 1245-1246, 1255, 1261, 1263, 1265, 1276, 1282, 1285-1288, 1301-1303, 1352->exit, 1395->1403, 1401-1402, 1420->exit, 1448-1449, 1467-1469, 1480->1486, 1483, 1485, 1492, 1547->1549, 1567, 1575->1577, 1577->exit, 1585, 1599->1602, 1603, 1664-1666, 1676-1677, 1684-1685, 1699-1702, 1736, 1763-1773"
+    },
+    {
+      "path": "src/aconsole/core/application/services/tabs.py",
+      "stmts": 1109,
+      "miss": 106,
+      "branches": 388,
+      "partial": 60,
+      "cov": "87%",
+      "missing": "156, 158, 172->174, 382, 384, 390, 405-406, 534, 572->571, 589, 644, 648, 658->exit, 660->exit, 662->exit, 684, 721, 768, 838-839, 853, 860-865, 875, 890, 896, 902->908, 910->912, 949, 953-954, 956-957, 964, 968->967, 977, 980-981, 988-993, 994->996, 1020, 1031, 1032->1034, 1037, 1042->1044, 1049, 1054, 1063->1062, 1077, 1089->exit, 1092, 1094, 1106-1107, 1131, 1167-1169, 1224, 1235, 1252, 1272, 1285, 1292, 1300-1302, 1306, 1352-1371, 1383, 1391, 1395-1396, 1575-1580, 1584-1589, 1593-1599"
+    },
+    {
+      "path": "src/aconsole/ui/views/review/git_actions.py",
+      "stmts": 456,
+      "miss": 92,
+      "branches": 116,
+      "partial": 33,
+      "cov": "75%",
+      "missing": "100-101, 108-110, 213->exit, 223, 243->exit, 247-249, 253->exit, 267, 293, 298, 302, 304, 306, 308, 310, 315->exit, 342-343, 366->372, 378->exit, 383->exit, 393-399, 405, 410-413, 418, 421-423, 428->exit, 432-433, 454, 473->exit, 489, 492-493, 496-497, 536-537, 541, 559-573, 575, 586-587, 596-604, 607, 613, 633, 647-655, 658-667, 670-673, 681-682, 689, 711-715, 719"
+    },
+    {
+      "path": "src/aconsole/ui/client/typed_facade.py",
+      "stmts": 173,
+      "miss": 82,
+      "branches": 0,
+      "partial": 0,
+      "cov": "53%",
+      "missing": "131, 134, 137, 140, 143, 146, 149, 152, 155, 158, 161, 164, 167, 170, 173, 176, 179, 182, 185, 188, 191, 194, 197, 200, 203, 209, 212, 215, 218, 221, 224, 227, 230, 233, 236, 239, 242, 245, 248, 251, 254, 257, 260, 263, 266, 269, 272, 275, 278, 281, 284, 287, 290, 293, 296, 299, 302, 305, 308, 311, 314, 317, 320, 323, 326, 329, 332, 335, 338, 341, 344, 347, 350, 353, 356, 359, 362, 365, 368, 371, 374, 377"
+    },
+    {
+      "path": "src/aconsole/ui/views/setup/wizard.py",
+      "stmts": 388,
+      "miss": 75,
+      "branches": 100,
+      "partial": 23,
+      "cov": "73%",
+      "missing": "183->189, 185-187, 189->exit, 203, 240-241, 256-259, 278->exit, 282->exit, 284->exit, 304, 306-307, 311-312, 325, 327, 334-336, 338->exit, 344-345, 348->exit, 353, 357, 360-361, 364->exit, 372->381, 377-379, 381->exit, 386->exit, 390->exit, 397->404, 400-402, 405, 408-411, 414-421, 424-437, 440-442, 445-459, 462, 465, 468"
+    },
+    {
+      "path": "src/aconsole/ui/views/setup/preferences.py",
+      "stmts": 350,
+      "miss": 64,
+      "branches": 90,
+      "partial": 22,
+      "cov": "77%",
+      "missing": "144-149, 152-156, 168-169, 173->175, 184-186, 188->exit, 195, 206->208, 208->210, 210->212, 219->221, 221->exit, 226, 262->264, 265, 266->275, 272->275, 281->283, 284->286, 299-311, 314-330, 333-338, 356, 367-371, 394, 398-399, 404, 433->exit, 439"
+    },
+    {
+      "path": "src/aconsole/core/application/services/git_state.py",
+      "stmts": 362,
+      "miss": 59,
+      "branches": 88,
+      "partial": 25,
+      "cov": "80%",
+      "missing": "119, 155, 167, 183, 187-197, 219, 260, 271, 312-313, 317-318, 360-364, 367-369, 376, 387-398, 407-414, 429, 473, 566, 569, 572-575, 578, 582, 585-586, 592, 594, 609, 649-650, 667"
+    },
+    {
+      "path": "src/aconsole/ui/views/review/git_pane.py",
+      "stmts": 506,
+      "miss": 57,
+      "branches": 120,
+      "partial": 17,
+      "cov": "85%",
+      "missing": "147->exit, 251-253, 256->259, 262-264, 290, 366->exit, 371->exit, 382-385, 398->400, 415-420, 421->423, 457-459, 471-484, 491->exit, 495-500, 516->exit, 524, 529-530, 545, 548-550, 568, 575->577, 609-619, 649-651, 663"
+    },
+    {
+      "path": "src/aconsole/core/infrastructure/ipc/session.py",
+      "stmts": 404,
+      "miss": 54,
+      "branches": 128,
+      "partial": 19,
+      "cov": "84%",
+      "missing": "161, 166, 195, 221, 240-241, 259, 287-288, 298-310, 317->322, 331, 334, 344-345, 353, 361, 375, 384-385, 402->408, 413-414, 419-420, 425, 428, 433-443, 447, 491, 496, 497->494, 504, 548-549, 560"
+    },
+    {
+      "path": "src/aconsole/core/infrastructure/mcp/tools.py",
+      "stmts": 861,
+      "miss": 52,
+      "branches": 220,
+      "partial": 35,
+      "cov": "91%",
+      "missing": "228->227, 230, 268->270, 415, 475->477, 481->497, 494-496, 499-500, 532->531, 534, 536->532, 556, 568-569, 681->683, 694->696, 737, 823, 838-839, 871, 923, 943-945, 1024, 1055, 1059, 1088-1089, 1133-1143, 1193, 1195, 1363, 1369, 1451, 1458, 1460, 1479, 1482, 1485, 1501, 1505-1507, 1509, 1510->1512, 1514, 1520"
+    },
+    {
+      "path": "src/aconsole/ui/views/startup.py",
+      "stmts": 51,
+      "miss": 51,
+      "branches": 0,
+      "partial": 0,
+      "cov": "0%",
+      "missing": "3-70"
+    },
+    {
+      "path": "src/aconsole/core/infrastructure/persistence/repositories/catalog.py",
+      "stmts": 664,
+      "miss": 50,
+      "branches": 52,
+      "partial": 26,
+      "cov": "89%",
+      "missing": "374-375, 407-408, 454-455, 497-498, 560-561, 617-618, 654-655, 679, 693-694, 732-733, 755, 769-770, 820-821, 855-856, 900-901, 931-932, 970-971, 1007-1008, 1044-1045, 1089-1090, 1122-1123, 1175-1176, 1216-1217, 1253-1254, 1286-1287, 1317-1318"
+    },
+    {
+      "path": "src/aconsole/ui/views/review/page.py",
+      "stmts": 266,
+      "miss": 49,
+      "branches": 52,
+      "partial": 11,
+      "cov": "77%",
+      "missing": "56, 88, 116->118, 119->exit, 151, 157-162, 164->166, 182-183, 188-190, 227-230, 235, 248->250, 258->260, 265-266, 293, 296-317, 322-323, 328-333, 339-343"
+    },
+    {
+      "path": "src/aconsole/ui/views/palette/dialog.py",
+      "stmts": 266,
+      "miss": 45,
+      "branches": 58,
+      "partial": 15,
+      "cov": "77%",
+      "missing": "92-93, 113-115, 116->exit, 137, 157-158, 169->exit, 181-182, 204, 207, 212, 215, 219->exit, 228->242, 234, 238-240, 243-244, 256, 259, 266, 269-270, 273, 276, 283, 289-306"
+    },
+    {
+      "path": "src/aconsole/ui/views/terminal/page.py",
+      "stmts": 331,
+      "miss": 42,
+      "branches": 72,
+      "partial": 12,
+      "cov": "84%",
+      "missing": "85, 109-110, 112-113, 117, 124, 127, 133, 160-161, 164-168, 259->265, 261-263, 265->exit, 273, 284, 289, 300->exit, 326, 345-346, 350, 353, 356-358, 364, 367, 376-378, 380->exit, 389-393, 396-397"
+    },
+    {
+      "path": "src/aconsole/sidecar/main.py",
+      "stmts": 405,
+      "miss": 39,
+      "branches": 112,
+      "partial": 20,
+      "cov": "88%",
+      "missing": "73-77, 85-88, 95->112, 99-100, 102->107, 185, 190-191, 267, 306, 313, 318->exit, 347-348, 350, 354, 369-370, 389->exit, 401-403, 412-413, 421-425, 453, 462, 471, 481, 502->504, 504->exit, 518-519"
+    },
+    {
+      "path": "src/aconsole/core/infrastructure/agents/usage_log.py",
+      "stmts": 224,
+      "miss": 37,
+      "branches": 74,
+      "partial": 13,
+      "cov": "79%",
+      "missing": "64, 67-68, 86, 89, 91->93, 96, 125-129, 131->130, 136-138, 158, 189, 194-196, 207, 234-240, 248, 267-272, 298, 301-302"
+    },
+    {
+      "path": "src/aconsole/core/infrastructure/fake/server.py",
+      "stmts": 296,
+      "miss": 34,
+      "branches": 88,
+      "partial": 7,
+      "cov": "88%",
+      "missing": "150-151, 155, 159-160, 201, 217-218, 236, 239-240, 245-246, 247->233, 266-267, 322-323, 325, 327, 358-361, 367-368, 375-387"
+    },
+    {
+      "path": "src/aconsole/core/domain/plan.py",
+      "stmts": 501,
+      "miss": 33,
+      "branches": 188,
+      "partial": 18,
+      "cov": "92%",
+      "missing": "69, 182, 189-192, 197, 226-230, 284, 325-326, 344-345, 370-371, 382, 392, 471, 515-518, 529, 550, 565-566, 576, 632, 665"
+    },
+    {
+      "path": "src/aconsole/core/infrastructure/persistence/repositories/tabs.py",
+      "stmts": 227,
+      "miss": 33,
+      "branches": 48,
+      "partial": 11,
+      "cov": "82%",
+      "missing": "55, 62, 73->71, 101-109, 140->exit, 148, 176, 191, 210, 233, 236-245, 248-255, 336, 392, 396"
+    },
+    {
+      "path": "src/aconsole/__main__.py",
+      "stmts": 64,
+      "miss": 32,
+      "branches": 16,
+      "partial": 1,
+      "cov": "41%",
+      "missing": "33-41, 69-92, 96, 100"
+    },
+    {
+      "path": "src/aconsole/core/infrastructure/agents/claude/sessions.py",
+      "stmts": 148,
+      "miss": 31,
+      "branches": 56,
+      "partial": 24,
+      "cov": "71%",
+      "missing": "35-36, 38->40, 40->42, 58, 60, 97->116, 99, 101, 104, 106->108, 108->110, 110->112, 113, 126-127, 132, 135-136, 144, 145->147, 149-150, 152, 159-165, 170, 173, 179, 189-190, 193->191, 195, 200"
+    },
+    {
+      "path": "src/aconsole/core/infrastructure/agents/codex/rollout.py",
+      "stmts": 192,
+      "miss": 30,
+      "branches": 52,
+      "partial": 12,
+      "cov": "83%",
+      "missing": "63-67, 110, 112, 115, 151-152, 156, 159, 162, 172, 175-176, 188, 191-192, 209-210, 222, 225-226, 231, 234-235, 240, 247-248"
+    },
+    {
+      "path": "src/aconsole/devcli/mcp_conformance.py",
+      "stmts": 133,
+      "miss": 30,
+      "branches": 28,
+      "partial": 9,
+      "cov": "75%",
+      "missing": "33, 73-74, 81-82, 95-98, 120-121, 127->131, 134-135, 137-138, 143-145, 151-161, 168, 172"
+    },
+    {
+      "path": "src/aconsole/ui/views/quota_account.py",
+      "stmts": 149,
+      "miss": 30,
+      "branches": 38,
+      "partial": 18,
+      "cov": "74%",
+      "missing": "35, 41, 45, 47, 51, 61, 63, 67, 71-73, 99-100, 109, 110->112, 116, 120-131, 167, 172, 173->176, 179->181, 194, 203, 209-212"
+    },
+    {
+      "path": "src/aconsole/ui/views/quota_dialog.py",
+      "stmts": 213,
+      "miss": 30,
+      "branches": 54,
+      "partial": 8,
+      "cov": "84%",
+      "missing": "94-101, 104-107, 114-116, 119-124, 142-143, 146, 182, 192, 201->206, 214, 219, 265->exit, 269-271"
+    },
+    {
+      "path": "src/aconsole/ui/views/review/session_bar.py",
+      "stmts": 181,
+      "miss": 30,
+      "branches": 38,
+      "partial": 5,
+      "cov": "77%",
+      "missing": "40-41, 111-112, 172, 206-209, 226-227, 241->exit, 251, 266-337, 365-375"
+    },
+    {
+      "path": "src/aconsole/ui/views/sidebar/plan_graph.py",
+      "stmts": 252,
+      "miss": 30,
+      "branches": 48,
+      "partial": 8,
+      "cov": "85%",
+      "missing": "89, 143->147, 189, 192, 195, 198, 202->exit, 216->exit, 257, 261, 281-302, 305-307"
+    },
+    {
+      "path": "src/aconsole/core/infrastructure/agents/cursor/limits.py",
+      "stmts": 176,
+      "miss": 29,
+      "branches": 46,
+      "partial": 6,
+      "cov": "83%",
+      "missing": "55, 65-72, 76-94, 129, 159, 185, 188->190, 208-209, 232-233, 270, 275-276"
+    },
+    {
+      "path": "src/aconsole/core/application/services/git_merge.py",
+      "stmts": 315,
+      "miss": 27,
+      "branches": 110,
+      "partial": 23,
+      "cov": "88%",
+      "missing": "100, 111, 115, 154-156, 167->169, 170, 183, 236, 257, 279, 286->285, 288, 304, 307->exit, 323, 329, 333, 336, 339, 421, 438->444, 441-443, 454-456, 465, 475"
+    },
+    {
+      "path": "src/aconsole/core/infrastructure/git/diff.py",
+      "stmts": 370,
+      "miss": 24,
+      "branches": 106,
+      "partial": 16,
+      "cov": "90%",
+      "missing": "143, 187, 208-209, 211, 232, 255-259, 271, 287, 289, 297, 321, 327, 350->353, 413->415, 428-429, 434, 452-455, 492->495, 518->520"
+    },
+    {
+      "path": "src/aconsole/core/infrastructure/agents/codex/limits.py",
+      "stmts": 203,
+      "miss": 23,
+      "branches": 66,
+      "partial": 17,
+      "cov": "85%",
+      "missing": "97, 108, 111-112, 121-122, 183, 186, 189, 192, 194, 205, 208, 210, 223, 227, 238, 241, 245, 268, 271-272, 277"
+    },
+    {
+      "path": "src/aconsole/ui/views/tabs/new_tab.py",
+      "stmts": 248,
+      "miss": 23,
+      "branches": 36,
+      "partial": 5,
+      "cov": "89%",
+      "missing": "152->156, 184-187, 189, 215, 232, 241, 249-250, 253-259, 262-267"
+    },
+    {
+      "path": "src/aconsole/ui/views/app.py",
+      "stmts": 242,
+      "miss": 21,
+      "branches": 74,
+      "partial": 19,
+      "cov": "87%",
+      "missing": "83->86, 91->exit, 97, 99, 100->exit, 128->132, 133->132, 138-139, 147->150, 151->150, 171, 182->184, 208, 211, 227, 256, 262->281, 272-273, 277-280, 285, 289-293"
+    },
+    {
+      "path": "src/aconsole/core/infrastructure/agents/codex/trust.py",
+      "stmts": 132,
+      "miss": 20,
+      "branches": 44,
+      "partial": 11,
+      "cov": "82%",
+      "missing": "48, 60, 67, 83, 90-91, 94, 97-98, 102, 109-110, 116, 122, 125-126, 128, 169-170, 174"
+    },
+    {
+      "path": "src/aconsole/core/infrastructure/git/worktrees.py",
+      "stmts": 350,
+      "miss": 20,
+      "branches": 108,
+      "partial": 12,
+      "cov": "93%",
+      "missing": "244-245, 252, 260-263, 306, 327, 330, 340, 347-348, 352, 354, 374, 389, 410, 445, 461"
+    },
+    {
+      "path": "src/aconsole/core/infrastructure/setup_checks.py",
+      "stmts": 176,
+      "miss": 20,
+      "branches": 34,
+      "partial": 5,
+      "cov": "88%",
+      "missing": "39, 43, 46, 51-52, 58, 61, 64, 145, 163-165, 227, 243-244, 288, 291-292, 295, 316"
+    },
+    {
+      "path": "src/aconsole/ui/views/shortcuts_dialog.py",
+      "stmts": 34,
+      "miss": 20,
+      "branches": 4,
+      "partial": 0,
+      "cov": "37%",
+      "missing": "57, 61-65, 70-83"
+    },
+    {
+      "path": "src/aconsole/sidecar/screen.py",
+      "stmts": 170,
+      "miss": 19,
+      "branches": 68,
+      "partial": 13,
+      "cov": "84%",
+      "missing": "90-96, 128, 130, 149, 156, 163, 167, 175, 182, 184-185, 199, 211->205, 213"
+    },
+    {
+      "path": "src/aconsole/core/infrastructure/codegraph/rust.py",
+      "stmts": 137,
+      "miss": 18,
+      "branches": 60,
+      "partial": 14,
+      "cov": "83%",
+      "missing": "48, 57->54, 73-74, 76, 79, 90-91, 99, 129, 134, 140, 143-144, 154, 157, 159, 165, 167"
+    },
+    {
+      "path": "src/aconsole/core/infrastructure/ipc/server.py",
+      "stmts": 103,
+      "miss": 18,
+      "branches": 18,
+      "partial": 4,
+      "cov": "82%",
+      "missing": "30-31, 38-39, 77-78, 98, 110, 118-120, 126-129, 142-154"
+    },
+    {
+      "path": "src/aconsole/core/infrastructure/tabs.py",
+      "stmts": 292,
+      "miss": 18,
+      "branches": 32,
+      "partial": 5,
+      "cov": "93%",
+      "missing": "137, 173-174, 191-193, 202, 204-206, 223, 225-226, 235, 243, 342, 345-346"
+    },
+    {
+      "path": "src/aconsole/ui/viewmodels/tabs_vm.py",
+      "stmts": 171,
+      "miss": 18,
+      "branches": 48,
+      "partial": 8,
+      "cov": "88%",
+      "missing": "93-94, 149, 166, 179, 209, 212, 219-220, 223-225, 237-238, 242-243, 247, 251"
+    },
+    {
+      "path": "src/aconsole/core/__main__.py",
+      "stmts": 64,
+      "miss": 17,
+      "branches": 16,
+      "partial": 3,
+      "cov": "72%",
+      "missing": "35-37, 81-95, 99, 103"
+    },
+    {
+      "path": "src/aconsole/core/infrastructure/git/checkpoints.py",
+      "stmts": 135,
+      "miss": 17,
+      "branches": 32,
+      "partial": 6,
+      "cov": "84%",
+      "missing": "62-63, 66-67, 122-123, 145-150, 152-153, 162, 167, 191"
+    },
+    {
+      "path": "src/aconsole/core/infrastructure/git/history.py",
+      "stmts": 194,
+      "miss": 17,
+      "branches": 68,
+      "partial": 9,
+      "cov": "89%",
+      "missing": "68->65, 79-83, 119, 122, 157-158, 214-215, 217, 237, 250-251, 253, 286"
+    },
+    {
+      "path": "src/aconsole/core/application/services/work_session_git.py",
+      "stmts": 104,
+      "miss": 16,
+      "branches": 34,
+      "partial": 10,
+      "cov": "81%",
+      "missing": "64, 70-71, 79-80, 82, 87, 96, 129, 133, 135, 163-165, 172-173"
+    },
+    {
+      "path": "src/aconsole/sidecar/framer.py",
+      "stmts": 296,
+      "miss": 16,
+      "branches": 132,
+      "partial": 16,
+      "cov": "93%",
+      "missing": "196->208, 210-211, 217->219, 230-231, 242, 254-255, 268, 277, 281, 309, 311, 313, 315, 340->342, 343, 353"
+    },
+    {
+      "path": "src/aconsole/ui/viewmodels/git_vm.py",
+      "stmts": 195,
+      "miss": 16,
+      "branches": 52,
+      "partial": 7,
+      "cov": "91%",
+      "missing": "96, 110, 177, 222, 239-242, 245-246, 253-254, 257-260, 275, 279, 298->300, 350->354, 365, 380"
+    },
+    {
+      "path": "src/aconsole/core/infrastructure/agents/claude/limits.py",
+      "stmts": 191,
+      "miss": 15,
+      "branches": 54,
+      "partial": 10,
+      "cov": "90%",
+      "missing": "123->125, 125->127, 141, 144, 189, 216-217, 224-225, 244, 248, 266->264, 293, 296-297, 305-306, 309"
+    },
+    {
+      "path": "src/aconsole/core/infrastructure/agents/opencode/limits.py",
+      "stmts": 159,
+      "miss": 15,
+      "branches": 38,
+      "partial": 6,
+      "cov": "89%",
+      "missing": "107-108, 116, 132-133, 136-137, 185, 201, 210, 220-221, 222->224, 228-229, 233"
+    },
+    {
+      "path": "src/aconsole/core/infrastructure/vault/sync.py",
+      "stmts": 174,
+      "miss": 15,
+      "branches": 46,
+      "partial": 10,
+      "cov": "89%",
+      "missing": "98->exit, 113, 131->exit, 155-157, 173-174, 186-187, 189, 242, 247, 249, 256-257, 260"
+    },
+    {
+      "path": "src/aconsole/core/domain/risk.py",
+      "stmts": 472,
+      "miss": 14,
+      "branches": 262,
+      "partial": 15,
+      "cov": "96%",
+      "missing": "277, 308, 328, 338->334, 387, 451, 453, 457, 522, 535->532, 537, 581, 633-635, 640->642, 717"
+    },
+    {
+      "path": "src/aconsole/core/infrastructure/agents/claude/skills.py",
+      "stmts": 82,
+      "miss": 14,
+      "branches": 34,
+      "partial": 9,
+      "cov": "77%",
+      "missing": "50, 53, 60, 64, 66->62, 74, 97, 100, 111-116, 121"
+    },
+    {
+      "path": "src/aconsole/ui/client/core_client.py",
+      "stmts": 358,
+      "miss": 14,
+      "branches": 96,
+      "partial": 18,
+      "cov": "93%",
+      "missing": "218->220, 287, 288->285, 316->318, 321-322, 338-339, 379-381, 417, 419->432, 428, 430, 432->exit, 434->exit, 436->exit, 442->444, 448->exit, 456->exit, 464->463, 477->exit, 481-482, 505->509, 516"
+    },
+    {
+      "path": "src/aconsole/ui/views/terminal/clipboard.py",
+      "stmts": 93,
+      "miss": 14,
+      "branches": 32,
+      "partial": 11,
+      "cov": "80%",
+      "missing": "42, 50, 54, 63, 66-67, 77, 80-81, 86, 88, 91, 110, 112->exit, 115, 117->exit"
+    },
+    {
+      "path": "src/aconsole/core/application/services/git_cleanup.py",
+      "stmts": 140,
+      "miss": 13,
+      "branches": 36,
+      "partial": 6,
+      "cov": "89%",
+      "missing": "88-90, 104, 112-115, 158-159, 169, 190-191, 205"
+    },
+    {
+      "path": "src/aconsole/core/domain/vault_sync.py",
+      "stmts": 202,
+      "miss": 13,
+      "branches": 74,
+      "partial": 8,
+      "cov": "92%",
+      "missing": "80, 126, 138-139, 209->211, 251, 263-264, 311-312, 321-322, 333-334"
+    },
+    {
+      "path": "src/aconsole/core/infrastructure/agents/launch.py",
+      "stmts": 133,
+      "miss": 13,
+      "branches": 38,
+      "partial": 7,
+      "cov": "87%",
+      "missing": "86->94, 94->96, 105-106, 124-125, 130-134, 139, 142-144, 158-160, 172->176"
+    },
+    {
+      "path": "src/aconsole/core/application/services/git_rewrite.py",
+      "stmts": 146,
+      "miss": 12,
+      "branches": 28,
+      "partial": 9,
+      "cov": "87%",
+      "missing": "159, 162->164, 206-207, 223, 230-231, 234-236, 241-242, 246->245, 248"
+    },
+    {
+      "path": "src/aconsole/ui/views/terminal/session.py",
+      "stmts": 124,
+      "miss": 12,
+      "branches": 42,
+      "partial": 12,
+      "cov": "84%",
+      "missing": "51-52, 64-65, 70-71, 90-91, 104->106, 106->108, 108->110, 116-117, 129->exit, 134, 138, 166->169"
+    },
+    {
+      "path": "src/aconsole/core/application/services/work_sessions.py",
+      "stmts": 60,
+      "miss": 11,
+      "branches": 12,
+      "partial": 1,
+      "cov": "78%",
+      "missing": "75, 80-81, 86-90, 96-98"
+    },
+    {
+      "path": "src/aconsole/core/infrastructure/agents/opencode/sessions.py",
+      "stmts": 47,
+      "miss": 11,
+      "branches": 2,
+      "partial": 0,
+      "cov": "73%",
+      "missing": "48-59"
+    },
+    {
+      "path": "src/aconsole/core/infrastructure/fake/scenarios.py",
+      "stmts": 119,
+      "miss": 11,
+      "branches": 4,
+      "partial": 0,
+      "cov": "91%",
+      "missing": "320-322, 330-376"
+    },
+    {
+      "path": "src/aconsole/ui/views/tabs/row.py",
+      "stmts": 248,
+      "miss": 11,
+      "branches": 46,
+      "partial": 10,
+      "cov": "92%",
+      "missing": "28, 166->168, 193->exit, 197->exit, 202-203, 225, 227->229, 233, 245, 255, 291-292, 298-299"
+    },
+    {
+      "path": "src/aconsole/ui/views/terminal/search.py",
+      "stmts": 91,
+      "miss": 11,
+      "branches": 16,
+      "partial": 0,
+      "cov": "88%",
+      "missing": "57-60, 63-65, 117-120"
+    },
+    {
+      "path": "src/aconsole/core/infrastructure/git/operations.py",
+      "stmts": 142,
+      "miss": 10,
+      "branches": 34,
+      "partial": 6,
+      "cov": "91%",
+      "missing": "51, 90, 131->133, 159, 162->164, 166->170, 185-186, 194-195, 229-231"
+    },
+    {
+      "path": "src/aconsole/core/infrastructure/mcp/server.py",
+      "stmts": 227,
+      "miss": 10,
+      "branches": 82,
+      "partial": 12,
+      "cov": "93%",
+      "missing": "80->exit, 117, 194, 230, 232->246, 255, 397, 401, 410, 414, 432, 437"
+    },
+    {
+      "path": "src/aconsole/core/infrastructure/vault/writer.py",
+      "stmts": 132,
+      "miss": 10,
+      "branches": 30,
+      "partial": 8,
+      "cov": "89%",
+      "missing": "60->62, 64->66, 83-84, 86, 88, 96->98, 157-158, 166-168, 170"
+    },
+    {
+      "path": "src/aconsole/ui/views/shortcuts.py",
+      "stmts": 82,
+      "miss": 10,
+      "branches": 30,
+      "partial": 5,
+      "cov": "87%",
+      "missing": "44, 48, 69-70, 87-88, 92-93, 97-98"
+    },
+    {
+      "path": "src/aconsole/core/application/services/approval_policy.py",
+      "stmts": 63,
+      "miss": 9,
+      "branches": 14,
+      "partial": 2,
+      "cov": "83%",
+      "missing": "69-70, 81, 94-97, 110, 114"
+    },
+    {
+      "path": "src/aconsole/core/infrastructure/agents/opencode/stream.py",
+      "stmts": 204,
+      "miss": 9,
+      "branches": 60,
+      "partial": 10,
+      "cov": "92%",
+      "missing": "133->135, 171, 178, 181->183, 187-190, 200->196, 234->238, 248, 257-258, 267->exit"
+    },
+    {
+      "path": "src/aconsole/devcli/client.py",
+      "stmts": 91,
+      "miss": 9,
+      "branches": 26,
+      "partial": 6,
+      "cov": "87%",
+      "missing": "48-49, 56, 63-64, 76-77, 91-92, 97->95"
+    },
+    {
+      "path": "src/aconsole/ui/client/methods.py",
+      "stmts": 57,
+      "miss": 9,
+      "branches": 10,
+      "partial": 3,
+      "cov": "79%",
+      "missing": "251, 263-264, 269-272, 277-278"
+    },
+    {
+      "path": "src/aconsole/ui/snapshot.py",
+      "stmts": 39,
+      "miss": 9,
+      "branches": 12,
+      "partial": 6,
+      "cov": "71%",
+      "missing": "19-20, 26-27, 30-31, 34-35, 49, 54->56"
+    },
+    {
+      "path": "src/aconsole/core/application/services/checkpoints.py",
+      "stmts": 81,
+      "miss": 8,
+      "branches": 22,
+      "partial": 2,
+      "cov": "86%",
+      "missing": "95-100, 116, 135"
+    },
+    {
+      "path": "src/aconsole/core/application/services/palette.py",
+      "stmts": 92,
+      "miss": 8,
+      "branches": 38,
+      "partial": 5,
+      "cov": "90%",
+      "missing": "54, 68-69, 72, 89-90, 112, 123"
+    },
+    {
+      "path": "src/aconsole/core/application/services/review.py",
+      "stmts": 123,
+      "miss": 8,
+      "branches": 34,
+      "partial": 3,
+      "cov": "92%",
+      "missing": "109-112, 132, 134-136, 195->194"
+    },
+    {
+      "path": "src/aconsole/core/infrastructure/agents/claude/telemetry.py",
+      "stmts": 94,
+      "miss": 8,
+      "branches": 20,
+      "partial": 4,
+      "cov": "89%",
+      "missing": "149, 157, 160, 164-165, 174, 183-184"
+    },
+    {
+      "path": "src/aconsole/core/infrastructure/clipboard.py",
+      "stmts": 80,
+      "miss": 8,
+      "branches": 24,
+      "partial": 4,
+      "cov": "88%",
+      "missing": "36-37, 42-43, 46-47, 80-81"
+    },
+    {
+      "path": "src/aconsole/ui/views/tabs/sidebar.py",
+      "stmts": 212,
+      "miss": 8,
+      "branches": 54,
+      "partial": 14,
+      "cov": "91%",
+      "missing": "28, 93->exit, 97->exit, 127, 129, 143->exit, 175-176, 180->exit, 185->exit, 195->exit, 210, 225->227, 234, 248, 261->exit"
+    },
+    {
+      "path": "src/aconsole/core/infrastructure/agents/live_limits.py",
+      "stmts": 94,
+      "miss": 7,
+      "branches": 22,
+      "partial": 4,
+      "cov": "91%",
+      "missing": "91, 95-96, 109->100, 112, 124->123, 130-132"
+    },
+    {
+      "path": "src/aconsole/core/infrastructure/ipc/framing.py",
+      "stmts": 48,
+      "miss": 7,
+      "branches": 8,
+      "partial": 3,
+      "cov": "82%",
+      "missing": "43-44, 64, 67, 70-71, 73"
+    },
+    {
+      "path": "src/aconsole/core/infrastructure/persistence/repositories/plans.py",
+      "stmts": 147,
+      "miss": 7,
+      "branches": 38,
+      "partial": 6,
+      "cov": "92%",
+      "missing": "70-71, 148, 156, 165-166, 169->168, 218"
+    },
+    {
+      "path": "src/aconsole/ui/viewmodels/palette_vm.py",
+      "stmts": 95,
+      "miss": 7,
+      "branches": 24,
+      "partial": 3,
+      "cov": "90%",
+      "missing": "39-43, 102->104, 114, 116"
+    },
+    {
+      "path": "src/aconsole/ui/views/approvals/panel.py",
+      "stmts": 353,
+      "miss": 7,
+      "branches": 92,
+      "partial": 7,
+      "cov": "97%",
+      "missing": "211, 256, 259-261, 303, 408, 427->exit, 459"
+    },
+    {
+      "path": "src/aconsole/ui/views/tabs/project_bar.py",
+      "stmts": 108,
+      "miss": 7,
+      "branches": 18,
+      "partial": 2,
+      "cov": "91%",
+      "missing": "97, 138-142, 145"
+    },
+    {
+      "path": "src/aconsole/core/application/services/git.py",
+      "stmts": 160,
+      "miss": 6,
+      "branches": 52,
+      "partial": 2,
+      "cov": "96%",
+      "missing": "126-127, 188->190, 235-238"
+    },
+    {
+      "path": "src/aconsole/core/application/services/work_session_history.py",
+      "stmts": 86,
+      "miss": 6,
+      "branches": 16,
+      "partial": 4,
+      "cov": "90%",
+      "missing": "136-138, 140, 150, 157, 161->166"
+    },
+    {
+      "path": "src/aconsole/core/domain/approvals.py",
+      "stmts": 226,
+      "miss": 6,
+      "branches": 76,
+      "partial": 5,
+      "cov": "96%",
+      "missing": "74, 237-238, 377, 379, 387"
+    },
+    {
+      "path": "src/aconsole/core/infrastructure/agents/cursor/launcher.py",
+      "stmts": 38,
+      "miss": 6,
+      "branches": 12,
+      "partial": 6,
+      "cov": "76%",
+      "missing": "32, 36, 44, 47, 50, 52"
+    },
+    {
+      "path": "src/aconsole/core/infrastructure/ipc/snapshot_chunks.py",
+      "stmts": 64,
+      "miss": 6,
+      "branches": 20,
+      "partial": 5,
+      "cov": "87%",
+      "missing": "39-40, 42, 45, 58, 82"
+    },
+    {
+      "path": "src/aconsole/core/infrastructure/persistence/engine.py",
+      "stmts": 84,
+      "miss": 6,
+      "branches": 12,
+      "partial": 3,
+      "cov": "91%",
+      "missing": "127-128, 137, 141-143"
+    },
+    {
+      "path": "src/aconsole/core/infrastructure/persistence/repositories/checkpoints.py",
+      "stmts": 39,
+      "miss": 6,
+      "branches": 0,
+      "partial": 0,
+      "cov": "85%",
+      "missing": "58-63, 66-69"
+    },
+    {
+      "path": "src/aconsole/core/infrastructure/agents/codex/sessions.py",
+      "stmts": 76,
+      "miss": 5,
+      "branches": 16,
+      "partial": 3,
+      "cov": "91%",
+      "missing": "42-43, 86, 106, 109"
+    },
+    {
+      "path": "src/aconsole/core/infrastructure/agents/codex/turns.py",
+      "stmts": 87,
+      "miss": 5,
+      "branches": 24,
+      "partial": 1,
+      "cov": "95%",
+      "missing": "32-33, 40, 105-106"
+    },
+    {
+      "path": "src/aconsole/core/infrastructure/agents/private_files.py",
+      "stmts": 92,
+      "miss": 5,
+      "branches": 16,
+      "partial": 2,
+      "cov": "94%",
+      "missing": "16-17, 88, 96-97"
+    },
+    {
+      "path": "src/aconsole/core/infrastructure/http/consumer.py",
+      "stmts": 118,
+      "miss": 5,
+      "branches": 30,
+      "partial": 1,
+      "cov": "96%",
+      "missing": "131, 142-143, 175-176"
+    },
+    {
+      "path": "src/aconsole/core/infrastructure/persistence/repositories/vault_files.py",
+      "stmts": 51,
+      "miss": 5,
+      "branches": 8,
+      "partial": 2,
+      "cov": "88%",
+      "missing": "37->35, 60, 75-76, 82-83"
+    },
+    {
+      "path": "src/aconsole/ui/client/ui_state.py",
+      "stmts": 43,
+      "miss": 5,
+      "branches": 6,
+      "partial": 3,
+      "cov": "84%",
+      "missing": "37, 41, 51-52, 62"
+    },
+    {
+      "path": "src/aconsole/ui/viewmodels/health_vm.py",
+      "stmts": 20,
+      "miss": 5,
+      "branches": 0,
+      "partial": 0,
+      "cov": "75%",
+      "missing": "36-40"
+    },
+    {
+      "path": "src/aconsole/core/application/services/git_ops.py",
+      "stmts": 115,
+      "miss": 4,
+      "branches": 12,
+      "partial": 2,
+      "cov": "95%",
+      "missing": "39-40, 149, 156"
+    },
+    {
+      "path": "src/aconsole/core/domain/git_state.py",
+      "stmts": 54,
+      "miss": 4,
+      "branches": 14,
+      "partial": 4,
+      "cov": "88%",
+      "missing": "30, 37, 64, 96->95, 98"
+    },
+    {
+      "path": "src/aconsole/core/infrastructure/codegraph/runner.py",
+      "stmts": 88,
+      "miss": 4,
+      "branches": 20,
+      "partial": 2,
+      "cov": "94%",
+      "missing": "111, 123-124, 131"
+    },
+    {
+      "path": "src/aconsole/core/infrastructure/containers/podman.py",
+      "stmts": 126,
+      "miss": 4,
+      "branches": 32,
+      "partial": 2,
+      "cov": "96%",
+      "missing": "164-165, 172-173"
+    },
+    {
+      "path": "src/aconsole/core/infrastructure/persistence/repositories/work_sessions.py",
+      "stmts": 43,
+      "miss": 4,
+      "branches": 4,
+      "partial": 0,
+      "cov": "91%",
+      "missing": "67-68, 129-130"
+    },
+    {
+      "path": "src/aconsole/core/infrastructure/persistence/types.py",
+      "stmts": 58,
+      "miss": 4,
+      "branches": 14,
+      "partial": 3,
+      "cov": "90%",
+      "missing": "38-39, 53, 60"
+    },
+    {
+      "path": "src/aconsole/core/infrastructure/persistence/uow.py",
+      "stmts": 32,
+      "miss": 4,
+      "branches": 6,
+      "partial": 3,
+      "cov": "82%",
+      "missing": "39, 41, 47-48"
+    },
+    {
+      "path": "src/aconsole/core/infrastructure/persistence/writer.py",
+      "stmts": 160,
+      "miss": 4,
+      "branches": 46,
+      "partial": 3,
+      "cov": "97%",
+      "missing": "58-59, 61, 200"
+    },
+    {
+      "path": "src/aconsole/core/infrastructure/runtime_logging.py",
+      "stmts": 33,
+      "miss": 4,
+      "branches": 8,
+      "partial": 2,
+      "cov": "85%",
+      "missing": "29-30, 38-39"
+    },
+    {
+      "path": "src/aconsole/devcli/__main__.py",
+      "stmts": 4,
+      "miss": 4,
+      "branches": 2,
+      "partial": 0,
+      "cov": "0%",
+      "missing": "3-8"
+    },
+    {
+      "path": "src/aconsole/ui/client/generate.py",
+      "stmts": 32,
+      "miss": 4,
+      "branches": 10,
+      "partial": 1,
+      "cov": "88%",
+      "missing": "60-62, 66"
+    },
+    {
+      "path": "src/aconsole/ui/spike.py",
+      "stmts": 81,
+      "miss": 4,
+      "branches": 14,
+      "partial": 4,
+      "cov": "92%",
+      "missing": "44, 58, 76-77, 90->92, 92->exit"
+    },
+    {
+      "path": "src/aconsole/ui/viewmodels/terminal_vm.py",
+      "stmts": 51,
+      "miss": 4,
+      "branches": 6,
+      "partial": 2,
+      "cov": "89%",
+      "missing": "40-43, 63-64, 86->88"
+    },
+    {
+      "path": "src/aconsole/ui/views/health_dialog.py",
+      "stmts": 85,
+      "miss": 4,
+      "branches": 14,
+      "partial": 1,
+      "cov": "93%",
+      "missing": "99, 123->exit, 127-129"
+    },
+    {
+      "path": "src/aconsole/core/application/services/approval_broker.py",
+      "stmts": 105,
+      "miss": 3,
+      "branches": 28,
+      "partial": 4,
+      "cov": "95%",
+      "missing": "103, 131->130, 146, 150, 160->164"
+    },
+    {
+      "path": "src/aconsole/core/application/services/diff.py",
+      "stmts": 84,
+      "miss": 3,
+      "branches": 12,
+      "partial": 1,
+      "cov": "96%",
+      "missing": "94-95, 135"
+    },
+    {
+      "path": "src/aconsole/core/infrastructure/codegraph/local_python.py",
+      "stmts": 73,
+      "miss": 3,
+      "branches": 38,
+      "partial": 4,
+      "cov": "94%",
+      "missing": "24->23, 46, 77, 91"
+    },
+    {
+      "path": "src/aconsole/core/infrastructure/git/watch.py",
+      "stmts": 87,
+      "miss": 3,
+      "branches": 22,
+      "partial": 2,
+      "cov": "95%",
+      "missing": "95, 97->101, 120-122"
+    },
+    {
+      "path": "src/aconsole/core/infrastructure/persistence/cleanup.py",
+      "stmts": 89,
+      "miss": 3,
+      "branches": 18,
+      "partial": 3,
+      "cov": "94%",
+      "missing": "51-52, 152, 156->exit"
+    },
+    {
+      "path": "src/aconsole/core/infrastructure/persistence/repositories/git_operations.py",
+      "stmts": 55,
+      "miss": 3,
+      "branches": 4,
+      "partial": 1,
+      "cov": "93%",
+      "missing": "101-103, 111->exit"
+    },
+    {
+      "path": "src/aconsole/ui/viewmodels/setup_vm.py",
+      "stmts": 95,
+      "miss": 3,
+      "branches": 16,
+      "partial": 1,
+      "cov": "96%",
+      "missing": "64-65, 141"
+    },
+    {
+      "path": "src/aconsole/ui/views/sidebar/git_card.py",
+      "stmts": 50,
+      "miss": 3,
+      "branches": 6,
+      "partial": 2,
+      "cov": "91%",
+      "missing": "62-65, 67"
+    },
+    {
+      "path": "src/aconsole/core/application/services/projects.py",
+      "stmts": 80,
+      "miss": 2,
+      "branches": 24,
+      "partial": 4,
+      "cov": "94%",
+      "missing": "79->81, 81->exit, 109, 153"
+    },
+    {
+      "path": "src/aconsole/core/domain/workspace.py",
+      "stmts": 81,
+      "miss": 2,
+      "branches": 30,
+      "partial": 2,
+      "cov": "96%",
+      "missing": "80, 88"
+    },
+    {
+      "path": "src/aconsole/core/infrastructure/agents/codex/launcher.py",
+      "stmts": 130,
+      "miss": 2,
+      "branches": 22,
+      "partial": 2,
+      "cov": "97%",
+      "missing": "213, 235"
+    },
+    {
+      "path": "src/aconsole/core/infrastructure/git/retention.py",
+      "stmts": 27,
+      "miss": 2,
+      "branches": 6,
+      "partial": 1,
+      "cov": "91%",
+      "missing": "27-28"
+    },
+    {
+      "path": "src/aconsole/core/infrastructure/git/runner.py",
+      "stmts": 140,
+      "miss": 2,
+      "branches": 34,
+      "partial": 2,
+      "cov": "98%",
+      "missing": "139, 182"
+    },
+    {
+      "path": "src/aconsole/core/infrastructure/http/approval.py",
+      "stmts": 39,
+      "miss": 2,
+      "branches": 2,
+      "partial": 0,
+      "cov": "95%",
+      "missing": "38-39"
+    },
+    {
+      "path": "src/aconsole/core/infrastructure/http/auth.py",
+      "stmts": 72,
+      "miss": 2,
+      "branches": 24,
+      "partial": 0,
+      "cov": "98%",
+      "missing": "29-30"
+    },
+    {
+      "path": "src/aconsole/core/infrastructure/persistence/repositories/knowledge.py",
+      "stmts": 88,
+      "miss": 2,
+      "branches": 14,
+      "partial": 2,
+      "cov": "96%",
+      "missing": "84->exit, 136-137"
+    },
+    {
+      "path": "src/aconsole/ui/bootstrap.py",
+      "stmts": 27,
+      "miss": 2,
+      "branches": 2,
+      "partial": 1,
+      "cov": "90%",
+      "missing": "47-48"
+    },
+    {
+      "path": "src/aconsole/ui/viewmodels/logic/quota_fmt.py",
+      "stmts": 54,
+      "miss": 2,
+      "branches": 22,
+      "partial": 0,
+      "cov": "97%",
+      "missing": "83-84"
+    },
+    {
+      "path": "src/aconsole/ui/viewmodels/review_vm.py",
+      "stmts": 32,
+      "miss": 2,
+      "branches": 0,
+      "partial": 0,
+      "cov": "94%",
+      "missing": "46-47"
+    },
+    {
+      "path": "src/aconsole/ui/views/review/graph_cell.py",
+      "stmts": 83,
+      "miss": 2,
+      "branches": 18,
+      "partial": 3,
+      "cov": "95%",
+      "missing": "64, 91, 114->116"
+    },
+    {
+      "path": "src/aconsole/ui/views/sidebar/quota_row.py",
+      "stmts": 139,
+      "miss": 2,
+      "branches": 26,
+      "partial": 2,
+      "cov": "98%",
+      "missing": "101->99, 108, 195"
+    },
+    {
+      "path": "src/aconsole/ui/views/terminal/palette.py",
+      "stmts": 30,
+      "miss": 2,
+      "branches": 4,
+      "partial": 1,
+      "cov": "91%",
+      "missing": "22-23"
+    },
+    {
+      "path": "src/aconsole/core/application/services/coalescer.py",
+      "stmts": 28,
+      "miss": 1,
+      "branches": 14,
+      "partial": 1,
+      "cov": "95%",
+      "missing": "25"
+    },
+    {
+      "path": "src/aconsole/core/domain/checkpoints.py",
+      "stmts": 96,
+      "miss": 1,
+      "branches": 16,
+      "partial": 0,
+      "cov": "99%",
+      "missing": "104"
+    },
+    {
+      "path": "src/aconsole/core/infrastructure/agents/command_files.py",
+      "stmts": 29,
+      "miss": 1,
+      "branches": 8,
+      "partial": 1,
+      "cov": "95%",
+      "missing": "63"
+    },
+    {
+      "path": "src/aconsole/core/infrastructure/codegraph/index.py",
+      "stmts": 100,
+      "miss": 1,
+      "branches": 22,
+      "partial": 1,
+      "cov": "98%",
+      "missing": "120"
+    },
+    {
+      "path": "src/aconsole/core/infrastructure/codegraph/python.py",
+      "stmts": 38,
+      "miss": 1,
+      "branches": 10,
+      "partial": 3,
+      "cov": "92%",
+      "missing": "23->25, 28->30, 50"
+    },
+    {
+      "path": "src/aconsole/core/infrastructure/fake/results.py",
+      "stmts": 34,
+      "miss": 1,
+      "branches": 2,
+      "partial": 1,
+      "cov": "94%",
+      "missing": "69"
+    },
+    {
+      "path": "src/aconsole/core/infrastructure/ipc/ring.py",
+      "stmts": 39,
+      "miss": 1,
+      "branches": 8,
+      "partial": 1,
+      "cov": "96%",
+      "missing": "51"
+    },
+    {
+      "path": "src/aconsole/ui/client/daemon.py",
+      "stmts": 26,
+      "miss": 1,
+      "branches": 6,
+      "partial": 0,
+      "cov": "97%",
+      "missing": "42"
+    },
+    {
+      "path": "src/aconsole/ui/viewmodels/logic/git_lanes.py",
+      "stmts": 114,
+      "miss": 1,
+      "branches": 40,
+      "partial": 1,
+      "cov": "99%",
+      "missing": "128"
+    },
+    {
+      "path": "src/aconsole/ui/views/sidebar/quota_card.py",
+      "stmts": 117,
+      "miss": 1,
+      "branches": 30,
+      "partial": 3,
+      "cov": "97%",
+      "missing": "104, 120->exit, 141->exit, 145->exit"
+    },
+    {
+      "path": "src/aconsole/__init__.py",
+      "stmts": 3,
+      "miss": 0,
+      "branches": 0,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/contracts/__init__.py",
+      "stmts": 4,
+      "miss": 0,
+      "branches": 0,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/contracts/app.py",
+      "stmts": 141,
+      "miss": 0,
+      "branches": 0,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/contracts/catalog.py",
+      "stmts": 12,
+      "miss": 0,
+      "branches": 0,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/contracts/common.py",
+      "stmts": 77,
+      "miss": 0,
+      "branches": 0,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/contracts/errors.py",
+      "stmts": 67,
+      "miss": 0,
+      "branches": 4,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/contracts/events.py",
+      "stmts": 29,
+      "miss": 0,
+      "branches": 0,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/contracts/generate.py",
+      "stmts": 91,
+      "miss": 0,
+      "branches": 14,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/contracts/git.py",
+      "stmts": 74,
+      "miss": 0,
+      "branches": 0,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/contracts/ingest.py",
+      "stmts": 65,
+      "miss": 0,
+      "branches": 0,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/contracts/ipc.py",
+      "stmts": 36,
+      "miss": 0,
+      "branches": 0,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/contracts/mcp_models.py",
+      "stmts": 41,
+      "miss": 0,
+      "branches": 0,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/contracts/messages.py",
+      "stmts": 12,
+      "miss": 0,
+      "branches": 0,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/contracts/methods.py",
+      "stmts": 20,
+      "miss": 0,
+      "branches": 4,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/contracts/settings.py",
+      "stmts": 56,
+      "miss": 0,
+      "branches": 6,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/contracts/setup_detail.py",
+      "stmts": 5,
+      "miss": 0,
+      "branches": 0,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/contracts/vault.py",
+      "stmts": 17,
+      "miss": 0,
+      "branches": 0,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/contracts/work_sessions.py",
+      "stmts": 30,
+      "miss": 0,
+      "branches": 0,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/core/__init__.py",
+      "stmts": 0,
+      "miss": 0,
+      "branches": 0,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/core/application/__init__.py",
+      "stmts": 0,
+      "miss": 0,
+      "branches": 0,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/core/application/ports/__init__.py",
+      "stmts": 0,
+      "miss": 0,
+      "branches": 0,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/core/application/ports/approval_policy.py",
+      "stmts": 4,
+      "miss": 0,
+      "branches": 0,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/core/application/ports/checkpoint_store.py",
+      "stmts": 17,
+      "miss": 0,
+      "branches": 0,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/core/application/ports/clock.py",
+      "stmts": 4,
+      "miss": 0,
+      "branches": 0,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/core/application/ports/diff_reader.py",
+      "stmts": 25,
+      "miss": 0,
+      "branches": 0,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/core/application/ports/events.py",
+      "stmts": 6,
+      "miss": 0,
+      "branches": 0,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/core/application/ports/git_repo.py",
+      "stmts": 63,
+      "miss": 0,
+      "branches": 0,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/core/application/ports/knowledge_store.py",
+      "stmts": 12,
+      "miss": 0,
+      "branches": 0,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/core/application/ports/plan_store.py",
+      "stmts": 13,
+      "miss": 0,
+      "branches": 0,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/core/application/ports/setup.py",
+      "stmts": 13,
+      "miss": 0,
+      "branches": 0,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/core/application/ports/tab_store.py",
+      "stmts": 62,
+      "miss": 0,
+      "branches": 0,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/core/application/ports/work_session_store.py",
+      "stmts": 4,
+      "miss": 0,
+      "branches": 0,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/core/application/services/__init__.py",
+      "stmts": 0,
+      "miss": 0,
+      "branches": 0,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/core/application/services/event_router.py",
+      "stmts": 25,
+      "miss": 0,
+      "branches": 4,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/core/application/services/quota_aggregator.py",
+      "stmts": 8,
+      "miss": 0,
+      "branches": 0,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/core/application/services/setup.py",
+      "stmts": 59,
+      "miss": 0,
+      "branches": 12,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/core/domain/__init__.py",
+      "stmts": 0,
+      "miss": 0,
+      "branches": 0,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/core/domain/agent.py",
+      "stmts": 16,
+      "miss": 0,
+      "branches": 0,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/core/domain/approval_policy.py",
+      "stmts": 45,
+      "miss": 0,
+      "branches": 8,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/core/domain/clock.py",
+      "stmts": 14,
+      "miss": 0,
+      "branches": 2,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/core/domain/errors.py",
+      "stmts": 8,
+      "miss": 0,
+      "branches": 0,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/core/domain/events.py",
+      "stmts": 8,
+      "miss": 0,
+      "branches": 0,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/core/domain/git_operation.py",
+      "stmts": 51,
+      "miss": 0,
+      "branches": 8,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/core/domain/ids.py",
+      "stmts": 20,
+      "miss": 0,
+      "branches": 4,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/core/domain/prefix_allowlist.py",
+      "stmts": 63,
+      "miss": 0,
+      "branches": 28,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/core/domain/quota.py",
+      "stmts": 52,
+      "miss": 0,
+      "branches": 12,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/core/domain/tab_status.py",
+      "stmts": 98,
+      "miss": 0,
+      "branches": 14,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/core/domain/work_session.py",
+      "stmts": 12,
+      "miss": 0,
+      "branches": 0,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/core/infrastructure/__init__.py",
+      "stmts": 0,
+      "miss": 0,
+      "branches": 0,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/core/infrastructure/agents/__init__.py",
+      "stmts": 0,
+      "miss": 0,
+      "branches": 0,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/core/infrastructure/agents/claude/__init__.py",
+      "stmts": 0,
+      "miss": 0,
+      "branches": 0,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/core/infrastructure/agents/claude/launcher.py",
+      "stmts": 101,
+      "miss": 0,
+      "branches": 12,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/core/infrastructure/agents/codex/__init__.py",
+      "stmts": 0,
+      "miss": 0,
+      "branches": 0,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/core/infrastructure/agents/cursor/__init__.py",
+      "stmts": 0,
+      "miss": 0,
+      "branches": 0,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/core/infrastructure/agents/opencode/__init__.py",
+      "stmts": 0,
+      "miss": 0,
+      "branches": 0,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/core/infrastructure/agents/opencode/launcher.py",
+      "stmts": 25,
+      "miss": 0,
+      "branches": 0,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/core/infrastructure/codegraph/__init__.py",
+      "stmts": 0,
+      "miss": 0,
+      "branches": 0,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/core/infrastructure/codegraph/protocol.py",
+      "stmts": 21,
+      "miss": 0,
+      "branches": 2,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/core/infrastructure/codegraph/typescript.py",
+      "stmts": 32,
+      "miss": 0,
+      "branches": 4,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/core/infrastructure/containers/__init__.py",
+      "stmts": 0,
+      "miss": 0,
+      "branches": 0,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/core/infrastructure/containers/distrobox_env.py",
+      "stmts": 77,
+      "miss": 0,
+      "branches": 20,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/core/infrastructure/containers/distrobox_ini.py",
+      "stmts": 77,
+      "miss": 0,
+      "branches": 12,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/core/infrastructure/containers/login.py",
+      "stmts": 5,
+      "miss": 0,
+      "branches": 0,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/core/infrastructure/fake/__init__.py",
+      "stmts": 0,
+      "miss": 0,
+      "branches": 0,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/core/infrastructure/git/__init__.py",
+      "stmts": 0,
+      "miss": 0,
+      "branches": 0,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/core/infrastructure/host_bins.py",
+      "stmts": 14,
+      "miss": 0,
+      "branches": 6,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/core/infrastructure/http/__init__.py",
+      "stmts": 0,
+      "miss": 0,
+      "branches": 0,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/core/infrastructure/http/app.py",
+      "stmts": 179,
+      "miss": 0,
+      "branches": 58,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/core/infrastructure/http/problem.py",
+      "stmts": 35,
+      "miss": 0,
+      "branches": 0,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/core/infrastructure/http/routes.py",
+      "stmts": 128,
+      "miss": 0,
+      "branches": 36,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/core/infrastructure/ipc/__init__.py",
+      "stmts": 0,
+      "miss": 0,
+      "branches": 0,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/core/infrastructure/knowledge.py",
+      "stmts": 52,
+      "miss": 0,
+      "branches": 14,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/core/infrastructure/mcp/__init__.py",
+      "stmts": 0,
+      "miss": 0,
+      "branches": 0,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/core/infrastructure/paths.py",
+      "stmts": 8,
+      "miss": 0,
+      "branches": 0,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/core/infrastructure/persistence/__init__.py",
+      "stmts": 0,
+      "miss": 0,
+      "branches": 0,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/core/infrastructure/persistence/models.py",
+      "stmts": 406,
+      "miss": 0,
+      "branches": 0,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/core/infrastructure/persistence/readers.py",
+      "stmts": 21,
+      "miss": 0,
+      "branches": 4,
+      "partial": 1,
+      "cov": "96%",
+      "missing": "29->exit"
+    },
+    {
+      "path": "src/aconsole/core/infrastructure/persistence/repositories/__init__.py",
+      "stmts": 0,
+      "miss": 0,
+      "branches": 0,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/core/infrastructure/persistence/repositories/ref_deletions.py",
+      "stmts": 33,
+      "miss": 0,
+      "branches": 0,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/core/infrastructure/persistence/startup.py",
+      "stmts": 54,
+      "miss": 0,
+      "branches": 6,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/core/infrastructure/vault/__init__.py",
+      "stmts": 0,
+      "miss": 0,
+      "branches": 0,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/core/ports/__init__.py",
+      "stmts": 0,
+      "miss": 0,
+      "branches": 0,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/core/ports/notifier.py",
+      "stmts": 7,
+      "miss": 0,
+      "branches": 0,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/core/ports/paths.py",
+      "stmts": 3,
+      "miss": 0,
+      "branches": 0,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/devcli/__init__.py",
+      "stmts": 0,
+      "miss": 0,
+      "branches": 0,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/sidecar/__init__.py",
+      "stmts": 0,
+      "miss": 0,
+      "branches": 0,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/sidecar/__main__.py",
+      "stmts": 3,
+      "miss": 0,
+      "branches": 0,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/sidecar/ipc.py",
+      "stmts": 45,
+      "miss": 0,
+      "branches": 4,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/ui/__init__.py",
+      "stmts": 0,
+      "miss": 0,
+      "branches": 0,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/ui/client/__init__.py",
+      "stmts": 0,
+      "miss": 0,
+      "branches": 0,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/ui/client/core_age.py",
+      "stmts": 20,
+      "miss": 0,
+      "branches": 0,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/ui/client/error_text.py",
+      "stmts": 13,
+      "miss": 0,
+      "branches": 2,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/ui/client/snapshot_chunks.py",
+      "stmts": 47,
+      "miss": 0,
+      "branches": 14,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/ui/client/store.py",
+      "stmts": 149,
+      "miss": 0,
+      "branches": 48,
+      "partial": 2,
+      "cov": "99%",
+      "missing": "56->exit, 86->exit"
+    },
+    {
+      "path": "src/aconsole/ui/gtk_typed.py",
+      "stmts": 20,
+      "miss": 0,
+      "branches": 2,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/ui/i18n.py",
+      "stmts": 48,
+      "miss": 0,
+      "branches": 6,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/ui/viewmodels/__init__.py",
+      "stmts": 0,
+      "miss": 0,
+      "branches": 0,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/ui/viewmodels/app_vm.py",
+      "stmts": 24,
+      "miss": 0,
+      "branches": 4,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/ui/viewmodels/approval_alerts.py",
+      "stmts": 47,
+      "miss": 0,
+      "branches": 14,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/ui/viewmodels/approvals_vm.py",
+      "stmts": 35,
+      "miss": 0,
+      "branches": 6,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/ui/viewmodels/logic/__init__.py",
+      "stmts": 0,
+      "miss": 0,
+      "branches": 0,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/ui/viewmodels/logic/approval_modes.py",
+      "stmts": 29,
+      "miss": 0,
+      "branches": 10,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/ui/viewmodels/logic/fonts.py",
+      "stmts": 30,
+      "miss": 0,
+      "branches": 4,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/ui/viewmodels/logic/keymap.py",
+      "stmts": 28,
+      "miss": 0,
+      "branches": 10,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/ui/viewmodels/logic/plan_layout.py",
+      "stmts": 24,
+      "miss": 0,
+      "branches": 6,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/ui/viewmodels/logic/rank.py",
+      "stmts": 49,
+      "miss": 0,
+      "branches": 24,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/ui/viewmodels/logic/tab_format.py",
+      "stmts": 19,
+      "miss": 0,
+      "branches": 0,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/ui/viewmodels/logic/terminal_palette.py",
+      "stmts": 6,
+      "miss": 0,
+      "branches": 0,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/ui/viewmodels/logic/time_fmt.py",
+      "stmts": 9,
+      "miss": 0,
+      "branches": 2,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/ui/viewmodels/sidebar_vm.py",
+      "stmts": 24,
+      "miss": 0,
+      "branches": 4,
+      "partial": 1,
+      "cov": "96%",
+      "missing": "22->exit"
+    },
+    {
+      "path": "src/aconsole/ui/views/__init__.py",
+      "stmts": 0,
+      "miss": 0,
+      "branches": 0,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/ui/views/approvals/__init__.py",
+      "stmts": 0,
+      "miss": 0,
+      "branches": 0,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/ui/views/approvals/alert.py",
+      "stmts": 17,
+      "miss": 0,
+      "branches": 0,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/ui/views/approvals/messages.py",
+      "stmts": 1,
+      "miss": 0,
+      "branches": 0,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/ui/views/palette/__init__.py",
+      "stmts": 0,
+      "miss": 0,
+      "branches": 0,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/ui/views/palette/messages.py",
+      "stmts": 1,
+      "miss": 0,
+      "branches": 0,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/ui/views/review/__init__.py",
+      "stmts": 0,
+      "miss": 0,
+      "branches": 0,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/ui/views/review/diff_widgets.py",
+      "stmts": 47,
+      "miss": 0,
+      "branches": 10,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/ui/views/review/messages.py",
+      "stmts": 1,
+      "miss": 0,
+      "branches": 0,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/ui/views/setup/__init__.py",
+      "stmts": 0,
+      "miss": 0,
+      "branches": 0,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/ui/views/setup/messages.py",
+      "stmts": 2,
+      "miss": 0,
+      "branches": 0,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/ui/views/sidebar/__init__.py",
+      "stmts": 0,
+      "miss": 0,
+      "branches": 0,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/ui/views/sidebar/messages.py",
+      "stmts": 1,
+      "miss": 0,
+      "branches": 0,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/ui/views/sidebar/plan_card.py",
+      "stmts": 60,
+      "miss": 0,
+      "branches": 8,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/ui/views/sidebar/section.py",
+      "stmts": 60,
+      "miss": 0,
+      "branches": 6,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/ui/views/tabs/__init__.py",
+      "stmts": 0,
+      "miss": 0,
+      "branches": 0,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/ui/views/tabs/messages.py",
+      "stmts": 1,
+      "miss": 0,
+      "branches": 0,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/ui/views/terminal/__init__.py",
+      "stmts": 0,
+      "miss": 0,
+      "branches": 0,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    },
+    {
+      "path": "src/aconsole/ui/views/terminal/messages.py",
+      "stmts": 1,
+      "miss": 0,
+      "branches": 0,
+      "partial": 0,
+      "cov": "100%",
+      "missing": ""
+    }
+  ]
+}

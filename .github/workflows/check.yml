@@ -59,6 +59,8 @@ jobs:
           .venv-core/bin/python -m coverage combine
           .venv-core/bin/python -m coverage report
       - name: Build and install Debian package
+        # Package failures must remain visible even when another check fails.
+        if: ${{ !cancelled() }}
         run: |
           .venv-ui/bin/python packaging/build_deb.py
           sudo apt-get install -y ./dist/aconsole_*_amd64.deb
