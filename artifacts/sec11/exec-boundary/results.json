@@ -1,0 +1,81 @@
+{
+  "base": "411ef4f2be115fe99f8ab618c7ca13aa47301f9f",
+  "environment": "baseline, guard and race probes in agent container; product-related tests via distrobox-host-exec on host; only temporary repositories",
+  "junit": {
+    "baseline.xml": {
+      "name": "pytest",
+      "errors": "0",
+      "failures": "1",
+      "skipped": "0",
+      "tests": "1",
+      "time": "0.127",
+      "timestamp": "2026-11-08T20:30:05.645260+03:00",
+      "hostname": "somovasnbook14"
+    },
+    "guarded.xml": {
+      "name": "pytest",
+      "errors": "0",
+      "failures": "3",
+      "skipped": "0",
+      "tests": "28",
+      "time": "6.731",
+      "timestamp": "2026-11-08T20:30:06.909925+03:00",
+      "hostname": "somovasnbook14"
+    },
+    "patch-reads-before.xml": {
+      "name": "pytest",
+      "errors": "0",
+      "failures": "2",
+      "skipped": "0",
+      "tests": "2",
+      "time": "0.175",
+      "timestamp": "2026-11-08T20:31:12.100273+03:00",
+      "hostname": "somovasnbook14"
+    },
+    "product-focused.xml": {
+      "name": "pytest",
+      "errors": "0",
+      "failures": "0",
+      "skipped": "0",
+      "tests": "42",
+      "time": "2.471",
+      "timestamp": "2026-11-08T20:31:28.311792+03:00",
+      "hostname": "somovasnbook14"
+    },
+    "guarded-after.xml": {
+      "name": "pytest",
+      "errors": "0",
+      "failures": "1",
+      "skipped": "0",
+      "tests": "30",
+      "time": "6.557",
+      "timestamp": "2026-11-08T20:32:15.488311+03:00",
+      "hostname": "somovasnbook14"
+    },
+    "product-related.xml": {
+      "name": "pytest",
+      "errors": "0",
+      "failures": "0",
+      "skipped": "0",
+      "tests": "75",
+      "time": "24.218",
+      "timestamp": "2026-11-08T20:32:43.899559+03:00",
+      "hostname": "somovasnbook14"
+    },
+    "product-race-after.xml": {
+      "name": "pytest",
+      "errors": "0",
+      "failures": "1",
+      "skipped": "0",
+      "tests": "1",
+      "time": "0.126",
+      "timestamp": "2026-11-08T20:33:51.999506+03:00",
+      "hostname": "somovasnbook14"
+    }
+  },
+  "source_sha256": {
+    "src/aconsole/core/infrastructure/git/runner.py": "fb8ff7b7f1ff0c50397aaade4840fea728f365e3bb3db224044a6ee2a5ed80d7",
+    "tests/core/test_git_host_exec.py": "a8606ed8c7641d4117f0c433fa07235b89b1e66eb88ba634fa1ac71d520621cd",
+    "artifacts/sec11/race_probe.py": "32649fdaf78a2e4fbd8ef70c091bb7df79e6edb1c861a570c387b2e41910609a"
+  }
+}

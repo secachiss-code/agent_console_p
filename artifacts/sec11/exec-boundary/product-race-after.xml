@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="0.126" timestamp="2026-11-08T20:33:51.999506+03:00" hostname="somovasnbook14"><testcase classname="artifacts.sec11.race_probe" name="test_no_driver_can_be_added_between_enumeration_and_status" time="0.025"><failure message="AssertionError: SEC-11: config inserted after name enumeration executed on the Git runner">tmp_path = PosixPath('/tmp/pytest-of-sas/pytest-198/test_no_driver_can_be_added_be0')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x40c1ba46190&gt;
+
+    def test_no_driver_can_be_added_between_enumeration_and_status(
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -&gt; None:
+        repo = new_repo(tmp_path / "repo")
+        _ = commit(repo, "f.txt", "one\n", "seed")
+        (repo / "f.txt").write_text("two\n", encoding="utf-8")
+        (repo / ".gitattributes").write_text("* filter=late\n", encoding="utf-8")
+        marker = tmp_path / "executed"
+        script = tmp_path / "late-driver.sh"
+        _script(script, marker)
+        runner = GitRunner()
+        execute = runner._execute  # noqa: SLF001 -- deterministic scheduling at the spawn boundary
+        swapped = False
+
+        def race(argv: tuple[str, ...], stdin: bytes | None, env: Mapping[str, str], limit: float) -&gt; GitOutput:
+            nonlocal swapped
+            result = execute(argv, stdin, env, limit)
+            if "--get-regexp" in argv and not swapped:
+                swapped = True
+                _ = git(repo, "config", "filter.late.clean", str(script))
+            return result
+
+        monkeypatch.setattr(runner, "_execute", race)
+        if runner.read(repo, "status", "--porcelain").code != 0:
+            msg = "status failed before the race could be checked"
+            raise AssertionError(msg)
+        if not swapped:
+            msg = "the deterministic race schedule was not reached"
+            raise AssertionError(msg)
+        if marker.exists():
+            msg = "SEC-11: config inserted after name enumeration executed on the Git runner"
+&gt;           raise AssertionError(msg)
+E           AssertionError: SEC-11: config inserted after name enumeration executed on the Git runner
+
+artifacts/sec11/race_probe.py:56: AssertionError</failure></testcase></testsuite></testsuites>

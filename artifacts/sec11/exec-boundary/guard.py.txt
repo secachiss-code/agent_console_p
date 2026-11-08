@@ -1,0 +1,33 @@
+"""Linux experiment: Git may start once; later execve calls return EPERM.
+
+Not a product launcher: this deliberately rejects Git child commands and hooks.
+"""
+import ctypes
+import errno
+import os
+import platform
+import sys
+
+class Filter(ctypes.Structure):
+    _fields_=[('code',ctypes.c_ushort),('jt',ctypes.c_ubyte),('jf',ctypes.c_ubyte),('k',ctypes.c_uint)]
+class Program(ctypes.Structure):
+    _fields_=[('len',ctypes.c_ushort),('filter',ctypes.POINTER(Filter))]
+
+# Only architectures actually described here are accepted. All others fail closed.
+arches={'x86_64':(0xc000003e,59,322,101),'aarch64':(0xc00000b7,221,281,117)}
+arch,execve,execveat,ptrace=arches[platform.machine()]
+fd=os.open(sys.argv[1],os.O_RDONLY|os.O_CLOEXEC)
+# Reject other syscall architectures, execve, and all execveat except the initial fd.
+ins=[Filter(0x20,0,0,4),Filter(0x15,1,0,arch),Filter(0x06,0,0,0x80000000),
+     Filter(0x20,0,0,0),Filter(0x35,0,1,0x40000000),Filter(0x06,0,0,0x00050000|errno.EPERM),
+     Filter(0x15,0,1,ptrace),Filter(0x06,0,0,0x00050000|errno.EPERM),
+     Filter(0x15,0,1,execve),Filter(0x06,0,0,0x00050000|errno.EPERM),
+     Filter(0x15,0,3,execveat),Filter(0x20,0,0,16),Filter(0x15,1,0,fd),
+     Filter(0x06,0,0,0x00050000|errno.EPERM),Filter(0x06,0,0,0x7fff0000)]
+array=(Filter*len(ins))(*ins);prog=Program(len(ins),array)
+libc=ctypes.CDLL(None,use_errno=True)
+for option,arg in [(38,1),(22,ctypes.byref(prog))]:
+    mode=2 if option==22 else arg
+    result=libc.prctl(option,mode,arg if option==22 else 0,0,0)
+    if result!=0:raise OSError(ctypes.get_errno(),os.strerror(ctypes.get_errno()))
+os.execve(fd,sys.argv[1:],os.environ)

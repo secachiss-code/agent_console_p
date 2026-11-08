@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="2" skipped="0" tests="2" time="0.175" timestamp="2026-11-08T20:31:12.100273+03:00" hostname="somovasnbook14"><testcase classname="tests.core.test_git_host_exec" name="test_patch_reads_do_not_need_even_a_neutral_textconv_program[command0]" time="0.026"><failure message="AssertionError: patch reads should use Git's built-in diff, without a textconv helper&#10;assert not True&#10; +  where True = exists()&#10; +    where exists = PosixPath('/tmp/pytest-of-sas/pytest-193/test_patch_reads_do_not_need_e0/ran').exists">tmp_path = PosixPath('/tmp/pytest-of-sas/pytest-193/test_patch_reads_do_not_need_e0')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x41fd1a4b690&gt;
+command = ('show', 'HEAD')
+
+    @pytest.mark.parametrize("command", [("show", "HEAD"), ("log", "-p", "-1")])
+    def test_patch_reads_do_not_need_even_a_neutral_textconv_program(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch, command: tuple[str, ...],
+    ) -&gt; None:
+        from aconsole.core.infrastructure.git import runner as runner_module  # noqa: PLC0415
+
+        repo, marker, script = _dirty_repo(tmp_path, "* diff=evil\n")
+        _ = git(repo, "config", "diff.evil.textconv", str(script))
+        # Detect invocation of the replacement as well as the repository's driver.
+        monkeypatch.setattr(runner_module, "_CAT", str(script))
+        result = GitRunner().invoke(repo, command)
+        assert result.code == 0
+&gt;       assert not marker.exists(), "patch reads should use Git's built-in diff, without a textconv helper"
+E       AssertionError: patch reads should use Git's built-in diff, without a textconv helper
+E       assert not True
+E        +  where True = exists()
+E        +    where exists = PosixPath('/tmp/pytest-of-sas/pytest-193/test_patch_reads_do_not_need_e0/ran').exists
+
+tests/core/test_git_host_exec.py:295: AssertionError</failure></testcase><testcase classname="tests.core.test_git_host_exec" name="test_patch_reads_do_not_need_even_a_neutral_textconv_program[command1]" time="0.023"><failure message="AssertionError: patch reads should use Git's built-in diff, without a textconv helper&#10;assert not True&#10; +  where True = exists()&#10; +    where exists = PosixPath('/tmp/pytest-of-sas/pytest-193/test_patch_reads_do_not_need_e1/ran').exists">tmp_path = PosixPath('/tmp/pytest-of-sas/pytest-193/test_patch_reads_do_not_need_e1')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x41fd1a46b90&gt;
+command = ('log', '-p', '-1')
+
+    @pytest.mark.parametrize("command", [("show", "HEAD"), ("log", "-p", "-1")])
+    def test_patch_reads_do_not_need_even_a_neutral_textconv_program(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch, command: tuple[str, ...],
+    ) -&gt; None:
+        from aconsole.core.infrastructure.git import runner as runner_module  # noqa: PLC0415
+
+        repo, marker, script = _dirty_repo(tmp_path, "* diff=evil\n")
+        _ = git(repo, "config", "diff.evil.textconv", str(script))
+        # Detect invocation of the replacement as well as the repository's driver.
+        monkeypatch.setattr(runner_module, "_CAT", str(script))
+        result = GitRunner().invoke(repo, command)
+        assert result.code == 0
+&gt;       assert not marker.exists(), "patch reads should use Git's built-in diff, without a textconv helper"
+E       AssertionError: patch reads should use Git's built-in diff, without a textconv helper
+E       assert not True
+E        +  where True = exists()
+E        +    where exists = PosixPath('/tmp/pytest-of-sas/pytest-193/test_patch_reads_do_not_need_e1/ran').exists
+
+tests/core/test_git_host_exec.py:295: AssertionError</failure></testcase></testsuite></testsuites>

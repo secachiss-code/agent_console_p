@@ -252,9 +252,9 @@ def _config(hooks_path: str) -> tuple[str, ...]:
 
 
 def _guard_diff(args: tuple[str, ...]) -> tuple[str, ...]:
-    """`git diff` runs textconv and external drivers unless these flags are present."""
+    """Patch-producing reads use Git's built-in diff, without external or textconv helpers."""
     command = next((word for word in args if not word.startswith("-")), "")
-    if command != "diff":
+    if command not in {"diff", "show", "log"}:
         return args
     missing = tuple(flag for flag in _DIFF_GUARDS if flag not in args)
     if not missing:

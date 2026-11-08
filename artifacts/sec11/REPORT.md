@@ -24,3 +24,5 @@ Static configuration and environment regressions passing does not satisfy that s
 Next implementation must prevent execution of programs introduced after enumeration while preserving explicitly approved commit/merge hooks. Adding more names, taking another mutable read, or detecting changes after execution is not a sufficient fix. The current runner is not a complete execution sandbox. No package deployment was performed.
 
 No legacy SEC phase-gate PASS is claimed; legacy phase IDs do not include these MCP node keys.
+
+Follow-up: [exec-boundary/REPORT.md](exec-boundary/REPORT.md). Patch reads hardened; SEC-11 still FAIL.

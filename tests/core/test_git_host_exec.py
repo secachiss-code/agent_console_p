@@ -9,6 +9,7 @@ from pathlib import Path
 import pytest
 
 from aconsole.core.application.ports.git_repo import GitCommandError
+from aconsole.core.infrastructure.git import runner as runner_module
 from aconsole.core.infrastructure.git.checkpoints import GitCheckpoints
 from aconsole.core.infrastructure.git.diff import GitDiff
 from aconsole.core.infrastructure.git.history import GitHistory
@@ -278,3 +279,17 @@ def test_process_environment_does_not_enable_external_diff_or_ssh(
     _ = runner.read(repo, "diff")
     _ = runner.read(repo, "ls-remote", "git@127.0.0.1:none.git", codes=frozenset(range(256)))
     assert not marker.exists()
+
+
+@pytest.mark.parametrize("command", [("show", "HEAD"), ("log", "-p", "-1")])
+def test_patch_reads_do_not_need_even_a_neutral_textconv_program(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, command: tuple[str, ...],
+) -> None:
+    repo, marker, script = _dirty_repo(tmp_path, "* diff=evil\n")
+    _ = git(repo, "config", "diff.evil.textconv", str(script))
+    # Detect invocation of the replacement as well as the repository's driver.
+    monkeypatch.setattr(runner_module, "_CAT", str(script))
+    result = GitRunner().invoke(repo, command)
+    assert result.code == 0
+    assert not marker.exists(), "patch reads should use Git's built-in diff, without a textconv helper"
+    assert b"one" in result.stdout
