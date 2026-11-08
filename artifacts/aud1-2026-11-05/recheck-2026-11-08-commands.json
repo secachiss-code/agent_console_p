@@ -1,0 +1,1013 @@
+[
+  {
+    "argv": [
+      "/usr/bin/git",
+      "-C",
+      "/tmp/aconsole-aud3-recheck-zlseh_dg/untracked",
+      "init",
+      "-b",
+      "main"
+    ],
+    "exit_code": 0,
+    "stdout": "Initialized empty Git repository in /tmp/aconsole-aud3-recheck-zlseh_dg/untracked/.git/\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "/usr/bin/git",
+      "-C",
+      "/tmp/aconsole-aud3-recheck-zlseh_dg/untracked",
+      "config",
+      "user.name",
+      "Audit"
+    ],
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "/usr/bin/git",
+      "-C",
+      "/tmp/aconsole-aud3-recheck-zlseh_dg/untracked",
+      "config",
+      "user.email",
+      "audit@example.invalid"
+    ],
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "/usr/bin/git",
+      "-C",
+      "/tmp/aconsole-aud3-recheck-zlseh_dg/untracked",
+      "add",
+      "-A",
+      "--",
+      "."
+    ],
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "/usr/bin/git",
+      "-C",
+      "/tmp/aconsole-aud3-recheck-zlseh_dg/untracked",
+      "commit",
+      "-m",
+      "base"
+    ],
+    "exit_code": 0,
+    "stdout": "[main (root-commit) 0eefea5] base\n 2 files changed, 1 insertion(+)\n create mode 100644 .gitignore\n create mode 100644 base.txt\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "/usr/bin/git",
+      "-C",
+      "/tmp/aconsole-aud3-recheck-zlseh_dg/untracked",
+      "show",
+      "refs/aconsole/checkpoints/audit/2:new.txt"
+    ],
+    "exit_code": 0,
+    "stdout": "recover me\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "/usr/bin/git",
+      "-C",
+      "/tmp/aconsole-aud3-recheck-zlseh_dg/outside",
+      "init",
+      "-b",
+      "main"
+    ],
+    "exit_code": 0,
+    "stdout": "Initialized empty Git repository in /tmp/aconsole-aud3-recheck-zlseh_dg/outside/.git/\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "/usr/bin/git",
+      "-C",
+      "/tmp/aconsole-aud3-recheck-zlseh_dg/outside",
+      "config",
+      "user.name",
+      "Audit"
+    ],
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "/usr/bin/git",
+      "-C",
+      "/tmp/aconsole-aud3-recheck-zlseh_dg/outside",
+      "config",
+      "user.email",
+      "audit@example.invalid"
+    ],
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "/usr/bin/git",
+      "-C",
+      "/tmp/aconsole-aud3-recheck-zlseh_dg/outside",
+      "add",
+      "-A",
+      "--",
+      "."
+    ],
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "/usr/bin/git",
+      "-C",
+      "/tmp/aconsole-aud3-recheck-zlseh_dg/outside",
+      "commit",
+      "-m",
+      "base"
+    ],
+    "exit_code": 0,
+    "stdout": "[main (root-commit) 0eefea5] base\n 2 files changed, 1 insertion(+)\n create mode 100644 .gitignore\n create mode 100644 base.txt\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "/usr/bin/git",
+      "-C",
+      "/tmp/aconsole-aud3-recheck-zlseh_dg/outside",
+      "add",
+      "-A",
+      "--",
+      "."
+    ],
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "/usr/bin/git",
+      "-C",
+      "/tmp/aconsole-aud3-recheck-zlseh_dg/outside",
+      "commit",
+      "-m",
+      "track sub"
+    ],
+    "exit_code": 0,
+    "stdout": "[main a60b37d] track sub\n 1 file changed, 1 insertion(+)\n create mode 100644 sub/victim.txt\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "/usr/bin/git",
+      "-C",
+      "/tmp/aconsole-aud3-recheck-zlseh_dg/outside",
+      "ls-files",
+      "-c",
+      "-o",
+      "--exclude-standard",
+      "-z"
+    ],
+    "exit_code": 0,
+    "stdout": "sub\u0000.gitignore\u0000base.txt\u0000sub/victim.txt\u0000",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "/usr/bin/git",
+      "-C",
+      "/tmp/aconsole-aud3-recheck-zlseh_dg/outside",
+      "ls-tree",
+      "-r",
+      "--name-only",
+      "refs/aconsole/checkpoints/audit/2"
+    ],
+    "exit_code": 0,
+    "stdout": ".gitignore\nbase.txt\nsub\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "/usr/bin/git",
+      "-C",
+      "/tmp/aconsole-aud3-recheck-zlseh_dg/dangling",
+      "init",
+      "-b",
+      "main"
+    ],
+    "exit_code": 0,
+    "stdout": "Initialized empty Git repository in /tmp/aconsole-aud3-recheck-zlseh_dg/dangling/.git/\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "/usr/bin/git",
+      "-C",
+      "/tmp/aconsole-aud3-recheck-zlseh_dg/dangling",
+      "config",
+      "user.name",
+      "Audit"
+    ],
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "/usr/bin/git",
+      "-C",
+      "/tmp/aconsole-aud3-recheck-zlseh_dg/dangling",
+      "config",
+      "user.email",
+      "audit@example.invalid"
+    ],
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "/usr/bin/git",
+      "-C",
+      "/tmp/aconsole-aud3-recheck-zlseh_dg/dangling",
+      "add",
+      "-A",
+      "--",
+      "."
+    ],
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "/usr/bin/git",
+      "-C",
+      "/tmp/aconsole-aud3-recheck-zlseh_dg/dangling",
+      "commit",
+      "-m",
+      "base"
+    ],
+    "exit_code": 0,
+    "stdout": "[main (root-commit) 0eefea5] base\n 2 files changed, 1 insertion(+)\n create mode 100644 .gitignore\n create mode 100644 base.txt\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "/usr/bin/git",
+      "-C",
+      "/tmp/aconsole-aud3-recheck-zlseh_dg/dangling",
+      "status",
+      "--porcelain"
+    ],
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "/usr/bin/git",
+      "-C",
+      "/tmp/aconsole-aud3-recheck-zlseh_dg/ignored-aconsole",
+      "init",
+      "-b",
+      "main"
+    ],
+    "exit_code": 0,
+    "stdout": "Initialized empty Git repository in /tmp/aconsole-aud3-recheck-zlseh_dg/ignored-aconsole/.git/\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "/usr/bin/git",
+      "-C",
+      "/tmp/aconsole-aud3-recheck-zlseh_dg/ignored-aconsole",
+      "config",
+      "user.name",
+      "Audit"
+    ],
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "/usr/bin/git",
+      "-C",
+      "/tmp/aconsole-aud3-recheck-zlseh_dg/ignored-aconsole",
+      "config",
+      "user.email",
+      "audit@example.invalid"
+    ],
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "/usr/bin/git",
+      "-C",
+      "/tmp/aconsole-aud3-recheck-zlseh_dg/ignored-aconsole",
+      "add",
+      "-A",
+      "--",
+      "."
+    ],
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "/usr/bin/git",
+      "-C",
+      "/tmp/aconsole-aud3-recheck-zlseh_dg/ignored-aconsole",
+      "commit",
+      "-m",
+      "base"
+    ],
+    "exit_code": 0,
+    "stdout": "[main (root-commit) 07240c2] base\n 2 files changed, 2 insertions(+)\n create mode 100644 .gitignore\n create mode 100644 base.txt\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "/usr/bin/git",
+      "-C",
+      "/tmp/aconsole-aud3-recheck-zlseh_dg/wt-ignored",
+      "status",
+      "--porcelain",
+      "--untracked-files=all",
+      "--ignored=matching"
+    ],
+    "exit_code": 0,
+    "stdout": "!! .aconsole/\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "/usr/bin/git",
+      "-C",
+      "/tmp/aconsole-aud3-recheck-zlseh_dg/dirty-close",
+      "init",
+      "-b",
+      "main"
+    ],
+    "exit_code": 0,
+    "stdout": "Initialized empty Git repository in /tmp/aconsole-aud3-recheck-zlseh_dg/dirty-close/.git/\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "/usr/bin/git",
+      "-C",
+      "/tmp/aconsole-aud3-recheck-zlseh_dg/dirty-close",
+      "config",
+      "user.name",
+      "Audit"
+    ],
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "/usr/bin/git",
+      "-C",
+      "/tmp/aconsole-aud3-recheck-zlseh_dg/dirty-close",
+      "config",
+      "user.email",
+      "audit@example.invalid"
+    ],
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "/usr/bin/git",
+      "-C",
+      "/tmp/aconsole-aud3-recheck-zlseh_dg/dirty-close",
+      "add",
+      "-A",
+      "--",
+      "."
+    ],
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "/usr/bin/git",
+      "-C",
+      "/tmp/aconsole-aud3-recheck-zlseh_dg/dirty-close",
+      "commit",
+      "-m",
+      "base"
+    ],
+    "exit_code": 0,
+    "stdout": "[main (root-commit) 0eefea5] base\n 2 files changed, 1 insertion(+)\n create mode 100644 .gitignore\n create mode 100644 base.txt\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "/usr/bin/git",
+      "-C",
+      "/tmp/aconsole-aud3-recheck-zlseh_dg/ignored-other",
+      "init",
+      "-b",
+      "main"
+    ],
+    "exit_code": 0,
+    "stdout": "Initialized empty Git repository in /tmp/aconsole-aud3-recheck-zlseh_dg/ignored-other/.git/\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "/usr/bin/git",
+      "-C",
+      "/tmp/aconsole-aud3-recheck-zlseh_dg/ignored-other",
+      "config",
+      "user.name",
+      "Audit"
+    ],
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "/usr/bin/git",
+      "-C",
+      "/tmp/aconsole-aud3-recheck-zlseh_dg/ignored-other",
+      "config",
+      "user.email",
+      "audit@example.invalid"
+    ],
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "/usr/bin/git",
+      "-C",
+      "/tmp/aconsole-aud3-recheck-zlseh_dg/ignored-other",
+      "add",
+      "-A",
+      "--",
+      "."
+    ],
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "/usr/bin/git",
+      "-C",
+      "/tmp/aconsole-aud3-recheck-zlseh_dg/ignored-other",
+      "commit",
+      "-m",
+      "base"
+    ],
+    "exit_code": 0,
+    "stdout": "[main (root-commit) d08f87e] base\n 2 files changed, 2 insertions(+)\n create mode 100644 .gitignore\n create mode 100644 base.txt\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "/usr/bin/git",
+      "-C",
+      "/tmp/aconsole-aud3-recheck-zlseh_dg/leading-dash",
+      "init",
+      "-b",
+      "main"
+    ],
+    "exit_code": 0,
+    "stdout": "Initialized empty Git repository in /tmp/aconsole-aud3-recheck-zlseh_dg/leading-dash/.git/\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "/usr/bin/git",
+      "-C",
+      "/tmp/aconsole-aud3-recheck-zlseh_dg/leading-dash",
+      "config",
+      "user.name",
+      "Audit"
+    ],
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "/usr/bin/git",
+      "-C",
+      "/tmp/aconsole-aud3-recheck-zlseh_dg/leading-dash",
+      "config",
+      "user.email",
+      "audit@example.invalid"
+    ],
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "/usr/bin/git",
+      "-C",
+      "/tmp/aconsole-aud3-recheck-zlseh_dg/leading-dash",
+      "add",
+      "-A",
+      "--",
+      "."
+    ],
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "/usr/bin/git",
+      "-C",
+      "/tmp/aconsole-aud3-recheck-zlseh_dg/leading-dash",
+      "commit",
+      "-m",
+      "base"
+    ],
+    "exit_code": 0,
+    "stdout": "[main (root-commit) 0eefea5] base\n 2 files changed, 1 insertion(+)\n create mode 100644 .gitignore\n create mode 100644 base.txt\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "/usr/bin/git",
+      "-C",
+      "/tmp/aconsole-aud3-recheck-zlseh_dg/leading-dash",
+      "diff",
+      "--cached",
+      "--name-only"
+    ],
+    "exit_code": 0,
+    "stdout": "--help\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "/usr/bin/git",
+      "-C",
+      "/tmp/aconsole-aud3-recheck-zlseh_dg/index-lock",
+      "init",
+      "-b",
+      "main"
+    ],
+    "exit_code": 0,
+    "stdout": "Initialized empty Git repository in /tmp/aconsole-aud3-recheck-zlseh_dg/index-lock/.git/\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "/usr/bin/git",
+      "-C",
+      "/tmp/aconsole-aud3-recheck-zlseh_dg/index-lock",
+      "config",
+      "user.name",
+      "Audit"
+    ],
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "/usr/bin/git",
+      "-C",
+      "/tmp/aconsole-aud3-recheck-zlseh_dg/index-lock",
+      "config",
+      "user.email",
+      "audit@example.invalid"
+    ],
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "/usr/bin/git",
+      "-C",
+      "/tmp/aconsole-aud3-recheck-zlseh_dg/index-lock",
+      "add",
+      "-A",
+      "--",
+      "."
+    ],
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "/usr/bin/git",
+      "-C",
+      "/tmp/aconsole-aud3-recheck-zlseh_dg/index-lock",
+      "commit",
+      "-m",
+      "base"
+    ],
+    "exit_code": 0,
+    "stdout": "[main (root-commit) 0eefea5] base\n 2 files changed, 1 insertion(+)\n create mode 100644 .gitignore\n create mode 100644 base.txt\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "/usr/bin/git",
+      "-C",
+      "/tmp/aconsole-aud3-recheck-zlseh_dg/index-lock",
+      "show",
+      "refs/aconsole/checkpoints/audit/1:base.txt"
+    ],
+    "exit_code": 0,
+    "stdout": "local\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "/usr/bin/git",
+      "-C",
+      "/tmp/aconsole-aud3-recheck-zlseh_dg/merge",
+      "init",
+      "-b",
+      "main"
+    ],
+    "exit_code": 0,
+    "stdout": "Initialized empty Git repository in /tmp/aconsole-aud3-recheck-zlseh_dg/merge/.git/\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "/usr/bin/git",
+      "-C",
+      "/tmp/aconsole-aud3-recheck-zlseh_dg/merge",
+      "config",
+      "user.name",
+      "Audit"
+    ],
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "/usr/bin/git",
+      "-C",
+      "/tmp/aconsole-aud3-recheck-zlseh_dg/merge",
+      "config",
+      "user.email",
+      "audit@example.invalid"
+    ],
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "/usr/bin/git",
+      "-C",
+      "/tmp/aconsole-aud3-recheck-zlseh_dg/merge",
+      "add",
+      "-A",
+      "--",
+      "."
+    ],
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "/usr/bin/git",
+      "-C",
+      "/tmp/aconsole-aud3-recheck-zlseh_dg/merge",
+      "commit",
+      "-m",
+      "base"
+    ],
+    "exit_code": 0,
+    "stdout": "[main (root-commit) 0eefea5] base\n 2 files changed, 1 insertion(+)\n create mode 100644 .gitignore\n create mode 100644 base.txt\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "/usr/bin/git",
+      "-C",
+      "/tmp/aconsole-aud3-recheck-zlseh_dg/merge",
+      "checkout",
+      "-b",
+      "topic"
+    ],
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": "Switched to a new branch 'topic'\n"
+  },
+  {
+    "argv": [
+      "/usr/bin/git",
+      "-C",
+      "/tmp/aconsole-aud3-recheck-zlseh_dg/merge",
+      "add",
+      "-A",
+      "--",
+      "."
+    ],
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "/usr/bin/git",
+      "-C",
+      "/tmp/aconsole-aud3-recheck-zlseh_dg/merge",
+      "commit",
+      "-m",
+      "topic"
+    ],
+    "exit_code": 0,
+    "stdout": "[topic 0aa2f26] topic\n 1 file changed, 1 insertion(+), 1 deletion(-)\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "/usr/bin/git",
+      "-C",
+      "/tmp/aconsole-aud3-recheck-zlseh_dg/merge",
+      "rev-parse",
+      "HEAD"
+    ],
+    "exit_code": 0,
+    "stdout": "0aa2f2650e076f0aafd175f477dae754b9188238\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "/usr/bin/git",
+      "-C",
+      "/tmp/aconsole-aud3-recheck-zlseh_dg/merge",
+      "checkout",
+      "main"
+    ],
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": "Switched to branch 'main'\n"
+  },
+  {
+    "argv": [
+      "/usr/bin/git",
+      "-C",
+      "/tmp/aconsole-aud3-recheck-zlseh_dg/merge",
+      "add",
+      "-A",
+      "--",
+      "."
+    ],
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "/usr/bin/git",
+      "-C",
+      "/tmp/aconsole-aud3-recheck-zlseh_dg/merge",
+      "commit",
+      "-m",
+      "main"
+    ],
+    "exit_code": 0,
+    "stdout": "[main 54424ba] main\n 2 files changed, 2 insertions(+), 1 deletion(-)\n create mode 100644 other.txt\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "/usr/bin/git",
+      "-C",
+      "/tmp/aconsole-aud3-recheck-zlseh_dg/merge",
+      "rev-parse",
+      "HEAD"
+    ],
+    "exit_code": 0,
+    "stdout": "54424bab48be2f50b5b951956f1ab40c7f18304d\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "/usr/bin/git",
+      "-C",
+      "/tmp/aconsole-aud3-recheck-zlseh_dg/merge",
+      "rev-parse",
+      "HEAD"
+    ],
+    "exit_code": 0,
+    "stdout": "54424bab48be2f50b5b951956f1ab40c7f18304d\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "/usr/bin/git",
+      "-C",
+      "/tmp/aconsole-aud3-recheck-zlseh_dg/merge",
+      "ls-files",
+      "-u"
+    ],
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "/usr/bin/git",
+      "-C",
+      "/tmp/aconsole-aud3-recheck-zlseh_dg/single-file-outside",
+      "init",
+      "-b",
+      "main"
+    ],
+    "exit_code": 0,
+    "stdout": "Initialized empty Git repository in /tmp/aconsole-aud3-recheck-zlseh_dg/single-file-outside/.git/\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "/usr/bin/git",
+      "-C",
+      "/tmp/aconsole-aud3-recheck-zlseh_dg/single-file-outside",
+      "config",
+      "user.name",
+      "Audit"
+    ],
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "/usr/bin/git",
+      "-C",
+      "/tmp/aconsole-aud3-recheck-zlseh_dg/single-file-outside",
+      "config",
+      "user.email",
+      "audit@example.invalid"
+    ],
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "/usr/bin/git",
+      "-C",
+      "/tmp/aconsole-aud3-recheck-zlseh_dg/single-file-outside",
+      "add",
+      "-A",
+      "--",
+      "."
+    ],
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "/usr/bin/git",
+      "-C",
+      "/tmp/aconsole-aud3-recheck-zlseh_dg/single-file-outside",
+      "commit",
+      "-m",
+      "base"
+    ],
+    "exit_code": 0,
+    "stdout": "[main (root-commit) 9bf1adc] base\n 2 files changed, 1 insertion(+)\n create mode 100644 .gitignore\n create mode 100644 base.txt\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "/usr/bin/git",
+      "-C",
+      "/tmp/aconsole-aud3-recheck-zlseh_dg/single-file-outside",
+      "rev-parse",
+      "HEAD"
+    ],
+    "exit_code": 0,
+    "stdout": "9bf1adc1bfc828d0b7e2d7721ea22e61c1635ad0\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "/usr/bin/git",
+      "-C",
+      "/tmp/aconsole-aud3-recheck-zlseh_dg/single-file-outside",
+      "add",
+      "-A",
+      "--",
+      "."
+    ],
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "/usr/bin/git",
+      "-C",
+      "/tmp/aconsole-aud3-recheck-zlseh_dg/single-file-outside",
+      "commit",
+      "-m",
+      "track sub"
+    ],
+    "exit_code": 0,
+    "stdout": "[main b5c5baa] track sub\n 1 file changed, 1 insertion(+)\n create mode 100644 sub/victim.txt\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "/usr/bin/git",
+      "-C",
+      "/tmp/aconsole-aud3-recheck-zlseh_dg/linked-root",
+      "init",
+      "-b",
+      "main"
+    ],
+    "exit_code": 0,
+    "stdout": "Initialized empty Git repository in /tmp/aconsole-aud3-recheck-zlseh_dg/linked-root/.git/\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "/usr/bin/git",
+      "-C",
+      "/tmp/aconsole-aud3-recheck-zlseh_dg/linked-root",
+      "config",
+      "user.name",
+      "Audit"
+    ],
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "/usr/bin/git",
+      "-C",
+      "/tmp/aconsole-aud3-recheck-zlseh_dg/linked-root",
+      "config",
+      "user.email",
+      "audit@example.invalid"
+    ],
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "/usr/bin/git",
+      "-C",
+      "/tmp/aconsole-aud3-recheck-zlseh_dg/linked-root",
+      "add",
+      "-A",
+      "--",
+      "."
+    ],
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "/usr/bin/git",
+      "-C",
+      "/tmp/aconsole-aud3-recheck-zlseh_dg/linked-root",
+      "commit",
+      "-m",
+      "base"
+    ],
+    "exit_code": 0,
+    "stdout": "[main (root-commit) 9bf1adc] base\n 2 files changed, 1 insertion(+)\n create mode 100644 .gitignore\n create mode 100644 base.txt\n",
+    "stderr": ""
+  }
+]
