@@ -76,3 +76,6 @@ or a green suite solely from cheaper tooltip updates.
 <!-- candidate-isolated-1: GskGLRenderer; load=[2.95263671875, 2.8251953125, 2.89013671875]; rows=10000 -->
 
 <!-- candidate-full: GskGLRenderer; load=[3.81982421875, 2.8466796875, 2.81201171875]; rows=10000 -->
+
+Follow-up after integration into main: [deferred unmapped row content](DEFERRED_MAP.md).
+PERF-7 performance acceptance remains open.

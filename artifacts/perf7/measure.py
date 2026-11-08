@@ -20,6 +20,14 @@ def pytest_runtest_call(item):
     from tests.gui.front import test_git_scale_ui as test
     original = test._on_pane
     label_stats={}
+    if os.environ.get('ACONSOLE_PERF7_PROFILE'):
+        from aconsole.ui.views.review.git_pane import _RowWidget
+        show_row = _RowWidget.show_row
+        def record_row(widget, row, state):
+            key='mapped' if widget.get_mapped() else 'unmapped'
+            label_stats[key]=label_stats.get(key,0)+1
+            return show_row(widget,row,state)
+        item._request.getfixturevalue('monkeypatch').setattr(_RowWidget,'show_row',record_row)
     if os.environ.get('ACONSOLE_PERF7_LABELS'):
         from aconsole.ui.views.review.git_pane import _RowWidget
         show_node=_RowWidget._show_node

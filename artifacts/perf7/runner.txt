@@ -6,6 +6,7 @@ import secrets
 import struct
 import subprocess
 import sys
+import tarfile
 import tempfile
 import time
 
@@ -15,12 +16,24 @@ parser.add_argument('--mode',choices=['isolated','full','screenshots'],default='
 parser.add_argument('--label',default='')
 parser.add_argument('--renderer',default='')
 parser.add_argument('--profile',action='store_true')
+parser.add_argument('--checkout-ref',default='')
+parser.add_argument('--scale-only',action='store_true')
 parser.add_argument('--labels',action='store_true')
 options=parser.parse_args()
 label=options.label or options.mode
 output=root/'artifacts/perf7'
 with tempfile.TemporaryDirectory(prefix='perf7-xvfb-') as directory:
     temp=Path(directory)
+    checkout=root
+    if options.checkout_ref:
+        sha=subprocess.check_output(['git','rev-parse','--verify',options.checkout_ref+'^{commit}'],cwd=root,text=True).strip()
+        archive=temp/'checkout.tar'
+        subprocess.run(['git','archive','--format=tar','--output='+str(archive),sha],cwd=root,check=True)
+        checkout=temp/'checkout'
+        checkout.mkdir()
+        with tarfile.open(archive) as held:
+            held.extractall(checkout,filter='data')
+        (output/(label+'-checkout.txt')).write_text(sha+'\n')
     subprocess.run(['/usr/bin/apt-get','download','xvfb'],cwd=temp,timeout=90,check=True)
     packages=list(temp.glob('xvfb_*.deb')); assert len(packages)==1
     subprocess.run(['/usr/bin/dpkg-deb','-x',str(packages[0]),str(temp/'package')],timeout=20,check=True)
@@ -34,7 +47,7 @@ with tempfile.TemporaryDirectory(prefix='perf7-xvfb-') as directory:
             if Path(f'/tmp/.X11-unix/X{number}').exists():break
             if server.poll() is not None:raise RuntimeError('Xvfb failed')
             time.sleep(.05)
-        env=dict(os.environ,DISPLAY=f':{number}',XAUTHORITY=str(auth),GDK_BACKEND='x11',GTK_A11Y='test',PYTHONPATH=str(root/'src')+':'+str(output),
+        env=dict(os.environ,DISPLAY=f':{number}',XAUTHORITY=str(auth),GDK_BACKEND='x11',GTK_A11Y='test',PYTHONPATH=str(checkout/'src')+':'+str(output),
             XDG_STATE_HOME=str(temp/'state'),XDG_CONFIG_HOME=str(temp/'config'),XDG_CACHE_HOME=str(temp/'cache'))
         env.pop('WAYLAND_DISPLAY',None);env.pop('BROADWAY_DISPLAY',None)
         try:
@@ -50,13 +63,14 @@ with tempfile.TemporaryDirectory(prefix='perf7-xvfb-') as directory:
         if options.labels: env['ACONSOLE_PERF7_LABELS']='1'
         tests=['tests/gui/front/test_git_scale_ui.py','tests/gui/front/test_git_row_tooltips.py'] if options.mode=='isolated' else ['tests/gui/front','tests/ui']
         if options.mode=='screenshots':
-            command=[sys.executable,str(root/'tools/git_snapshot.py'),'--out',str(output/'real-git')]
+            command=[sys.executable,str(root/'tools/git_snapshot.py'),'--out',str(output/(label+'-ui'))]
             subprocess.run(command,env=env,cwd=root,timeout=120,check=True)
             raise SystemExit(0)
+        if options.scale_only: tests=['tests/gui/front/test_git_scale_ui.py']
         plugin=['-p','measure']
         command=[sys.executable,'-m','pytest','-o','addopts=','-q',*plugin,'--junitxml='+str(output/(label+'.xml')),*tests]
         with (output/(label+'.log')).open('w') as stream:
-            result=subprocess.run(command,env=env,cwd=root,timeout=360,stdout=stream,stderr=subprocess.STDOUT)
+            result=subprocess.run(command,env=env,cwd=checkout,timeout=360,stdout=stream,stderr=subprocess.STDOUT)
         print((output/(label+'.log')).read_text()[-1800:])
         raise SystemExit(result.returncode)
     finally:

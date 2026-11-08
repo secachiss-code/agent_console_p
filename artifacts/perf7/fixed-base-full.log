@@ -1,0 +1,666 @@
+Collected 0 items to run in parallel
+........................................................................ [ 15%]
+........................................................................ [ 31%]
+...................................................F.................... [ 47%]
+........................................................................ [ 63%]
+........................................................................ [ 79%]
+..................................................................F..... [ 95%]
+...................                                                      [100%]
+=================================== FAILURES ===================================
+________________________ test_scrolling_a_long_history _________________________
+
+tmp_path = PosixPath('/tmp/pytest-of-sas/pytest-166/test_scrolling_a_long_history0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x79b4d0a68c20>
+
+    def test_scrolling_a_long_history(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+        repo = tmp_path / "repo"
+        repo.mkdir()
+        _ = _git(repo, "init", "-q", "-b", "develop")
+        lines: list[str] = []
+        for number in range(_COMMITS):
+            message = f"commit {number}"
+            lines.extend((
+                "commit refs/heads/develop",
+                f"committer t <t@e> {1_700_000_000 + number} +0000",
+                f"data {len(message)}",
+                message,
+                f"M 100644 inline f{number % 200}.txt",
+                f"data {len(message)}",
+                message,
+                "",
+            ))
+        _ = subprocess.run(
+            [_GIT, "-C", str(repo), "fast-import", "--quiet"], input="\n".join(lines), text=True, check=True
+        )
+        _ = _git(repo, "checkout", "-qf", "develop")
+
+        async def check(pane: GitPane, _toasts: list[str], _window: Adw.ApplicationWindow) -> None:
+            before = _rss_mb()
+            marks = [f"start {before:.0f}"]
+            await _settled(lambda: pane.store.get_n_items() >= 200)
+            marks.append(f"first page {_rss_mb():.0f}")
+            loading = time.perf_counter()
+            for _ in range(_PAGE_ATTEMPTS):
+                if pane.store.get_n_items() >= _COMMITS:
+                    break
+                await pane.load_more()
+            await _settled(lambda: pane.store.get_n_items() >= _COMMITS)
+            loaded = time.perf_counter() - loading
+            marks.append(f"all rows {_rss_mb():.0f} after {loaded:.1f} s")
+            adjustment = pane.scroller.get_vadjustment()
+            frames: list[float] = []
+            started = time.perf_counter()
+            last = started
+
+            def tick(_widget: Gtk.Widget, _clock: Gdk.FrameClock) -> bool:
+                nonlocal last
+                now = time.perf_counter()
+                frames.append(now - last)
+                last = now
+                span = adjustment.get_upper() - adjustment.get_page_size()
+                progress = (now - started) / _SCROLL_S
+                adjustment.set_value(span * min(progress, 1.0))
+                return now - started < _SCROLL_S
+
+            _ = pane.list_view.add_tick_callback(tick)
+            await _settled(lambda: time.perf_counter() - started >= _SCROLL_S)
+            assert len(frames) >= _MIN_FRAMES, f"only {len(frames)} frames"
+            median = statistics.median(frames) * _MS
+            p95 = statistics.quantiles(frames, n=_PERCENTILES)[_P95_INDEX] * _MS
+            rss = _rss_mb()
+            line = (
+                f"git scale: {pane.store.get_n_items()} rows, {len(frames)} frames in {_SCROLL_S:.0f} s, "
+                f"median {median:.1f} ms, p95 {p95:.1f} ms, worst {max(frames) * _MS:.1f} ms, "
+                f"RSS {rss:.0f} MB ({', '.join(marks)})"
+            )
+            _report(line)
+            assert adjustment.get_value() > 0, "the list never moved"
+            assert median <= _FRAME_LIMIT_MS, line
+            assert rss - before <= _GROWTH_LIMIT_MB, line
+
+>       _on_pane(tmp_path, monkeypatch, repo, check)
+
+tests/gui/front/test_git_scale_ui.py:148:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/artifacts/perf7/measure.py:94: in on_pane
+    return original(tmp_path,monkeypatch,repo,observed)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/gui/front/test_git_pane.py:127: in _on_pane
+    raise failures[0]
+tests/gui/front/test_git_pane.py:108: in _run
+    await check(pane, toasts, window)
+/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/artifacts/perf7/measure.py:82: in observed
+    await check(pane,toasts,window)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+pane = <git_pane.GitPane object at 0x79b4d0a778c0 (aconsole+ui+views+review+git_pane+GitPane at 0xdc7a2cf0)>
+_toasts = []
+_window = <Adw.ApplicationWindow object at 0x79b4d0a0e840 (AdwApplicationWindow at 0xd7ead4e0)>
+
+    async def check(pane: GitPane, _toasts: list[str], _window: Adw.ApplicationWindow) -> None:
+        before = _rss_mb()
+        marks = [f"start {before:.0f}"]
+        await _settled(lambda: pane.store.get_n_items() >= 200)
+        marks.append(f"first page {_rss_mb():.0f}")
+        loading = time.perf_counter()
+        for _ in range(_PAGE_ATTEMPTS):
+            if pane.store.get_n_items() >= _COMMITS:
+                break
+            await pane.load_more()
+        await _settled(lambda: pane.store.get_n_items() >= _COMMITS)
+        loaded = time.perf_counter() - loading
+        marks.append(f"all rows {_rss_mb():.0f} after {loaded:.1f} s")
+        adjustment = pane.scroller.get_vadjustment()
+        frames: list[float] = []
+        started = time.perf_counter()
+        last = started
+
+        def tick(_widget: Gtk.Widget, _clock: Gdk.FrameClock) -> bool:
+            nonlocal last
+            now = time.perf_counter()
+            frames.append(now - last)
+            last = now
+            span = adjustment.get_upper() - adjustment.get_page_size()
+            progress = (now - started) / _SCROLL_S
+            adjustment.set_value(span * min(progress, 1.0))
+            return now - started < _SCROLL_S
+
+        _ = pane.list_view.add_tick_callback(tick)
+        await _settled(lambda: time.perf_counter() - started >= _SCROLL_S)
+        assert len(frames) >= _MIN_FRAMES, f"only {len(frames)} frames"
+        median = statistics.median(frames) * _MS
+        p95 = statistics.quantiles(frames, n=_PERCENTILES)[_P95_INDEX] * _MS
+        rss = _rss_mb()
+        line = (
+            f"git scale: {pane.store.get_n_items()} rows, {len(frames)} frames in {_SCROLL_S:.0f} s, "
+            f"median {median:.1f} ms, p95 {p95:.1f} ms, worst {max(frames) * _MS:.1f} ms, "
+            f"RSS {rss:.0f} MB ({', '.join(marks)})"
+        )
+        _report(line)
+        assert adjustment.get_value() > 0, "the list never moved"
+>       assert median <= _FRAME_LIMIT_MS, line
+E       AssertionError: git scale: 10000 rows, 50 frames in 4 s, median 79.0 ms, p95 121.9 ms, worst 134.9 ms, RSS 2149 MB (start 2113, first page 2127, all rows 2147 after 3.9 s)
+E       assert 78.96715099923313 <= 17.5
+
+tests/gui/front/test_git_scale_ui.py:145: AssertionError
+----------------------------- Captured stderr call -----------------------------
+[11/08/26 18:26:01] INFO     Context impl SQLiteImpl.           migration.py:205
+                    INFO     Will assume non-transactional DDL. migration.py:208
+                    INFO     Running upgrade  -> 0001_initial,  migration.py:611
+                             Initial schema from DATA_MODEL §3,
+                             written out table by table.
+                    INFO     Running upgrade 0001_initial ->    migration.py:611
+                             0002_plan_node_details, Keep what
+                             an agent wrote on a plan node: its
+                             boundaries, output format, and
+                             note.
+                    INFO     Running upgrade                    migration.py:611
+                             0002_plan_node_details ->
+                             0003_knowledge_details, Keep what
+                             a fact says and what a handover
+                             packet lists, not only their
+                             titles.
+                    INFO     Running upgrade                    migration.py:611
+                             0003_knowledge_details ->
+                             0004_git_operations, A journal of
+                             merges and rebases, so a restart
+                             can say what happened to a branch.
+                    INFO     Running upgrade                    migration.py:611
+                             0004_git_operations ->
+                             0005_work_sessions, Task sessions
+                             retain existing workspaces without
+                             executing Git or moving refs.
+                    INFO     Running upgrade 0005_work_sessions migration.py:611
+                             -> 0006_session_history, Durable
+                             session snapshots retain actors
+                             even after a tab is pruned.
+[11/08/26 18:26:02] INFO     Running upgrade                    migration.py:611
+                             0006_session_history ->
+                             0007_git_ref_deletions, Durable
+                             outbox for expired legacy
+                             checkpoint refs.
+                    INFO     Running upgrade                    migration.py:611
+                             0007_git_ref_deletions ->
+                             0008_pending_session_fork, Keep a
+                             native CLI fork distinct from a
+                             resume across core restarts.
+                    INFO     Running upgrade                    migration.py:611
+                             0007_git_ref_deletions ->
+                             0008_approval_policy, Project
+                             approval-policy override. Null
+                             inherits the global choice stored
+                             in settings.
+                    INFO     Running upgrade                    migration.py:611
+                             0008_approval_policy,
+                             0008_pending_session_fork ->
+                             0009_merge_approval_fork, Join
+                             approval-policy and pending-fork
+                             migration histories without
+                             rewriting either.
+                    INFO     StreamableHTTP       streamable_http_manager.py:162
+                             session manager
+                             started
+                    WARNING  cannot read HOME of container           tabs.py:257
+                             agent-codex
+                             ╭─ Traceback (most recent call last) ─╮
+                             │ /tmp/perf7-xvfb-58akc_kd/checkout/s │
+                             │ rc/aconsole/core/infrastructure/tab │
+                             │ s.py:254 in agent_home              │
+                             │                                     │
+                             │   251 │   │   if cached is not None │
+                             │   252 │   │   │   return cached     │
+                             │   253 │   │   try:                  │
+                             │ ❱ 254 │   │   │   inspected = self. │
+                             │   255 │   │   │   text = inspected. │
+                             │       "-c", 'printf %s "$HOME"'))   │
+                             │   256 │   │   except (ContainerErro │
+                             │   257 │   │   │   _LOG.warning("can │
+                             │                                     │
+                             │ /tmp/perf7-xvfb-58akc_kd/checkout/s │
+                             │ rc/aconsole/core/infrastructure/con │
+                             │ tainers/podman.py:111 in inspect    │
+                             │                                     │
+                             │   108 │   def inspect(self, name: s │
+                             │   109 │   │   """Return id, name, a │
+                             │   110 │   │   check_container_name( │
+                             │ ❱ 111 │   │   text = self._run(("in │
+                             │   112 │   │   try:                  │
+                             │   113 │   │   │   rows = msgspec.js │
+                             │   114 │   │   except msgspec.Decode │
+                             │                                     │
+                             │ /tmp/perf7-xvfb-58akc_kd/checkout/s │
+                             │ rc/aconsole/core/infrastructure/con │
+                             │ tainers/podman.py:216 in _run       │
+                             │                                     │
+                             │   213 │   │   except FileNotFoundEr │
+                             │   214 │   │   │   raise ContainerEr │
+                             │   215 │   │   if completed.returnco │
+                             │ ❱ 216 │   │   │   raise ContainerEr │
+                             │       detail=completed.stderr)      │
+                             │   217 │   │   return completed.stdo │
+                             │   218                               │
+                             ╰─────────────────────────────────────╯
+                             ContainerError: podman command failed
+[11/08/26 18:26:03] WARNING  cannot read HOME of container           tabs.py:257
+                             agent-codex
+                             ╭─ Traceback (most recent call last) ─╮
+                             │ /tmp/perf7-xvfb-58akc_kd/checkout/s │
+                             │ rc/aconsole/core/infrastructure/tab │
+                             │ s.py:254 in agent_home              │
+                             │                                     │
+                             │   251 │   │   if cached is not None │
+                             │   252 │   │   │   return cached     │
+                             │   253 │   │   try:                  │
+                             │ ❱ 254 │   │   │   inspected = self. │
+                             │   255 │   │   │   text = inspected. │
+                             │       "-c", 'printf %s "$HOME"'))   │
+                             │   256 │   │   except (ContainerErro │
+                             │   257 │   │   │   _LOG.warning("can │
+                             │                                     │
+                             │ /tmp/perf7-xvfb-58akc_kd/checkout/s │
+                             │ rc/aconsole/core/infrastructure/con │
+                             │ tainers/podman.py:111 in inspect    │
+                             │                                     │
+                             │   108 │   def inspect(self, name: s │
+                             │   109 │   │   """Return id, name, a │
+                             │   110 │   │   check_container_name( │
+                             │ ❱ 111 │   │   text = self._run(("in │
+                             │   112 │   │   try:                  │
+                             │   113 │   │   │   rows = msgspec.js │
+                             │   114 │   │   except msgspec.Decode │
+                             │                                     │
+                             │ /tmp/perf7-xvfb-58akc_kd/checkout/s │
+                             │ rc/aconsole/core/infrastructure/con │
+                             │ tainers/podman.py:216 in _run       │
+                             │                                     │
+                             │   213 │   │   except FileNotFoundEr │
+                             │   214 │   │   │   raise ContainerEr │
+                             │   215 │   │   if completed.returnco │
+                             │ ❱ 216 │   │   │   raise ContainerEr │
+                             │       detail=completed.stderr)      │
+                             │   217 │   │   return completed.stdo │
+                             │   218                               │
+                             ╰─────────────────────────────────────╯
+                             ContainerError: podman command failed
+[11/08/26 18:26:04] WARNING  cannot read HOME of container           tabs.py:257
+                             agent-codex
+                             ╭─ Traceback (most recent call last) ─╮
+                             │ /tmp/perf7-xvfb-58akc_kd/checkout/s │
+                             │ rc/aconsole/core/infrastructure/tab │
+                             │ s.py:254 in agent_home              │
+                             │                                     │
+                             │   251 │   │   if cached is not None │
+                             │   252 │   │   │   return cached     │
+                             │   253 │   │   try:                  │
+                             │ ❱ 254 │   │   │   inspected = self. │
+                             │   255 │   │   │   text = inspected. │
+                             │       "-c", 'printf %s "$HOME"'))   │
+                             │   256 │   │   except (ContainerErro │
+                             │   257 │   │   │   _LOG.warning("can │
+                             │                                     │
+                             │ /tmp/perf7-xvfb-58akc_kd/checkout/s │
+                             │ rc/aconsole/core/infrastructure/con │
+                             │ tainers/podman.py:111 in inspect    │
+                             │                                     │
+                             │   108 │   def inspect(self, name: s │
+                             │   109 │   │   """Return id, name, a │
+                             │   110 │   │   check_container_name( │
+                             │ ❱ 111 │   │   text = self._run(("in │
+                             │   112 │   │   try:                  │
+                             │   113 │   │   │   rows = msgspec.js │
+                             │   114 │   │   except msgspec.Decode │
+                             │                                     │
+                             │ /tmp/perf7-xvfb-58akc_kd/checkout/s │
+                             │ rc/aconsole/core/infrastructure/con │
+                             │ tainers/podman.py:216 in _run       │
+                             │                                     │
+                             │   213 │   │   except FileNotFoundEr │
+                             │   214 │   │   │   raise ContainerEr │
+                             │   215 │   │   if completed.returnco │
+                             │ ❱ 216 │   │   │   raise ContainerEr │
+                             │       detail=completed.stderr)      │
+                             │   217 │   │   return completed.stdo │
+                             │   218                               │
+                             ╰─────────────────────────────────────╯
+                             ContainerError: podman command failed
+[11/08/26 18:26:05] WARNING  cannot read HOME of container           tabs.py:257
+                             agent-codex
+                             ╭─ Traceback (most recent call last) ─╮
+                             │ /tmp/perf7-xvfb-58akc_kd/checkout/s │
+                             │ rc/aconsole/core/infrastructure/tab │
+                             │ s.py:254 in agent_home              │
+                             │                                     │
+                             │   251 │   │   if cached is not None │
+                             │   252 │   │   │   return cached     │
+                             │   253 │   │   try:                  │
+                             │ ❱ 254 │   │   │   inspected = self. │
+                             │   255 │   │   │   text = inspected. │
+                             │       "-c", 'printf %s "$HOME"'))   │
+                             │   256 │   │   except (ContainerErro │
+                             │   257 │   │   │   _LOG.warning("can │
+                             │                                     │
+                             │ /tmp/perf7-xvfb-58akc_kd/checkout/s │
+                             │ rc/aconsole/core/infrastructure/con │
+                             │ tainers/podman.py:111 in inspect    │
+                             │                                     │
+                             │   108 │   def inspect(self, name: s │
+                             │   109 │   │   """Return id, name, a │
+                             │   110 │   │   check_container_name( │
+                             │ ❱ 111 │   │   text = self._run(("in │
+                             │   112 │   │   try:                  │
+                             │   113 │   │   │   rows = msgspec.js │
+                             │   114 │   │   except msgspec.Decode │
+                             │                                     │
+                             │ /tmp/perf7-xvfb-58akc_kd/checkout/s │
+                             │ rc/aconsole/core/infrastructure/con │
+                             │ tainers/podman.py:216 in _run       │
+                             │                                     │
+                             │   213 │   │   except FileNotFoundEr │
+                             │   214 │   │   │   raise ContainerEr │
+                             │   215 │   │   if completed.returnco │
+                             │ ❱ 216 │   │   │   raise ContainerEr │
+                             │       detail=completed.stderr)      │
+                             │   217 │   │   return completed.stdo │
+                             │   218                               │
+                             ╰─────────────────────────────────────╯
+                             ContainerError: podman command failed
+[11/08/26 18:26:06] WARNING  cannot read HOME of container           tabs.py:257
+                             agent-codex
+                             ╭─ Traceback (most recent call last) ─╮
+                             │ /tmp/perf7-xvfb-58akc_kd/checkout/s │
+                             │ rc/aconsole/core/infrastructure/tab │
+                             │ s.py:254 in agent_home              │
+                             │                                     │
+                             │   251 │   │   if cached is not None │
+                             │   252 │   │   │   return cached     │
+                             │   253 │   │   try:                  │
+                             │ ❱ 254 │   │   │   inspected = self. │
+                             │   255 │   │   │   text = inspected. │
+                             │       "-c", 'printf %s "$HOME"'))   │
+                             │   256 │   │   except (ContainerErro │
+                             │   257 │   │   │   _LOG.warning("can │
+                             │                                     │
+                             │ /tmp/perf7-xvfb-58akc_kd/checkout/s │
+                             │ rc/aconsole/core/infrastructure/con │
+                             │ tainers/podman.py:111 in inspect    │
+                             │                                     │
+                             │   108 │   def inspect(self, name: s │
+                             │   109 │   │   """Return id, name, a │
+                             │   110 │   │   check_container_name( │
+                             │ ❱ 111 │   │   text = self._run(("in │
+                             │   112 │   │   try:                  │
+                             │   113 │   │   │   rows = msgspec.js │
+                             │   114 │   │   except msgspec.Decode │
+                             │                                     │
+                             │ /tmp/perf7-xvfb-58akc_kd/checkout/s │
+                             │ rc/aconsole/core/infrastructure/con │
+                             │ tainers/podman.py:216 in _run       │
+                             │                                     │
+                             │   213 │   │   except FileNotFoundEr │
+                             │   214 │   │   │   raise ContainerEr │
+                             │   215 │   │   if completed.returnco │
+                             │ ❱ 216 │   │   │   raise ContainerEr │
+                             │       detail=completed.stderr)      │
+                             │   217 │   │   return completed.stdo │
+                             │   218                               │
+                             ╰─────────────────────────────────────╯
+                             ContainerError: podman command failed
+[11/08/26 18:26:07] WARNING  cannot read HOME of container           tabs.py:257
+                             agent-codex
+                             ╭─ Traceback (most recent call last) ─╮
+                             │ /tmp/perf7-xvfb-58akc_kd/checkout/s │
+                             │ rc/aconsole/core/infrastructure/tab │
+                             │ s.py:254 in agent_home              │
+                             │                                     │
+                             │   251 │   │   if cached is not None │
+                             │   252 │   │   │   return cached     │
+                             │   253 │   │   try:                  │
+                             │ ❱ 254 │   │   │   inspected = self. │
+                             │   255 │   │   │   text = inspected. │
+                             │       "-c", 'printf %s "$HOME"'))   │
+                             │   256 │   │   except (ContainerErro │
+                             │   257 │   │   │   _LOG.warning("can │
+                             │                                     │
+                             │ /tmp/perf7-xvfb-58akc_kd/checkout/s │
+                             │ rc/aconsole/core/infrastructure/con │
+                             │ tainers/podman.py:111 in inspect    │
+                             │                                     │
+                             │   108 │   def inspect(self, name: s │
+                             │   109 │   │   """Return id, name, a │
+                             │   110 │   │   check_container_name( │
+                             │ ❱ 111 │   │   text = self._run(("in │
+                             │   112 │   │   try:                  │
+                             │   113 │   │   │   rows = msgspec.js │
+                             │   114 │   │   except msgspec.Decode │
+                             │                                     │
+                             │ /tmp/perf7-xvfb-58akc_kd/checkout/s │
+                             │ rc/aconsole/core/infrastructure/con │
+                             │ tainers/podman.py:216 in _run       │
+                             │                                     │
+                             │   213 │   │   except FileNotFoundEr │
+                             │   214 │   │   │   raise ContainerEr │
+                             │   215 │   │   if completed.returnco │
+                             │ ❱ 216 │   │   │   raise ContainerEr │
+                             │       detail=completed.stderr)      │
+                             │   217 │   │   return completed.stdo │
+                             │   218                               │
+                             ╰─────────────────────────────────────╯
+                             ContainerError: podman command failed
+[11/08/26 18:26:08] WARNING  cannot read HOME of container           tabs.py:257
+                             agent-codex
+                             ╭─ Traceback (most recent call last) ─╮
+                             │ /tmp/perf7-xvfb-58akc_kd/checkout/s │
+                             │ rc/aconsole/core/infrastructure/tab │
+                             │ s.py:254 in agent_home              │
+                             │                                     │
+                             │   251 │   │   if cached is not None │
+                             │   252 │   │   │   return cached     │
+                             │   253 │   │   try:                  │
+                             │ ❱ 254 │   │   │   inspected = self. │
+                             │   255 │   │   │   text = inspected. │
+                             │       "-c", 'printf %s "$HOME"'))   │
+                             │   256 │   │   except (ContainerErro │
+                             │   257 │   │   │   _LOG.warning("can │
+                             │                                     │
+                             │ /tmp/perf7-xvfb-58akc_kd/checkout/s │
+                             │ rc/aconsole/core/infrastructure/con │
+                             │ tainers/podman.py:111 in inspect    │
+                             │                                     │
+                             │   108 │   def inspect(self, name: s │
+                             │   109 │   │   """Return id, name, a │
+                             │   110 │   │   check_container_name( │
+                             │ ❱ 111 │   │   text = self._run(("in │
+                             │   112 │   │   try:                  │
+                             │   113 │   │   │   rows = msgspec.js │
+                             │   114 │   │   except msgspec.Decode │
+                             │                                     │
+                             │ /tmp/perf7-xvfb-58akc_kd/checkout/s │
+                             │ rc/aconsole/core/infrastructure/con │
+                             │ tainers/podman.py:216 in _run       │
+                             │                                     │
+                             │   213 │   │   except FileNotFoundEr │
+                             │   214 │   │   │   raise ContainerEr │
+                             │   215 │   │   if completed.returnco │
+                             │ ❱ 216 │   │   │   raise ContainerEr │
+                             │       detail=completed.stderr)      │
+                             │   217 │   │   return completed.stdo │
+                             │   218                               │
+                             ╰─────────────────────────────────────╯
+                             ContainerError: podman command failed
+[11/08/26 18:26:09] WARNING  cannot read HOME of container           tabs.py:257
+                             agent-codex
+                             ╭─ Traceback (most recent call last) ─╮
+                             │ /tmp/perf7-xvfb-58akc_kd/checkout/s │
+                             │ rc/aconsole/core/infrastructure/tab │
+                             │ s.py:254 in agent_home              │
+                             │                                     │
+                             │   251 │   │   if cached is not None │
+                             │   252 │   │   │   return cached     │
+                             │   253 │   │   try:                  │
+                             │ ❱ 254 │   │   │   inspected = self. │
+                             │   255 │   │   │   text = inspected. │
+                             │       "-c", 'printf %s "$HOME"'))   │
+                             │   256 │   │   except (ContainerErro │
+                             │   257 │   │   │   _LOG.warning("can │
+                             │                                     │
+                             │ /tmp/perf7-xvfb-58akc_kd/checkout/s │
+                             │ rc/aconsole/core/infrastructure/con │
+                             │ tainers/podman.py:111 in inspect    │
+                             │                                     │
+                             │   108 │   def inspect(self, name: s │
+                             │   109 │   │   """Return id, name, a │
+                             │   110 │   │   check_container_name( │
+                             │ ❱ 111 │   │   text = self._run(("in │
+                             │   112 │   │   try:                  │
+                             │   113 │   │   │   rows = msgspec.js │
+                             │   114 │   │   except msgspec.Decode │
+                             │                                     │
+                             │ /tmp/perf7-xvfb-58akc_kd/checkout/s │
+                             │ rc/aconsole/core/infrastructure/con │
+                             │ tainers/podman.py:216 in _run       │
+                             │                                     │
+                             │   213 │   │   except FileNotFoundEr │
+                             │   214 │   │   │   raise ContainerEr │
+                             │   215 │   │   if completed.returnco │
+                             │ ❱ 216 │   │   │   raise ContainerEr │
+                             │       detail=completed.stderr)      │
+                             │   217 │   │   return completed.stdo │
+                             │   218                               │
+                             ╰─────────────────────────────────────╯
+                             ContainerError: podman command failed
+[11/08/26 18:26:10] INFO     StreamableHTTP       streamable_http_manager.py:166
+                             session manager
+                             shutting down
+___________ test_deb_source_copy_can_translate_without_the_checkout ____________
+
+tmp_path = PosixPath('/tmp/pytest-of-sas/pytest-166/test_deb_source_copy_can_trans0')
+
+    def test_deb_source_copy_can_translate_without_the_checkout(tmp_path: Path) -> None:
+        import os
+        import subprocess
+        import sys
+
+        from tests.test_packaging import _builder
+
+        site = tmp_path / "site"
+>       _builder()._copy_app(site)
+
+tests/ui/test_i18n.py:81:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+packaging/build_deb.py:141: in _copy_app
+    listed = subprocess.run(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+input = None, capture_output = True, timeout = None, check = True
+popenargs = (('git', 'ls-files', 'src/aconsole', 'migrations'),)
+kwargs = {'cwd': PosixPath('/tmp/perf7-xvfb-58akc_kd/checkout'), 'text': True, 'stdout': -1, 'stderr': -1}
+
+    def run(*popenargs,
+            input=None, capture_output=False, timeout=None, check=False, **kwargs):
+        """Run command with arguments and return a CompletedProcess instance.
+
+        The returned instance will have attributes args, returncode, stdout and
+        stderr. By default, stdout and stderr are not captured, and those attributes
+        will be None. Pass stdout=PIPE and/or stderr=PIPE in order to capture them,
+        or pass capture_output=True to capture both.
+
+        If check is True and the exit code was non-zero, it raises a
+        CalledProcessError. The CalledProcessError object will have the return code
+        in the returncode attribute, and output & stderr attributes if those streams
+        were captured.
+
+        If timeout (seconds) is given and the process takes too long,
+         a TimeoutExpired exception will be raised.
+
+        There is an optional argument "input", allowing you to
+        pass bytes or a string to the subprocess's stdin.  If you use this argument
+        you may not also use the Popen constructor's "stdin" argument, as
+        it will be used internally.
+
+        By default, all communication is in bytes, and therefore any "input" should
+        be bytes, and the stdout and stderr will be bytes. If in text mode, any
+        "input" should be a string, and stdout and stderr will be strings decoded
+        according to locale encoding, or by "encoding" if set. Text mode is
+        triggered by setting any of text, encoding, errors or universal_newlines.
+
+        The other arguments are the same as for the Popen constructor.
+        """
+        if input is not None:
+            if kwargs.get('stdin') is not None:
+                raise ValueError('stdin and input arguments may not both be used.')
+            kwargs['stdin'] = PIPE
+
+        if capture_output:
+            if kwargs.get('stdout') is not None or kwargs.get('stderr') is not None:
+                raise ValueError('stdout and stderr arguments may not be used '
+                                 'with capture_output.')
+            kwargs['stdout'] = PIPE
+            kwargs['stderr'] = PIPE
+
+        with Popen(*popenargs, **kwargs) as process:
+            try:
+                stdout, stderr = process.communicate(input, timeout=timeout)
+            except TimeoutExpired as exc:
+                process.kill()
+                if _mswindows:
+                    # Windows accumulates the output in a single blocking
+                    # read() call run on child threads, with the timeout
+                    # being done in a join() on those threads.  communicate()
+                    # _after_ kill() is required to collect that and add it
+                    # to the exception.
+                    exc.stdout, exc.stderr = process.communicate()
+                else:
+                    # POSIX _communicate already populated the output so
+                    # far into the TimeoutExpired exception.
+                    process.wait()
+                raise
+            except:  # Including KeyboardInterrupt, communicate handled that.
+                process.kill()
+                # We don't call process.wait() as .__exit__ does that for us.
+                raise
+            retcode = process.poll()
+            if check and retcode:
+>               raise CalledProcessError(retcode, process.args,
+                                         output=stdout, stderr=stderr)
+E               subprocess.CalledProcessError: Command ('git', 'ls-files', 'src/aconsole', 'migrations') returned non-zero exit status 128.
+
+/home/sas/.local/share/uv/python/cpython-3.15.1-linux-x86_64-gnu/lib/python3.15/subprocess.py:692: CalledProcessError
+=============================== warnings summary ===============================
+../../../home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/events.py:803
+  /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/events.py:803: DeprecationWarning: 'asyncio.AbstractEventLoopPolicy' is deprecated and slated for removal in Python 3.16
+    AbstractEventLoopPolicy = getattr(asyncio, "AbstractEventLoopPolicy", object)
+
+tests/gui/front/test_b1_keys.py::test_b1_keys_terminal_passthrough
+  /tmp/perf7-xvfb-58akc_kd/checkout/tests/gui/front/test_b1_keys.py:286: DeprecationWarning: Vte.Pty.close is deprecated
+    pty.close()
+
+tests/gui/front/test_contrast_table.py: 400 warnings
+tests/gui/front/test_ux1_shortcuts.py: 6 warnings
+  /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/events.py:890: DeprecationWarning: 'asyncio.get_event_loop_policy' is deprecated and slated for removal in Python 3.16
+    if not isinstance(_get_event_loop_policy(), GLibEventLoopPolicy):
+
+tests/gui/front/test_contrast_table.py::test_the_table_is_the_floor_theme_and_the_dim_label_is_readable
+  /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/overrides/GLib.py:631: RuntimeWarning: coroutine 'HealthDialog.refresh' was never awaited
+    return super().iteration(may_block)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/gui/front/test_des2_accessibility.py::test_every_plan_state_is_visible_and_updates_on_heartbeat
+  /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/_pytest/runner.py:180: RuntimeWarning: coroutine 'MainWindow._renew_git_watch' was never awaited
+    del sys.last_exc  # type:ignore[attr-defined]
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/gui/front/test_git_actions.py::test_stage_commit_and_file_buttons_in_the_inspector
+  /tmp/perf7-xvfb-58akc_kd/checkout/src/aconsole/ui/views/review/graph_cell.py:110: DeprecationWarning: Gtk.Widget.get_style_context is deprecated
+    _found, background = self.get_style_context().lookup_color("view_bg_color")
+
+tests/gui/front/test_git_actions.py::test_stage_commit_and_file_buttons_in_the_inspector
+  /tmp/perf7-xvfb-58akc_kd/checkout/src/aconsole/ui/views/review/graph_cell.py:110: DeprecationWarning: Gtk.StyleContext.lookup_color is deprecated
+    _found, background = self.get_style_context().lookup_color("view_bg_color")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/gui/front/test_git_scale_ui.py::test_scrolling_a_long_history - ...
+FAILED tests/ui/test_i18n.py::test_deb_source_copy_can_translate_without_the_checkout
+2 failed, 449 passed, 412 warnings in 197.24s (0:03:17)

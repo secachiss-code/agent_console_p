@@ -40,3 +40,37 @@ def test_recycled_tooltip_is_current_for_pointer_and_keyboard(monkeypatch: pytes
     row._tooltip_leave(Gtk.EventControllerMotion())
     row._set_tooltip("fourth")
     assert queries == [row.title]
+
+
+def test_unmapped_rows_render_only_the_latest_binding_on_map(monkeypatch: pytest.MonkeyPatch) -> None:
+    from datetime import UTC, datetime
+
+    from aconsole.contracts.git import GitNodeView
+    from aconsole.ui.viewmodels.git_vm import GraphBuilder
+
+    Gtk.init()
+    row = _RowWidget()
+    builder = GraphBuilder(None)
+    nodes = tuple(GitNodeView(
+        oid=str(index) * 40, kind="commit", parents=(), refs=(), subject=f"commit {index}",
+        author="author", at=datetime(2026, 11, 8, tzinfo=UTC), tab_id=None, plan_node=None,
+    ) for index in (1, 2))
+    first, second = (builder.commit(node) for node in nodes)
+    mapped = [False]
+    monkeypatch.setattr(row, "get_mapped", lambda: mapped[0])
+    row.show_row(first, None)
+    row.show_row(second, None)
+    assert row.title.get_text() == ""
+    assert row.cell.row is second.layout  # geometry is available before labels are mapped
+    row._mapped_row(row)
+    assert row.title.get_text() == "commit 2"
+    assert row._tooltip_text.endswith("author")
+    mapped[0] = True
+    row.show_row(first, None)
+    assert row.title.get_text() == "commit 1"
+    mapped[0] = False
+    row.show_row(second, None)
+    row.clear_row()
+    row._mapped_row(row)
+    assert row.title.get_text() == "commit 1"  # unbound data must not be rendered later
+    assert row._pending is None

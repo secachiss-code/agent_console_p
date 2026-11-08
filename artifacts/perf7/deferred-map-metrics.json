@@ -1,0 +1,113 @@
+{
+  "after-merge-profile": {
+    "renderer": "GskGLRenderer",
+    "load_before": [
+      3.87109375,
+      2.3857421875,
+      1.96826171875
+    ],
+    "load_after": [
+      3.65673828125,
+      2.38916015625,
+      1.974609375
+    ],
+    "rows": 10000,
+    "scale": "git scale: 10000 rows, 74 frames in 4 s, median 51.1 ms, p95 83.2 ms, worst 176.6 ms, RSS 406 MB (start 362, first page 376, all rows 395 after 3.6 s)",
+    "functions": {
+      "_show_node": {
+        "calls": 9702,
+        "cumulative_seconds": 0.606386732
+      },
+      "_setup_row": {
+        "calls": 206,
+        "cumulative_seconds": 0.041781085
+      },
+      "_bind_row": {
+        "calls": 9702,
+        "cumulative_seconds": 0.854895358
+      }
+    }
+  },
+  "deferred-map-isolated": {
+    "renderer": "GskGLRenderer",
+    "load_before": [
+      2.97119140625,
+      2.4755859375,
+      2.0380859375
+    ],
+    "load_after": [
+      2.8212890625,
+      2.45947265625,
+      2.037109375
+    ],
+    "rows": 10000,
+    "scale": "git scale: 10000 rows, 101 frames in 4 s, median 36.5 ms, p95 54.9 ms, worst 180.7 ms, RSS 408 MB (start 362, first page 377, all rows 396 after 3.3 s)"
+  },
+  "deferred-map-full": {
+    "renderer": "GskGLRenderer",
+    "load_before": [
+      3.990234375,
+      3.0595703125,
+      2.32421875
+    ],
+    "load_after": [
+      3.68359375,
+      3.02392578125,
+      2.3203125
+    ],
+    "rows": 10000,
+    "scale": "git scale: 10000 rows, 53 frames in 4 s, median 73.9 ms, p95 100.8 ms, worst 146.8 ms, RSS 2148 MB (start 2111, first page 2125, all rows 2145 after 4.1 s)"
+  },
+  "fixed-base-full": {
+    "renderer": "GskGLRenderer",
+    "load_before": [
+      4.04638671875,
+      3.40380859375,
+      2.62548828125
+    ],
+    "load_after": [
+      4.5009765625,
+      3.52294921875,
+      2.6728515625
+    ],
+    "rows": 10000,
+    "scale": "git scale: 10000 rows, 50 frames in 4 s, median 79.0 ms, p95 121.9 ms, worst 134.9 ms, RSS 2149 MB (start 2113, first page 2127, all rows 2147 after 3.9 s)"
+  },
+  "deferred-map-profile": {
+    "renderer": "GskGLRenderer",
+    "load_before": [
+      2.98583984375,
+      3.34521484375,
+      2.75927734375
+    ],
+    "load_after": [
+      3.38232421875,
+      3.4169921875,
+      2.7890625
+    ],
+    "rows": 10000,
+    "scale": "git scale: 10000 rows, 96 frames in 4 s, median 38.7 ms, p95 57.6 ms, worst 179.5 ms, RSS 406 MB (start 362, first page 376, all rows 395 after 3.5 s)",
+    "functions": {
+      "_show_node": {
+        "calls": 3537,
+        "cumulative_seconds": 0.2775188
+      },
+      "_render_pending": {
+        "calls": 4042,
+        "cumulative_seconds": 0.298023086
+      },
+      "_setup_row": {
+        "calls": 206,
+        "cumulative_seconds": 0.044854147000000004
+      },
+      "_bind_row": {
+        "calls": 9732,
+        "cumulative_seconds": 0.372961906
+      }
+    }
+  },
+  "source_sha256": {
+    "tests/gui/front/test_git_scale_ui.py": "c9455d75de02cde25f09cbc4f9e423d3e66a0a583c51f50ebac7eb9789634c4c",
+    "src/aconsole/ui/views/review/git_pane.py": "15152da941043e1dfb60780ef015e99cb9d1c95e8dd916603e0bb64b82d0bc94"
+  }
+}

@@ -90,6 +90,8 @@ class _RowWidget(Gtk.Box):
         self.when.add_css_class("dim-label")
         self.when.add_css_class("ac-git-when")
         self.append(self.when)
+        self._pending: tuple[GraphRow, GitStateResult | None] | None = None
+        _ = self.connect("map", self._mapped_row)
 
     def _query_tooltip(
         self, _widget: Gtk.Widget, _x: int, _y: int, _keyboard: bool, tooltip: Gtk.Tooltip,  # noqa: FBT001 -- GTK signal signature
@@ -114,11 +116,30 @@ class _RowWidget(Gtk.Box):
             self.title.trigger_tooltip_query()
 
     def show_row(self, row: GraphRow, state: GitStateResult | None) -> None:
+        # GTK also binds its offscreen cache. Graph geometry participates in size
+        # measurement immediately; labels and badges only need work when mapped.
         self.cell.set_row(
             row.layout,
             snapshot_node=row.node is not None and row.node.kind == "checkpoint",
             uncommitted=row.worktree is not None,
         )
+        self._pending = (row, state)
+        if self.get_mapped():
+            self._render_pending()
+
+    def clear_row(self) -> None:
+        self._pending = None
+        self._tooltip_hovered = False
+
+    def _mapped_row(self, _widget: Gtk.Widget) -> None:
+        self._render_pending()
+
+    def _render_pending(self) -> None:
+        pending = self._pending
+        if pending is None:
+            return
+        self._pending = None
+        row, state = pending
         while (child := self.pills.get_first_child()) is not None:
             self.pills.remove(child)
         if row.worktree is not None:
@@ -274,6 +295,7 @@ class GitPane(Gtk.Box):
         factory = Gtk.SignalListItemFactory()
         _ = factory.connect("setup", self._setup_row)
         _ = factory.connect("bind", self._bind_row)
+        _ = factory.connect("unbind", self._unbind_row)
         self.list_view: Gtk.ListView = Gtk.ListView(model=self.selection, factory=factory)
         self.list_view.add_css_class("ac-git-list")
         self.scroller: Gtk.ScrolledWindow = Gtk.ScrolledWindow(child=self.list_view, hexpand=True, vexpand=True)
@@ -343,6 +365,11 @@ class GitPane(Gtk.Box):
         data = item.get_item()
         if isinstance(widget, _RowWidget) and isinstance(data, RowItem):
             widget.show_row(data.row, self.state)
+
+    def _unbind_row(self, _factory: Gtk.SignalListItemFactory, item: Gtk.ListItem) -> None:
+        widget = item.get_child()
+        if isinstance(widget, _RowWidget):
+            widget.clear_row()
 
     async def refresh(self) -> None:
         """Compare with what is shown. Unchanged tips leave the rows, selection, and scroll position alone."""

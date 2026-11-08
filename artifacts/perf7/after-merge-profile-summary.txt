@@ -1,0 +1,33 @@
+Sun Nov  8 18:17:50 2026    artifacts/perf7/after-merge-profile.prof
+
+         814413 function calls (814213 primitive calls) in 1.842 seconds
+
+   Ordered by: cumulative time
+   List reduced from 332 to 25 due to restriction <25>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+       74    0.229    0.003    1.067    0.014 test_git_scale_ui.py:122(tick)
+     9702    0.072    0.000    0.855    0.000 git_pane.py:341(_bind_row)
+     9702    0.030    0.000    0.780    0.000 measure.py:26(record_row)
+     9702    0.043    0.000    0.747    0.000 git_pane.py:116(show_row)
+     9702    0.179    0.000    0.606    0.000 git_pane.py:145(_show_node)
+      383    0.002    0.000    0.579    0.002 events.py:416(dispatch)
+      383    0.001    0.000    0.576    0.002 events.py:287(_glib_dispatch)
+      383    0.005    0.000    0.575    0.002 base_events.py:1990(_run_once)
+      504    0.001    0.000    0.565    0.001 events.py:92(_run)
+      504    0.001    0.000    0.564    0.001 {method 'run' of '_contextvars.Context' objects}
+      131    0.000    0.000    0.463    0.004 test_git_pane.py:98(_run)
+      132    0.001    0.000    0.462    0.004 test_git_scale_ui.py:104(check)
+      131    0.000    0.000    0.462    0.004 measure.py:55(observed)
+       98    0.130    0.001    0.455    0.005 git_pane.py:434(load_more)
+     9702    0.016    0.000    0.280    0.000 i18n.py:53(format_date)
+    10000    0.015    0.000    0.253    0.000 git_vm.py:130(commit)
+    10000    0.040    0.000    0.230    0.000 git_lanes.py:66(add)
+     9707    0.013    0.000    0.144    0.000 i18n.py:17(language)
+     9702    0.130    0.000    0.143    0.000 git_pane.py:106(_set_tooltip)
+     9707    0.008    0.000    0.128    0.000 locale.py:591(getlocale)
+     1504    0.011    0.000    0.116    0.000 graph_cell.py:84(do_snapshot)
+     9707    0.011    0.000    0.111    0.000 locale.py:471(_parse_localename)
+     9702    0.068    0.000    0.097    0.000 graph_cell.py:77(set_row)
+     9707    0.031    0.000    0.097    0.000 locale.py:388(normalize)
+    10000    0.046    0.000    0.096    0.000 git_lanes.py:131(_below)
