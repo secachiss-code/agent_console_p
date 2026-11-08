@@ -1,0 +1,8 @@
+{
+  "commit": "95b502f583dc796a20f771ea6ce8f5157e26c922",
+  "sha256": {
+    "tests/gui/front/test_git_scale_ui.py": "c9455d75de02cde25f09cbc4f9e423d3e66a0a583c51f50ebac7eb9789634c4c",
+    "src/aconsole/ui/views/review/git_pane.py": "372874aa22dfedbfd848734e70a9ac132912132fa2fc5fae883aea716dda492e",
+    "src/aconsole/ui/views/review/graph_cell.py": "99651e078dbb7b781346d873b6a562aa5f90aa82ce086a89e0e89818ce91875f"
+  }
+}

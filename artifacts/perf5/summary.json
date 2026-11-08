@@ -1,0 +1,1568 @@
+{
+  "baseline-cairo": {
+    "renderer": "GskCairoRenderer",
+    "load_before": [
+      2.3076171875,
+      2.8330078125,
+      2.75439453125
+    ],
+    "load_after": [
+      2.568359375,
+      2.8720703125,
+      2.76806640625
+    ],
+    "rows": 10000,
+    "rss_kib": {
+      "proc_before": 231596,
+      "proc_after": 251272
+    },
+    "scale": "git scale: 10000 rows, 132 frames in 4 s, median 30.0 ms, p95 39.1 ms, worst 47.3 ms, RSS 245 MB (start 226, first page 226, all rows 241 after 3.1 s)",
+    "observed_scroll_medians_ms": {
+      "wall": 29.854876003810205,
+      "cpu": 26.225495499999862,
+      "thread": 26.225592000000077
+    },
+    "gc": [
+      {
+        "generation": 0,
+        "duration_ms": 0.959466997301206,
+        "during_scroll": false,
+        "collected": 60
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.2991939982166514,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.22853899281471968,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.13723000301979482,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 1,
+        "duration_ms": 4.389809997519478,
+        "during_scroll": false,
+        "collected": 525
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.18038999405689538,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.11404900578781962,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.18576600996311754,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.15925800835248083,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.13878500612918288,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.14549300249200314,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.157738002599217,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.12228901323396713,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.1237780088558793,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.14058400120120496,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.18374400679022074,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 1,
+        "duration_ms": 1.9957449985668063,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.13188101002015173,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.11955499940086156,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.14112899953033775,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.13658001262228936,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.14166500477585942,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.1152420009020716,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.19378399883862585,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.11863499821629375,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.13069299166090786,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.13317199773155153,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.13575000048149377,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 1,
+        "duration_ms": 2.106871994328685,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.16277800023090094,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.15723099932074547,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.16458799655083567,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.13594399206340313,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.12106099165976048,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.13600700185634196,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.15255999460350722,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.14651499805040658,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.14112598728388548,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.11706400255206972,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.17938799283001572,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 1,
+        "duration_ms": 2.1926829940639436,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.20768700051121414,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.1309360086452216,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.14897000801283866,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.13222999405115843,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.14410499716177583,
+        "during_scroll": false,
+        "collected": 0
+      }
+    ],
+    "suite": {
+      "name": "pytest",
+      "errors": "0",
+      "failures": "1",
+      "skipped": "0",
+      "tests": "2",
+      "time": "16.080",
+      "timestamp": "2026-11-08T14:58:28.219547+03:00",
+      "hostname": "somovasnbook14"
+    }
+  },
+  "baseline-full": {
+    "renderer": "GskGLRenderer",
+    "load_before": [
+      4.93994140625,
+      3.564453125,
+      3.02783203125
+    ],
+    "load_after": [
+      5.45166015625,
+      3.72509765625,
+      3.08642578125
+    ],
+    "rows": 10000,
+    "rss_kib": {
+      "proc_before": 2157372,
+      "proc_after": 2194676
+    },
+    "scale": "git scale: 10000 rows, 41 frames in 4 s, median 91.6 ms, p95 140.8 ms, worst 142.0 ms, RSS 2143 MB (start 2107, first page 2120, all rows 2140 after 3.9 s)",
+    "observed_scroll_medians_ms": {
+      "wall": 91.2068469915539,
+      "cpu": 108.25088400000027,
+      "thread": 65.24284799999691
+    },
+    "gc": [
+      {
+        "generation": 0,
+        "duration_ms": 1.1475920036900789,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.22510800044983625,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.30586900538764894,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.18776700017042458,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.16350099758710712,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.1608909951755777,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.19773699750658125,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.16491799033246934,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.20701899484265596,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.17213499813806266,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.1739959989208728,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 1,
+        "duration_ms": 3.3750259899534285,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.18242100486531854,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.15995600551832467,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.18640101188793778,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.15798700042068958,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.20484300330281258,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.1746760099194944,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.17190800281241536,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.1722919987514615,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.1700000138953328,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.19072899885941297,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.1997660001507029,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 1,
+        "duration_ms": 2.642882987856865,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.22820300364401191,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.16636098735034466,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.17094900249503553,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.16107800183817744,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.17893400217872113,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.1632130006328225,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.16476999735459685,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.17287700029555708,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.1953169994521886,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.1691570068942383,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.16534500173293054,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 1,
+        "duration_ms": 2.4379289970966056,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.15957800496835262,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.16123999375849962,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.17055700300261378,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.21446000027935952,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.20897100330330431,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.16330700600519776,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.17225199553649873,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.17423799727112055,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.17604799359105527,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.16834199777804315,
+        "during_scroll": false,
+        "collected": 0
+      }
+    ],
+    "suite": {
+      "name": "pytest",
+      "errors": "0",
+      "failures": "1",
+      "skipped": "0",
+      "tests": "443",
+      "time": "175.892",
+      "timestamp": "2026-11-08T14:58:57.653865+03:00",
+      "hostname": "somovasnbook14"
+    }
+  },
+  "baseline-isolated-1": {
+    "renderer": "GskGLRenderer",
+    "load_before": [
+      3.35107421875,
+      3.12939453125,
+      2.83203125
+    ],
+    "load_after": [
+      3.24267578125,
+      3.1103515625,
+      2.8271484375
+    ],
+    "rows": 10000,
+    "rss_kib": {
+      "proc_before": 370016,
+      "proc_after": 415436
+    },
+    "scale": "git scale: 10000 rows, 53 frames in 4 s, median 73.5 ms, p95 96.0 ms, worst 218.3 ms, RSS 406 MB (start 361, first page 375, all rows 395 after 3.1 s)",
+    "observed_scroll_medians_ms": {
+      "wall": 73.54698600829579,
+      "cpu": 89.86258399999869,
+      "thread": 53.31539200000002
+    },
+    "gc": [
+      {
+        "generation": 0,
+        "duration_ms": 0.9657949995016679,
+        "during_scroll": false,
+        "collected": 70
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.18595300207380205,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.26693299878388643,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.1380460016662255,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 1,
+        "duration_ms": 4.885696005658247,
+        "during_scroll": false,
+        "collected": 525
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.15980300668161362,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.1268619962502271,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.17482999828644097,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.15158200403675437,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.14466300490312278,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.1192359923152253,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.12337000225670636,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.13691800995729864,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.12869600323028862,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.14079900574870408,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.16510600107721984,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 1,
+        "duration_ms": 2.2216320066945627,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.14135400124359876,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.15429900668095797,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.12584100477397442,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.1344279880868271,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.1255169918294996,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.17373499576933682,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.18569600069895387,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.13178400695323944,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.14395700418390334,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.15355899813584983,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.1497470075264573,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 1,
+        "duration_ms": 2.282952002133243,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.14683800691273063,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.1426759990863502,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.19578999490477145,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.12798501120414585,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.14409499999601394,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.12953000259585679,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.1345490018138662,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.1402909983880818,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.12297699868213385,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.12705399421975017,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.1674739905865863,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 1,
+        "duration_ms": 1.811717011150904,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.12028000492136925,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.12662800145335495,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.1502230006735772,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.11631699453573674,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.12694000906776637,
+        "during_scroll": false,
+        "collected": 0
+      }
+    ],
+    "suite": {
+      "name": "pytest",
+      "errors": "0",
+      "failures": "1",
+      "skipped": "0",
+      "tests": "2",
+      "time": "17.634",
+      "timestamp": "2026-11-08T14:56:48.467185+03:00",
+      "hostname": "somovasnbook14"
+    }
+  },
+  "baseline-isolated-2": {
+    "renderer": "GskGLRenderer",
+    "load_before": [
+      3.6083984375,
+      3.69580078125,
+      3.14404296875
+    ],
+    "load_after": [
+      3.36083984375,
+      3.6396484375,
+      3.13134765625
+    ],
+    "rows": 10000,
+    "rss_kib": {
+      "proc_before": 369936,
+      "proc_after": 415108
+    },
+    "scale": "git scale: 10000 rows, 51 frames in 4 s, median 75.2 ms, p95 109.2 ms, worst 210.1 ms, RSS 405 MB (start 361, first page 375, all rows 395 after 3.3 s)",
+    "observed_scroll_medians_ms": {
+      "wall": 75.42715599993244,
+      "cpu": 90.89072099999917,
+      "thread": 54.567522000000146
+    },
+    "gc": [
+      {
+        "generation": 0,
+        "duration_ms": 1.5759169909870252,
+        "during_scroll": false,
+        "collected": 70
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.2231599937658757,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.36567200731951743,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.18707300478126854,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 1,
+        "duration_ms": 6.154760994832031,
+        "during_scroll": false,
+        "collected": 525
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.17499800014775246,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.15573999553453177,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.17204100731760263,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.13196600775700063,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.1401779882144183,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.1374849962303415,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.1307119964621961,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.13638399832416326,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.15846001042518765,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.12706599954981357,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.19170899759046733,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 1,
+        "duration_ms": 1.904028991702944,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.12391200289130211,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.12663599045481533,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.16605999553576112,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.13525599206332117,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.1160589890787378,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.14135599485598505,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.15777599764987826,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.14101399574428797,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.2860020031221211,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.1524279941804707,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.11832600284833461,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 1,
+        "duration_ms": 2.2135839972179383,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.12871100625488907,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.13618999219033867,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.1735920086503029,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.11985600576736033,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.11804699897766113,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.14719700266141444,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.13004199718125165,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.15399100084323436,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.11576000542845577,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.14153600204735994,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.15975700807757676,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 1,
+        "duration_ms": 2.196158005972393,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.15286600682884455,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.11845899280160666,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.13779799337498844,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.1417599996784702,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.12478999269660562,
+        "during_scroll": false,
+        "collected": 0
+      }
+    ],
+    "suite": {
+      "name": "pytest",
+      "errors": "0",
+      "failures": "1",
+      "skipped": "0",
+      "tests": "2",
+      "time": "17.771",
+      "timestamp": "2026-11-08T15:02:05.415339+03:00",
+      "hostname": "somovasnbook14"
+    }
+  },
+  "baseline-profile": {
+    "renderer": "GskGLRenderer",
+    "load_before": [
+      2.59912109375,
+      2.95458984375,
+      2.78662109375
+    ],
+    "load_after": [
+      2.80859375,
+      2.9892578125,
+      2.80029296875
+    ],
+    "rows": 10000,
+    "rss_kib": {
+      "proc_before": 369924,
+      "proc_after": 415660
+    },
+    "scale": "git scale: 10000 rows, 47 frames in 4 s, median 83.1 ms, p95 122.2 ms, worst 196.1 ms, RSS 406 MB (start 361, first page 375, all rows 395 after 3.4 s)",
+    "observed_scroll_medians_ms": {
+      "wall": 80.676327997935,
+      "cpu": 96.35381600000059,
+      "thread": 60.24161399999972
+    },
+    "gc": [
+      {
+        "generation": 0,
+        "duration_ms": 1.5290629962692037,
+        "during_scroll": false,
+        "collected": 70
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.1973229955183342,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.24476900580339134,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.1306100020883605,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 1,
+        "duration_ms": 6.014827988110483,
+        "during_scroll": false,
+        "collected": 525
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.17507300071883947,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.14011100574862212,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.1894020097097382,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.14676200225949287,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.1376209984300658,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.12022099690511823,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.138103001518175,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.12332999904174358,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.13268800103105605,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.2675379946595058,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.14538801042363048,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 1,
+        "duration_ms": 2.3388419940602034,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.14992400247137994,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.14511699555441737,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.1279960124520585,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.13003700587432832,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.1795049902284518,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.1455790043110028,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.19125599646940827,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.1406579976901412,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.15106500359252095,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.13220999971963465,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.1568849984323606,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 1,
+        "duration_ms": 2.326889007235877,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.1388770033372566,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.14518899843096733,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.17946999287232757,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.13918599870521575,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.13164200936444104,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.14024799747858196,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.13586100249085575,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.1652409991947934,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.1461389911128208,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.13108500570524484,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.16747000336181372,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 1,
+        "duration_ms": 2.227099990705028,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.13786899216938764,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.16492600843776017,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.17477700021117926,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.15479099238291383,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.1283390010939911,
+        "during_scroll": false,
+        "collected": 0
+      },
+      {
+        "generation": 0,
+        "duration_ms": 0.13410400424618274,
+        "during_scroll": true,
+        "collected": 0
+      }
+    ],
+    "suite": {
+      "name": "pytest",
+      "errors": "0",
+      "failures": "1",
+      "skipped": "0",
+      "tests": "2",
+      "time": "17.664",
+      "timestamp": "2026-11-08T14:57:36.919255+03:00",
+      "hostname": "somovasnbook14"
+    }
+  }
+}

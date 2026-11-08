@@ -1,0 +1,34 @@
+"""Summarize captured runs without changing raw measurements."""
+import json
+from pathlib import Path
+import statistics
+import xml.etree.ElementTree as ET
+
+root=Path(__file__).resolve().parent
+summary={}
+for path in sorted(root.glob('*.jsonl')):
+    if not path.stat().st_size:
+        continue
+    d=json.loads(path.read_text())
+    frames=[f for f in d['frames'] if f['scroll']>0]
+    start=next((f['at'] for f in frames),float('inf'))
+    pending={}
+    collections=[]
+    for event in d['gc']:
+        gen=event['generation']
+        if event['phase']=='start': pending[gen]=event['at']
+        elif gen in pending:
+            begin=pending.pop(gen)
+            collections.append(dict(generation=gen,duration_ms=(event['at']-begin)*1000,
+                during_scroll=event['at']>=start,collected=event['collected']))
+    suite=ET.parse(path.with_suffix('.xml')).getroot().find('testsuite')
+    summary[path.stem]=dict(renderer=d['renderer'],load_before=d['load_before'],load_after=d['load_after'],
+        rows=d['rows'],rss_kib={key:int(next(line.split()[1] for line in d[key].splitlines()
+            if line.startswith('VmRSS:'))) for key in ('proc_before','proc_after')},
+        scale=path.with_name(path.stem+'-scale.txt').read_text().strip(),
+        observed_scroll_medians_ms={k:1000*statistics.median(f[k] for f in frames)
+            for k in ('wall','cpu','thread')},gc=collections,suite=suite.attrib)
+(root/'summary.json').write_text(json.dumps(summary,indent=2)+'\n')
+for label,d in summary.items():
+    print(label,d['renderer'],d['scale'])
+    print('  scroll medians',d['observed_scroll_medians_ms'],'load',d['load_before'])
