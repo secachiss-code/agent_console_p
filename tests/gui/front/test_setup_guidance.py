@@ -2,7 +2,7 @@
 import pytest
 
 from aconsole.contracts.app import CheckResult
-from aconsole.ui.views.setup import messages
+from aconsole.ui import i18n
 from aconsole.ui.views.setup.wizard import _check_reason, _check_title
 
 
@@ -11,7 +11,7 @@ from aconsole.ui.views.setup.wizard import _check_reason, _check_title
 def test_isolated_container_guidance_is_localized_and_safe(
     monkeypatch: pytest.MonkeyPatch, language: str, category: str,
 ) -> None:
-    monkeypatch.setattr(messages.locale, "getlocale", lambda: (language, "UTF-8"))
+    monkeypatch.setattr(i18n.locale, "getlocale", lambda: (language, "UTF-8"))
     check = CheckResult(
         id=category, title="UNTRANSLATED", ok=False, severity="warning", detail="agent-example",
         fix_id=None, requires_confirmation=False, command="podman inspect agent-example",

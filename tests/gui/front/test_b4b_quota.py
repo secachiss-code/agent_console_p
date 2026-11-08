@@ -135,14 +135,20 @@ def test_the_main_pool_is_named_by_its_days_and_api_stays_api() -> None:
     assert window_name(api) == "API"
 
 
-def test_the_cursor_card_counts_its_main_pool_in_percent_and_api_in_dollars() -> None:
+@pytest.mark.parametrize(("language", "expected"), [("en_US", "$6.68 / $11.25"), ("ru_RU", "$6,68 / $11,25")])
+def test_the_cursor_card_counts_its_main_pool_in_percent_and_api_in_dollars(
+    monkeypatch: pytest.MonkeyPatch, language: str, expected: str,
+) -> None:
+    from aconsole.ui import i18n
+
+    monkeypatch.setattr(i18n.locale, "getlocale", lambda: (language, "UTF-8"))
     from aconsole.ui.views.sidebar.quota_row import QuotaRow
 
     auto = msgspec.structs.replace(_quota("5h", 87, QuotaLevel.WARN), key="auto", spent_usd=391.54, limit_usd=450.0)
     api = msgspec.structs.replace(_quota("5h", 59, QuotaLevel.OK), key="api", spent_usd=6.68, limit_usd=11.25)
     assert "87" in QuotaRow(auto).percent_label.get_text()
     assert "$" not in QuotaRow(auto).percent_label.get_text()
-    assert QuotaRow(api).percent_label.get_text() == "$6.68 / $11.25"
+    assert QuotaRow(api).percent_label.get_text() == expected
 
 
 def _percents(card: QuotaCard) -> str:
@@ -161,7 +167,7 @@ def _sidebar_window(key: str, used: float, *, period_days: int | None = None) ->
     [
         (AgentKind.CLAUDE, ("7d", "5h", "budget"), ["5 ч", "7 д"]),
         (AgentKind.CODEX, ("5h", "7d"), ["5 ч", "7 д"]),
-        (AgentKind.CURSOR, ("auto", "api", "budget"), ["31 д", "API"]),
+        (AgentKind.CURSOR, ("auto", "api", "budget"), ["31 день", "API"]),
         (AgentKind.OPENCODE, ("month", "5h", "week"), ["5 ч", "Нед", "Мес"]),  # noqa: RUF001 -- Russian text
     ],
 )

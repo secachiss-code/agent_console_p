@@ -13,6 +13,7 @@ from aconsole.contracts.app import (
 )
 from aconsole.contracts.common import TabId
 from aconsole.contracts.events import InjectToTerminal
+from aconsole.contracts.messages import UiMessage
 from aconsole.core.application.ports.diff_reader import (
     DiffFileStat,
     DiffFileText,
@@ -29,7 +30,7 @@ from aconsole.core.domain.tab_status import TabStatus
 _TAB_MISSING = 2003
 _TOO_LARGE = 3008
 _LINES = 2000
-_QUEUED = "Комментарий поставлен в очередь вкладки"
+_QUEUED = UiMessage.COMMENT_QUEUED
 
 
 class DiffTab:
@@ -96,7 +97,7 @@ class DiffService:
 
     def send_comment(self, tab_id: str, path: str, hunk_id: str, text: str) -> CommandResult:
         """Inject the comment when the tab is idle. Otherwise keep it and say so."""
-        return self.send_text(tab_id, f"Комментарий к `{path}` {hunk_id}: {text}\n")
+        return self.send_text(tab_id, f"Comment on `{path}` {hunk_id}: {text}\n")
 
     def send_text(self, tab_id: str, message: str) -> CommandResult:
         """Inject when the tab is idle. Otherwise keep it, in order, and say so."""

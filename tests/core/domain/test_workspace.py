@@ -49,7 +49,7 @@ def test_dirty_summary_counts_each_kind() -> None:
     assert dirty_summary(Dirt()) is None
     facts = Dirt(modified=2, staged=1, untracked=3)
     assert is_dirty(facts) is True
-    assert dirty_summary(facts) == "2 изменено, 1 в индексе, 3 новых"
+    assert dirty_summary(facts) == "modified=2, staged=1, untracked=3"
 
 
 def test_dirty_close_asks_until_the_user_chooses() -> None:

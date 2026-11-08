@@ -5,6 +5,7 @@ from datetime import datetime
 
 from aconsole.contracts.app import AccountView, TabView
 from aconsole.contracts.common import TabStatus
+from aconsole.ui.i18n import format_number
 
 _CENT = 0.01
 _SYMBOLS = {
@@ -35,7 +36,7 @@ class TabPresentation:
 def session_cost(tab: TabView) -> str:
     """What the session has cost at API prices, as the agent counts it. Nothing below a cent, nothing unknown."""
     cost = tab.session_cost_usd
-    return f"${cost:,.2f}" if cost is not None and cost >= _CENT else ""
+    return f"${format_number(cost, 2)}" if cost is not None and cost >= _CENT else ""
 
 
 def format_tab(tab: TabView, _accounts: tuple[AccountView, ...], now: datetime) -> TabPresentation:

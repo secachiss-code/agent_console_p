@@ -56,7 +56,7 @@ async def handle_permission(
     if outcome.phase not in {ApprovalPhase.ALLOWED, ApprovalPhase.DENIED}:
         return json_response(empty_json())
     behavior = "allow" if outcome.phase is ApprovalPhase.ALLOWED else "deny"
-    message = (outcome.message or "Отклонено в AConsole") if behavior == "deny" else None
+    message = (outcome.message or "Denied in AConsole") if behavior == "deny" else None
     response = HookResponse(hook_specific_output=HookSpecificOutput(hook_event_name="PermissionRequest",
         decision=PermissionDecision(behavior=behavior, message=message)))
     return json_response(msgspec.json.encode(response))

@@ -70,7 +70,7 @@ def test_runtime_refuses_a_mismatched_hook_definition(tmp_path: Path, damage: st
     assert not {"hooks", "approvals", "checkpoints"} & commands.capabilities(AgentKind.CODEX)
     assert notices
     assert notices[0][0] == "tab-a"
-    assert "/hooks" in notices[0][1]
+    assert notices[0][1] == "codex.hooks.help"
 
 
 def test_probe_does_not_change_user_configuration(tmp_path: Path) -> None:
@@ -156,8 +156,8 @@ def test_real_daemon_launch_reports_capabilities_and_fallback_notice(
             if not successful:
                 assert notices
                 assert notices[0].tab_id == tab.id
-                assert "/hooks" in notices[0].body
-                assert "чекпоинты отключены" in notices[0].body
+                assert notices[0].title == "notify.codex_hooks_unavailable"
+                assert notices[0].body == "codex.hooks.help"
         finally:
             await client.close()
             daemon.request_stop()

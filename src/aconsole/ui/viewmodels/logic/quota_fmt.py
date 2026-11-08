@@ -2,6 +2,8 @@
 
 from collections.abc import Callable
 
+from aconsole.ui.i18n import format_number
+
 _NAMES = {"opencode": "OpenCode", "grok": "Grok"}
 _WARNING_PERCENT = 80
 _CRITICAL_PERCENT = 95
@@ -17,7 +19,7 @@ def format_percent(value: float | None, *, estimated: bool = False) -> str:
     if value is None:
         return "—"
     prefix = "≈" if estimated else ""
-    return f"{prefix}{value:.0f} %"
+    return f"{prefix}{format_number(value, grouping=False)} %"
 
 
 def shown_percent(used: float | None, display: str) -> float | None:
@@ -42,8 +44,8 @@ def format_money(spent: float | None, limit: float | None) -> str:
     """Dollars spent, over the cap when there is one: "$12.40 / $20", or "$5.20" for an uncapped pool."""
     if spent is None:
         return ""
-    shown = f"${spent:,.2f}"
-    return f"{shown} / ${f'{limit:,.2f}'.removesuffix('.00')}" if limit else shown
+    shown = f"${format_number(spent, 2)}"
+    return f"{shown} / ${format_number(limit, 0 if limit == int(limit) else 2)}" if limit else shown
 
 
 def format_window_money(spent: float | None, limit: float | None, display: str = "used") -> str:
@@ -57,7 +59,7 @@ def format_tokens(count: int) -> str:
     """A token count at a glance: 950, 12.3K, 4.5M, 1.2G."""
     for size, unit in ((1_000_000_000, "G"), (1_000_000, "M"), (1_000, "K")):
         if count >= size:
-            return f"{count / size:.1f}{unit}"
+            return f"{format_number(count / size, 1, grouping=False)}{unit}"
     return str(count)
 
 
@@ -67,7 +69,7 @@ def format_bytes(size: int) -> str:
         return f"{size} B"
     if size < _MB:
         return f"{size / _KB:.0f} KB"
-    return f"{size / _MB:.1f} MB"
+    return f"{format_number(size / _MB, 1, grouping=False)} MB"
 
 
 def approx_tokens(size: int) -> str:

@@ -24,12 +24,20 @@ from aconsole.contracts.app import (  # noqa: E402
     TabView,
 )
 from aconsole.contracts.common import ApprovalDecision, NodeId, NodeStatus, PlanId, ProjectId, TabId  # noqa: E402
-from aconsole.contracts.events import CheckpointCreated, GitStateUpdated, InjectToTerminal, SettingsChanged, UiEvent  # noqa: E402
+from aconsole.contracts.events import (  # noqa: E402
+    CheckpointCreated,
+    GitStateUpdated,
+    InjectToTerminal,
+    Notify,
+    SettingsChanged,
+    UiEvent,
+)
 from aconsole.contracts.settings import Settings  # noqa: E402
 from aconsole.ui.bootstrap import spawn_task  # noqa: E402
 from aconsole.ui.client.core_client import CoreClient  # noqa: E402
 from aconsole.ui.client.store import CoreStore  # noqa: E402
 from aconsole.ui.client.ui_state import UiState  # noqa: E402
+from aconsole.ui.i18n import core_message  # noqa: E402
 from aconsole.ui.viewmodels.app_vm import AppViewModel  # noqa: E402
 from aconsole.ui.viewmodels.approval_alerts import Alert, ApprovalAlerts  # noqa: E402
 from aconsole.ui.viewmodels.approvals_vm import ApprovalsViewModel  # noqa: E402
@@ -914,7 +922,7 @@ class MainWindow(Adw.ApplicationWindow):
 
     def _palette_result(self, result: CommandResult) -> None:
         if result.toast:
-            self.toast_overlay.add_toast(Adw.Toast.new(result.toast))
+            self.toast_overlay.add_toast(Adw.Toast.new(core_message(result.toast)))
         if not result.ok:
             return
         if result.opened_tab is not None:
@@ -936,6 +944,8 @@ class MainWindow(Adw.ApplicationWindow):
         self._sync_approvals(_store)
         if isinstance(event, SettingsChanged):
             _ = spawn_task(self._refresh_settings())
+        elif isinstance(event, Notify) and event.title == "notify.codex_hooks_unavailable":
+            self._tab_error(f"{core_message(event.title)}: {core_message(event.body)}")
         elif isinstance(event, InjectToTerminal):
             self._terminal_page(str(event.tab_id)).inject(event.text, submit=event.submit)
         elif isinstance(event, CheckpointCreated):

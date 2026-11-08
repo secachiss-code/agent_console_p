@@ -207,7 +207,7 @@ class ApprovalCard(Gtk.Box):
         if isinstance(detail, CommandDetail):
             return translate("approvals.title.command").format(agent=agent)
         if isinstance(detail, EditDetail):
-            return translate("approvals.title.edit").format(agent=agent, count=len(detail.files))
+            return translate("approvals.title.edit", len(detail.files)).format(agent=agent, count=len(detail.files))
         return translate("approvals.title.tool").format(agent=agent, tool=safe_text(self.view.tool))
 
     def _risk_text(self) -> str:
@@ -251,7 +251,7 @@ class ApprovalCard(Gtk.Box):
             named, rest = files_preview(detail.files)
             lines = list(named)
             if rest:
-                lines.append(translate("approvals.more_files").format(count=rest))
+                lines.append(translate("approvals.more_files", rest).format(count=rest))
             body.append(_mono("\n".join(lines)))
             if detail.diff_preview:
                 body.append(_mono(detail.diff_preview))
@@ -385,9 +385,9 @@ class ApprovalPanel(Gtk.Box):
     def _count_others(self, elsewhere: int) -> None:
         parts: list[str] = []
         if len(self.cards) > 1:
-            parts.append(translate("approvals.more_here").format(count=len(self.cards) - 1))
+            parts.append(translate("approvals.more_here", len(self.cards) - 1).format(count=len(self.cards) - 1))
         if elsewhere:
-            parts.append(translate("approvals.more_elsewhere").format(count=elsewhere))
+            parts.append(translate("approvals.more_elsewhere", elsewhere).format(count=elsewhere))
         self.more_label.set_label(" · ".join(parts))
         self.more_label.set_visible(bool(parts))
 

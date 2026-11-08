@@ -37,7 +37,7 @@ def test_comment_to_unstarted_tab_is_refused(tmp_path: Path) -> None:
                 tab_id=tab.id, path="f", hunk_id="h", text="keep this comment",
             ), CommandResult)
             assert not result.ok
-            assert result.toast
+            assert result.toast == "review.agent_not_started"
             assert not daemon.review.send_text(str(tab.id), "message").ok
             await client.call("tab/started", StartedParams(tab_id=tab.id, pid=os.getpid()), EmptyResult)
             delivered = await client.call("diff/sendComment", SendCommentParams(

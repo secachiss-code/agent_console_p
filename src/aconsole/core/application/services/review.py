@@ -22,6 +22,7 @@ from aconsole.contracts.app import (
 )
 from aconsole.contracts.common import CheckpointId, TabId
 from aconsole.contracts.events import CheckpointCreated, TabUpdated, UiEvent
+from aconsole.contracts.messages import UiMessage
 from aconsole.core.application.services.checkpoints import CheckpointRestore, CheckpointService
 from aconsole.core.application.services.diff import DiffService
 from aconsole.core.application.services.tabs import ReviewTarget, TabRequestError, TabService
@@ -82,7 +83,7 @@ class ReviewService:
 
     def _send_comment(self, comment: SendCommentParams) -> CommandResult:
         if not self._target(str(comment.tab_id)).started:
-            return CommandResult(ok=False, toast="Сначала запустите агента во вкладке")
+            return CommandResult(ok=False, toast=UiMessage.AGENT_NOT_STARTED)
         _ = self._bind(str(comment.tab_id), None)
         return self._diff.send_comment(str(comment.tab_id), comment.path, comment.hunk_id, comment.text)
 
@@ -99,7 +100,7 @@ class ReviewService:
     def send_text(self, tab_id: str, message: str) -> CommandResult:
         """Text for one tab's agent, waiting its turn when the agent is busy."""
         if not self._target(tab_id).started:
-            return CommandResult(ok=False, toast="Сначала запустите агента во вкладке")
+            return CommandResult(ok=False, toast=UiMessage.AGENT_NOT_STARTED)
         _ = self._bind(tab_id, None)
         return self._diff.send_text(tab_id, message)
 

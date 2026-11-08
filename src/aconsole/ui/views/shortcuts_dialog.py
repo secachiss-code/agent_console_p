@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import locale
 from typing import Final
 
 import gi
@@ -11,42 +10,51 @@ gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
 from gi.repository import Adw, Gtk  # noqa: E402
 
+from aconsole.ui.i18n import _  # noqa: E402
 from aconsole.ui.viewmodels.logic.keymap import BindingSpec  # noqa: E402
 
-_TITLE: Final = ("Keyboard shortcuts", "Горячие клавиши")
-ACTION_TITLES: Final[dict[str, tuple[str, str]]] = {
-    "palette": ("Command palette", "Командная палитра"),
-    "new-tab": ("New tab", "Новая вкладка"),
-    "close-tab": ("Close tab", "Закрыть вкладку"),
-    "next-tab": ("Next tab", "Следующая вкладка"),
-    "previous-tab": ("Previous tab", "Предыдущая вкладка"),
-    **{f"tab-{number}": (f"Tab {number}", f"Вкладка {number}") for number in range(1, 10)},
-    "next-attention": ("Next request for attention", "Следующий запрос внимания"),
-    "approve": ("Allow the request", "Разрешить запрос"),
-    "deny": ("Deny the request", "Отклонить запрос"),
-    "attention-next": ("Next request, in the list", "Следующий запрос в списке"),
-    "attention-previous": ("Previous request, in the list", "Предыдущий запрос в списке"),
-    "attention-allow": ("Allow, in the list", "Разрешить в списке"),
-    "attention-deny": ("Deny, in the list", "Отклонить в списке"),
-    "attention-open": ("Open the request's tab, in the list", "Открыть вкладку запроса из списка"),
-    "diff": ("Changes", "Изменения"),
-    "git": ("Git", "Git"),
-    "terminal-search": ("Search the terminal", "Поиск в терминале"),
-    "copy": ("Copy", "Копировать"),
-    "paste": ("Paste", "Вставить"),
-    "toggle-sidebar": ("Show or hide the sidebar", "Показать или скрыть сайдбар"),
-    "settings": ("Preferences", "Настройки"),
-    "shortcuts": ("Keyboard shortcuts", "Горячие клавиши"),
-    "zoom-in": ("Larger terminal text", "Крупнее текст терминала"),
-    "zoom-reset": ("Normal terminal text", "Обычный текст терминала"),
-    "zoom-out": ("Smaller terminal text", "Мельче текст терминала"),
-    "quit": ("Quit", "Выход"),
-    "send-next-key": ("Send the next key to the terminal", "Передать следующую клавишу терминалу"),
+_TITLE: Final = "shortcuts.title"
+ACTION_TITLES: Final[dict[str, str]] = {
+    "palette": "shortcuts.palette",
+    "new-tab": "shortcuts.new-tab",
+    "close-tab": "shortcuts.close-tab",
+    "next-tab": "shortcuts.next-tab",
+    "previous-tab": "shortcuts.previous-tab",
+    "tab-1": "shortcuts.tab-1",
+    "tab-2": "shortcuts.tab-2",
+    "tab-3": "shortcuts.tab-3",
+    "tab-4": "shortcuts.tab-4",
+    "tab-5": "shortcuts.tab-5",
+    "tab-6": "shortcuts.tab-6",
+    "tab-7": "shortcuts.tab-7",
+    "tab-8": "shortcuts.tab-8",
+    "tab-9": "shortcuts.tab-9",
+    "next-attention": "shortcuts.next-attention",
+    "approve": "shortcuts.approve",
+    "deny": "shortcuts.deny",
+    "attention-next": "shortcuts.attention-next",
+    "attention-previous": "shortcuts.attention-previous",
+    "attention-allow": "shortcuts.attention-allow",
+    "attention-deny": "shortcuts.attention-deny",
+    "attention-open": "shortcuts.attention-open",
+    "diff": "shortcuts.diff",
+    "git": "shortcuts.git",
+    "terminal-search": "shortcuts.terminal-search",
+    "copy": "shortcuts.copy",
+    "paste": "shortcuts.paste",
+    "toggle-sidebar": "shortcuts.toggle-sidebar",
+    "settings": "shortcuts.settings",
+    "shortcuts": "shortcuts.shortcuts",
+    "zoom-in": "shortcuts.zoom-in",
+    "zoom-reset": "shortcuts.zoom-reset",
+    "zoom-out": "shortcuts.zoom-out",
+    "quit": "shortcuts.quit",
+    "send-next-key": "shortcuts.send-next-key",
 }
 
 
-def _text(pair: tuple[str, str]) -> str:
-    return pair[1 if (locale.getlocale()[0] or "").startswith("ru") else 0]
+def _text(key: str) -> str:
+    return _(key)
 
 
 def _keys(accelerators: tuple[str, ...]) -> str:

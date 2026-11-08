@@ -30,6 +30,7 @@ from aconsole.contracts.common import AccountId, AgentKind, ClientRole, QuotaLev
 from aconsole.contracts.errors import ErrorData, ErrorObject, MessageTooLargeDetails, error_by_name
 from aconsole.contracts.events import Notify, PlanUpdated, QuotaUpdated, TabAdded, TabRemoved, TabUpdated, UiEvent
 from aconsole.contracts.ipc import InitializeParams, Notification, ProtocolLimits, Request, ResponseErr
+from aconsole.contracts.messages import UiMessage
 from aconsole.core.application.ports.events import EventSink
 from aconsole.core.application.ports.git_repo import GitCommandError
 from aconsole.core.application.services.approval_broker import ApprovalHold
@@ -735,7 +736,7 @@ class Daemon:
                     self._register_tab(tab, token)
 
     def _codex_hook_issue(self, tab_id: str, body: str) -> None:
-        self._from_worker(Notify(tab_id=TabId(tab_id), title="Hooks Codex недоступны", body=body,
+        self._from_worker(Notify(tab_id=TabId(tab_id), title=UiMessage.CODEX_HOOKS_UNAVAILABLE, body=body,
             priority="normal", episode_id=f"codex-hooks:{tab_id}"))
 
     def _from_worker(self, event: UiEvent) -> None:
@@ -837,7 +838,7 @@ class Daemon:
         self._publish(event, self._live_tabs, None)
 
     def _approval_notify(self, approval: Approval) -> None:
-        self._approval_event(Notify(tab_id=TabId(approval.tab_id), title="Требуется подтверждение",
+        self._approval_event(Notify(tab_id=TabId(approval.tab_id), title=UiMessage.APPROVAL_REQUIRED,
             body=approval.command or approval.tool, priority="high", episode_id=approval.id))
 
     def _approval_audit(self, approval: Approval) -> None:

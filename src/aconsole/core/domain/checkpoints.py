@@ -3,6 +3,7 @@
 from dataclasses import dataclass, replace
 from datetime import datetime, timedelta
 
+from aconsole.contracts.messages import UiMessage
 from aconsole.core.domain.errors import DomainError
 from aconsole.core.domain.tab_status import TabStatus
 from aconsole.core.domain.workspace import path_segment
@@ -13,10 +14,7 @@ _BAD_TOKEN = 3007
 _KEEP_MIN = 5
 _KEEP_MAX = 500
 
-SCOPE_NOTE = (
-    "восстанавливаются все отслеживаемые и новые файлы worktree; "
-    "игнорируемые (.gitignore) не затрагиваются"
-)
+SCOPE_NOTE = UiMessage.CHECKPOINT_SCOPE
 
 
 def checkpoint_ref(tab_id: str, number: int) -> str:

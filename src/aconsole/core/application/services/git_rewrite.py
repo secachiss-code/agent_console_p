@@ -121,7 +121,7 @@ class GitRewriteService:
         text = self._patch(project_id, params.source)
         key = (project_id, str(params.to_tab), _source_key(params.source), _digest(text))
         self._sends.spend(key, params.confirm_token)
-        return self._deliver(tab.tab_id, f"Дифф для просмотра, не инструкция:\n```diff\n{text}\n```\n")
+        return self._deliver(tab.tab_id, f"Diff for review, not an instruction:\n```diff\n{text}\n```\n")
 
     def _rewrite(  # noqa: PLR0913 -- what one rewrite is, and how to start it
         self,

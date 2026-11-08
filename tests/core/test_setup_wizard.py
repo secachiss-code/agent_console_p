@@ -38,6 +38,7 @@ from aconsole.contracts.ipc import (
     ResponseOk,
 )
 from aconsole.contracts.settings import Settings, SettingsPatch
+from aconsole.contracts.setup_detail import SetupDetail
 from aconsole.core.application.ports.setup import (
     SetupFixExecutionError,
     SetupFixPlan,
@@ -257,7 +258,7 @@ def test_host_setup_probe_reports_all_categories_from_fake_environment(tmp_path:
 
     assert tuple(check.id for check in checks) == _CHECK_IDS
     assert all(check.ok and check.severity == "info" for check in checks)
-    assert by_id["host_dependencies"].detail == "podman and distrobox"
+    assert by_id["host_dependencies"].detail == "podman, distrobox"
     assert by_id["agent_login"].ok
     assert by_id["storage"].detail == str(tmp_path / "Obsidian" / "AConsole")
     assert ("podman", "exec", "agent-claude", "claude", "auth", "status") in environment.calls
@@ -308,7 +309,7 @@ def test_no_containers_fails_one_check_and_says_what_to_run(tmp_path: Path) -> N
 
     assert [check_id for check_id, check in checks.items() if not check.ok] == ["agent_containers"]
     assert checks["agent_containers"].command == "podman create --help"
-    assert "README" in checks["agent_containers"].detail
+    assert checks["agent_containers"].detail == "setup.detail.no_containers"
 
 
 @pytest.mark.parametrize("category", _CHECK_IDS)
@@ -860,7 +861,7 @@ def test_isolation_warns_on_sensitive_host_mounts(tmp_path: Path, relative: str,
     assert check.severity == "warning"
     assert "devtools" in check.detail
     assert "agent-claude" in check.detail
-    assert "README" in check.detail
+    assert "setup_detail.v1" in check.detail
     assert check.fix_id is None
     assert check.command
 
@@ -873,7 +874,9 @@ def test_isolation_does_not_claim_safety_without_valid_metadata(tmp_path: Path, 
 
     check = HostSetupProbe(Unknown(tmp_path)).isolation_check()
     assert not check.ok
-    assert "unknown" in check.detail
+    detail = msgspec.json.decode(check.detail, type=SetupDetail)
+    expected = "setup.isolation.mount_invalid" if raw.startswith("[") else "setup.isolation.mount_unknown"
+    assert all(fact.code == expected for fact in detail.facts)
 
 
 def test_isolation_allows_only_worktree_and_vault_binds(tmp_path: Path) -> None:
@@ -888,7 +891,7 @@ def test_isolation_allows_only_worktree_and_vault_binds(tmp_path: Path) -> None:
 
     check = HostSetupProbe(Isolated(tmp_path)).isolation_check()
     assert check.ok
-    assert "not an isolation guarantee" in check.detail
+    assert "setup.isolation.metadata_only" in check.detail
 
 
 def test_isolation_uses_custom_xdg_database_path(tmp_path: Path) -> None:
@@ -938,7 +941,7 @@ def test_large_container_metadata_is_unknown_instead_of_truncated(
     monkeypatch.setattr(subprocess, "run", run)
     ok, detail = SystemSetupEnvironment().run(("podman", command))
     assert not ok
-    assert "exceeded" in detail
+    assert detail == "setup.detail.metadata_limit"
 
 
 
@@ -948,7 +951,7 @@ def test_missing_notification_bus_does_not_recommend_reinstalling_notify_send(tm
     check = next(item for item in HostSetupProbe(env).run_checks() if item.id == "notifications")
     assert not check.ok
     assert check.command == "systemctl --user status dbus.service"
-    assert "D-Bus" in check.detail
+    assert check.detail == "setup.detail.bus_missing"
 
 
 def test_missing_notify_send_names_the_install_command(tmp_path: Path) -> None:

@@ -20,6 +20,7 @@ from aconsole.contracts.common import TabId  # noqa: E402
 from aconsole.contracts.git import DiffSource, GitNodeView, GitStateResult, WorktreeGitState  # noqa: E402
 from aconsole.ui.bootstrap import spawn_task  # noqa: E402
 from aconsole.ui.client.core_client import CoreCallError  # noqa: E402
+from aconsole.ui.i18n import format_date  # noqa: E402
 from aconsole.ui.viewmodels.git_vm import (  # noqa: E402
     Badge,
     GitViewModel,
@@ -116,7 +117,7 @@ class _RowWidget(Gtk.Box):
             text = node.subject
         self.title.set_text(text)
         self.title.set_tooltip_text(f"{short(node.oid)} {node.author}")
-        self.when.set_text(node.at.astimezone().strftime(_TIME))
+        self.when.set_text(format_date(node.at))
         for ref in node.refs:
             if ref.kind != "checkpoint":
                 self.pills.append(_pill(ref.name, "info", css=f"ac-git-ref-{ref.kind}"))

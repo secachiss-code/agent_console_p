@@ -59,10 +59,12 @@ class GitCard(Gtk.Button):
         )
         self.state_label.remove_css_class("warning")
         if summary.conflicted:
-            self.state_label.set_label(translate("git.card.conflicts").format(count=summary.conflicted))
+            self.state_label.set_label(
+                translate("git.card.conflicts", summary.conflicted).format(count=summary.conflicted),
+            )
             self.state_label.add_css_class("warning")
         elif summary.ready:
-            self.state_label.set_label(translate("git.card.ready").format(count=summary.ready))
+            self.state_label.set_label(translate("git.card.ready", summary.ready).format(count=summary.ready))
         else:
             self.state_label.set_label(translate("git.card.nothing"))
         self.state_label.set_visible(True)

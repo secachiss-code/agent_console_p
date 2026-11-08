@@ -1,0 +1,1956 @@
+# AConsole UI catalog. Stable message IDs; brace placeholders are Python format fields.
+msgid ""
+msgstr "Project-Id-Version: AConsole 0.1.1\nLanguage: ru\nContent-Type: text/plain; charset=UTF-8\nPlural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<12 || n%100>14) ? 1 : 2);\n"
+
+msgid "approvals.alert.open"
+msgstr "Открыть"
+
+msgid "approvals.alert.title"
+msgstr "Агент ждёт решения"
+
+msgid "approvals.allow"
+msgstr "Разрешить"
+
+msgid "approvals.allow_session"
+msgstr "Разрешать до закрытия вкладки"
+
+msgid "approvals.allow_session_tip"
+msgstr "Также разрешить такую команду до конца сессии этой вкладки"
+
+msgid "approvals.closed"
+msgstr "Запрос уже закрыт: решение не применено"
+
+msgid "approvals.cwd"
+msgstr "В {cwd}"
+
+msgid "approvals.deny"
+msgstr "Отклонить"
+
+msgid "approvals.deny_message"
+msgstr "Пояснение при отказе (необязательно)"
+
+msgid "approvals.failed"
+msgstr "Не удалось отправить решение: {error}. Запрос ещё открыт"
+
+msgid "approvals.left"
+msgstr "Осталось {time}"
+
+msgid "approvals.more_elsewhere"
+msgid_plural "approvals.more_elsewhere.plural"
+msgstr[0] "{count} запрос в других вкладках · Ctrl+Shift+Y"
+msgstr[1] "{count} запроса в других вкладках · Ctrl+Shift+Y"
+msgstr[2] "{count} запросов в других вкладках · Ctrl+Shift+Y"
+
+msgid "approvals.more_files"
+msgid_plural "approvals.more_files.plural"
+msgstr[0] "и ещё {count} файл"
+msgstr[1] "и ещё {count} файла"
+msgstr[2] "и ещё {count} файлов"
+
+msgid "approvals.more_here"
+msgid_plural "approvals.more_here.plural"
+msgstr[0] "ещё {count} запрос здесь"
+msgstr[1] "ещё {count} запроса здесь"
+msgstr[2] "ещё {count} запросов здесь"
+
+msgid "approvals.release"
+msgstr "В терминале"
+
+msgid "approvals.release_tip"
+msgstr "Передать запрос собственному диалогу агента"
+
+msgid "approvals.risk.destructive"
+msgstr "Удаляет данные"
+
+msgid "approvals.risk.network"
+msgstr "Сеть"
+
+msgid "approvals.risk.outside_worktree"
+msgstr "Вне рабочей копии"
+
+msgid "approvals.risk.privilege"
+msgstr "Повышенные права"
+
+msgid "approvals.risk.publish"
+msgstr "Публикация"
+
+msgid "approvals.risk.secrets"
+msgstr "Секреты"
+
+msgid "approvals.time_up"
+msgstr "Время вышло"
+
+msgid "approvals.title.command"
+msgstr "{agent} хочет выполнить команду"
+
+msgid "approvals.title.edit"
+msgid_plural "approvals.title.edit.plural"
+msgstr[0] "{agent} хочет изменить {count} файл"
+msgstr[1] "{agent} хочет изменить {count} файла"
+msgstr[2] "{agent} хочет изменить {count} файлов"
+
+msgid "approvals.title.tool"
+msgstr "{agent} хочет использовать {tool}"
+
+msgid "checkpoint.scope.worktree"
+msgstr "Восстанавливаются все отслеживаемые и новые файлы рабочей копии; игнорируемые (.gitignore) не затрагиваются"
+
+msgid "clipboard.copy"
+msgstr "Копировать"
+
+msgid "clipboard.empty"
+msgstr "В буфере нет текста или изображения"
+
+msgid "clipboard.error"
+msgstr "Не удалось вставить: {error}"
+
+msgid "clipboard.image"
+msgstr "Вставить изображение"
+
+msgid "clipboard.large"
+msgstr "Изображение больше 8 МиБ или 32 мегапикселей"
+
+msgid "clipboard.paste"
+msgstr "Вставить"
+
+msgid "clipboard.select"
+msgstr "Выделить всё"
+
+msgid "codex.hooks.help"
+msgstr "Hooks Codex не подтверждены.\nСогласования остаются в терминале, автоматические снимки отключены.\nОткройте /hooks в Codex, проверьте настройки hooks и ограничения администратора, затем перезапустите агента в AConsole."
+
+msgid "connection.reconnecting"
+msgstr "Связь с ядром потеряна. Переподключаемся; данные на экране могут быть устаревшими."
+
+msgid "error.AGENT_CONFIG_UNSUPPORTED_VERSION"
+msgstr "Эта версия агента не поддерживается"
+
+msgid "error.AGENT_NOT_LOGGED_IN"
+msgstr "Агент не вошёл в аккаунт: выполните вход в его контейнере"
+
+msgid "error.AGENT_UNAVAILABLE"
+msgstr "Агент недоступен: проверьте его контейнер в мастере настройки"
+
+msgid "error.APPROVAL_ALREADY_DECIDED"
+msgstr "По этому запросу уже есть решение"
+
+msgid "error.APPROVAL_EXPIRED"
+msgstr "Время на этот запрос вышло"
+
+msgid "error.APPROVAL_NOT_FOUND"
+msgstr "Этот запрос уже закрыт"
+
+msgid "error.BRANCH_ALREADY_CHECKED_OUT"
+msgstr "Эта ветка открыта в другой рабочей копии"
+
+msgid "error.CHECKPOINT_NOT_FOUND"
+msgstr "Этой снимка больше нет"
+
+msgid "error.CHECKPOINT_RESTORE_CONFLICT"
+msgstr "Файлы изменились после снимка"
+
+msgid "error.CONFIRM_TOKEN_INVALID"
+msgstr "Предпросмотр устарел. Посмотрите ещё раз"
+
+msgid "error.CONTAINER_START_FAILED"
+msgstr "Контейнер агента не запустился"
+
+msgid "error.CONTENT_MODIFIED"
+msgstr "Данные успели измениться. Повторите"
+
+msgid "error.DATABASE_TRANSACTION_FAILED"
+msgstr "Не удалось записать в базу данных"
+
+msgid "error.DIFF_TOO_LARGE"
+msgstr "Изменения слишком большие для показа"
+
+msgid "error.GIT_BRANCH_UNKNOWN"
+msgstr "Этой ветки больше нет"
+
+msgid "error.GIT_COMMAND_FAILED"
+msgstr "Git не смог это выполнить"
+
+msgid "error.GIT_OPERATION_IN_PROGRESS"
+msgstr "Уже идёт другая операция Git"
+
+msgid "error.GIT_SNAPSHOT_STALE"
+msgstr "Репозиторий успел измениться. Повторите"
+
+msgid "error.GIT_STATE_STALE"
+msgstr "Репозиторий успел измениться. Повторите"
+
+msgid "error.GIT_WORKTREE_UNKNOWN"
+msgstr "Этой рабочей копии больше нет в списке"
+
+msgid "error.LEASE_HELD"
+msgstr "Над этим шагом работает другой агент"
+
+msgid "error.MERGE_CONFLICT"
+msgstr "При слиянии есть конфликты"
+
+msgid "error.MERGE_MODE_UNAVAILABLE"
+msgstr "Этот способ слияния здесь недоступен"
+
+msgid "error.MERGE_PREVIEW_STALE"
+msgstr "Ветки изменились. Посмотрите слияние ещё раз"
+
+msgid "error.NODE_EVIDENCE_REQUIRED"
+msgstr "Для этого шага сначала нужны доказательства"
+
+msgid "error.NODE_NOT_FOUND"
+msgstr "Этого шага больше нет"
+
+msgid "error.NODE_NOT_READY"
+msgstr "Предыдущие шаги ещё не закончены"
+
+msgid "error.NODE_TRANSITION_INVALID"
+msgstr "Шаг нельзя так изменить"
+
+msgid "error.NOTE_NOT_FOUND"
+msgstr "Этой заметки больше нет"
+
+msgid "error.PATHS_OVERLAP"
+msgstr "Те же файлы меняет другой шаг"
+
+msgid "error.PATH_NOT_ALLOWED"
+msgstr "Этот путь вне разрешённых приложению"
+
+msgid "error.PLAN_NOT_FOUND"
+msgstr "Этого плана больше нет"
+
+msgid "error.PROJECT_NOT_A_GIT_REPO"
+msgstr "Эта папка не является репозиторием Git"
+
+msgid "error.PROJECT_NOT_FOUND"
+msgstr "Этого проекта больше нет в списке"
+
+msgid "error.PROTOCOL_VERSION_UNSUPPORTED"
+msgstr "Версии интерфейса и ядра несовместимы. Перезапустите ядро той же версии AConsole"
+
+msgid "error.REQUEST_CANCELLED"
+msgstr "Запрос отменён"
+
+msgid "error.SERVER_BUSY"
+msgstr "Ядро занято. Повторите через минуту"
+
+msgid "error.SESSION_NOT_FOUND"
+msgstr "Этой сессии больше нет"
+
+msgid "error.SETUP_FIX_FAILED"
+msgstr "Исправление не сработало"
+
+msgid "error.TAB_NOT_FOUND"
+msgstr "Этой вкладки больше нет"
+
+msgid "error.TAB_STATE_CONFLICT"
+msgstr "Состояние вкладки изменилось. Повторите"
+
+msgid "error.VAULT_CONFLICT"
+msgstr "Заметка успела измениться"
+
+msgid "error.VAULT_NOT_CONFIGURED"
+msgstr "Папка заметок не настроена"
+
+msgid "error.WORKTREE_BUSY"
+msgstr "В этой рабочей копии работает агент"
+
+msgid "error.WORKTREE_CREATE_FAILED"
+msgstr "Не удалось создать рабочую копию"
+
+msgid "error.WORKTREE_DIRTY"
+msgstr "В рабочей копии есть незафиксированные изменения"
+
+msgid "error.WORKTREE_NOT_REMOVABLE"
+msgstr "Эту рабочую копию нельзя удалить"
+
+msgid "error.WORK_SESSION_ARCHIVED"
+msgstr "Возобновите сессию перед изменением"
+
+msgid "error.WORK_SESSION_NOT_FOUND"
+msgstr "Рабочая сессия не найдена"
+
+msgid "error.WORK_SESSION_WORKSPACE_CONFLICT"
+msgstr "Рабочая копия уже принадлежит сессии"
+
+msgid "error.fallback"
+msgstr "Ядро не смогло это выполнить ({name}). Подробности в журнале: {log}"
+
+msgid "git.abort_body"
+msgstr "Git вернётся к исходному состоянию. Правки файлов, сделанные с тех пор, пропадут."
+
+msgid "git.abort_go"
+msgstr "Прервать"
+
+msgid "git.abort_heading"
+msgstr "Прервать {kind}?"
+
+msgid "git.aborted"
+msgstr "Прервано"
+
+msgid "git.back"
+msgstr "К терминалу"
+
+msgid "git.badge_behind"
+msgstr "Отстаёт: {count}"
+
+msgid "git.badge_busy"
+msgstr "Агент работает"
+
+msgid "git.badge_conflict"
+msgstr "Конфликт: {count}"
+
+msgid "git.badge_in_progress"
+msgstr "Идёт Git-операция"
+
+msgid "git.badge_ready"
+msgstr "Сливается +{insertions} −{deletions}"
+
+msgid "git.badge_unchecked"
+msgstr "Не проверено"
+
+msgid "git.block.already_merged"
+msgstr "Эта ветка уже слита."
+
+msgid "git.block.conflict"
+msgstr "Ветки конфликтуют."
+
+msgid "git.block.same_branch"
+msgstr "Это и есть целевая ветка."
+
+msgid "git.block.source_busy"
+msgstr "В этой ветке работает агент."
+
+msgid "git.block.source_dirty"
+msgstr "Закоммитьте файлы сессии перед слиянием"
+
+msgid "git.block.target_busy"
+msgstr "В целевой ветке работает агент."
+
+msgid "git.block.target_dirty"
+msgstr "В рабочей копии целевой ветки есть незакоммиченные изменения."
+
+msgid "git.block.target_in_progress"
+msgstr "В целевой ветке не закончена Git-операция."
+
+msgid "git.cancel"
+msgstr "Отмена"
+
+msgid "git.card.conflicts"
+msgid_plural "git.card.conflicts.plural"
+msgstr[0] "С конфликтами {count} копия"
+msgstr[1] "С конфликтами {count} копии"
+msgstr[2] "С конфликтами {count} копий"
+
+msgid "git.card.nothing"
+msgstr "Сливать нечего"
+
+msgid "git.card.open"
+msgstr "Git и снимки"
+
+msgid "git.card.ready"
+msgid_plural "git.card.ready.plural"
+msgstr[0] "Готова к слиянию {count} копия"
+msgstr[1] "Готовы к слиянию {count} копии"
+msgstr[2] "Готовы к слиянию {count} копий"
+
+msgid "git.card.title"
+msgstr "Git"
+
+msgid "git.card.unknown"
+msgstr "Ветки, коммиты и снимки"
+
+msgid "git.card.worktrees"
+msgstr "Рабочих копий: {count} · с изменениями: {changed}"
+
+msgid "git.cherry_go"
+msgstr "Применить"
+
+msgid "git.cherry_heading"
+msgstr "Cherry-pick {oid}"
+
+msgid "git.cleaned"
+msgstr "Рабочая копия удалена"
+
+msgid "git.cleaned_kept"
+msgstr "Рабочая копия удалена. Её коммиты сохранены в {ref}"
+
+msgid "git.cleanup_body"
+msgstr "{path} будет удалён с диска. Удалить можно только слитую рабочую копию без изменений."
+
+msgid "git.cleanup_go"
+msgstr "Удалить"
+
+msgid "git.cleanup_heading"
+msgstr "Удалить рабочую копию ветки {branch}?"
+
+msgid "git.cleanup_ignored_body"
+msgstr "Вместе с {path} удалится и то, что Git там игнорирует, например .venv или локальные настройки."
+
+msgid "git.cleanup_ignored_go"
+msgstr "Удалить и их"
+
+msgid "git.cleanup_ignored_heading"
+msgstr "Здесь есть игнорируемые файлы"
+
+msgid "git.close"
+msgstr "Закрыть"
+
+msgid "git.closed_tab"
+msgstr "вкладка закрыта"
+
+msgid "git.commit_counts"
+msgstr "В индексе: {count}"
+
+msgid "git.commit_go"
+msgstr "Закоммитить"
+
+msgid "git.commit_placeholder"
+msgstr "Сообщение коммита"
+
+msgid "git.committed"
+msgstr "Закоммичено: {oid}"
+
+msgid "git.detached"
+msgstr "отсоединённый HEAD"
+
+msgid "git.discard_body"
+msgstr "Файл вернётся к {oid}: +{insertions} −{deletions}. Индекс не изменится. Текущие файлы сохранятся на служебной ссылке, так что вернуть их можно вручную."
+
+msgid "git.discard_go"
+msgstr "Отменить изменения"
+
+msgid "git.discard_heading"
+msgstr "Отменить изменения в {path}?"
+
+msgid "git.discard_removes"
+msgstr "В последнем коммите этого файла нет, поэтому он будет удалён. Текущие файлы сохранятся на служебной ссылке, так что вернуть их можно вручную."
+
+msgid "git.do.abort"
+msgstr "Прервать…"
+
+msgid "git.do.cherry_pick"
+msgstr "Cherry-pick…"
+
+msgid "git.do.cleanup"
+msgstr "Удалить рабочую копию…"
+
+msgid "git.do.continue"
+msgstr "Продолжить"
+
+msgid "git.do.merge"
+msgstr "Слить…"
+
+msgid "git.do.rebase"
+msgstr "Перебазировать…"
+
+msgid "git.do.restore"
+msgstr "Восстановить файл…"
+
+msgid "git.do.send"
+msgstr "Отправить дифф…"
+
+msgid "git.do.stage"
+msgstr "В индекс"
+
+msgid "git.do.unstage"
+msgstr "Из индекса"
+
+msgid "git.empty"
+msgstr "Коммитов пока нет"
+
+msgid "git.err.confirm_token_invalid"
+msgstr "Подтверждение устарело. Повторите"
+
+msgid "git.err.database_transaction_failed"
+msgstr "Журнал не записался, поэтому ничего не изменено. Повторите"
+
+msgid "git.err.git_operation_in_progress"
+msgstr "Сначала завершите или прервите Git-операцию"
+
+msgid "git.err.git_state_stale"
+msgstr "Git изменился. Проверьте и повторите"
+
+msgid "git.err.merge_conflict"
+msgstr "Ветки конфликтуют"
+
+msgid "git.err.merge_mode_unavailable"
+msgstr "Сейчас это слияние невозможно"
+
+msgid "git.err.merge_preview_stale"
+msgstr "Ветка сдвинулась после предпросмотра. Откройте слияние заново"
+
+msgid "git.err.not_removable.agent_running"
+msgstr "Вкладка ещё открыта. Сначала остановите агента"
+
+msgid "git.err.not_removable.detached"
+msgstr "Он не на ветке"
+
+msgid "git.err.not_removable.dirty"
+msgstr "В нём есть незакоммиченные файлы"
+
+msgid "git.err.not_removable.main_checkout"
+msgstr "Основной checkout удалить нельзя"
+
+msgid "git.err.not_removable.not_managed"
+msgstr "Эта рабочая копия не принадлежит AConsole"
+
+msgid "git.err.not_removable.not_merged"
+msgstr "Его коммиты ещё не слиты"
+
+msgid "git.err.other"
+msgstr "Не получилось: {name}"
+
+msgid "git.err.worktree_busy"
+msgstr "Там работает агент. Дождитесь конца его хода"
+
+msgid "git.facts"
+msgstr "Изменения затрагивают записанные факты: {count}"
+
+msgid "git.facts_body"
+msgstr "Их код изменился после записи. Возможно, они всё ещё верны."
+
+msgid "git.facts_heading"
+msgstr "Факты на проверку"
+
+msgid "git.facts_line"
+msgstr "{title}: {paths}"
+
+msgid "git.facts_open"
+msgstr "Открыть в Obsidian"
+
+msgid "git.facts_show"
+msgstr "Показать"
+
+msgid "git.file_discard"
+msgstr "Отменить изменения…"
+
+msgid "git.file_stage"
+msgstr "Добавить файл в индекс"
+
+msgid "git.file_unstage"
+msgstr "Убрать файл из индекса"
+
+msgid "git.merge_body"
+msgstr "Только коммиты: {source_oid} в {target_oid}, +{insertions} −{deletions}."
+
+msgid "git.merge_cleanup"
+msgstr "Удалить рабочую копию и ветку после слияния"
+
+msgid "git.merge_conflicts"
+msgstr "Конфликты в файлах: {paths}"
+
+msgid "git.merge_go"
+msgstr "Слить"
+
+msgid "git.merge_heading"
+msgstr "Слить {source} в {target}"
+
+msgid "git.merge_message"
+msgstr "Сообщение коммита (необязательно)"
+
+msgid "git.merge_session_cleanup"
+msgstr "Архивировать сессию, остановить агентов и удалить её основную копию; сохранить копии исполнителей и историю"
+
+msgid "git.merge_source_dirty"
+msgstr "В {source} есть незакоммиченные файлы. В это слияние они не попадут."
+
+msgid "git.merged"
+msgstr "Слито: {oid}"
+
+msgid "git.meta_branch"
+msgstr "Ветка: {branch}"
+
+msgid "git.meta_node"
+msgstr "Узел: {node}"
+
+msgid "git.mode.fast_forward"
+msgstr "Перемотка (fast-forward)"
+
+msgid "git.mode.merge"
+msgstr "Коммит слияния"
+
+msgid "git.mode.squash"
+msgstr "Объединить в один коммит"
+
+msgid "git.mode_base"
+msgstr "Относительно базы"
+
+msgid "git.mode_index"
+msgstr "В индексе"
+
+msgid "git.mode_worktree"
+msgstr "Не в индексе"
+
+msgid "git.more"
+msgid_plural "git.more.plural"
+msgstr[0] "Загружен {count} коммит"
+msgstr[1] "Загружено {count} коммита"
+msgstr[2] "Загружено {count} коммитов"
+
+msgid "git.next"
+msgstr "Далее"
+
+msgid "git.no_project"
+msgstr "Сначала добавьте проект"
+
+msgid "git.op_conflicted"
+msgstr "Остановлено на конфликте. Исправьте файлы, добавьте их в индекс, затем продолжите или прервите"
+
+msgid "git.op_done"
+msgstr "Готово: {oid}"
+
+msgid "git.op_failed"
+msgstr "Не завершилось: {detail}"
+
+msgid "git.op_line"
+msgstr "{kind}: {status}"
+
+msgid "git.open"
+msgstr "Git и снимки"
+
+msgid "git.pick_worktree"
+msgstr "В какую рабочую копию?"
+
+msgid "git.rebase_body"
+msgstr "У коммитов появятся новые идентификаторы. Старый HEAD останется на служебной ссылке, так что это обратимо."
+
+msgid "git.rebase_go"
+msgstr "Перебазировать"
+
+msgid "git.rebase_heading"
+msgstr "Перебазировать {branch} на {base}?"
+
+msgid "git.refresh"
+msgstr "Обновить"
+
+msgid "git.refused"
+msgstr "Git отказал: {detail}"
+
+msgid "git.restore_body"
+msgstr "В {worktree}, из {oid}: +{insertions} −{deletions}. Текущие файлы сначала сохранятся на служебной ссылке."
+
+msgid "git.restore_go"
+msgstr "Восстановить"
+
+msgid "git.restore_heading"
+msgstr "Восстановить {path}?"
+
+msgid "git.restore_removes"
+msgstr "В {oid} этого файла нет, поэтому он будет удалён из {worktree}. Текущие файлы сначала сохранятся на служебной ссылке."
+
+msgid "git.restored"
+msgstr "Восстановлено: {path}"
+
+msgid "git.resumed"
+msgstr "Продолжено"
+
+msgid "git.scope_all"
+msgstr "Все ветки"
+
+msgid "git.scope_tab"
+msgstr "Вкладка: {title}"
+
+msgid "git.select"
+msgstr "Выберите коммит, снимок или незакоммиченные файлы"
+
+msgid "git.send_body"
+msgstr "Файлов: {files}, объём: {size}. Текст попадёт в терминал этого агента как материал для просмотра."
+
+msgid "git.send_confirm_heading"
+msgstr "Отправить вкладке «{title}»?"
+
+msgid "git.send_go"
+msgstr "Отправить"
+
+msgid "git.send_heading"
+msgstr "Какому агенту отправить дифф?"
+
+msgid "git.send_too_large"
+msgstr "Дифф больше 64 КиБ. Выберите поменьше"
+
+msgid "git.sent"
+msgstr "Дифф отправлен"
+
+msgid "git.session_active"
+msgstr "активна"
+
+msgid "git.session_archive"
+msgstr "Архивировать сессию"
+
+msgid "git.session_archive_hint"
+msgstr "Остановить агентов и архивировать сессию, сохранив рабочие копии и историю. Возобновление разрешает новую работу."
+
+msgid "git.session_archived"
+msgstr "в архиве"
+
+msgid "git.session_cleanup_hint"
+msgstr "Удалить копию исполнителя, если результат принят и в копии нет незакоммиченных или игнорируемых файлов."
+
+msgid "git.session_cleanup_worker"
+msgstr "Удалить копию исполнителя"
+
+msgid "git.session_confirm"
+msgstr "Подтвердить"
+
+msgid "git.session_handoff"
+msgstr "Передать управление"
+
+msgid "git.session_handoff_hint"
+msgstr "Остановить исполнителя, сохранить снимок и запустить выбранного агента. Переключение вкладки этого не делает."
+
+msgid "git.session_integrate"
+msgstr "Принять в сессию"
+
+msgid "git.session_isolated"
+msgstr "отдельная копия"
+
+msgid "git.session_project"
+msgstr "Весь проект"
+
+msgid "git.session_removed"
+msgstr "основная копия удалена; история сохранена"
+
+msgid "git.session_rename"
+msgstr "Переименовать задачу"
+
+msgid "git.session_reopen_hint"
+msgstr "Возобновить сессию для продолжения работы в сохранённых копиях."
+
+msgid "git.session_restore"
+msgstr "Восстановить файлы"
+
+msgid "git.session_restore_hint"
+msgstr "Остановить агентов, сохранить защитный снимок и восстановить файлы. HEAD и индекс останутся прежними."
+
+msgid "git.session_result"
+msgstr "Сохранить результат"
+
+msgid "git.session_result_hint"
+msgstr "Остановить изолированного исполнителя и сохранить его файлы как результат для проверки."
+
+msgid "git.session_resume"
+msgstr "Возобновить сессию"
+
+msgid "git.session_shared"
+msgstr "общая копия"
+
+msgid "git.snapshot"
+msgstr "Снимок {turn}: {label}"
+
+msgid "git.stale"
+msgstr "Git изменился. Обновляю"
+
+msgid "git.title"
+msgstr "Git и снимки"
+
+msgid "git.uncommitted"
+msgstr "Не закоммичено: {branch}"
+
+msgid "git.uncommitted_counts"
+msgstr "в индексе {staged} · изменено {unstaged} · новых {untracked} · в конфликте {conflicted}"
+
+msgid "health.answered"
+msgstr "Обработано запросов"
+
+msgid "health.commit"
+msgstr "Последняя запись, мс"
+
+msgid "health.core"
+msgstr "Ядро"
+
+msgid "health.failed"
+msgstr "Ошибок записи"
+
+msgid "health.isolation"
+msgstr "Изоляция контейнеров"
+
+msgid "health.isolation_check"
+msgstr "Проверить монтирования контейнеров"
+
+msgid "health.isolation_loading"
+msgstr "Проверяем монтирования контейнеров…"
+
+msgid "health.isolation_unknown"
+msgstr "Изоляция не проверена. Проверьте монтирования контейнеров перед использованием ограничений согласований."
+
+msgid "health.no_answer"
+msgstr "Не отвечает"
+
+msgid "health.no_database"
+msgstr "Работает без базы данных"
+
+msgid "health.ok"
+msgstr "Работает"
+
+msgid "health.queued"
+msgstr "Записей в очереди"
+
+msgid "health.reconnects"
+msgstr "Переподключений"
+
+msgid "health.resyncs"
+msgstr "Повторных снимков"
+
+msgid "health.slowest"
+msgstr "Самый долгий запрос за последнее время, мс"
+
+msgid "health.title"
+msgstr "Состояние ядра"
+
+msgid "notify.approval_required"
+msgstr "Требуется подтверждение"
+
+msgid "notify.codex_hooks_unavailable"
+msgstr "Hooks Codex недоступны"
+
+msgid "palette.back"
+msgstr "Назад"
+
+msgid "palette.current_terminal"
+msgstr "Текущий терминал"
+
+msgid "palette.empty"
+msgstr "Подходящих команд нет"
+
+msgid "palette.error"
+msgstr "Не удалось загрузить команды"
+
+msgid "palette.execute_error"
+msgstr "Не удалось выполнить команду"
+
+msgid "palette.item_unavailable"
+msgstr "Эта команда больше недоступна"
+
+msgid "palette.kind.action"
+msgstr "Действия"
+
+msgid "palette.kind.approval"
+msgstr "Подтверждения"
+
+msgid "palette.kind.command"
+msgstr "Команды"
+
+msgid "palette.kind.native_skill"
+msgstr "Скиллы"
+
+msgid "palette.kind.note"
+msgstr "Заметки"
+
+msgid "palette.kind.plan_node"
+msgstr "План"
+
+msgid "palette.kind.session"
+msgstr "Сессии"
+
+msgid "palette.kind.tab"
+msgstr "Вкладки"
+
+msgid "palette.loading"
+msgstr "Загрузка команд…"
+
+msgid "palette.note_unavailable"
+msgstr "Эта заметка больше недоступна"
+
+msgid "palette.open_plan"
+msgstr "Открыть план: {title}"
+
+msgid "palette.pending_requests"
+msgstr "Ожидающие запросы"
+
+msgid "palette.recent_empty"
+msgstr "Начните вводить команду"
+
+msgid "palette.review_request"
+msgstr "Рассмотреть запрос: {tool}"
+
+msgid "palette.run"
+msgstr "Выполнить"
+
+msgid "palette.search"
+msgstr "Найти команду"
+
+msgid "palette.title"
+msgstr "Команды"
+
+msgid "palette.uri_error"
+msgstr "Не удалось открыть ссылку"
+
+msgid "plan.accept"
+msgstr "Принять"
+
+msgid "plan.back"
+msgstr "К терминалу"
+
+msgid "plan.blocks"
+msgstr "Блокирует: {nodes}"
+
+msgid "plan.card.progress"
+msgstr "Выполнено {done} из {total}"
+
+msgid "plan.card.title"
+msgstr "План"
+
+msgid "plan.card.unknown"
+msgstr "Плана пока нет"
+
+msgid "plan.decision_error"
+msgstr "Не удалось изменить шаг: {error}"
+
+msgid "plan.depends"
+msgstr "Зависит от: {nodes}"
+
+msgid "plan.empty"
+msgstr "Попросите агента спланировать задачу — план появится здесь и в Obsidian"
+
+msgid "plan.evidence"
+msgstr "Отчёт агента: {text}"
+
+msgid "plan.go_tab"
+msgstr "Перейти во вкладку"
+
+msgid "plan.hidden"
+msgstr "ещё {count} не показано"
+
+msgid "plan.lease"
+msgstr "Аренда до {time}"
+
+msgid "plan.ready"
+msgstr "Готово к работе: {nodes}"
+
+msgid "plan.select_node"
+msgstr "Выберите шаг, чтобы увидеть подробности"
+
+msgid "plan.send_back"
+msgstr "Вернуть"
+
+msgid "plan.sent_back_note"
+msgstr "Возвращено при приёмке"
+
+msgid "plan.status.blocked"
+msgstr "Заблокирован"
+
+msgid "plan.status.cancelled"
+msgstr "Отменён"
+
+msgid "plan.status.done"
+msgstr "Готово"
+
+msgid "plan.status.failed"
+msgstr "Ошибка"
+
+msgid "plan.status.in_progress"
+msgstr "В работе"
+
+msgid "plan.status.pending"
+msgstr "Ожидает"
+
+msgid "plan.status.verifying"
+msgstr "Проверяется"
+
+msgid "prefs.appearance"
+msgstr "Внешний вид"
+
+msgid "prefs.apply"
+msgstr "Применить"
+
+msgid "prefs.approval_hold"
+msgstr "Секунд на решение"
+
+msgid "prefs.approvals"
+msgstr "Запросы агентов"
+
+msgid "prefs.approvals_inline"
+msgstr "В этом окне"
+
+msgid "prefs.approvals_mode"
+msgstr "Отвечать"
+
+msgid "prefs.approvals_native"
+msgstr "В диалоге агента"
+
+msgid "prefs.close_body"
+msgstr "Применить изменения перед закрытием?"
+
+msgid "prefs.dark"
+msgstr "Тёмная"
+
+msgid "prefs.discard"
+msgstr "Отменить изменения"
+
+msgid "prefs.error"
+msgstr "Не удалось сохранить настройки. Ваши правки сохранены; повторите применение."
+
+msgid "prefs.font"
+msgstr "Шрифты по порядку (пусто — системный)"
+
+msgid "prefs.font_add"
+msgstr "Добавить установленный моноширинный шрифт"
+
+msgid "prefs.font_size"
+msgstr "Размер шрифта"
+
+msgid "prefs.font_tip"
+msgstr "Несколько шрифтов через запятую: символ, которого нет в первом, берётся из следующего"
+
+msgid "prefs.keep_editing"
+msgstr "Продолжить редактирование"
+
+msgid "prefs.light"
+msgstr "Светлая"
+
+msgid "prefs.load_error"
+msgstr "Не удалось загрузить настройки"
+
+msgid "prefs.quota_critical"
+msgstr "Критический уровень при использовании, %"
+
+msgid "prefs.quota_display"
+msgstr "Лимиты: показывать"
+
+msgid "prefs.quota_remaining"
+msgstr "Осталось"
+
+msgid "prefs.quota_used"
+msgstr "Использовано"
+
+msgid "prefs.quota_warn"
+msgstr "Предупреждение при использовании, %"
+
+msgid "prefs.saved"
+msgstr "Настройки сохранены"
+
+msgid "prefs.saving"
+msgstr "Сохранение настроек…"
+
+msgid "prefs.scrollback"
+msgstr "Строк прокрутки"
+
+msgid "prefs.system"
+msgstr "Системная"
+
+msgid "prefs.terminal"
+msgstr "Терминал"
+
+msgid "prefs.theme"
+msgstr "Тема"
+
+msgid "prefs.title"
+msgstr "Настройки"
+
+msgid "prefs.unsaved"
+msgstr "Несохранённые настройки"
+
+msgid "prefs.updated_draft"
+msgstr "Настройки изменились в другом окне. Ваши правки сохранены; проверьте их перед применением."
+
+msgid "quit.cancel"
+msgstr "Остаться"
+
+msgid "quit.close"
+msgstr "Закрыть приложение"
+
+msgid "quit.counts"
+msgstr "Работающих агентов: {agents}. Ожидающих запросов: {approvals}."
+
+msgid "quit.effect"
+msgstr "Работа может прерваться. Запросы больше не будут видны. Рабочие копии сохранятся."
+
+msgid "quit.heading"
+msgstr "Закрыть AConsole?"
+
+msgid "quit.unknown"
+msgstr "Не удалось проверить агентов. Они могут продолжать работу."
+
+msgid "quota.5h"
+msgstr "5 ч"
+
+msgid "quota.7d"
+msgstr "7 д"
+
+msgid "quota.api"
+msgstr "API"
+
+msgid "quota.api_cost"
+msgstr "Открытые сессии по ценам API: {money} ({count})"
+
+msgid "quota.auto"
+msgstr "Auto + Composer"
+
+msgid "quota.auto.short"
+msgstr "Auto"
+
+msgid "quota.budget"
+msgstr "Пул"
+
+msgid "quota.credits"
+msgstr "Осталось кредитов: {count}"
+
+msgid "quota.credits_unlimited"
+msgstr "Кредиты: без ограничений"
+
+msgid "quota.critical"
+msgstr "Использовано не менее 95 % лимита аккаунта"
+
+msgid "quota.days"
+msgstr "{count} д"
+
+msgid "quota.details"
+msgstr "Подробнее"
+
+msgid "quota.empty"
+msgstr "Пока нет данных"
+
+msgid "quota.info"
+msgstr "Откуда берутся лимиты"
+
+msgid "quota.info.date"
+msgstr "Обновлено {time}"
+
+msgid "quota.info.every"
+msgstr "Опрашивается каждые {minutes} мин"
+
+msgid "quota.info.hours"
+msgid_plural "quota.info.hours.plural"
+msgstr[0] "Обновлено в {time}, {count} час назад"
+msgstr[1] "Обновлено в {time}, {count} часа назад"
+msgstr[2] "Обновлено в {time}, {count} часов назад"
+
+msgid "quota.info.mcp"
+msgstr "Токены инструментов AConsole оценены как байты / 4."
+
+msgid "quota.info.minutes"
+msgid_plural "quota.info.minutes.plural"
+msgstr[0] "Обновлено в {time}, {count} минуту назад"
+msgstr[1] "Обновлено в {time}, {count} минуты назад"
+msgstr[2] "Обновлено в {time}, {count} минут назад"
+
+msgid "quota.info.never"
+msgstr "Чисел пока нет"
+
+msgid "quota.info.note"
+msgstr "Ядро опрашивает каждого агента по своему расписанию. Кнопка обновления спрашивает всех сразу."
+
+msgid "quota.info.now"
+msgstr "Обновлено только что, в {time}"
+
+msgid "quota.mcp"
+msgstr "Инструменты AConsole передали агенту {size}, {tokens} токенов, вызовов: {calls}"
+
+msgid "quota.month"
+msgstr "Месяц"
+
+msgid "quota.month.short"
+msgstr "Мес"
+
+msgid "quota.no_go"
+msgstr "Нет подписки Go"
+
+msgid "quota.no_go.copy"
+msgstr "OpenCode считает 5 часов, неделю и месяц только для подписки Go. Этот логин платит по факту."
+
+msgid "quota.observed"
+msgstr "на {time}"
+
+msgid "quota.panel.cache_read"
+msgstr "из кэша"
+
+msgid "quota.panel.cache_write"
+msgstr "в кэш"
+
+msgid "quota.panel.close"
+msgstr "Закрыть подробности"
+
+msgid "quota.panel.input"
+msgstr "ввод"
+
+msgid "quota.panel.limits"
+msgstr "Лимиты"
+
+msgid "quota.panel.no_tokens"
+msgstr "Агент не передаёт данные о токенах"
+
+msgid "quota.panel.output"
+msgstr "вывод"
+
+msgid "quota.panel.period"
+msgid_plural "quota.panel.period.plural"
+msgstr[0] "Пул на {count} день"
+msgstr[1] "Пул на {count} дня"
+msgstr[2] "Пул на {count} дней"
+
+msgid "quota.panel.plan"
+msgstr "Тариф"
+
+msgid "quota.panel.reset"
+msgstr "Сброс {time}, через {left}"
+
+msgid "quota.panel.source"
+msgstr "Источник"
+
+msgid "quota.panel.tokens"
+msgstr "Токены"
+
+msgid "quota.panel.tokens_since"
+msgstr "Токены с {date}"
+
+msgid "quota.panel.total"
+msgstr "Всего"
+
+msgid "quota.peak"
+msgstr "до {pct} %"
+
+msgid "quota.peak_left"
+msgstr "осталось {pct} %"
+
+msgid "quota.refresh"
+msgstr "Запросить лимиты у всех агентов сейчас"
+
+msgid "quota.reset"
+msgstr "Сброс {time}"
+
+msgid "quota.source.claude-usage"
+msgstr "/usage Claude в контейнере agent-claude"
+
+msgid "quota.source.codex-app-server"
+msgstr "Сервер приложения Codex в контейнере agent-codex"
+
+msgid "quota.source.cursor-dashboard"
+msgstr "API панели Cursor, по входу Cursor CLI"
+
+msgid "quota.source.none"
+msgstr "Источник пока не ответил"
+
+msgid "quota.source.opencode-go"
+msgstr "API использования OpenCode Go, по ключу OpenCode CLI"
+
+msgid "quota.source_unknown"
+msgstr "Источник данных не указан"
+
+msgid "quota.tabs"
+msgstr "Вкладки этого аккаунта"
+
+msgid "quota.title"
+msgstr "Лимиты"
+
+msgid "quota.title_left"
+msgstr "Остаток лимитов"
+
+msgid "quota.unknown"
+msgstr "Данных о лимитах пока нет"
+
+msgid "quota.unknown.copy"
+msgstr "Агент ещё не передал данные о лимитах"
+
+msgid "quota.week"
+msgstr "Неделя"
+
+msgid "quota.week.short"
+msgstr "Нед"
+
+msgid "review.agent_not_started"
+msgstr "Сначала запустите агента во вкладке"
+
+msgid "review.back"
+msgstr "К терминалу"
+
+msgid "review.binary"
+msgstr "Двоичный файл: показать нечего"
+
+msgid "review.changes"
+msgstr "Изменения"
+
+msgid "review.checkpoint_line"
+msgstr "Ход {turn} · {time} · файлов: {files} · +{insertions} −{deletions}"
+
+msgid "review.checkpoints"
+msgstr "Чекпоинты"
+
+msgid "review.comment"
+msgstr "Комментарий"
+
+msgid "review.comment_body"
+msgstr "{path}, {hunk}"
+
+msgid "review.comment_cancel"
+msgstr "Отмена"
+
+msgid "review.comment_error"
+msgstr "Не удалось отправить комментарий"
+
+msgid "review.comment_heading"
+msgstr "Комментарий для агента"
+
+msgid "review.comment_queued"
+msgstr "Комментарий поставлен в очередь вкладки"
+
+msgid "review.comment_send"
+msgstr "Отправить"
+
+msgid "review.comment_sent"
+msgstr "Комментарий отправлен"
+
+msgid "review.load_error"
+msgstr "Не удалось загрузить: {error}"
+
+msgid "review.no_changes"
+msgstr "Изменений нет"
+
+msgid "review.no_checkpoints"
+msgstr "Чекпоинт появляется при каждом отправленном запросе"
+
+msgid "review.no_tab"
+msgstr "Сначала выберите вкладку"
+
+msgid "review.open"
+msgstr "Изменения и снимки"
+
+msgid "review.restore"
+msgstr "Восстановить"
+
+msgid "review.restore_body"
+msgstr "{scope}\n\nФайлов в снимке: {count}\n{files}\n\nТекущее состояние сохранится как новый снимок."
+
+msgid "review.restore_busy"
+msgstr "Агент работает. Восстановите, когда он закончит"
+
+msgid "review.restore_cancel"
+msgstr "Отмена"
+
+msgid "review.restore_error"
+msgstr "Не удалось восстановить: {error}"
+
+msgid "review.restore_expired"
+msgstr "Подтверждение устарело. Попробуйте ещё раз"
+
+msgid "review.restore_heading"
+msgstr "Восстановить этот снимок?"
+
+msgid "review.restore_more"
+msgid_plural "review.restore_more.plural"
+msgstr[0] "и ещё {count} файл"
+msgstr[1] "и ещё {count} файла"
+msgstr[2] "и ещё {count} файлов"
+
+msgid "review.restored"
+msgstr "Восстановлено"
+
+msgid "review.select_file"
+msgstr "Выберите файл"
+
+msgid "review.too_large"
+msgstr "Этот diff слишком большой, показать его нельзя"
+
+msgid "review.truncated"
+msgstr "Дальше diff обрезан"
+
+msgid "section.collapse"
+msgstr "Свернуть"
+
+msgid "section.expand"
+msgstr "Развернуть"
+
+msgid "setup.applied"
+msgstr "Изменения применены"
+
+msgid "setup.apply"
+msgstr "Применить"
+
+msgid "setup.available"
+msgstr "Доступен"
+
+msgid "setup.back"
+msgstr "Назад"
+
+msgid "setup.changes"
+msgstr "Изменения"
+
+msgid "setup.check.agent_containers"
+msgstr "Контейнеры агентов"
+
+msgid "setup.check.agent_login"
+msgstr "Вход агентов в аккаунт"
+
+msgid "setup.check.agent_versions"
+msgstr "Программы агентов"
+
+msgid "setup.check.container_isolation"
+msgstr "Изоляция контейнеров"
+
+msgid "setup.check.devtools_graph_tools"
+msgstr "Инструменты графа кода"
+
+msgid "setup.check.host_dependencies"
+msgstr "Программы на компьютере"
+
+msgid "setup.check.notifications"
+msgstr "Уведомления"
+
+msgid "setup.check.storage"
+msgstr "Папка заметок"
+
+msgid "setup.check.worktree_storage_mounts"
+msgstr "Папки в контейнерах"
+
+msgid "setup.checked"
+msgstr "Проверьте результаты и продолжите"
+
+msgid "setup.checking"
+msgstr "Проверяем окружение…"
+
+msgid "setup.copied"
+msgstr "Команда скопирована"
+
+msgid "setup.copy_command"
+msgstr "Скопировать"
+
+msgid "setup.done"
+msgstr "Готово"
+
+msgid "setup.done_copy"
+msgstr "Всё готово. Изменения и снимки доступны из меню вкладки."
+
+msgid "setup.error"
+msgstr "Не удалось завершить шаг. Повторите попытку."
+
+msgid "setup.expired"
+msgstr "Срок предпросмотра истёк. Посмотрите изменения заново."
+
+msgid "setup.finish"
+msgstr "Готово"
+
+msgid "setup.folder"
+msgstr "Выбрать папку проекта…"
+
+msgid "setup.found"
+msgstr "Нашли"
+
+msgid "setup.log"
+msgstr "Журнал: {path}"
+
+msgid "setup.login"
+msgstr "Нужен вход"
+
+msgid "setup.next"
+msgstr "Дальше"
+
+msgid "setup.no_agents"
+msgstr "Ни один агент не готов. Настройте изолированный контейнер по README и запустите мастер заново."
+
+msgid "setup.no_changes"
+msgstr "Изменения не требуются"
+
+msgid "setup.no_project"
+msgstr "Проект не выбран"
+
+msgid "setup.open_task"
+msgstr "Открыть первую задачу"
+
+msgid "setup.preview"
+msgstr "Посмотреть изменения"
+
+msgid "setup.preview_copy"
+msgstr "Проверьте точные изменения перед применением"
+
+msgid "setup.project"
+msgstr "Проект"
+
+msgid "setup.project_copy"
+msgstr "Агенты спрашивают, прежде чем действовать. Это можно изменить в настройках."
+
+msgid "setup.reason.agent_containers"
+msgstr "Контейнеров агентов пока нет. Перед созданием выберите изолированные папки по README. Справка по команде:"
+
+msgid "setup.reason.agent_login"
+msgstr "Нет входа в аккаунт: {detail}. Войдите:"
+
+msgid "setup.reason.agent_versions"
+msgstr "Программа агента не отвечает в контейнере: {detail}. Откройте контейнер и установите её:"
+
+msgid "setup.reason.container_isolation"
+msgstr "Данные хоста могут быть доступны, либо изоляция неизвестна. Нужен отдельный HOME, доступ только к рабочим копиям и vault. См. README: Container isolation. Результат: {detail}"
+
+msgid "setup.reason.devtools_graph_tools"
+msgstr "В контейнере devtools нет: {detail}. Граф кода покроет меньше языков. Установите их там:"
+
+msgid "setup.reason.host_dependencies"
+msgstr "Не установлено: {detail}. Установите:"
+
+msgid "setup.reason.notifications"
+msgstr "Для уведомлений нужны notify-send и сеанс D-Bus. Недоступно: {detail}. Проверьте или установите:"
+
+msgid "setup.reason.storage"
+msgstr "Папки нет: {detail}. Создайте её здесь на шаге «Изменения» или выполните:"
+
+msgid "setup.reason.worktree_storage_mounts"
+msgstr "Контейнеры не видят рабочие папки: {detail}. Проверьте монтирования; оставьте только рабочие копии и vault:"
+
+msgid "setup.restart"
+msgstr "Запустить мастер заново…"
+
+msgid "setup.skip"
+msgstr "Позже"
+
+msgid "setup.task"
+msgstr "Первая задача"
+
+msgid "setup.task_copy"
+msgstr "Откройте агента в новой рабочей копии или продолжите без запуска задачи."
+
+msgid "setup.title"
+msgstr "Добро пожаловать в AConsole"
+
+msgid "setup.unavailable"
+msgstr "Недоступен"
+
+msgid "shortcuts.approve"
+msgstr "Разрешить запрос"
+
+msgid "shortcuts.attention-allow"
+msgstr "Разрешить в списке"
+
+msgid "shortcuts.attention-deny"
+msgstr "Отклонить в списке"
+
+msgid "shortcuts.attention-next"
+msgstr "Следующий запрос в списке"
+
+msgid "shortcuts.attention-open"
+msgstr "Открыть вкладку запроса из списка"
+
+msgid "shortcuts.attention-previous"
+msgstr "Предыдущий запрос в списке"
+
+msgid "shortcuts.close-tab"
+msgstr "Закрыть вкладку"
+
+msgid "shortcuts.copy"
+msgstr "Копировать"
+
+msgid "shortcuts.deny"
+msgstr "Отклонить запрос"
+
+msgid "shortcuts.diff"
+msgstr "Изменения"
+
+msgid "shortcuts.git"
+msgstr "Git"
+
+msgid "shortcuts.new-tab"
+msgstr "Новая вкладка"
+
+msgid "shortcuts.next-attention"
+msgstr "Следующий запрос внимания"
+
+msgid "shortcuts.next-tab"
+msgstr "Следующая вкладка"
+
+msgid "shortcuts.palette"
+msgstr "Командная палитра"
+
+msgid "shortcuts.paste"
+msgstr "Вставить"
+
+msgid "shortcuts.previous-tab"
+msgstr "Предыдущая вкладка"
+
+msgid "shortcuts.quit"
+msgstr "Выход"
+
+msgid "shortcuts.send-next-key"
+msgstr "Передать следующую клавишу терминалу"
+
+msgid "shortcuts.settings"
+msgstr "Настройки"
+
+msgid "shortcuts.shortcuts"
+msgstr "Горячие клавиши"
+
+msgid "shortcuts.tab-1"
+msgstr "Вкладка 1"
+
+msgid "shortcuts.tab-2"
+msgstr "Вкладка 2"
+
+msgid "shortcuts.tab-3"
+msgstr "Вкладка 3"
+
+msgid "shortcuts.tab-4"
+msgstr "Вкладка 4"
+
+msgid "shortcuts.tab-5"
+msgstr "Вкладка 5"
+
+msgid "shortcuts.tab-6"
+msgstr "Вкладка 6"
+
+msgid "shortcuts.tab-7"
+msgstr "Вкладка 7"
+
+msgid "shortcuts.tab-8"
+msgstr "Вкладка 8"
+
+msgid "shortcuts.tab-9"
+msgstr "Вкладка 9"
+
+msgid "shortcuts.terminal-search"
+msgstr "Поиск в терминале"
+
+msgid "shortcuts.title"
+msgstr "Горячие клавиши"
+
+msgid "shortcuts.toggle-sidebar"
+msgstr "Показать или скрыть боковую панель"
+
+msgid "shortcuts.zoom-in"
+msgstr "Крупнее текст терминала"
+
+msgid "shortcuts.zoom-out"
+msgstr "Мельче текст терминала"
+
+msgid "shortcuts.zoom-reset"
+msgstr "Обычный текст терминала"
+
+msgid "startup.close"
+msgstr "Закрыть"
+
+msgid "startup.diagnostics"
+msgstr "Скопировать диагностику"
+
+msgid "startup.failed"
+msgstr "Не удалось запустить AConsole"
+
+msgid "startup.loading"
+msgstr "Подключаемся к ядру…"
+
+msgid "startup.log"
+msgstr "Журнал: {path}"
+
+msgid "startup.retry"
+msgstr "Повторить"
+
+msgid "startup.starting"
+msgstr "Запускаем AConsole…"
+
+msgid "tabs.close"
+msgstr "Закрыть…"
+
+msgid "tabs.close_body"
+msgstr "У вкладки есть своя рабочая копия"
+
+msgid "tabs.close_cancel"
+msgstr "Отмена"
+
+msgid "tabs.close_error"
+msgstr "Не удалось закрыть вкладку: {error}"
+
+msgid "tabs.close_heading"
+msgstr "Оставить рабочую копию?"
+
+msgid "tabs.close_keep"
+msgstr "Оставить"
+
+msgid "tabs.close_kept"
+msgstr "Вкладка закрыта, рабочая копия осталась ({reason})"
+
+msgid "tabs.close_remove"
+msgstr "Удалить"
+
+msgid "tabs.empty"
+msgstr "Откройте агента в рабочей копии проекта"
+
+msgid "tabs.fork"
+msgstr "Создать ветку CLI-сессии"
+
+msgid "tabs.list"
+msgstr "Вкладки"
+
+msgid "tabs.menu"
+msgstr "Меню вкладки"
+
+msgid "tabs.move_down"
+msgstr "Ниже (Alt+↓)"
+
+msgid "tabs.move_up"
+msgstr "Выше (Alt+↑)"
+
+msgid "tabs.name"
+msgstr "Название вкладки"
+
+msgid "tabs.new"
+msgstr "Новая вкладка"
+
+msgid "tabs.new.add_project"
+msgstr "Добавить проект…"
+
+msgid "tabs.new.agent"
+msgstr "Агент"
+
+msgid "tabs.new.base_branch"
+msgstr "Базовая ветка"
+
+msgid "tabs.new.cli_empty"
+msgstr "Сохранённых сессий нет. Для OpenCode нужен работающий сервер."
+
+msgid "tabs.new.cli_error"
+msgstr "Не удалось загрузить CLI-сессии. Откройте диалог заново для повтора."
+
+msgid "tabs.new.cli_new"
+msgstr "Новая CLI-сессия"
+
+msgid "tabs.new.cli_session"
+msgstr "CLI-сессия агента"
+
+msgid "tabs.new.error"
+msgstr "Не удалось открыть вкладку: {error}"
+
+msgid "tabs.new.existing_worktree"
+msgstr "Существующая рабочая копия"
+
+msgid "tabs.new.isolated"
+msgstr "Изолированный исполнитель"
+
+msgid "tabs.new.isolated_hint"
+msgstr "Отдельная рабочая копия для параллельной работы"
+
+msgid "tabs.new.main_checkout"
+msgstr "Основная рабочая копия"
+
+msgid "tabs.new.main_warning"
+msgstr "Агент будет менять основную рабочую копию проекта."
+
+msgid "tabs.new.new_worktree"
+msgstr "Новая рабочая копия"
+
+msgid "tabs.new.no_agents"
+msgstr "Нет доступных агентов"
+
+msgid "tabs.new.no_node"
+msgstr "Без узла"
+
+msgid "tabs.new.no_projects"
+msgstr "Добавьте проект, чтобы открыть вкладку"
+
+msgid "tabs.new.open"
+msgstr "Открыть"
+
+msgid "tabs.new.opening"
+msgstr "Открытие…"
+
+msgid "tabs.new.path"
+msgstr "Путь существующей рабочей копии"
+
+msgid "tabs.new.plan_node"
+msgstr "Узел плана"
+
+msgid "tabs.new.project"
+msgstr "Проект"
+
+msgid "tabs.new.project_error"
+msgstr "Не удалось добавить проект: {error}"
+
+msgid "tabs.new.task"
+msgstr "Новая задача"
+
+msgid "tabs.new.task_title"
+msgstr "Название задачи"
+
+msgid "tabs.new.work_session"
+msgstr "Рабочая сессия"
+
+msgid "tabs.new.workspace"
+msgstr "Рабочая копия"
+
+msgid "tabs.project"
+msgstr "Проект"
+
+msgid "tabs.project.close_tabs"
+msgstr "Сначала закройте вкладки проекта"
+
+msgid "tabs.project.remove"
+msgstr "Убрать проект из списка"
+
+msgid "tabs.project.remove_body"
+msgstr "Репозиторий, рабочие копии и их файлы останутся на диске. Проект можно добавить снова."
+
+msgid "tabs.project.remove_error"
+msgstr "Не удалось убрать проект: {error}"
+
+msgid "tabs.project.remove_heading"
+msgstr "Убрать {name} из списка?"
+
+msgid "tabs.reason.ahead"
+msgstr "В рабочей копии есть коммиты, не слитые в базовую ветку."
+
+msgid "tabs.reason.dirty"
+msgstr "В рабочей копии есть незаписанные изменения."
+
+msgid "tabs.reason.ignored"
+msgstr "В рабочей копии есть игнорируемые файлы, которые будут удалены."
+
+msgid "tabs.reason.kept"
+msgstr "Рабочая копия сохранена: удалить её не удалось."
+
+msgid "tabs.rename"
+msgstr "Переименовать"
+
+msgid "tabs.reorder_error"
+msgstr "Не удалось завершить перестановку. Порядок вкладок мог измениться"
+
+msgid "tabs.search"
+msgstr "Поиск сессий"
+
+msgid "tabs.search.none"
+msgstr "Сессии не найдены"
+
+msgid "tabs.status.error"
+msgstr "Ошибка"
+
+msgid "tabs.status.exited"
+msgstr "Завершён"
+
+msgid "tabs.status.idle"
+msgstr "Свободен"
+
+msgid "tabs.status.starting"
+msgstr "Запускается"
+
+msgid "tabs.status.unknown"
+msgstr "Статус неизвестен"
+
+msgid "tabs.status.waiting_approval"
+msgstr "Ждёт подтверждения"
+
+msgid "tabs.status.waiting_input"
+msgstr "Ждёт ввода"
+
+msgid "tabs.status.working"
+msgstr "Работает"
+
+msgid "tabs.stop_body"
+msgstr "Незавершённая команда будет прервана. Перед закрытием приложение проверит рабочую копию."
+
+msgid "tabs.stop_close"
+msgstr "Остановить и закрыть"
+
+msgid "tabs.stop_heading"
+msgstr "Остановить агента и закрыть вкладку?"
+
+msgid "tabs.wait_days"
+msgstr "{days} д"
+
+msgid "tabs.wait_hours"
+msgstr "{hours} ч"
+
+msgid "tabs.wait_minutes"
+msgstr "{minutes} мин"
+
+msgid "terminal.cancel"
+msgstr "Отмена"
+
+msgid "terminal.close"
+msgstr "Закрыть"
+
+msgid "terminal.empty"
+msgstr "Выберите вкладку агента"
+
+msgid "terminal.ended"
+msgstr "Сессия завершена"
+
+msgid "terminal.ended_code"
+msgstr "Сессия завершена с кодом {code}"
+
+msgid "terminal.error"
+msgstr "Не удалось запустить сессию: {error}"
+
+msgid "terminal.handoff"
+msgstr "Передать управление"
+
+msgid "terminal.handoff_confirm"
+msgstr "Остановить текущего агента, проверить завершение его процессов, сохранить снимок и запустить этого агента?"
+
+msgid "terminal.new"
+msgstr "Новая"
+
+msgid "terminal.report_error"
+msgstr "Не удалось передать состояние сессии"
+
+msgid "terminal.restart_error"
+msgstr "Не удалось перезапустить сессию"
+
+msgid "terminal.resume"
+msgstr "Возобновить"
+
+msgid "terminal.resume_unavailable"
+msgstr "Нет сохранённой сессии или агент не поддерживает продолжение. Выберите новую сессию."
+
+msgid "terminal.retry"
+msgstr "Повторить запуск сессии"
+
+msgid "terminal.search"
+msgstr "Поиск в терминале"
+
+msgid "terminal.search_close"
+msgstr "Закрыть поиск"
+
+msgid "terminal.search_next"
+msgstr "Следующее совпадение"
+
+msgid "terminal.search_previous"
+msgstr "Предыдущее совпадение"
+
+msgid "terminal.start"
+msgstr "Запустите агента в своём проекте"
+
+msgid "terminal.waiting_body"
+msgstr "В этой рабочей копии уже запущен другой агент. Новая вкладка ожидает. Передайте управление для запуска или выберите отдельную копию для параллельной работы."
+
+msgid "terminal.waiting_title"
+msgstr "Агент добавлен в сессию"
+
+msgid "duration.days"
+msgid_plural "duration.days.plural"
+msgstr[0] "{count} день"
+msgstr[1] "{count} дня"
+msgstr[2] "{count} дней"
+
+msgid "setup.detail.metadata_limit"
+msgstr "Метаданные монтирований превысили предел диагностики"
+
+msgid "setup.detail.no_containers"
+msgstr "Контейнеров агентов нет. См. README: изоляция контейнеров (SEC-7)."
+
+msgid "setup.detail.agent_login"
+msgstr "Здесь проверяется Claude; состояние остальных агентов показано выше"
+
+msgid "setup.detail.agent_versions"
+msgstr "Версии агентов в их контейнерах"
+
+msgid "setup.detail.storage_mounts"
+msgstr "Пути рабочих копий и заметок в контейнерах агентов"
+
+msgid "setup.detail.notify_missing"
+msgstr "notify-send не установлен"
+
+msgid "setup.detail.bus_missing"
+msgstr "Сессионная шина D-Bus недоступна"
+
+msgid "setup.isolation.list_unknown"
+msgstr "Список контейнеров недоступен; изоляция неизвестна"
+
+msgid "setup.isolation.mount_unknown"
+msgstr "{0}: метаданные монтирований недоступны; изоляция неизвестна"
+
+msgid "setup.isolation.mount_invalid"
+msgstr "{0}: неверные метаданные монтирований; изоляция неизвестна"
+
+msgid "setup.isolation.mount_unresolved"
+msgstr "{0}: источник монтирования не определён; изоляция неизвестна"
+
+msgid "setup.isolation.writable"
+msgstr "{0}: {1} → {2} (доступна запись)"
+
+msgid "setup.isolation.readonly"
+msgstr "{0}: {1} → {2} (только чтение)"
+
+msgid "setup.isolation.metadata_only"
+msgstr "Чувствительные монтирования хоста не найдены; проверка метаданных не гарантирует изоляцию."

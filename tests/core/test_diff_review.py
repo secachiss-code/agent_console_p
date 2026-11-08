@@ -19,7 +19,7 @@ from aconsole.core.infrastructure.git.diff import GitDiff
 _GIT = "/usr/bin/git"
 _FIXTURE = Path(__file__).resolve().parents[1] / "fixtures" / "diff"
 _MARKER = "ACONSOLE_DIFF_DRIVER_RAN"
-_QUEUED = "Комментарий поставлен в очередь вкладки"
+_QUEUED = "review.comment_queued"
 _BIG = 20
 _CAP = 4
 _BETA = ((6, 10),)
@@ -83,7 +83,7 @@ def test_diff_review_send_comment_queues_until_idle(tmp_path: Path) -> None:
     first = events.events[0]
     assert isinstance(first, InjectToTerminal)
     assert first.submit is True
-    assert first.text == "Комментарий к `keep.txt` @@ -1 +1 @@: rename it\n"
+    assert first.text == "Comment on `keep.txt` @@ -1 +1 @@: rename it\n"
     with pytest.raises(DomainError) as missing:
         service.summary("missing", None)
     assert missing.value.name == "TAB_NOT_FOUND"

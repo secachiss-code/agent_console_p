@@ -1,5 +1,7 @@
 """Formatting of quota reset countdowns."""
 
+from aconsole.ui.i18n import _
+
 _SECONDS_PER_DAY = 24 * 60 * 60
 
 
@@ -8,6 +10,6 @@ def format_remaining(seconds: int, locale: str) -> str:
     remaining = max(0, seconds)
     if remaining >= _SECONDS_PER_DAY:
         days = remaining // _SECONDS_PER_DAY
-        return f"{days} дн" if locale.startswith("ru") else f"{days}d"
+        return _("duration.days", days, lang=locale).format(count=days)
     minutes = remaining // 60
     return f"{minutes // 60}:{minutes % 60:02d}"

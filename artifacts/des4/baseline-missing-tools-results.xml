@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="1" failures="0" skipped="0" tests="1" time="3.285" timestamp="2026-11-08T12:47:43.108303+03:00" hostname="somovasnbook14"><testcase classname="" name="tests.gui.front.test_contrast_table" time="0.000"><error message="collection failure">ImportError while importing test module '/tmp/des4-xvfb-795bsv81/baseline/tests/gui/front/test_contrast_table.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/home/sas/.local/share/uv/python/cpython-3.15.1-linux-x86_64-gnu/lib/python3.15/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/gui/front/test_contrast_table.py:18: in &lt;module&gt;
+    import contrast_check  # noqa: E402
+    ^^^^^^^^^^^^^^^^^^^^^
+E   ModuleNotFoundError: No module named 'contrast_check'</error></testcase></testsuite></testsuites>

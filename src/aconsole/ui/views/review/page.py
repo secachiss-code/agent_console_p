@@ -13,6 +13,10 @@ from gi.repository import Adw, Gtk, Pango  # noqa: E402
 from aconsole.contracts.app import CheckpointView, DiffFileResult, DiffFileView, DiffHunk  # noqa: E402
 from aconsole.ui.bootstrap import spawn_task  # noqa: E402
 from aconsole.ui.client.core_client import CoreCallError  # noqa: E402
+from aconsole.ui.i18n import (  # noqa: E402
+    core_message,
+    format_date,
+)
 from aconsole.ui.viewmodels.review_vm import ReviewViewModel, files_preview  # noqa: E402
 from aconsole.ui.views.review.diff_widgets import file_row, hunk_text  # noqa: E402
 from aconsole.ui.views.review.messages import _ as translate  # noqa: E402
@@ -239,11 +243,11 @@ class ReviewPage(Gtk.Box):
         finally:
             self._sending_comments.discard(key)
         if not result.ok:
-            self._toast(result.toast or translate("review.comment_error"))
+            self._toast(core_message(result.toast) if result.toast else translate("review.comment_error"))
             return
         if self._comment_drafts.get(key) == text:
             _ = self._comment_drafts.pop(key, None)
-        self._toast(result.toast or translate("review.comment_sent"))
+        self._toast(core_message(result.toast) if result.toast else translate("review.comment_sent"))
 
     async def load_checkpoints(self) -> None:
         self._checkpoint_generation += 1
@@ -274,7 +278,7 @@ class ReviewPage(Gtk.Box):
         row.set_subtitle(
             translate("review.checkpoint_line").format(
                 turn=point.turn,
-                time=point.created_at.astimezone().strftime("%d.%m %H:%M"),
+                time=format_date(point.created_at),
                 files=point.files_changed,
                 insertions=point.insertions,
                 deletions=point.deletions,
@@ -297,11 +301,11 @@ class ReviewPage(Gtk.Box):
         named, rest = files_preview(preview.files)
         lines = list(named)
         if rest:
-            lines.append(translate("review.restore_more").format(count=rest))
+            lines.append(translate("review.restore_more", rest).format(count=rest))
         dialog = Adw.AlertDialog(
             heading=translate("review.restore_heading"),
             body=translate("review.restore_body").format(
-                scope=preview.scope_note, count=len(preview.files), files="\n".join(lines),
+                scope=core_message(preview.scope_note), count=len(preview.files), files="\n".join(lines),
             ),
         )
         dialog.add_response("cancel", translate("review.restore_cancel"))

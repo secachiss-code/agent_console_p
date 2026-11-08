@@ -9,6 +9,7 @@ from typing import Final, final
 
 from aconsole.contracts.app import SessionListResult
 from aconsole.contracts.common import AgentKind
+from aconsole.contracts.messages import UiMessage
 from aconsole.core.domain.agent import CAPABILITIES
 from aconsole.core.domain.agent import AgentKind as DomainAgent
 from aconsole.core.infrastructure.agents.claude import sessions as claude_sessions
@@ -23,10 +24,7 @@ from aconsole.core.infrastructure.agents.opencode.stream import EventStream
 
 _LOG = logging.getLogger(__name__)
 _NO_PORT: Final = 0
-_CODEX_HOOKS_HELP: Final = """Hooks Codex не подтверждены.
-Согласования остаются в терминале, автоматические чекпоинты отключены.
-Откройте /hooks в Codex, проверьте настройки hooks и ограничения администратора,
-затем перезапустите агента в AConsole."""
+_CODEX_HOOKS_HELP: Final = UiMessage.CODEX_HOOKS_HELP
 
 
 @final

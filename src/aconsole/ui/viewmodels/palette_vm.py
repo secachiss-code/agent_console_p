@@ -1,7 +1,10 @@
 """Cached palette search and execution state, independent of GTK."""
 
+import msgspec
+
 from aconsole.contracts.app import CommandResult, PaletteExecuteParams, PaletteItem, PaletteItemsResult, PaletteQuery
 from aconsole.ui.client.core_client import CoreClient
+from aconsole.ui.i18n import _, core_message
 from aconsole.ui.viewmodels.logic.rank import rank_items
 
 
@@ -40,7 +43,7 @@ class PaletteViewModel:
             return
         if generation == self._generation:
             self.loading = False
-            self._catalog = result.items
+            self._catalog = tuple(_localized(item) for item in result.items)
             self.items = rank_items(self._catalog, self.query)
 
     def close(self) -> None:
@@ -101,3 +104,14 @@ class PaletteViewModel:
             raise
         finally:
             self.executing = False
+
+
+def _localized(item: PaletteItem) -> PaletteItem:
+    title = item.title
+    if item.id.startswith("command:plan:"):
+        title = _("palette.open_plan").format(title=title)
+    elif item.id.startswith("approval:"):
+        title = _("palette.review_request").format(tool=title)
+    elif item.id in {"command:terminal", "command:approvals"}:
+        title = core_message(title)
+    return item if title == item.title else msgspec.structs.replace(item, title=title)

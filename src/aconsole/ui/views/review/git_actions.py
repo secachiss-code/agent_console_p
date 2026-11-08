@@ -18,6 +18,7 @@ from gi.repository import Adw, GObject, Gtk  # noqa: E402
 
 from aconsole.ui.bootstrap import spawn_task  # noqa: E402
 from aconsole.ui.client.core_client import CoreCallError  # noqa: E402
+from aconsole.ui.i18n import core_message  # noqa: E402
 from aconsole.ui.viewmodels.git_vm import (  # noqa: E402
     GitViewModel,
     GraphRow,
@@ -678,7 +679,7 @@ class GitActions:
 
     async def _do_send(self, source: DiffSource, preview: SendDiffPreviewResult) -> None:
         done = await self._host.viewmodel.send(source, preview)
-        self._host.toast(done.toast or translate("git.sent"))
+        self._host.toast(core_message(done.toast) if done.toast else translate("git.sent"))
 
     async def _load_facts(self) -> None:
         """A hint beside the work. If it cannot be read, the banner just stays away."""

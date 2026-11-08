@@ -18,6 +18,7 @@ from aconsole.contracts.app import (
     ResetRankingParams,
 )
 from aconsole.contracts.common import NoteRef, PaletteKind
+from aconsole.contracts.messages import UiMessage
 
 PALETTE_METHODS: Final = frozenset({"palette/items", "palette/execute", "palette/resetRanking"})
 
@@ -59,16 +60,16 @@ class PaletteService:
             entries = self._catalog(PaletteQuery(tab_id=params.tab_id, project_id=params.project_id))
             entry = entries.get(params.item_id)
             if entry is None:
-                return CommandResult(ok=False, toast="This palette item is no longer available")
+                return CommandResult(ok=False, toast=UiMessage.PALETTE_ITEM_UNAVAILABLE)
             result = entry.result
             if entry.note is not None:
                 try:
                     uri = self._note_uri(str(entry.note))
                 except ValueError:
-                    return CommandResult(ok=False, toast="This note is no longer available")
+                    return CommandResult(ok=False, toast=UiMessage.PALETTE_NOTE_UNAVAILABLE)
                 result = CommandResult(ok=True, toast=None, open_uri=uri)
             if result is None:
-                return CommandResult(ok=False, toast="This palette item is unavailable")
+                return CommandResult(ok=False, toast=UiMessage.PALETTE_ITEM_UNAVAILABLE)
             # Ranking is bounded to the live catalog, rather than retaining deleted tab/node IDs forever.
             self._usage = {key: score for key, score in self._usage.items() if key in entries}
             self._usage[params.item_id] = self._usage.get(params.item_id, 0.0) + 1.0
@@ -104,13 +105,13 @@ class PaletteService:
             add(f"tab:{row.id}", PaletteKind.TAB, row.title, row.agent.value,
                 CommandResult(ok=True, toast=None, opened_tab=row.id))
         if tab is not None:
-            add("command:terminal", PaletteKind.COMMAND, "Current terminal", tab.title,
+            add("command:terminal", PaletteKind.COMMAND, UiMessage.PALETTE_TERMINAL, tab.title,
                 CommandResult(ok=True, toast=None, opened_tab=tab.id))
         for plan in snapshot.plans:
             if project is not None and plan.project_id != project:
                 continue
             target = CommandResult(ok=True, toast=None, open_page=PageRef(kind="plan", ref=str(plan.id)))
-            add(f"command:plan:{plan.id}", PaletteKind.COMMAND, f"Open plan: {plan.title}", plan.goal, target)
+            add(f"command:plan:{plan.id}", PaletteKind.COMMAND, plan.title, plan.goal, target)
             for node in plan.nodes:
                 add(f"node:{node.id}", PaletteKind.PLAN_NODE, f"{node.key}: {node.title}", plan.title, target)
                 ref = node.note if self._note_ref is None else self._note_ref(str(plan.id), node.key)
@@ -121,9 +122,9 @@ class PaletteService:
             if view.tab_id not in tab_ids:
                 continue
             target = CommandResult(ok=True, toast=None, opened_tab=view.tab_id)
-            add(f"approval:{view.id}", PaletteKind.APPROVAL, f"Review request: {view.tool}", str(view.tab_id), target)
+            add(f"approval:{view.id}", PaletteKind.APPROVAL, view.tool, str(view.tab_id), target)
         if snapshot.approvals and any(view.tab_id in tab_ids for view in snapshot.approvals):
             first = next(view for view in snapshot.approvals if view.tab_id in tab_ids)
-            add("command:approvals", PaletteKind.COMMAND, "Pending requests", None,
+            add("command:approvals", PaletteKind.COMMAND, UiMessage.PALETTE_APPROVALS, None,
                 CommandResult(ok=True, toast=None, opened_tab=first.tab_id))
         return entries

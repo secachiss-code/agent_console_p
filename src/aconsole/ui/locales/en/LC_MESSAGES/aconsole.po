@@ -1,0 +1,1944 @@
+# AConsole UI catalog. Stable message IDs; brace placeholders are Python format fields.
+msgid ""
+msgstr "Project-Id-Version: AConsole 0.1.1\nLanguage: en\nContent-Type: text/plain; charset=UTF-8\nPlural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "approvals.alert.open"
+msgstr "Open"
+
+msgid "approvals.alert.title"
+msgstr "An agent is waiting for a decision"
+
+msgid "approvals.allow"
+msgstr "Allow"
+
+msgid "approvals.allow_session"
+msgstr "Allow until this tab closes"
+
+msgid "approvals.allow_session_tip"
+msgstr "Also allow the same command for the rest of this tab's session"
+
+msgid "approvals.closed"
+msgstr "This request is already closed: your decision was not applied"
+
+msgid "approvals.cwd"
+msgstr "In {cwd}"
+
+msgid "approvals.deny"
+msgstr "Deny"
+
+msgid "approvals.deny_message"
+msgstr "Message if denied (optional)"
+
+msgid "approvals.failed"
+msgstr "Could not send the decision: {error}. The request is still open"
+
+msgid "approvals.left"
+msgstr "{time} left"
+
+msgid "approvals.more_elsewhere"
+msgid_plural "approvals.more_elsewhere.plural"
+msgstr[0] "{count} request in other tabs · Ctrl+Shift+Y"
+msgstr[1] "{count} requests in other tabs · Ctrl+Shift+Y"
+
+msgid "approvals.more_files"
+msgid_plural "approvals.more_files.plural"
+msgstr[0] "and {count} more file"
+msgstr[1] "and {count} more files"
+
+msgid "approvals.more_here"
+msgid_plural "approvals.more_here.plural"
+msgstr[0] "{count} more request here"
+msgstr[1] "{count} more requests here"
+
+msgid "approvals.release"
+msgstr "In terminal"
+
+msgid "approvals.release_tip"
+msgstr "Leave this request to the agent's own prompt"
+
+msgid "approvals.risk.destructive"
+msgstr "Destructive"
+
+msgid "approvals.risk.network"
+msgstr "Network"
+
+msgid "approvals.risk.outside_worktree"
+msgstr "Outside the worktree"
+
+msgid "approvals.risk.privilege"
+msgstr "Elevated rights"
+
+msgid "approvals.risk.publish"
+msgstr "Publishes"
+
+msgid "approvals.risk.secrets"
+msgstr "Secrets"
+
+msgid "approvals.time_up"
+msgstr "Time is up"
+
+msgid "approvals.title.command"
+msgstr "{agent} wants to run a command"
+
+msgid "approvals.title.edit"
+msgid_plural "approvals.title.edit.plural"
+msgstr[0] "{agent} wants to edit {count} file"
+msgstr[1] "{agent} wants to edit {count} files"
+
+msgid "approvals.title.tool"
+msgstr "{agent} wants to use {tool}"
+
+msgid "checkpoint.scope.worktree"
+msgstr "Restores all tracked and new files in the working copy; ignored files (.gitignore) are left unchanged"
+
+msgid "clipboard.copy"
+msgstr "Copy"
+
+msgid "clipboard.empty"
+msgstr "No text or image in clipboard"
+
+msgid "clipboard.error"
+msgstr "Could not paste: {error}"
+
+msgid "clipboard.image"
+msgstr "Paste image"
+
+msgid "clipboard.large"
+msgstr "Image exceeds 8 MiB or 32 megapixels"
+
+msgid "clipboard.paste"
+msgstr "Paste"
+
+msgid "clipboard.select"
+msgstr "Select all"
+
+msgid "codex.hooks.help"
+msgstr "Codex hooks have not been confirmed.\nApprovals stay in the terminal; automatic checkpoints are disabled.\nOpen /hooks in Codex, check hook settings and administrator restrictions, then restart the agent in AConsole."
+
+msgid "connection.reconnecting"
+msgstr "Connection to core lost. Reconnecting; displayed data may be out of date."
+
+msgid "error.AGENT_CONFIG_UNSUPPORTED_VERSION"
+msgstr "This agent version is not supported"
+
+msgid "error.AGENT_NOT_LOGGED_IN"
+msgstr "This agent is not signed in: sign in inside its container"
+
+msgid "error.AGENT_UNAVAILABLE"
+msgstr "This agent is not available: check its container in the setup wizard"
+
+msgid "error.APPROVAL_ALREADY_DECIDED"
+msgstr "This request was already decided"
+
+msgid "error.APPROVAL_EXPIRED"
+msgstr "The time for this request ran out"
+
+msgid "error.APPROVAL_NOT_FOUND"
+msgstr "This request is already closed"
+
+msgid "error.BRANCH_ALREADY_CHECKED_OUT"
+msgstr "This branch is open in another working copy"
+
+msgid "error.CHECKPOINT_NOT_FOUND"
+msgstr "This checkpoint no longer exists"
+
+msgid "error.CHECKPOINT_RESTORE_CONFLICT"
+msgstr "Files changed since the checkpoint"
+
+msgid "error.CONFIRM_TOKEN_INVALID"
+msgstr "The preview is out of date. Review again"
+
+msgid "error.CONTAINER_START_FAILED"
+msgstr "The agent's container did not start"
+
+msgid "error.CONTENT_MODIFIED"
+msgstr "The data changed meanwhile. Try again"
+
+msgid "error.DATABASE_TRANSACTION_FAILED"
+msgstr "Could not save to the database"
+
+msgid "error.DIFF_TOO_LARGE"
+msgstr "The changes are too large to show"
+
+msgid "error.GIT_BRANCH_UNKNOWN"
+msgstr "This branch no longer exists"
+
+msgid "error.GIT_COMMAND_FAILED"
+msgstr "Git could not do this"
+
+msgid "error.GIT_OPERATION_IN_PROGRESS"
+msgstr "Another Git operation is running"
+
+msgid "error.GIT_SNAPSHOT_STALE"
+msgstr "The repository changed meanwhile. Try again"
+
+msgid "error.GIT_STATE_STALE"
+msgstr "The repository changed meanwhile. Try again"
+
+msgid "error.GIT_WORKTREE_UNKNOWN"
+msgstr "This working copy is no longer known"
+
+msgid "error.LEASE_HELD"
+msgstr "Another agent is working on this step"
+
+msgid "error.MERGE_CONFLICT"
+msgstr "The merge has conflicts"
+
+msgid "error.MERGE_MODE_UNAVAILABLE"
+msgstr "This way of merging cannot be used here"
+
+msgid "error.MERGE_PREVIEW_STALE"
+msgstr "The branches changed. Review the merge again"
+
+msgid "error.NODE_EVIDENCE_REQUIRED"
+msgstr "This step needs evidence first"
+
+msgid "error.NODE_NOT_FOUND"
+msgstr "This step no longer exists"
+
+msgid "error.NODE_NOT_READY"
+msgstr "Steps before this one are not finished"
+
+msgid "error.NODE_TRANSITION_INVALID"
+msgstr "The step cannot change like this"
+
+msgid "error.NOTE_NOT_FOUND"
+msgstr "This note no longer exists"
+
+msgid "error.PATHS_OVERLAP"
+msgstr "Another step is changing the same files"
+
+msgid "error.PATH_NOT_ALLOWED"
+msgstr "This path is outside what the application may use"
+
+msgid "error.PLAN_NOT_FOUND"
+msgstr "This plan no longer exists"
+
+msgid "error.PROJECT_NOT_A_GIT_REPO"
+msgstr "This folder is not a Git repository"
+
+msgid "error.PROJECT_NOT_FOUND"
+msgstr "This project is no longer known"
+
+msgid "error.PROTOCOL_VERSION_UNSUPPORTED"
+msgstr "The UI and core are incompatible. Restart the core with the same AConsole version"
+
+msgid "error.REQUEST_CANCELLED"
+msgstr "The request was cancelled"
+
+msgid "error.SERVER_BUSY"
+msgstr "The core is busy. Try again in a moment"
+
+msgid "error.SESSION_NOT_FOUND"
+msgstr "This session no longer exists"
+
+msgid "error.SETUP_FIX_FAILED"
+msgstr "The fix did not work"
+
+msgid "error.TAB_NOT_FOUND"
+msgstr "This tab no longer exists"
+
+msgid "error.TAB_STATE_CONFLICT"
+msgstr "The tab has moved on. Try again"
+
+msgid "error.VAULT_CONFLICT"
+msgstr "The note changed meanwhile"
+
+msgid "error.VAULT_NOT_CONFIGURED"
+msgstr "The notes folder is not set up"
+
+msgid "error.WORKTREE_BUSY"
+msgstr "An agent is working in this copy"
+
+msgid "error.WORKTREE_CREATE_FAILED"
+msgstr "Could not create a working copy"
+
+msgid "error.WORKTREE_DIRTY"
+msgstr "The working copy has uncommitted changes"
+
+msgid "error.WORKTREE_NOT_REMOVABLE"
+msgstr "This working copy cannot be removed"
+
+msgid "error.WORK_SESSION_ARCHIVED"
+msgstr "Reopen this archived task before changing it"
+
+msgid "error.WORK_SESSION_NOT_FOUND"
+msgstr "This task session no longer exists"
+
+msgid "error.WORK_SESSION_WORKSPACE_CONFLICT"
+msgstr "This working copy already belongs to a task"
+
+msgid "error.fallback"
+msgstr "The core could not do this ({name}). Details are in {log}"
+
+msgid "git.abort_body"
+msgstr "Git goes back to where it started. File fixes made since are lost."
+
+msgid "git.abort_go"
+msgstr "Abort"
+
+msgid "git.abort_heading"
+msgstr "Abort this {kind}?"
+
+msgid "git.aborted"
+msgstr "Aborted"
+
+msgid "git.back"
+msgstr "Back to terminal"
+
+msgid "git.badge_behind"
+msgstr "Behind {count}"
+
+msgid "git.badge_busy"
+msgstr "Agent is working"
+
+msgid "git.badge_conflict"
+msgstr "Conflict: {count}"
+
+msgid "git.badge_in_progress"
+msgstr "Operation in progress"
+
+msgid "git.badge_ready"
+msgstr "Merges +{insertions} −{deletions}"
+
+msgid "git.badge_unchecked"
+msgstr "Not checked"
+
+msgid "git.block.already_merged"
+msgstr "This branch is already merged."
+
+msgid "git.block.conflict"
+msgstr "The branches conflict."
+
+msgid "git.block.same_branch"
+msgstr "This is the target branch itself."
+
+msgid "git.block.source_busy"
+msgstr "An agent is working on this branch."
+
+msgid "git.block.source_dirty"
+msgstr "Commit the session's files before merging"
+
+msgid "git.block.target_busy"
+msgstr "An agent is working on the target."
+
+msgid "git.block.target_dirty"
+msgstr "The target's worktree has uncommitted changes."
+
+msgid "git.block.target_in_progress"
+msgstr "A Git operation is unfinished on the target."
+
+msgid "git.cancel"
+msgstr "Cancel"
+
+msgid "git.card.conflicts"
+msgid_plural "git.card.conflicts.plural"
+msgstr[0] "{count} copy with conflicts"
+msgstr[1] "{count} copies with conflicts"
+
+msgid "git.card.nothing"
+msgstr "Nothing to merge"
+
+msgid "git.card.open"
+msgstr "Git & checkpoints"
+
+msgid "git.card.ready"
+msgid_plural "git.card.ready.plural"
+msgstr[0] "{count} copy ready to merge"
+msgstr[1] "{count} copies ready to merge"
+
+msgid "git.card.title"
+msgstr "Git"
+
+msgid "git.card.unknown"
+msgstr "Branches, commits and snapshots"
+
+msgid "git.card.worktrees"
+msgstr "Working copies: {count} · with changes: {changed}"
+
+msgid "git.cherry_go"
+msgstr "Cherry-pick"
+
+msgid "git.cherry_heading"
+msgstr "Cherry-pick {oid}"
+
+msgid "git.cleaned"
+msgstr "Worktree removed"
+
+msgid "git.cleaned_kept"
+msgstr "Worktree removed. Its commits are kept on {ref}"
+
+msgid "git.cleanup_body"
+msgstr "{path} is deleted from disk. Only merged, clean worktrees can go."
+
+msgid "git.cleanup_go"
+msgstr "Remove"
+
+msgid "git.cleanup_heading"
+msgstr "Remove the worktree of {branch}?"
+
+msgid "git.cleanup_ignored_body"
+msgstr "Removing {path} also deletes what Git ignores there, such as .venv or local settings."
+
+msgid "git.cleanup_ignored_go"
+msgstr "Delete them too"
+
+msgid "git.cleanup_ignored_heading"
+msgstr "Ignored files are here too"
+
+msgid "git.close"
+msgstr "Close"
+
+msgid "git.closed_tab"
+msgstr "closed tab"
+
+msgid "git.commit_counts"
+msgstr "Staged: {count}"
+
+msgid "git.commit_go"
+msgstr "Commit"
+
+msgid "git.commit_placeholder"
+msgstr "Commit message"
+
+msgid "git.committed"
+msgstr "Committed {oid}"
+
+msgid "git.detached"
+msgstr "detached HEAD"
+
+msgid "git.discard_body"
+msgstr "The file goes back to {oid}: +{insertions} −{deletions}. What is staged stays. Current files are kept on a side ref, so this can be undone by hand."
+
+msgid "git.discard_go"
+msgstr "Discard"
+
+msgid "git.discard_heading"
+msgstr "Discard changes in {path}?"
+
+msgid "git.discard_removes"
+msgstr "The last commit does not have this file, so it is deleted. Current files are kept on a side ref, so this can be undone by hand."
+
+msgid "git.do.abort"
+msgstr "Abort…"
+
+msgid "git.do.cherry_pick"
+msgstr "Cherry-pick…"
+
+msgid "git.do.cleanup"
+msgstr "Remove worktree…"
+
+msgid "git.do.continue"
+msgstr "Continue"
+
+msgid "git.do.merge"
+msgstr "Merge…"
+
+msgid "git.do.rebase"
+msgstr "Rebase…"
+
+msgid "git.do.restore"
+msgstr "Restore file…"
+
+msgid "git.do.send"
+msgstr "Send diff…"
+
+msgid "git.do.stage"
+msgstr "Stage"
+
+msgid "git.do.unstage"
+msgstr "Unstage"
+
+msgid "git.empty"
+msgstr "No commits yet"
+
+msgid "git.err.confirm_token_invalid"
+msgstr "That confirmation ran out. Try again"
+
+msgid "git.err.database_transaction_failed"
+msgstr "The journal could not be written, so nothing was changed. Try again"
+
+msgid "git.err.git_operation_in_progress"
+msgstr "Finish or abort the Git operation first"
+
+msgid "git.err.git_state_stale"
+msgstr "Git moved since you looked. Check and try again"
+
+msgid "git.err.merge_conflict"
+msgstr "The branches conflict"
+
+msgid "git.err.merge_mode_unavailable"
+msgstr "This merge cannot be done now"
+
+msgid "git.err.merge_preview_stale"
+msgstr "A branch moved after the preview. Open the merge again"
+
+msgid "git.err.not_removable.agent_running"
+msgstr "Its tab is still open. Stop the agent first"
+
+msgid "git.err.not_removable.detached"
+msgstr "It is on no branch"
+
+msgid "git.err.not_removable.dirty"
+msgstr "It has uncommitted files"
+
+msgid "git.err.not_removable.main_checkout"
+msgstr "The main checkout cannot be removed"
+
+msgid "git.err.not_removable.not_managed"
+msgstr "This working copy is not managed by AConsole"
+
+msgid "git.err.not_removable.not_merged"
+msgstr "Its commits are not merged yet"
+
+msgid "git.err.other"
+msgstr "Could not do that: {name}"
+
+msgid "git.err.worktree_busy"
+msgstr "An agent is working there. Wait for its turn to end"
+
+msgid "git.facts"
+msgstr "Changes touch {count} recorded facts"
+
+msgid "git.facts_body"
+msgstr "Their code changed after they were written. They may still be true."
+
+msgid "git.facts_heading"
+msgstr "Facts to check"
+
+msgid "git.facts_line"
+msgstr "{title}: {paths}"
+
+msgid "git.facts_open"
+msgstr "Open in Obsidian"
+
+msgid "git.facts_show"
+msgstr "Show"
+
+msgid "git.file_discard"
+msgstr "Discard changes…"
+
+msgid "git.file_stage"
+msgstr "Stage this file"
+
+msgid "git.file_unstage"
+msgstr "Unstage this file"
+
+msgid "git.merge_body"
+msgstr "Commits only: {source_oid} into {target_oid}, +{insertions} −{deletions}."
+
+msgid "git.merge_cleanup"
+msgstr "Remove the worktree and branch after merging"
+
+msgid "git.merge_conflicts"
+msgstr "Conflicts in: {paths}"
+
+msgid "git.merge_go"
+msgstr "Merge"
+
+msgid "git.merge_heading"
+msgstr "Merge {source} into {target}"
+
+msgid "git.merge_message"
+msgstr "Commit message (optional)"
+
+msgid "git.merge_session_cleanup"
+msgstr "Archive the session, stop its agents and remove its main working copy; keep worker copies and history"
+
+msgid "git.merge_source_dirty"
+msgstr "{source} has uncommitted files. They stay out of this merge."
+
+msgid "git.merged"
+msgstr "Merged as {oid}"
+
+msgid "git.meta_branch"
+msgstr "Branch: {branch}"
+
+msgid "git.meta_node"
+msgstr "Node: {node}"
+
+msgid "git.mode.fast_forward"
+msgstr "Fast-forward"
+
+msgid "git.mode.merge"
+msgstr "Merge commit"
+
+msgid "git.mode.squash"
+msgstr "Squash into one commit"
+
+msgid "git.mode_base"
+msgstr "Against base"
+
+msgid "git.mode_index"
+msgstr "Staged"
+
+msgid "git.mode_worktree"
+msgstr "Not staged"
+
+msgid "git.more"
+msgid_plural "git.more.plural"
+msgstr[0] "{count} commit loaded"
+msgstr[1] "{count} commits loaded"
+
+msgid "git.next"
+msgstr "Next"
+
+msgid "git.no_project"
+msgstr "Add a project first"
+
+msgid "git.op_conflicted"
+msgstr "Stopped on a conflict. Fix the files, stage them, then continue or abort"
+
+msgid "git.op_done"
+msgstr "Done: {oid}"
+
+msgid "git.op_failed"
+msgstr "Did not finish: {detail}"
+
+msgid "git.op_line"
+msgstr "{kind}: {status}"
+
+msgid "git.open"
+msgstr "Git & checkpoints"
+
+msgid "git.pick_worktree"
+msgstr "Which worktree?"
+
+msgid "git.rebase_body"
+msgstr "Its commits get new ids. The old head stays on a side ref, so this can be undone."
+
+msgid "git.rebase_go"
+msgstr "Rebase"
+
+msgid "git.rebase_heading"
+msgstr "Rebase {branch} onto {base}?"
+
+msgid "git.refresh"
+msgstr "Refresh"
+
+msgid "git.refused"
+msgstr "Git refused: {detail}"
+
+msgid "git.restore_body"
+msgstr "In {worktree}, from {oid}: +{insertions} −{deletions}. The current files are kept on a side ref first."
+
+msgid "git.restore_go"
+msgstr "Restore"
+
+msgid "git.restore_heading"
+msgstr "Restore {path}?"
+
+msgid "git.restore_removes"
+msgstr "{oid} does not have this file, so it is deleted from {worktree}. The current files are kept on a side ref first."
+
+msgid "git.restored"
+msgstr "Restored {path}"
+
+msgid "git.resumed"
+msgstr "Continued"
+
+msgid "git.scope_all"
+msgstr "All branches"
+
+msgid "git.scope_tab"
+msgstr "Tab: {title}"
+
+msgid "git.select"
+msgstr "Select a commit, a snapshot or uncommitted files"
+
+msgid "git.send_body"
+msgstr "{files} files, {size}. It goes into that agent's terminal as text to review."
+
+msgid "git.send_confirm_heading"
+msgstr "Send to {title}?"
+
+msgid "git.send_go"
+msgstr "Send"
+
+msgid "git.send_heading"
+msgstr "Send a diff to which agent?"
+
+msgid "git.send_too_large"
+msgstr "This diff is over 64 KiB. Select a smaller one"
+
+msgid "git.sent"
+msgstr "Diff sent"
+
+msgid "git.session_active"
+msgstr "active"
+
+msgid "git.session_archive"
+msgstr "Archive session"
+
+msgid "git.session_archive_hint"
+msgstr "Stop the session's agents and archive it, keeping its working copies and history. Reopening permits new work."
+
+msgid "git.session_archived"
+msgstr "archived"
+
+msgid "git.session_cleanup_hint"
+msgstr "Remove this worker copy only if its result was accepted and the copy has no uncommitted or ignored files."
+
+msgid "git.session_cleanup_worker"
+msgstr "Remove worker copy"
+
+msgid "git.session_confirm"
+msgstr "Confirm"
+
+msgid "git.session_handoff"
+msgstr "Hand off"
+
+msgid "git.session_handoff_hint"
+msgstr "Stop the current executor, keep a checkpoint, and start the selected agent. Switching tabs alone does not do this."
+
+msgid "git.session_integrate"
+msgstr "Accept into session"
+
+msgid "git.session_isolated"
+msgstr "isolated"
+
+msgid "git.session_project"
+msgstr "Entire project"
+
+msgid "git.session_removed"
+msgstr "main copy removed; history retained"
+
+msgid "git.session_rename"
+msgstr "Rename task"
+
+msgid "git.session_reopen_hint"
+msgstr "Reopen this session to permit new work in its saved copies."
+
+msgid "git.session_restore"
+msgstr "Restore files"
+
+msgid "git.session_restore_hint"
+msgstr "Stop session agents and save a safety snapshot, then restore files. HEAD and the staging index stay unchanged."
+
+msgid "git.session_result"
+msgstr "Keep worker result"
+
+msgid "git.session_result_hint"
+msgstr "Stop this isolated executor and retain its files as an immutable result for review."
+
+msgid "git.session_resume"
+msgstr "Reopen session"
+
+msgid "git.session_shared"
+msgstr "shared"
+
+msgid "git.snapshot"
+msgstr "Snapshot {turn}: {label}"
+
+msgid "git.stale"
+msgstr "Git moved. Reloading"
+
+msgid "git.title"
+msgstr "Git & checkpoints"
+
+msgid "git.uncommitted"
+msgstr "Uncommitted: {branch}"
+
+msgid "git.uncommitted_counts"
+msgstr "{staged} staged · {unstaged} changed · {untracked} new · {conflicted} in conflict"
+
+msgid "health.answered"
+msgstr "Requests answered"
+
+msgid "health.commit"
+msgstr "Last commit, ms"
+
+msgid "health.core"
+msgstr "Core"
+
+msgid "health.failed"
+msgstr "Failed writes"
+
+msgid "health.isolation"
+msgstr "Container isolation"
+
+msgid "health.isolation_check"
+msgstr "Check container mounts"
+
+msgid "health.isolation_loading"
+msgstr "Checking container mounts…"
+
+msgid "health.isolation_unknown"
+msgstr "Isolation has not been verified. Check container mounts before trusting approval restrictions."
+
+msgid "health.no_answer"
+msgstr "Not answering"
+
+msgid "health.no_database"
+msgstr "Working without a database"
+
+msgid "health.ok"
+msgstr "Working"
+
+msgid "health.queued"
+msgstr "Writes waiting"
+
+msgid "health.reconnects"
+msgstr "Reconnections"
+
+msgid "health.resyncs"
+msgstr "Snapshots pulled again"
+
+msgid "health.slowest"
+msgstr "Slowest request lately, ms"
+
+msgid "health.title"
+msgstr "Core health"
+
+msgid "notify.approval_required"
+msgstr "Approval required"
+
+msgid "notify.codex_hooks_unavailable"
+msgstr "Codex hooks unavailable"
+
+msgid "palette.back"
+msgstr "Back"
+
+msgid "palette.current_terminal"
+msgstr "Current terminal"
+
+msgid "palette.empty"
+msgstr "No matching commands"
+
+msgid "palette.error"
+msgstr "Could not load commands"
+
+msgid "palette.execute_error"
+msgstr "Could not execute the command"
+
+msgid "palette.item_unavailable"
+msgstr "This palette item is no longer available"
+
+msgid "palette.kind.action"
+msgstr "Actions"
+
+msgid "palette.kind.approval"
+msgstr "Approvals"
+
+msgid "palette.kind.command"
+msgstr "Commands"
+
+msgid "palette.kind.native_skill"
+msgstr "Skills"
+
+msgid "palette.kind.note"
+msgstr "Notes"
+
+msgid "palette.kind.plan_node"
+msgstr "Plan"
+
+msgid "palette.kind.session"
+msgstr "Sessions"
+
+msgid "palette.kind.tab"
+msgstr "Tabs"
+
+msgid "palette.loading"
+msgstr "Loading commands…"
+
+msgid "palette.note_unavailable"
+msgstr "This note is no longer available"
+
+msgid "palette.open_plan"
+msgstr "Open plan: {title}"
+
+msgid "palette.pending_requests"
+msgstr "Pending requests"
+
+msgid "palette.recent_empty"
+msgstr "Type to find a command"
+
+msgid "palette.review_request"
+msgstr "Review request: {tool}"
+
+msgid "palette.run"
+msgstr "Run"
+
+msgid "palette.search"
+msgstr "Search commands"
+
+msgid "palette.title"
+msgstr "Commands"
+
+msgid "palette.uri_error"
+msgstr "Could not open the link"
+
+msgid "plan.accept"
+msgstr "Accept"
+
+msgid "plan.back"
+msgstr "Back to terminal"
+
+msgid "plan.blocks"
+msgstr "Blocks: {nodes}"
+
+msgid "plan.card.progress"
+msgstr "{done} of {total} done"
+
+msgid "plan.card.title"
+msgstr "Plan"
+
+msgid "plan.card.unknown"
+msgstr "No plan yet"
+
+msgid "plan.decision_error"
+msgstr "Could not change the step: {error}"
+
+msgid "plan.depends"
+msgstr "Depends on: {nodes}"
+
+msgid "plan.empty"
+msgstr "Ask the agent to plan the task. The plan appears here and in Obsidian"
+
+msgid "plan.evidence"
+msgstr "Agent's report: {text}"
+
+msgid "plan.go_tab"
+msgstr "Go to tab"
+
+msgid "plan.hidden"
+msgstr "{count} more not shown"
+
+msgid "plan.lease"
+msgstr "Lease until {time}"
+
+msgid "plan.ready"
+msgstr "Ready: {nodes}"
+
+msgid "plan.select_node"
+msgstr "Select a step to see its details"
+
+msgid "plan.send_back"
+msgstr "Send back"
+
+msgid "plan.sent_back_note"
+msgstr "Sent back when accepting the step"
+
+msgid "plan.status.blocked"
+msgstr "Blocked"
+
+msgid "plan.status.cancelled"
+msgstr "Cancelled"
+
+msgid "plan.status.done"
+msgstr "Done"
+
+msgid "plan.status.failed"
+msgstr "Failed"
+
+msgid "plan.status.in_progress"
+msgstr "In progress"
+
+msgid "plan.status.pending"
+msgstr "Waiting"
+
+msgid "plan.status.verifying"
+msgstr "Verifying"
+
+msgid "prefs.appearance"
+msgstr "Appearance"
+
+msgid "prefs.apply"
+msgstr "Apply"
+
+msgid "prefs.approval_hold"
+msgstr "Seconds to wait for a decision"
+
+msgid "prefs.approvals"
+msgstr "Agent requests"
+
+msgid "prefs.approvals_inline"
+msgstr "This window"
+
+msgid "prefs.approvals_mode"
+msgstr "Answer in"
+
+msgid "prefs.approvals_native"
+msgstr "The agent's own prompt"
+
+msgid "prefs.close_body"
+msgstr "Apply your changes before closing?"
+
+msgid "prefs.dark"
+msgstr "Dark"
+
+msgid "prefs.discard"
+msgstr "Discard changes"
+
+msgid "prefs.error"
+msgstr "Could not save preferences. Your edits are kept; try applying again."
+
+msgid "prefs.font"
+msgstr "Fonts, in order (blank uses the system font)"
+
+msgid "prefs.font_add"
+msgstr "Add an installed monospace font"
+
+msgid "prefs.font_size"
+msgstr "Font size"
+
+msgid "prefs.font_tip"
+msgstr "Several families, separated by commas: a character the first lacks comes from the next"
+
+msgid "prefs.keep_editing"
+msgstr "Keep editing"
+
+msgid "prefs.light"
+msgstr "Light"
+
+msgid "prefs.load_error"
+msgstr "Could not load preferences"
+
+msgid "prefs.quota_critical"
+msgstr "Critical at used quota, %"
+
+msgid "prefs.quota_display"
+msgstr "Limits show"
+
+msgid "prefs.quota_remaining"
+msgstr "Remaining"
+
+msgid "prefs.quota_used"
+msgstr "Used"
+
+msgid "prefs.quota_warn"
+msgstr "Warning at used quota, %"
+
+msgid "prefs.saved"
+msgstr "Preferences saved"
+
+msgid "prefs.saving"
+msgstr "Saving preferences…"
+
+msgid "prefs.scrollback"
+msgstr "Scrollback lines"
+
+msgid "prefs.system"
+msgstr "System"
+
+msgid "prefs.terminal"
+msgstr "Terminal"
+
+msgid "prefs.theme"
+msgstr "Theme"
+
+msgid "prefs.title"
+msgstr "Preferences"
+
+msgid "prefs.unsaved"
+msgstr "Unsaved preferences"
+
+msgid "prefs.updated_draft"
+msgstr "Preferences changed elsewhere. Your edits are kept; review them before applying."
+
+msgid "quit.cancel"
+msgstr "Stay"
+
+msgid "quit.close"
+msgstr "Close application"
+
+msgid "quit.counts"
+msgstr "Running agents: {agents}. Pending requests: {approvals}."
+
+msgid "quit.effect"
+msgstr "Work may be interrupted. Pending requests will no longer be visible. Working copies remain."
+
+msgid "quit.heading"
+msgstr "Close AConsole?"
+
+msgid "quit.unknown"
+msgstr "Could not check running agents. They may still be working."
+
+msgid "quota.5h"
+msgstr "5 h"
+
+msgid "quota.7d"
+msgstr "7 d"
+
+msgid "quota.api"
+msgstr "API"
+
+msgid "quota.api_cost"
+msgstr "Open sessions at API prices: {money} ({count})"
+
+msgid "quota.auto"
+msgstr "Auto + Composer"
+
+msgid "quota.auto.short"
+msgstr "Auto"
+
+msgid "quota.budget"
+msgstr "Pool"
+
+msgid "quota.credits"
+msgstr "Credits left: {count}"
+
+msgid "quota.credits_unlimited"
+msgstr "Credits: unlimited"
+
+msgid "quota.critical"
+msgstr "An account has reached 95% of its limit"
+
+msgid "quota.days"
+msgstr "{count} d"
+
+msgid "quota.details"
+msgstr "Details"
+
+msgid "quota.empty"
+msgstr "No data yet"
+
+msgid "quota.info"
+msgstr "Where the limits come from"
+
+msgid "quota.info.date"
+msgstr "Updated on {time}"
+
+msgid "quota.info.every"
+msgstr "Asked every {minutes} min"
+
+msgid "quota.info.hours"
+msgid_plural "quota.info.hours.plural"
+msgstr[0] "Updated at {time}, {count} hour ago"
+msgstr[1] "Updated at {time}, {count} hours ago"
+
+msgid "quota.info.mcp"
+msgstr "Tokens for AConsole's tools are estimated as bytes / 4."
+
+msgid "quota.info.minutes"
+msgid_plural "quota.info.minutes.plural"
+msgstr[0] "Updated at {time}, {count} minute ago"
+msgstr[1] "Updated at {time}, {count} minutes ago"
+
+msgid "quota.info.never"
+msgstr "No numbers yet"
+
+msgid "quota.info.note"
+msgstr "The core asks each agent on its own schedule. The refresh button asks all of them now."
+
+msgid "quota.info.now"
+msgstr "Updated just now, at {time}"
+
+msgid "quota.mcp"
+msgstr "AConsole tools sent the agent {size}, {tokens} tokens, in {calls} calls"
+
+msgid "quota.month"
+msgstr "Month"
+
+msgid "quota.month.short"
+msgstr "Mo"
+
+msgid "quota.no_go"
+msgstr "No Go subscription"
+
+msgid "quota.no_go.copy"
+msgstr "OpenCode counts 5 hours, a week and a month only for its Go subscription. This login pays as it goes."
+
+msgid "quota.observed"
+msgstr "as of {time}"
+
+msgid "quota.panel.cache_read"
+msgstr "cache read"
+
+msgid "quota.panel.cache_write"
+msgstr "cache write"
+
+msgid "quota.panel.close"
+msgstr "Close details"
+
+msgid "quota.panel.input"
+msgstr "input"
+
+msgid "quota.panel.limits"
+msgstr "Limits"
+
+msgid "quota.panel.no_tokens"
+msgstr "This agent reports no tokens"
+
+msgid "quota.panel.output"
+msgstr "output"
+
+msgid "quota.panel.period"
+msgid_plural "quota.panel.period.plural"
+msgstr[0] "A pool for {count} day"
+msgstr[1] "A pool for {count} days"
+
+msgid "quota.panel.plan"
+msgstr "Plan"
+
+msgid "quota.panel.reset"
+msgstr "Resets on {time}, in {left}"
+
+msgid "quota.panel.source"
+msgstr "Source"
+
+msgid "quota.panel.tokens"
+msgstr "Tokens"
+
+msgid "quota.panel.tokens_since"
+msgstr "Tokens since {date}"
+
+msgid "quota.panel.total"
+msgstr "Total"
+
+msgid "quota.peak"
+msgstr "up to {pct} %"
+
+msgid "quota.peak_left"
+msgstr "{pct} % left"
+
+msgid "quota.refresh"
+msgstr "Ask every agent for its limits now"
+
+msgid "quota.reset"
+msgstr "Resets on {time}"
+
+msgid "quota.source.claude-usage"
+msgstr "Claude's /usage in the agent-claude container"
+
+msgid "quota.source.codex-app-server"
+msgstr "Codex app server in the agent-codex container"
+
+msgid "quota.source.cursor-dashboard"
+msgstr "Cursor's dashboard API, with the CLI's login"
+
+msgid "quota.source.none"
+msgstr "No source has answered yet"
+
+msgid "quota.source.opencode-go"
+msgstr "OpenCode Go usage API, with the CLI's key"
+
+msgid "quota.source_unknown"
+msgstr "Usage source unavailable"
+
+msgid "quota.tabs"
+msgstr "Tabs using this account"
+
+msgid "quota.title"
+msgstr "Limits"
+
+msgid "quota.title_left"
+msgstr "Limits left"
+
+msgid "quota.unknown"
+msgstr "No usage data yet"
+
+msgid "quota.unknown.copy"
+msgstr "Usage has not been reported by this agent"
+
+msgid "quota.week"
+msgstr "Week"
+
+msgid "quota.week.short"
+msgstr "Wk"
+
+msgid "review.agent_not_started"
+msgstr "Start the agent in this tab first"
+
+msgid "review.back"
+msgstr "Back to terminal"
+
+msgid "review.binary"
+msgstr "Binary file: nothing to show"
+
+msgid "review.changes"
+msgstr "Changes"
+
+msgid "review.checkpoint_line"
+msgstr "Turn {turn} · {time} · {files} files · +{insertions} −{deletions}"
+
+msgid "review.checkpoints"
+msgstr "Checkpoints"
+
+msgid "review.comment"
+msgstr "Comment"
+
+msgid "review.comment_body"
+msgstr "{path}, {hunk}"
+
+msgid "review.comment_cancel"
+msgstr "Cancel"
+
+msgid "review.comment_error"
+msgstr "Could not send the comment"
+
+msgid "review.comment_heading"
+msgstr "Comment for the agent"
+
+msgid "review.comment_queued"
+msgstr "Comment queued for this tab"
+
+msgid "review.comment_send"
+msgstr "Send"
+
+msgid "review.comment_sent"
+msgstr "Comment sent"
+
+msgid "review.load_error"
+msgstr "Could not load: {error}"
+
+msgid "review.no_changes"
+msgstr "No changes"
+
+msgid "review.no_checkpoints"
+msgstr "A checkpoint appears with each prompt you send"
+
+msgid "review.no_tab"
+msgstr "Select a tab first"
+
+msgid "review.open"
+msgstr "Changes and checkpoints"
+
+msgid "review.restore"
+msgstr "Restore"
+
+msgid "review.restore_body"
+msgstr "{scope}\n\nFiles in the checkpoint: {count}\n{files}\n\nThe current state is kept as a new checkpoint."
+
+msgid "review.restore_busy"
+msgstr "The agent is working. Restore when it stops"
+
+msgid "review.restore_cancel"
+msgstr "Cancel"
+
+msgid "review.restore_error"
+msgstr "Could not restore: {error}"
+
+msgid "review.restore_expired"
+msgstr "The confirmation expired. Try again"
+
+msgid "review.restore_heading"
+msgstr "Restore this checkpoint?"
+
+msgid "review.restore_more"
+msgid_plural "review.restore_more.plural"
+msgstr[0] "and {count} more file"
+msgstr[1] "and {count} more files"
+
+msgid "review.restored"
+msgstr "Restored"
+
+msgid "review.select_file"
+msgstr "Select a file"
+
+msgid "review.too_large"
+msgstr "This diff is too large to show"
+
+msgid "review.truncated"
+msgstr "The diff is cut off here"
+
+msgid "section.collapse"
+msgstr "Fold"
+
+msgid "section.expand"
+msgstr "Unfold"
+
+msgid "setup.applied"
+msgstr "Changes applied"
+
+msgid "setup.apply"
+msgstr "Apply"
+
+msgid "setup.available"
+msgstr "Available"
+
+msgid "setup.back"
+msgstr "Back"
+
+msgid "setup.changes"
+msgstr "Changes"
+
+msgid "setup.check.agent_containers"
+msgstr "Agent containers"
+
+msgid "setup.check.agent_login"
+msgstr "Agent sign-in"
+
+msgid "setup.check.agent_versions"
+msgstr "Agent programs"
+
+msgid "setup.check.container_isolation"
+msgstr "Container isolation"
+
+msgid "setup.check.devtools_graph_tools"
+msgstr "Code graph tools"
+
+msgid "setup.check.host_dependencies"
+msgstr "Host programs"
+
+msgid "setup.check.notifications"
+msgstr "Notifications"
+
+msgid "setup.check.storage"
+msgstr "Notes folder"
+
+msgid "setup.check.worktree_storage_mounts"
+msgstr "Folders in containers"
+
+msgid "setup.checked"
+msgstr "Review the results, then continue"
+
+msgid "setup.checking"
+msgstr "Checking your environment…"
+
+msgid "setup.copied"
+msgstr "Command copied"
+
+msgid "setup.copy_command"
+msgstr "Copy"
+
+msgid "setup.done"
+msgstr "Ready"
+
+msgid "setup.done_copy"
+msgstr "You are ready. Review changes and checkpoints from the tab menu."
+
+msgid "setup.error"
+msgstr "Could not complete this step. Try again."
+
+msgid "setup.expired"
+msgstr "Preview expired. Review changes again."
+
+msgid "setup.finish"
+msgstr "Finish"
+
+msgid "setup.folder"
+msgstr "Choose a project folder…"
+
+msgid "setup.found"
+msgstr "Found"
+
+msgid "setup.log"
+msgstr "Logs: {path}"
+
+msgid "setup.login"
+msgstr "Sign-in needed"
+
+msgid "setup.next"
+msgstr "Continue"
+
+msgid "setup.no_agents"
+msgstr "No agent is ready. Configure an isolated container using README, then run setup again."
+
+msgid "setup.no_changes"
+msgstr "No changes required"
+
+msgid "setup.no_project"
+msgstr "No project selected"
+
+msgid "setup.open_task"
+msgstr "Open first task"
+
+msgid "setup.preview"
+msgstr "Preview changes"
+
+msgid "setup.preview_copy"
+msgstr "Review the exact changes before applying them"
+
+msgid "setup.project"
+msgstr "Project"
+
+msgid "setup.project_copy"
+msgstr "Agents ask before acting. You can change this in preferences."
+
+msgid "setup.reason.agent_containers"
+msgstr "No agent container yet. Choose isolated mounts using README before creating one. Command reference:"
+
+msgid "setup.reason.agent_login"
+msgstr "Not signed in: {detail}. Sign in:"
+
+msgid "setup.reason.agent_versions"
+msgstr "The agent's program does not answer in: {detail}. Open the container and install it:"
+
+msgid "setup.reason.container_isolation"
+msgstr "Host data may be exposed, or isolation is unknown. Use a separate HOME and only worktrees/vault. See README: Container isolation. Findings: {detail}"
+
+msgid "setup.reason.devtools_graph_tools"
+msgstr "Missing in devtools: {detail}. The code graph then covers fewer languages. Install them there:"
+
+msgid "setup.reason.host_dependencies"
+msgstr "Not installed: {detail}. Install it:"
+
+msgid "setup.reason.notifications"
+msgstr "Desktop notifications need notify-send and a desktop D-Bus session. Missing: {detail}. Check or install:"
+
+msgid "setup.reason.storage"
+msgstr "The folder does not exist: {detail}. Create it here on the Changes step, or run:"
+
+msgid "setup.reason.worktree_storage_mounts"
+msgstr "Containers cannot see working folders: {detail}. Inspect mounts; provide only worktrees and vault:"
+
+msgid "setup.restart"
+msgstr "Run setup again…"
+
+msgid "setup.skip"
+msgstr "Later"
+
+msgid "setup.task"
+msgstr "First task"
+
+msgid "setup.task_copy"
+msgstr "Open an agent in a new working copy, or continue without starting a task."
+
+msgid "setup.title"
+msgstr "Welcome to AConsole"
+
+msgid "setup.unavailable"
+msgstr "Unavailable"
+
+msgid "shortcuts.approve"
+msgstr "Allow the request"
+
+msgid "shortcuts.attention-allow"
+msgstr "Allow, in the list"
+
+msgid "shortcuts.attention-deny"
+msgstr "Deny, in the list"
+
+msgid "shortcuts.attention-next"
+msgstr "Next request, in the list"
+
+msgid "shortcuts.attention-open"
+msgstr "Open the request's tab, in the list"
+
+msgid "shortcuts.attention-previous"
+msgstr "Previous request, in the list"
+
+msgid "shortcuts.close-tab"
+msgstr "Close tab"
+
+msgid "shortcuts.copy"
+msgstr "Copy"
+
+msgid "shortcuts.deny"
+msgstr "Deny the request"
+
+msgid "shortcuts.diff"
+msgstr "Changes"
+
+msgid "shortcuts.git"
+msgstr "Git"
+
+msgid "shortcuts.new-tab"
+msgstr "New tab"
+
+msgid "shortcuts.next-attention"
+msgstr "Next request for attention"
+
+msgid "shortcuts.next-tab"
+msgstr "Next tab"
+
+msgid "shortcuts.palette"
+msgstr "Command palette"
+
+msgid "shortcuts.paste"
+msgstr "Paste"
+
+msgid "shortcuts.previous-tab"
+msgstr "Previous tab"
+
+msgid "shortcuts.quit"
+msgstr "Quit"
+
+msgid "shortcuts.send-next-key"
+msgstr "Send the next key to the terminal"
+
+msgid "shortcuts.settings"
+msgstr "Preferences"
+
+msgid "shortcuts.shortcuts"
+msgstr "Keyboard shortcuts"
+
+msgid "shortcuts.tab-1"
+msgstr "Tab 1"
+
+msgid "shortcuts.tab-2"
+msgstr "Tab 2"
+
+msgid "shortcuts.tab-3"
+msgstr "Tab 3"
+
+msgid "shortcuts.tab-4"
+msgstr "Tab 4"
+
+msgid "shortcuts.tab-5"
+msgstr "Tab 5"
+
+msgid "shortcuts.tab-6"
+msgstr "Tab 6"
+
+msgid "shortcuts.tab-7"
+msgstr "Tab 7"
+
+msgid "shortcuts.tab-8"
+msgstr "Tab 8"
+
+msgid "shortcuts.tab-9"
+msgstr "Tab 9"
+
+msgid "shortcuts.terminal-search"
+msgstr "Search the terminal"
+
+msgid "shortcuts.title"
+msgstr "Keyboard shortcuts"
+
+msgid "shortcuts.toggle-sidebar"
+msgstr "Show or hide the sidebar"
+
+msgid "shortcuts.zoom-in"
+msgstr "Larger terminal text"
+
+msgid "shortcuts.zoom-out"
+msgstr "Smaller terminal text"
+
+msgid "shortcuts.zoom-reset"
+msgstr "Normal terminal text"
+
+msgid "startup.close"
+msgstr "Close"
+
+msgid "startup.diagnostics"
+msgstr "Copy diagnostics"
+
+msgid "startup.failed"
+msgstr "Could not start AConsole"
+
+msgid "startup.loading"
+msgstr "Connecting to core…"
+
+msgid "startup.log"
+msgstr "Log: {path}"
+
+msgid "startup.retry"
+msgstr "Retry"
+
+msgid "startup.starting"
+msgstr "Starting AConsole…"
+
+msgid "tabs.close"
+msgstr "Close…"
+
+msgid "tabs.close_body"
+msgstr "The tab has its own working copy"
+
+msgid "tabs.close_cancel"
+msgstr "Cancel"
+
+msgid "tabs.close_error"
+msgstr "Could not close the tab: {error}"
+
+msgid "tabs.close_heading"
+msgstr "Keep the working copy?"
+
+msgid "tabs.close_keep"
+msgstr "Keep"
+
+msgid "tabs.close_kept"
+msgstr "Closed the tab and kept the working copy ({reason})"
+
+msgid "tabs.close_remove"
+msgstr "Remove"
+
+msgid "tabs.empty"
+msgstr "Open an agent in a project working copy"
+
+msgid "tabs.fork"
+msgstr "Fork CLI session"
+
+msgid "tabs.list"
+msgstr "Tabs"
+
+msgid "tabs.menu"
+msgstr "Tab menu"
+
+msgid "tabs.move_down"
+msgstr "Move down (Alt+Down)"
+
+msgid "tabs.move_up"
+msgstr "Move up (Alt+Up)"
+
+msgid "tabs.name"
+msgstr "Tab name"
+
+msgid "tabs.new"
+msgstr "New tab"
+
+msgid "tabs.new.add_project"
+msgstr "Add project…"
+
+msgid "tabs.new.agent"
+msgstr "Agent"
+
+msgid "tabs.new.base_branch"
+msgstr "Base branch"
+
+msgid "tabs.new.cli_empty"
+msgstr "No saved conversations. OpenCode needs a running server."
+
+msgid "tabs.new.cli_error"
+msgstr "Could not load CLI conversations. Retry by reopening this dialog."
+
+msgid "tabs.new.cli_new"
+msgstr "New CLI conversation"
+
+msgid "tabs.new.cli_session"
+msgstr "CLI conversation"
+
+msgid "tabs.new.error"
+msgstr "Could not open the tab: {error}"
+
+msgid "tabs.new.existing_worktree"
+msgstr "Existing working copy"
+
+msgid "tabs.new.isolated"
+msgstr "Isolated executor"
+
+msgid "tabs.new.isolated_hint"
+msgstr "A separate working copy for parallel work"
+
+msgid "tabs.new.main_checkout"
+msgstr "Main checkout"
+
+msgid "tabs.new.main_warning"
+msgstr "The agent will edit the project's main working copy."
+
+msgid "tabs.new.new_worktree"
+msgstr "New working copy"
+
+msgid "tabs.new.no_agents"
+msgstr "No agents are available"
+
+msgid "tabs.new.no_node"
+msgstr "No node"
+
+msgid "tabs.new.no_projects"
+msgstr "Add a project to open a tab"
+
+msgid "tabs.new.open"
+msgstr "Open"
+
+msgid "tabs.new.opening"
+msgstr "Opening…"
+
+msgid "tabs.new.path"
+msgstr "Existing working copy path"
+
+msgid "tabs.new.plan_node"
+msgstr "Plan node"
+
+msgid "tabs.new.project"
+msgstr "Project"
+
+msgid "tabs.new.project_error"
+msgstr "Could not add the project: {error}"
+
+msgid "tabs.new.task"
+msgstr "New task"
+
+msgid "tabs.new.task_title"
+msgstr "Task title"
+
+msgid "tabs.new.work_session"
+msgstr "Task session"
+
+msgid "tabs.new.workspace"
+msgstr "Working copy"
+
+msgid "tabs.project"
+msgstr "Project"
+
+msgid "tabs.project.close_tabs"
+msgstr "Close this project's tabs first"
+
+msgid "tabs.project.remove"
+msgstr "Remove project from list"
+
+msgid "tabs.project.remove_body"
+msgstr "The repository, working copies and their files will stay on disk. You can add the project again."
+
+msgid "tabs.project.remove_error"
+msgstr "Could not remove the project: {error}"
+
+msgid "tabs.project.remove_heading"
+msgstr "Remove {name} from the list?"
+
+msgid "tabs.reason.ahead"
+msgstr "The working copy contains commits not merged into the base branch."
+
+msgid "tabs.reason.dirty"
+msgstr "The working copy contains uncommitted changes."
+
+msgid "tabs.reason.ignored"
+msgstr "The working copy contains ignored files that would be removed."
+
+msgid "tabs.reason.kept"
+msgstr "The working copy was kept because removal could not be completed."
+
+msgid "tabs.rename"
+msgstr "Rename"
+
+msgid "tabs.reorder_error"
+msgstr "Could not finish reordering. Tab order may have changed"
+
+msgid "tabs.search"
+msgstr "Search sessions"
+
+msgid "tabs.search.none"
+msgstr "No sessions match"
+
+msgid "tabs.status.error"
+msgstr "Error"
+
+msgid "tabs.status.exited"
+msgstr "Finished"
+
+msgid "tabs.status.idle"
+msgstr "Idle"
+
+msgid "tabs.status.starting"
+msgstr "Starting"
+
+msgid "tabs.status.unknown"
+msgstr "Unknown status"
+
+msgid "tabs.status.waiting_approval"
+msgstr "Waiting for approval"
+
+msgid "tabs.status.waiting_input"
+msgstr "Waiting for input"
+
+msgid "tabs.status.working"
+msgstr "Working"
+
+msgid "tabs.stop_body"
+msgstr "Unfinished commands will stop. The working copy will be checked before closing."
+
+msgid "tabs.stop_close"
+msgstr "Stop and close"
+
+msgid "tabs.stop_heading"
+msgstr "Stop the agent and close the tab?"
+
+msgid "tabs.wait_days"
+msgstr "{days} d"
+
+msgid "tabs.wait_hours"
+msgstr "{hours} h"
+
+msgid "tabs.wait_minutes"
+msgstr "{minutes} min"
+
+msgid "terminal.cancel"
+msgstr "Cancel"
+
+msgid "terminal.close"
+msgstr "Close"
+
+msgid "terminal.empty"
+msgstr "Select an agent tab"
+
+msgid "terminal.ended"
+msgstr "Session ended"
+
+msgid "terminal.ended_code"
+msgstr "Session ended with code {code}"
+
+msgid "terminal.error"
+msgstr "Could not start the session: {error}"
+
+msgid "terminal.handoff"
+msgstr "Hand off control"
+
+msgid "terminal.handoff_confirm"
+msgstr "Stop the current agent, verify its processes have exited, save a checkpoint, then start this agent?"
+
+msgid "terminal.new"
+msgstr "New"
+
+msgid "terminal.report_error"
+msgstr "Could not report session state"
+
+msgid "terminal.restart_error"
+msgstr "Could not restart the session"
+
+msgid "terminal.resume"
+msgstr "Resume"
+
+msgid "terminal.resume_unavailable"
+msgstr "No saved conversation, or this agent does not support resume. Choose a new session."
+
+msgid "terminal.retry"
+msgstr "Retry starting the session"
+
+msgid "terminal.search"
+msgstr "Search the terminal"
+
+msgid "terminal.search_close"
+msgstr "Close search"
+
+msgid "terminal.search_next"
+msgstr "Next match"
+
+msgid "terminal.search_previous"
+msgstr "Previous match"
+
+msgid "terminal.start"
+msgstr "Start an agent in your project"
+
+msgid "terminal.waiting_body"
+msgstr "Another agent is using this working copy. This tab is waiting. Hand off control to start it, or choose an isolated copy for parallel work."
+
+msgid "terminal.waiting_title"
+msgstr "Agent added to the session"
+
+msgid "duration.days"
+msgid_plural "duration.days.plural"
+msgstr[0] "{count} day"
+msgstr[1] "{count} days"
+
+msgid "setup.detail.metadata_limit"
+msgstr "Container mount metadata exceeded the diagnostic limit"
+
+msgid "setup.detail.no_containers"
+msgstr "No agent containers. See README: Container isolation (SEC-7)."
+
+msgid "setup.detail.agent_login"
+msgstr "Claude is checked here; other agents show their state above"
+
+msgid "setup.detail.agent_versions"
+msgstr "Agent versions inside their containers"
+
+msgid "setup.detail.storage_mounts"
+msgstr "Working copy and notes paths inside agent containers"
+
+msgid "setup.detail.notify_missing"
+msgstr "notify-send is missing"
+
+msgid "setup.detail.bus_missing"
+msgstr "Session D-Bus is unavailable"
+
+msgid "setup.isolation.list_unknown"
+msgstr "Container list unavailable; isolation is unknown"
+
+msgid "setup.isolation.mount_unknown"
+msgstr "{0}: mount metadata unavailable; isolation is unknown"
+
+msgid "setup.isolation.mount_invalid"
+msgstr "{0}: invalid mount metadata; isolation is unknown"
+
+msgid "setup.isolation.mount_unresolved"
+msgstr "{0}: unresolved mount source; isolation is unknown"
+
+msgid "setup.isolation.writable"
+msgstr "{0}: {1} → {2} (writable)"
+
+msgid "setup.isolation.readonly"
+msgstr "{0}: {1} → {2} (read-only)"
+
+msgid "setup.isolation.metadata_only"
+msgstr "No sensitive host binds detected; this metadata check does not guarantee isolation."

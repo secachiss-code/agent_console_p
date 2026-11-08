@@ -9,6 +9,7 @@ gi.require_version("Adw", "1")
 from gi.repository import Adw, GLib, Gtk  # noqa: E402
 
 from aconsole.ui.bootstrap import spawn_task  # noqa: E402
+from aconsole.ui.i18n import format_number, setup_check_reason  # noqa: E402
 from aconsole.ui.viewmodels.health_vm import HealthFacts, HealthViewModel  # noqa: E402
 from aconsole.ui.views.setup.messages import _ as translate  # noqa: E402
 
@@ -43,9 +44,9 @@ def _rows(facts: HealthFacts) -> dict[str, tuple[str, bool]]:
         "health.core": (translate(state), not core.database),
         "health.queued": (str(core.writer_queued), core.writer_queued >= _BACKLOG),
         "health.failed": (str(core.writer_failed), core.writer_failed > 0),
-        "health.commit": (f"{core.writer_last_commit_ms:.1f}", core.writer_last_commit_ms >= _SLOW_MS),
+        "health.commit": (format_number(core.writer_last_commit_ms, 1), core.writer_last_commit_ms >= _SLOW_MS),
         "health.answered": (str(core.ipc_answered), False),
-        "health.slowest": (f"{core.ipc_slowest_ms:.1f}", core.ipc_slowest_ms >= _SLOW_MS),
+        "health.slowest": (format_number(core.ipc_slowest_ms, 1), core.ipc_slowest_ms >= _SLOW_MS),
         **client,
     }
 
@@ -102,7 +103,10 @@ class HealthDialog(Adw.Dialog):
         self.isolation_label.set_label(translate("health.isolation_loading"))
         try:
             check = await self._viewmodel.load_isolation()
-            self.isolation_label.set_label(translate("health.isolation_unknown") if check is None else check.detail)
+            self.isolation_label.set_label(
+                translate("health.isolation_unknown") if check is None
+                else setup_check_reason(check),
+            )
             if check is None or not check.ok:
                 self.isolation_label.add_css_class("warning")
             else:

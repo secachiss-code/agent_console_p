@@ -41,13 +41,19 @@ def _trouble(dialog: HealthDialog) -> set[str]:
     return {key for key, label in dialog.values.items() if label.has_css_class("error")}
 
 
-def test_healthy_numbers_are_shown_without_alarm() -> None:
+@pytest.mark.parametrize(("language", "commit", "slowest"), [("en_US", "3.2", "12.5"), ("ru_RU", "3,2", "12,5")])
+def test_healthy_numbers_are_shown_without_alarm(
+    monkeypatch: pytest.MonkeyPatch, language: str, commit: str, slowest: str,
+) -> None:
+    from aconsole.ui import i18n
+
+    monkeypatch.setattr(i18n.locale, "getlocale", lambda: (language, "UTF-8"))
     dialog = _dialog()
     dialog.show_facts(HealthFacts(core=_HEALTHY, resyncs=1, reconnects=2))
     assert dialog.values["health.queued"].get_label() == "2"
-    assert dialog.values["health.commit"].get_label() == "3.2"
+    assert dialog.values["health.commit"].get_label() == commit
     assert dialog.values["health.answered"].get_label() == "40"
-    assert dialog.values["health.slowest"].get_label() == "12.5"
+    assert dialog.values["health.slowest"].get_label() == slowest
     assert dialog.values["health.resyncs"].get_label() == "1"
     assert dialog.values["health.reconnects"].get_label() == "2"
     assert _trouble(dialog) == set()
@@ -122,4 +128,8 @@ def test_health_shows_isolation_result_and_reenables_check(*, ok: bool | None) -
     assert dialog.isolation_button.get_sensitive()
     assert dialog.isolation_label.has_css_class("warning") is (ok is not True)
     if ok is not None:
-        assert dialog.isolation_label.get_label() == "mount diagnostics"
+        assert "mount diagnostics" in dialog.isolation_label.get_label()
+        if not ok:
+            assert "README" in dialog.isolation_label.get_label()
+        else:
+            assert dialog.isolation_label.get_label() == "mount diagnostics"

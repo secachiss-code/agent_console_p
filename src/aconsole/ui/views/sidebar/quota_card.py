@@ -9,6 +9,7 @@ gi.require_version("Adw", "1")
 from gi.repository import GLib, GObject, Gtk  # noqa: E402
 
 from aconsole.contracts.app import AccountView, TabView  # noqa: E402
+from aconsole.ui.i18n import format_date  # noqa: E402
 from aconsole.ui.views.quota_dialog import QuotaDialog  # noqa: E402
 from aconsole.ui.views.sidebar.messages import _ as translate  # noqa: E402
 from aconsole.ui.views.sidebar.quota_row import AccountLine  # noqa: E402
@@ -92,7 +93,7 @@ class QuotaCard(Gtk.Button):
             self.rows.append(self.summary_label)
         observations = [window.observed_at for account in accounts for window in account.quota if window.observed_at]
         self.summary_label.set_label(
-            translate("quota.observed").format(time=min(observations).astimezone().strftime("%d.%m %H:%M"))
+            translate("quota.observed").format(time=format_date(min(observations)))
             if observations else "",
         )
         self.summary_label.set_visible(self._with_heading or bool(self.summary_label.get_label()))

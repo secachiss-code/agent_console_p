@@ -20,6 +20,7 @@ from aconsole.ui.bootstrap import spawn_task  # noqa: E402
 from aconsole.ui.client.core_client import CoreClient  # noqa: E402
 from aconsole.ui.client.error_text import core_log_path  # noqa: E402
 from aconsole.ui.client.store import CoreStore  # noqa: E402
+from aconsole.ui.i18n import setup_check_reason  # noqa: E402
 from aconsole.ui.viewmodels.setup_vm import PreferencesViewModel, SetupViewModel  # noqa: E402
 from aconsole.ui.views.setup.messages import _ as translate  # noqa: E402
 from aconsole.ui.views.setup.messages import known  # noqa: E402
@@ -39,10 +40,7 @@ def _check_title(check: CheckResult) -> str:
 
 
 def _check_reason(check: CheckResult) -> str:
-    key = f"setup.reason.{check.id}"
-    if not known(key):
-        return check.detail or check.title
-    return translate(key).format(detail=check.detail or "")
+    return setup_check_reason(check)
 
 
 class SetupWizard(Adw.Dialog):

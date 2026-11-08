@@ -1,6 +1,5 @@
 """One contract-backed quota window, shared by the card and details."""
 
-import locale
 from datetime import UTC, datetime
 
 import gi
@@ -10,6 +9,7 @@ from gi.repository import Gtk, Pango  # noqa: E402
 
 from aconsole.contracts.app import AccountView, QuotaWindowView  # noqa: E402
 from aconsole.contracts.common import AgentKind  # noqa: E402
+from aconsole.ui.i18n import format_date, language  # noqa: E402
 from aconsole.ui.viewmodels.logic.quota_fmt import (  # noqa: E402
     agent_name,
     format_percent,
@@ -24,19 +24,19 @@ from aconsole.ui.views.sidebar.messages import _ as translate  # noqa: E402
 def window_name(window: QuotaWindowView) -> str:
     """What the window is called. The plan's main pool is named by its days, as "5 h" and "7 d" are; API stays API."""
     if window.period_days is not None and window.key != "api":
-        return translate("quota.days").format(count=window.period_days)
+        return translate("duration.days", window.period_days).format(count=window.period_days)
     return translate(f"quota.{window.key}")
 
 
 def _remaining(window: QuotaWindowView) -> str:
     reset = window.resets_at
     seconds = int((reset - datetime.now(UTC)).total_seconds()) if reset else 0
-    return format_remaining(seconds, locale.getlocale()[0] or "en") if seconds > 0 else "—"
+    return format_remaining(seconds, language()) if seconds > 0 else "—"
 
 
 def _reset_tooltip(window: QuotaWindowView) -> str | None:
     reset = window.resets_at
-    return translate("quota.reset").format(time=reset.astimezone().strftime("%d.%m %H:%M")) if reset else None
+    return translate("quota.reset").format(time=format_date(reset)) if reset else None
 
 
 class QuotaRow(Gtk.Box):

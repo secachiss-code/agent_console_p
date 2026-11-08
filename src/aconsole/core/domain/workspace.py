@@ -103,11 +103,11 @@ def dirty_summary(facts: Dirt) -> str | None:
         return None
     parts: list[str] = []
     if facts.modified > 0:
-        parts.append(f"{facts.modified} изменено")
+        parts.append(f"modified={facts.modified}")
     if facts.staged > 0:
-        parts.append(f"{facts.staged} в индексе")
+        parts.append(f"staged={facts.staged}")
     if facts.untracked > 0:
-        parts.append(f"{facts.untracked} новых")
+        parts.append(f"untracked={facts.untracked}")
     return ", ".join(parts)
 
 

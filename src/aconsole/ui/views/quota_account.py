@@ -1,6 +1,5 @@
 """One account in full, beside the limits: its plan, limits with exact resets, and tokens per model."""
 
-import locale
 from collections.abc import Callable
 from datetime import UTC, datetime
 
@@ -10,6 +9,7 @@ gi.require_version("Gtk", "4.0")
 from gi.repository import Gtk  # noqa: E402
 
 from aconsole.contracts.app import AccountView, ModelUsageView, QuotaWindowView, TabView  # noqa: E402
+from aconsole.ui.i18n import format_date, format_number, language  # noqa: E402
 from aconsole.ui.viewmodels.logic.quota_fmt import (  # noqa: E402
     agent_name,
     approx_tokens,
@@ -44,12 +44,14 @@ def ago(observed: datetime | None) -> str:
     if seconds < _SECONDS_PER_MINUTE:
         return translate("quota.info.now").format(time=local.strftime("%H:%M:%S"))
     if seconds < _SECONDS_PER_HOUR:
-        return translate("quota.info.minutes").format(
+        return translate("quota.info.minutes", seconds // _SECONDS_PER_MINUTE).format(
             time=local.strftime("%H:%M"), count=seconds // _SECONDS_PER_MINUTE,
         )
     if seconds < _SECONDS_PER_DAY:
-        return translate("quota.info.hours").format(time=local.strftime("%H:%M"), count=seconds // _SECONDS_PER_HOUR)
-    return translate("quota.info.date").format(time=local.strftime("%d.%m %H:%M"))
+        return translate("quota.info.hours", seconds // _SECONDS_PER_HOUR).format(
+            time=local.strftime("%H:%M"), count=seconds // _SECONDS_PER_HOUR,
+        )
+    return translate("quota.info.date").format(time=format_date(local))
 
 
 def money_lines(account: AccountView, tabs: tuple[TabView, ...]) -> list[str]:
@@ -58,11 +60,11 @@ def money_lines(account: AccountView, tabs: tuple[TabView, ...]) -> list[str]:
     if account.credits_unlimited:
         lines.append(translate("quota.credits_unlimited"))
     elif account.credits_balance is not None:
-        lines.append(translate("quota.credits").format(count=f"{account.credits_balance:,.2f}"))
+        lines.append(translate("quota.credits").format(count=format_number(account.credits_balance, 2)))
     costs = [tab.session_cost_usd for tab in tabs if tab.agent is account.agent and tab.session_cost_usd]
     if costs:
         # What this agent's open sessions would have cost at API prices: the money the plan stands in for.
-        lines.append(translate("quota.api_cost").format(money=f"${sum(costs):,.2f}", count=len(costs)))
+        lines.append(translate("quota.api_cost").format(money=f"${format_number(sum(costs), 2)}", count=len(costs)))
     mine = [tab for tab in tabs if tab.agent is account.agent and tab.mcp_bytes]
     if mine:
         # What AConsole's own tools put in this agent's context: the console's share of the tokens.
@@ -90,11 +92,11 @@ def _two_sides(left: str, right: str) -> Gtk.Box:
 
 
 def _reset_text(reset: datetime) -> str:
-    moment = reset.astimezone().strftime("%d.%m.%Y %H:%M")
+    moment = format_date(reset, year=True)
     seconds = int((reset - datetime.now(UTC)).total_seconds())
     if seconds <= 0:
         return translate("quota.reset").format(time=moment)
-    left = format_remaining(seconds, locale.getlocale()[0] or "en")
+    left = format_remaining(seconds, language())
     return translate("quota.panel.reset").format(time=moment, left=left)
 
 
@@ -104,7 +106,7 @@ def _limit_block(window: QuotaWindowView) -> Gtk.Box:
     money = format_money(window.spent_usd, window.limit_usd)
     block.append(_two_sides(translate(f"quota.{window.key}"), f"{money} · {used}" if money else used))
     if window.period_days is not None:
-        block.append(detail(translate("quota.panel.period").format(count=window.period_days)))
+        block.append(detail(translate("quota.panel.period", window.period_days).format(count=window.period_days)))
     if window.resets_at is not None:
         block.append(detail(_reset_text(window.resets_at)))
     return block
@@ -117,7 +119,7 @@ def _model_total(model: ModelUsageView) -> int:
 def _model_block(model: ModelUsageView) -> Gtk.Box:
     block = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
     total = format_tokens(_model_total(model))
-    cost = f" · ${model.cost_usd:,.2f}" if model.cost_usd is not None else ""
+    cost = f" · ${format_number(model.cost_usd, 2)}" if model.cost_usd is not None else ""
     block.append(_two_sides(model.model, total + cost))
     parts = (
         ("quota.panel.input", model.input_tokens),
@@ -198,7 +200,7 @@ class AccountPanel(Gtk.Box):
         since = account.usage_since
         if since is None:
             return translate("quota.panel.tokens")
-        return translate("quota.panel.tokens_since").format(date=since.astimezone().strftime("%d.%m %H:%M"))
+        return translate("quota.panel.tokens_since").format(date=format_date(since))
 
     @staticmethod
     def _tokens(account: AccountView) -> list[Gtk.Widget]:
@@ -206,5 +208,5 @@ class AccountPanel(Gtk.Box):
             return [detail(translate("quota.panel.no_tokens"))]
         total = format_tokens(sum(_model_total(model) for model in account.usage))
         costs = [model.cost_usd for model in account.usage if model.cost_usd is not None]
-        cost = f" · ${sum(costs):,.2f}" if costs else ""
+        cost = f" · ${format_number(sum(costs), 2)}" if costs else ""
         return [_two_sides(translate("quota.panel.total"), total + cost), *map(_model_block, account.usage)]

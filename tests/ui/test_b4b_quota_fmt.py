@@ -11,6 +11,13 @@ from aconsole.ui.viewmodels.logic.quota_fmt import (
 )
 
 
+@pytest.fixture(autouse=True)
+def english_locale(monkeypatch: pytest.MonkeyPatch) -> None:
+    from aconsole.ui import i18n
+
+    monkeypatch.setattr(i18n.locale, "getlocale", lambda: ("en_US", "UTF-8"))
+
+
 @pytest.mark.parametrize(
     "case",
     [

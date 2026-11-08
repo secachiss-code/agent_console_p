@@ -14,6 +14,7 @@ from gi.repository import Adw, Gdk, Gtk, Pango  # noqa: E402
 from aconsole.contracts.app import CommandResult, PaletteItem, PaletteQuery  # noqa: E402
 from aconsole.ui.bootstrap import spawn_task  # noqa: E402
 from aconsole.ui.client.core_client import CoreClient  # noqa: E402
+from aconsole.ui.i18n import core_message  # noqa: E402
 from aconsole.ui.viewmodels.palette_vm import PaletteViewModel  # noqa: E402
 from aconsole.ui.views.palette.messages import _ as translate  # noqa: E402
 
@@ -230,7 +231,9 @@ class PaletteDialog(Adw.Dialog):
                     # `closed` fires only when the sheet's animation ends, which needs frames. The command is done now.
                     self._mark_closed()
                 else:
-                    self.status_label.set_label(result.toast or translate("palette.execute_error"))
+                    self.status_label.set_label(
+                        core_message(result.toast) if result.toast else translate("palette.execute_error"),
+                    )
                 self._on_result(result)
         except Exception:  # noqa: BLE001 -- retain the selected command and allow deliberate retry
             if generation == self._generation:
