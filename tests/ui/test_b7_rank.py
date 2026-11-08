@@ -199,3 +199,35 @@ def test_rank_2000_under_16ms() -> None:
 
     assert ranked
     assert elapsed < 0.016
+
+
+def test_equal_ranking_keys_preserve_input_order_without_comparing_items() -> None:
+    from aconsole.ui.viewmodels.logic.rank import rank_items
+
+    first = _item("same", title="Same title", aliases=("go",), subtitle="first")
+    second = _item("same", title="Same title", aliases=("go",), subtitle="second")
+    ranked = rank_items((first, second), "go")
+    assert ranked[0] is first
+    assert ranked[1] is second
+
+
+def test_exact_alias_after_a_prefix_keeps_exact_match_priority() -> None:
+    from aconsole.ui.viewmodels.logic.rank import rank_items
+
+    exact = _item("exact", aliases=("go further", " GO "))
+    prefix = _item("prefix", aliases=("go there",), score_hint=100)
+    assert rank_items((prefix, exact), "go") == (exact, prefix)
+
+
+def test_transient_sort_records_release_their_item_references() -> None:
+    import sys
+
+    from aconsole.ui.viewmodels.logic.rank import rank_items
+
+    item = _item("retention", aliases=("go",))
+    items = (item,)
+    before = sys.getrefcount(item)
+    result = rank_items(items, "go")
+    assert sys.getrefcount(item) == before + 1  # only the returned tuple retains a new reference
+    del result
+    assert sys.getrefcount(item) == before

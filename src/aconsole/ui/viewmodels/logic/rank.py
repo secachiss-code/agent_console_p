@@ -2,6 +2,7 @@
 
 from collections.abc import Sequence
 
+import msgspec
 from rapidfuzz.fuzz import WRatio
 
 from aconsole.contracts.app import PaletteItem
@@ -9,15 +10,31 @@ from aconsole.contracts.app import PaletteItem
 _MAX_SCORE = 100.0
 
 
+class _Ranked(msgspec.Struct, frozen=True, order=True, gc=False):
+    # Private, transient records only point to scalars and an immutable PaletteItem.
+    # They cannot form cycles or escape this call, so tracking them adds GC pressure
+    # without collecting anything. The process-wide collector remains enabled.
+    match_class: int
+    score: float
+    hint: float
+    title: str
+    item_id: str
+    order: int  # stable ties stop comparison before the non-orderable item
+    item: PaletteItem
+
+
 def _normalize(text: str) -> str:
     return " ".join(text.casefold().split())
 
 
 def _match(item: PaletteItem, needle: str, title: str, cutoff: float) -> tuple[int, float] | None:
-    aliases = tuple(_normalize(alias) for alias in item.aliases)
-    if needle in aliases:
-        return 0, _MAX_SCORE
-    if any(alias.startswith(needle) for alias in aliases):
+    prefix = False
+    for raw in item.aliases:
+        alias = _normalize(raw)
+        if alias == needle:
+            return 0, _MAX_SCORE
+        prefix |= alias.startswith(needle)
+    if prefix:
         return 1, _MAX_SCORE
     score = WRatio(needle, title, score_cutoff=cutoff)
     if score >= cutoff and score > 0:
@@ -46,17 +63,17 @@ def rank_items(
     if limit == 0:
         return ()
     needle = _normalize(query)
-    ranked: list[tuple[int, float, float, str, str, PaletteItem]] = []
-    for item in items:
+    ranked: list[_Ranked] = []
+    for order, item in enumerate(items):
         title = _normalize(item.title)
         if not needle:
             if item.score_hint > 0:
-                ranked.append((0, 0, -item.score_hint, title, item.id, item))
+                ranked.append(_Ranked(0, 0.0, -item.score_hint, title, item.id, order, item))
             continue
         match = _match(item, needle, title, score_cutoff)
         if match is None:
             continue
         match_class, score = match
-        ranked.append((match_class, -score, -item.score_hint, title, item.id, item))
-    ranked.sort(key=lambda entry: entry[:5])
-    return tuple(entry[5] for entry in ranked[:limit])
+        ranked.append(_Ranked(match_class, -score, -item.score_hint, title, item.id, order, item))
+    ranked.sort()
+    return tuple(entry.item for entry in ranked[:limit])

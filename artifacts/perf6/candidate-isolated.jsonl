@@ -1,0 +1,1 @@
+{"active": false, "gc": [], "wall_ns": 3153174, "thread_ns": 3153052, "process_ns": 3152538, "items": 2000, "before_gc": [404, 2, 1], "gc_threshold": [2000, 10, 10], "after_gc": [15, 4, 1], "max_rss_kb": 79888, "pid": 1172854}
