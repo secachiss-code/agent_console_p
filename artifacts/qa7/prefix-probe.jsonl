@@ -1,0 +1,17 @@
+{"at": 62526.873254213, "event": "before_paste", "mode": "text", "title": "", "data": true}
+{"at": 62526.876510276, "event": "commit", "mode": "text", "title": "", "data": "d09fd180d0b8d0b2d0b5d18220f09f8c8d0d7365636f6e64206c696e650d0d"}
+{"at": 62526.955632108, "event": "parsed", "mode": "text", "title": "qa7-parser-ready", "data": null}
+{"at": 62528.309465559, "event": "before_paste", "mode": "image", "title": "", "data": true}
+{"at": 62528.393891931, "event": "commit", "mode": "image", "title": "", "data": "272f6174746163686d656e74732f696d6167652077697468207370616365732e706e6727"}
+{"at": 62528.412438951, "event": "parsed", "mode": "image", "title": "qa7-parser-ready", "data": null}
+{"at": 62529.706769721, "event": "parsed", "mode": "mixed", "title": "qa7-parser-ready", "data": null}
+{"at": 62529.761515727, "event": "before_paste", "mode": "mixed", "title": "qa7-parser-ready", "data": true}
+{"at": 62529.766966338, "event": "commit", "mode": "mixed", "title": "qa7-parser-ready", "data": "1b5b3230307ed09fd180d0b8d0b2d0b5d18220f09f8c8d0d7365636f6e64206c696e650d0d1b5b3230317e"}
+{"at": 62530.056534524, "event": "commit", "mode": "mixed", "title": "qa7-parser-ready", "data": "1b5b3230307ed09fd180d0b8d0b2d0b5d18220f09f8c8d0d7365636f6e64206c696e650d0d1b5b3230317e"}
+{"at": 62530.260287381, "event": "commit", "mode": "mixed", "title": "qa7-parser-ready", "data": "1b5b3230307ed09fd180d0b8d0b2d0b5d18220f09f8c8d0d7365636f6e64206c696e650d0d1b5b3230317e"}
+{"at": 62530.479170161, "event": "commit", "mode": "mixed", "title": "qa7-parser-ready", "data": "1b5b3230307e272f6174746163686d656e74732f696d6167652077697468207370616365732e706e67271b5b3230317e"}
+{"at": 62532.020747618, "event": "before_paste", "mode": "empty", "title": "", "data": true}
+{"at": 62532.122432917, "event": "parsed", "mode": "empty", "title": "qa7-parser-ready", "data": null}
+{"at": 62533.455375411, "event": "before_paste", "mode": "cancel", "title": "", "data": true}
+{"at": 62533.464488713, "event": "parsed", "mode": "cancel", "title": "qa7-parser-ready", "data": null}
+{"at": 62534.892285302, "event": "parsed", "mode": "copy", "title": "qa7-parser-ready", "data": null}

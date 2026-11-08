@@ -9,6 +9,7 @@ import gi
 import pytest
 
 gi.require_version("Gtk", "4.0")
+gi.require_version("Gdk", "4.0")
 gi.require_version("Vte", "3.91")
 from gi.repository import Gdk, GLib, Gtk, Vte  # noqa: E402
 
@@ -23,6 +24,9 @@ from tests.gui.front.test_b1_keys import _XTestKeyboard  # noqa: E402
 if TYPE_CHECKING:
     from pathlib import Path
 
+_PASTE_READY = "aconsole-paste-mode-ready"
+# OSC follows DECSET in the same stream: the title changes only after VTE parses the mode.
+_READY_SEQUENCE = b"\x1b[?2004h\x1b]2;" + _PASTE_READY.encode("ascii") + b"\x07"
 _TEXT = "Привет 🌍\nsecond line\n\n"
 
 
@@ -49,16 +53,19 @@ class _ClipboardApp(AConsoleApp):
             page.terminal.spawn_async(
                 Vte.PtyFlags.DEFAULT, None,
                 ["/usr/bin/python3", "-c", (
-                    "import os,tty,time;tty.setraw(0);os.write(1,b'\\x1b[?2004h');"
+                    f"import os,tty,time;tty.setraw(0);os.write(1,{_READY_SEQUENCE!r});"
                     f"open({str(ready)!r},'w').close();time.sleep(30)"
                 )], None, GLib.SpawnFlags.DEFAULT, None, None, -1, None, None, None,
             )
             page.focus_terminal()
             for _ in range(100):
-                if ready.exists() and page.terminal.has_focus():
+                if (ready.exists() and page.terminal.has_focus()
+                        and page.terminal.get_window_title() == _PASTE_READY):
                     break
                 await asyncio.sleep(0.02)
             assert ready.exists()
+            # The child's ready file acknowledges write(), not VTE's asynchronous input parser.
+            assert page.terminal.get_window_title() == _PASTE_READY
             keyboard = _XTestKeyboard(window)
             await asyncio.sleep(0.1)
 

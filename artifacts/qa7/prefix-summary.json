@@ -1,0 +1,44 @@
+[
+  {
+    "mode": "cancel",
+    "title_at_keypress": "",
+    "title_at_first_commit": null,
+    "first_commit_bracketed": null,
+    "parsed_minus_commit_ms": null
+  },
+  {
+    "mode": "copy",
+    "title_at_keypress": null,
+    "title_at_first_commit": null,
+    "first_commit_bracketed": null,
+    "parsed_minus_commit_ms": null
+  },
+  {
+    "mode": "empty",
+    "title_at_keypress": "",
+    "title_at_first_commit": null,
+    "first_commit_bracketed": null,
+    "parsed_minus_commit_ms": null
+  },
+  {
+    "mode": "image",
+    "title_at_keypress": "",
+    "title_at_first_commit": "",
+    "first_commit_bracketed": false,
+    "parsed_minus_commit_ms": 18.547
+  },
+  {
+    "mode": "mixed",
+    "title_at_keypress": "qa7-parser-ready",
+    "title_at_first_commit": "qa7-parser-ready",
+    "first_commit_bracketed": true,
+    "parsed_minus_commit_ms": -60.197
+  },
+  {
+    "mode": "text",
+    "title_at_keypress": "",
+    "title_at_first_commit": "",
+    "first_commit_bracketed": false,
+    "parsed_minus_commit_ms": 79.122
+  }
+]

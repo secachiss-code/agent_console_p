@@ -1,0 +1,32 @@
+[
+  {
+    "case": "test_real_clipboard_shortcuts[text]",
+    "time": "2.469",
+    "status": "passed"
+  },
+  {
+    "case": "test_real_clipboard_shortcuts[image]",
+    "time": "2.108",
+    "status": "passed"
+  },
+  {
+    "case": "test_real_clipboard_shortcuts[mixed]",
+    "time": "2.309",
+    "status": "passed"
+  },
+  {
+    "case": "test_real_clipboard_shortcuts[empty]",
+    "time": "1.705",
+    "status": "passed"
+  },
+  {
+    "case": "test_real_clipboard_shortcuts[cancel]",
+    "time": "1.604",
+    "status": "passed"
+  },
+  {
+    "case": "test_real_clipboard_shortcuts[copy]",
+    "time": "1.570",
+    "status": "passed"
+  }
+]

@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="2" skipped="0" tests="149" time="52.661" timestamp="2026-11-08T13:02:49.972182+03:00" hostname="somovasnbook14"><testcase classname="tests.gui.front.test_approval_alerts" name="test_a_request_in_an_inactive_window_rings_once_with_the_tab" time="0.002" /><testcase classname="tests.gui.front.test_approval_alerts" name="test_an_active_window_does_not_ring" time="0.001" /><testcase classname="tests.gui.front.test_approval_alerts" name="test_notification_policy_always_never_and_live_change" time="0.001" /><testcase classname="tests.gui.front.test_approval_alerts" name="test_an_inactive_tab_rings_in_an_active_window" time="0.001" /><testcase classname="tests.gui.front.test_approval_alerts" name="test_switching_to_a_notified_tab_withdraws_without_repeating_its_episode" time="0.001" /><testcase classname="tests.gui.front.test_approval_alerts" name="test_an_active_window_without_a_selected_tab_does_not_hide_requests" time="0.001" /><testcase classname="tests.gui.front.test_approval_alerts" name="test_a_decision_withdraws_and_the_next_request_is_a_new_episode" time="0.001" /><testcase classname="tests.gui.front.test_approval_alerts" name="test_coming_back_withdraws_and_leaving_again_does_not_ring_again" time="0.001" /><testcase classname="tests.gui.front.test_approval_alerts" name="test_leaving_a_window_with_an_open_request_rings_once" time="0.001" /><testcase classname="tests.gui.front.test_approval_alerts" name="test_each_tab_has_its_own_episode_and_only_the_decided_one_goes" time="0.001" /><testcase classname="tests.gui.front.test_approval_alerts" name="test_a_tab_title_that_is_unknown_still_rings" time="0.001" /><testcase classname="tests.gui.front.test_approval_alerts" name="test_a_closing_window_takes_its_notifications_along" time="0.001" /><testcase classname="tests.gui.front.test_approval_alerts" name="test_the_notification_does_not_show_the_command" time="0.005" /><testcase classname="tests.gui.front.test_approval_alerts" name="test_the_window_rings_withdraws_and_a_click_opens_the_tab[waiting]" time="2.867" /><testcase classname="tests.gui.front.test_approval_panel" name="test_cards_show_what_is_asked_and_take_no_focus[waiting]" time="0.036" /><testcase classname="tests.gui.front.test_approval_panel" name="test_a_decision_closes_the_card_and_the_next_press_cannot_land_on_the_next_one[waiting]" time="0.497" /><testcase classname="tests.gui.front.test_approval_panel" name="test_keys_move_between_cards_and_open_the_tab[waiting]" time="0.148" /><testcase classname="tests.gui.front.test_approval_panel" name="test_release_leaves_the_request_to_the_agent[waiting]" time="0.149" /><testcase classname="tests.gui.front.test_approval_panel" name="test_a_closed_request_says_the_decision_did_not_apply[approval-expired]" time="0.165" /><testcase classname="tests.gui.front.test_approval_panel" name="test_a_lost_call_keeps_the_card_for_another_try[waiting]" time="0.135" /><testcase classname="tests.gui.front.test_approval_panel" name="test_only_the_open_tab_shows_its_request_and_the_rest_are_counted[waiting]" time="0.024" /><testcase classname="tests.gui.front.test_approval_panel" name="test_a_risky_allow_waits_half_a_second_and_is_never_the_default[waiting]" time="0.529" /><testcase classname="tests.gui.front.test_approval_panel" name="test_a_new_card_cannot_be_decided_by_the_press_that_met_it[waiting]" time="0.146" /><testcase classname="tests.gui.front.test_approval_panel" name="test_the_checkbox_widens_the_allow_to_the_tab[waiting]" time="0.553" /><testcase classname="tests.gui.front.test_approval_panel" name="test_tab_reaches_the_details_the_checkbox_and_every_button[waiting]" time="0.559" /><testcase classname="tests.gui.front.test_approval_panel" name="test_buttons_keep_one_row_against_the_end_when_there_is_room[waiting]" time="0.249" /><testcase classname="tests.gui.front.test_approval_panel" name="test_expired_approval_disables_allow_and_blocks_keyboard_decision[waiting]" time="0.538" /><testcase classname="tests.gui.front.test_approval_panel" name="test_the_card_leaves_the_terminal_alone_and_its_buttons_on_screen[waiting]" time="1.100" /><testcase classname="tests.gui.front.test_approval_panel" name="test_the_window_routes_keys_to_a_card_only_when_it_has_focus[waiting]" time="1.559" /><testcase classname="tests.gui.front.test_b0_window" name="test_sidebar_lists_demo_tabs[1280-False]" time="0.800" /><testcase classname="tests.gui.front.test_b0_window" name="test_sidebar_lists_demo_tabs[700-True]" time="0.648" /><testcase classname="tests.gui.front.test_b0_window" name="test_collapsed_sidebar_button_opens_and_closes_sidebar" time="0.465" /><testcase classname="tests.gui.front.test_b0_window" name="test_system_title_buttons_keep_clear_header_space[1280-False-left]" time="0.758" /><testcase classname="tests.gui.front.test_b0_window" name="test_system_title_buttons_keep_clear_header_space[1280-False-right]" time="0.705" /><testcase classname="tests.gui.front.test_b0_window" name="test_system_title_buttons_keep_clear_header_space[1280-False-both]" time="0.845" /><testcase classname="tests.gui.front.test_b0_window" name="test_system_title_buttons_keep_clear_header_space[700-True-left]" time="0.795" /><testcase classname="tests.gui.front.test_b0_window" name="test_system_title_buttons_keep_clear_header_space[700-True-right]" time="1.046" /><testcase classname="tests.gui.front.test_b0_window" name="test_system_title_buttons_keep_clear_header_space[700-True-both]" time="0.684" /><testcase classname="tests.gui.front.test_b0_window" name="test_snapshot_connection_error_exits_without_a_window" time="0.013" /><testcase classname="tests.gui.front.test_b0_window" name="test_startup_error_offers_retry_and_opens_the_window" time="0.675" /><testcase classname="tests.gui.front.test_b0_window" name="test_startup_connection_error_says_so_and_exits_once_closed" time="0.105" /><testcase classname="tests.gui.front.test_b10_setup" name="test_b10_setup_load_and_preview_never_apply_without_explicit_action" time="0.002" /><testcase classname="tests.gui.front.test_b10_setup" name="test_b10_setup_checks_keep_newer_result_when_older_request_finishes_late" time="0.002" /><testcase classname="tests.gui.front.test_b10_setup" name="test_b10_setup_apply_uses_exact_visible_preview_id_and_token" time="0.001" /><testcase classname="tests.gui.front.test_b10_setup" name="test_b10_setup_rejects_absent_and_expired_previews_without_apply" time="0.001" /><testcase classname="tests.gui.front.test_b10_setup" name="test_b10_setup_latest_preview_wins_when_older_response_arrives_late" time="0.001" /><testcase classname="tests.gui.front.test_b10_setup" name="test_b10_setup_discard_invalidates_pending_preview" time="0.001" /><testcase classname="tests.gui.front.test_b10_setup" name="test_b10_setup_blocks_double_apply_while_first_call_is_pending" time="0.001" /><testcase classname="tests.gui.front.test_b10_setup" name="test_b10_preferences_load_and_update_publish_server_settings_to_two_subscribers" time="0.001" /><testcase classname="tests.gui.front.test_b10_setup" name="test_b10_preferences_distinguish_none_from_unset_and_use_returned_revisions" time="0.001" /><testcase classname="tests.gui.front.test_b10_setup" name="test_b10_preferences_serialize_concurrent_updates_using_latest_revision" time="0.001" /><testcase classname="tests.gui.front.test_b10_setup" name="test_b10_preferences_update_error_propagates_without_publication" time="0.002" /><testcase classname="tests.gui.front.test_b10_setup" name="test_b10_preferences_unsubscribe_is_idempotent" time="0.002" /><testcase classname="tests.gui.front.test_b10_views" name="test_b10_wizard_later_closes_without_finishing_and_finish_persists_completion" time="1.139" /><testcase classname="tests.gui.front.test_b10_views" name="test_b10_wizard_apply_button_sends_exact_visible_preview_token" time="0.478" /><testcase classname="tests.gui.front.test_b10_views" name="test_b10_preferences_save_updates_two_retained_terminals_without_restart" time="0.422" /><testcase classname="tests.gui.front.test_b10_views" name="test_preferences_keep_drafts_when_remote_settings_change" time="0.247" /><testcase classname="tests.gui.front.test_b10_views" name="test_window_shows_connection_loss_and_recovers_controls" time="0.162" /><testcase classname="tests.gui.front.test_b10_views" name="test_new_tab_uses_selected_workspace_and_guards_duplicate_launches[0]" time="0.294" /><testcase classname="tests.gui.front.test_b10_views" name="test_new_tab_uses_selected_workspace_and_guards_duplicate_launches[1]" time="0.577" /><testcase classname="tests.gui.front.test_b10_views" name="test_new_tab_uses_selected_workspace_and_guards_duplicate_launches[2]" time="0.828" /><testcase classname="tests.gui.front.test_b10_views" name="test_b10_wizard_refreshes_agents_live_and_projects_when_reopened" time="0.509" /><testcase classname="tests.gui.front.test_b10_views" name="test_b10_wizard_says_why_a_check_failed_and_gives_the_command" time="0.504" /><testcase classname="tests.gui.front.test_b10_views" name="test_b10_wizard_without_an_agent_says_what_to_do_next" time="0.556" /><testcase classname="tests.gui.front.test_b1_keys" name="test_b1_keys_settings_override_updates_controller" time="0.809" /><testcase classname="tests.gui.front.test_b1_keys" name="test_b1_keys_older_settings_response_cannot_replace_keymap" time="0.941" /><testcase classname="tests.gui.front.test_b1_keys" name="test_b1_keys_palette_shortcut_action_dispatches" time="0.907" /><testcase classname="tests.gui.front.test_b1_keys" name="test_b1_keys_terminal_passthrough" time="0.893" /><testcase classname="tests.gui.front.test_b1_keys" name="test_b1_keys_initial_shortcut_controller" time="0.691" /><testcase classname="tests.gui.front.test_b1_keys" name="test_b1_keys_narrow_window" time="0.516" /><testcase classname="tests.gui.front.test_b2_dnd" name="test_b2_drag_prepare_and_drop_signals_request_reorder" time="0.802" /><testcase classname="tests.gui.front.test_b2_menu" name="test_b2_row_menu_rename_starts_editing_the_bound_row" time="0.119" /><testcase classname="tests.gui.front.test_b2_menu" name="test_b2_context_menu_opens_from_shift_f10" time="0.247" /><testcase classname="tests.gui.front.test_b2_menu" name="test_b2_close_intent_is_disabled_without_handler_and_targets_bound_row" time="0.167" /><testcase classname="tests.gui.front.test_b2_menu" name="test_b2_unbind_rebind_closes_menu_and_discards_old_row_target" time="0.140" /><testcase classname="tests.gui.front.test_b2_menu" name="test_the_menu_opens_the_health_dialog_with_the_core_s_answer" time="0.171" /><testcase classname="tests.gui.front.test_b2_sections" name="test_b2_tab_section_and_header_follow_tab_and_account_updates" time="0.893" /><testcase classname="tests.gui.front.test_b2_sections" name="test_b2_tab_row_edit_and_close_controls_have_explicit_behavior" time="0.094" /><testcase classname="tests.gui.front.test_b2_status" name="test_b2_status_tooltips_distinguish_waiting_states_and_show_working_spinner" time="0.030" /><testcase classname="tests.gui.front.test_b2_tabs" name="test_b2_tab_updated_changes_one_row" time="0.062" /><testcase classname="tests.gui.front.test_b2_tabs" name="test_b2_reorder_requests_core" time="0.165" /><testcase classname="tests.gui.front.test_b2_tabs" name="test_b2_reorder_partial_failure_keeps_store_state" time="0.157" /><testcase classname="tests.gui.front.test_b2_tabs" name="test_b2_rename_requests_core" time="0.623" /><testcase classname="tests.gui.front.test_b2_tabs" name="test_b2_rebinding_while_editing_does_not_rename_new_tab" time="0.626" /><testcase classname="tests.gui.front.test_b2_tabs" name="test_b2_focus_requests_core" time="0.005" /><testcase classname="tests.gui.front.test_b2_tabs" name="test_b2_empty_state" time="0.019" /><testcase classname="tests.gui.front.test_b4a_plan" name="test_b4a_plan_card_demo_shows_plan_and_ready_nodes" time="0.004" /><testcase classname="tests.gui.front.test_b4a_plan" name="test_b4a_plan_card_activation_and_page" time="0.006" /><testcase classname="tests.gui.front.test_b4a_plan" name="test_b4a_plan_card_empty_state_explains_missing_plan" time="0.004" /><testcase classname="tests.gui.front.test_b4a_plan" name="test_b4a_plan_graph_shows_all_nodes_and_emphasizes_hovered_node_neighbors" time="0.022" /><testcase classname="tests.gui.front.test_b4a_plan" name="test_b4a_plan_graph_tab_action_targets_hovered_nodes_tab" time="0.006" /><testcase classname="tests.gui.front.test_b4a_plan" name="test_b4a_window_plan_card_demo" time="0.834" /><testcase classname="tests.gui.front.test_b4a_plan" name="test_b4a_window_plan_card_opens_page" time="0.363" /><testcase classname="tests.gui.front.test_b4a_plan" name="test_window_actions_reach_the_core" time="0.327" /><testcase classname="tests.gui.front.test_b4a_plan" name="test_a_summary_section_folds_and_remembers_it" time="0.008" /><testcase classname="tests.gui.front.test_b4a_plan" name="test_a_person_accepts_or_sends_back_a_step_on_verification" time="0.005" /><testcase classname="tests.gui.front.test_b4a_plan" name="test_without_a_decision_handler_no_step_offers_to_be_accepted" time="0.005" /><testcase classname="tests.gui.front.test_b4a_plan" name="test_heartbeat_keeps_plan_buttons_and_selection" time="0.009" /><testcase classname="tests.gui.front.test_b4b_quota" name="test_the_main_pool_is_named_by_its_days_and_api_stays_api" time="0.001" /><testcase classname="tests.gui.front.test_b4b_quota" name="test_the_cursor_card_counts_its_main_pool_in_percent_and_api_in_dollars[en_US-$6.68 / $11.25]" time="0.005" /><testcase classname="tests.gui.front.test_b4b_quota" name="test_the_cursor_card_counts_its_main_pool_in_percent_and_api_in_dollars[ru_RU-$6,68 / $11,25]" time="0.003" /><testcase classname="tests.gui.front.test_b4b_quota" name="test_the_sidebar_shows_every_window_of_an_account_shortest_first[claude-windows0-expected0]" time="0.002" /><testcase classname="tests.gui.front.test_b4b_quota" name="test_the_sidebar_shows_every_window_of_an_account_shortest_first[codex-windows1-expected1]" time="0.002" /><testcase classname="tests.gui.front.test_b4b_quota" name="test_the_sidebar_shows_every_window_of_an_account_shortest_first[cursor-windows2-expected2]" time="0.002" /><testcase classname="tests.gui.front.test_b4b_quota" name="test_the_sidebar_shows_every_window_of_an_account_shortest_first[opencode-windows3-expected3]" time="0.003" /><testcase classname="tests.gui.front.test_b4b_quota" name="test_opencode_without_go_says_so_instead_of_waiting_for_numbers" time="0.002" /><testcase classname="tests.gui.front.test_b4b_quota" name="test_b4b_quota_card_shows_normal_unknown_estimated_and_critical_windows" time="0.219" /><testcase classname="tests.gui.front.test_b4b_quota" name="test_b4b_summary_card_combines_plan_and_quota_and_tracks_live_updates" time="1.260" /><testcase classname="tests.gui.front.test_b5a_page" name="test_b5a_terminal_page_starts_once_and_shows_three_actions_after_exit" time="0.848" /><testcase classname="tests.gui.front.test_b5a_page" name="test_shared_workspace_waits_for_confirmed_handoff_after_failed_launch" time="1.190" /><testcase classname="tests.gui.front.test_b5a_page" name="test_b5a_closed_terminal_page_does_not_start_queued_worker" time="0.011" /><testcase classname="tests.gui.front.test_b5a_page" name="test_failed_terminal_spawn_can_be_retried" time="0.843" /><testcase classname="tests.gui.front.test_b5a_page" name="test_b5a_window_creates_terminal_pages_on_selection_and_reuses_them" time="1.235" /><testcase classname="tests.gui.front.test_b5a_page" name="test_b5a_disposed_window_ignores_later_store_and_selection_updates" time="1.127" /><testcase classname="tests.gui.front.test_b5a_terminal" name="test_b5a_terminal_session_spawn" time="0.002" /><testcase classname="tests.gui.front.test_b5a_terminal" name="test_b5a_restart_on_one_terminal_keeps_a_single_exit_handler" time="0.002" /><testcase classname="tests.gui.front.test_b5a_terminal" name="test_b5a_terminal_start_is_lazy_and_cancelled_waiter_does_not_cancel_worker" time="0.002" /><testcase classname="tests.gui.front.test_b5a_terminal" name="test_b5a_terminal_reports_raw_exit_status_after_started_attempt" time="0.001" /><testcase classname="tests.gui.front.test_b5a_terminal" name="test_b5a_terminal_reports_spawn_and_launch_errors_without_lifecycle" time="0.002" /><testcase classname="tests.gui.front.test_b5a_terminal" name="test_b5a_terminal_cancel_before_spawn_cancels_spec_fetch" time="0.002" /><testcase classname="tests.gui.front.test_b5a_terminal" name="test_b5a_terminal_cancel_before_worker_starts_settles_all_waiters" time="0.001" /><testcase classname="tests.gui.front.test_b5a_terminal" name="test_b5a_terminal_late_success_after_cancel_still_reports_lifecycle" time="0.001" /><testcase classname="tests.gui.front.test_b5a_terminal" name="test_b5a_real_vte_spawn_async_reports_exit_and_raw_wait_status" time="0.087" /><testcase classname="tests.gui.front.test_b5a_terminal" name="test_b5a_real_vte_does_not_inherit_parent_environment" time="0.099" /><testcase classname="tests.gui.front.test_b5a_terminal" name="test_b5a_terminal_palette_binding_initial_theme_uses_exact_design_colors[light-#241f31-#ffffff-palette0]" time="0.004" /><testcase classname="tests.gui.front.test_b5a_terminal" name="test_b5a_terminal_palette_binding_initial_theme_uses_exact_design_colors[dark-#deddda-#1e1e1e-palette1]" time="0.003" /><testcase classname="tests.gui.front.test_b5a_terminal" name="test_b5a_terminal_palette_binding_updates_on_theme" time="0.002" /><testcase classname="tests.gui.front.test_b7_dialog" name="test_b7_palette_search_is_local_and_executes_selected_argument" time="0.867" /><testcase classname="tests.gui.front.test_b7_dialog" name="test_b7_palette_row_activation_uses_activated_row" time="0.030" /><testcase classname="tests.gui.front.test_b7_dialog" name="test_b7_main_window_opens_palette_lazily_with_selected_context" time="0.203" /><testcase classname="tests.gui.front.test_b7_palette" name="test_b7_palette_loads_once_and_searches_cached_items_locally" time="0.004" /><testcase classname="tests.gui.front.test_b7_palette" name="test_b7_palette_execute_sends_argument_and_opening_context" time="0.002" /><testcase classname="tests.gui.front.test_b7_palette" name="test_b7_palette_rejects_disabled_invalid_selection_and_arguments" time="0.002" /><testcase classname="tests.gui.front.test_b7_palette" name="test_b7_palette_rejects_argument_for_item_without_argument_spec" time="0.002" /><testcase classname="tests.gui.front.test_b7_palette" name="test_b7_palette_close_discards_pending_load_and_new_open_wins" time="0.002" /><testcase classname="tests.gui.front.test_b7_palette" name="test_b7_palette_uses_latest_query_when_load_finishes" time="0.002" /><testcase classname="tests.gui.front.test_b7_palette" name="test_b7_palette_changed_search_clears_selection_before_execute" time="0.002" /><testcase classname="tests.gui.front.test_b7_palette" name="test_b7_palette_repeating_query_preserves_selection" time="0.002" /><testcase classname="tests.gui.front.test_b7_palette" name="test_b7_palette_back_keeps_query_and_results" time="0.002" /><testcase classname="tests.gui.front.test_b7_palette" name="test_b7_palette_ignores_second_execute_while_first_is_pending" time="0.002" /><testcase classname="tests.gui.front.test_b7_palette" name="test_b7_palette_late_execute_result_does_not_change_new_opening" time="0.002" /><testcase classname="tests.gui.front.test_b7_palette" name="test_b7_palette_pending_execute_blocks_new_opening_without_mutating_it" time="0.002" /><testcase classname="tests.gui.front.test_b7_palette" name="test_b7_palette_execute_error_propagates_and_keeps_selection" time="0.001" /><testcase classname="tests.gui.front.test_clipboard_routing" name="test_real_clipboard_shortcuts[text]" time="1.599"><failure message="AssertionError">running_app = '/tmp/aconsole-gui-d6tqkftx/core.sock'
+tmp_path = PosixPath('/tmp/pytest-of-sas/pytest-134/test_real_clipboard_shortcuts_0')
+mode = 'text'
+
+    @pytest.mark.parametrize("mode", ["text", "image", "mixed", "empty", "cancel", "copy"])
+    def test_real_clipboard_shortcuts(running_app: str, tmp_path: Path, mode: str) -&gt; None:
+        app = _ClipboardApp(CoreClient(running_app), tmp_path, mode)
+        assert run_app(lambda: app, ["aconsole-test-clipboard"]) == 0
+        if app.problem is not None:
+&gt;           raise app.problem
+
+tests/gui/front/test_clipboard_routing.py:151:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = &lt;test_clipboard_routing._ClipboardApp object at 0x6ffffb254980 (tests+gui+front+test_clipboard_routing+_ClipboardApp at 0x9d3ab960)&gt;
+
+    """Actual GDK clipboard transfers through window capture shortcuts and a VTE PTY."""
+
+    from __future__ import annotations
+
+    import asyncio
+    from typing import TYPE_CHECKING
+
+    import gi
+    import pytest
+
+    gi.require_version("Gtk", "4.0")
+    gi.require_version("Vte", "3.91")
+    from gi.repository import Gdk, GLib, Gtk, Vte  # noqa: E402
+
+    from aconsole.contracts.common import TabId  # noqa: E402
+    from aconsole.ui.bootstrap import run_app  # noqa: E402
+    from aconsole.ui.client.core_client import CoreClient  # noqa: E402
+    from aconsole.ui.views.app import AConsoleApp  # noqa: E402
+    from aconsole.ui.views.terminal.page import TerminalPage  # noqa: E402
+    from tests.core.test_clipboard import png  # noqa: E402
+    from tests.gui.front.test_b1_keys import _XTestKeyboard  # noqa: E402
+
+    if TYPE_CHECKING:
+        from pathlib import Path
+
+    _TEXT = "Привет 🌍\nsecond line\n\n"
+
+
+    class _ClipboardApp(AConsoleApp):
+        def __init__(self, client: CoreClient, directory: Path, mode: str) -&gt; None:
+            super().__init__(client)
+            self.directory = directory
+            self.mode = mode
+            self.problem: Exception | None = None
+            self.received = bytearray()
+            self.images: list[bytes] = []
+
+        async def _open(self) -&gt; None:  # noqa: C901, PLR0912, PLR0915 -- one end-to-end keyboard/clipboard scenario
+            keyboard = None
+            page = None
+            try:
+                await super()._open()
+                window = self.window
+                assert window is not None
+                page = TerminalPage(self.client, TabId("tab-a"), lambda: None, lambda _tab: None)
+                window.set_content(page)
+                page.terminal.connect("commit", lambda _vte, text, _length: self.received.extend(text.encode()))
+                ready = self.directory / "ready"
+                page.terminal.spawn_async(
+                    Vte.PtyFlags.DEFAULT, None,
+                    ["/usr/bin/python3", "-c", (
+                        "import os,tty,time;tty.setraw(0);os.write(1,b'\\x1b[?2004h');"
+                        f"open({str(ready)!r},'w').close();time.sleep(30)"
+                    )], None, GLib.SpawnFlags.DEFAULT, None, None, -1, None, None, None,
+                )
+                page.focus_terminal()
+                for _ in range(100):
+                    if ready.exists() and page.terminal.has_focus():
+                        break
+                    await asyncio.sleep(0.02)
+                assert ready.exists()
+                keyboard = _XTestKeyboard(window)
+                await asyncio.sleep(0.1)
+
+                async def prepare(data: bytes) -&gt; str:
+                    self.images.append(data)
+                    await asyncio.sleep(0.02)
+                    return "/attachments/image with spaces.png"
+
+                page.clipboard.prepare = prepare
+                clipboard = page.get_clipboard()
+                if self.mode == "copy":
+                    clipboard.set("previous clipboard content")
+                    page.terminal.feed(b"copy shortcut sentinel\r\n")
+&gt;                   await asyncio.sleep(0.1)
+E                   AssertionError
+
+tests/gui/front/test_clipboard_routing.py:75: AssertionError</failure></testcase><testcase classname="tests.gui.front.test_clipboard_routing" name="test_real_clipboard_shortcuts[image]" time="1.356"><failure message="AssertionError">running_app = '/tmp/aconsole-gui-3rxo_wo_/core.sock'
+tmp_path = PosixPath('/tmp/pytest-of-sas/pytest-134/test_real_clipboard_shortcuts_1')
+mode = 'image'
+
+    @pytest.mark.parametrize("mode", ["text", "image", "mixed", "empty", "cancel", "copy"])
+    def test_real_clipboard_shortcuts(running_app: str, tmp_path: Path, mode: str) -&gt; None:
+        app = _ClipboardApp(CoreClient(running_app), tmp_path, mode)
+        assert run_app(lambda: app, ["aconsole-test-clipboard"]) == 0
+        if app.problem is not None:
+&gt;           raise app.problem
+
+tests/gui/front/test_clipboard_routing.py:151:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = &lt;test_clipboard_routing._ClipboardApp object at 0x7000129d8d40 (tests+gui+front+test_clipboard_routing+_ClipboardApp at 0xa62fee00)&gt;
+
+    """Actual GDK clipboard transfers through window capture shortcuts and a VTE PTY."""
+
+    from __future__ import annotations
+
+    import asyncio
+    from typing import TYPE_CHECKING
+
+    import gi
+    import pytest
+
+    gi.require_version("Gtk", "4.0")
+    gi.require_version("Vte", "3.91")
+    from gi.repository import Gdk, GLib, Gtk, Vte  # noqa: E402
+
+    from aconsole.contracts.common import TabId  # noqa: E402
+    from aconsole.ui.bootstrap import run_app  # noqa: E402
+    from aconsole.ui.client.core_client import CoreClient  # noqa: E402
+    from aconsole.ui.views.app import AConsoleApp  # noqa: E402
+    from aconsole.ui.views.terminal.page import TerminalPage  # noqa: E402
+    from tests.core.test_clipboard import png  # noqa: E402
+    from tests.gui.front.test_b1_keys import _XTestKeyboard  # noqa: E402
+
+    if TYPE_CHECKING:
+        from pathlib import Path
+
+    _TEXT = "Привет 🌍\nsecond line\n\n"
+
+
+    class _ClipboardApp(AConsoleApp):
+        def __init__(self, client: CoreClient, directory: Path, mode: str) -&gt; None:
+            super().__init__(client)
+            self.directory = directory
+            self.mode = mode
+            self.problem: Exception | None = None
+            self.received = bytearray()
+            self.images: list[bytes] = []
+
+        async def _open(self) -&gt; None:  # noqa: C901, PLR0912, PLR0915 -- one end-to-end keyboard/clipboard scenario
+            keyboard = None
+            page = None
+            try:
+                await super()._open()
+                window = self.window
+                assert window is not None
+                page = TerminalPage(self.client, TabId("tab-a"), lambda: None, lambda _tab: None)
+                window.set_content(page)
+                page.terminal.connect("commit", lambda _vte, text, _length: self.received.extend(text.encode()))
+                ready = self.directory / "ready"
+                page.terminal.spawn_async(
+                    Vte.PtyFlags.DEFAULT, None,
+                    ["/usr/bin/python3", "-c", (
+                        "import os,tty,time;tty.setraw(0);os.write(1,b'\\x1b[?2004h');"
+                        f"open({str(ready)!r},'w').close();time.sleep(30)"
+                    )], None, GLib.SpawnFlags.DEFAULT, None, None, -1, None, None, None,
+                )
+                page.focus_terminal()
+                for _ in range(100):
+                    if ready.exists() and page.terminal.has_focus():
+                        break
+                    await asyncio.sleep(0.02)
+                assert ready.exists()
+                keyboard = _XTestKeyboard(window)
+                await asyncio.sleep(0.1)
+
+                async def prepare(data: bytes) -&gt; str:
+                    self.images.append(data)
+                    await asyncio.sleep(0.02)
+                    return "/attachments/image with spaces.png"
+
+                page.clipboard.prepare = prepare
+                clipboard = page.get_clipboard()
+                if self.mode == "copy":
+                    clipboard.set("previous clipboard content")
+                    page.terminal.feed(b"copy shortcut sentinel\r\n")
+&gt;                   await asyncio.sleep(0.1)
+E                   AssertionError
+
+tests/gui/front/test_clipboard_routing.py:75: AssertionError</failure></testcase><testcase classname="tests.gui.front.test_clipboard_routing" name="test_real_clipboard_shortcuts[mixed]" time="2.238" /><testcase classname="tests.gui.front.test_clipboard_routing" name="test_real_clipboard_shortcuts[empty]" time="1.459" /><testcase classname="tests.gui.front.test_clipboard_routing" name="test_real_clipboard_shortcuts[cancel]" time="1.437" /><testcase classname="tests.gui.front.test_clipboard_routing" name="test_real_clipboard_shortcuts[copy]" time="1.350" /></testsuite></testsuites>

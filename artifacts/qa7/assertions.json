@@ -1,0 +1,8 @@
+{
+  "original_assertions": 14,
+  "candidate_assertions": 15,
+  "all_original_assertions_retained": true,
+  "sleep_calls_unchanged": true,
+  "readiness_iterations": 100,
+  "readiness_interval_seconds": 0.02
+}

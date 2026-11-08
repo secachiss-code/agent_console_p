@@ -1,0 +1,216 @@
+Collected 0 items to run in parallel
+........................................................................ [ 48%]
+.......................................................................F [ 96%]
+F....                                                                    [100%]
+=================================== FAILURES ===================================
+_____________________ test_real_clipboard_shortcuts[text] ______________________
+
+running_app = '/tmp/aconsole-gui-d6tqkftx/core.sock'
+tmp_path = PosixPath('/tmp/pytest-of-sas/pytest-134/test_real_clipboard_shortcuts_0')
+mode = 'text'
+
+    @pytest.mark.parametrize("mode", ["text", "image", "mixed", "empty", "cancel", "copy"])
+    def test_real_clipboard_shortcuts(running_app: str, tmp_path: Path, mode: str) -> None:
+        app = _ClipboardApp(CoreClient(running_app), tmp_path, mode)
+        assert run_app(lambda: app, ["aconsole-test-clipboard"]) == 0
+        if app.problem is not None:
+>           raise app.problem
+
+tests/gui/front/test_clipboard_routing.py:151:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <test_clipboard_routing._ClipboardApp object at 0x6ffffb254980 (tests+gui+front+test_clipboard_routing+_ClipboardApp at 0x9d3ab960)>
+
+    """Actual GDK clipboard transfers through window capture shortcuts and a VTE PTY."""
+
+    from __future__ import annotations
+
+    import asyncio
+    from typing import TYPE_CHECKING
+
+    import gi
+    import pytest
+
+    gi.require_version("Gtk", "4.0")
+    gi.require_version("Vte", "3.91")
+    from gi.repository import Gdk, GLib, Gtk, Vte  # noqa: E402
+
+    from aconsole.contracts.common import TabId  # noqa: E402
+    from aconsole.ui.bootstrap import run_app  # noqa: E402
+    from aconsole.ui.client.core_client import CoreClient  # noqa: E402
+    from aconsole.ui.views.app import AConsoleApp  # noqa: E402
+    from aconsole.ui.views.terminal.page import TerminalPage  # noqa: E402
+    from tests.core.test_clipboard import png  # noqa: E402
+    from tests.gui.front.test_b1_keys import _XTestKeyboard  # noqa: E402
+
+    if TYPE_CHECKING:
+        from pathlib import Path
+
+    _TEXT = "Привет 🌍\nsecond line\n\n"
+
+
+    class _ClipboardApp(AConsoleApp):
+        def __init__(self, client: CoreClient, directory: Path, mode: str) -> None:
+            super().__init__(client)
+            self.directory = directory
+            self.mode = mode
+            self.problem: Exception | None = None
+            self.received = bytearray()
+            self.images: list[bytes] = []
+
+        async def _open(self) -> None:  # noqa: C901, PLR0912, PLR0915 -- one end-to-end keyboard/clipboard scenario
+            keyboard = None
+            page = None
+            try:
+                await super()._open()
+                window = self.window
+                assert window is not None
+                page = TerminalPage(self.client, TabId("tab-a"), lambda: None, lambda _tab: None)
+                window.set_content(page)
+                page.terminal.connect("commit", lambda _vte, text, _length: self.received.extend(text.encode()))
+                ready = self.directory / "ready"
+                page.terminal.spawn_async(
+                    Vte.PtyFlags.DEFAULT, None,
+                    ["/usr/bin/python3", "-c", (
+                        "import os,tty,time;tty.setraw(0);os.write(1,b'\\x1b[?2004h');"
+                        f"open({str(ready)!r},'w').close();time.sleep(30)"
+                    )], None, GLib.SpawnFlags.DEFAULT, None, None, -1, None, None, None,
+                )
+                page.focus_terminal()
+                for _ in range(100):
+                    if ready.exists() and page.terminal.has_focus():
+                        break
+                    await asyncio.sleep(0.02)
+                assert ready.exists()
+                keyboard = _XTestKeyboard(window)
+                await asyncio.sleep(0.1)
+
+                async def prepare(data: bytes) -> str:
+                    self.images.append(data)
+                    await asyncio.sleep(0.02)
+                    return "/attachments/image with spaces.png"
+
+                page.clipboard.prepare = prepare
+                clipboard = page.get_clipboard()
+                if self.mode == "copy":
+                    clipboard.set("previous clipboard content")
+                    page.terminal.feed(b"copy shortcut sentinel\r\n")
+>                   await asyncio.sleep(0.1)
+E                   AssertionError
+
+tests/gui/front/test_clipboard_routing.py:75: AssertionError
+----------------------------- Captured stderr call -----------------------------
+
+(approval-alert-test:1087620): GLib-GIO-CRITICAL **: 13:03:33.193: g_application_send_notification: assertion 'g_application_get_is_registered (application)' failed
+
+(approval-alert-test:1087620): Adwaita-WARNING **: 13:03:34.490: AdwBottomSheet 0xa8e898c0 exceeds AdwBreakpointBin height: requested 231 px, 200 px available
+_____________________ test_real_clipboard_shortcuts[image] _____________________
+
+running_app = '/tmp/aconsole-gui-3rxo_wo_/core.sock'
+tmp_path = PosixPath('/tmp/pytest-of-sas/pytest-134/test_real_clipboard_shortcuts_1')
+mode = 'image'
+
+    @pytest.mark.parametrize("mode", ["text", "image", "mixed", "empty", "cancel", "copy"])
+    def test_real_clipboard_shortcuts(running_app: str, tmp_path: Path, mode: str) -> None:
+        app = _ClipboardApp(CoreClient(running_app), tmp_path, mode)
+        assert run_app(lambda: app, ["aconsole-test-clipboard"]) == 0
+        if app.problem is not None:
+>           raise app.problem
+
+tests/gui/front/test_clipboard_routing.py:151:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <test_clipboard_routing._ClipboardApp object at 0x7000129d8d40 (tests+gui+front+test_clipboard_routing+_ClipboardApp at 0xa62fee00)>
+
+    """Actual GDK clipboard transfers through window capture shortcuts and a VTE PTY."""
+
+    from __future__ import annotations
+
+    import asyncio
+    from typing import TYPE_CHECKING
+
+    import gi
+    import pytest
+
+    gi.require_version("Gtk", "4.0")
+    gi.require_version("Vte", "3.91")
+    from gi.repository import Gdk, GLib, Gtk, Vte  # noqa: E402
+
+    from aconsole.contracts.common import TabId  # noqa: E402
+    from aconsole.ui.bootstrap import run_app  # noqa: E402
+    from aconsole.ui.client.core_client import CoreClient  # noqa: E402
+    from aconsole.ui.views.app import AConsoleApp  # noqa: E402
+    from aconsole.ui.views.terminal.page import TerminalPage  # noqa: E402
+    from tests.core.test_clipboard import png  # noqa: E402
+    from tests.gui.front.test_b1_keys import _XTestKeyboard  # noqa: E402
+
+    if TYPE_CHECKING:
+        from pathlib import Path
+
+    _TEXT = "Привет 🌍\nsecond line\n\n"
+
+
+    class _ClipboardApp(AConsoleApp):
+        def __init__(self, client: CoreClient, directory: Path, mode: str) -> None:
+            super().__init__(client)
+            self.directory = directory
+            self.mode = mode
+            self.problem: Exception | None = None
+            self.received = bytearray()
+            self.images: list[bytes] = []
+
+        async def _open(self) -> None:  # noqa: C901, PLR0912, PLR0915 -- one end-to-end keyboard/clipboard scenario
+            keyboard = None
+            page = None
+            try:
+                await super()._open()
+                window = self.window
+                assert window is not None
+                page = TerminalPage(self.client, TabId("tab-a"), lambda: None, lambda _tab: None)
+                window.set_content(page)
+                page.terminal.connect("commit", lambda _vte, text, _length: self.received.extend(text.encode()))
+                ready = self.directory / "ready"
+                page.terminal.spawn_async(
+                    Vte.PtyFlags.DEFAULT, None,
+                    ["/usr/bin/python3", "-c", (
+                        "import os,tty,time;tty.setraw(0);os.write(1,b'\\x1b[?2004h');"
+                        f"open({str(ready)!r},'w').close();time.sleep(30)"
+                    )], None, GLib.SpawnFlags.DEFAULT, None, None, -1, None, None, None,
+                )
+                page.focus_terminal()
+                for _ in range(100):
+                    if ready.exists() and page.terminal.has_focus():
+                        break
+                    await asyncio.sleep(0.02)
+                assert ready.exists()
+                keyboard = _XTestKeyboard(window)
+                await asyncio.sleep(0.1)
+
+                async def prepare(data: bytes) -> str:
+                    self.images.append(data)
+                    await asyncio.sleep(0.02)
+                    return "/attachments/image with spaces.png"
+
+                page.clipboard.prepare = prepare
+                clipboard = page.get_clipboard()
+                if self.mode == "copy":
+                    clipboard.set("previous clipboard content")
+                    page.terminal.feed(b"copy shortcut sentinel\r\n")
+>                   await asyncio.sleep(0.1)
+E                   AssertionError
+
+tests/gui/front/test_clipboard_routing.py:75: AssertionError
+=============================== warnings summary ===============================
+../../../../../../Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/events.py:803
+  /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/events.py:803: DeprecationWarning: 'asyncio.AbstractEventLoopPolicy' is deprecated and slated for removal in Python 3.16
+    AbstractEventLoopPolicy = getattr(asyncio, "AbstractEventLoopPolicy", object)
+
+tests/gui/front/test_clipboard_routing.py::test_real_clipboard_shortcuts[text]
+  /home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/gui/front/test_clipboard_routing.py:105: DeprecationWarning: Vte.Pty.close is deprecated
+    assert self.received == b""
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/gui/front/test_clipboard_routing.py::test_real_clipboard_shortcuts[text]
+FAILED tests/gui/front/test_clipboard_routing.py::test_real_clipboard_shortcuts[image]
+2 failed, 147 passed, 291 deselected, 2 warnings in 52.72s

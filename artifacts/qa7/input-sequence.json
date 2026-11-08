@@ -1,0 +1,6 @@
+[
+  {
+    "child_prefix": "import os,tty,time;tty.setraw(0);os.write(1,b'\\x1b[?2004h')",
+    "enable_hex": "1b5b3f3230303468"
+  }
+]
