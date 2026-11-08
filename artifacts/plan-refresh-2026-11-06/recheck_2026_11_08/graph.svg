@@ -1,0 +1,510 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 4540 2046" width="4540" height="2046">
+<style>text{font-family:system-ui,sans-serif;fill:#0f172a} .edge{fill:none;stroke:#94a3b8;stroke-width:1.5}</style>
+<defs><marker id="arrow" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M0 0L7 3.5L0 7" fill="#94a3b8"/></marker></defs>
+<rect width="4540" height="2046" fill="#f8fafc"/>
+<text x="40" y="32" font-size="24" font-weight="700">AConsole · plan-1 · фактический граф</text>
+<text x="40" y="56" font-size="13">Снимок 2026-11-08T17:53:16.065205+00:00 · 83 узлов · 82 зависимостей blocks · по подтверждённым проверкам</text>
+<rect x="40" y="74" width="14" height="14" rx="3" fill="#dcfce7" stroke="#15803d"/>
+<text x="61" y="86" font-size="12">Готово: 64</text>
+<rect x="210" y="74" width="14" height="14" rx="3" fill="#ede9fe" stroke="#7c3aed"/>
+<text x="231" y="86" font-size="12">На проверке: 0</text>
+<rect x="380" y="74" width="14" height="14" rx="3" fill="#ffedd5" stroke="#c2410c"/>
+<text x="401" y="86" font-size="12">В работе: 1</text>
+<rect x="550" y="74" width="14" height="14" rx="3" fill="#f1f5f9" stroke="#64748b"/>
+<text x="571" y="86" font-size="12">В очереди: 13</text>
+<rect x="720" y="74" width="14" height="14" rx="3" fill="#fee2e2" stroke="#b91c1c"/>
+<text x="741" y="86" font-size="12">Заблокировано: 2</text>
+<rect x="890" y="74" width="14" height="14" rx="3" fill="#fecaca" stroke="#991b1b"/>
+<text x="911" y="86" font-size="12">Ошибка: 3</text>
+<rect x="1060" y="74" width="14" height="14" rx="3" fill="#e5e7eb" stroke="#6b7280"/>
+<text x="1081" y="86" font-size="12">Отменено: 0</text>
+<path class="edge" d="M1530,292 C1585,292 1605,1220 1660,1220" marker-end="url(#arrow)"><title>SYS-3 → QA-1: blocks</title></path>
+<path class="edge" d="M1530,176 C1585,176 1605,1220 1660,1220" marker-end="url(#arrow)"><title>SYS-2 → QA-1: blocks</title></path>
+<path class="edge" d="M1150,1452 C1205,1452 1605,1220 1660,1220" marker-end="url(#arrow)"><title>SEC-2 → QA-1: blocks</title></path>
+<path class="edge" d="M770,872 C825,872 1605,1220 1660,1220" marker-end="url(#arrow)"><title>MEM-1 → QA-1: blocks</title></path>
+<path class="edge" d="M1150,1916 C1205,1916 1605,1220 1660,1220" marker-end="url(#arrow)"><title>SYS-1 → QA-1: blocks</title></path>
+<path class="edge" d="M1150,988 C1205,988 1605,1220 1660,1220" marker-end="url(#arrow)"><title>SEC-1 → QA-1: blocks</title></path>
+<path class="edge" d="M2490,292 C2545,292 2565,408 2620,408" marker-end="url(#arrow)"><title>SEC-4 → QA-2: blocks</title></path>
+<path class="edge" d="M1530,176 C1585,176 1605,1684 1660,1684" marker-end="url(#arrow)"><title>SYS-2 → SYS-4: blocks</title></path>
+<path class="edge" d="M2010,1684 C2065,1684 2085,408 2140,408" marker-end="url(#arrow)"><title>SYS-4 → SEC-5: blocks</title></path>
+<path class="edge" d="M2970,408 C3025,408 3045,524 3100,524" marker-end="url(#arrow)"><title>QA-2 → CMT-1: blocks</title></path>
+<path class="edge" d="M2490,408 C2545,408 2565,408 2620,408" marker-end="url(#arrow)"><title>SEC-5 → QA-2: blocks</title></path>
+<path class="edge" d="M1150,1452 C1205,1452 2085,408 2140,408" marker-end="url(#arrow)"><title>SEC-2 → SEC-5: blocks</title></path>
+<path class="edge" d="M2010,1452 C2065,1452 2565,408 2620,408" marker-end="url(#arrow)"><title>SEC-3 → QA-2: blocks</title></path>
+<path class="edge" d="M770,872 C825,872 2085,408 2140,408" marker-end="url(#arrow)"><title>MEM-1 → SEC-5: blocks</title></path>
+<path class="edge" d="M1150,988 C1205,988 1605,1452 1660,1452" marker-end="url(#arrow)"><title>SEC-1 → SEC-3: blocks</title></path>
+<path class="edge" d="M2010,1684 C2065,1684 2565,408 2620,408" marker-end="url(#arrow)"><title>SYS-4 → QA-2: blocks</title></path>
+<path class="edge" d="M1150,1916 C1205,1916 1605,1684 1660,1684" marker-end="url(#arrow)"><title>SYS-1 → SYS-4: blocks</title></path>
+<path class="edge" d="M2010,1220 C2065,1220 2565,408 2620,408" marker-end="url(#arrow)"><title>QA-1 → QA-2: blocks</title></path>
+<path class="edge" d="M2010,1452 C2065,1452 2085,292 2140,292" marker-end="url(#arrow)"><title>SEC-3 → SEC-4: blocks</title></path>
+<path class="edge" d="M390,292 C445,292 3525,176 3580,176" marker-end="url(#arrow)"><title>APR-3 → QA-6: blocks</title></path>
+<path class="edge" d="M1150,1104 C1205,1104 4005,176 4060,176" marker-end="url(#arrow)"><title>SEC-10 → CMT-2: blocks</title></path>
+<path class="edge" d="M1530,640 C1585,640 2085,524 2140,524" marker-end="url(#arrow)"><title>UX-4 → UX-6: blocks</title></path>
+<path class="edge" d="M1150,176 C1205,176 3525,176 3580,176" marker-end="url(#arrow)"><title>QA-3 → QA-6: blocks</title></path>
+<path class="edge" d="M2010,1800 C2065,1800 2085,524 2140,524" marker-end="url(#arrow)"><title>UX-2 → UX-6: blocks</title></path>
+<path class="edge" d="M770,756 C825,756 4005,176 4060,176" marker-end="url(#arrow)"><title>HAR-5 → CMT-2: blocks</title></path>
+<path class="edge" d="M1150,1568 C1205,1568 1605,524 1660,524" marker-end="url(#arrow)"><title>SEC-6 → CORE-5: blocks</title></path>
+<path class="edge" d="M2010,408 C2065,408 4005,176 4060,176" marker-end="url(#arrow)"><title>CORE-1 → CMT-2: blocks</title></path>
+<path class="edge" d="M2970,176 C3025,176 3525,176 3580,176" marker-end="url(#arrow)"><title>APR-5 → QA-6: blocks</title></path>
+<path class="edge" d="M1150,1568 C1205,1568 1605,292 1660,292" marker-end="url(#arrow)"><title>SEC-6 → APR-4: blocks</title></path>
+<path class="edge" d="M390,176 C445,176 1605,872 1660,872" marker-end="url(#arrow)"><title>APR-1 → DES-3: blocks</title></path>
+<path class="edge" d="M1530,292 C1585,292 1605,408 1660,408" marker-end="url(#arrow)"><title>SYS-3 → CORE-1: blocks</title></path>
+<path class="edge" d="M2010,988 C2065,988 4005,176 4060,176" marker-end="url(#arrow)"><title>DES-4 → CMT-2: blocks</title></path>
+<path class="edge" d="M2010,176 C2065,176 3525,176 3580,176" marker-end="url(#arrow)"><title>APR-2 → QA-6: blocks</title></path>
+<path class="edge" d="M770,640 C825,640 4005,176 4060,176" marker-end="url(#arrow)"><title>HAR-4 → CMT-2: blocks</title></path>
+<path class="edge" d="M1150,1568 C1205,1568 1605,1568 1660,1568" marker-end="url(#arrow)"><title>SEC-6 → SEC-7: blocks</title></path>
+<path class="edge" d="M2010,640 C2065,640 4005,176 4060,176" marker-end="url(#arrow)"><title>CORE-6 → CMT-2: blocks</title></path>
+<path class="edge" d="M2010,1916 C2065,1916 2085,524 2140,524" marker-end="url(#arrow)"><title>UX-5 → UX-6: blocks</title></path>
+<path class="edge" d="M2010,756 C2065,756 4005,176 4060,176" marker-end="url(#arrow)"><title>DES-2 → CMT-2: blocks</title></path>
+<path class="edge" d="M390,1336 C445,1336 1605,872 1660,872" marker-end="url(#arrow)"><title>DES-1 → DES-3: blocks</title></path>
+<path class="edge" d="M770,292 C825,292 2085,524 2140,524" marker-end="url(#arrow)"><title>HAR-1 → UX-6: blocks</title></path>
+<path class="edge" d="M770,524 C825,524 2085,524 2140,524" marker-end="url(#arrow)"><title>HAR-3 → UX-6: blocks</title></path>
+<path class="edge" d="M390,988 C445,988 4005,176 4060,176" marker-end="url(#arrow)"><title>CORE-4 → CMT-2: blocks</title></path>
+<path class="edge" d="M1530,408 C1585,408 1605,1800 1660,1800" marker-end="url(#arrow)"><title>UX-1 → UX-2: blocks</title></path>
+<path class="edge" d="M3450,176 C3505,176 3525,176 3580,176" marker-end="url(#arrow)"><title>APR-6 → QA-6: blocks</title></path>
+<path class="edge" d="M390,176 C445,176 1605,176 1660,176" marker-end="url(#arrow)"><title>APR-1 → APR-2: blocks</title></path>
+<path class="edge" d="M390,756 C445,756 4005,176 4060,176" marker-end="url(#arrow)"><title>CORE-2 → CMT-2: blocks</title></path>
+<path class="edge" d="M2010,524 C2065,524 4005,176 4060,176" marker-end="url(#arrow)"><title>CORE-5 → CMT-2: blocks</title></path>
+<path class="edge" d="M770,872 C825,872 1605,640 1660,640" marker-end="url(#arrow)"><title>MEM-1 → CORE-6: blocks</title></path>
+<path class="edge" d="M2970,408 C3025,408 3525,176 3580,176" marker-end="url(#arrow)"><title>QA-2 → QA-6: blocks</title></path>
+<path class="edge" d="M390,1452 C445,1452 4005,176 4060,176" marker-end="url(#arrow)"><title>FE-1 → CMT-2: blocks</title></path>
+<path class="edge" d="M1150,1800 C1205,1800 2565,176 2620,176" marker-end="url(#arrow)"><title>SEC-9 → APR-5: blocks</title></path>
+<path class="edge" d="M1150,1452 C1205,1452 2565,176 2620,176" marker-end="url(#arrow)"><title>SEC-2 → APR-5: blocks</title></path>
+<path class="edge" d="M2490,524 C2545,524 4005,176 4060,176" marker-end="url(#arrow)"><title>UX-6 → CMT-2: blocks</title></path>
+<path class="edge" d="M2490,408 C2545,408 2565,176 2620,176" marker-end="url(#arrow)"><title>SEC-5 → APR-5: blocks</title></path>
+<path class="edge" d="M2970,176 C3025,176 3045,408 3100,408" marker-end="url(#arrow)"><title>APR-5 → APR-8: blocks</title></path>
+<path class="edge" d="M2010,292 C2065,292 2085,176 2140,176" marker-end="url(#arrow)"><title>APR-4 → APR-9: blocks</title></path>
+<path class="edge" d="M770,524 C825,524 1605,1916 1660,1916" marker-end="url(#arrow)"><title>HAR-3 → UX-5: blocks</title></path>
+<path class="edge" d="M1530,524 C1585,524 2085,524 2140,524" marker-end="url(#arrow)"><title>UX-3 → UX-6: blocks</title></path>
+<path class="edge" d="M1150,408 C1205,408 4005,176 4060,176" marker-end="url(#arrow)"><title>QA-5 → CMT-2: blocks</title></path>
+<path class="edge" d="M1530,640 C1585,640 1605,988 1660,988" marker-end="url(#arrow)"><title>UX-4 → DES-4: blocks</title></path>
+<path class="edge" d="M2010,1568 C2065,1568 2565,176 2620,176" marker-end="url(#arrow)"><title>SEC-7 → APR-5: blocks</title></path>
+<path class="edge" d="M3450,292 C3505,292 3525,176 3580,176" marker-end="url(#arrow)"><title>APR-7 → QA-6: blocks</title></path>
+<path class="edge" d="M390,1336 C445,1336 1605,756 1660,756" marker-end="url(#arrow)"><title>DES-1 → DES-2: blocks</title></path>
+<path class="edge" d="M3450,408 C3505,408 3525,176 3580,176" marker-end="url(#arrow)"><title>APR-8 → QA-6: blocks</title></path>
+<path class="edge" d="M2010,292 C2065,292 2565,176 2620,176" marker-end="url(#arrow)"><title>APR-4 → APR-5: blocks</title></path>
+<path class="edge" d="M770,408 C825,408 3045,292 3100,292" marker-end="url(#arrow)"><title>HAR-2 → APR-7: blocks</title></path>
+<path class="edge" d="M2970,176 C3025,176 3045,292 3100,292" marker-end="url(#arrow)"><title>APR-5 → APR-7: blocks</title></path>
+<path class="edge" d="M2010,872 C2065,872 4005,176 4060,176" marker-end="url(#arrow)"><title>DES-3 → CMT-2: blocks</title></path>
+<path class="edge" d="M390,524 C445,524 4005,176 4060,176" marker-end="url(#arrow)"><title>AUD-2 → CMT-2: blocks</title></path>
+<path class="edge" d="M1530,408 C1585,408 2085,524 2140,524" marker-end="url(#arrow)"><title>UX-1 → UX-6: blocks</title></path>
+<path class="edge" d="M390,408 C445,408 4005,176 4060,176" marker-end="url(#arrow)"><title>AUD-1 → CMT-2: blocks</title></path>
+<path class="edge" d="M1150,292 C1205,292 4005,176 4060,176" marker-end="url(#arrow)"><title>QA-4 → CMT-2: blocks</title></path>
+<path class="edge" d="M2970,176 C3025,176 3045,176 3100,176" marker-end="url(#arrow)"><title>APR-5 → APR-6: blocks</title></path>
+<path class="edge" d="M3450,524 C3505,524 4005,176 4060,176" marker-end="url(#arrow)"><title>CMT-1 → CMT-2: blocks</title></path>
+<path class="edge" d="M390,872 C445,872 4005,176 4060,176" marker-end="url(#arrow)"><title>CORE-3 → CMT-2: blocks</title></path>
+<path class="edge" d="M3930,176 C3985,176 4005,176 4060,176" marker-end="url(#arrow)"><title>QA-6 → CMT-2: blocks</title></path>
+<path class="edge" d="M2490,176 C2545,176 3525,176 3580,176" marker-end="url(#arrow)"><title>APR-9 → QA-6: blocks</title></path>
+<path class="edge" d="M1150,1684 C1205,1684 2565,176 2620,176" marker-end="url(#arrow)"><title>SEC-8 → APR-5: blocks</title></path>
+<path class="edge" d="M390,408 C445,408 -15,640 40,640" marker-end="url(#arrow)" stroke-dasharray="4 5" opacity="0.5"><title>AUD-1 → AUD-3: parent</title></path>
+<path class="edge" d="M390,408 C445,408 745,756 800,756" marker-end="url(#arrow)" stroke-dasharray="4 5" opacity="0.5"><title>AUD-1 → REL-2: parent</title></path>
+<path class="edge" d="M390,408 C445,408 745,640 800,640" marker-end="url(#arrow)" stroke-dasharray="4 5" opacity="0.5"><title>AUD-1 → REL-1: parent</title></path>
+<path class="edge" d="M1150,640 C1205,640 1605,1336 1660,1336" marker-end="url(#arrow)"><title>REL-1 → REL-3: blocks</title></path>
+<path class="edge" d="M390,408 C445,408 1605,1336 1660,1336" marker-end="url(#arrow)" stroke-dasharray="4 5" opacity="0.5"><title>AUD-1 → REL-3: parent</title></path>
+<path class="edge" d="M1150,292 C1205,292 745,872 800,872" marker-end="url(#arrow)" stroke-dasharray="4 5" opacity="0.5"><title>QA-4 → REL-4: related</title></path>
+<path class="edge" d="M1150,640 C1205,640 -15,1684 40,1684" marker-end="url(#arrow)" stroke-dasharray="4 5" opacity="0.5"><title>REL-1 → GIT-1: related</title></path>
+<path class="edge" d="M1150,756 C1205,756 -15,1684 40,1684" marker-end="url(#arrow)" stroke-dasharray="4 5" opacity="0.5"><title>REL-2 → GIT-1: related</title></path>
+<path class="edge" d="M390,408 C445,408 -15,1684 40,1684" marker-end="url(#arrow)" stroke-dasharray="4 5" opacity="0.5"><title>AUD-1 → GIT-1: related</title></path>
+<path class="edge" d="M2010,408 C2065,408 745,872 800,872" marker-end="url(#arrow)" stroke-dasharray="4 5" opacity="0.5"><title>CORE-1 → REL-4: related</title></path>
+<path class="edge" d="M1150,1220 C1205,1220 -15,1684 40,1684" marker-end="url(#arrow)" stroke-dasharray="4 5" opacity="0.5"><title>SEC-11 → GIT-1: related</title></path>
+<path class="edge" d="M390,1684 C445,1684 -15,1800 40,1800" marker-end="url(#arrow)" stroke-dasharray="4 5" opacity="0.5"><title>GIT-1 → GIT-2: related</title></path>
+<path class="edge" d="M390,408 C445,408 -15,1800 40,1800" marker-end="url(#arrow)" stroke-dasharray="4 5" opacity="0.5"><title>AUD-1 → GIT-2: related</title></path>
+<path class="edge" d="M1150,640 C1205,640 -15,1800 40,1800" marker-end="url(#arrow)" stroke-dasharray="4 5" opacity="0.5"><title>REL-1 → GIT-2: related</title></path>
+<path class="edge" d="M1150,756 C1205,756 365,176 420,176" marker-end="url(#arrow)" stroke-dasharray="4 5" opacity="0.5"><title>REL-2 → GIT-4: related</title></path>
+<path class="edge" d="M390,1916 C445,1916 365,176 420,176" marker-end="url(#arrow)" stroke-dasharray="4 5" opacity="0.5"><title>GIT-3 → GIT-4: related</title></path>
+<path class="edge" d="M390,408 C445,408 365,176 420,176" marker-end="url(#arrow)" stroke-dasharray="4 5" opacity="0.5"><title>AUD-1 → GIT-4: related</title></path>
+<path class="edge" d="M1150,756 C1205,756 -15,1916 40,1916" marker-end="url(#arrow)" stroke-dasharray="4 5" opacity="0.5"><title>REL-2 → GIT-3: related</title></path>
+<path class="edge" d="M390,408 C445,408 -15,1916 40,1916" marker-end="url(#arrow)" stroke-dasharray="4 5" opacity="0.5"><title>AUD-1 → GIT-3: related</title></path>
+<path class="edge" d="M770,1104 C825,1104 -15,1104 40,1104" marker-end="url(#arrow)" stroke-dasharray="4 5" opacity="0.5"><title>PERF-2 → CORE-7: related</title></path>
+<path class="edge" d="M390,988 C445,988 -15,1104 40,1104" marker-end="url(#arrow)" stroke-dasharray="4 5" opacity="0.5"><title>CORE-4 → CORE-7: related</title></path>
+<path class="edge" d="M390,872 C445,872 365,1220 420,1220" marker-end="url(#arrow)" stroke-dasharray="4 5" opacity="0.5"><title>CORE-3 → PERF-3: related</title></path>
+<path class="edge" d="M770,1104 C825,1104 365,1220 420,1220" marker-end="url(#arrow)" stroke-dasharray="4 5" opacity="0.5"><title>PERF-2 → PERF-3: related</title></path>
+<path class="edge" d="M770,1220 C825,1220 365,1336 420,1336" marker-end="url(#arrow)" stroke-dasharray="4 5" opacity="0.5"><title>PERF-3 → PERF-4: related</title></path>
+<path class="edge" d="M1530,756 C1585,756 365,1916 420,1916" marker-end="url(#arrow)" stroke-dasharray="4 5" opacity="0.5"><title>UX-7 → PLAN-3: related</title></path>
+<path class="edge" d="M390,1104 C445,1104 365,1916 420,1916" marker-end="url(#arrow)" stroke-dasharray="4 5" opacity="0.5"><title>CORE-7 → PLAN-3: related</title></path>
+<path class="edge" d="M770,1220 C825,1220 365,1916 420,1916" marker-end="url(#arrow)" stroke-dasharray="4 5" opacity="0.5"><title>PERF-3 → PLAN-3: related</title></path>
+<path class="edge" d="M770,1684 C825,1684 365,1916 420,1916" marker-end="url(#arrow)" stroke-dasharray="4 5" opacity="0.5"><title>PLAN-1 → PLAN-3: related</title></path>
+<path class="edge" d="M2010,1568 C2065,1568 2565,292 2620,292" marker-end="url(#arrow)"><title>SEC-7 → GATE-1: blocks</title></path>
+<path class="edge" d="M2490,292 C2545,292 2565,292 2620,292" marker-end="url(#arrow)"><title>SEC-4 → GATE-1: blocks</title></path>
+<path class="edge" d="M1530,524 C1585,524 -15,1220 40,1220" marker-end="url(#arrow)" stroke-dasharray="4 5" opacity="0.5"><title>UX-3 → CORE-8: related</title></path>
+<path class="edge" d="M2010,1452 C2065,1452 745,1336 800,1336" marker-end="url(#arrow)" stroke-dasharray="4 5" opacity="0.5"><title>SEC-3 → SEC-12: related</title></path>
+<path class="edge" d="M1150,988 C1205,988 745,1336 800,1336" marker-end="url(#arrow)" stroke-dasharray="4 5" opacity="0.5"><title>SEC-1 → SEC-12: related</title></path>
+<path class="edge" d="M1150,1220 C1205,1220 745,1336 800,1336" marker-end="url(#arrow)" stroke-dasharray="4 5" opacity="0.5"><title>SEC-11 → SEC-12: related</title></path>
+<path class="edge" d="M2010,1220 C2065,1220 745,1336 800,1336" marker-end="url(#arrow)" stroke-dasharray="4 5" opacity="0.5"><title>QA-1 → SEC-12: related</title></path>
+<path class="edge" d="M390,1452 C445,1452 -15,1568 40,1568" marker-end="url(#arrow)" stroke-dasharray="4 5" opacity="0.5"><title>FE-1 → FE-2: related</title></path>
+<path class="edge" d="M770,1452 C825,1452 1605,1104 1660,1104" marker-end="url(#arrow)"><title>PERF-5 → PERF-7: blocks</title></path>
+<g id="node-2"><title>SEC-1 · Закрыть границу hostrun · Готово</title><rect x="800" y="942" width="350" height="100" rx="9" fill="#dcfce7" stroke="#15803d" stroke-width="2"/>
+<text x="812" y="965" font-size="16" font-weight="700">SEC-1 · Готово</text>
+<text x="812" y="987" font-size="12">Закрыть границу hostrun</text>
+</g>
+<g id="node-3"><title>SEC-2 · Исправить повторы разового approval · Готово</title><rect x="800" y="1406" width="350" height="100" rx="9" fill="#dcfce7" stroke="#15803d" stroke-width="2"/>
+<text x="812" y="1429" font-size="16" font-weight="700">SEC-2 · Готово</text>
+<text x="812" y="1451" font-size="12">Исправить повторы разового approval</text>
+</g>
+<g id="node-4"><title>SYS-1 · Не запускать агента при неудачном orphan scan · Готово</title><rect x="800" y="1870" width="350" height="100" rx="9" fill="#dcfce7" stroke="#15803d" stroke-width="2"/>
+<text x="812" y="1893" font-size="16" font-weight="700">SYS-1 · Готово</text>
+<text x="812" y="1915" font-size="12">Не запускать агента при неудачном orphan</text>
+<text x="812" y="1932" font-size="12">scan</text>
+</g>
+<g id="node-5"><title>SYS-2 · Сохранять ссылку на worktree при отказе удаления · Готово</title><rect x="1180" y="130" width="350" height="100" rx="9" fill="#dcfce7" stroke="#15803d" stroke-width="2"/>
+<text x="1192" y="153" font-size="16" font-weight="700">SYS-2 · Готово</text>
+<text x="1192" y="175" font-size="12">Сохранять ссылку на worktree при отказе</text>
+<text x="1192" y="192" font-size="12">удаления</text>
+</g>
+<g id="node-6"><title>SYS-3 · Устранить гонку старта core · Готово</title><rect x="1180" y="246" width="350" height="100" rx="9" fill="#dcfce7" stroke="#15803d" stroke-width="2"/>
+<text x="1192" y="269" font-size="16" font-weight="700">SYS-3 · Готово</text>
+<text x="1192" y="291" font-size="12">Устранить гонку старта core</text>
+</g>
+<g id="node-7"><title>MEM-1 · Ограничить рост памяти и очистить обработчики · Готово</title><rect x="420" y="826" width="350" height="100" rx="9" fill="#dcfce7" stroke="#15803d" stroke-width="2"/>
+<text x="432" y="849" font-size="16" font-weight="700">MEM-1 · Готово</text>
+<text x="432" y="871" font-size="12">Ограничить рост памяти и очистить</text>
+<text x="432" y="888" font-size="12">обработчики</text>
+</g>
+<g id="node-8"><title>QA-1 · Проверить исправления и сценарии отказа · Готово</title><rect x="1660" y="1174" width="350" height="100" rx="9" fill="#dcfce7" stroke="#15803d" stroke-width="2"/>
+<text x="1672" y="1197" font-size="16" font-weight="700">QA-1 · Готово</text>
+<text x="1672" y="1219" font-size="12">Проверить исправления и сценарии отказа</text>
+</g>
+<g id="node-9"><title>SEC-3 · Закрыть оставшиеся host-exec действия · Готово</title><rect x="1660" y="1406" width="350" height="100" rx="9" fill="#dcfce7" stroke="#15803d" stroke-width="2"/>
+<text x="1672" y="1429" font-size="16" font-weight="700">SEC-3 · Готово</text>
+<text x="1672" y="1451" font-size="12">Закрыть оставшиеся host-exec действия</text>
+</g>
+<g id="node-10"><title>SEC-4 · Защитить review gate от подделки · Готово</title><rect x="2140" y="246" width="350" height="100" rx="9" fill="#dcfce7" stroke="#15803d" stroke-width="2"/>
+<text x="2152" y="269" font-size="16" font-weight="700">SEC-4 · Готово</text>
+<text x="2152" y="291" font-size="12">Защитить review gate от подделки</text>
+</g>
+<g id="node-11"><title>SYS-4 · Проверять фактическую остановку orphan-процессов · Готово</title><rect x="1660" y="1638" width="350" height="100" rx="9" fill="#dcfce7" stroke="#15803d" stroke-width="2"/>
+<text x="1672" y="1661" font-size="16" font-weight="700">SYS-4 · Готово</text>
+<text x="1672" y="1683" font-size="12">Проверять фактическую остановку orphan-</text>
+<text x="1672" y="1700" font-size="12">процессов</text>
+</g>
+<g id="node-12"><title>SEC-5 · Изолировать approval по табам · Готово</title><rect x="2140" y="362" width="350" height="100" rx="9" fill="#dcfce7" stroke="#15803d" stroke-width="2"/>
+<text x="2152" y="385" font-size="16" font-weight="700">SEC-5 · Готово</text>
+<text x="2152" y="407" font-size="12">Изолировать approval по табам</text>
+</g>
+<g id="node-13"><title>QA-2 · Проверить дополнительные исправления · Готово</title><rect x="2620" y="362" width="350" height="100" rx="9" fill="#dcfce7" stroke="#15803d" stroke-width="2"/>
+<text x="2632" y="385" font-size="16" font-weight="700">QA-2 · Готово</text>
+<text x="2632" y="407" font-size="12">Проверить дополнительные исправления</text>
+</g>
+<g id="node-14"><title>CMT-1 · Проверить обязательные коммиты по узлам · Ошибка</title><rect x="3100" y="478" width="350" height="100" rx="9" fill="#fecaca" stroke="#991b1b" stroke-width="2"/>
+<text x="3112" y="501" font-size="16" font-weight="700">CMT-1 · Ошибка</text>
+<text x="3112" y="523" font-size="12">Проверить обязательные коммиты по узлам</text>
+</g>
+<g id="node-18"><title>AUD-1 · Завершить аудит Git и сохранности данных · Готово</title><rect x="40" y="362" width="350" height="100" rx="9" fill="#dcfce7" stroke="#15803d" stroke-width="2"/>
+<text x="52" y="385" font-size="16" font-weight="700">AUD-1 · Готово</text>
+<text x="52" y="407" font-size="12">Завершить аудит Git и сохранности данных</text>
+</g>
+<g id="node-19"><title>AUD-2 · Проверить находки на живом приложении · Заблокировано</title><rect x="40" y="478" width="350" height="100" rx="9" fill="#fee2e2" stroke="#b91c1c" stroke-width="2"/>
+<text x="52" y="501" font-size="16" font-weight="700">AUD-2 · Заблокировано</text>
+<text x="52" y="523" font-size="12">Проверить находки на живом приложении</text>
+</g>
+<g id="node-20"><title>SEC-6 · Аутентифицировать клиентов IPC-сокета · Готово</title><rect x="800" y="1522" width="350" height="100" rx="9" fill="#dcfce7" stroke="#15803d" stroke-width="2"/>
+<text x="812" y="1545" font-size="16" font-weight="700">SEC-6 · Готово</text>
+<text x="812" y="1567" font-size="12">Аутентифицировать клиентов IPC-сокета</text>
+</g>
+<g id="node-21"><title>SEC-7 · Убрать хостовые данные из досягаемости агента · Заблокировано</title><rect x="1660" y="1522" width="350" height="100" rx="9" fill="#fee2e2" stroke="#b91c1c" stroke-width="2"/>
+<text x="1672" y="1545" font-size="16" font-weight="700">SEC-7 · Заблокировано</text>
+<text x="1672" y="1567" font-size="12">Убрать хостовые данные из досягаемости</text>
+<text x="1672" y="1584" font-size="12">агента</text>
+</g>
+<g id="node-22"><title>SEC-8 · Запретить git исполнять код репозитория на хосте · Готово</title><rect x="800" y="1638" width="350" height="100" rx="9" fill="#dcfce7" stroke="#15803d" stroke-width="2"/>
+<text x="812" y="1661" font-size="16" font-weight="700">SEC-8 · Готово</text>
+<text x="812" y="1683" font-size="12">Запретить git исполнять код репозитория на</text>
+<text x="812" y="1700" font-size="12">хосте</text>
+</g>
+<g id="node-23"><title>SEC-9 · Закрыть обходы классификатора риска · Готово</title><rect x="800" y="1754" width="350" height="100" rx="9" fill="#dcfce7" stroke="#15803d" stroke-width="2"/>
+<text x="812" y="1777" font-size="16" font-weight="700">SEC-9 · Готово</text>
+<text x="812" y="1799" font-size="12">Закрыть обходы классификатора риска</text>
+</g>
+<g id="node-24"><title>SEC-10 · Убрать токен из argv и флаги из session id · Готово</title><rect x="800" y="1058" width="350" height="100" rx="9" fill="#dcfce7" stroke="#15803d" stroke-width="2"/>
+<text x="812" y="1081" font-size="16" font-weight="700">SEC-10 · Готово</text>
+<text x="812" y="1103" font-size="12">Убрать токен из argv и флаги из session id</text>
+</g>
+<g id="node-25"><title>APR-1 · Перенести запрос согласования поверх терминала · В очереди</title><rect x="40" y="130" width="350" height="100" rx="9" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
+<text x="52" y="153" font-size="16" font-weight="700">APR-1 · В очереди</text>
+<text x="52" y="175" font-size="12">Перенести запрос согласования поверх</text>
+<text x="52" y="192" font-size="12">терминала</text>
+</g>
+<g id="node-26"><title>APR-2 · Показывать содержимое Write, Edit и MCP в запросе · В очереди</title><rect x="1660" y="130" width="350" height="100" rx="9" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
+<text x="1672" y="153" font-size="16" font-weight="700">APR-2 · В очереди</text>
+<text x="1672" y="175" font-size="12">Показывать содержимое Write, Edit и MCP в</text>
+<text x="1672" y="192" font-size="12">запросе</text>
+</g>
+<g id="node-27"><title>APR-3 · Включить системные уведомления о запросах · Готово</title><rect x="40" y="246" width="350" height="100" rx="9" fill="#dcfce7" stroke="#15803d" stroke-width="2"/>
+<text x="52" y="269" font-size="16" font-weight="700">APR-3 · Готово</text>
+<text x="52" y="291" font-size="12">Включить системные уведомления о запросах</text>
+</g>
+<g id="node-28"><title>APR-4 · Модель режимов согласований: глобально и проект · Готово</title><rect x="1660" y="246" width="350" height="100" rx="9" fill="#dcfce7" stroke="#15803d" stroke-width="2"/>
+<text x="1672" y="269" font-size="16" font-weight="700">APR-4 · Готово</text>
+<text x="1672" y="291" font-size="12">Модель режимов согласований: глобально и</text>
+<text x="1672" y="308" font-size="12">проект</text>
+</g>
+<g id="node-29"><title>APR-5 · Применить режимы для Claude Code · В очереди</title><rect x="2620" y="130" width="350" height="100" rx="9" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
+<text x="2632" y="153" font-size="16" font-weight="700">APR-5 · В очереди</text>
+<text x="2632" y="175" font-size="12">Применить режимы для Claude Code</text>
+</g>
+<g id="node-30"><title>APR-6 · Перехват и режимы для OpenCode · В очереди</title><rect x="3100" y="130" width="350" height="100" rx="9" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
+<text x="3112" y="153" font-size="16" font-weight="700">APR-6 · В очереди</text>
+<text x="3112" y="175" font-size="12">Перехват и режимы для OpenCode</text>
+</g>
+<g id="node-31"><title>APR-7 · Перехват и режимы для Codex · В очереди</title><rect x="3100" y="246" width="350" height="100" rx="9" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
+<text x="3112" y="269" font-size="16" font-weight="700">APR-7 · В очереди</text>
+<text x="3112" y="291" font-size="12">Перехват и режимы для Codex</text>
+</g>
+<g id="node-32"><title>APR-8 · Перехват и режимы для Cursor · В очереди</title><rect x="3100" y="362" width="350" height="100" rx="9" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
+<text x="3112" y="385" font-size="16" font-weight="700">APR-8 · В очереди</text>
+<text x="3112" y="407" font-size="12">Перехват и режимы для Cursor</text>
+</g>
+<g id="node-33"><title>APR-9 · Настройка режимов в окне и честная матрица · Готово</title><rect x="2140" y="130" width="350" height="100" rx="9" fill="#dcfce7" stroke="#15803d" stroke-width="2"/>
+<text x="2152" y="153" font-size="16" font-weight="700">APR-9 · Готово</text>
+<text x="2152" y="175" font-size="12">Настройка режимов в окне и честная матрица</text>
+</g>
+<g id="node-34"><title>HAR-1 · Подключить MCP-сервер ядра к вкладкам Claude · Готово</title><rect x="420" y="246" width="350" height="100" rx="9" fill="#dcfce7" stroke="#15803d" stroke-width="2"/>
+<text x="432" y="269" font-size="16" font-weight="700">HAR-1 · Готово</text>
+<text x="432" y="291" font-size="12">Подключить MCP-сервер ядра к вкладкам</text>
+<text x="432" y="308" font-size="12">Claude</text>
+</g>
+<g id="node-35"><title>HAR-2 · Включить hooks Codex и исправить заявленные возможности · Готово</title><rect x="420" y="362" width="350" height="100" rx="9" fill="#dcfce7" stroke="#15803d" stroke-width="2"/>
+<text x="432" y="385" font-size="16" font-weight="700">HAR-2 · Готово</text>
+<text x="432" y="407" font-size="12">Включить hooks Codex и исправить заявленные</text>
+<text x="432" y="424" font-size="12">возможности</text>
+</g>
+<g id="node-36"><title>HAR-3 · Исправить fork и выбор сессии · Готово</title><rect x="420" y="478" width="350" height="100" rx="9" fill="#dcfce7" stroke="#15803d" stroke-width="2"/>
+<text x="432" y="501" font-size="16" font-weight="700">HAR-3 · Готово</text>
+<text x="432" y="523" font-size="12">Исправить fork и выбор сессии</text>
+</g>
+<g id="node-37"><title>HAR-4 · Сделать статусы вкладок надёжными · Готово</title><rect x="420" y="594" width="350" height="100" rx="9" fill="#dcfce7" stroke="#15803d" stroke-width="2"/>
+<text x="432" y="617" font-size="16" font-weight="700">HAR-4 · Готово</text>
+<text x="432" y="639" font-size="12">Сделать статусы вкладок надёжными</text>
+</g>
+<g id="node-38"><title>HAR-5 · Устойчивость sidecar и наблюдателей · Готово</title><rect x="420" y="710" width="350" height="100" rx="9" fill="#dcfce7" stroke="#15803d" stroke-width="2"/>
+<text x="432" y="733" font-size="16" font-weight="700">HAR-5 · Готово</text>
+<text x="432" y="755" font-size="12">Устойчивость sidecar и наблюдателей</text>
+</g>
+<g id="node-39"><title>UX-1 · Починить горячие клавиши, которые ничего не делают · Готово</title><rect x="1180" y="362" width="350" height="100" rx="9" fill="#dcfce7" stroke="#15803d" stroke-width="2"/>
+<text x="1192" y="385" font-size="16" font-weight="700">UX-1 · Готово</text>
+<text x="1192" y="407" font-size="12">Починить горячие клавиши, которые ничего не</text>
+<text x="1192" y="424" font-size="12">делают</text>
+</g>
+<g id="node-40"><title>UX-2 · Спрашивать перед закрытием окна и вкладки с агентом · Готово</title><rect x="1660" y="1754" width="350" height="100" rx="9" fill="#dcfce7" stroke="#15803d" stroke-width="2"/>
+<text x="1672" y="1777" font-size="16" font-weight="700">UX-2 · Готово</text>
+<text x="1672" y="1799" font-size="12">Спрашивать перед закрытием окна и вкладки с</text>
+<text x="1672" y="1816" font-size="12">агентом</text>
+</g>
+<g id="node-41"><title>UX-3 · Подключить палитру к настоящему ядру · Готово</title><rect x="1180" y="478" width="350" height="100" rx="9" fill="#dcfce7" stroke="#15803d" stroke-width="2"/>
+<text x="1192" y="501" font-size="16" font-weight="700">UX-3 · Готово</text>
+<text x="1192" y="523" font-size="12">Подключить палитру к настоящему ядру</text>
+</g>
+<g id="node-42"><title>UX-4 · Сделать первый запуск и ошибки понятными · Готово</title><rect x="1180" y="594" width="350" height="100" rx="9" fill="#dcfce7" stroke="#15803d" stroke-width="2"/>
+<text x="1192" y="617" font-size="16" font-weight="700">UX-4 · Готово</text>
+<text x="1192" y="639" font-size="12">Сделать первый запуск и ошибки понятными</text>
+</g>
+<g id="node-43"><title>UX-5 · Режимы новой вкладки и управление проектами · Готово</title><rect x="1660" y="1870" width="350" height="100" rx="9" fill="#dcfce7" stroke="#15803d" stroke-width="2"/>
+<text x="1672" y="1893" font-size="16" font-weight="700">UX-5 · Готово</text>
+<text x="1672" y="1915" font-size="12">Режимы новой вкладки и управление проектами</text>
+</g>
+<g id="node-44"><title>UX-6 · Сверить README и настройки с поведением · Готово</title><rect x="2140" y="478" width="350" height="100" rx="9" fill="#dcfce7" stroke="#15803d" stroke-width="2"/>
+<text x="2152" y="501" font-size="16" font-weight="700">UX-6 · Готово</text>
+<text x="2152" y="523" font-size="12">Сверить README и настройки с поведением</text>
+</g>
+<g id="node-45"><title>CORE-1 · Поднимать ядро после падения и показывать потерю связи · Готово</title><rect x="1660" y="362" width="350" height="100" rx="9" fill="#dcfce7" stroke="#15803d" stroke-width="2"/>
+<text x="1672" y="385" font-size="16" font-weight="700">CORE-1 · Готово</text>
+<text x="1672" y="407" font-size="12">Поднимать ядро после падения и показывать</text>
+<text x="1672" y="424" font-size="12">потерю связи</text>
+</g>
+<g id="node-46"><title>CORE-2 · Убрать блокировки из общего потока и event loop · Готово</title><rect x="40" y="710" width="350" height="100" rx="9" fill="#dcfce7" stroke="#15803d" stroke-width="2"/>
+<text x="52" y="733" font-size="16" font-weight="700">CORE-2 · Готово</text>
+<text x="52" y="755" font-size="12">Убрать блокировки из общего потока и event</text>
+<text x="52" y="772" font-size="12">loop</text>
+</g>
+<g id="node-47"><title>CORE-3 · Согласовать запись в БД и состояние в памяти · Готово</title><rect x="40" y="826" width="350" height="100" rx="9" fill="#dcfce7" stroke="#15803d" stroke-width="2"/>
+<text x="52" y="849" font-size="16" font-weight="700">CORE-3 · Готово</text>
+<text x="52" y="871" font-size="12">Согласовать запись в БД и состояние в</text>
+<text x="52" y="888" font-size="12">памяти</text>
+</g>
+<g id="node-48"><title>CORE-4 · Исправить MCP: lease между планами и лимиты · Готово</title><rect x="40" y="942" width="350" height="100" rx="9" fill="#dcfce7" stroke="#15803d" stroke-width="2"/>
+<text x="52" y="965" font-size="16" font-weight="700">CORE-4 · Готово</text>
+<text x="52" y="987" font-size="12">Исправить MCP: lease между планами и лимиты</text>
+</g>
+<g id="node-49"><title>CORE-5 · Устойчивость IPC и очереди ingest · Готово</title><rect x="1660" y="478" width="350" height="100" rx="9" fill="#dcfce7" stroke="#15803d" stroke-width="2"/>
+<text x="1672" y="501" font-size="16" font-weight="700">CORE-5 · Готово</text>
+<text x="1672" y="523" font-size="12">Устойчивость IPC и очереди ingest</text>
+</g>
+<g id="node-50"><title>CORE-6 · Ограничить рост и настроить логи · Готово</title><rect x="1660" y="594" width="350" height="100" rx="9" fill="#dcfce7" stroke="#15803d" stroke-width="2"/>
+<text x="1672" y="617" font-size="16" font-weight="700">CORE-6 · Готово</text>
+<text x="1672" y="639" font-size="12">Ограничить рост и настроить логи</text>
+</g>
+<g id="node-51"><title>FE-1 · Устранить гонки и устаревшие ответы в UI · Готово</title><rect x="40" y="1406" width="350" height="100" rx="9" fill="#dcfce7" stroke="#15803d" stroke-width="2"/>
+<text x="52" y="1429" font-size="16" font-weight="700">FE-1 · Готово</text>
+<text x="52" y="1451" font-size="12">Устранить гонки и устаревшие ответы в UI</text>
+</g>
+<g id="node-52"><title>DES-1 · Реальный контроль контраста · Готово</title><rect x="40" y="1290" width="350" height="100" rx="9" fill="#dcfce7" stroke="#15803d" stroke-width="2"/>
+<text x="52" y="1313" font-size="16" font-weight="700">DES-1 · Готово</text>
+<text x="52" y="1335" font-size="12">Реальный контроль контраста</text>
+</g>
+<g id="node-53"><title>DES-2 · Различимость состояний и доступность · Готово</title><rect x="1660" y="710" width="350" height="100" rx="9" fill="#dcfce7" stroke="#15803d" stroke-width="2"/>
+<text x="1672" y="733" font-size="16" font-weight="700">DES-2 · Готово</text>
+<text x="1672" y="755" font-size="12">Различимость состояний и доступность</text>
+</g>
+<g id="node-54"><title>DES-3 · Единый визуальный язык приложения · В очереди</title><rect x="1660" y="826" width="350" height="100" rx="9" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
+<text x="1672" y="849" font-size="16" font-weight="700">DES-3 · В очереди</text>
+<text x="1672" y="871" font-size="12">Единый визуальный язык приложения</text>
+</g>
+<g id="node-55"><title>DES-4 · Локализация и терминология · Готово</title><rect x="1660" y="942" width="350" height="100" rx="9" fill="#dcfce7" stroke="#15803d" stroke-width="2"/>
+<text x="1672" y="965" font-size="16" font-weight="700">DES-4 · Готово</text>
+<text x="1672" y="987" font-size="12">Локализация и терминология</text>
+</g>
+<g id="node-56"><title>QA-3 · Проверки на настоящем ядре · В очереди</title><rect x="800" y="130" width="350" height="100" rx="9" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
+<text x="812" y="153" font-size="16" font-weight="700">QA-3 · В очереди</text>
+<text x="812" y="175" font-size="12">Проверки на настоящем ядре</text>
+</g>
+<g id="node-57"><title>QA-4 · CI, сборка и контракты · В очереди</title><rect x="800" y="246" width="350" height="100" rx="9" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
+<text x="812" y="269" font-size="16" font-weight="700">QA-4 · В очереди</text>
+<text x="812" y="291" font-size="12">CI, сборка и контракты</text>
+</g>
+<g id="node-58"><title>QA-5 · Гигиена репозитория и лицензия · В очереди</title><rect x="800" y="362" width="350" height="100" rx="9" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
+<text x="812" y="385" font-size="16" font-weight="700">QA-5 · В очереди</text>
+<text x="812" y="407" font-size="12">Гигиена репозитория и лицензия</text>
+</g>
+<g id="node-59"><title>QA-6 · Итоговая проверка согласований и выпуска · В очереди</title><rect x="3580" y="130" width="350" height="100" rx="9" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
+<text x="3592" y="153" font-size="16" font-weight="700">QA-6 · В очереди</text>
+<text x="3592" y="175" font-size="12">Итоговая проверка согласований и выпуска</text>
+</g>
+<g id="node-60"><title>CMT-2 · Проверить коммиты новых узлов · В очереди</title><rect x="4060" y="130" width="350" height="100" rx="9" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
+<text x="4072" y="153" font-size="16" font-weight="700">CMT-2 · В очереди</text>
+<text x="4072" y="175" font-size="12">Проверить коммиты новых узлов</text>
+</g>
+<g id="node-70"><title>UX-7 · Кнопка приёмки узлов на странице плана · Готово</title><rect x="1180" y="710" width="350" height="100" rx="9" fill="#dcfce7" stroke="#15803d" stroke-width="2"/>
+<text x="1192" y="733" font-size="16" font-weight="700">UX-7 · Готово</text>
+<text x="1192" y="755" font-size="12">Кнопка приёмки узлов на странице плана</text>
+</g>
+<g id="node-75"><title>SEC-11 · Закрыть запуск кода через filter, merge, gpg и git вне runner · Ошибка</title><rect x="800" y="1174" width="350" height="100" rx="9" fill="#fecaca" stroke="#991b1b" stroke-width="2"/>
+<text x="812" y="1197" font-size="16" font-weight="700">SEC-11 · Ошибка</text>
+<text x="812" y="1219" font-size="12">Закрыть запуск кода через filter, merge,</text>
+<text x="812" y="1236" font-size="12">gpg и git вне runner</text>
+</g>
+<g id="node-77"><title>PLAN-1 · Согласовать готовность узла с блокировкой пересекающихся путей · Готово</title><rect x="420" y="1638" width="350" height="100" rx="9" fill="#dcfce7" stroke="#15803d" stroke-width="2"/>
+<text x="432" y="1661" font-size="16" font-weight="700">PLAN-1 · Готово</text>
+<text x="432" y="1683" font-size="12">Согласовать готовность узла с блокировкой</text>
+<text x="432" y="1700" font-size="12">пересекающихся путей</text>
+</g>
+<g id="node-80"><title>PERF-1 · Восстановить порог framer 64 КиБ за 5 мс · Готово</title><rect x="420" y="942" width="350" height="100" rx="9" fill="#dcfce7" stroke="#15803d" stroke-width="2"/>
+<text x="432" y="965" font-size="16" font-weight="700">PERF-1 · Готово</text>
+<text x="432" y="987" font-size="12">Восстановить порог framer 64 КиБ за 5 мс</text>
+</g>
+<g id="node-83"><title>AUD-3 · Воспроизвести риски Git и записать отчёт без изменения исходников · Готово</title><rect x="40" y="594" width="350" height="100" rx="9" fill="#dcfce7" stroke="#15803d" stroke-width="2"/>
+<text x="52" y="617" font-size="16" font-weight="700">AUD-3 · Готово</text>
+<text x="52" y="639" font-size="12">Воспроизвести риски Git и записать отчёт</text>
+<text x="52" y="656" font-size="12">без изменения исходников</text>
+</g>
+<g id="node-84"><title>REL-1 · Не удалять файлы за пределами worktree через симлинк каталога · Готово</title><rect x="800" y="594" width="350" height="100" rx="9" fill="#dcfce7" stroke="#15803d" stroke-width="2"/>
+<text x="812" y="617" font-size="16" font-weight="700">REL-1 · Готово</text>
+<text x="812" y="639" font-size="12">Не удалять файлы за пределами worktree</text>
+<text x="812" y="656" font-size="12">через симлинк каталога</text>
+</g>
+<g id="node-85"><title>REL-2 · Сохранять ignored-файлы внутри .aconsole при закрытии worktree · Готово</title><rect x="800" y="710" width="350" height="100" rx="9" fill="#dcfce7" stroke="#15803d" stroke-width="2"/>
+<text x="812" y="733" font-size="16" font-weight="700">REL-2 · Готово</text>
+<text x="812" y="755" font-size="12">Сохранять ignored-файлы внутри .aconsole</text>
+<text x="812" y="772" font-size="12">при закрытии worktree</text>
+</g>
+<g id="node-86"><title>REL-3 · Удалять лишние dangling symlink при восстановлении чекпоинта · Готово</title><rect x="1660" y="1290" width="350" height="100" rx="9" fill="#dcfce7" stroke="#15803d" stroke-width="2"/>
+<text x="1672" y="1313" font-size="16" font-weight="700">REL-3 · Готово</text>
+<text x="1672" y="1335" font-size="12">Удалять лишние dangling symlink при</text>
+<text x="1672" y="1352" font-size="12">восстановлении чекпоинта</text>
+</g>
+<g id="node-105"><title>GIT-1 · Проверить неизменность результатов WorkSession и согласовать продолжение после 0.1.1 · Готово</title><rect x="40" y="1638" width="350" height="100" rx="9" fill="#dcfce7" stroke="#15803d" stroke-width="2"/>
+<text x="52" y="1661" font-size="16" font-weight="700">GIT-1 · Готово</text>
+<text x="52" y="1683" font-size="12">Проверить неизменность результатов</text>
+<text x="52" y="1700" font-size="12">WorkSession и согласовать продолжение после</text>
+<text x="52" y="1717" font-size="12">0.1.1</text>
+</g>
+<g id="node-106"><title>REL-4 · Проверить обновление UI при ядре без work_sessions.v1 · Готово</title><rect x="800" y="826" width="350" height="100" rx="9" fill="#dcfce7" stroke="#15803d" stroke-width="2"/>
+<text x="812" y="849" font-size="16" font-weight="700">REL-4 · Готово</text>
+<text x="812" y="871" font-size="12">Проверить обновление UI при ядре без</text>
+<text x="812" y="888" font-size="12">work_sessions.v1</text>
+</g>
+<g id="node-108"><title>GIT-2 · Восстанавливать историю WorkSession по записанному OID, а не изменяемому ref · Готово</title><rect x="40" y="1754" width="350" height="100" rx="9" fill="#dcfce7" stroke="#15803d" stroke-width="2"/>
+<text x="52" y="1777" font-size="16" font-weight="700">GIT-2 · Готово</text>
+<text x="52" y="1799" font-size="12">Восстанавливать историю WorkSession по</text>
+<text x="52" y="1816" font-size="12">записанному OID, а не изменяемому ref</text>
+</g>
+<g id="node-112"><title>GIT-3 · Не доверять настройкам скрытия dirty-состояния подмодулей · Готово</title><rect x="40" y="1870" width="350" height="100" rx="9" fill="#dcfce7" stroke="#15803d" stroke-width="2"/>
+<text x="52" y="1893" font-size="16" font-weight="700">GIT-3 · Готово</text>
+<text x="52" y="1915" font-size="12">Не доверять настройкам скрытия dirty-</text>
+<text x="52" y="1932" font-size="12">состояния подмодулей</text>
+</g>
+<g id="node-113"><title>GIT-4 · Не применять blanket --force при согласии удалить только ignored-файлы · Готово</title><rect x="420" y="130" width="350" height="100" rx="9" fill="#dcfce7" stroke="#15803d" stroke-width="2"/>
+<text x="432" y="153" font-size="16" font-weight="700">GIT-4 · Готово</text>
+<text x="432" y="175" font-size="12">Не применять blanket --force при согласии</text>
+<text x="432" y="192" font-size="12">удалить только ignored-файлы</text>
+</g>
+<g id="node-124"><title>PLAN-2 · Актуализировать граф и порядок продолжения AConsole · В работе</title><rect x="420" y="1754" width="350" height="100" rx="9" fill="#ffedd5" stroke="#c2410c" stroke-width="2"/>
+<text x="432" y="1777" font-size="16" font-weight="700">PLAN-2 · В работе</text>
+<text x="432" y="1799" font-size="12">Актуализировать граф и порядок продолжения</text>
+<text x="432" y="1816" font-size="12">AConsole</text>
+</g>
+<g id="node-125"><title>PERF-2 · Проверить превышение задержки writer tick в полном наборе · Готово</title><rect x="420" y="1058" width="350" height="100" rx="9" fill="#dcfce7" stroke="#15803d" stroke-width="2"/>
+<text x="432" y="1081" font-size="16" font-weight="700">PERF-2 · Готово</text>
+<text x="432" y="1103" font-size="12">Проверить превышение задержки writer tick в</text>
+<text x="432" y="1120" font-size="12">полном наборе</text>
+</g>
+<g id="node-131"><title>CORE-7 · Разрешить повтор failed-узла через штатный MCP · Готово</title><rect x="40" y="1058" width="350" height="100" rx="9" fill="#dcfce7" stroke="#15803d" stroke-width="2"/>
+<text x="52" y="1081" font-size="16" font-weight="700">CORE-7 · Готово</text>
+<text x="52" y="1103" font-size="12">Разрешить повтор failed-узла через штатный</text>
+<text x="52" y="1120" font-size="12">MCP</text>
+</g>
+<g id="node-132"><title>PERF-3 · Разобрать отказ ожидания сокета в полном core-прогоне · Готово</title><rect x="420" y="1174" width="350" height="100" rx="9" fill="#dcfce7" stroke="#15803d" stroke-width="2"/>
+<text x="432" y="1197" font-size="16" font-weight="700">PERF-3 · Готово</text>
+<text x="432" y="1219" font-size="12">Разобрать отказ ожидания сокета в полном</text>
+<text x="432" y="1236" font-size="12">core-прогоне</text>
+</g>
+<g id="node-134"><title>PERF-4 · Проверить границы fault injection recovery без изменения занятых файлов · Готово</title><rect x="420" y="1290" width="350" height="100" rx="9" fill="#dcfce7" stroke="#15803d" stroke-width="2"/>
+<text x="432" y="1313" font-size="16" font-weight="700">PERF-4 · Готово</text>
+<text x="432" y="1335" font-size="12">Проверить границы fault injection recovery</text>
+<text x="432" y="1352" font-size="12">без изменения занятых файлов</text>
+</g>
+<g id="node-140"><title>PLAN-3 · Применить завершение по проверкам и освободить просроченные verifying · Готово</title><rect x="420" y="1870" width="350" height="100" rx="9" fill="#dcfce7" stroke="#15803d" stroke-width="2"/>
+<text x="432" y="1893" font-size="16" font-weight="700">PLAN-3 · Готово</text>
+<text x="432" y="1915" font-size="12">Применить завершение по проверкам и</text>
+<text x="432" y="1932" font-size="12">освободить просроченные verifying</text>
+</g>
+<g id="node-195"><title>GATE-1 · Вернуть доверенный PASS gate через независимую приёмку · В очереди</title><rect x="2620" y="246" width="350" height="100" rx="9" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
+<text x="2632" y="269" font-size="16" font-weight="700">GATE-1 · В очереди</text>
+<text x="2632" y="291" font-size="12">Вернуть доверенный PASS gate через</text>
+<text x="2632" y="308" font-size="12">независимую приёмку</text>
+</g>
+<g id="node-210"><title>CORE-8 · Защитить EchoWindow vault от параллельного record/is_echo · Готово</title><rect x="40" y="1174" width="350" height="100" rx="9" fill="#dcfce7" stroke="#15803d" stroke-width="2"/>
+<text x="52" y="1197" font-size="16" font-weight="700">CORE-8 · Готово</text>
+<text x="52" y="1219" font-size="12">Защитить EchoWindow vault от параллельного</text>
+<text x="52" y="1236" font-size="12">record/is_echo</text>
+</g>
+<g id="node-220"><title>SEC-12 · Изолировать Git hostrun от исполняемой конфигурации репозитория · Готово</title><rect x="800" y="1290" width="350" height="100" rx="9" fill="#dcfce7" stroke="#15803d" stroke-width="2"/>
+<text x="812" y="1313" font-size="16" font-weight="700">SEC-12 · Готово</text>
+<text x="812" y="1335" font-size="12">Изолировать Git hostrun от исполняемой</text>
+<text x="812" y="1352" font-size="12">конфигурации репозитория</text>
+</g>
+<g id="node-230"><title>FE-2 · Восстановить контекст ссылок FE-10, FE-16 и FE-17 · Готово</title><rect x="40" y="1522" width="350" height="100" rx="9" fill="#dcfce7" stroke="#15803d" stroke-width="2"/>
+<text x="52" y="1545" font-size="16" font-weight="700">FE-2 · Готово</text>
+<text x="52" y="1567" font-size="12">Восстановить контекст ссылок FE-10, FE-16 и</text>
+<text x="52" y="1584" font-size="12">FE-17</text>
+</g>
+<g id="node-245"><title>QA-7 · Разобрать потерю bracketed paste в полном GUI-наборе · Готово</title><rect x="800" y="478" width="350" height="100" rx="9" fill="#dcfce7" stroke="#15803d" stroke-width="2"/>
+<text x="812" y="501" font-size="16" font-weight="700">QA-7 · Готово</text>
+<text x="812" y="523" font-size="12">Разобрать потерю bracketed paste в полном</text>
+<text x="812" y="540" font-size="12">GUI-наборе</text>
+</g>
+<g id="node-246"><title>PERF-5 · Разобрать отказ frame-time Git-графа в native Xvfb · Готово</title><rect x="420" y="1406" width="350" height="100" rx="9" fill="#dcfce7" stroke="#15803d" stroke-width="2"/>
+<text x="432" y="1429" font-size="16" font-weight="700">PERF-5 · Готово</text>
+<text x="432" y="1451" font-size="12">Разобрать отказ frame-time Git-графа в</text>
+<text x="432" y="1468" font-size="12">native Xvfb</text>
+</g>
+<g id="node-250"><title>PERF-6 · Разобрать выброс времени ранжирования палитры в полном UI-наборе · Готово</title><rect x="420" y="1522" width="350" height="100" rx="9" fill="#dcfce7" stroke="#15803d" stroke-width="2"/>
+<text x="432" y="1545" font-size="16" font-weight="700">PERF-6 · Готово</text>
+<text x="432" y="1567" font-size="12">Разобрать выброс времени ранжирования</text>
+<text x="432" y="1584" font-size="12">палитры в полном UI-наборе</text>
+</g>
+<g id="node-257"><title>PERF-7 · Ускорить прокрутку Git-истории и подтвердить время кадра · Ошибка</title><rect x="1660" y="1058" width="350" height="100" rx="9" fill="#fecaca" stroke="#991b1b" stroke-width="2"/>
+<text x="1672" y="1081" font-size="16" font-weight="700">PERF-7 · Ошибка</text>
+<text x="1672" y="1103" font-size="12">Ускорить прокрутку Git-истории и</text>
+<text x="1672" y="1120" font-size="12">подтвердить время кадра</text>
+</g>
+</svg>

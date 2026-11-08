@@ -1,0 +1,36 @@
+"""Read-only plan-1 snapshot and canonical PlanBoard projection; never save live state."""
+import json
+from dataclasses import asdict
+from datetime import UTC,datetime
+from pathlib import Path
+from collections import Counter
+import msgspec
+from sqlalchemy import create_engine,select,text
+from sqlalchemy.orm import Session
+from aconsole.core.infrastructure.persistence.models import PlanEdge
+from aconsole.core.infrastructure.persistence.repositories.plans import load_plans
+from aconsole.core.infrastructure.mcp.tools import PlanBoard
+
+folder=Path(__file__).resolve().parent
+engine=create_engine('sqlite:///file:/home/sas/.local/share/aconsole/aconsole.db?mode=ro&uri=true')
+with Session(engine) as session:
+    session.execute(text('PRAGMA query_only=ON'))
+    saved=next(p for p in load_plans(session) if p.id=='plan-1')
+    ids={n.id for n in saved.nodes}
+    edges=session.scalars(select(PlanEdge).where(PlanEdge.src_node_id.in_(ids))).all()
+    data={'plan_id':saved.id,'title':saved.title,'goal':saved.goal,
+          'captured_at':datetime.now(UTC).isoformat(),'database_access':'mode=ro plus PRAGMA query_only=ON; PlanBoard store.save raises',
+          'nodes':[asdict(n) for n in saved.nodes],
+          'edges':[{'src':e.src_node_id,'dst':e.dst_node_id,'kind':e.kind.value} for e in edges]}
+engine.dispose()
+class ReadOnlyStore:
+    def load(self):return (saved,)
+    def save(self,plan):raise AssertionError('this audit cannot save')
+board=PlanBoard(checked_completion=True)
+board.use_store(ReadOnlyStore())
+view=board.view('plan-1');assert view is not None
+assert len(view.nodes)==len(ids)==83
+assert Counter(n.status.value for n in view.nodes)==Counter(n.status for n in saved.nodes)
+(folder/'snapshot.json').write_text(json.dumps(data,default=str,ensure_ascii=False,indent=2)+'\n')
+(folder/'plan-view.json').write_bytes(msgspec.json.encode(view)+b'\n')
+print('Captured',len(ids),'nodes',len(edges),'edges; counts',dict(Counter(n.status for n in saved.nodes)))

@@ -1,0 +1,228 @@
+{
+  "captured_at": "2026-11-08 17:50:09 UTC",
+  "runs": [
+    {
+      "id": 42505812669,
+      "head_sha": "d40a66831660521ab856fb616070b0bfabf00482",
+      "status": "completed",
+      "conclusion": "failure",
+      "html_url": "https://github.com/secachiss-code/agent_console_p/actions/runs/42505812669",
+      "created_at": "2026-11-08T17:36:32Z"
+    },
+    {
+      "id": 42504639016,
+      "head_sha": "411ef4f2be115fe99f8ab618c7ca13aa47301f9f",
+      "status": "completed",
+      "conclusion": "failure",
+      "html_url": "https://github.com/secachiss-code/agent_console_p/actions/runs/42504639016",
+      "created_at": "2026-11-08T17:22:22Z"
+    },
+    {
+      "id": 42502340176,
+      "head_sha": "f5be4a2bf393c0813761ec55ae4b777a92c6323f",
+      "status": "completed",
+      "conclusion": "failure",
+      "html_url": "https://github.com/secachiss-code/agent_console_p/actions/runs/42502340176",
+      "created_at": "2026-11-08T16:55:32Z"
+    },
+    {
+      "id": 42501192100,
+      "head_sha": "503e3de771d903dc08915ba09e933bbc7eb0f214",
+      "status": "completed",
+      "conclusion": "failure",
+      "html_url": "https://github.com/secachiss-code/agent_console_p/actions/runs/42501192100",
+      "created_at": "2026-11-08T16:41:44Z"
+    },
+    {
+      "id": 42500772759,
+      "head_sha": "2222bb669d7aedb94bbb2a86ab7129c097c17dd8",
+      "status": "completed",
+      "conclusion": "failure",
+      "html_url": "https://github.com/secachiss-code/agent_console_p/actions/runs/42500772759",
+      "created_at": "2026-11-08T16:36:41Z"
+    }
+  ],
+  "job": {
+    "jobs": [
+      {
+        "id": 128808080460,
+        "name": "check",
+        "status": "completed",
+        "conclusion": "failure",
+        "run_id": 42505812669,
+        "logs_url": null,
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1
+          },
+          {
+            "name": "Run actions/checkout@v4",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2
+          },
+          {
+            "name": "Run astral-sh/setup-uv@v6",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3
+          },
+          {
+            "name": "Install GTK",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 4
+          },
+          {
+            "name": "Install the two environments",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5
+          },
+          {
+            "name": "Lint, types, layers, contracts",
+            "status": "completed",
+            "conclusion": "failure",
+            "number": 6
+          },
+          {
+            "name": "Core tests",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 7
+          },
+          {
+            "name": "Interface tests",
+            "status": "completed",
+            "conclusion": "failure",
+            "number": 8
+          },
+          {
+            "name": "Enforce combined coverage",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 9
+          },
+          {
+            "name": "Build and install Debian package",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 10
+          },
+          {
+            "name": "Post Run astral-sh/setup-uv@v6",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 19
+          },
+          {
+            "name": "Post Run actions/checkout@v4",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 20
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 21
+          }
+        ]
+      }
+    ]
+  },
+  "log_excerpt": [
+    "2026-11-08T17:37:19.3176302Z I001 [*] Import block is un-sorted or un-formatted",
+    "2026-11-08T17:37:19.3754024Z I001 [*] Import block is un-sorted or un-formatted",
+    "2026-11-08T17:37:19.3881764Z I001 [*] Import block is un-sorted or un-formatted",
+    "2026-11-08T17:37:19.3981134Z I001 [*] Import block is un-sorted or un-formatted",
+    "2026-11-08T17:37:19.4048198Z I001 [*] Import block is un-sorted or un-formatted",
+    "2026-11-08T17:37:19.4184953Z E501 Line too long (237 > 120)",
+    "2026-11-08T17:37:19.4401323Z E501 Line too long (157 > 120)",
+    "2026-11-08T17:37:19.4406600Z E501 Line too long (160 > 120)",
+    "2026-11-08T17:37:19.4415719Z I001 [*] Import block is un-sorted or un-formatted",
+    "2026-11-08T17:37:53.7698874Z ##[error]Process completed with exit code 1.",
+    "2026-11-08T17:40:08.4731363Z             (AgentKind.OPENCODE, (\"month\", \"5h\", \"week\"), [\"5 ч\", \"Нед\", \"Мес\"]),  # noqa: RUF001 -- Russian text",
+    "2026-11-08T17:40:08.4737355Z E       AssertionError: assert ['5 h', '7 d'] == ['5 ч', '7 д']",
+    "2026-11-08T17:40:08.4737738Z E         ",
+    "2026-11-08T17:40:08.4738031Z E         At index 0 diff: '5 h' != '5 ч'",
+    "2026-11-08T17:40:08.4738335Z E         ",
+    "2026-11-08T17:40:08.4738546Z E         Full diff:",
+    "2026-11-08T17:40:08.4738781Z E           [",
+    "2026-11-08T17:40:08.4739022Z E         -     '5 ч',",
+    "2026-11-08T17:40:08.4739502Z E         ?        ^",
+    "2026-11-08T17:40:08.4739710Z E         +     '5 h',",
+    "2026-11-08T17:40:08.4739903Z E         ?        ^",
+    "2026-11-08T17:40:08.4740125Z E         -     '7 д',",
+    "2026-11-08T17:40:08.4740315Z E         ?        ^",
+    "2026-11-08T17:40:08.4740499Z E         +     '7 d',",
+    "2026-11-08T17:40:08.4740694Z E         ?        ^",
+    "2026-11-08T17:40:08.4740875Z E           ]",
+    "2026-11-08T17:40:08.4741129Z tests/gui/front/test_b4b_quota.py:180: AssertionError",
+    "2026-11-08T17:40:08.4745325Z             (AgentKind.OPENCODE, (\"month\", \"5h\", \"week\"), [\"5 ч\", \"Нед\", \"Мес\"]),  # noqa: RUF001 -- Russian text",
+    "2026-11-08T17:40:08.4749344Z E       AssertionError: assert ['5 h', '7 d'] == ['5 ч', '7 д']",
+    "2026-11-08T17:40:08.4749645Z E         ",
+    "2026-11-08T17:40:08.4749887Z E         At index 0 diff: '5 h' != '5 ч'",
+    "2026-11-08T17:40:08.4750131Z E         ",
+    "2026-11-08T17:40:08.4750483Z E         Full diff:",
+    "2026-11-08T17:40:08.4750671Z E           [",
+    "2026-11-08T17:40:08.4750884Z E         -     '5 ч',",
+    "2026-11-08T17:40:08.4751090Z E         ?        ^",
+    "2026-11-08T17:40:08.4751282Z E         +     '5 h',",
+    "2026-11-08T17:40:08.4751470Z E         ?        ^",
+    "2026-11-08T17:40:08.4751681Z E         -     '7 д',",
+    "2026-11-08T17:40:08.4751871Z E         ?        ^",
+    "2026-11-08T17:40:08.4752284Z E         +     '7 d',",
+    "2026-11-08T17:40:08.4752477Z E         ?        ^",
+    "2026-11-08T17:40:08.4752660Z E           ]",
+    "2026-11-08T17:40:08.4752921Z tests/gui/front/test_b4b_quota.py:180: AssertionError",
+    "2026-11-08T17:40:08.4756917Z             (AgentKind.OPENCODE, (\"month\", \"5h\", \"week\"), [\"5 ч\", \"Нед\", \"Мес\"]),  # noqa: RUF001 -- Russian text",
+    "2026-11-08T17:40:08.4761096Z E       AssertionError: assert ['31 days', 'API'] == ['31 день', 'API']",
+    "2026-11-08T17:40:08.4761428Z E         ",
+    "2026-11-08T17:40:08.4770208Z E         At index 0 diff: '31 days' != '31 день'",
+    "2026-11-08T17:40:08.4770735Z E         ",
+    "2026-11-08T17:40:08.4771031Z E         Full diff:",
+    "2026-11-08T17:40:08.4771385Z E           [",
+    "2026-11-08T17:40:08.4771832Z E         -     '31 день',",
+    "2026-11-08T17:40:08.4772332Z E         +     '31 days',",
+    "2026-11-08T17:40:08.4772563Z E               'API',",
+    "2026-11-08T17:40:08.4772773Z E           ]",
+    "2026-11-08T17:40:08.4773033Z tests/gui/front/test_b4b_quota.py:180: AssertionError",
+    "2026-11-08T17:40:08.4777239Z             (AgentKind.OPENCODE, (\"month\", \"5h\", \"week\"), [\"5 ч\", \"Нед\", \"Мес\"]),  # noqa: RUF001 -- Russian text",
+    "2026-11-08T17:40:08.4781617Z E       AssertionError: assert ['5 h', 'Wk', 'Mo'] == ['5 ч', 'Нед', 'Мес']",
+    "2026-11-08T17:40:08.4781966Z E         ",
+    "2026-11-08T17:40:08.4782512Z E         At index 0 diff: '5 h' != '5 ч'",
+    "2026-11-08T17:40:08.4782768Z E         ",
+    "2026-11-08T17:40:08.4782950Z E         Full diff:",
+    "2026-11-08T17:40:08.4783162Z E           [",
+    "2026-11-08T17:40:08.4783389Z E         -     '5 ч',",
+    "2026-11-08T17:40:08.4783595Z E         ?        ^",
+    "2026-11-08T17:40:08.4783799Z E         +     '5 h',",
+    "2026-11-08T17:40:08.4783991Z E         ?        ^",
+    "2026-11-08T17:40:08.4784227Z E         -     'Нед',",
+    "2026-11-08T17:40:08.4784450Z E         -     'Мес',",
+    "2026-11-08T17:40:08.4784646Z E         +     'Wk',",
+    "2026-11-08T17:40:08.4784847Z E         +     'Mo',",
+    "2026-11-08T17:40:08.4785051Z E           ]",
+    "2026-11-08T17:40:08.4785304Z tests/gui/front/test_b4b_quota.py:180: AssertionError",
+    "2026-11-08T17:40:08.4809710Z FAILED tests/gui/front/test_b4b_quota.py::test_the_sidebar_shows_every_window_of_an_account_shortest_first[claude-windows0-expected0] - AssertionError: assert ['5 h', '7 d'] == ['5 ч', '7 д']",
+    "2026-11-08T17:40:08.4814044Z FAILED tests/gui/front/test_b4b_quota.py::test_the_sidebar_shows_every_window_of_an_account_shortest_first[codex-windows1-expected1] - AssertionError: assert ['5 h', '7 d'] == ['5 ч', '7 д']",
+    "2026-11-08T17:40:08.4818102Z FAILED tests/gui/front/test_b4b_quota.py::test_the_sidebar_shows_every_window_of_an_account_shortest_first[cursor-windows2-expected2] - AssertionError: assert ['31 days', 'API'] == ['31 день', 'API']",
+    "2026-11-08T17:40:08.4821504Z FAILED tests/gui/front/test_b4b_quota.py::test_the_sidebar_shows_every_window_of_an_account_shortest_first[opencode-windows3-expected3] - AssertionError: assert ['5 h', 'Wk', 'Mo'] == ['5 ч', 'Нед', 'Мес']",
+    "2026-11-08T17:40:09.3781937Z ##[error]Process completed with exit code 1."
+  ],
+  "local_ruff_existing_errors": 381,
+  "local_ruff_by_file": {
+    "artifacts/main-merge/measure.py": 72,
+    "artifacts/perf2/recheck_measure.py": 61,
+    "artifacts/perf5/measure.py": 48,
+    "artifacts/perf6/measure.py": 41,
+    "artifacts/perf7/measure.py": 107,
+    "artifacts/qa7/probe.py": 37,
+    "artifacts/sec11/exec-boundary/guard_plugin.py": 15
+  },
+  "new_audit_files_ruff_errors": 0
+}

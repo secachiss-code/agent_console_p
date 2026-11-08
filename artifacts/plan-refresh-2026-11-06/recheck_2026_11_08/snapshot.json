@@ -1,0 +1,4486 @@
+{
+  "plan_id": "plan-1",
+  "title": "Устранить риски и утечки AConsole",
+  "goal": "Закрыть подтверждённые риски выполнения кода на хосте и повторного разового ALLOW, обеспечить безопасное управление процессами/worktree, исправить гонку старта core и убрать неограниченный рост ресурсов. Изменения выполнять отдельными проверяемыми узлами; безопасность hostrun и approval проверить особенно тщательно.",
+  "captured_at": "2026-11-08T17:53:16.065205+00:00",
+  "database_access": "mode=ro plus PRAGMA query_only=ON; PlanBoard store.save raises",
+  "nodes": [
+    {
+      "id": "node-2",
+      "key": "SEC-1",
+      "title": "Закрыть границу hostrun",
+      "objective": "Не допускать исполнения изменяемого checkout-кода на хосте через hostrun check, test и gate; отключить внешние diff/textconv механизмы у hostrun git diff.",
+      "status": "done",
+      "owner": null,
+      "paths": [
+        "tools/hostrun/server.py",
+        "tools/hostrun/actions.py",
+        "tools/hostrun/policy.example.toml",
+        "tests/hostrun"
+      ],
+      "acceptance": [
+        "Агент не может добиться исполнения изменённого tools/check.sh, tools/gate/phase_gate.py или тестового кода с правами host-пользователя.",
+        "hostrun git diff не запускает diff.external или textconv из конфигурации репозитория.",
+        "Проверки hostrun покрывают разрешённые и запрещённые пути исполнения."
+      ],
+      "review_required": true,
+      "boundaries": "Сохранить named actions и их текущие пользовательские сценарии, но запускать код проекта в контейнерной изоляции либо через доверенный неизменяемый host-инструмент. Учесть, что локальная hostrun policy может отличаться от policy.example.toml.",
+      "output_format": null,
+      "evidence": "Существующее исправление c412748 принято. hostrun test hostrun: 174 PASS, exit 0. Каталог tests/hostrun совпадает с worktree (diff -qr), actions/server совпадают по SHA256. Проверены контейнерные argv check/test/gate, HTTP dispatch, отказ внешним Git diff/textconv драйверам в реальном временном repo. Действующие policy и unit прочитаны, отличия от example и границы SEC-3/4/7 записаны. Отчёт artifacts/sec1-revalidation/REPORT.md, коммит приёмки 9498b18. git diff --check проходит.",
+      "note": "Узел не начат в этом проходе: check, test и gate ещё исполняют код checkout на хосте. Следующий шаг — перенести их в контейнер или на неизменяемый инструмент и закрыть diff.external/textconv.",
+      "fence": 3,
+      "tab_id": null,
+      "lease_id": null,
+      "lease_expires_at": null,
+      "layer": 0,
+      "priority": 0.2425778947678241,
+      "unmet_blockers": 0,
+      "created_at": "2026-11-04 11:42:01.483744+00:00",
+      "depends_on": [],
+      "parent": null,
+      "related": [],
+      "artifacts": [
+        {
+          "id": "art-65",
+          "kind": "commit",
+          "ref": "c412748255a2a0b0abd6aa19217c1b9ce6b2ee1c"
+        },
+        {
+          "id": "art-191",
+          "kind": "test_report",
+          "ref": "artifacts/sec1-revalidation/REPORT.md"
+        },
+        {
+          "id": "art-192",
+          "kind": "commit",
+          "ref": "9498b18"
+        }
+      ]
+    },
+    {
+      "id": "node-3",
+      "key": "SEC-2",
+      "title": "Исправить повторы разового approval",
+      "objective": "Развести повторную доставку одного события и новый идентичный вызов инструмента: ранее завершённый разовый ALLOW не должен разрешать независимый повтор.",
+      "status": "done",
+      "owner": null,
+      "paths": [
+        "src/aconsole/core/domain/approvals.py",
+        "src/aconsole/core/application/services/approval_broker.py",
+        "src/aconsole/core/infrastructure/http/approval.py",
+        "tests/core/domain/test_approvals.py"
+      ],
+      "acceptance": [
+        "После разового ALLOW новый hook с теми же session/tool/input в пределах TTL не получает автоматический ALLOW.",
+        "Повтор одного и того же события не создаёт лишних запросов, если протокол предоставляет стабильный event id.",
+        "Тесты различают pending-дедупликацию, повтор доставки и независимый повтор действия."
+      ],
+      "review_required": true,
+      "boundaries": "Оставить повторную обработку одного события идемпотентной, если есть стабильный идентификатор вызова. Если такого идентификатора нет, безопасно запрашивать подтверждение заново. Не менять поведение явно выбранного tab/session allow.",
+      "output_format": null,
+      "evidence": "Проверены критерии SEC-2 на main72bb409 (код approvals не менялся после e91a0a2): hostrun test core tests/core/domain/test_approvals.py tests/core/test_approval_hold.py tests/core/test_approval_native.py tests/core/test_ingest_http.py ->149 PASS, exit0. Новая одинаковая команда после разового ALLOW создаёт PENDING; стабильный event_id переигрывает то же событие; pending dedup и tab/session remember правила сохраняются. Полный1766 PASS ранее в artifacts/plan3/core.txt. Межтабовая изоляция — отдельный SEC-5, здесь не объявляется закрытой.",
+      "note": "Завершено по проверкам и существующему отдельному коммиту; kb-127.",
+      "fence": 2,
+      "tab_id": null,
+      "lease_id": null,
+      "lease_expires_at": null,
+      "layer": 0,
+      "priority": 0.3425778947844908,
+      "unmet_blockers": 0,
+      "created_at": "2026-11-04 11:42:01.483744+00:00",
+      "depends_on": [],
+      "parent": null,
+      "related": [],
+      "artifacts": [
+        {
+          "id": "art-62",
+          "kind": "commit",
+          "ref": "e91a0a2576d903ad96ffb7ff177406d25dc7fc6b"
+        },
+        {
+          "id": "art-149",
+          "kind": "commit",
+          "ref": "e91a0a2"
+        },
+        {
+          "id": "art-150",
+          "kind": "test_report",
+          "ref": "artifacts/plan3/core.txt"
+        }
+      ]
+    },
+    {
+      "id": "node-4",
+      "key": "SYS-1",
+      "title": "Не запускать агента при неудачном orphan scan",
+      "objective": "Сделать запуск нового терминала fail-closed, если приложение не смогло проверить и остановить старые процессы таба.",
+      "status": "done",
+      "owner": null,
+      "paths": [
+        "src/aconsole/core/application/services/tabs.py",
+        "src/aconsole/core/infrastructure/containers/podman.py",
+        "tests/core"
+      ],
+      "acceptance": [
+        "При неудачном orphan scan новый агент не стартует.",
+        "При успешном сканировании сохраняется текущий сценарий запуска.",
+        "Проверки покрывают ошибки Podman и отсутствие старых процессов."
+      ],
+      "review_required": false,
+      "boundaries": "Ограничить число повторов сканирования; при окончательной ошибке вернуть понятную ошибку и оставить возможность повторить запуск. Не посылать сигналы PID вне namespace контейнера.",
+      "output_format": null,
+      "evidence": "tab/launchSpec при ошибке orphan scan делает 3 попытки и возвращает CONTAINER_START_FAILED, argv агента не выдаётся. Повторный launch после успешного скана без старых процессов возвращает прежний spec. Коммит 923a851cafec9bf2695a131f62e83d6cd6a29864.",
+      "note": null,
+      "fence": 1,
+      "tab_id": null,
+      "lease_id": null,
+      "lease_expires_at": null,
+      "layer": 0,
+      "priority": 0.2425778947986111,
+      "unmet_blockers": 0,
+      "created_at": "2026-11-04 11:42:01.483744+00:00",
+      "depends_on": [],
+      "parent": null,
+      "related": [],
+      "artifacts": [
+        {
+          "id": "art-61",
+          "kind": "commit",
+          "ref": "923a851cafec9bf2695a131f62e83d6cd6a29864"
+        }
+      ]
+    },
+    {
+      "id": "node-5",
+      "key": "SYS-2",
+      "title": "Сохранять ссылку на worktree при отказе удаления",
+      "objective": "Не помечать workspace удалённым и не терять его из приложения, если Git отказался удалить worktree после предварительной проверки.",
+      "status": "done",
+      "owner": null,
+      "paths": [
+        "src/aconsole/core/application/services/tabs.py",
+        "src/aconsole/core/infrastructure/git/worktrees.py",
+        "src/aconsole/core/infrastructure/persistence/repositories/tabs.py",
+        "tests/core"
+      ],
+      "acceptance": [
+        "Если удаление возвращает removed=False, путь к worktree остаётся зарегистрированным и доступным после закрытия таба.",
+        "Пользователь получает корректный статус, отличающий удалённый worktree от оставленного.",
+        "Проверки покрывают изменение состояния между предварительным осмотром и удалением."
+      ],
+      "review_required": false,
+      "boundaries": "Сохранить пользовательские изменения и предоставить понятный результат закрытия. Не удалять worktree принудительно при обнаружении новых изменений или lock.",
+      "output_format": null,
+      "evidence": "Если git worktree remove возвращает ошибку после проверки, каталог и ветка остаются, --force не повторяется. Закрытие вкладки не ставит workspace.removed_at; CloseTabResult.dirty_summary отличает оставленную копию (dirty/kept) от удалённой (None), UI показывает это тостом. Тесты: tests/core/test_worktrees.py, tests/core/test_tabs.py. Коммит 25fbe0231633064adc546ce1bb1a24dd78421e66.",
+      "note": null,
+      "fence": 1,
+      "tab_id": null,
+      "lease_id": null,
+      "lease_expires_at": null,
+      "layer": 0,
+      "priority": 0.2425778948059028,
+      "unmet_blockers": 0,
+      "created_at": "2026-11-04 11:42:01.483744+00:00",
+      "depends_on": [],
+      "parent": null,
+      "related": [],
+      "artifacts": []
+    },
+    {
+      "id": "node-6",
+      "key": "SYS-3",
+      "title": "Устранить гонку старта core",
+      "objective": "Если lock уже занят, но Unix-сокет ещё не появился, повторять подключение до общего срока ожидания вместо немедленного отказа.",
+      "status": "done",
+      "owner": null,
+      "paths": [
+        "src/aconsole/ui/client/core_client.py",
+        "src/aconsole/core/bootstrap.py",
+        "tests/gui/test_core_client.py"
+      ],
+      "acceptance": [
+        "Параллельный запуск UI успешно подключается к core, который уже держит lock и ещё поднимает сокет.",
+        "Если core так и не становится доступен, UI возвращает ограниченную по времени диагностируемую ошибку.",
+        "Второй core не стартует, пока lock удерживается."
+      ],
+      "review_required": false,
+      "boundaries": "Не запускать второй core при занятом lock; сохранить текущий сценарий запуска нового core, когда lock свободен.",
+      "output_format": null,
+      "evidence": "При занятом lock клиент повторяет connect до _READY_DEADLINE_S и не запускает второй процесс. Если сокет не появился, ConnectionError «core socket did not appear». Свободный lock по-прежнему стартует один core. pytest tests/gui/test_core_client.py. Коммит f149e4cbc014fb04592d46e5aa05d6c6e3ccd5a1.",
+      "note": null,
+      "fence": 1,
+      "tab_id": null,
+      "lease_id": null,
+      "lease_expires_at": null,
+      "layer": 0,
+      "priority": 0.2425778948121528,
+      "unmet_blockers": 0,
+      "created_at": "2026-11-04 11:42:01.483744+00:00",
+      "depends_on": [],
+      "parent": null,
+      "related": [],
+      "artifacts": [
+        {
+          "id": "art-67",
+          "kind": "commit",
+          "ref": "f149e4cbc014fb04592d46e5aa05d6c6e3ccd5a1"
+        }
+      ]
+    },
+    {
+      "id": "node-7",
+      "key": "MEM-1",
+      "title": "Ограничить рост памяти и очистить обработчики",
+      "objective": "Убирать завершённые VTE-обработчики и ограничить удержание исторических данных в ApprovalBook, EchoBook, OpenCode EventReader и IPC diagnostics.",
+      "status": "done",
+      "owner": null,
+      "paths": [
+        "src/aconsole/ui/views/terminal/session.py",
+        "src/aconsole/core/domain/approvals.py",
+        "src/aconsole/core/application/services/approval_broker.py",
+        "src/aconsole/core/infrastructure/vault/writer.py",
+        "src/aconsole/core/infrastructure/agents/opencode/stream.py",
+        "src/aconsole/core/infrastructure/ipc/server.py",
+        "tests"
+      ],
+      "acceptance": [
+        "После серии Resume/New Session на одном VTE-виджете остаётся не более одного активного child-exited обработчика.",
+        "Истёкшие записи и закрытые сессии освобождают память; бесконечные списки имеют TTL или верхнюю границу.",
+        "Проверки подтверждают, что очистка не меняет действующие approval, vault echo и session-cost сценарии."
+      ],
+      "review_required": false,
+      "boundaries": "Сохранить нужную идемпотентность и стоимость активной OpenCode-сессии; очистка должна учитывать TTL и завершение таба, а диагностическая история IPC не должна быть неограниченной.",
+      "output_format": null,
+      "evidence": "commit a13a7f78354b062616fdf109e75c811b730254d7; pytest tests/core/domain/test_approvals.py tests/core/test_approval_hold.py tests/core/test_approval_native.py tests/core/test_session_cost.py tests/core/test_opencode_cursor.py tests/core/test_vault_writer.py tests/core/test_ipc_a.py",
+      "note": "Finished VTE exit handlers, expired approvals, echo hashes, IPC peer history, and OpenCode session costs are bounded. Core tests passed. GUI VTE tests need libgtk, which this container does not have.",
+      "fence": 1,
+      "tab_id": null,
+      "lease_id": null,
+      "lease_expires_at": null,
+      "layer": 0,
+      "priority": 0.34257789481875006,
+      "unmet_blockers": 0,
+      "created_at": "2026-11-04 11:42:01.483744+00:00",
+      "depends_on": [],
+      "parent": null,
+      "related": [],
+      "artifacts": [
+        {
+          "id": "art-63",
+          "kind": "commit",
+          "ref": "a13a7f78354b062616fdf109e75c811b730254d7"
+        }
+      ]
+    },
+    {
+      "id": "node-8",
+      "key": "QA-1",
+      "title": "Проверить исправления и сценарии отказа",
+      "objective": "Проверить каждый исправленный сценарий, провести обзор изменений безопасности и убедиться, что сохранены ожидаемые пользовательские потоки.",
+      "status": "done",
+      "owner": null,
+      "paths": [],
+      "acceptance": [
+        "Добавлены проверки регрессий для каждого принятого дефекта.",
+        "Проверены ошибки старта/остановки процессов, гонка worktree и повторный hook.",
+        "Security review подтверждает отсутствие исполнения изменяемого checkout-кода на host через разрешённые hostrun actions."
+      ],
+      "review_required": true,
+      "boundaries": "Запускать hostrun-проверки после выполнения SEC-1 либо использовать изолированный runner; не считать статическую проверку достаточной для hostrun и approval.",
+      "output_format": null,
+      "evidence": "01c5cbde; artifacts/qa1/REPORT.md. SEC1/SEC2/SYS1/SYS2/SYS3/MEM1 mapped to executable regressions. Found filter.clean hostrun bypass and fixed separately SEC12=37728b85 before completion. Final515passed/1expectedskip; followup168passed overlapsmain; recovery/worksession/cleanup/sidecar35passed; GTK VTEadapter13passed. Hostrun diffcheckpass and changed-lineRuff0 (43legacy). Checked source routing only: installedservice not restarted, SEC7/SEC11/GATE1 unresolved explicitly.",
+      "note": null,
+      "fence": 1,
+      "tab_id": null,
+      "lease_id": null,
+      "lease_expires_at": null,
+      "layer": 1,
+      "priority": 0.14257789482534722,
+      "unmet_blockers": 0,
+      "created_at": "2026-11-04 11:42:01.483744+00:00",
+      "depends_on": [
+        "SYS-3",
+        "SYS-2",
+        "SEC-2",
+        "MEM-1",
+        "SYS-1",
+        "SEC-1"
+      ],
+      "parent": null,
+      "related": [],
+      "artifacts": [
+        {
+          "id": "art-223",
+          "kind": "commit",
+          "ref": "01c5cbde"
+        },
+        {
+          "id": "art-224",
+          "kind": "test_report",
+          "ref": "artifacts/qa1/REPORT.md"
+        }
+      ]
+    },
+    {
+      "id": "node-9",
+      "key": "SEC-3",
+      "title": "Закрыть оставшиеся host-exec действия",
+      "objective": "Не исполнять на хосте изменяемый код через core-run, fake-core, ui-run, ui-snapshot и deps-sync; оставить только неизменяемые проверенные команды или перенести действия в контейнер.",
+      "status": "done",
+      "owner": null,
+      "paths": [
+        "tools/hostrun/server.py",
+        "tools/hostrun/actions.py",
+        "tools/hostrun/policy.example.toml",
+        "tests/hostrun"
+      ],
+      "acceptance": [
+        "core-run, fake-core, ui-run, ui-snapshot и deps-sync не запускают код из рабочего checkout на host-пользователе.",
+        "policy.example.toml не выдаёт агентам действий, исполняющих изменяемый код хоста.",
+        "Проверки покрывают каждый закрытый action и сохранение разрешённых сценариев."
+      ],
+      "review_required": true,
+      "boundaries": "Не менять продуктовый код вне hostrun; не ослаблять существующие запреты.",
+      "output_format": "Изменения hostrun + регрессионные тесты; отчёт о закрытых actions и оставшихся разрешённых путях.",
+      "evidence": "1795dd4. deps-sync/core-run/ui-run/ui-snapshot/fake-core перенесены в devtools; fake lifecycle и PID validation в контейнерном namespace. 198 PASS, 1 skip (нет linked docs) на текущем worktree в devtools. Покрыты каждый action, запрещённые аргументы, HTTP-only-podman dispatch, container CLI и реальный временный fake-процесс start/retry/stop. compileall, git diff --check прошли; новых Ruff diagnostics нет относительно базы (45 прежних). Отчёт artifacts/sec3/REPORT.md. Изменения не активированы в работающем hostrun; runtime service не перезапускался, интеграция/активация отдельно.",
+      "note": null,
+      "fence": 1,
+      "tab_id": null,
+      "lease_id": null,
+      "lease_expires_at": null,
+      "layer": 1,
+      "priority": 0.24243807479247687,
+      "unmet_blockers": 0,
+      "created_at": "2026-11-04 12:02:09.528894+00:00",
+      "depends_on": [
+        "SEC-1"
+      ],
+      "parent": null,
+      "related": [],
+      "artifacts": [
+        {
+          "id": "art-193",
+          "kind": "test_report",
+          "ref": "artifacts/sec3/REPORT.md"
+        },
+        {
+          "id": "art-194",
+          "kind": "commit",
+          "ref": "1795dd4"
+        }
+      ]
+    },
+    {
+      "id": "node-10",
+      "key": "SEC-4",
+      "title": "Защитить review gate от подделки",
+      "objective": "Не доверять отчётам и review-записям, которые агент может изменить из контейнера; исключить самоодобрение агентом собственных изменений.",
+      "status": "done",
+      "owner": null,
+      "paths": [
+        "tools/hostrun/server.py",
+        "tools/hostrun/actions.py",
+        "tools/hostrun/policy.example.toml",
+        "tests/hostrun"
+      ],
+      "acceptance": [
+        "Агент не может подделать успешный gate или review через файлы в checkout или state-каталоге.",
+        "agent-claude не может одобрить собственные изменения; approve требует независимого субъекта.",
+        "Проверки покрывают подделку отчёта, повтор review и попытку self-approval."
+      ],
+      "review_required": true,
+      "boundaries": "Не менять формат пользовательских отчётов без необходимости; не давать агенту новых прав.",
+      "output_format": "Изменения review gate + тесты подделки и self-approval; краткий threat report.",
+      "evidence": "d2ea3aa. Эскалация закрыта fail-closed: approve запрещён агентам даже при wider local policy и через старый runtime plan; inspect read-only. Удалено promotion PASS по writable reports/review. Task/audit gate child0 возвращает UNVERIFIED exit1, ненулевые ошибки сохраняются. 208 PASS,1 docs skip; compileall/Python3.12 syntax/diff проходят; новых Ruff diagnostics нет. artifacts/sec4/REPORT.md. Независимая положительная приёмка пока не реализована: GATE-1 node-195 зависит от SEC-4/SEC-7, возвращение trusted PASS обязательно остаётся в плане. Service не активирован, изменения только в worktree.",
+      "note": null,
+      "fence": 1,
+      "tab_id": null,
+      "lease_id": null,
+      "lease_expires_at": null,
+      "layer": 2,
+      "priority": 0.24243807479976853,
+      "unmet_blockers": 0,
+      "created_at": "2026-11-04 12:02:09.528894+00:00",
+      "depends_on": [
+        "SEC-3"
+      ],
+      "parent": null,
+      "related": [],
+      "artifacts": [
+        {
+          "id": "art-196",
+          "kind": "test_report",
+          "ref": "artifacts/sec4/REPORT.md"
+        },
+        {
+          "id": "art-197",
+          "kind": "commit",
+          "ref": "d2ea3aa"
+        }
+      ]
+    },
+    {
+      "id": "node-11",
+      "key": "SYS-4",
+      "title": "Проверять фактическую остановку orphan-процессов",
+      "objective": "Не подавлять ошибки остановки контейнеров и подтверждать повторным сканированием, что процессы таба действительно завершены.",
+      "status": "done",
+      "owner": null,
+      "paths": [
+        "src/aconsole/core/application/services/tabs.py",
+        "src/aconsole/core/infrastructure/containers/podman.py",
+        "tests/core"
+      ],
+      "acceptance": [
+        "Ошибка stop_in_container не считается успешной остановкой и отражается в результате.",
+        "После остановки выполняется повторное сканирование; оставшиеся процессы блокируют запуск.",
+        "Проверки покрывают ошибку Podman, частичную остановку и успешное завершение."
+      ],
+      "review_required": true,
+      "boundaries": "Не менять политику владения контейнерами; не завершать чужие контейнеры.",
+      "output_format": "Изменения остановки orphan-процессов + тесты частичного отказа; отчёт о поведении fail-closed.",
+      "evidence": "main72bb409: source _stop_orphans propagates stop_in_container failure asFalse and rescans after signalling; remaining PIDs block launch. hostrun test core tests/core/test_tabs.py tests/core/test_tabs_restore.py tests/core/test_round6_k25.py ->71PASS exit0. test_stop_in_container_reports_a_podman_failure and test_orphans_are_stopped_inside_their_container_not_on_the_host pass. Existing partial-stop and successful restart cases pass. Prior full1766PASS artifacts/plan3/core.txt. Критерии не требуют завершать реальные пользовательские контейнеры, поэтому они не трогались.",
+      "note": "Перепроверка прежней реализации; отдельный коммит ae64625 уже в main. kb-127.",
+      "fence": 4,
+      "tab_id": null,
+      "lease_id": null,
+      "lease_expires_at": null,
+      "layer": 1,
+      "priority": 0.24243807480671298,
+      "unmet_blockers": 0,
+      "created_at": "2026-11-04 12:02:09.528894+00:00",
+      "depends_on": [
+        "SYS-2",
+        "SYS-1"
+      ],
+      "parent": null,
+      "related": [],
+      "artifacts": [
+        {
+          "id": "art-66",
+          "kind": "commit",
+          "ref": "ae6462597be29ae37e3c75f5f1a2d687db723801"
+        },
+        {
+          "id": "art-92",
+          "kind": "commit",
+          "ref": "ae64625"
+        }
+      ]
+    },
+    {
+      "id": "node-12",
+      "key": "SEC-5",
+      "title": "Изолировать approval по табам",
+      "objective": "Учесть tab_id в ключе дедупликации approval, не возвращать завершённые решения другого таба и очищать состояние при закрытии таба.",
+      "status": "done",
+      "owner": null,
+      "paths": [
+        "src/aconsole/core/domain/approvals.py",
+        "src/aconsole/core/application/services/approval_broker.py",
+        "src/aconsole/core/application/services/tabs.py",
+        "src/aconsole/core/infrastructure/http/approval.py",
+        "tests/core"
+      ],
+      "acceptance": [
+        "Новый запрос в другом табе с теми же session/tool/input не получает чужой завершённый ALLOW или DENIED.",
+        "Закрытие таба освобождает его pending/settled approval и не влияет на другие табы.",
+        "Тесты покрывают межтабовую изоляцию, TTL и очистку при закрытии."
+      ],
+      "review_required": true,
+      "boundaries": "Не менять семантику разового ALLOW, установленную в SEC-2; не хранить секреты в логах.",
+      "output_format": "Изменения approval + тесты изоляции табов; отчёт о жизненном цикле записей.",
+      "evidence": "main6edcf49. Все критерии SEC-5 подтверждены: pending/event replay ключи scoped tab/session/tool/input; другой tab не получает чужие ALLOW/DENY; закрытие удаляет pending/settled/remembered rules только этого tab. Реальный временный daemonHTTP+IPC test: tab/close освобождает свой hook, другой остаётся pending и получает отдельный DENY. 13 новых случаев PASS; targeted162PASS; fullcore1779PASS; check-final exit0; gitdiffcachedcheckPASS. Старые tests не менялись. Отчёт artifacts/sec5/REPORT.md. Установленное приложение в этом узле не переустанавливалось.",
+      "note": "Готово по подтверждённым проверкам kb-127; отдельный коммит создан до done.",
+      "fence": 1,
+      "tab_id": null,
+      "lease_id": null,
+      "lease_expires_at": null,
+      "layer": 2,
+      "priority": 0.24243807481319446,
+      "unmet_blockers": 0,
+      "created_at": "2026-11-04 12:02:09.528894+00:00",
+      "depends_on": [
+        "SYS-4",
+        "SEC-2",
+        "MEM-1"
+      ],
+      "parent": null,
+      "related": [],
+      "artifacts": [
+        {
+          "id": "art-151",
+          "kind": "commit",
+          "ref": "6edcf49"
+        },
+        {
+          "id": "art-152",
+          "kind": "test_report",
+          "ref": "artifacts/sec5/REPORT.md"
+        }
+      ]
+    },
+    {
+      "id": "node-13",
+      "key": "QA-2",
+      "title": "Проверить дополнительные исправления",
+      "objective": "Проверить SEC-3, SEC-4, SYS-4 и SEC-5, включая попытки обхода hostrun, подделки review, self-approval и межтабовой утечки approval.",
+      "status": "done",
+      "owner": null,
+      "paths": [
+        "tools/hostrun",
+        "src/aconsole/core",
+        "tests"
+      ],
+      "acceptance": [
+        "Для каждого нового дефекта есть регрессионная проверка.",
+        "Проверены попытки исполнения checkout-кода, подделки gate/review, self-approval и чужого approval.",
+        "Security review подтверждает отсутствие известных обходов в разрешённых actions."
+      ],
+      "review_required": true,
+      "boundaries": "Проверочный узел; исправления выполняются в соответствующих рабочих узлах.",
+      "output_format": "Отчёт проверки: дефект → тест → результат; список остаточных рисков.",
+      "evidence": "ea0aa57b; artifacts/qa2/REPORT.md. Current worktree devtools457passed/1expectedskip(45.86s), all hostrun+orphan+approval HTTP/IPC regressions. Selfapproval4agents denied even with broad policy; forged/replay/zeroexit gate remains UNVERIFIED; container-only checkout/Git dispatch; orphan failure/rescan blockslaunch; publicclose releases onlyown hook. No new defects in checked scope. SEC7/SEC11/GATE1/livehostrun activation explicitly not claimed. Diffcheckpass, report/sourcehashes committed.",
+      "note": null,
+      "fence": 1,
+      "tab_id": null,
+      "lease_id": null,
+      "lease_expires_at": null,
+      "layer": 3,
+      "priority": 0.24243807481979168,
+      "unmet_blockers": 0,
+      "created_at": "2026-11-04 12:02:09.528894+00:00",
+      "depends_on": [
+        "SEC-4",
+        "SEC-5",
+        "SEC-3",
+        "SYS-4",
+        "QA-1"
+      ],
+      "parent": null,
+      "related": [],
+      "artifacts": [
+        {
+          "id": "art-228",
+          "kind": "commit",
+          "ref": "ea0aa57b"
+        },
+        {
+          "id": "art-229",
+          "kind": "test_report",
+          "ref": "artifacts/qa2/REPORT.md"
+        }
+      ]
+    },
+    {
+      "id": "node-14",
+      "key": "CMT-1",
+      "title": "Проверить обязательные коммиты по узлам",
+      "objective": "Убедиться, что каждый рабочий узел завершён отдельным коммитом с trailer AConsole-Node, нет смешанных коммитов, а история покрывает все изменения.",
+      "status": "failed",
+      "owner": null,
+      "paths": [],
+      "acceptance": [
+        "Для каждого рабочего узла есть ровно один коммит с AConsole-Node: <KEY>.",
+        "Нет коммитов, смешивающих несколько узлов, и нет изменений вне узлов.",
+        "QA-узлы не создают отдельных коммитов, если не меняют файлы."
+      ],
+      "review_required": true,
+      "boundaries": "Не менять код; только аудит истории и запись отчёта.",
+      "output_format": "Таблица узел → SHA коммита; список пропусков и нарушений.",
+      "evidence": "На main и docs/0.1.1-project-docs ровно один trailer: SEC-1 c412748255a2, SEC-2 e91a0a2576d9, SYS-1 923a851cafec, SYS-2 25fbe0231633, SYS-3 f149e4cbc014, MEM-1 a13a7f78354b, SYS-4 ae6462597be2, SEC-5 6edcf496d317. Смешанных trailer нет. Пропуск: SEC-3 1795dd492553 и SEC-4 d2ea3aadc75e только в ac/codex-ff3f69f4401638ca; в main и docs их кода и отчётов нет. QA-1 01c5cbdecf82 и QA-2 ea0aa57bf00f меняют файлы отчётов, но тоже только на этой ветке. Там же второй SEC-1 9498b18feadf. Выход за пути: SYS-2 (messages.py, window.py), SYS-4 (infrastructure/tabs.py), SEC-5 (bootstrap.py и artifacts/sec5). Узел код не меняет.",
+      "note": "Приёмка не сошлась: история main и docs не содержит коммиты SEC-3 и SEC-4.",
+      "fence": 1,
+      "tab_id": null,
+      "lease_id": null,
+      "lease_expires_at": null,
+      "layer": 4,
+      "priority": 1.142438074828125,
+      "unmet_blockers": 0,
+      "created_at": "2026-11-04 12:02:09.528894+00:00",
+      "depends_on": [
+        "QA-2"
+      ],
+      "parent": null,
+      "related": [],
+      "artifacts": []
+    },
+    {
+      "id": "node-18",
+      "key": "AUD-1",
+      "title": "Завершить аудит Git и сохранности данных",
+      "objective": "Аудит этой области оборвался и отчёта нет. Проверить без правок: закрытие вкладки, откат чекпоинта (REL-22: удаляет untracked без снимка), --force, merge и конфликты, опции с ведущим \"-\", необычные репозитории, index.lock при параллельных агентах. Найденное оформить новыми узлами.",
+      "status": "done",
+      "owner": null,
+      "paths": [
+        "src/aconsole/core/infrastructure/git",
+        "src/aconsole/core/application/services/git_state.py",
+        "src/aconsole/core/application/services/tabs.py",
+        "src/aconsole/ui/views/review"
+      ],
+      "acceptance": [
+        "Есть отчёт с путями и способом воспроизведения для каждой находки.",
+        "Каждый сценарий потери данных проверен на одноразовом репозитории.",
+        "Подтверждённые дефекты добавлены в план новыми узлами."
+      ],
+      "review_required": false,
+      "boundaries": null,
+      "output_format": null,
+      "evidence": "Прямое решение пользователя kb-127, review_required=false; завершение существующей подтверждённой реализации без повторного кода. main 86744c4. 13 disposable Git audit probes and74 existing regressions PASS, specified scenarios recorded, confirmed defects separately tracked/fixed; artifacts/aud1-2026-11-06/REPORT.md.",
+      "note": null,
+      "fence": 3,
+      "tab_id": null,
+      "lease_id": null,
+      "lease_expires_at": null,
+      "layer": 0,
+      "priority": 0.14180890961412038,
+      "unmet_blockers": 0,
+      "created_at": "2026-11-04 13:32:45.516448+00:00",
+      "depends_on": [],
+      "parent": null,
+      "related": [],
+      "artifacts": [
+        {
+          "id": "art-114",
+          "kind": "commit",
+          "ref": "86744c4"
+        }
+      ]
+    },
+    {
+      "id": "node-19",
+      "key": "AUD-2",
+      "title": "Проверить находки на живом приложении",
+      "objective": "Находки сделаны по коду, GUI не запускался, проверяющий этап не проводился. За один проход на реальном окне подтвердить: Ctrl+Shift+C/V, Ctrl+Tab, Ctrl+Q, F1; палитру; закрытие окна при работающем агенте (живы ли процессы); сжимает ли панель согласований терминал; реальные hooks Codex, OpenCode, Cursor. Результат записать в узлы как заметки: что не подтвердилось, снять из работы.",
+      "status": "blocked",
+      "owner": null,
+      "paths": [],
+      "acceptance": [
+        "По каждому пункту записан результат: подтверждено или нет, с версией CLI.",
+        "Неподтвердившиеся пункты исключены из соответствующих узлов."
+      ],
+      "review_required": false,
+      "boundaries": null,
+      "output_format": null,
+      "evidence": null,
+      "note": "Живые CLI и рабочий стол недоступны через разрешённые действия текущего окружения; подменять проверку реальных hooks тестами фейка нельзя. Unblock: доступен автоматизированный запуск настоящего GUI и CLI через hostrun.",
+      "fence": 1,
+      "tab_id": null,
+      "lease_id": null,
+      "lease_expires_at": null,
+      "layer": 0,
+      "priority": 1.1418089096203705,
+      "unmet_blockers": 0,
+      "created_at": "2026-11-04 13:32:45.516448+00:00",
+      "depends_on": [],
+      "parent": null,
+      "related": [],
+      "artifacts": []
+    },
+    {
+      "id": "node-20",
+      "key": "SEC-6",
+      "title": "Аутентифицировать клиентов IPC-сокета",
+      "objective": "Подтверждено кодом и из контейнера: core.sock виден агенту, uid совпадает, allow_peer проверяет только uid, роль берётся из initialize без доказательства (session.py:375-378), nonce уходит подписчикам. Агент может вызвать settings/update и approval/decide. Файловый секрет не поможет: /home/sas и /run/user/1000 смонтированы в контейнер. Вариант для проверки: роли UI и CLI только от процессов в mnt-namespace ядра (SO_PEERCRED pid плюс /proc/<pid>/ns/mnt), контейнеру только роль sidecar с токеном. Закрывает SEC-A-01, SEC-P-05 и требование пользователя: агент не переключает режим согласований.",
+      "status": "done",
+      "owner": null,
+      "paths": [
+        "src/aconsole/core/infrastructure/ipc",
+        "src/aconsole/core/bootstrap.py",
+        "tests/core"
+      ],
+      "acceptance": [
+        "Процесс из контейнера не может вызвать settings/update, approval/decide и подписаться на события с nonce.",
+        "Клиент с неподтверждённой ролью получает ROLE_FORBIDDEN, отказ пишется в лог.",
+        "Sidecar в контейнере и UI на хосте работают как раньше.",
+        "Тест воспроизводит подключение из другого namespace или эквивалентную подмену."
+      ],
+      "review_required": true,
+      "boundaries": null,
+      "output_format": null,
+      "evidence": "Реализацияc13283f; отчётecac0a6. hostrun test core tests/core/test_ipc_a.py ->14PASS, exit0; свежий полныйcore1779PASS. Эквивалентный namespace тест подтверждает ROLE_FORBIDDEN UI/CLI, предупреждение caplog и блокировку settings/update,approval/decide,events/subscribe; token sidecar допускается с ограниченными ролями. Native agent probe: UI/CLI соединения закрыты до ответа initialize, privilegedRPCнеотправлялись; это ранний отказ, не выданный заJSONROLE_FORBIDDEN. Host UI-role реально работал при активации/сверке. УстановленныеIPC server/session побайтно равныmain;ASTbootstrap._client совпадает. Защиту host mounts SEC7 не объявляем закрытой.",
+      "note": "Критерии проверены с разрешённой эквивалентной подменой namespace; пользовательские агенты не перезапускались.",
+      "fence": 4,
+      "tab_id": null,
+      "lease_id": null,
+      "lease_expires_at": null,
+      "layer": 0,
+      "priority": 0.3418089096313658,
+      "unmet_blockers": 0,
+      "created_at": "2026-11-04 13:32:45.516448+00:00",
+      "depends_on": [],
+      "parent": null,
+      "related": [],
+      "artifacts": [
+        {
+          "id": "art-64",
+          "kind": "commit",
+          "ref": "c13283feae760b914a146cc4f7c94d630b89fc00"
+        },
+        {
+          "id": "art-93",
+          "kind": "commit",
+          "ref": "c13283f"
+        },
+        {
+          "id": "art-153",
+          "kind": "test_report",
+          "ref": "artifacts/sec6-revalidation/REPORT.md"
+        }
+      ]
+    },
+    {
+      "id": "node-21",
+      "key": "SEC-7",
+      "title": "Убрать хостовые данные из досягаемости агента",
+      "objective": "Подтверждено из контейнера: /home/sas смонтирован на запись, агенту доступны aconsole.db с настройками, ~/.bashrc и ~/.config/systemd/user. Запрет на переключение режима нельзя обеспечить кодом ядра, пока агент может править базу напрямую, а запись в .bashrc означает выполнение на хосте. AConsole контейнеры не создаёт (README), поэтому нужны проверка и инструкция. Решить вместе с пользователем, какие монтирования оставить; пересоздание контейнеров делает только пользователь.",
+      "status": "blocked",
+      "owner": null,
+      "paths": [
+        "src/aconsole/core/application/services/setup.py",
+        "README.md",
+        "tests/core"
+      ],
+      "acceptance": [
+        "Мастер и health показывают предупреждение, если из контейнера доступны база AConsole или домашний каталог хоста, с готовой инструкцией.",
+        "README описывает рекомендуемую конфигурацию контейнера и её проверку.",
+        "В рекомендуемой конфигурации агент не может записать в базу AConsole и файлы запуска хоста."
+      ],
+      "review_required": true,
+      "boundaries": null,
+      "output_format": null,
+      "evidence": null,
+      "note": "Реализация SEC-7 зафиксирована в84d889c:65core+8GUI PASS. Для окончательной приёмки нужна выбранная пользователем и вручную созданная изолированная конфигурация контейнеров (по условиям узла только пользователь меняет mounts). Текущие контейнеры не изменены. Освобождаю резервы путей до этой внешней проверки; диагностика и инструкция готовы, критерий live isolation не объявлен выполненным.",
+      "fence": 1,
+      "tab_id": null,
+      "lease_id": null,
+      "lease_expires_at": null,
+      "layer": 1,
+      "priority": 4.24180890963831,
+      "unmet_blockers": 0,
+      "created_at": "2026-11-04 13:32:45.516448+00:00",
+      "depends_on": [
+        "SEC-6"
+      ],
+      "parent": null,
+      "related": [],
+      "artifacts": [
+        {
+          "id": "art-198",
+          "kind": "test_report",
+          "ref": "artifacts/sec7/REPORT.md"
+        },
+        {
+          "id": "art-199",
+          "kind": "commit",
+          "ref": "84d889c"
+        }
+      ]
+    },
+    {
+      "id": "node-22",
+      "key": "SEC-8",
+      "title": "Запретить git исполнять код репозитория на хосте",
+      "objective": "Ядро на хосте вызывает git в репозитории, чей .git/config может писать агент. В infrastructure/git нет нейтрализации core.fsmonitor, core.hooksPath, diff.external, textconv, core.sshCommand. Обход: агент пишет core.fsmonitor, ядро выполняет его на хосте вне контейнера (SEC-P-03, SEC-A-03). Отличается от SEC-1: там hostrun и разработка, здесь сам продукт. Все вызовы должны идти через runner.py с безопасными -c и окружением, а hooks явных операций пользователя (commit, merge) разрешаться осознанно.",
+      "status": "done",
+      "owner": null,
+      "paths": [
+        "src/aconsole/core/infrastructure/git",
+        "tests/core"
+      ],
+      "acceptance": [
+        "Вредный core.fsmonitor и hooksPath в репозитории не выполняются при опросе статуса, diff и снимках.",
+        "Вызовы git вне общего runner запрещены проверкой.",
+        "Регрессионные тесты покрывают каждый опасный ключ конфигурации.",
+        "Описано поведение hooks при commit и merge из интерфейса."
+      ],
+      "review_required": true,
+      "boundaries": null,
+      "output_format": null,
+      "evidence": "6976824: original fixed-key/hook criteria verified: status/diff/snapshot markers for fsmonitor/hooksPath, external diff/textconv/SSH; whole-core spawn checks incl async; explicit commit/merge hook permission and public merge-hook refusal. 71 focused+1807 regular PASS, final hostrun check exit 0 with known ownership warning. Dynamic new-driver race remains independently failed SEC-11.",
+      "note": null,
+      "fence": 3,
+      "tab_id": null,
+      "lease_id": null,
+      "lease_expires_at": null,
+      "layer": 0,
+      "priority": 0.14180890966967594,
+      "unmet_blockers": 0,
+      "created_at": "2026-11-04 13:32:45.516448+00:00",
+      "depends_on": [],
+      "parent": null,
+      "related": [],
+      "artifacts": [
+        {
+          "id": "art-69",
+          "kind": "commit",
+          "ref": "bf46375e8fb25f9ed3e9bc1891ba2d2041465a96"
+        },
+        {
+          "id": "art-101",
+          "kind": "commit",
+          "ref": "583fab0"
+        },
+        {
+          "id": "art-165",
+          "kind": "commit",
+          "ref": "6976824"
+        },
+        {
+          "id": "art-166",
+          "kind": "test_report",
+          "ref": "artifacts/sec8-revalidation/REPORT.md"
+        }
+      ]
+    },
+    {
+      "id": "node-23",
+      "key": "SEC-9",
+      "title": "Закрыть обходы классификатора риска",
+      "objective": "Подтверждено запуском classify: пустые теги у echo \"$(rm -rf ~)\", echo x > .git/hooks/pre-commit, echo x >> .git/config, sed -i на .git/config, git -c core.fsmonitor=..., GIT_CONFIG_COUNT, echo > .claude/settings.local.json, .codex/config.toml, claude --dangerously-skip-permissions, codex exec --yolo. X=$(rm -rf ~) получает только outside_worktree. Также SEC-A-07 и SEC-A-09. Подрежим «опасные спрашивать» зависит от этого. Классификатор остаётся советчиком, а не единственным барьером: неразобранная команда считается рискованной.",
+      "status": "done",
+      "owner": null,
+      "paths": [
+        "src/aconsole/core/domain/risk.py",
+        "tests/core/domain"
+      ],
+      "acceptance": [
+        "Все команды из описания получают теги, тест перечисляет их таблицей.",
+        "Команды, которые разбор не смог понять, считаются рискованными.",
+        "Запись в .git, конфиги агентов и запуск вложенных агентов имеют свой тег.",
+        "Правило «во вкладке» не применяется к команде с подстановкой."
+      ],
+      "review_required": true,
+      "boundaries": null,
+      "output_format": null,
+      "evidence": "ce759aa / 0b1f778: 290 targeted risk and approval cases PASS; hostrun check exit 0 (ownership warning recorded); four acceptance criteria verified in artifacts/sec9-revalidation/REPORT.md. Existing destructive tag used; classifier remains advisory.",
+      "note": null,
+      "fence": 2,
+      "tab_id": null,
+      "lease_id": null,
+      "lease_expires_at": null,
+      "layer": 0,
+      "priority": 0.14180890967789353,
+      "unmet_blockers": 0,
+      "created_at": "2026-11-04 13:32:45.516448+00:00",
+      "depends_on": [],
+      "parent": null,
+      "related": [],
+      "artifacts": [
+        {
+          "id": "art-68",
+          "kind": "commit",
+          "ref": "0b1f778306146a5feedb2e9b976fd28873361397"
+        },
+        {
+          "id": "art-156",
+          "kind": "commit",
+          "ref": "ce759aa"
+        },
+        {
+          "id": "art-157",
+          "kind": "test_report",
+          "ref": "artifacts/sec9-revalidation/REPORT.md"
+        }
+      ]
+    },
+    {
+      "id": "node-24",
+      "key": "SEC-10",
+      "title": "Убрать токен из argv и флаги из session id",
+      "objective": "Токен вкладки передаётся в argv podman exec и sidecar (HAR-08, SEC-P-06), session id с ведущим \"-\" становится флагом CLI (SEC-P-07), запись в HOME следует по симлинкам (SEC-P-08), python -m без -P в лаунчере (SEC-P-09), MCP не проверяет Origin и Host (SEC-P-10, API-23). Сначала воспроизвести: эти находки не перепроверялись.",
+      "status": "done",
+      "owner": null,
+      "paths": [
+        "src/aconsole/core/infrastructure/agents",
+        "src/aconsole/core/infrastructure/tabs.py",
+        "src/aconsole/core/infrastructure/mcp/server.py",
+        "tests/core"
+      ],
+      "acceptance": [
+        "Токена нет в командной строке процессов.",
+        "Session id проверяется по формату, перед ним стоит --.",
+        "Запись в HOME не следует по симлинкам наружу.",
+        "/mcp проверяет Origin и Host как ingest."
+      ],
+      "review_required": false,
+      "boundaries": null,
+      "output_format": null,
+      "evidence": "По прямому решению пользователя kb-127: выполненные узлы с PASS завершаются автоматически. main d9ba7cc. artifacts/sec10-2026-11-06/REPORT.md: 213 targeted,67 approved, contracts and static checks PASS; public launchSpec4 agents, real curl, HOME symlink race, local HTTP checks PASS. Unrelated writer-tick timing failure explicitly tracked red PERF-2.",
+      "note": "Однократное завершение по новому решению пользователя kb-127; review_required=false. Повторной реализации нет, используется подтверждённый результат существующего коммита.",
+      "fence": 2,
+      "tab_id": null,
+      "lease_id": null,
+      "lease_expires_at": null,
+      "layer": 0,
+      "priority": 0.14180890968495372,
+      "unmet_blockers": 0,
+      "created_at": "2026-11-04 13:32:45.516448+00:00",
+      "depends_on": [],
+      "parent": null,
+      "related": [],
+      "artifacts": [
+        {
+          "id": "art-126",
+          "kind": "commit",
+          "ref": "d9ba7cc"
+        }
+      ]
+    },
+    {
+      "id": "node-25",
+      "key": "APR-1",
+      "title": "Перенести запрос согласования поверх терминала",
+      "objective": "Жалоба пользователя USER-01 и расхождение с DESIGN §2.1 и §1 («магия», «родное, но маковое»): там карточка поверх терминала той же вкладки, в коде add_bottom_bar (window.py:525), высота 320 px, кнопки прокручиваются вместе с содержимым (panel.py). Сделать оверлей в стиле приложения: кнопки всегда видны, детали прокручиваются отдельно, анимация появления 200 мс. Сохранить решения коммита 0fdcfba: карточка не забирает фокус, защита от двойного нажатия. Добавить из DESIGN: для рискованных «Разрешить» включается через 500 мс и не по умолчанию. Запрос другой вкладки виден счётчиком. Перед кодом показать макет пользователю.",
+      "status": "pending",
+      "owner": null,
+      "paths": [
+        "src/aconsole/ui/views/approvals",
+        "src/aconsole/ui/views/window.py",
+        "src/aconsole/ui/style/style.css",
+        "tests/gui"
+      ],
+      "acceptance": [
+        "Кнопки решения видны при любой длине команды и diff без прокрутки.",
+        "Появление запроса не меняет размер терминала и не вызывает перерисовку агента.",
+        "Набор текста в терминале в момент появления запроса не может принять решение.",
+        "Снимки светлой и тёмной темы приняты пользователем.",
+        "Работает в узком окне и с клавиатуры, Orca читает запрос."
+      ],
+      "review_required": false,
+      "boundaries": null,
+      "output_format": null,
+      "evidence": "f5be4a2b main. Existing overlay14666d84 verified. Реальный Orca прежде говорил только scroll pane: explicit accessible GROUP исправляет name/cwd, speech output заголовок+риск+команда.32testsPASS, Ruff+strict typesPASS; external checkerFAIL baseline/PASS candidate. Три финальных снимка просмотрены/представлены пользователю. Async-вопрос принятия пока без ответа.",
+      "note": "Техническая реализация и проверки готовы; ожидается только явная пользовательская приёмка light/dark-снимков согласно acceptance APR-1. Не done; проваленных финальных проверок нет.",
+      "fence": 6,
+      "tab_id": null,
+      "lease_id": null,
+      "lease_expires_at": null,
+      "layer": 0,
+      "priority": 3.241808909691088,
+      "unmet_blockers": 0,
+      "created_at": "2026-11-04 13:32:45.516448+00:00",
+      "depends_on": [],
+      "parent": null,
+      "related": [],
+      "artifacts": [
+        {
+          "id": "art-71",
+          "kind": "commit",
+          "ref": "294500e"
+        },
+        {
+          "id": "art-72",
+          "kind": "commit",
+          "ref": "14666d8"
+        },
+        {
+          "id": "art-73",
+          "kind": "note",
+          "ref": "Актуальный коммит 14666d8, а не 294500e. В 294500e check.sh возвращал 1 (ruff), запись «check.sh зелёный» для него неверна. На 14666d8: check.sh rc=0, core rc=0, test_approval_panel rc=0."
+        },
+        {
+          "id": "art-276",
+          "kind": "commit",
+          "ref": "f5be4a2bf393c0813761ec55ae4b777a92c6323f"
+        },
+        {
+          "id": "art-277",
+          "kind": "test_report",
+          "ref": "artifacts/apr1/REPORT.md"
+        },
+        {
+          "id": "art-278",
+          "kind": "file",
+          "ref": "artifacts/apr1/ui/ru-approvals-light.png"
+        },
+        {
+          "id": "art-279",
+          "kind": "file",
+          "ref": "artifacts/apr1/ui/ru-approvals-dark.png"
+        },
+        {
+          "id": "art-280",
+          "kind": "file",
+          "ref": "artifacts/apr1/ui/ru-approvals-narrow.png"
+        }
+      ]
+    },
+    {
+      "id": "node-26",
+      "key": "APR-2",
+      "title": "Показывать содержимое Write, Edit и MCP в запросе",
+      "objective": "Запросы Write, Edit и MCP приходят без пути, содержимого и тегов (SEC-A-04), длинная команда режется на 4000 символов без просмотра остатка (SEC-A-16), запрос остаётся после отмены агентом (SEC-A-18). Решение без этих данных вслепую. DESIGN §2.1: список файлов и свёрнутый diff до 200 строк. Риск для правок считать по путям: .git, конфиги агентов, вне worktree.",
+      "status": "pending",
+      "owner": null,
+      "paths": [
+        "src/aconsole/core/infrastructure/http/approval.py",
+        "src/aconsole/core/domain/approvals.py",
+        "src/aconsole/ui/views/approvals",
+        "tests/core"
+      ],
+      "acceptance": [
+        "Запрос правки показывает пути и diff, запрос MCP показывает инструмент и аргументы.",
+        "Запись в .git и конфиги агентов отмечена как рискованная.",
+        "Длинную команду можно прочитать целиком.",
+        "Отменённый агентом запрос исчезает."
+      ],
+      "review_required": false,
+      "boundaries": null,
+      "output_format": null,
+      "evidence": null,
+      "note": null,
+      "fence": 0,
+      "tab_id": null,
+      "lease_id": null,
+      "lease_expires_at": null,
+      "layer": 1,
+      "priority": 2.141808909712963,
+      "unmet_blockers": 1,
+      "created_at": "2026-11-04 13:32:45.516448+00:00",
+      "depends_on": [
+        "APR-1"
+      ],
+      "parent": null,
+      "related": [],
+      "artifacts": []
+    },
+    {
+      "id": "node-27",
+      "key": "APR-3",
+      "title": "Включить системные уведомления о запросах",
+      "objective": "В src нет Gio.Notification и send_notification: пользователь не узнает о запросе, если окно свёрнуто (UX-13). Запрос истекает, и агент простаивает. Реализовать DESIGN §6: одно уведомление на эпизод, только если окно или вкладка не в фокусе, отзыв при решении, переход к вкладке по клику.",
+      "status": "done",
+      "owner": null,
+      "paths": [
+        "src/aconsole/ui/views/app.py",
+        "src/aconsole/ui/views/window.py",
+        "tests/gui"
+      ],
+      "acceptance": [
+        "Запрос при неактивном окне даёт уведомление, клик открывает вкладку.",
+        "На один эпизод одно уведомление, при решении оно отзывается.",
+        "При активной вкладке уведомления нет."
+      ],
+      "review_required": false,
+      "boundaries": null,
+      "output_format": null,
+      "evidence": "daa8c4d5 исправляет незакрытый случай: активное окно больше не подавляет уведомления других вкладок. Selected active tab suppressed; episode once; navigation/resolution withdraw. 3 новые policy-регрессии и MainWindow/Gio-action integration на фоновой вкладке. Alerts+panel suite28PASS на privateXvfb; Ruff/diffPASS; светлый/тёмный/узкий screenshot просмотрены, геометриянеизменна. artifacts/apr3/REPORT.md. OS-notification daemon не вызывался: send/withdraw перехвачены тестом. Снимки APR-1 и Orca этим не приняты. Применён gtk-screenshot-review, без перезапуска установленного приложения.",
+      "note": null,
+      "fence": 3,
+      "tab_id": null,
+      "lease_id": null,
+      "lease_expires_at": null,
+      "layer": 0,
+      "priority": 0.14180890972650464,
+      "unmet_blockers": 0,
+      "created_at": "2026-11-04 13:32:45.516448+00:00",
+      "depends_on": [],
+      "parent": null,
+      "related": [],
+      "artifacts": [
+        {
+          "id": "art-206",
+          "kind": "test_report",
+          "ref": "artifacts/apr3/REPORT.md"
+        },
+        {
+          "id": "art-207",
+          "kind": "commit",
+          "ref": "daa8c4d5"
+        }
+      ]
+    },
+    {
+      "id": "node-28",
+      "key": "APR-4",
+      "title": "Модель режимов согласований: глобально и проект",
+      "objective": "Решение пользователя USER-02. Режимы: спрашивать (сейчас и по умолчанию), разрешать с подрежимами «опасные спрашивать» и «опасные тоже разрешать», запрещать, по сценарию. Сценарий только заглушка: реализация потом, в UI недоступен, в домене ведёт себя как «спрашивать». Уровни: глобальный и проектный, проектный важнее; уровня вкладки нет. Отдельное поле от approvals_mode: тот отвечает за место вопроса, этот за то, кто решает. Порт ApprovalPolicy в application: классификатор даёт теги, решение принимает политика. Только модель, контракт и миграция, применение в APR-5. Трактовку подрежимов подтвердить у пользователя.",
+      "status": "done",
+      "owner": null,
+      "paths": [
+        "src/aconsole/core/application",
+        "src/aconsole/core/domain/approvals.py",
+        "src/aconsole/contracts/settings.py",
+        "migrations/versions",
+        "tests/core"
+      ],
+      "acceptance": [
+        "Режим хранится на обоих уровнях и переживает перезапуск ядра.",
+        "Заглушка сценария ведёт себя как «спрашивать» и покрыта тестом.",
+        "Изменить режим можно только из UI: MCP, ingest и контейнер получают отказ.",
+        "Контракты и golden обновлены, миграция обратима."
+      ],
+      "review_required": true,
+      "boundaries": null,
+      "output_format": null,
+      "evidence": "Коммит ccbad5c50fba459da613a9c6fe9d53e80d838566, trailer AConsole-Node: APR-4. tests/core/test_approval_policy.py покрывает хранение на обоих уровнях, заглушку scenario, отказ MCP/ingest/container и обратимую миграцию 0008. Контракты и golden обновлены. Трактовка подрежимов: kb-241.",
+      "note": "Коммит ccbad5c5. Модель хранится глобально и на проекте, scenario спрашивает, менять режим может только UI. Применение к харнессам остаётся APR-5.",
+      "fence": 2,
+      "tab_id": null,
+      "lease_id": null,
+      "lease_expires_at": null,
+      "layer": 1,
+      "priority": 0.24180890973368058,
+      "unmet_blockers": 0,
+      "created_at": "2026-11-04 13:32:45.516448+00:00",
+      "depends_on": [
+        "SEC-6"
+      ],
+      "parent": null,
+      "related": [],
+      "artifacts": []
+    },
+    {
+      "id": "node-29",
+      "key": "APR-5",
+      "title": "Применить режимы для Claude Code",
+      "objective": "Первый адаптер. По отчёту harness-interception: решения PreToolUse и PermissionRequest в демоне, статический permissions.deny и dontAsk в --settings для fail-closed «запрещать», onFailure block (Claude Code 2.1.295+, проверять версию). Закрепить правила запрета на запись в .claude и .git (SEC-A-05, SEC-A-11, SEC-A-12). Автоматические решения пишутся в журнал и видны пользователю. Без предшествующих узлов автоматическое разрешение включать нельзя.",
+      "status": "pending",
+      "owner": null,
+      "paths": [
+        "src/aconsole/core/infrastructure/agents/claude",
+        "src/aconsole/core/infrastructure/http/approval.py",
+        "src/aconsole/core/application/services/approval_broker.py",
+        "tests/core"
+      ],
+      "acceptance": [
+        "Каждый режим и подрежим проверен на реальном Claude Code, версия записана.",
+        "Падение демона в режиме «запрещать» не даёт выполнить вызов.",
+        "Автоматические решения видны в журнале с причиной.",
+        "Правка настроек агентом не отключает выбранный режим, либо это явно показано."
+      ],
+      "review_required": true,
+      "boundaries": null,
+      "output_format": null,
+      "evidence": null,
+      "note": null,
+      "fence": 0,
+      "tab_id": null,
+      "lease_id": null,
+      "lease_expires_at": null,
+      "layer": 3,
+      "priority": 3.4418089097399305,
+      "unmet_blockers": 1,
+      "created_at": "2026-11-04 13:32:45.516448+00:00",
+      "depends_on": [
+        "SEC-9",
+        "SEC-2",
+        "SEC-5",
+        "SEC-7",
+        "APR-4",
+        "SEC-8"
+      ],
+      "parent": null,
+      "related": [],
+      "artifacts": []
+    },
+    {
+      "id": "node-30",
+      "key": "APR-6",
+      "title": "Перехват и режимы для OpenCode",
+      "objective": "README называет запросы OpenCode только нативными, но механизмы есть. Вариант O-V2: статика permission через OPENCODE_CONFIG_CONTENT для allow и deny. Вариант O-V1: ответ через API по SSE permission.asked для панели. Сначала проверить на целевой версии, блокирует ли сервер инструмент до ответа и показывает ли TUI такие запросы.",
+      "status": "pending",
+      "owner": null,
+      "paths": [
+        "src/aconsole/core/infrastructure/agents/opencode",
+        "tests/core"
+      ],
+      "acceptance": [
+        "Проверка на реальной версии записана в узел.",
+        "Разрешать и запрещать работают статически.",
+        "Спрашивать через панель включён, только если подтверждена блокировка; иначе UI честно говорит о нативном запросе."
+      ],
+      "review_required": false,
+      "boundaries": null,
+      "output_format": null,
+      "evidence": null,
+      "note": null,
+      "fence": 0,
+      "tab_id": null,
+      "lease_id": null,
+      "lease_expires_at": null,
+      "layer": 4,
+      "priority": 2.141808909773148,
+      "unmet_blockers": 1,
+      "created_at": "2026-11-04 13:32:45.516448+00:00",
+      "depends_on": [
+        "APR-5"
+      ],
+      "parent": null,
+      "related": [],
+      "artifacts": []
+    },
+    {
+      "id": "node-31",
+      "key": "APR-7",
+      "title": "Перехват и режимы для Codex",
+      "objective": "Зависит от работающих hooks (HAR-2). Варианты: PermissionRequest и PreToolUse как ask-gate, статика approval_policy и sandbox через -c. Проверить на целевой версии: срабатывает ли PermissionRequest при approval_policy=never, работает ли allow из PreToolUse. В launcher сейчас нет approval_policy и sandbox_mode (SEC-A-05).",
+      "status": "pending",
+      "owner": null,
+      "paths": [
+        "src/aconsole/core/infrastructure/agents/codex",
+        "tests/core"
+      ],
+      "acceptance": [
+        "Проверка на реальной версии записана в узел.",
+        "Режимы применяются там, где подтверждены; покрытие честно указано в UI.",
+        "Режим запрещать не пропускает вызов при падении hook."
+      ],
+      "review_required": false,
+      "boundaries": null,
+      "output_format": null,
+      "evidence": null,
+      "note": null,
+      "fence": 0,
+      "tab_id": null,
+      "lease_id": null,
+      "lease_expires_at": null,
+      "layer": 4,
+      "priority": 2.1418089097876156,
+      "unmet_blockers": 1,
+      "created_at": "2026-11-04 13:32:45.516448+00:00",
+      "depends_on": [
+        "HAR-2",
+        "APR-5"
+      ],
+      "parent": null,
+      "related": [],
+      "artifacts": []
+    },
+    {
+      "id": "node-32",
+      "key": "APR-8",
+      "title": "Перехват и режимы для Cursor",
+      "objective": "Самый неопределённый харнесс. Сначала проверить локально, запускают ли agent и agent -p hooks из ~/.cursor/hooks.json и работает ли failClosed. По результату: U-V1 через hooks либо U-V2 статические правила cli-config.json. Если перехват не подтвердился, режим честно помечается как неприменимый.",
+      "status": "pending",
+      "owner": null,
+      "paths": [
+        "src/aconsole/core/infrastructure/agents/cursor",
+        "tests/core"
+      ],
+      "acceptance": [
+        "Проверка на реальной версии записана в узел.",
+        "Для каждого режима указано: работает, частично или неприменимо.",
+        "Настройка не обещает защиту, которой нет."
+      ],
+      "review_required": false,
+      "boundaries": null,
+      "output_format": null,
+      "evidence": null,
+      "note": null,
+      "fence": 0,
+      "tab_id": null,
+      "lease_id": null,
+      "lease_expires_at": null,
+      "layer": 4,
+      "priority": 2.141808909800463,
+      "unmet_blockers": 1,
+      "created_at": "2026-11-04 13:32:45.516448+00:00",
+      "depends_on": [
+        "APR-5"
+      ],
+      "parent": null,
+      "related": [],
+      "artifacts": []
+    },
+    {
+      "id": "node-33",
+      "key": "APR-9",
+      "title": "Настройка режимов в окне и честная матрица",
+      "objective": "Настройки глобально и в проекте. Для каждого харнесса видно, что режим реально даёт в этой версии CLI. Сценарий показан как недоступный. «Опасные тоже разрешать» требует явного подтверждения и постоянного индикатора. Вкладка без hooks сообщает об этом (SEC-A-14). Каждый режим включается в UI только после своего адаптера.",
+      "status": "done",
+      "owner": null,
+      "paths": [
+        "src/aconsole/ui/views/setup/preferences.py",
+        "src/aconsole/ui/viewmodels",
+        "tests/gui"
+      ],
+      "acceptance": [
+        "Режим меняется на обоих уровнях, проект видит унаследованное значение.",
+        "Неприменимые режимы отключены с объяснением причины.",
+        "Активный автоматический режим виден в окне постоянно."
+      ],
+      "review_required": false,
+      "boundaries": null,
+      "output_format": null,
+      "evidence": "acab39cb2e8e10b2032c13cdf4c450a3c4cc33de. Глобально и для проекта можно выбрать ask/allow/deny; NULL проекта показывает глобальный режим. Сценарий виден и не выбирается. Опасные вызовы спрашивают подтверждение. Автоматический режим держит баннер. Вкладка без hooks пишет, что запросы остаются в терминале. Матрица говорит, что allow/deny CLI ещё не применяет. tests/ui/test_approval_modes.py прошёл. GUI-прогон недоступен: нет libgtk-4.",
+      "note": null,
+      "fence": 1,
+      "tab_id": null,
+      "lease_id": null,
+      "lease_expires_at": null,
+      "layer": 2,
+      "priority": 0.14180890981342592,
+      "unmet_blockers": 0,
+      "created_at": "2026-11-04 13:32:45.516448+00:00",
+      "depends_on": [
+        "APR-4"
+      ],
+      "parent": null,
+      "related": [],
+      "artifacts": []
+    },
+    {
+      "id": "node-34",
+      "key": "HAR-1",
+      "title": "Подключить MCP-сервер ядра к вкладкам Claude",
+      "objective": "Claude не получает MCP: в settings вкладки только permissions.allow mcp__aconsole__*, а mcpServers и --mcp-config нет, хотя у OpenCode и Cursor подключение есть. Подтверждено на этой сессии: инструментов mcp__aconsole__ нет, сервер при этом отвечает на прямой запрос с токеном вкладки. Доска планов README для Claude не работает (HAR-03).",
+      "status": "done",
+      "owner": null,
+      "paths": [
+        "src/aconsole/core/infrastructure/agents/claude/launcher.py",
+        "tests/core"
+      ],
+      "acceptance": [
+        "Новая вкладка Claude видит двенадцать инструментов aconsole.",
+        "Вызов инструмента работает в контексте своей вкладки.",
+        "Тест проверяет итоговый argv и конфигурацию."
+      ],
+      "review_required": false,
+      "boundaries": null,
+      "output_format": null,
+      "evidence": "951dc9f verifies existing 0a6a207/d9ba7cc: final Claude argv includes --mcp-config; generated private config/env reaches all 12 real daemon HTTP tools and isolates projects, with same-project tab isolation also verified. Installed launcher byte-identical to main (SHA256 in report). 56 targeted / 1794 full tests PASS, hostrun check exit 0. No paid Claude query/native CLI run claimed. artifacts/har1-revalidation/REPORT.md.",
+      "note": "CLI `mcp list` не читает сеансовый --mcp-config; реальный сеансовый контрольный протокол подтверждает подключение. Источники: https://code.claude.com/docs/en/mcp (env expansion headers) и официальный anthropics/claude-agent-sdk-python query.py (initialize/mcp_status). Узел на приёмке; коммит в main прикрепляется отдельно.",
+      "fence": 2,
+      "tab_id": null,
+      "lease_id": null,
+      "lease_expires_at": null,
+      "layer": 0,
+      "priority": 0.14180890981909722,
+      "unmet_blockers": 0,
+      "created_at": "2026-11-04 13:32:45.516448+00:00",
+      "depends_on": [],
+      "parent": null,
+      "related": [],
+      "artifacts": [
+        {
+          "id": "art-95",
+          "kind": "commit",
+          "ref": "0a6a207"
+        },
+        {
+          "id": "art-160",
+          "kind": "commit",
+          "ref": "951dc9f"
+        },
+        {
+          "id": "art-161",
+          "kind": "test_report",
+          "ref": "artifacts/har1-revalidation/REPORT.md"
+        }
+      ]
+    },
+    {
+      "id": "node-35",
+      "key": "HAR-2",
+      "title": "Включить hooks Codex и исправить заявленные возможности",
+      "objective": "ADR-0002 отключает hooks до доверия, но цепочка доверия не завершена: hooks не устанавливаются, согласования и чекпоинты Codex не работают, а CAPABILITIES[CODEX].approvals=True говорит обратное (HAR-02). Первым шагом сделать флаг и README честными, затем цепочка hooks/list и hooks.state с тестом на фикстуре реальной версии.",
+      "status": "done",
+      "owner": null,
+      "paths": [
+        "src/aconsole/core/infrastructure/agents/codex",
+        "README.md",
+        "tests/core"
+      ],
+      "acceptance": [
+        "Capabilities и README совпадают с поведением на каждом шаге.",
+        "На реальном Codex hook доходит до ядра и даёт карточку.",
+        "Если доверие получить нельзя, UI объясняет, что делать."
+      ],
+      "review_required": false,
+      "boundaries": null,
+      "output_format": null,
+      "evidence": "15ef3c1dca4c41f00c056ab8edcf1261ffb59949: README описывает включение согласований и чекпоинтов Codex только после подтверждения семи hooks и уведомление открыть /hooks. Тест test_readme_matches_the_codex_capability_steps и остальные tests/core/test_codex_hook_runtime.py прошли. Цепочка hooks/list и hooks.state уже была в коде.",
+      "note": null,
+      "fence": 2,
+      "tab_id": null,
+      "lease_id": null,
+      "lease_expires_at": null,
+      "layer": 0,
+      "priority": 0.14180890982604166,
+      "unmet_blockers": 0,
+      "created_at": "2026-11-04 13:32:45.516448+00:00",
+      "depends_on": [],
+      "parent": null,
+      "related": [],
+      "artifacts": [
+        {
+          "id": "art-103",
+          "kind": "commit",
+          "ref": "bbbc86a"
+        }
+      ]
+    },
+    {
+      "id": "node-36",
+      "key": "HAR-3",
+      "title": "Исправить fork и выбор сессии",
+      "objective": "Fork копирует сессию исходной вкладки, копия резюмирует ту же сессию (HAR-01). Выбор сессии недостижим: project.sessions всегда пуст, session/list не маршрутизирован (HAR-13). Продолжение и форк недоступны из UI (UX-16), «Продолжить» запускает новую сессию без предупреждения (HAR-30), Cursor: код и README расходятся по resume (HAR-19). Сначала воспроизвести HAR-01.",
+      "status": "done",
+      "owner": null,
+      "paths": [
+        "src/aconsole/core/application/services/tabs.py",
+        "src/aconsole/ui/views/tabs",
+        "tests/core"
+      ],
+      "acceptance": [
+        "Форк продолжает отдельную сессию, исходная не меняется.",
+        "Список сессий работает на реальном ядре и доступен из новой вкладки.",
+        "Resume недоступен там, где не поддержан, и не запускает молча новую сессию."
+      ],
+      "review_required": false,
+      "boundaries": null,
+      "output_format": null,
+      "evidence": "c764b024: pending fork сохранён миграцией 0008 до нового дочернего ID; session/list через реальный Daemon и native readers, выбор CLI-сессии и fork в GTK. Resume без ID/поддержки/Claude transcript явно отказан, Cursor согласован с README. Итог: 1451 core/contracts PASS (257.02с), 58 GTK PASS, basedpyright0/0, Ruff/diff-check PASS, просмотрены9 PNG. artifacts/har3/REPORT.md и JUnit содержат результаты/пределы; первоначальный writer max6.371мс сохранён как наблюдение PERF-2, порог5мс неизменён. Реальные оплачиваемые беседы не запускались; каталог OpenCode требует управляемого сервера.",
+      "note": "Без изменений; сначала завершаю отдельный upgrade-path REL-4, чтобы не удерживать пути HAR-3.",
+      "fence": 3,
+      "tab_id": null,
+      "lease_id": null,
+      "lease_expires_at": null,
+      "layer": 0,
+      "priority": 0.24180890983240744,
+      "unmet_blockers": 0,
+      "created_at": "2026-11-04 13:32:45.516448+00:00",
+      "depends_on": [],
+      "parent": null,
+      "related": [],
+      "artifacts": [
+        {
+          "id": "art-233",
+          "kind": "commit",
+          "ref": "c764b024"
+        },
+        {
+          "id": "art-234",
+          "kind": "test_report",
+          "ref": "artifacts/har3/REPORT.md"
+        }
+      ]
+    },
+    {
+      "id": "node-37",
+      "key": "HAR-4",
+      "title": "Сделать статусы вкладок надёжными",
+      "objective": "ScreenWatch для Cursor стирает хвост экрана при вводе (HAR-04), visible_tail склеивает слова (HAR-05), для OpenCode заявлен, но не включается (HAR-06), OSC 9 даёт WAITING_APPROVAL без карточки (HAR-07), статусы выводятся из текста агента (SEC-A-15). Сначала проверить на реальных CLI; нет фикстур OpenCode и Cursor (HAR-26), их снять.",
+      "status": "done",
+      "owner": null,
+      "paths": [
+        "src/aconsole/core/infrastructure/agents",
+        "tests/core"
+      ],
+      "acceptance": [
+        "Есть фикстуры с реальным выводом OpenCode и Cursor.",
+        "Статус ожидания не теряется при вводе.",
+        "Статус ожидания без карточки объясняет, где отвечать."
+      ],
+      "review_required": false,
+      "boundaries": null,
+      "output_format": null,
+      "evidence": "98fbbffd08d602f21c71b4008d9f18379a193052. Ввод без Enter не стирает вопрос и не считается новым ходом. visible_tail применяет стирание строки и сдвиг курсора. Фикстуры: tests/fixtures/screen/cursor-agent-2026.11.05.bin (реальный экран Cursor Agent v2026.11.05) и opencode 2.1.2 --help/--version. OpenCode тоже получает ACONSOLE_SCREEN_WATCH. Ожидание без карточки ставит ANSWER_IN_TERMINAL, подсказка статуса говорит ответить в терминале. TUI OpenCode за 4 с не дал ни байта.",
+      "note": "Не вносил изменений. Acceptance требует первых real CLI fixtures; выбираю независимый core-узел без подмены native-проверок фейками.",
+      "fence": 2,
+      "tab_id": null,
+      "lease_id": null,
+      "lease_expires_at": null,
+      "layer": 0,
+      "priority": 0.14180890983888889,
+      "unmet_blockers": 0,
+      "created_at": "2026-11-04 13:32:45.516448+00:00",
+      "depends_on": [],
+      "parent": null,
+      "related": [],
+      "artifacts": []
+    },
+    {
+      "id": "node-38",
+      "key": "HAR-5",
+      "title": "Устойчивость sidecar и наблюдателей",
+      "objective": "CoreLink рвёт связь навсегда после одного таймаута 50 мс (HAR-09), _write_stdout пропускает exited при ошибке (HAR-10), TurnWatch Codex умирает, если контейнер не готов (HAR-12), PID из другого namespace (REL-06). Также обновляет SYS-4. Сначала воспроизвести.",
+      "status": "done",
+      "owner": null,
+      "paths": [
+        "src/aconsole/core/infrastructure/agents",
+        "src/aconsole/core/infrastructure",
+        "tests/core"
+      ],
+      "acceptance": [
+        "Кратковременная задержка не обрывает связь sidecar с ядром.",
+        "Завершение процесса всегда доходит до ядра.",
+        "Наблюдатель Codex переживает поздний старт контейнера."
+      ],
+      "review_required": false,
+      "boundaries": null,
+      "output_format": null,
+      "evidence": "5a96265e; artifacts/har5/REPORT.md. До исправления 5 failed/1 passed. Итог 83 passed; усиленный exit status 6 passed. Настоящий Unix-сокет восстанавливает 100 кадров + exited после150мс паузы; stdout cleanup reap/SIGKILL; Codex discovery повторяется после None/ошибки; Daemon использует SO_PEERCRED PID. Strict basedpyright0errors/0warnings, Ruff/diff passed. Ограничения недоступного ядра и bounded queue документированы.",
+      "note": null,
+      "fence": 1,
+      "tab_id": null,
+      "lease_id": null,
+      "lease_expires_at": null,
+      "layer": 0,
+      "priority": 0.1418089098451389,
+      "unmet_blockers": 0,
+      "created_at": "2026-11-04 13:32:45.516448+00:00",
+      "depends_on": [],
+      "parent": null,
+      "related": [],
+      "artifacts": [
+        {
+          "id": "art-218",
+          "kind": "commit",
+          "ref": "5a96265e"
+        },
+        {
+          "id": "art-219",
+          "kind": "test_report",
+          "ref": "artifacts/har5/REPORT.md"
+        }
+      ]
+    },
+    {
+      "id": "node-39",
+      "key": "UX-1",
+      "title": "Починить горячие клавиши, которые ничего не делают",
+      "objective": "Подтверждено кодом: шорткаты перехватываются в CAPTURE, activate возвращает True, а _handle_action обрабатывает только часть действий. Без обработчика: close-tab, next-tab, previous-tab, tab-1..9, handover, terminal-search, copy, paste, shortcuts, zoom-*, quit. Ctrl+Shift+C/V съедаются до терминала, поэтому его обработчик в page.py их не получает (UX-03, UX-04, DES-07). Действие без обработчика не должно забирать клавишу. Проверка на живом окне в AUD-2.",
+      "status": "done",
+      "owner": null,
+      "paths": [
+        "src/aconsole/ui/views/shortcuts.py",
+        "src/aconsole/ui/views/window.py",
+        "src/aconsole/ui/viewmodels/logic/keymap.py",
+        "tests/gui"
+      ],
+      "acceptance": [
+        "Каждое действие keymap имеет обработчик или удалено из keymap и README.",
+        "Ctrl+Shift+C и V работают в терминале.",
+        "Тест падает при действии без обработчика."
+      ],
+      "review_required": false,
+      "boundaries": null,
+      "output_format": null,
+      "evidence": "f15498a4: принято существующее исправление09ac8ffa. 28PASS на отдельном защищённом Xvfb, реальные GTK/VTE/GDK/XTest и fakecore. Все keymap actions имеют handler/title; unhandled action возвращаетFalse. Добавлены2 Gtk.CallbackAction regressions и реальный CtrlShiftC copy clipboard с проверкой отсутствияCtrlCвPTY. Все5 paste-modes проходят CAPTURE; Entry focus/keyboard overrides/search проверены. Ruff и diffPASS. artifacts/ux1-revalidation/REPORT.md. ПервичныйBroadway5fails из-заотсутствияX11 устранены переходомнаизолированныйXvfb безсистемнойустановки. Productionviews/styles неизменны; установленное окно остаётсявAUD-2.",
+      "note": "Код и тесты готовы, живое окно проверяется в AUD-2.",
+      "fence": 3,
+      "tab_id": null,
+      "lease_id": null,
+      "lease_expires_at": null,
+      "layer": 0,
+      "priority": 0.24180890985196762,
+      "unmet_blockers": 0,
+      "created_at": "2026-11-04 13:32:45.516448+00:00",
+      "depends_on": [],
+      "parent": null,
+      "related": [],
+      "artifacts": [
+        {
+          "id": "art-204",
+          "kind": "test_report",
+          "ref": "artifacts/ux1-revalidation/REPORT.md"
+        },
+        {
+          "id": "art-205",
+          "kind": "commit",
+          "ref": "f15498a4"
+        }
+      ]
+    },
+    {
+      "id": "node-40",
+      "key": "UX-2",
+      "title": "Спрашивать перед закрытием окна и вкладки с агентом",
+      "objective": "Подтверждено кодом: _close_requested сразу скрывает окно и завершает работу, проверки занятых вкладок нет, хотя README и DESIGN её обещают (UX-01, REL-02). Закрытие вкладки при чистом worktree не спрашивает о работающем агенте (UX-08), диалог показывает сырые токены dirty, ahead (UX-07). Ctrl+Q также должен идти этим путём. Судьбу агентов при закрытии уточнить в AUD-2.",
+      "status": "done",
+      "owner": null,
+      "paths": [
+        "src/aconsole/ui/views/app.py",
+        "src/aconsole/ui/views/window.py",
+        "tests/gui"
+      ],
+      "acceptance": [
+        "Закрытие при работающих агентах или ожидающих запросах спрашивает и показывает их число.",
+        "Закрытие вкладки с работающим агентом спрашивает всегда.",
+        "Диалог говорит человеческим языком, что будет потеряно."
+      ],
+      "review_required": false,
+      "boundaries": null,
+      "output_format": null,
+      "evidence": "dae76440. До скрытия окна app/quitCheck; диалог с числом running agents/pending approvals, default+Escape cancel. Running/pending таб требует подтверждения до tab/close дажеприclean; неизвестныйcoreтожеconfirm; duplicatecheckscoalesced. Dirty/ahead/ignored/kept переведены. CtrlQ используеттотжеwindow.close. GUI расширение69PASS наprivateXvfb, Ruff/diffPASS,6nativeAdwснимковlight/dark/700pxпросмотрены. Начальные4clipboardfailисправленыочисткойтестовыхmodal,финальныйтотженаборбезskip. artifacts/ux2/REPORT.md. Реальная судьба агентовв установленномприложениипо-прежнемувAUD-2; runtimeнеактивирован.",
+      "note": null,
+      "fence": 2,
+      "tab_id": null,
+      "lease_id": null,
+      "lease_expires_at": null,
+      "layer": 1,
+      "priority": 0.1418089098587963,
+      "unmet_blockers": 0,
+      "created_at": "2026-11-04 13:32:45.516448+00:00",
+      "depends_on": [
+        "UX-1"
+      ],
+      "parent": null,
+      "related": [],
+      "artifacts": [
+        {
+          "id": "art-208",
+          "kind": "test_report",
+          "ref": "artifacts/ux2/REPORT.md"
+        },
+        {
+          "id": "art-209",
+          "kind": "commit",
+          "ref": "dae76440"
+        }
+      ]
+    },
+    {
+      "id": "node-41",
+      "key": "UX-3",
+      "title": "Подключить палитру к настоящему ядру",
+      "objective": "Подтверждено: palette/items, palette/execute, palette/resetRanking и session/list есть только в фейковом ядре (API-01, UX-02, HAR-18), поэтому Ctrl+Shift+P не работает в реальном режиме, хотя это заявлено в README. В DESIGN палитра главный путь.",
+      "status": "done",
+      "owner": null,
+      "paths": [
+        "src/aconsole/core/bootstrap.py",
+        "src/aconsole/core/application",
+        "src/aconsole/ui/views/palette",
+        "tests/core"
+      ],
+      "acceptance": [
+        "Палитра на реальном ядре ищет команды, вкладки, узлы плана, заметки и согласования.",
+        "Ответ укладывается в цель DESIGN: меньше 100 мс.",
+        "Тест идёт через настоящую маршрутизацию ядра."
+      ],
+      "review_required": false,
+      "boundaries": null,
+      "output_format": null,
+      "evidence": "1436f06b реализует palette/items execute resetRanking через настоящий Daemon/Connection. Каталог команд навигации, tabs, plan nodes, связанных заметок vault и approvals; исполнение проверяет текущий контекст/цель, рейтинг в памяти со сбросом. PlanView cache синхронно on_changed и boot restore; runtime agent/quota probes не нужны каталогу. 36PASS wire/vault/plan/IPC;403items10requests median4.87ms,max14.66ms,каждый<100ms. Strict basedpyright0errors0warnings,Ruff/diffPASS. artifacts/ux3/REPORT.md. CORE-8 отдельно5f2f276d. session/list/native resume остаются HAR-3; все файлы vault не индексируются, только связанные заметки. Runtime установленного ядра не активирован.",
+      "note": null,
+      "fence": 2,
+      "tab_id": null,
+      "lease_id": null,
+      "lease_expires_at": null,
+      "layer": 0,
+      "priority": 0.14180890986527778,
+      "unmet_blockers": 0,
+      "created_at": "2026-11-04 13:32:45.516448+00:00",
+      "depends_on": [],
+      "parent": null,
+      "related": [],
+      "artifacts": [
+        {
+          "id": "art-213",
+          "kind": "test_report",
+          "ref": "artifacts/ux3/REPORT.md"
+        },
+        {
+          "id": "art-214",
+          "kind": "commit",
+          "ref": "1436f06b"
+        }
+      ]
+    },
+    {
+      "id": "node-42",
+      "key": "UX-4",
+      "title": "Сделать первый запуск и ошибки понятными",
+      "objective": "Ошибка старта молча закрывает приложение, до 20 с пустой экран (UX-05). Ошибки показываются кодами (UX-06). Мастер: английские заголовки, причины в подсказках, Agent Login всегда «!» при любом не-Claude контейнере (UX-09, UX-10, HAR-22), тупик без контейнеров (UX-11), vault и mounts без исправления (UX-18, UX-19), «Позже» отключает мастер навсегда (UX-27), нет CLI или логина не видно (UX-26). Логи не упоминаются (UX-34). Сначала воспроизвести.",
+      "status": "done",
+      "owner": null,
+      "paths": [
+        "src/aconsole/ui/views/setup",
+        "src/aconsole/ui/views/app.py",
+        "src/aconsole/core/application/services/setup.py",
+        "tests/gui"
+      ],
+      "acceptance": [
+        "При ошибке старта пользователь видит причину и путь к логу.",
+        "Каждая непройденная проверка говорит, что сделать, с готовой командой.",
+        "Без контейнеров есть понятный следующий шаг.",
+        "Мастер можно открыть снова."
+      ],
+      "review_required": false,
+      "boundaries": null,
+      "output_format": null,
+      "evidence": "Коммиты 1c1cb150, 793852aa; artifacts/ux4/REPORT.md. Видимый лог startup, безопасные пояснения изоляции en/ru, корректная диагностика notify-send/D-Bus; 67 core + 33 GUI passed; Ruff/diff check; просмотрены native GTK light/dark/narrow startup/setup.",
+      "note": null,
+      "fence": 3,
+      "tab_id": null,
+      "lease_id": null,
+      "lease_expires_at": null,
+      "layer": 0,
+      "priority": 0.2418089098721065,
+      "unmet_blockers": 0,
+      "created_at": "2026-11-04 13:32:45.516448+00:00",
+      "depends_on": [],
+      "parent": null,
+      "related": [],
+      "artifacts": [
+        {
+          "id": "art-215",
+          "kind": "commit",
+          "ref": "1c1cb150"
+        },
+        {
+          "id": "art-216",
+          "kind": "commit",
+          "ref": "793852aa"
+        },
+        {
+          "id": "art-217",
+          "kind": "test_report",
+          "ref": "artifacts/ux4/REPORT.md"
+        }
+      ]
+    },
+    {
+      "id": "node-43",
+      "key": "UX-5",
+      "title": "Режимы новой вкладки и управление проектами",
+      "objective": "Вкладка всегда открывается в новом worktree: нет выбора режима, базовой ветки, узла плана (UX-15), хотя README описывает три режима. Нет прогресса открытия (UX-28). Проект нельзя удалить (UX-23). Отказ с сообщением агенту недоступен (UX-17).",
+      "status": "done",
+      "owner": null,
+      "paths": [
+        "src/aconsole/ui/views/tabs/new_tab.py",
+        "src/aconsole/ui/views/sidebar",
+        "tests/gui"
+      ],
+      "acceptance": [
+        "Доступны три режима из README и базовая ветка.",
+        "Открытие показывает прогресс и ошибку.",
+        "Проект можно удалить без потери worktree."
+      ],
+      "review_required": false,
+      "boundaries": null,
+      "output_format": null,
+      "evidence": "944376a7. Сохранены три режима, добавлены базовая ветка нового worktree и узел активного плана, spinner/Открытие/inline error с сохранением полей. Проект удаляется только из каталога после подтверждения; при вкладках действие отключено. Реальный временный Daemon подтвердил сохранность worktree и незакоммиченного файла через remove/restart/re-add. Optional пояснение DENY использует существующее message. 40 core PASS, 46 GTK PASS, basedpyright0/0, Ruff/diff-check PASS, просмотрены12 PNG. Отчёт artifacts/ux5/REPORT.md; пользовательские проекты и сервисы не менялись.",
+      "note": null,
+      "fence": 1,
+      "tab_id": null,
+      "lease_id": null,
+      "lease_expires_at": null,
+      "layer": 1,
+      "priority": 0.14180890988148148,
+      "unmet_blockers": 0,
+      "created_at": "2026-11-04 13:32:45.516448+00:00",
+      "depends_on": [
+        "HAR-3"
+      ],
+      "parent": null,
+      "related": [],
+      "artifacts": [
+        {
+          "id": "art-235",
+          "kind": "commit",
+          "ref": "944376a7"
+        },
+        {
+          "id": "art-236",
+          "kind": "test_report",
+          "ref": "artifacts/ux5/REPORT.md"
+        }
+      ]
+    },
+    {
+      "id": "node-44",
+      "key": "UX-6",
+      "title": "Сверить README и настройки с поведением",
+      "objective": "README обещает то, чего нет в UI (UX-21, UX-24), пороги квот захардкожены при наличии настроек (UX-22, REL-20), окно настроек теряет правки (UX-35). Выполнять после основных исправлений, чтобы не переписывать дважды. Для каждого расхождения решить: реализовать или убрать обещание.",
+      "status": "done",
+      "owner": null,
+      "paths": [
+        "README.md",
+        "src/aconsole/ui/views/setup/preferences.py"
+      ],
+      "acceptance": [
+        "Каждая заявленная в README функция существует или удалена.",
+        "Настройки либо действуют, либо убраны.",
+        "Несохранённые правки не теряются молча."
+      ],
+      "review_required": false,
+      "boundaries": null,
+      "output_format": null,
+      "evidence": "eb1fd523. README: удалены stale fake-only palette/session, fork/close claims, GUI/RPC-настройки разделены, документированы ограничения OpenCode/Cursor/C#. Пороги квот действуют в core/sidebar/details/banner, warn<=critical валидируется; notify_when применён; codegraph_languages управляет текущими индексаторами и инвалидируетcache. Черновик защищён при закрытии/выходе, ошибке и позднем save; начальная загрузка блокирует редактирование. 1454 core/contracts PASS (257.93с) до последней language delta, delta30 PASS (18.07с), GTK77 PASS (9.26с), basedpyright11модулей0/0, Ruff/diff-check PASS,9PNG просмотрены. Первый полный1450/4FAIL и retry70PASS сохранены; лимиты100мс palette/5мс writer не менялись, PERF-2 не закрыт. Отчёт artifacts/ux6/REPORT.md содержит матрицу возможностей/настроек и пределы.",
+      "note": null,
+      "fence": 1,
+      "tab_id": null,
+      "lease_id": null,
+      "lease_expires_at": null,
+      "layer": 2,
+      "priority": 0.14180890988854167,
+      "unmet_blockers": 0,
+      "created_at": "2026-11-04 13:32:45.516448+00:00",
+      "depends_on": [
+        "UX-4",
+        "UX-2",
+        "UX-5",
+        "HAR-1",
+        "HAR-3",
+        "UX-3",
+        "UX-1"
+      ],
+      "parent": null,
+      "related": [],
+      "artifacts": [
+        {
+          "id": "art-237",
+          "kind": "commit",
+          "ref": "eb1fd523"
+        },
+        {
+          "id": "art-238",
+          "kind": "test_report",
+          "ref": "artifacts/ux6/REPORT.md"
+        }
+      ]
+    },
+    {
+      "id": "node-45",
+      "key": "CORE-1",
+      "title": "Поднимать ядро после падения и показывать потерю связи",
+      "objective": "Подтверждено кодом: _reconnect только переподключается к сокету и не запускает ядро (REL-01), окно при этом молча замирает (DES-10). Токены живых агентов теряются при перезапуске (REL-04, проверить). core.lock освобождается до завершения потоков (REL-03). Дополняет SYS-3.",
+      "status": "done",
+      "owner": null,
+      "paths": [
+        "src/aconsole/ui/client/core_client.py",
+        "src/aconsole/core/bootstrap.py",
+        "tests/core"
+      ],
+      "acceptance": [
+        "После kill -9 ядра UI поднимает его и восстанавливает вкладки.",
+        "Во время потери связи виден баннер.",
+        "Живые агенты после перезапуска ядра продолжают отправлять hooks."
+      ],
+      "review_required": false,
+      "boundaries": null,
+      "output_format": null,
+      "evidence": "Прямое решение пользователя kb-127, review_required=false; завершение существующей подтверждённой реализации без повторного кода. main 95ee966. Real disposable daemon kill/recovery, restored tabs, connection banner transitions and surviving hook endpoint/token tests PASS; rechecked in REL-4 29-case suite.",
+      "note": null,
+      "fence": 5,
+      "tab_id": null,
+      "lease_id": null,
+      "lease_expires_at": null,
+      "layer": 1,
+      "priority": 0.14180890989699074,
+      "unmet_blockers": 0,
+      "created_at": "2026-11-04 13:32:45.516448+00:00",
+      "depends_on": [
+        "SYS-3"
+      ],
+      "parent": null,
+      "related": [],
+      "artifacts": [
+        {
+          "id": "art-99",
+          "kind": "commit",
+          "ref": "95ee966"
+        }
+      ]
+    },
+    {
+      "id": "node-46",
+      "key": "CORE-2",
+      "title": "Убрать блокировки из общего потока и event loop",
+      "objective": "Git-снимки чекпоинтов и approvals делят один worker (BE-01): длинный снимок задерживает ответ на запрос. MCP-инструменты блокируют loop синхронным git и БД (API-15, REL-05). Тяжёлые проверки мастера занимают тот же поток (UX-25), синхронные колбэки через .result() (BE-08). Сначала замерить задержку решения при большом репозитории.",
+      "status": "done",
+      "owner": null,
+      "paths": [
+        "src/aconsole/core/bootstrap.py",
+        "src/aconsole/core/infrastructure/mcp/tools.py",
+        "tests/core"
+      ],
+      "acceptance": [
+        "Решение по согласованию проходит за заданное время при идущем снимке.",
+        "MCP-инструменты не блокируют loop: есть тест на задержку.",
+        "Замеры до и после записаны."
+      ],
+      "review_required": false,
+      "boundaries": null,
+      "output_format": null,
+      "evidence": "4fe1251: PermissionRequest reads immutable published policy and loop-owned worktree paths instead of queueing behind tab/Git work. Real HTTP+IPC decision during gated 1500-file/6 MB capture: 1405.823 ms baseline ->3.194 ms after, unchanged250 ms bound; setup contention4.748 ms; MCP loop2.365 ms (SDK already offloads, preserved). Four new cases,53 focused+1811 regular tests PASS; hostrun check exit0 (ownership warning). Settings updates/close/recovery/isolation covered. Before/after artifact recorded.",
+      "note": null,
+      "fence": 1,
+      "tab_id": null,
+      "lease_id": null,
+      "lease_expires_at": null,
+      "layer": 0,
+      "priority": 0.14180890990381945,
+      "unmet_blockers": 0,
+      "created_at": "2026-11-04 13:32:45.516448+00:00",
+      "depends_on": [],
+      "parent": null,
+      "related": [],
+      "artifacts": [
+        {
+          "id": "art-177",
+          "kind": "commit",
+          "ref": "4fe1251"
+        },
+        {
+          "id": "art-178",
+          "kind": "test_report",
+          "ref": "artifacts/core2/REPORT.md"
+        }
+      ]
+    },
+    {
+      "id": "node-47",
+      "key": "CORE-3",
+      "title": "Согласовать запись в БД и состояние в памяти",
+      "objective": "Writer.call по таймауту оставляет задачу в очереди: память откатывается, запись выполняется (BE-04, REL-07). update_settings меняет память до записи и пишет тремя транзакциями (BE-05), что важно для режима согласований. Также BE-06, BE-16, REL-26. Сначала воспроизвести.",
+      "status": "done",
+      "owner": null,
+      "paths": [
+        "src/aconsole/core/infrastructure/persistence",
+        "src/aconsole/core/application/services/tabs.py",
+        "tests/core"
+      ],
+      "acceptance": [
+        "Таймаут не приводит к расхождению памяти и БД.",
+        "Настройки применяются атомарно.",
+        "Завершение не теряет и не повторяет записи."
+      ],
+      "review_required": false,
+      "boundaries": null,
+      "output_format": null,
+      "evidence": "Прямое решение пользователя kb-127, review_required=false; завершение существующей подтверждённой реализации без повторного кода. main f590d26. Queued writer/settings consistency regressions PASS; atomic settings, no phantom late writes, shutdown drains validated. Distinct writer timing limit remains red PERF-2.",
+      "note": "Изменение семантики ожидания намеренное: лимит5с применяется до старта, после старта вызывающий ждёт определённый итог транзакции. В адаптерах/фикстуре добавлен внутренний save_settings; wire-контракт не менялся. Коммит прикрепляется отдельно; статус done не выставлялся.",
+      "fence": 3,
+      "tab_id": null,
+      "lease_id": null,
+      "lease_expires_at": null,
+      "layer": 0,
+      "priority": 0.1418089099105324,
+      "unmet_blockers": 0,
+      "created_at": "2026-11-04 13:32:45.516448+00:00",
+      "depends_on": [],
+      "parent": null,
+      "related": [],
+      "artifacts": [
+        {
+          "id": "art-97",
+          "kind": "commit",
+          "ref": "f590d26"
+        }
+      ]
+    },
+    {
+      "id": "node-48",
+      "key": "CORE-4",
+      "title": "Исправить MCP: lease между планами и лимиты",
+      "objective": "lease_id = <key>:<fence> не уникален между планами, claim падает с INTERNAL_ERROR (BE-03): проявится при втором плане проекта. Неограниченные ответы и входы (API-14), kb_add сообщает об успехе без сохранения (API-16), нет сквозного HTTP-теста изоляции вкладок (API-03). plan_get detailed не возвращает зависимости узла, из-за чего агент не видит причину ready=false (замечено при чтении плана).",
+      "status": "done",
+      "owner": null,
+      "paths": [
+        "src/aconsole/core/infrastructure/mcp",
+        "src/aconsole/core/domain/plan.py",
+        "src/aconsole/core/infrastructure/persistence/repositories/plans.py",
+        "tests/core"
+      ],
+      "acceptance": [
+        "Одинаковые ключи в двух планах можно взять одновременно.",
+        "Ответы и входы имеют лимиты.",
+        "Сквозной тест подтверждает изоляцию вкладок по токену.",
+        "plan_get показывает зависимости."
+      ],
+      "review_required": false,
+      "boundaries": null,
+      "output_format": null,
+      "evidence": "9f50947: identical node keys claimed in two persisted plans and reloaded; bounded MCP fields, 1 MiB fixed/chunked HTTP input, 256 KiB success text; real same-project two-tab HTTP lease/artifact/handover isolation; foreign/anonymous session reuse 403; detailed dependencies; KB missing-project write now errors. 56 targeted + 1794 full core PASS, hostrun check exit 0; ownership warning documented. artifacts/core4/REPORT.md.",
+      "note": null,
+      "fence": 1,
+      "tab_id": null,
+      "lease_id": null,
+      "lease_expires_at": null,
+      "layer": 0,
+      "priority": 0.14180890991724537,
+      "unmet_blockers": 0,
+      "created_at": "2026-11-04 13:32:45.516448+00:00",
+      "depends_on": [],
+      "parent": null,
+      "related": [],
+      "artifacts": [
+        {
+          "id": "art-158",
+          "kind": "commit",
+          "ref": "9f50947"
+        },
+        {
+          "id": "art-159",
+          "kind": "test_report",
+          "ref": "artifacts/core4/REPORT.md"
+        }
+      ]
+    },
+    {
+      "id": "node-49",
+      "key": "CORE-5",
+      "title": "Устойчивость IPC и очереди ingest",
+      "objective": "Исключение в ветке TURN убивает обработчик (API-02), битый кадр рвёт соединение (API-04), событие больше 16 МиБ молча не отправляется (API-05), snapshot без пагинации может не дать UI стартовать (API-06), таймаут клиента не отменяет работу (API-07), переполнение ingest теряет события и меняет порядок (API-08, HAR-23), версии UI и ядра не сверяются (API-09, QA-14). Сначала воспроизвести.",
+      "status": "done",
+      "owner": null,
+      "paths": [
+        "src/aconsole/core/infrastructure/ipc",
+        "src/aconsole/core/infrastructure/http",
+        "tests/core"
+      ],
+      "acceptance": [
+        "Каждая ошибка клиента получает ответ, соединение не падает.",
+        "Потеря событий обнаруживается и ведёт к resync.",
+        "Несовпадение версий показывается пользователю."
+      ],
+      "review_required": false,
+      "boundaries": null,
+      "output_format": null,
+      "evidence": "34da233; artifacts/core5/REPORT.md. Typed errors keep valid IPC streams usable; explicit loss detection and automatic resync; negotiated bounded large snapshots; queued cancellation prevents deferred mutation; existing localized protocol/capability incompatibility tests pass. hostrun test core: exit 0, 1835 cases. hostrun check and cached diff check exit 0. No deployment; SEC-11 remains failed.",
+      "note": "Acceptance passed and committed directly in main, per PLAN-3.",
+      "fence": 2,
+      "tab_id": null,
+      "lease_id": null,
+      "lease_expires_at": null,
+      "layer": 1,
+      "priority": 0.14180890992418982,
+      "unmet_blockers": 0,
+      "created_at": "2026-11-04 13:32:45.516448+00:00",
+      "depends_on": [
+        "SEC-6"
+      ],
+      "parent": null,
+      "related": [],
+      "artifacts": [
+        {
+          "id": "art-186",
+          "kind": "commit",
+          "ref": "34da233"
+        },
+        {
+          "id": "art-187",
+          "kind": "test_report",
+          "ref": "artifacts/core5/REPORT.md"
+        }
+      ]
+    },
+    {
+      "id": "node-50",
+      "key": "CORE-6",
+      "title": "Ограничить рост и настроить логи",
+      "objective": "refs/aconsole/* не удаляются (BE-09, REL-15), стоимость растёт с их числом (BE-13). UsageLog перечитывает все jsonl на каждом опросе (REL-13, HAR-29). Логирование ядра не настроено, лог ротируется только при старте UI (REL-17, REL-18). Сейчас aconsole-db-wal около 15 МБ при базе 327 КБ: проверить контрольные точки WAL. Дополняет MEM-1.",
+      "status": "done",
+      "owner": null,
+      "paths": [
+        "src/aconsole/core/infrastructure/git",
+        "src/aconsole/core/infrastructure/persistence",
+        "tests/core"
+      ],
+      "acceptance": [
+        "Вытесненные refs удаляются, есть тест.",
+        "Опрос логов читает только новое.",
+        "Логи ядра настроены и ротируются.",
+        "WAL не растёт без ограничений."
+      ],
+      "review_required": false,
+      "boundaries": null,
+      "output_format": null,
+      "evidence": "Прямое решение пользователя kb-127, review_required=false; завершение существующей подтверждённой реализации без повторного кода. main 2d2e329. Full core/contracts PASS at implementation,82 focused+9 final resource cases PASS; durable refs outbox, byte-tail usage, log rotation and noninterrupting WAL compaction. Retention/pinned-reader limits documented in artifacts/core6-2026-11-06/REPORT.md.",
+      "note": null,
+      "fence": 4,
+      "tab_id": null,
+      "lease_id": null,
+      "lease_expires_at": null,
+      "layer": 1,
+      "priority": 0.14180890993113426,
+      "unmet_blockers": 0,
+      "created_at": "2026-11-04 13:32:45.516448+00:00",
+      "depends_on": [
+        "MEM-1"
+      ],
+      "parent": null,
+      "related": [],
+      "artifacts": [
+        {
+          "id": "art-119",
+          "kind": "commit",
+          "ref": "2d2e329"
+        }
+      ]
+    },
+    {
+      "id": "node-51",
+      "key": "FE-1",
+      "title": "Устранить гонки и устаревшие ответы в UI",
+      "objective": "Исключение подписчика store.apply запускает переподключение (FE-01), load_more дописывает старую область (FE-03), git-операции не сериализованы (FE-04), load_checkpoints без поколения (FE-05), граф пересоздаётся на каждый heartbeat (FE-06), InjectToTerminal для незапущенной вкладки теряется при ok=True (FE-02). Сначала воспроизвести. Также FE-10, FE-16, FE-17.",
+      "status": "done",
+      "owner": null,
+      "paths": [
+        "src/aconsole/ui/client",
+        "src/aconsole/ui/views/review",
+        "src/aconsole/ui/views/sidebar",
+        "tests/gui"
+      ],
+      "acceptance": [
+        "Исключение подписчика не рвёт соединение.",
+        "Устаревший ответ не меняет экран.",
+        "Текст для незапущенной вкладки доставляется или даёт ошибку."
+      ],
+      "review_required": false,
+      "boundaries": null,
+      "output_format": null,
+      "evidence": "60275c63; artifacts/fe1/REPORT.md. Initial3UI+1RPCfailures reproduced. Implemented subscriber isolation, stale load_more/checkpoint/inspector guards, asyncioLock Git serialization, in-place plan heartbeat updates, okFalse for unstarted terminal. Core52passed; GUI51passed; final6controlled tests passed(overlap); strictbasedpyright0errors/0warnings;Ruff/diffpass;9nativeGTKscreens reviewed. Opaque FE10/16/17 refs have no source in checkout/ctx; preserved separately in FE2/node230, not claimed verified.",
+      "note": null,
+      "fence": 1,
+      "tab_id": null,
+      "lease_id": null,
+      "lease_expires_at": null,
+      "layer": 0,
+      "priority": 0.1418089099375,
+      "unmet_blockers": 0,
+      "created_at": "2026-11-04 13:32:45.516448+00:00",
+      "depends_on": [],
+      "parent": null,
+      "related": [],
+      "artifacts": [
+        {
+          "id": "art-231",
+          "kind": "commit",
+          "ref": "60275c63"
+        },
+        {
+          "id": "art-232",
+          "kind": "test_report",
+          "ref": "artifacts/fe1/REPORT.md"
+        }
+      ]
+    },
+    {
+      "id": "node-52",
+      "key": "DES-1",
+      "title": "Реальный контроль контраста",
+      "objective": "Подтверждено: tools/check.sh вызывает contrast_check без аргументов, и он ничего не проверяет (DES-03, QA-05). Вторичный текст в светлой теме 2.8–3.2:1 (DES-01), пилюли Git (DES-02), рёбра графа (DES-32), терминальная палитра (DES-18). Цифры пересчитать: они не перепроверялись.",
+      "status": "done",
+      "owner": null,
+      "paths": [
+        "tools/contrast_check.py",
+        "tools/check.sh",
+        "src/aconsole/ui/style/style.css",
+        "tests/test_contrast.py"
+      ],
+      "acceptance": [
+        "Гейт проверяет реальные пары цветов обеих тем и падает при нарушении.",
+        "Текст проходит 4.5:1, значимые элементы 3:1."
+      ],
+      "review_required": false,
+      "boundaries": null,
+      "output_format": null,
+      "evidence": "fd865c88: принято существующее исправлениеc696a05f. 14 unit PASS,1 GUI PASS на отдельном Broadway. Установленная libadwaita1.5.0 совпала с таблицами обеих тем; live GTK probe выявил0 нарушений. Минимум текста light4.7695/dark4.5622, graphics3.1613/3.5020. Добавлена регрессия main([]): нормальныйCSS0, бледныйтекст1. Terminalpalette тесты проходят с явным исключением darkslot0. Ruff/diff PASS. artifacts/des1-revalidation/REPORT.md и live-theme.json. Runtime CSS/views не менялись.",
+      "note": "Гейт работает, 0 нарушений. Цвета текста немного изменились: посмотрите на живом приложении.",
+      "fence": 2,
+      "tab_id": null,
+      "lease_id": null,
+      "lease_expires_at": null,
+      "layer": 0,
+      "priority": 0.24180890994432871,
+      "unmet_blockers": 0,
+      "created_at": "2026-11-04 13:32:45.516448+00:00",
+      "depends_on": [],
+      "parent": null,
+      "related": [],
+      "artifacts": [
+        {
+          "id": "art-74",
+          "kind": "commit",
+          "ref": "c696a05"
+        },
+        {
+          "id": "art-202",
+          "kind": "test_report",
+          "ref": "artifacts/des1-revalidation/REPORT.md"
+        },
+        {
+          "id": "art-203",
+          "kind": "commit",
+          "ref": "fd865c88"
+        }
+      ]
+    },
+    {
+      "id": "node-53",
+      "key": "DES-2",
+      "title": "Различимость состояний и доступность",
+      "objective": "Статусы плана pending, blocked, cancelled неотличимы (DES-04), состояния вкладок только цветом (DES-05, DES-24), кнопки и поля без accessible name (DES-06, DES-26), перестановка вкладок только мышью (DES-08), граф молча обрезан до 30 узлов (DES-27, FE-07), фокус едва заметен (DES-09).",
+      "status": "done",
+      "owner": null,
+      "paths": [
+        "src/aconsole/ui/views/sidebar",
+        "src/aconsole/ui/views/tabs",
+        "src/aconsole/ui/style/style.css",
+        "tests/gui"
+      ],
+      "acceptance": [
+        "Каждое состояние различимо без цвета.",
+        "Все элементы управления озвучиваются и доступны с клавиатуры.",
+        "Обрезка графа явно показана."
+      ],
+      "review_required": false,
+      "boundaries": null,
+      "output_format": null,
+      "evidence": "Коммит249eb00f (AConsole-Node: DES-2), отчёт artifacts/des2/REPORT.md и gtk-results.xml. Native GTK в приватном Xvfb с GTK_A11Y=test: 53 passed/3 прежних deprecation warnings,9.32с; проверены7состояний плана и heartbeat,8статусов вкладки, accessible LABEL, Alt+Up/Down→reorder RPC, меню, busy/границы групп/unbind. Strict basedpyright9изменённых модулей0errors/0warnings, Ruff и diff-check PASS. Просмотрены6снимков: граф и sidebar, light/dark1280x800 и light700x800; все статусы графа читаются, sidebar/menu доступны в узком режиме. Граф не обрезается: сохранены31/40/72-node проверки. Доступные имена проверены тестовым механизмом GTK; физическая клавиатура и Orca вручную не проверялись, ограничение указано в отчёте. Изменение plan_layout.py нужно для высоты64px/шага84px и ранее отмечено в note; core/wire не менялись.",
+      "note": "Реализация DES-2 ещё не начата: выполнено только чтение исходников. Пользователь переключил работу на commit/push текущего результата; пути освобождены для продолжения позже.",
+      "fence": 3,
+      "tab_id": null,
+      "lease_id": null,
+      "lease_expires_at": null,
+      "layer": 1,
+      "priority": 0.14180890995208334,
+      "unmet_blockers": 0,
+      "created_at": "2026-11-04 13:32:45.516448+00:00",
+      "depends_on": [
+        "DES-1"
+      ],
+      "parent": null,
+      "related": [],
+      "artifacts": [
+        {
+          "id": "art-242",
+          "kind": "commit",
+          "ref": "249eb00f"
+        },
+        {
+          "id": "art-243",
+          "kind": "test_report",
+          "ref": "artifacts/des2/REPORT.md"
+        }
+      ]
+    },
+    {
+      "id": "node-54",
+      "key": "DES-3",
+      "title": "Единый визуальный язык приложения",
+      "objective": "Пожелание пользователя: стиль macOS, «магия», единство. Это уже принципы DESIGN §1, но CSS без шкалы: три размера шрифта, семь радиусов, около тридцати отступов (DES-16), мёртвые классы (DES-22), разные пустые состояния (DES-28), все риски одним красным (DES-17). Ввести токены и привести экраны к ним на базе результата APR-1. Эталонные снимки вместо проверки размера файла (DES-31, QA-22). Перед кодом согласовать направление с пользователем.",
+      "status": "pending",
+      "owner": null,
+      "paths": [
+        "src/aconsole/ui/style/style.css",
+        "src/aconsole/ui/views",
+        "tests/gui"
+      ],
+      "acceptance": [
+        "Отступы, радиусы и шрифты заданы токенами.",
+        "Панели и диалоги выглядят как одно приложение, снимки приняты пользователем.",
+        "Снимки сравниваются с эталоном в проверках."
+      ],
+      "review_required": false,
+      "boundaries": null,
+      "output_format": null,
+      "evidence": null,
+      "note": null,
+      "fence": 0,
+      "tab_id": null,
+      "lease_id": null,
+      "lease_expires_at": null,
+      "layer": 1,
+      "priority": 1.1418089099591435,
+      "unmet_blockers": 1,
+      "created_at": "2026-11-04 13:32:45.516448+00:00",
+      "depends_on": [
+        "APR-1",
+        "DES-1"
+      ],
+      "parent": null,
+      "related": [],
+      "artifacts": []
+    },
+    {
+      "id": "node-55",
+      "key": "DES-4",
+      "title": "Локализация и терминология",
+      "objective": "Семь копий словаря без gettext (DES-12), русский текст из ядра в английском интерфейсе (DES-11, UX-33), нет множественных форм (DES-13), числа и даты по одному формату (DES-14, DES-15), терминология расходится (UX-32). Ядро должно отдавать коды, а UI тексты.",
+      "status": "done",
+      "owner": null,
+      "paths": [
+        "src/aconsole/ui/views",
+        "src/aconsole/contracts",
+        "tests/gui"
+      ],
+      "acceptance": [
+        "Один механизм переводов.",
+        "Ядро не содержит текста для пользователя.",
+        "Счётчики верно склоняются в русском."
+      ],
+      "review_required": false,
+      "boundaries": null,
+      "output_format": null,
+      "evidence": "Коммит f360ac23 с AConsole-Node: DES-4. Отчёт artifacts/des4/REPORT.md; JUnit core-results.xml108passed, unit-results.xml60passed, focused-results.xml276passed/11deprecationwarnings (пересекающиеся наборы не суммируются). Один gettextAPI/PO+MO en/ru заменяет7словарей, ошибки/shortcuts; plural boundary0/1/2/5/11/14/21/22/25/101/111, числа/даты/sessioncost/health. UiMessage и tagged SetupDetail коды+данные вместо UI-прозы ядра; UI переводит toast,scope,палитру,setup/health. Vault-формат/пользовательский контент и внешняя диагностика сохранены. Проверена загрузка каталога из реальной deb source copy без checkout. Strict basedpyright всей UI+изменённыхcore/contracts0errors/0warnings, Ruff/diff-check PASS, import-linter6kept. Просмотрены18PNG plan/setup/approvals en/ru light/dark/narrow, clipping нет. ОбщийGUI НЕ PASS: текущий427pass/5fail до исправления2health expectation; старый249eb00f407pass/3fail — те же clipboard[text/mixed]/scale, сохранены QA-7/PERF-5. Исправленные health cases проходят в окончательном focused наборе. Система и рабочая БД не менялись.",
+      "note": null,
+      "fence": 1,
+      "tab_id": null,
+      "lease_id": null,
+      "lease_expires_at": null,
+      "layer": 1,
+      "priority": 0.14180890997175927,
+      "unmet_blockers": 0,
+      "created_at": "2026-11-04 13:32:45.516448+00:00",
+      "depends_on": [
+        "UX-4"
+      ],
+      "parent": null,
+      "related": [],
+      "artifacts": [
+        {
+          "id": "art-247",
+          "kind": "commit",
+          "ref": "f360ac23"
+        },
+        {
+          "id": "art-248",
+          "kind": "test_report",
+          "ref": "artifacts/des4/REPORT.md"
+        }
+      ]
+    },
+    {
+      "id": "node-56",
+      "key": "QA-3",
+      "title": "Проверки на настоящем ядре",
+      "objective": "Главный вывод сверки: 1125 core-тестов зелёные (проверено), а палитра, клавиши, MCP для Claude и уведомления не работают, потому что GUI-тесты идут на фейковом ядре и вызывают обработчики напрямую (UX-37). Добавить сквозные сценарии на реальном ядре и сверку METHODS с маршрутизацией (API-13): метод клиента без обработчика ядра должен ронять проверку. Запускать первым из QA: он сразу покажет такие дыры.",
+      "status": "pending",
+      "owner": null,
+      "paths": [
+        "tools/check_contracts.py",
+        "tests"
+      ],
+      "acceptance": [
+        "Проверка падает на методе клиента без маршрута в ядре.",
+        "Сквозные сценарии покрывают вкладку, запрос и решение, план через MCP.",
+        "Проверка запускается в CI."
+      ],
+      "review_required": false,
+      "boundaries": null,
+      "output_format": null,
+      "evidence": "artifacts/ux3/REPORT.md; artifacts/har3/REPORT.md; artifacts/perf2/RECHECK-2026-11-08.md; план-1 UX-3/HAR-3/SEC-8 done. Сверка PATHS/lease по snapshot PLAN-2.",
+      "note": "PLAN-2: прежний blocker устарел. UX-3done1436f06b и HAR-3donec764b024 содержат реальные маршруты palette/session; их отчёты и полныйcore1517PASS на411ef4f2 доступны. SEC-8done, активного перекрытия tests/core нет. QA-3 возвращён в pending для собственной сквозной/CI приёмки; done не объявлен.",
+      "fence": 1,
+      "tab_id": null,
+      "lease_id": null,
+      "lease_expires_at": null,
+      "layer": 0,
+      "priority": 2.141808909978588,
+      "unmet_blockers": 0,
+      "created_at": "2026-11-04 13:32:45.516448+00:00",
+      "depends_on": [],
+      "parent": null,
+      "related": [],
+      "artifacts": []
+    },
+    {
+      "id": "node-57",
+      "key": "QA-4",
+      "title": "CI, сборка и контракты",
+      "objective": "Deb нигде не проверяется (QA-04), порог покрытия не применяется (QA-06), проверка владения пропускается без main (QA-07), deb теряет неотслеживаемые модули (QA-08), tools и tests вне линтеров (QA-12), HOME в тестах не изолируется (QA-20), два набора golden (API-10, QA-09), check_breaking сравнивает с HEAD (API-11), разные версии (QA-15, API-18). Тесты падают с AF_UNIX path too long при длинном временном пути: 88 тестов в проверке.",
+      "status": "pending",
+      "owner": null,
+      "paths": [
+        ".github/workflows",
+        "tools",
+        "packaging/build_deb.py",
+        "tests"
+      ],
+      "acceptance": [
+        "CI собирает и ставит deb.",
+        "Порог покрытия действует.",
+        "Один набор golden.",
+        "Тесты работают при длинном пути и не трогают настоящий HOME."
+      ],
+      "review_required": false,
+      "boundaries": null,
+      "output_format": null,
+      "evidence": "https://github.com/secachiss-code/agent_console_p/actions/runs/42505812669 ; job128808080460. PlanSEC-8/PERF-1done; paths tests/core свободны. Старый запрос остановки отменён повторными 'Продолжай реализацию плана'.",
+      "note": "PLAN-2: прежние path locks SEC-8 сняты (done); новый CI действительно запущен,результат получен:run42505812669 наd40a6683 failure(check/interface),core/coverage/deb skipped. QA-4 возвращён в pending для воспроизведения/исправления этого конкретного CI; не done. Исторический framer block отдельно закрыт PERF-1, последующий tests/core1517PASS относится411ef4f2.",
+      "fence": 2,
+      "tab_id": null,
+      "lease_id": null,
+      "lease_expires_at": null,
+      "layer": 0,
+      "priority": 1.141808910028125,
+      "unmet_blockers": 0,
+      "created_at": "2026-11-04 13:32:45.516448+00:00",
+      "depends_on": [],
+      "parent": null,
+      "related": [],
+      "artifacts": [
+        {
+          "id": "art-82",
+          "kind": "commit",
+          "ref": "2e4c5aa"
+        }
+      ]
+    },
+    {
+      "id": "node-58",
+      "key": "QA-5",
+      "title": "Гигиена репозитория и лицензия",
+      "objective": "Нет LICENSE при публикации deb (QA-13, REL-19): выбор лицензии за пользователем. .aconsole/ не в .gitignore (QA-28), 48 личных путей (QA-23), спайки в продукте (QA-29), экшены пинятся тегами (QA-31), установка: QA-25, QA-27, UX-29.",
+      "status": "pending",
+      "owner": null,
+      "paths": [
+        ".gitignore",
+        "LICENSE",
+        "install.sh",
+        "packaging",
+        ".github/workflows"
+      ],
+      "acceptance": [
+        "Лицензия выбрана пользователем и добавлена.",
+        ".aconsole/ игнорируется.",
+        "Личных путей нет в отслеживаемых файлах."
+      ],
+      "review_required": false,
+      "boundaries": null,
+      "output_format": null,
+      "evidence": "Прямой ответ пользователя«оставляем»в текущем диалоге на вопросQA-5(MIT). LICENSE MIT copyright2026secachiss-code. SnapshotPLAN-2:единственнаяактивнаяleasePLAN-2вartifacts,testsсвободны.",
+      "note": "PLAN-2: пользователь2026-11-08 явно подтвердил существующую MIT License ответом«оставляем»на вопросоMIT. LICENSE ужеотслеживается,повторнойзаменыфайланет. Прежниепутиtestsосвобождены. QA-5pendingдляпроверкиличныхпутей/гигиены/установки;doneнезаявлен.",
+      "fence": 1,
+      "tab_id": null,
+      "lease_id": null,
+      "lease_expires_at": null,
+      "layer": 0,
+      "priority": 1.1418089100421298,
+      "unmet_blockers": 0,
+      "created_at": "2026-11-04 13:32:45.516448+00:00",
+      "depends_on": [],
+      "parent": null,
+      "related": [],
+      "artifacts": [
+        {
+          "id": "art-79",
+          "kind": "commit",
+          "ref": "729ba04"
+        }
+      ]
+    },
+    {
+      "id": "node-59",
+      "key": "QA-6",
+      "title": "Итоговая проверка согласований и выпуска",
+      "objective": "Сквозная проверка на реальных CLI перед тем, как считать режимы готовыми: матрица харнесс × режим совпадает с поведением, агент не может изменить режим и одобрить себе запрос ни одним из путей, включая файлы.",
+      "status": "pending",
+      "owner": null,
+      "paths": [],
+      "acceptance": [
+        "Матрица проверена на реальных версиях.",
+        "Попытки агента изменить режим и одобрить запрос из контейнера не работают.",
+        "Security review пройден."
+      ],
+      "review_required": true,
+      "boundaries": null,
+      "output_format": null,
+      "evidence": null,
+      "note": null,
+      "fence": 0,
+      "tab_id": null,
+      "lease_id": null,
+      "lease_expires_at": null,
+      "layer": 5,
+      "priority": 1.1418089100537039,
+      "unmet_blockers": 6,
+      "created_at": "2026-11-04 13:32:45.516448+00:00",
+      "depends_on": [
+        "APR-3",
+        "QA-3",
+        "APR-5",
+        "APR-2",
+        "APR-6",
+        "QA-2",
+        "APR-7",
+        "APR-8",
+        "APR-9"
+      ],
+      "parent": null,
+      "related": [],
+      "artifacts": []
+    },
+    {
+      "id": "node-60",
+      "key": "CMT-2",
+      "title": "Проверить коммиты новых узлов",
+      "objective": "Как CMT-1 для узлов этой редакции плана: один коммит на узел с trailer AConsole-Node, без смешивания.",
+      "status": "pending",
+      "owner": null,
+      "paths": [],
+      "acceptance": [
+        "Для каждого рабочего узла есть ровно один коммит с AConsole-Node: <KEY>.",
+        "Нет коммитов, смешивающих узлы."
+      ],
+      "review_required": false,
+      "boundaries": null,
+      "output_format": null,
+      "evidence": null,
+      "note": null,
+      "fence": 0,
+      "tab_id": null,
+      "lease_id": null,
+      "lease_expires_at": null,
+      "layer": 6,
+      "priority": 0.041808910065393515,
+      "unmet_blockers": 6,
+      "created_at": "2026-11-04 13:32:45.516448+00:00",
+      "depends_on": [
+        "SEC-10",
+        "HAR-5",
+        "CORE-1",
+        "DES-4",
+        "HAR-4",
+        "CORE-6",
+        "DES-2",
+        "CORE-4",
+        "CORE-2",
+        "CORE-5",
+        "FE-1",
+        "UX-6",
+        "QA-5",
+        "DES-3",
+        "AUD-2",
+        "AUD-1",
+        "QA-4",
+        "CMT-1",
+        "CORE-3",
+        "QA-6"
+      ],
+      "parent": null,
+      "related": [],
+      "artifacts": []
+    },
+    {
+      "id": "node-70",
+      "key": "UX-7",
+      "title": "Кнопка приёмки узлов на странице плана",
+      "objective": "Перевести узел из verifying в done может только человек, но в окне для этого нет кнопки, а заметок vault у плана нет. Из-за этого узлы на проверке держат свои пути и блокируют задачи ядра. Решение пользователя 2026-11-04: сделать кнопки на странице плана.",
+      "status": "done",
+      "owner": null,
+      "paths": [
+        "src/aconsole/ui/views/sidebar/plan_graph.py",
+        "src/aconsole/ui/views/sidebar/messages.py",
+        "src/aconsole/contracts/app.py",
+        "src/aconsole/core/infrastructure/mcp/tools.py",
+        "contracts/schema",
+        "tests/contracts",
+        "tests/gui/front/test_b4a_plan.py"
+      ],
+      "acceptance": [
+        "У узла на проверке видны результат агента и кнопки Принять и Вернуть.",
+        "Принять переводит узел в done, Вернуть возвращает его в очередь.",
+        "Отказ ядра показан пользователю, узел не меняется.",
+        "Агент по-прежнему не может перевести verifying в done."
+      ],
+      "review_required": false,
+      "boundaries": null,
+      "output_format": null,
+      "evidence": "f91a332b. Отчёт и кнопки под заголовком доступны над approval overlay, report selectable/word-wrap/scroll. Human verifying→pending атомарен: один RPC/commit/event, rollback при отказе сохраняет узел, исходное evidence не теряется. Pending UI по node ID и исходной странице защищает дубли и поздние ответы. 111 core/domain/MCP/contracts PASS14.23с, 42GTK PASS10.54с (5 предупреждений, включая test-client loop teardown; описаны), stricttypes0/0, Ruff/diffcheckPASS,9PNG просмотрены. Старый критерий запрета agent verifying→done применяется к manual-политике: позднее явное решение пользователя PLAN-3/kb-127, b4183fcc и artifacts/plan3/REPORT.md сохраняет checked completion владельцем с новым evidence; его тесты не менялись и PASS. Полный общий core-набор на этом узле не повторялся. Отчёт artifacts/ux7/REPORT.md.",
+      "note": "Нужен перезапуск приложения с новым кодом.",
+      "fence": 4,
+      "tab_id": null,
+      "lease_id": null,
+      "lease_expires_at": null,
+      "layer": 0,
+      "priority": 0.039961918459722225,
+      "unmet_blockers": 0,
+      "created_at": "2026-11-04 17:58:43.524006+00:00",
+      "depends_on": [],
+      "parent": null,
+      "related": [],
+      "artifacts": [
+        {
+          "id": "art-239",
+          "kind": "commit",
+          "ref": "f91a332b"
+        },
+        {
+          "id": "art-240",
+          "kind": "test_report",
+          "ref": "artifacts/ux7/REPORT.md"
+        }
+      ]
+    },
+    {
+      "id": "node-75",
+      "key": "SEC-11",
+      "title": "Закрыть запуск кода через filter, merge, gpg и git вне runner",
+      "objective": "Найдено при сверке SEC-8 на реальном git: filter.<имя>.clean и .process из конфигурации репозитория выполняются на хосте при status и diff через GitRunner; gpg.program выполняется при commit. core/infrastructure/tabs.py и mcp/tools.py запускают git в обход runner, а проверка смотрит только каталог infrastructure/git.",
+      "status": "failed",
+      "owner": null,
+      "paths": [
+        "src/aconsole/core/infrastructure/git/runner.py",
+        "src/aconsole/core/infrastructure/tabs.py",
+        "src/aconsole/core/infrastructure/mcp/tools.py",
+        "tests/core/test_git_host_exec.py"
+      ],
+      "acceptance": [
+        "filter clean, smudge и process из репозитория не выполняются при status и diff.",
+        "merge driver, gpg.program, askpass и редактор из репозитория не выполняются.",
+        "Git на хосте запускается только через runner, проверка охватывает всё ядро."
+      ],
+      "review_required": false,
+      "boundaries": null,
+      "output_format": null,
+      "evidence": "d40a6683 опубликованmain. artifacts/sec11/exec-boundary/REPORT.md +XML/results. Product-related75PASS; new2regressionsFAILbefore/PASSafter;Ruff+stricttypesPASS. OriginalraceunchangedstillFAIL. Experimentalguard29PASS/1FAIL(hook),raceunderprototypePASS. Productpipelinehooksemanticsunchanged; kernelguardнепродукт.",
+      "note": "После попытки исправления обязательная security-проверка всё ещёFAIL. Show/log усилены отдельно; seccomp-прототип не включён, поскольку ломает разрешённыйpre-commit hook. Никакого ложного securityPASS.",
+      "fence": 3,
+      "tab_id": null,
+      "lease_id": null,
+      "lease_expires_at": null,
+      "layer": 0,
+      "priority": 0.03900927054456019,
+      "unmet_blockers": 0,
+      "created_at": "2026-11-04 20:15:54.402072+00:00",
+      "depends_on": [],
+      "parent": null,
+      "related": [],
+      "artifacts": [
+        {
+          "id": "art-76",
+          "kind": "commit",
+          "ref": "273fbdc721dfb04fb6f32c2f47d82b0b9c7fb99c"
+        },
+        {
+          "id": "art-163",
+          "kind": "commit",
+          "ref": "b454648"
+        },
+        {
+          "id": "art-164",
+          "kind": "test_report",
+          "ref": "artifacts/sec11/REPORT.md"
+        },
+        {
+          "id": "art-285",
+          "kind": "commit",
+          "ref": "d40a66831660521ab856fb616070b0bfabf00482"
+        },
+        {
+          "id": "art-286",
+          "kind": "test_report",
+          "ref": "artifacts/sec11/exec-boundary/REPORT.md"
+        }
+      ]
+    },
+    {
+      "id": "node-77",
+      "key": "PLAN-1",
+      "title": "Согласовать готовность узла с блокировкой пересекающихся путей",
+      "objective": "Воспроизведено: plan_ready предлагает SEC-6/HAR-1, но node_claim отклоняет PATHS_OVERLAP SEC-8. Готовность должна учитывать те же блокировки путей, что и claim, включая verifying, без снятия блокировок.",
+      "status": "done",
+      "owner": null,
+      "paths": [
+        "src/aconsole/core/domain/plan.py",
+        "tests/contracts/test_plan_ready_paths.py"
+      ],
+      "acceptance": [
+        "ready не предлагает pending узел с путями, занятыми in_progress или verifying узлом.",
+        "После освобождения путей узел снова готов.",
+        "Claim продолжает отклонять пересекающиеся пути; независимые узлы остаются доступны."
+      ],
+      "review_required": true,
+      "boundaries": null,
+      "output_format": null,
+      "evidence": "68bf72ce: принято существующее исправление44e77039. Общий _path_blocker для ready/claim; исходные регрессии in_progress/verifying, empty/independent paths и human release. Добавлены2 регрессии публичного PlanBoard.ready: фильтр доlimit=1 и доступный claim после release. Contract/domain/MCP/store/wire текущего worktree вdevtools:83PASS,exit0. Ruff и git diff --check проходят. artifacts/plan1-revalidation/REPORT.md. Исходники runtime не менялись.",
+      "note": "Реализовано и закоммичено. Работающий демон загрузит новую логику при штатном перезапуске; текущее окружение использует загруженный ранее код.",
+      "fence": 2,
+      "tab_id": null,
+      "lease_id": null,
+      "lease_expires_at": null,
+      "layer": 0,
+      "priority": 0.03859152619849537,
+      "unmet_blockers": 0,
+      "created_at": "2026-11-04 21:16:03.713306+00:00",
+      "depends_on": [],
+      "parent": null,
+      "related": [],
+      "artifacts": [
+        {
+          "id": "art-78",
+          "kind": "commit",
+          "ref": "44e7703"
+        },
+        {
+          "id": "art-200",
+          "kind": "test_report",
+          "ref": "artifacts/plan1-revalidation/REPORT.md"
+        },
+        {
+          "id": "art-201",
+          "kind": "commit",
+          "ref": "68bf72ce"
+        }
+      ]
+    },
+    {
+      "id": "node-80",
+      "key": "PERF-1",
+      "title": "Восстановить порог framer 64 КиБ за 5 мс",
+      "objective": "При выполнении QA-4 test_framer_speed_64kib повторно падает: минимум 6.26 мс в полном наборе и 5.29 мс отдельно при лимите 5 мс. Оптимизировать разбор без изменения существующего теста или порога.",
+      "status": "done",
+      "owner": null,
+      "paths": [
+        "src/aconsole/sidecar/framer.py"
+      ],
+      "acceptance": [
+        "hostrun test core -k framer_speed проходит три раза подряд без изменения теста и лимита.",
+        "Регрессии sidecar проходят; побайтное поведение и обработка разбиений сохраняются."
+      ],
+      "review_required": true,
+      "boundaries": null,
+      "output_format": null,
+      "evidence": "Existing implementation0263d4b1 verified; reportddb1024f artifacts/perf1/REPORT.md. Three consecutive hostrun test core -k framer_speed exit0, unchanged test SHA2564b74b47d.../5ms limit; main and worktree source hashes equal. Current worktree42regressions passed(2.91s). 40unprofiled CPU measurements min2.2222 median2.6192 max2.8316ms. No implementation/test/threshold changes needed.",
+      "note": "Готово к проверке. По просьбе пользователя поставлена логическая точка; полный core после окончательной оптимизации ещё не повторён.",
+      "fence": 2,
+      "tab_id": null,
+      "lease_id": null,
+      "lease_expires_at": null,
+      "layer": 0,
+      "priority": 0.03841576364942129,
+      "unmet_blockers": 0,
+      "created_at": "2026-11-04 21:41:22.301787+00:00",
+      "depends_on": [],
+      "parent": null,
+      "related": [],
+      "artifacts": [
+        {
+          "id": "art-81",
+          "kind": "commit",
+          "ref": "0263d4b"
+        },
+        {
+          "id": "art-225",
+          "kind": "commit",
+          "ref": "0263d4b1414056add0b266e93320f91661b2c34d"
+        },
+        {
+          "id": "art-226",
+          "kind": "commit",
+          "ref": "ddb1024f"
+        },
+        {
+          "id": "art-227",
+          "kind": "test_report",
+          "ref": "artifacts/perf1/REPORT.md"
+        }
+      ]
+    },
+    {
+      "id": "node-83",
+      "key": "AUD-3",
+      "title": "Воспроизвести риски Git и записать отчёт без изменения исходников",
+      "objective": "Read-only часть AUD-1: проверить restore/checkpoint safety, закрытие worktree, force, конфликты merge, имена с ведущим дефисом, симлинки и index.lock на новых временных репозиториях. Исходники и существующие тесты не менять; результат записать в artifacts/aud1-2026-11-05. Подтверждённые дефекты оформить отдельными узлами.",
+      "status": "done",
+      "owner": "codex",
+      "paths": [
+        "artifacts/aud1-2026-11-05"
+      ],
+      "acceptance": [
+        "Отчёт содержит исходные пути, команды и результаты.",
+        "Подтверждённые дефекты добавлены в план отдельными узлами."
+      ],
+      "review_required": true,
+      "boundaries": null,
+      "output_format": null,
+      "evidence": "503e3de7 опубликован main. artifacts/aud1-2026-11-05/RECHECK-2026-11-08.md:12 сценариев,35+14tests passed,0failed/skipped. Симлинки,index.lock,merge conflict,force/discard races,linked worktree. Product sources/existing tests unchanged. Незавершённый sandbox run не засчитан; завершённый повтор35passed.",
+      "note": "Read-only AUD-3 завершён; новые дефекты не подтверждены. Старые REL-1/2/3 повторно проверены, дубли узлов не нужны.",
+      "fence": 2,
+      "tab_id": null,
+      "lease_id": null,
+      "lease_expires_at": null,
+      "layer": 0,
+      "priority": 0.02998218646041667,
+      "unmet_blockers": 0,
+      "created_at": "2026-11-05 17:55:48.408775+00:00",
+      "depends_on": [],
+      "parent": "AUD-1",
+      "related": [],
+      "artifacts": [
+        {
+          "id": "art-87",
+          "kind": "commit",
+          "ref": "7448b18"
+        },
+        {
+          "id": "art-273",
+          "kind": "commit",
+          "ref": "503e3de771d903dc08915ba09e933bbc7eb0f214"
+        },
+        {
+          "id": "art-274",
+          "kind": "test_report",
+          "ref": "artifacts/aud1-2026-11-05/RECHECK-2026-11-08.md"
+        }
+      ]
+    },
+    {
+      "id": "node-84",
+      "key": "REL-1",
+      "title": "Не удалять файлы за пределами worktree через симлинк каталога",
+      "objective": "AUD-3 подтвердил: checkpoint materialize и GitMutations.restore_file удаляют repo/sub/victim.txt через Path.unlink, если sub заменён симлинком на внешний каталог. Checkpoint restore возвращает restored=True, а safety ref содержит только сам симлинк и не сохраняет удалённые внешние байты. Использовать операции, не следующие по симлинкам родителей, во всех путях удаления при restore.",
+      "status": "done",
+      "owner": "codex",
+      "paths": [
+        "src/aconsole/core/infrastructure/git/checkpoints.py",
+        "src/aconsole/core/infrastructure/git/operations.py",
+        "tests/core"
+      ],
+      "acceptance": [
+        "Restore checkpoint и restoreFile не меняют ничего за пределами worktree при подмене родителя симлинком.",
+        "Проверки охватывают оба входа и обычный restore.",
+        "При невозможности безопасного восстановления возвращается диагностируемый отказ."
+      ],
+      "review_required": true,
+      "boundaries": null,
+      "output_format": null,
+      "evidence": "22e5c42 revalidates f410c5e: both restore paths use descriptor-relative no-follow deletion; six symlink/concurrent replacement cases preserve external bytes; ordinary restore and diagnostic exceptions covered. All included in current 1807 regular PASS and hostrun check exit 0 (ownership warning).",
+      "note": "Проверено также детерминированное переименование/подмена родителя прямо перед unlink; внешний sentinel сохраняется. Узел передан на приёмку, done агентом не выставлен.",
+      "fence": 3,
+      "tab_id": null,
+      "lease_id": null,
+      "lease_expires_at": null,
+      "layer": 0,
+      "priority": 0.1299632996320602,
+      "unmet_blockers": 0,
+      "created_at": "2026-11-05 17:58:31.591032+00:00",
+      "depends_on": [],
+      "parent": "AUD-1",
+      "related": [],
+      "artifacts": [
+        {
+          "id": "art-90",
+          "kind": "commit",
+          "ref": "f410c5e"
+        },
+        {
+          "id": "art-167",
+          "kind": "commit",
+          "ref": "22e5c42"
+        },
+        {
+          "id": "art-168",
+          "kind": "test_report",
+          "ref": "artifacts/rel1-revalidation/REPORT.md"
+        }
+      ]
+    },
+    {
+      "id": "node-85",
+      "key": "REL-2",
+      "title": "Сохранять ignored-файлы внутри .aconsole при закрытии worktree",
+      "objective": "AUD-3 подтвердил: при .gitignore='.aconsole/' и .aconsole/notes.txt, status выдаёт '!! .aconsole/', _status_ignored исключает каталог целиком, state='clean', close без discard удаляет worktree и notes.txt. Игнорировать только служебный lock, а не весь каталог.",
+      "status": "done",
+      "owner": "codex",
+      "paths": [
+        "src/aconsole/core/infrastructure/git/worktrees.py",
+        "tests/core/test_worktrees.py"
+      ],
+      "acceptance": [
+        "Ignored файлы .aconsole кроме lock требуют явного discard.",
+        "Без discard данные и worktree остаются.",
+        "Один служебный lock не создаёт ложного предупреждения."
+      ],
+      "review_required": true,
+      "boundaries": null,
+      "output_format": null,
+      "evidence": "3e9cb23 revalidates 3d18f08: ignored notes/nested data require explicit discard and survive refusal; exact runtime lock alone stays clean, release permits removal. Current 1807 regular PASS and hostrun check exit 0 (ownership warning); existing tests unchanged.",
+      "note": "Общий helper влияет также на Git cleanup, поэтому operations.py включён в этот узел для согласованности. Done не выставлен: результат на приёмке.",
+      "fence": 3,
+      "tab_id": null,
+      "lease_id": null,
+      "lease_expires_at": null,
+      "layer": 0,
+      "priority": 0.029963299638657407,
+      "unmet_blockers": 0,
+      "created_at": "2026-11-05 17:58:31.591032+00:00",
+      "depends_on": [],
+      "parent": "AUD-1",
+      "related": [],
+      "artifacts": [
+        {
+          "id": "art-91",
+          "kind": "commit",
+          "ref": "3d18f08"
+        },
+        {
+          "id": "art-169",
+          "kind": "commit",
+          "ref": "3e9cb23"
+        },
+        {
+          "id": "art-170",
+          "kind": "test_report",
+          "ref": "artifacts/rel2-revalidation/REPORT.md"
+        }
+      ]
+    },
+    {
+      "id": "node-86",
+      "key": "REL-3",
+      "title": "Удалять лишние dangling symlink при восстановлении чекпоинта",
+      "objective": "AUD-3 подтвердил: untracked broken symlink после snapshot остаётся после успешного restore, потому что materialize использует Path.is_file() и пропускает dangling symlink.",
+      "status": "done",
+      "owner": "codex",
+      "paths": [
+        "src/aconsole/core/infrastructure/git/checkpoints.py",
+        "tests/core/test_checkpoints_git.py"
+      ],
+      "acceptance": [
+        "После restore лишний broken symlink отсутствует.",
+        "Страховочный checkpoint позволяет восстановить прежний симлинк.",
+        "Не нарушается защита от перехода за пределы worktree."
+      ],
+      "review_required": true,
+      "boundaries": null,
+      "output_format": null,
+      "evidence": "2f2ea06. Причина уже исправлена f410c5e (REL-1); добавлены две регрессии REL-3. Прямой запуск текущего worktree в devtools: 10 PASS (test_checkpoints_git.py и test_restore_boundaries.py), повтор после lint также 10 PASS. Ruff и git diff --check проходят. Проверены удаление dangling symlink, восстановление из safety checkpoint, ignored links, внешний sentinel, неизменность HEAD и индекса. artifacts/rel3/REPORT.md.",
+      "note": null,
+      "fence": 2,
+      "tab_id": null,
+      "lease_id": null,
+      "lease_expires_at": null,
+      "layer": 1,
+      "priority": 0.029963299644907408,
+      "unmet_blockers": 0,
+      "created_at": "2026-11-05 17:58:31.591032+00:00",
+      "depends_on": [
+        "REL-1"
+      ],
+      "parent": "AUD-1",
+      "related": [],
+      "artifacts": [
+        {
+          "id": "art-189",
+          "kind": "test_report",
+          "ref": "artifacts/rel3/REPORT.md"
+        },
+        {
+          "id": "art-190",
+          "kind": "commit",
+          "ref": "2f2ea06"
+        }
+      ]
+    },
+    {
+      "id": "node-105",
+      "key": "GIT-1",
+      "title": "Проверить неизменность результатов WorkSession и согласовать продолжение после 0.1.1",
+      "objective": "Коммиты82eaa78/af92e2e/e36ce9c добавили WorkSession и integrate/cleanup. Проверить, что integration использует записанный immutable oid, а подмена refs/aconsole/sessions после result не позволяет принять другое дерево или удалить данные. Сверить REL-1/REL-2/CORE-1/HAR-2 с новыми путями и записать порядок продолжения.",
+      "status": "done",
+      "owner": "codex",
+      "paths": [
+        "src/aconsole/core/application/services/work_session_git.py",
+        "tests/core/test_work_session_result_integrity.py",
+        "artifacts/plan-reconciliation-0.1.1"
+      ],
+      "acceptance": [
+        "Подмена result ref после фиксации не меняет принимаемый результат и не разрешает опасную очистку.",
+        "Preview и integrate проверены через публичный RPC на временном Git-репозитории.",
+        "Регрессии restore, ignored-файлов и WorkSession проходят; обзор новых коммитов и дальнейший порядок записаны."
+      ],
+      "review_required": true,
+      "boundaries": null,
+      "output_format": null,
+      "evidence": "2297406 revalidates 4c9b15a: four public RPC ref-tampering cases preserve original result, HEAD and later worker bytes; stale refs refused in session/generic preview/integrate, unsafe cleanup refused. Reconciliation/continuation recorded; current restore/ignored/session cases included in 1807 PASS and hostrun check exit 0; native CLI criteria separate.",
+      "note": null,
+      "fence": 3,
+      "tab_id": null,
+      "lease_id": null,
+      "lease_expires_at": null,
+      "layer": 0,
+      "priority": 0.021189261054745372,
+      "unmet_blockers": 0,
+      "created_at": "2026-11-06 15:01:59.284516+00:00",
+      "depends_on": [],
+      "parent": null,
+      "related": [
+        "REL-1",
+        "REL-2",
+        "AUD-1",
+        "SEC-11"
+      ],
+      "artifacts": [
+        {
+          "id": "art-109",
+          "kind": "commit",
+          "ref": "4c9b15a"
+        },
+        {
+          "id": "art-171",
+          "kind": "commit",
+          "ref": "2297406"
+        },
+        {
+          "id": "art-172",
+          "kind": "test_report",
+          "ref": "artifacts/git1-revalidation/REPORT.md"
+        }
+      ]
+    },
+    {
+      "id": "node-106",
+      "key": "REL-4",
+      "title": "Проверить обновление UI при ядре без work_sessions.v1",
+      "objective": "Новый CoreClient._handshake отвергает старое ядро до возврата server_pid, а UI вызывает replace_daemon только после start_daemon. Артефакты перезапусков сохраняют failed: stop timeout и capability mismatch. Воспроизвести upgrade-path и исправить без потери агентов/данных и принудительного уничтожения живого ядра.",
+      "status": "done",
+      "owner": "codex",
+      "paths": [
+        "src/aconsole/ui/client/core_client.py",
+        "tests/core/test_core_upgrade.py"
+      ],
+      "acceptance": [
+        "Старое ядро без work_sessions.v1 безопасно обновляется либо даёт понятный проверяемый отказ.",
+        "Несовместимые UI/core не продолжают работу по новой схеме.",
+        "Тесты используют отдельные процессы и данные, не перезапускают приложение пользователя."
+      ],
+      "review_required": true,
+      "boundaries": null,
+      "output_format": null,
+      "evidence": "09d93ea revalidatesb73d4b2: safe localized PROTOCOL_VERSION_UNSUPPORTED refusal for legacy core without work_sessions.v1, transport/resources closed, no newer-schema requests after incompatibility, explicit retry works. Four disposable-process/flock/socket tests preserve old core, agent and binary data through refusal/retry/timeout/reconnect. Included in1811 regular PASS, check exit0; no user-app restart, automatic-upgrade or native CLI certification claim.",
+      "note": null,
+      "fence": 2,
+      "tab_id": null,
+      "lease_id": null,
+      "lease_expires_at": null,
+      "layer": 0,
+      "priority": 0.02118926106134259,
+      "unmet_blockers": 0,
+      "created_at": "2026-11-06 15:01:59.284516+00:00",
+      "depends_on": [],
+      "parent": null,
+      "related": [
+        "QA-4",
+        "CORE-1"
+      ],
+      "artifacts": [
+        {
+          "id": "art-121",
+          "kind": "commit",
+          "ref": "b73d4b2"
+        },
+        {
+          "id": "art-183",
+          "kind": "commit",
+          "ref": "09d93ea"
+        },
+        {
+          "id": "art-184",
+          "kind": "test_report",
+          "ref": "artifacts/rel4-revalidation/REPORT.md"
+        }
+      ]
+    },
+    {
+      "id": "node-108",
+      "key": "GIT-2",
+      "title": "Восстанавливать историю WorkSession по записанному OID, а не изменяемому ref",
+      "objective": "В новом WorkSessionHistory.materialize target.oid зафиксирован в БД, но GitCheckpoints.materialize вызывается с target.ref. Смена ref может применить другое дерево при restore даже после preview, связанного с записанным OID. Воспроизвести через public restore RPC и закрепить восстановление за immutable OID.",
+      "status": "done",
+      "owner": "codex",
+      "paths": [
+        "src/aconsole/core/application/services/work_session_history.py",
+        "tests/core/test_work_session_restore_integrity.py"
+      ],
+      "acceptance": [
+        "Подмена snapshot ref до или после restorePreview не подменяет применяемое дерево.",
+        "Restore сохраняет HEAD, индекс и safety snapshot текущего состояния.",
+        "Тест проходит через публичный RPC на временном репозитории."
+      ],
+      "review_required": true,
+      "boundaries": null,
+      "output_format": null,
+      "evidence": "9f7fcff revalidates 0b7717f: two public RPC moved-ref cases restore recorded OID before/after preview, preserve HEAD/index and exact staged safety snapshot. Missing OID refuses. Current 1807 regular PASS, hostrun check exit 0 with ownership warning.",
+      "note": null,
+      "fence": 3,
+      "tab_id": null,
+      "lease_id": null,
+      "lease_expires_at": null,
+      "layer": 0,
+      "priority": 0.02112346263460648,
+      "unmet_blockers": 0,
+      "created_at": "2026-11-06 15:11:27.782977+00:00",
+      "depends_on": [],
+      "parent": null,
+      "related": [
+        "GIT-1",
+        "AUD-1",
+        "REL-1"
+      ],
+      "artifacts": [
+        {
+          "id": "art-110",
+          "kind": "commit",
+          "ref": "0b7717f"
+        },
+        {
+          "id": "art-173",
+          "kind": "commit",
+          "ref": "9f7fcff"
+        },
+        {
+          "id": "art-174",
+          "kind": "test_report",
+          "ref": "artifacts/git2-revalidation/REPORT.md"
+        }
+      ]
+    },
+    {
+      "id": "node-112",
+      "key": "GIT-3",
+      "title": "Не доверять настройкам скрытия dirty-состояния подмодулей",
+      "objective": "AUD-1 на0b7717f: .git/config submodule.sub.ignore=all скрывает unsaved content в initialized submodule, GitHistory.status.unstaged=0; Worktrees.close(discard_ignored=True) удаляет worktree вместе с этими данными. Status safety checks должны явно учитывать dirty/untracked submodules независимо от конфигурации; проверить оба status-пути и cleanup.",
+      "status": "done",
+      "owner": "codex",
+      "paths": [
+        "src/aconsole/core/infrastructure/git/history.py",
+        "src/aconsole/core/infrastructure/git/worktrees.py",
+        "tests/core/test_submodule_cleanup_safety.py"
+      ],
+      "acceptance": [
+        "Dirty и untracked-файлы подмодуля не скрываются настройками submodule.*.ignore/diff.ignoreSubmodules.",
+        "Очистка с discard_ignored не удаляет несохранённую работу подмодуля.",
+        "Регрессия воспроизводит исходный дефект на локальных временных репозиториях без сети."
+      ],
+      "review_required": true,
+      "boundaries": null,
+      "output_format": null,
+      "evidence": "5dad116 revalidates2f3aa87: both status paths force --ignore-submodules=none and --untracked-files=all. Six local-repo regressions cover hidden tracked/untracked submodule data and public git/cleanupWorktree refusal with discard_ignored=True; bytes and branches preserved. Included in current1811 regular PASS, hostrun check exit0 (ownership warning), no network or existing-test changes.",
+      "note": null,
+      "fence": 2,
+      "tab_id": null,
+      "lease_id": null,
+      "lease_expires_at": null,
+      "layer": 0,
+      "priority": 0.02095426183113426,
+      "unmet_blockers": 0,
+      "created_at": "2026-11-06 15:35:49.677982+00:00",
+      "depends_on": [],
+      "parent": null,
+      "related": [
+        "REL-2",
+        "AUD-1"
+      ],
+      "artifacts": [
+        {
+          "id": "art-115",
+          "kind": "commit",
+          "ref": "2f3aa87"
+        },
+        {
+          "id": "art-179",
+          "kind": "commit",
+          "ref": "5dad116"
+        },
+        {
+          "id": "art-180",
+          "kind": "test_report",
+          "ref": "artifacts/git3-revalidation/REPORT.md"
+        }
+      ]
+    },
+    {
+      "id": "node-113",
+      "key": "GIT-4",
+      "title": "Не применять blanket --force при согласии удалить только ignored-файлы",
+      "objective": "AUD-1 на0b7717f: если новый untracked-файл появляется между preflight и Git remove, Worktrees.close и GitMutations.remove_worktree при discard_ignored=True удаляют его через --force. Без forced удаления Git отказывает и файл остаётся. Реализовать scoped discard ignored без bypass dirty-проверки Git, не обещая изоляцию от всех внешних писателей.",
+      "status": "done",
+      "owner": "codex",
+      "paths": [
+        "src/aconsole/core/infrastructure/git/worktrees.py",
+        "src/aconsole/core/infrastructure/git/operations.py",
+        "tests/core/test_cleanup_discard_race.py"
+      ],
+      "acceptance": [
+        "Discard ignored не превращается в разрешение удалить новые обычные dirty/untracked-файлы.",
+        "Контролируемая запись непосредственно перед remove сохраняет файл и даёт отказ в обоих адаптерах.",
+        "Nested repositories/submodules и собственный runtime lock обрабатываются безопасно; явный discard действительно удаляет разрешённые ignored-данные."
+      ],
+      "review_required": true,
+      "boundaries": null,
+      "output_format": null,
+      "evidence": "ea3bbe9 revalidatesa286858: both adapters remove without blanket --force, preserve final native Git dirty/untracked checks and explicit ignored-data consent. Fourteen cases cover controlled late tracked/untracked/nested/hidden writes, consent/refusal and runtime lock; submodule regressions also pass. Current1811 regular PASS, hostrun check exit0 with ownership warning. No promise of isolation from every external writer.",
+      "note": null,
+      "fence": 2,
+      "tab_id": null,
+      "lease_id": null,
+      "lease_expires_at": null,
+      "layer": 0,
+      "priority": 0.020954261837499998,
+      "unmet_blockers": 0,
+      "created_at": "2026-11-06 15:35:49.677982+00:00",
+      "depends_on": [],
+      "parent": null,
+      "related": [
+        "REL-2",
+        "GIT-3",
+        "AUD-1"
+      ],
+      "artifacts": [
+        {
+          "id": "art-116",
+          "kind": "commit",
+          "ref": "a286858"
+        },
+        {
+          "id": "art-181",
+          "kind": "commit",
+          "ref": "ea3bbe9"
+        },
+        {
+          "id": "art-182",
+          "kind": "test_report",
+          "ref": "artifacts/git4-revalidation/REPORT.md"
+        }
+      ]
+    },
+    {
+      "id": "node-124",
+      "key": "PLAN-2",
+      "title": "Актуализировать граф и порядок продолжения AConsole",
+      "objective": "По запросу пользователя 2026-11-06 сверить граф plan-1 с коммитами и проверками, привязать актуальные результаты SEC-10/CORE-6/REL-4, отразить подтверждённые зависимости и оставшиеся блокировки. Не подменять человеческую приёмку verifying узлов и не снимать чужие lease. Зафиксировать снимок и проверяемый порядок продолжения.",
+      "status": "in_progress",
+      "owner": "codex",
+      "paths": [
+        "artifacts/plan-refresh-2026-11-06"
+      ],
+      "acceptance": [
+        "Статусы и коммиты сверены; реализованные узлы переданы на человеческую проверку.",
+        "Граф содержит реальные зависимости, а блокировки путей и порядок дальнейших работ записаны отдельно.",
+        "Подтверждённые изменения плана сохранены через штатные инструменты; отчёт не утверждает приёмку человеком."
+      ],
+      "review_required": true,
+      "boundaries": null,
+      "output_format": null,
+      "evidence": "artifacts/plan-refresh-2026-11-06/REPORT.md, ui-all.txt, gtk-recheck.txt, live-projection.txt, images/. Пользовательское правило kb-127; самостоятельный разбор установил missing libpango, библиотека не устанавливалась без user/system authorization.",
+      "note": "Повтор PLAN-2: актуальная сверка графа/коммитов; исходный отказ GTK/Pango проверю на текущем native environment. Человеческая визуальная приёмка APR-1 остаётся отдельной, не объявляется выполненной.",
+      "fence": 3,
+      "tab_id": "ff3f69f4401638ca",
+      "lease_id": "PLAN-2:3",
+      "lease_expires_at": "2026-11-08 18:02:42.062287+00:00",
+      "layer": 0,
+      "priority": 0.019994101818981484,
+      "unmet_blockers": 0,
+      "created_at": "2026-11-06 17:54:05.460599+00:00",
+      "depends_on": [],
+      "parent": null,
+      "related": [],
+      "artifacts": [
+        {
+          "id": "art-128",
+          "kind": "commit",
+          "ref": "23a79ef"
+        }
+      ]
+    },
+    {
+      "id": "node-125",
+      "key": "PERF-2",
+      "title": "Проверить превышение задержки writer tick в полном наборе",
+      "objective": "В окончательном общем прогоне SEC-10 после согласованной правки старого expectation единственный отказ — tests/core/test_persistence_b.py::test_persistence_b_tick: max=0.006125119 при пороге 0.005, p50=0.00000447, p99=0.00001031, n=506529. На предыдущем полном прогоне этот тест проходил. Отделить чувствительность к нагрузке от проблемы writer/event loop; порог и существующую проверку не ослаблять. Это отдельное наблюдение, не доказательство причины в SEC-10.",
+      "status": "done",
+      "owner": "codex",
+      "paths": [
+        "src/aconsole/core/infrastructure/persistence/writer.py",
+        "tests/core/test_persistence_b.py",
+        "artifacts/perf2"
+      ],
+      "acceptance": [
+        "Повторные измерения отдельно и в полном наборе записаны с условиями нагрузки.",
+        "При подтверждённой причине внесено отдельное исправление без изменения порога и удаления теста.",
+        "Полный набор проходит либо измеренный внешний фактор документирован без ложного успешного результата."
+      ],
+      "review_required": true,
+      "boundaries": null,
+      "output_format": null,
+      "evidence": "411ef4f2 опубликован main. artifacts/perf2/RECHECK-2026-11-08.md +4JSONL/4JUnit/runmetadata/logs. Basef5be4a2b; isolated1/2/3 max1.984/3.081/2.498ms;full1517passed,0failed/skipped,295.01s;fulltickmax3.224ms<5ms,n544602,stored30000. Python3.15.1gilFalse,load/PSIrecorded;никакойпричиныscheduler/GCнеприписано.",
+      "note": "Выполнены повторные измерения отдельно и в полном наборе; полный corePASS. Старый6.125119msне воспроизведён,причина неизвестна; production writer/исходный benchmark/assert/порог неизменены. Done — завершение проверки,не утверждение исправления старого выброса.",
+      "fence": 2,
+      "tab_id": null,
+      "lease_id": null,
+      "lease_expires_at": null,
+      "layer": 0,
+      "priority": 0.019958689203472223,
+      "unmet_blockers": 0,
+      "created_at": "2026-11-06 17:59:11.425673+00:00",
+      "depends_on": [],
+      "parent": null,
+      "related": [],
+      "artifacts": [
+        {
+          "id": "art-282",
+          "kind": "commit",
+          "ref": "411ef4f2be115fe99f8ab618c7ca13aa47301f9f"
+        },
+        {
+          "id": "art-283",
+          "kind": "test_report",
+          "ref": "artifacts/perf2/RECHECK-2026-11-08.md"
+        }
+      ]
+    },
+    {
+      "id": "node-131",
+      "key": "CORE-7",
+      "title": "Разрешить повтор failed-узла через штатный MCP",
+      "objective": "При продолжении PERF-2 на main cf52b8a: node_claim(node-125) возвращает NODE_TRANSITION_INVALID pending; node_update(status=pending,fence=1) возвращает LEASE_STALE_FENCE 1. Domain Plan.transition разрешает FAILED->PENDING только с fence=None после освобождения lease, а MCP schema требует fence:int. Нужен штатный путь retry без записи в БД и без ослабления fence активной lease.",
+      "status": "done",
+      "owner": "codex",
+      "paths": [
+        "src/aconsole/core/infrastructure/mcp/tools.py",
+        "src/aconsole/core/infrastructure/mcp/server.py",
+        "tests/core/test_mcp_retry.py"
+      ],
+      "acceptance": [
+        "Освобождённый failed-узел возвращается в pending и снова берётся через публичные MCP tools.",
+        "Чужой либо устаревший fence активной lease отклоняется.",
+        "Регрессионный тест проходит через MCP API и сохраняет изоляцию табов."
+      ],
+      "review_required": false,
+      "boundaries": null,
+      "output_format": null,
+      "evidence": "18 MCP tests PASS; полный core 1757 PASS; check PASS. Повторный общий прогон PLAN-3 1766 PASS. Проверены retry released lease, active stale/missing fence, foreign tab, verifying ownership и project isolation. Правило завершения пользователя kb-127; свежий core штатно активирован по запросу пользователя.",
+      "note": "Подтверждённые критерии выполнены; запись через штатный MCP без прямого изменения БД.",
+      "fence": 1,
+      "tab_id": null,
+      "lease_id": null,
+      "lease_expires_at": null,
+      "layer": 0,
+      "priority": 0.01946587048240741,
+      "unmet_blockers": 0,
+      "created_at": "2026-11-06 19:10:09.379480+00:00",
+      "depends_on": [],
+      "parent": null,
+      "related": [
+        "PERF-2",
+        "CORE-4"
+      ],
+      "artifacts": [
+        {
+          "id": "art-142",
+          "kind": "commit",
+          "ref": "7152c72"
+        },
+        {
+          "id": "art-143",
+          "kind": "test_report",
+          "ref": "artifacts/core7/REPORT.md"
+        }
+      ]
+    },
+    {
+      "id": "node-132",
+      "key": "PERF-3",
+      "title": "Разобрать отказ ожидания сокета в полном core-прогоне",
+      "objective": "Полный hostrun test core на main cf52b8a 2026-11-06 exit1 (249257 мс): единственный отказ test_core_recovery.py::test_core_keeps_its_lock_until_a_slow_writer_has_stopped при _connect до writer.post. wait_for_socket после 100 итераций с sleep(0.01) выбрасывает socket did not appear. PERF-2 в этом прогоне проходит. Повторить отдельно и в наборе; установить причину, не увеличивать timeout ради зелёного результата.",
+      "status": "done",
+      "owner": "codex",
+      "paths": [
+        "src/aconsole/core/bootstrap.py",
+        "tests/core/test_core_recovery.py",
+        "tests/core/conftest.py",
+        "artifacts/perf3"
+      ],
+      "acceptance": [
+        "Результаты отдельных повторов и полного набора сохранены.",
+        "Причина установлена либо отсутствие воспроизведения указано явно.",
+        "Существующие проверки остановки writer, удержания lock и timeout не ослаблены."
+      ],
+      "review_required": false,
+      "boundaries": null,
+      "output_format": null,
+      "evidence": "27 recovery/writer/persistence PASS, полный core 1747 PASS; последующие полные 1757 и 1766 PASS. Fault injection перенесён после _connect; исходные assert и таймауты сохранены. Правило завершения пользователя kb-127; свежий core штатно активирован по запросу пользователя.",
+      "note": "Подтверждённые критерии выполнены; запись через штатный MCP без прямого изменения БД.",
+      "fence": 1,
+      "tab_id": null,
+      "lease_id": null,
+      "lease_expires_at": null,
+      "layer": 0,
+      "priority": 0.019440361370486114,
+      "unmet_blockers": 0,
+      "created_at": "2026-11-06 19:13:49.778264+00:00",
+      "depends_on": [],
+      "parent": null,
+      "related": [
+        "CORE-3",
+        "PERF-2"
+      ],
+      "artifacts": [
+        {
+          "id": "art-144",
+          "kind": "commit",
+          "ref": "4a487fc"
+        },
+        {
+          "id": "art-145",
+          "kind": "test_report",
+          "ref": "artifacts/perf3/fix/REPORT.md"
+        }
+      ]
+    },
+    {
+      "id": "node-134",
+      "key": "PERF-4",
+      "title": "Проверить границы fault injection recovery без изменения занятых файлов",
+      "objective": "Продолжение PERF-3: создать самостоятельный диагностический сценарий в artifacts/perf3. Сравнить исходную проверку с переносом _WAIT_S=.03 после подключения клиента. Исходные reserved код и тесты не менять. Сохранить patch-кандидат, результаты и ограничения; это эксперимент, не замена полного core и не закрытие PERF-3.",
+      "status": "done",
+      "owner": "codex",
+      "paths": [
+        "artifacts/perf3"
+      ],
+      "acceptance": [
+        "Диагностический сценарий сохраняет исходные assertions shutdown, timeout и lock.",
+        "Оригинальная проверка воспроизводит отказ, кандидат исполняется отдельно не менее трёх раз.",
+        "Patch-кандидат и результаты сохранены в main; исходный тест не изменён."
+      ],
+      "review_required": false,
+      "boundaries": null,
+      "output_format": null,
+      "evidence": "main e3a9497, artifacts/perf3/REPORT.md. Candidate3 standalone PASS plus1 mixed PASS; original baseline under full collection FAIL twice this turn, isolated original PASS recorded. AST assert equality and unchanged source SHA256 verified. git apply --unidiff-zero --check candidate.diff PASS; git diff --cached --check PASS. hostrun check exit0 (Ruff/types/contracts pass; known ownership Not a git repository remains invalid). All PERF-4 experimental acceptance met. PERF-3 NOT fixed: source unchanged, approval to apply patch pending.",
+      "note": "Закрыт только независимый диагностический эксперимент, не исходный дефект и не полный core.",
+      "fence": 1,
+      "tab_id": null,
+      "lease_id": null,
+      "lease_expires_at": null,
+      "layer": 0,
+      "priority": 0.019403810949305555,
+      "unmet_blockers": 0,
+      "created_at": "2026-11-06 19:19:05.573957+00:00",
+      "depends_on": [],
+      "parent": null,
+      "related": [
+        "PERF-3"
+      ],
+      "artifacts": [
+        {
+          "id": "art-135",
+          "kind": "test_report",
+          "ref": "artifacts/perf3/REPORT.md"
+        },
+        {
+          "id": "art-136",
+          "kind": "commit",
+          "ref": "e3a9497"
+        }
+      ]
+    },
+    {
+      "id": "node-140",
+      "key": "PLAN-3",
+      "title": "Применить завершение по проверкам и освободить просроченные verifying",
+      "objective": "По решению пользователя kb-127 и вопросу о10готовыхузлах: явная политика checked completion в ядре должна позволять владельцу узла завершать in_progress/verifying с результатами обязательных проверок, включая legacy review_required=true. Старые ручные правила сохранить для явно ручной политики. Просроченный verifying в checked-политике возвращается в pending для повторной проверки новым исполнителем, без автоматического done. Отдельно сохранить правдивую сверку статусов/коммитов.",
+      "status": "done",
+      "owner": "codex",
+      "paths": [
+        "src/aconsole/core/domain/plan.py",
+        "src/aconsole/core/infrastructure/mcp/tools.py",
+        "src/aconsole/core/bootstrap.py",
+        "tests/core/test_checked_completion.py",
+        "artifacts/plan3"
+      ],
+      "acceptance": [
+        "Включённая daemon-политика допускает done с evidence после проверок и освобождает пути/зависимости.",
+        "Без evidence завершение отвергается; активный чужой fence и владелец защищены.",
+        "Просроченный verifying может быть взят заново, а до повторной проверки не становится done.",
+        "Рестарт и отказ записи сохраняют выбранную политику и проверяемые статусы; ручная политика совместима со старыми тестами.",
+        "Сверка объясняет фактический счётчик без ложного массового приёма узлов."
+      ],
+      "review_required": false,
+      "boundaries": null,
+      "output_format": null,
+      "evidence": "97 целевых PASS; полный core 1766 PASS; check PASS. Native HTTP MCP/Unix IPC counter/restart test PASS. Пакет b4183fc установлен, ядро штатно заменено 21227 -> 174407; вкладка и процессы агента сохранены. Live MCP активировал checked policy и освободил просроченные verifying. Правило завершения пользователя kb-127; свежий core штатно активирован по запросу пользователя.",
+      "note": "Подтверждённые критерии выполнены; запись через штатный MCP без прямого изменения БД.",
+      "fence": 1,
+      "tab_id": null,
+      "lease_id": null,
+      "lease_expires_at": null,
+      "layer": 0,
+      "priority": 0.0191688845650463,
+      "unmet_blockers": 0,
+      "created_at": "2026-11-06 19:52:55.337974+00:00",
+      "depends_on": [],
+      "parent": null,
+      "related": [
+        "UX-7",
+        "CORE-7",
+        "PERF-3",
+        "PLAN-1"
+      ],
+      "artifacts": [
+        {
+          "id": "art-146",
+          "kind": "commit",
+          "ref": "b4183fc"
+        },
+        {
+          "id": "art-147",
+          "kind": "test_report",
+          "ref": "artifacts/plan3/REPORT.md"
+        }
+      ]
+    },
+    {
+      "id": "node-195",
+      "key": "GATE-1",
+      "title": "Вернуть доверенный PASS gate через независимую приёмку",
+      "objective": "SEC-4 закрывает эскалацию fail-closed: agent-writable gate/review больше не выдаёт доверенный PASS; task и audit gate завершаются UNVERIFIED. Для возвращения PASS нужен независимый проверяющий с неизменяемым кодом и состоянием, недоступным агентам. Второй контейнер с общим writable HOME не является независимым субъектом.",
+      "status": "pending",
+      "owner": null,
+      "paths": [
+        "tools/hostrun/server.py",
+        "tools/hostrun/actions.py",
+        "tools/hostrun/policy.example.toml",
+        "tests/hostrun"
+      ],
+      "acceptance": [
+        "Проверяющий код, база проверки и записи approval недоступны для записи агентам.",
+        "Независимая приёмка выдаёт PASS; self-approval, replay и поддельные отчёты запрещены.",
+        "Сценарий и граница доверия документированы и покрыты тестами."
+      ],
+      "review_required": false,
+      "boundaries": "Не возвращать доверие к writable JSON и approve агентам. Активация работающих сервисов отдельно.",
+      "output_format": null,
+      "evidence": null,
+      "note": null,
+      "fence": 0,
+      "tab_id": null,
+      "lease_id": null,
+      "lease_expires_at": null,
+      "layer": 3,
+      "priority": 0.01216267942627315,
+      "unmet_blockers": 1,
+      "created_at": "2026-11-07 12:41:48.950430+00:00",
+      "depends_on": [
+        "SEC-7",
+        "SEC-4"
+      ],
+      "parent": null,
+      "related": [],
+      "artifacts": []
+    },
+    {
+      "id": "node-210",
+      "key": "CORE-8",
+      "title": "Защитить EchoWindow vault от параллельного record/is_echo",
+      "objective": "При wire-проверке UX-3 с экспортом200заметок watchdog Thread-1 падает: EchoWindow._prune RuntimeError dictionary changed size during iteration. VaultWriter пишет с vault-worker, observer читает echo с watchdog. Общий _seen не защищён.",
+      "status": "done",
+      "owner": null,
+      "paths": [
+        "src/aconsole/core/infrastructure/vault/writer.py",
+        "tests/core"
+      ],
+      "acceptance": [
+        "Параллельные record/is_echo не вызывают исключений и не теряют работоспособность observer.",
+        "TTL echo сохраняется, устаревшие записи удаляются.",
+        "Регрессия покрывает пересечение prune с записью из другого потока."
+      ],
+      "review_required": false,
+      "boundaries": null,
+      "output_format": null,
+      "evidence": "5f2f276d: исправлен EchoBook (в исходной формулировке ошибочно EchoWindow). Общий Lock для remember/is_echo/len, prune не пересекается с записью. Детерминированная двухпоточная регрессия проверяет блокировку и сохранение TTL. Vault writer+wire и UX-3 wire:12PASS без observer thread warning; Ruff/diffPASS. artifacts/core8/REPORT.md. Установленный core/vault не затрагивались.",
+      "note": null,
+      "fence": 1,
+      "tab_id": null,
+      "lease_id": null,
+      "lease_expires_at": null,
+      "layer": 0,
+      "priority": 0.01157347591226852,
+      "unmet_blockers": 0,
+      "created_at": "2026-11-07 14:06:39.668865+00:00",
+      "depends_on": [],
+      "parent": null,
+      "related": [
+        "UX-3"
+      ],
+      "artifacts": [
+        {
+          "id": "art-211",
+          "kind": "commit",
+          "ref": "5f2f276d"
+        },
+        {
+          "id": "art-212",
+          "kind": "test_report",
+          "ref": "artifacts/core8/REPORT.md"
+        }
+      ]
+    },
+    {
+      "id": "node-220",
+      "key": "SEC-12",
+      "title": "Изолировать Git hostrun от исполняемой конфигурации репозитория",
+      "objective": "QA-1 на5a96265e: построенный hostrun git diff с --no-ext-diff --no-textconv выполняет filter.evil.clean на уровне процесса hostrun. git status также допускает core.fsmonitor, а gate-review inspect вызывает host git напрямую. Перенести allowlisted Git и review Git в devtools, сохранить аргументы и отказ при недоступном контейнере. Не полагаться на перечисление изменяемых driver keys.",
+      "status": "done",
+      "owner": null,
+      "paths": [
+        "tools/hostrun/actions.py",
+        "tools/hostrun/server.py",
+        "tools/hostrun/policy.example.toml",
+        "tests/hostrun"
+      ],
+      "acceptance": [
+        "Allowlisted git actions и gate-review inspect не запускают git или драйверы репозитория процессом hostrun на хосте.",
+        "Настоящие Git filters/fsmonitor воспроизведены на одноразовых репозиториях внутри devtools, маршрутизация покрыта HTTP/исполняемыми тестами.",
+        "Ожидаемые status/diff/log/review и отказ при неготовом devtools покрыты регрессиями; политика документирует границу SEC-7."
+      ],
+      "review_required": false,
+      "boundaries": null,
+      "output_format": null,
+      "evidence": "37728b85; artifacts/sec12/REPORT.md. Hostrun Git/review no longer executes host Git; fixed Podman start/exec only, no fallback. Real filter/fsmonitor fixtures exercised in devtools; HTTP5forms and failure tests. QA1+hostrun515passed/1expectedskip; hostrun followup+sessioncost168passed; changed-lineRuff0newdiagnostics (43legacy), diffcheckpass. Running service and SEC7 isolation not claimed.",
+      "note": null,
+      "fence": 1,
+      "tab_id": null,
+      "lease_id": null,
+      "lease_expires_at": null,
+      "layer": 0,
+      "priority": 0.011229031681018518,
+      "unmet_blockers": 0,
+      "created_at": "2026-11-07 14:56:15.667096+00:00",
+      "depends_on": [],
+      "parent": null,
+      "related": [
+        "SEC-3",
+        "SEC-1",
+        "SEC-11",
+        "QA-1"
+      ],
+      "artifacts": [
+        {
+          "id": "art-221",
+          "kind": "commit",
+          "ref": "37728b85"
+        },
+        {
+          "id": "art-222",
+          "kind": "test_report",
+          "ref": "artifacts/sec12/REPORT.md"
+        }
+      ]
+    },
+    {
+      "id": "node-230",
+      "key": "FE-2",
+      "title": "Восстановить контекст ссылок FE-10, FE-16 и FE-17",
+      "objective": "Описание FE-1 дополнительно ссылается на FE-10/FE-16/FE-17 без текста находок. В checkout найдены только эти ссылки в снимке плана; ctx_get(node-51,query='FE-10 FE-16 FE-17') возвращает0items. Сохранить эти пункты отдельно: найти исходный аудит, восстановить сценарии и проверить их, не приписывать им произвольные исправления FE-1.",
+      "status": "done",
+      "owner": null,
+      "paths": [],
+      "acceptance": [
+        "Для каждого из трёх ID найдены исходное описание и воспроизводимый сценарий либо явно зафиксирована недоступность источника.",
+        "Подтверждённые дефекты оформлены отдельными рабочими узлами или привязаны к проверяемым существующим исправлениям."
+      ],
+      "review_required": false,
+      "boundaries": null,
+      "output_format": null,
+      "evidence": "2222bb66; artifacts/fe2/REPORT.md + source-search.json + context-search.json. Проверены все достижимые refs, файлы, общие docs/.grok, четыре ctx_get. Только перекрёстные ссылки без сценариев. Произвольное сопоставление с FE-1 не сделано.",
+      "note": "Выполнена явная альтернатива приёмки: недоступность источников документирована отдельно по FE-10/16/17. Это НЕ подтверждает исправление неизвестных дефектов.",
+      "fence": 1,
+      "tab_id": null,
+      "lease_id": null,
+      "lease_expires_at": null,
+      "layer": 0,
+      "priority": 0.009881381883564815,
+      "unmet_blockers": 0,
+      "created_at": "2026-11-07 18:10:19.361417+00:00",
+      "depends_on": [],
+      "parent": null,
+      "related": [
+        "FE-1"
+      ],
+      "artifacts": [
+        {
+          "id": "art-270",
+          "kind": "test_report",
+          "ref": "artifacts/fe2/REPORT.md"
+        },
+        {
+          "id": "art-271",
+          "kind": "commit",
+          "ref": "2222bb66"
+        }
+      ]
+    },
+    {
+      "id": "node-245",
+      "key": "QA-7",
+      "title": "Разобрать потерю bracketed paste в полном GUI-наборе",
+      "objective": "DES-4: на неизменённом 249eb00f полный native Xvfb прогон даёт те же отказы test_real_clipboard_shortcuts[text]/[mixed], что и текущий checkout: VTE commit получает текст без ESC[200~/201~. Изолированные6clipboardсценариев на том же HEAD проходят. Источник: artifacts/des4/baseline-results.xml, baseline-focused-results.xml и gtk-full-results.xml. Установить зависимость от порядка/состояния GTK/VTE и исправить подтверждённую причину отдельным коммитом.",
+      "status": "done",
+      "owner": "codex",
+      "paths": [
+        "tests/gui/front/test_clipboard_routing.py",
+        "src/aconsole/ui/views/terminal",
+        "artifacts/qa7"
+      ],
+      "acceptance": [
+        "Сравнены изолированный и полный прогоны на фиксированном коммите, установлена причина или явно описана неопределённость.",
+        "Проверки текста, bracketed paste и маршрутизации физической клавиатуры сохранены; assertions и тайминги не ослаблены ради PASS.",
+        "После подтверждённой правки оба сценария повторно проверены в полном наборе."
+      ],
+      "review_required": false,
+      "boundaries": null,
+      "output_format": null,
+      "evidence": "Коммит 94a76538 (AConsole-Node: QA-7), отчёт artifacts/qa7/REPORT.md. База f360ac23, snapshot и SHA256 исходного теста сохранены. Probe-prefix: 147 passed/2 failed; title пуст при небракетированном commit, callback parse позже на 79.122 ms (text), 18.547 ms (image). Isolated-probe: 6 passed, marker до вставки. Причина — ready-файл подтверждал write() ребёнка, но не обработку VTE. Исправлена только готовность тестового PTY: DECSET+OSC2 в одном write, ожидание title в прежнем цикле 100×20 ms и новый assert. Все 14 старых assertions и sleeps сохранены (assertions.json). Кандидат isolated: 6 passed, 8.77 s. Полный front/ui: 438 passed/2 failed, 440 тестов, 167.86 s; все 6 clipboard-case PASS, включая text/mixed; full-clipboard-summary.json проверен по JUnit. Оставшиеся отказы — PERF-5 и новый единичный rank elapsed144.533 ms/порог16 ms (PERF-6); общий PASS не заявлен, thresholds не менялись. Ruff и diff-check PASS. Прогоны последовательные, приватный Xvfb; product UI/wire не менялись.",
+      "note": null,
+      "fence": 2,
+      "tab_id": null,
+      "lease_id": null,
+      "lease_expires_at": null,
+      "layer": 0,
+      "priority": 0.0033355738009259255,
+      "unmet_blockers": 0,
+      "created_at": "2026-11-08 09:52:55.143307+00:00",
+      "depends_on": [],
+      "parent": null,
+      "related": [],
+      "artifacts": [
+        {
+          "id": "art-251",
+          "kind": "commit",
+          "ref": "94a76538"
+        },
+        {
+          "id": "art-252",
+          "kind": "test_report",
+          "ref": "artifacts/qa7/REPORT.md"
+        }
+      ]
+    },
+    {
+      "id": "node-246",
+      "key": "PERF-5",
+      "title": "Разобрать отказ frame-time Git-графа в native Xvfb",
+      "objective": "DES-4: полный неизменённый249eb00f в private Xvfb,10000строк:44frames/4с,median86.2мс,p95129.7мс,worst145.8мс,RSS2097MB; порогmedian17.5мс. Текущий checkout:median90.3мс,RSS2131MB. Изолированный baseline тоже падает. Не считать это доказательством регрессии локализации или автоматически менять порог. Источник artifacts/des4/baseline-results.xml и gtk-full-results.xml. Установить ограничения software renderer/нагрузки и реальную стоимость UI.",
+      "status": "done",
+      "owner": "codex",
+      "paths": [
+        "tests/gui/front/test_git_scale_ui.py",
+        "src/aconsole/ui/views/review",
+        "artifacts/perf5"
+      ],
+      "acceptance": [
+        "Повторные измерения фиксируют renderer, нагрузку, начальную память и размер истории отдельно и в наборе.",
+        "Причина установлена либо явно сохранены ограничения среды и отказ без ложного PASS.",
+        "Порог и существующие assertions не ослаблены; при подтверждённом дефекте отдельное исправление проверено повторно."
+      ],
+      "review_required": false,
+      "boundaries": null,
+      "output_format": null,
+      "evidence": "Diagnostic scope completed in68db5c50. Baseline95b502f5 unchanged sources/test hashes. Default isolated repeats73.5/75.2ms; full91.6ms (442passed/1failed); controlled Cairo30.0ms alsoFAIL17.5ms. DefaultGskGLRenderer uses llvmpipe, accelerated=no;4CPUs, loads recorded. RSS growth44MiB isolated/36MiB full;2.1GiB entry RSS in full distinguished from page growth. No observed GC during unprofiled scroll. Separate cProfile:9147binds/206widgetsetup, _bind_row cumulative1.740s, _show_node1.500s; graph snapshot0.077s. Environment/native GTK/application costs not fully separable, GPU results unknown and explicitly limited; no falsePASS/thresholdchange/rendereroverride. PERF-7 node-257 tracks actual optimization and unresolved frame-time acceptance.",
+      "note": null,
+      "fence": 1,
+      "tab_id": null,
+      "lease_id": null,
+      "lease_expires_at": null,
+      "layer": 0,
+      "priority": 0.10333557380729168,
+      "unmet_blockers": 0,
+      "created_at": "2026-11-08 09:52:55.143307+00:00",
+      "depends_on": [],
+      "parent": null,
+      "related": [],
+      "artifacts": [
+        {
+          "id": "art-258",
+          "kind": "commit",
+          "ref": "68db5c50ceec1735f6c3826db447a6fabbf50cf4"
+        },
+        {
+          "id": "art-259",
+          "kind": "test_report",
+          "ref": "artifacts/perf5/REPORT.md"
+        }
+      ]
+    },
+    {
+      "id": "node-250",
+      "key": "PERF-6",
+      "title": "Разобрать выброс времени ранжирования палитры в полном UI-наборе",
+      "objective": "QA-7 на f360ac23 с правкой только clipboard fixture: полный native Xvfb front/ui440тестов дал test_rank_2000_under_16ms elapsed=0.14453298899752554 при пороге0.016. В DES-4 полный baseline/текущий и focused этот тест проходил. Источник artifacts/qa7/full.xml/full.log. Это единичное наблюдение, не доказательство регрессии QA-7. Сравнить изолированный и полный прогоны и установить влияние scheduling/GC/нагрузки либо причину в rank_items.",
+      "status": "done",
+      "owner": "codex",
+      "paths": [
+        "tests/ui/test_b7_rank.py",
+        "src/aconsole/ui/viewmodels/logic/rank.py",
+        "artifacts/perf6"
+      ],
+      "acceptance": [
+        "Изолированные и полные измерения выполнены на фиксированных коммитах с описанием условий нагрузки.",
+        "Причина подтверждена либо невоспроизводимость и ограничения явно записаны без ложного PASS.",
+        "Порог16мс и существующие assertions не ослаблены; подтверждённое исправление проверено отдельным коммитом."
+      ],
+      "review_required": false,
+      "boundaries": null,
+      "output_format": null,
+      "evidence": "Commit 95b502f5. Original full rank 145.538 ms includes 141.562 ms generation-2 GC (~97%); isolated originals 4.132/4.319 ms. Reduced tracked transient allocations with ordered acyclic msgspec records and single-pass aliases. Candidate isolated 44 passed (3.153 ms), full 442 passed/1 failed (rank 3.163 ms, no GC inside). Existing 16 ms assertion unchanged. Differential 14,400 cases preserve item identity/order; Ruff and strict basedpyright pass. Full suite remaining failure is separately tracked PERF-5, median frame 84.5 ms vs 17.5 ms. REPORT.md explicitly limits memory/latency claims.",
+      "note": null,
+      "fence": 1,
+      "tab_id": null,
+      "lease_id": null,
+      "lease_expires_at": null,
+      "layer": 0,
+      "priority": 0.002655575470601852,
+      "unmet_blockers": 0,
+      "created_at": "2026-11-08 11:30:50.328989+00:00",
+      "depends_on": [],
+      "parent": null,
+      "related": [],
+      "artifacts": [
+        {
+          "id": "art-254",
+          "kind": "commit",
+          "ref": "95b502f5"
+        },
+        {
+          "id": "art-255",
+          "kind": "test_report",
+          "ref": "artifacts/perf6/REPORT.md"
+        }
+      ]
+    },
+    {
+      "id": "node-257",
+      "key": "PERF-7",
+      "title": "Ускорить прокрутку Git-истории и подтвердить время кадра",
+      "objective": "По диагностике PERF-5 уменьшить стоимость повторной привязки строк Git-истории: исходный 10000-row/4s тест падает и с llvmpipe GL (73.5ms), и с Cairo (30.0ms), порог17.5ms. Профиль указывает на _bind_row/_show_node (9147 binds,1.740/1.500s на check). Сделать отдельное проверяемое исправление UI; не выдавать диагностику или renderer override за достижение порога. Полные данные artifacts/perf5/REPORT.md.",
+      "status": "failed",
+      "owner": "codex",
+      "paths": [
+        "src/aconsole/ui/views/review",
+        "tests/gui/front/test_git_scale_ui.py",
+        "artifacts/perf7"
+      ],
+      "acceptance": [
+        "Измерения baseline/candidate на фиксированных commits, с записью renderer, host load, RSS, history size; отдельно и в полном UI-наборе.",
+        "Снижение стоимости row bind и отсутствие регрессии selection, badges, локализации, virtualization; screenshot review light/dark/narrow при изменении views.",
+        "Существующие assertions 17.5ms/150MiB/минимум30frames не ослаблены; результат FAIL остаётся FAIL. Выполнение perf acceptance подтверждено исходным тестом; если нужна аппаратная GPU-проверка, явно отметить её отсутствие и не объявлять производительность исправленной."
+      ],
+      "review_required": false,
+      "boundaries": "Не менять renderer глобально, не подменять workload или перф assertions. Диагностика PERF-5 завершена отдельно от этого исправления.",
+      "output_format": null,
+      "evidence": "531d6157; artifacts/perf7/NATIVE.md. Full UI 452 passed/1 failed, median49.9ms Xvfb. Real Intel GPU 33.4ms >17.5ms (1 passed/1 failed). Native stacks98, screenshot light/dark/narrow reviewed. GPU доступен: прежнее предположение об отсутствии GPU опровергнуто.",
+      "note": "По kb-127: обязательный исходный тест падает, поэтому failed. Малые оптимизации опубликованы отдельным commit; без ослабления assertion.",
+      "fence": 4,
+      "tab_id": null,
+      "lease_id": null,
+      "lease_expires_at": null,
+      "layer": 1,
+      "priority": 0.002448138068518519,
+      "unmet_blockers": 0,
+      "created_at": "2026-11-08 12:00:42.588196+00:00",
+      "depends_on": [
+        "PERF-5"
+      ],
+      "parent": null,
+      "related": [],
+      "artifacts": [
+        {
+          "id": "art-261",
+          "kind": "commit",
+          "ref": "211c11044d119c828ae90375b0ca6e3077aa10c5"
+        },
+        {
+          "id": "art-262",
+          "kind": "test_report",
+          "ref": "artifacts/perf7/REPORT.md"
+        },
+        {
+          "id": "art-265",
+          "kind": "commit",
+          "ref": "173408c2"
+        },
+        {
+          "id": "art-266",
+          "kind": "test_report",
+          "ref": "artifacts/perf7/DEFERRED_MAP.md"
+        },
+        {
+          "id": "art-268",
+          "kind": "test_report",
+          "ref": "artifacts/perf7/NATIVE.md"
+        },
+        {
+          "id": "art-269",
+          "kind": "commit",
+          "ref": "531d6157c9849bcaedb7fa2f3fc0caf022a57736"
+        }
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "src": "node-6",
+      "dst": "node-8",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-5",
+      "dst": "node-8",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-3",
+      "dst": "node-8",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-7",
+      "dst": "node-8",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-4",
+      "dst": "node-8",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-2",
+      "dst": "node-8",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-10",
+      "dst": "node-13",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-5",
+      "dst": "node-11",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-11",
+      "dst": "node-12",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-13",
+      "dst": "node-14",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-12",
+      "dst": "node-13",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-3",
+      "dst": "node-12",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-9",
+      "dst": "node-13",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-7",
+      "dst": "node-12",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-2",
+      "dst": "node-9",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-11",
+      "dst": "node-13",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-4",
+      "dst": "node-11",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-8",
+      "dst": "node-13",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-9",
+      "dst": "node-10",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-27",
+      "dst": "node-59",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-24",
+      "dst": "node-60",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-42",
+      "dst": "node-44",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-56",
+      "dst": "node-59",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-40",
+      "dst": "node-44",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-38",
+      "dst": "node-60",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-20",
+      "dst": "node-49",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-45",
+      "dst": "node-60",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-29",
+      "dst": "node-59",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-20",
+      "dst": "node-28",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-25",
+      "dst": "node-54",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-6",
+      "dst": "node-45",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-55",
+      "dst": "node-60",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-26",
+      "dst": "node-59",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-37",
+      "dst": "node-60",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-20",
+      "dst": "node-21",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-50",
+      "dst": "node-60",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-43",
+      "dst": "node-44",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-53",
+      "dst": "node-60",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-52",
+      "dst": "node-54",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-34",
+      "dst": "node-44",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-36",
+      "dst": "node-44",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-48",
+      "dst": "node-60",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-39",
+      "dst": "node-40",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-30",
+      "dst": "node-59",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-25",
+      "dst": "node-26",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-46",
+      "dst": "node-60",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-49",
+      "dst": "node-60",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-7",
+      "dst": "node-50",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-13",
+      "dst": "node-59",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-51",
+      "dst": "node-60",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-23",
+      "dst": "node-29",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-3",
+      "dst": "node-29",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-44",
+      "dst": "node-60",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-12",
+      "dst": "node-29",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-29",
+      "dst": "node-32",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-28",
+      "dst": "node-33",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-36",
+      "dst": "node-43",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-41",
+      "dst": "node-44",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-58",
+      "dst": "node-60",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-42",
+      "dst": "node-55",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-21",
+      "dst": "node-29",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-31",
+      "dst": "node-59",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-52",
+      "dst": "node-53",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-32",
+      "dst": "node-59",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-28",
+      "dst": "node-29",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-35",
+      "dst": "node-31",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-29",
+      "dst": "node-31",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-54",
+      "dst": "node-60",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-19",
+      "dst": "node-60",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-39",
+      "dst": "node-44",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-18",
+      "dst": "node-60",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-57",
+      "dst": "node-60",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-29",
+      "dst": "node-30",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-14",
+      "dst": "node-60",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-47",
+      "dst": "node-60",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-59",
+      "dst": "node-60",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-33",
+      "dst": "node-59",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-22",
+      "dst": "node-29",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-18",
+      "dst": "node-83",
+      "kind": "parent"
+    },
+    {
+      "src": "node-18",
+      "dst": "node-85",
+      "kind": "parent"
+    },
+    {
+      "src": "node-18",
+      "dst": "node-84",
+      "kind": "parent"
+    },
+    {
+      "src": "node-84",
+      "dst": "node-86",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-18",
+      "dst": "node-86",
+      "kind": "parent"
+    },
+    {
+      "src": "node-57",
+      "dst": "node-106",
+      "kind": "related"
+    },
+    {
+      "src": "node-84",
+      "dst": "node-105",
+      "kind": "related"
+    },
+    {
+      "src": "node-85",
+      "dst": "node-105",
+      "kind": "related"
+    },
+    {
+      "src": "node-18",
+      "dst": "node-105",
+      "kind": "related"
+    },
+    {
+      "src": "node-45",
+      "dst": "node-106",
+      "kind": "related"
+    },
+    {
+      "src": "node-75",
+      "dst": "node-105",
+      "kind": "related"
+    },
+    {
+      "src": "node-105",
+      "dst": "node-108",
+      "kind": "related"
+    },
+    {
+      "src": "node-18",
+      "dst": "node-108",
+      "kind": "related"
+    },
+    {
+      "src": "node-84",
+      "dst": "node-108",
+      "kind": "related"
+    },
+    {
+      "src": "node-85",
+      "dst": "node-113",
+      "kind": "related"
+    },
+    {
+      "src": "node-112",
+      "dst": "node-113",
+      "kind": "related"
+    },
+    {
+      "src": "node-18",
+      "dst": "node-113",
+      "kind": "related"
+    },
+    {
+      "src": "node-85",
+      "dst": "node-112",
+      "kind": "related"
+    },
+    {
+      "src": "node-18",
+      "dst": "node-112",
+      "kind": "related"
+    },
+    {
+      "src": "node-125",
+      "dst": "node-131",
+      "kind": "related"
+    },
+    {
+      "src": "node-48",
+      "dst": "node-131",
+      "kind": "related"
+    },
+    {
+      "src": "node-47",
+      "dst": "node-132",
+      "kind": "related"
+    },
+    {
+      "src": "node-125",
+      "dst": "node-132",
+      "kind": "related"
+    },
+    {
+      "src": "node-132",
+      "dst": "node-134",
+      "kind": "related"
+    },
+    {
+      "src": "node-70",
+      "dst": "node-140",
+      "kind": "related"
+    },
+    {
+      "src": "node-131",
+      "dst": "node-140",
+      "kind": "related"
+    },
+    {
+      "src": "node-132",
+      "dst": "node-140",
+      "kind": "related"
+    },
+    {
+      "src": "node-77",
+      "dst": "node-140",
+      "kind": "related"
+    },
+    {
+      "src": "node-21",
+      "dst": "node-195",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-10",
+      "dst": "node-195",
+      "kind": "blocks"
+    },
+    {
+      "src": "node-41",
+      "dst": "node-210",
+      "kind": "related"
+    },
+    {
+      "src": "node-9",
+      "dst": "node-220",
+      "kind": "related"
+    },
+    {
+      "src": "node-2",
+      "dst": "node-220",
+      "kind": "related"
+    },
+    {
+      "src": "node-75",
+      "dst": "node-220",
+      "kind": "related"
+    },
+    {
+      "src": "node-8",
+      "dst": "node-220",
+      "kind": "related"
+    },
+    {
+      "src": "node-51",
+      "dst": "node-230",
+      "kind": "related"
+    },
+    {
+      "src": "node-246",
+      "dst": "node-257",
+      "kind": "blocks"
+    }
+  ]
+}

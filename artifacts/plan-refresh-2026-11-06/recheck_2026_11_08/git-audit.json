@@ -1,0 +1,768 @@
+{
+  "base": "d40a66831660521ab856fb616070b0bfabf00482",
+  "commit_artifacts": [
+    {
+      "key": "SEC-1",
+      "ref": "c412748255a2a0b0abd6aa19217c1b9ce6b2ee1c",
+      "sha": "c412748255a2a0b0abd6aa19217c1b9ce6b2ee1c",
+      "reachable_from_base": true,
+      "subject": "fix(hostrun): run check, test, and gate inside devtools"
+    },
+    {
+      "key": "SEC-1",
+      "ref": "9498b18",
+      "sha": "9498b18feadf52097a590c654a46ceb0408f66b3",
+      "reachable_from_base": true,
+      "subject": "docs(hostrun): verify existing SEC-1 execution boundary"
+    },
+    {
+      "key": "SEC-2",
+      "ref": "e91a0a2576d903ad96ffb7ff177406d25dc7fc6b",
+      "sha": "e91a0a2576d903ad96ffb7ff177406d25dc7fc6b",
+      "reachable_from_base": true,
+      "subject": "fix(approvals): stop a one-time allow from covering the next identical call"
+    },
+    {
+      "key": "SEC-2",
+      "ref": "e91a0a2",
+      "sha": "e91a0a2576d903ad96ffb7ff177406d25dc7fc6b",
+      "reachable_from_base": true,
+      "subject": "fix(approvals): stop a one-time allow from covering the next identical call"
+    },
+    {
+      "key": "SYS-1",
+      "ref": "923a851cafec9bf2695a131f62e83d6cd6a29864",
+      "sha": "923a851cafec9bf2695a131f62e83d6cd6a29864",
+      "reachable_from_base": true,
+      "subject": "fix(tabs): refuse to launch an agent when the orphan scan fails"
+    },
+    {
+      "key": "SYS-3",
+      "ref": "f149e4cbc014fb04592d46e5aa05d6c6e3ccd5a1",
+      "sha": "f149e4cbc014fb04592d46e5aa05d6c6e3ccd5a1",
+      "reachable_from_base": true,
+      "subject": "fix(ui): wait for a core that holds the lock but has no socket yet"
+    },
+    {
+      "key": "MEM-1",
+      "ref": "a13a7f78354b062616fdf109e75c811b730254d7",
+      "sha": "a13a7f78354b062616fdf109e75c811b730254d7",
+      "reachable_from_base": true,
+      "subject": "fix(memory): drop finished rows so a long tab does not grow without bound"
+    },
+    {
+      "key": "QA-1",
+      "ref": "01c5cbde",
+      "sha": "01c5cbdecf82655b54b4a01913bd31100a863201",
+      "reachable_from_base": true,
+      "subject": "docs(qa1): record regression and hostrun security review"
+    },
+    {
+      "key": "SEC-3",
+      "ref": "1795dd4",
+      "sha": "1795dd492553ed425b9b3a01439f002f60b2daba",
+      "reachable_from_base": true,
+      "subject": "fix(hostrun): contain remaining checkout execution (SEC-3)"
+    },
+    {
+      "key": "SEC-4",
+      "ref": "d2ea3aa",
+      "sha": "d2ea3aadc75e878b65123ab9819e9ea4765daf1f",
+      "reachable_from_base": true,
+      "subject": "fix(hostrun): reject agent approval and untrusted gate success (SEC-4)"
+    },
+    {
+      "key": "SYS-4",
+      "ref": "ae6462597be29ae37e3c75f5f1a2d687db723801",
+      "sha": "ae6462597be29ae37e3c75f5f1a2d687db723801",
+      "reachable_from_base": true,
+      "subject": "fix(tabs): treat a failed orphan stop as still running"
+    },
+    {
+      "key": "SYS-4",
+      "ref": "ae64625",
+      "sha": "ae6462597be29ae37e3c75f5f1a2d687db723801",
+      "reachable_from_base": true,
+      "subject": "fix(tabs): treat a failed orphan stop as still running"
+    },
+    {
+      "key": "SEC-5",
+      "ref": "6edcf49",
+      "sha": "6edcf496d3172394ee8abe911a3b647bc0f73534",
+      "reachable_from_base": true,
+      "subject": "fix(core): isolate approval replay and cleanup by tab (SEC-5)"
+    },
+    {
+      "key": "QA-2",
+      "ref": "ea0aa57b",
+      "sha": "ea0aa57bf00f3ae34c83fc2bddf7b83a5282f6bd",
+      "reachable_from_base": true,
+      "subject": "docs(qa2): verify hostrun trust and approval isolation regressions"
+    },
+    {
+      "key": "AUD-1",
+      "ref": "86744c4",
+      "sha": "86744c4d318e1879f5cbdb8a628d83d122cb1162",
+      "reachable_from_base": true,
+      "subject": "AUD-1: record disposable Git and WorkSession data-preservation audit"
+    },
+    {
+      "key": "SEC-6",
+      "ref": "c13283feae760b914a146cc4f7c94d630b89fc00",
+      "sha": "c13283feae760b914a146cc4f7c94d630b89fc00",
+      "reachable_from_base": true,
+      "subject": "fix(ipc): accept UI and CLI only from the core mount namespace"
+    },
+    {
+      "key": "SEC-6",
+      "ref": "c13283f",
+      "sha": "c13283feae760b914a146cc4f7c94d630b89fc00",
+      "reachable_from_base": true,
+      "subject": "fix(ipc): accept UI and CLI only from the core mount namespace"
+    },
+    {
+      "key": "SEC-7",
+      "ref": "84d889c",
+      "sha": "84d889c2bfaeb78623b84cf5886022be1e708ebc",
+      "reachable_from_base": true,
+      "subject": "feat(setup): warn about exposed host data in containers (SEC-7)"
+    },
+    {
+      "key": "SEC-8",
+      "ref": "bf46375e8fb25f9ed3e9bc1891ba2d2041465a96",
+      "sha": "bf46375e8fb25f9ed3e9bc1891ba2d2041465a96",
+      "reachable_from_base": true,
+      "subject": "fix(git): stop repository config from running programs on the host"
+    },
+    {
+      "key": "SEC-8",
+      "ref": "583fab0",
+      "sha": "583fab0d1ca1fc849566e4384f2b4a9b9ebda4f2",
+      "reachable_from_base": true,
+      "subject": "SEC-8: enforce the explicit Git hook permission boundary"
+    },
+    {
+      "key": "SEC-8",
+      "ref": "6976824",
+      "sha": "69768241fdbe6050972ed11808e16d5ef64bf69d",
+      "reachable_from_base": true,
+      "subject": "docs(core): revalidate fixed Git config and hook boundaries (SEC-8)"
+    },
+    {
+      "key": "SEC-9",
+      "ref": "0b1f778306146a5feedb2e9b976fd28873361397",
+      "sha": "0b1f778306146a5feedb2e9b976fd28873361397",
+      "reachable_from_base": true,
+      "subject": "fix(risk): tag substitution, git writes, and nested agent bypasses"
+    },
+    {
+      "key": "SEC-9",
+      "ref": "ce759aa",
+      "sha": "ce759aaac86dda2202ce029164fc3692d1840b22",
+      "reachable_from_base": true,
+      "subject": "docs(core): revalidate risk classifier acceptance (SEC-9)"
+    },
+    {
+      "key": "SEC-10",
+      "ref": "d9ba7cc",
+      "sha": "d9ba7cc1674a5f2003408a113531eff9415579ac",
+      "reachable_from_base": true,
+      "subject": "SEC-10: keep launch credentials out of argv and harden agent inputs"
+    },
+    {
+      "key": "APR-1",
+      "ref": "294500e",
+      "sha": "294500e927f152ee59700d9b32ff195edc2b7d28",
+      "reachable_from_base": false,
+      "subject": "feat(ui): show an approval as a card over its tab's terminal"
+    },
+    {
+      "key": "APR-1",
+      "ref": "14666d8",
+      "sha": "14666d8481c6af360edd84b21ee9f17a3cc83f22",
+      "reachable_from_base": true,
+      "subject": "feat(ui): show an approval as a card over its tab's terminal"
+    },
+    {
+      "key": "APR-1",
+      "ref": "f5be4a2bf393c0813761ec55ae4b777a92c6323f",
+      "sha": "f5be4a2bf393c0813761ec55ae4b777a92c6323f",
+      "reachable_from_base": true,
+      "subject": "fix(a11y): expose approval details to Orca"
+    },
+    {
+      "key": "APR-3",
+      "ref": "daa8c4d5",
+      "sha": "daa8c4d556c77bdc74f188399840bcc939289acb",
+      "reachable_from_base": true,
+      "subject": "fix(ui): notify for approvals in inactive tabs (APR-3)"
+    },
+    {
+      "key": "HAR-1",
+      "ref": "0a6a207",
+      "sha": "0a6a207766f3c1583f27cdfa2b3962b41844b70c",
+      "reachable_from_base": true,
+      "subject": "fix(core): connect Claude tabs to the plan MCP server (HAR-1)"
+    },
+    {
+      "key": "HAR-1",
+      "ref": "951dc9f",
+      "sha": "951dc9fe666746017bce13ead6277cd07b080e7f",
+      "reachable_from_base": true,
+      "subject": "docs(core): verify Claude tab MCP launch configuration (HAR-1)"
+    },
+    {
+      "key": "HAR-2",
+      "ref": "bbbc86a",
+      "sha": "bbbc86a392e3e7de0e14e8ef1229bee7b2ea985f",
+      "reachable_from_base": true,
+      "subject": "HAR-2: verify Codex hook trust before enabling integrations"
+    },
+    {
+      "key": "HAR-3",
+      "ref": "c764b024",
+      "sha": "c764b0243f0ae50fa7e12ec65e33fdc06703eb62",
+      "reachable_from_base": true,
+      "subject": "fix(sessions): preserve forks and expose native resume"
+    },
+    {
+      "key": "HAR-5",
+      "ref": "5a96265e",
+      "sha": "5a96265e2a61ab738d7e7acf7f9fbf070a5eec7e",
+      "reachable_from_base": true,
+      "subject": "fix(sidecar): survive backpressure and terminal teardown"
+    },
+    {
+      "key": "UX-1",
+      "ref": "f15498a4",
+      "sha": "f15498a479bf6c778e0384efaa4b983b09b45d31",
+      "reachable_from_base": true,
+      "subject": "test(ui): verify shortcut capture and real clipboard copy (UX-1)"
+    },
+    {
+      "key": "UX-2",
+      "ref": "dae76440",
+      "sha": "dae7644078229a5e3237f1efd4e9a02bf0654f12",
+      "reachable_from_base": true,
+      "subject": "fix(ui): confirm closing active agents and pending requests (UX-2)"
+    },
+    {
+      "key": "UX-3",
+      "ref": "1436f06b",
+      "sha": "1436f06bfc7834d7633177e0904ec4f866d3944b",
+      "reachable_from_base": true,
+      "subject": "feat(core): serve command palette from live application state (UX-3)"
+    },
+    {
+      "key": "UX-4",
+      "ref": "1c1cb150",
+      "sha": "1c1cb150a30b9b56efffbcea55e91bab4241a8a3",
+      "reachable_from_base": true,
+      "subject": "fix(setup): clarify startup failures and isolation guidance"
+    },
+    {
+      "key": "UX-4",
+      "ref": "793852aa",
+      "sha": "793852aae7c77ef03a72bd920221c8837ecef9b9",
+      "reachable_from_base": true,
+      "subject": "docs(ux4): verify setup themes with native captures"
+    },
+    {
+      "key": "UX-5",
+      "ref": "944376a7",
+      "sha": "944376a7cea3a72e2373d470de6c1f7ff65d8731",
+      "reachable_from_base": true,
+      "subject": "feat(ui): complete new tab options and project removal"
+    },
+    {
+      "key": "UX-6",
+      "ref": "eb1fd523",
+      "sha": "eb1fd523788bc6cc4e9537dc0b89d98378090343",
+      "reachable_from_base": true,
+      "subject": "fix(settings): apply preferences and protect unsaved drafts"
+    },
+    {
+      "key": "CORE-1",
+      "ref": "95ee966",
+      "sha": "95ee96620ed7eedb3e9f3f9992095db189e19d86",
+      "reachable_from_base": true,
+      "subject": "CORE-1: restore the daemon and agent access after a core crash"
+    },
+    {
+      "key": "CORE-2",
+      "ref": "4fe1251",
+      "sha": "4fe12515ac9e35de700e9acf5ddb8b114db2e31d",
+      "reachable_from_base": true,
+      "subject": "fix(core): keep approvals responsive during checkpoint work (CORE-2)"
+    },
+    {
+      "key": "CORE-3",
+      "ref": "f590d26",
+      "sha": "f590d264a8b5822ddcd49bbf9224d9122f1f10d4",
+      "reachable_from_base": true,
+      "subject": "fix(core): keep queued writes and settings consistent (CORE-3)"
+    },
+    {
+      "key": "CORE-4",
+      "ref": "9f50947",
+      "sha": "9f509476985a42c7fc1e49631354607e6cb760ef",
+      "reachable_from_base": true,
+      "subject": "fix(core): isolate MCP leases and sessions and bound plan tools (CORE-4)"
+    },
+    {
+      "key": "CORE-5",
+      "ref": "34da233",
+      "sha": "34da233cb370718ff9d7f5c9788283870bd0546b",
+      "reachable_from_base": true,
+      "subject": "fix(core): recover IPC and ingest after transport failures (CORE-5)"
+    },
+    {
+      "key": "CORE-6",
+      "ref": "2d2e329",
+      "sha": "2d2e329c56a980969f332853ad5a477c9483c8b8",
+      "reachable_from_base": true,
+      "subject": "CORE-6: maintain expired refs, incremental usage logs and SQLite WAL"
+    },
+    {
+      "key": "FE-1",
+      "ref": "60275c63",
+      "sha": "60275c63fca52fc26420d347a7f4ba7dd36fa079",
+      "reachable_from_base": true,
+      "subject": "fix(ui): reject stale responses and serialize review actions"
+    },
+    {
+      "key": "DES-1",
+      "ref": "c696a05",
+      "sha": "c696a05f26d140f11d2a9d958519de1aa65c9e73",
+      "reachable_from_base": true,
+      "subject": "fix(ui): hold every color to WCAG AA, with a gate that reads the style sheet"
+    },
+    {
+      "key": "DES-1",
+      "ref": "fd865c88",
+      "sha": "fd865c881e4f0b99e7fb27c6b3deac5d2f24668b",
+      "reachable_from_base": true,
+      "subject": "test(ui): verify default contrast gate and live theme ratios (DES-1)"
+    },
+    {
+      "key": "DES-2",
+      "ref": "249eb00f",
+      "sha": "249eb00ff6fa08e867d73436371df97ad0b03d71",
+      "reachable_from_base": true,
+      "subject": "feat(ui): distinguish statuses and add keyboard tab reordering"
+    },
+    {
+      "key": "DES-4",
+      "ref": "f360ac23",
+      "sha": "f360ac234e751fb83cbfecc6fc67d6a7ae5ecefa",
+      "reachable_from_base": true,
+      "subject": "feat(i18n): unify gettext catalogs and localize core presentation codes"
+    },
+    {
+      "key": "QA-4",
+      "ref": "2e4c5aa",
+      "sha": "2e4c5aa4cc08fdce88b5c8aec274bf81c569194f",
+      "reachable_from_base": true,
+      "subject": "test(ci): consolidate contract goldens and isolate the test home"
+    },
+    {
+      "key": "QA-5",
+      "ref": "729ba04",
+      "sha": "729ba045930ab5642dce65adee4ac0de8b35cb59",
+      "reachable_from_base": true,
+      "subject": "chore(repo): ignore per-worktree runtime state"
+    },
+    {
+      "key": "UX-7",
+      "ref": "f91a332b",
+      "sha": "f91a332bd162e02e81a52f3a314df0441759fe57",
+      "reachable_from_base": true,
+      "subject": "fix(plan): return reviewed work atomically and track UI decisions"
+    },
+    {
+      "key": "SEC-11",
+      "ref": "273fbdc721dfb04fb6f32c2f47d82b0b9c7fb99c",
+      "sha": "273fbdc721dfb04fb6f32c2f47d82b0b9c7fb99c",
+      "reachable_from_base": true,
+      "subject": "fix(git): keep repository config from running programs on the host"
+    },
+    {
+      "key": "SEC-11",
+      "ref": "b454648",
+      "sha": "b4546487c20dbc2856fa33c4a710f2368cf612d9",
+      "reachable_from_base": true,
+      "subject": "fix(git): harden execution environment and retain SEC-11 race evidence"
+    },
+    {
+      "key": "SEC-11",
+      "ref": "d40a66831660521ab856fb616070b0bfabf00482",
+      "sha": "d40a66831660521ab856fb616070b0bfabf00482",
+      "reachable_from_base": true,
+      "subject": "fix(git): avoid textconv helpers in history patch reads"
+    },
+    {
+      "key": "PLAN-1",
+      "ref": "44e7703",
+      "sha": "44e770398fa2dabb82c9aa32a0b7056f1db04843",
+      "reachable_from_base": true,
+      "subject": "fix(plans): exclude reserved paths from ready nodes"
+    },
+    {
+      "key": "PLAN-1",
+      "ref": "68bf72ce",
+      "sha": "68bf72ce3e7264ea9a1ff4729f7d4f85d2f11fbe",
+      "reachable_from_base": true,
+      "subject": "test(plans): verify public ready respects reserved paths (PLAN-1)"
+    },
+    {
+      "key": "PERF-1",
+      "ref": "0263d4b",
+      "sha": "0263d4b1414056add0b266e93320f91661b2c34d",
+      "reachable_from_base": true,
+      "subject": "perf(sidecar): batch complete OSC sequences in ordinary output"
+    },
+    {
+      "key": "PERF-1",
+      "ref": "0263d4b1414056add0b266e93320f91661b2c34d",
+      "sha": "0263d4b1414056add0b266e93320f91661b2c34d",
+      "reachable_from_base": true,
+      "subject": "perf(sidecar): batch complete OSC sequences in ordinary output"
+    },
+    {
+      "key": "PERF-1",
+      "ref": "ddb1024f",
+      "sha": "ddb1024fd31711aaea970461e03af235d89238c2",
+      "reachable_from_base": true,
+      "subject": "docs(perf1): verify existing framer optimization and original limit"
+    },
+    {
+      "key": "AUD-3",
+      "ref": "7448b18",
+      "sha": "7448b18505fc0d16bc2b9017b789f55e73377573",
+      "reachable_from_base": true,
+      "subject": "docs(core): record disposable Git data-preservation audit (AUD-3)"
+    },
+    {
+      "key": "AUD-3",
+      "ref": "503e3de771d903dc08915ba09e933bbc7eb0f214",
+      "sha": "503e3de771d903dc08915ba09e933bbc7eb0f214",
+      "reachable_from_base": true,
+      "subject": "docs(audit): verify Git data preservation on current main"
+    },
+    {
+      "key": "REL-1",
+      "ref": "f410c5e",
+      "sha": "f410c5ec54fd9400445ab2cc401770005e887a3f",
+      "reachable_from_base": true,
+      "subject": "fix(core): keep restore deletions inside the worktree (REL-1)"
+    },
+    {
+      "key": "REL-1",
+      "ref": "22e5c42",
+      "sha": "22e5c4292cb6f6f75238594a15d61bc4fd00278a",
+      "reachable_from_base": true,
+      "subject": "docs(core): verify restore deletion boundaries (REL-1)"
+    },
+    {
+      "key": "REL-2",
+      "ref": "3d18f08",
+      "sha": "3d18f08a957c1b92039c1815534b950ad9ea9e53",
+      "reachable_from_base": true,
+      "subject": "fix(core): retain ignored runtime files until discard (REL-2)"
+    },
+    {
+      "key": "REL-2",
+      "ref": "3e9cb23",
+      "sha": "3e9cb23748c64c1247b65001d821a8779baaf59e",
+      "reachable_from_base": true,
+      "subject": "docs(core): verify ignored runtime data preservation (REL-2)"
+    },
+    {
+      "key": "REL-3",
+      "ref": "2f2ea06",
+      "sha": "2f2ea0649ae882c00d274aaacf59408346d071e8",
+      "reachable_from_base": true,
+      "subject": "test(core): verify dangling symlink checkpoint recovery (REL-3)"
+    },
+    {
+      "key": "GIT-1",
+      "ref": "4c9b15a",
+      "sha": "4c9b15a06cba4edd57402df318c78cbc6fa0e6e7",
+      "reachable_from_base": true,
+      "subject": "GIT-1: pin WorkSession integration to the recorded result commit"
+    },
+    {
+      "key": "GIT-1",
+      "ref": "2297406",
+      "sha": "2297406aada129f635d5926810724f0a8c3d7789",
+      "reachable_from_base": true,
+      "subject": "docs(core): verify immutable WorkSession result integration (GIT-1)"
+    },
+    {
+      "key": "REL-4",
+      "ref": "b73d4b2",
+      "sha": "b73d4b2a58317b1cffa6e5fd1cc6256fc781093a",
+      "reachable_from_base": true,
+      "subject": "REL-4: disconnect cleanly when the core rejects UI compatibility"
+    },
+    {
+      "key": "REL-4",
+      "ref": "09d93ea",
+      "sha": "09d93ea781c613425cb1c0c699af22f7bd4b195d",
+      "reachable_from_base": true,
+      "subject": "docs(core): verify safe legacy core incompatibility refusal (REL-4)"
+    },
+    {
+      "key": "GIT-2",
+      "ref": "0b7717f",
+      "sha": "0b7717f48e8cb6972d218873f26724307f39e46d",
+      "reachable_from_base": true,
+      "subject": "GIT-2: restore WorkSession files from the confirmed commit OID"
+    },
+    {
+      "key": "GIT-2",
+      "ref": "9f7fcff",
+      "sha": "9f7fcffac88239d2cfb59e917a07af2908d46e90",
+      "reachable_from_base": true,
+      "subject": "docs(core): verify WorkSession restore uses recorded OID (GIT-2)"
+    },
+    {
+      "key": "GIT-3",
+      "ref": "2f3aa87",
+      "sha": "2f3aa87a1146e249fb205afe57f7f1f85107da45",
+      "reachable_from_base": true,
+      "subject": "GIT-3: expose dirty submodules in cleanup safety checks"
+    },
+    {
+      "key": "GIT-3",
+      "ref": "5dad116",
+      "sha": "5dad116f402b8fb22540bc0ccbd00ffc846d90fc",
+      "reachable_from_base": true,
+      "subject": "docs(core): verify dirty submodules cannot hide from cleanup (GIT-3)"
+    },
+    {
+      "key": "GIT-4",
+      "ref": "a286858",
+      "sha": "a286858141e31f90d12e49055a26386f023e4a35",
+      "reachable_from_base": true,
+      "subject": "GIT-4: preserve late writes when discarding ignored worktree files"
+    },
+    {
+      "key": "GIT-4",
+      "ref": "ea3bbe9",
+      "sha": "ea3bbe963779854761f67ce73455d8dd83c26309",
+      "reachable_from_base": true,
+      "subject": "docs(core): verify ignored discard preserves late writes (GIT-4)"
+    },
+    {
+      "key": "PLAN-2",
+      "ref": "23a79ef",
+      "sha": "23a79efa64153f92010d12c2ee833d5dc6deb77a",
+      "reachable_from_base": true,
+      "subject": "PLAN-2: show every plan node and publish the reconciled graph"
+    },
+    {
+      "key": "PERF-2",
+      "ref": "411ef4f2be115fe99f8ab618c7ca13aa47301f9f",
+      "sha": "411ef4f2be115fe99f8ab618c7ca13aa47301f9f",
+      "reachable_from_base": true,
+      "subject": "docs(perf2): verify writer tick in isolated and full core runs"
+    },
+    {
+      "key": "CORE-7",
+      "ref": "7152c72",
+      "sha": "7152c7250a202ba329e828f6ff5b2985894fe807",
+      "reachable_from_base": true,
+      "subject": "fix(core): allow MCP retry without a released lease fence (CORE-7)"
+    },
+    {
+      "key": "PERF-3",
+      "ref": "4a487fc",
+      "sha": "4a487fc37b70f36ee36a4775c57c4f0ad795325d",
+      "reachable_from_base": true,
+      "subject": "test(core): scope writer fault injection to shutdown (PERF-3)"
+    },
+    {
+      "key": "PERF-4",
+      "ref": "e3a9497",
+      "sha": "e3a949702c957610b5d6bc4ad8231ae584d2fc8f",
+      "reachable_from_base": true,
+      "subject": "docs(core): verify recovery shutdown injection scope (PERF-4)"
+    },
+    {
+      "key": "PLAN-3",
+      "ref": "b4183fc",
+      "sha": "b4183fcce13dafda9721eb281f362149093271e5",
+      "reachable_from_base": true,
+      "subject": "fix(core): finish checked plan work without manual review (PLAN-3)"
+    },
+    {
+      "key": "CORE-8",
+      "ref": "5f2f276d",
+      "sha": "5f2f276d4e7776ec918be4eb7264b3c9c3292b4a",
+      "reachable_from_base": true,
+      "subject": "fix(vault): serialize concurrent echo journal access (CORE-8)"
+    },
+    {
+      "key": "SEC-12",
+      "ref": "37728b85",
+      "sha": "37728b8524709ee057fd02caf070724d7d380dfd",
+      "reachable_from_base": true,
+      "subject": "fix(hostrun): confine repository Git commands to devtools"
+    },
+    {
+      "key": "FE-2",
+      "ref": "2222bb66",
+      "sha": "2222bb669d7aedb94bbb2a86ab7129c097c17dd8",
+      "reachable_from_base": true,
+      "subject": "docs(fe2): record unavailable original finding context"
+    },
+    {
+      "key": "QA-7",
+      "ref": "94a76538",
+      "sha": "94a76538f9aaa5a990fe9a7e55ac98ed5821c489",
+      "reachable_from_base": true,
+      "subject": "test(clipboard): wait for VTE to parse bracketed paste mode"
+    },
+    {
+      "key": "PERF-5",
+      "ref": "68db5c50ceec1735f6c3826db447a6fabbf50cf4",
+      "sha": "68db5c50ceec1735f6c3826db447a6fabbf50cf4",
+      "reachable_from_base": true,
+      "subject": "test(perf): diagnose Git history frame times in native Xvfb"
+    },
+    {
+      "key": "PERF-6",
+      "ref": "95b502f5",
+      "sha": "95b502f583dc796a20f771ea6ce8f5157e26c922",
+      "reachable_from_base": true,
+      "subject": "perf(palette): avoid cyclic GC pressure during ranking"
+    },
+    {
+      "key": "PERF-7",
+      "ref": "211c11044d119c828ae90375b0ca6e3077aa10c5",
+      "sha": "211c11044d119c828ae90375b0ca6e3077aa10c5",
+      "reachable_from_base": true,
+      "subject": "perf(git): defer tooltip queries for recycled history rows"
+    },
+    {
+      "key": "PERF-7",
+      "ref": "173408c2",
+      "sha": "173408c2cf5e4077ea55f9e6169306f43ba7c6d6",
+      "reachable_from_base": true,
+      "subject": "perf(git): defer content for unmapped history rows"
+    },
+    {
+      "key": "PERF-7",
+      "ref": "531d6157c9849bcaedb7fa2f3fc0caf022a57736",
+      "sha": "531d6157c9849bcaedb7fa2f3fc0caf022a57736",
+      "reachable_from_base": true,
+      "subject": "perf(git): batch graph pages and avoid redundant redraws"
+    }
+  ],
+  "done_nodes_without_reachable_commit_artifact": [
+    "SYS-2",
+    "APR-4",
+    "APR-9",
+    "HAR-4"
+  ],
+  "trailer_counts": {
+    "APR-1": 2,
+    "APR-3": 2,
+    "APR-4": 1,
+    "APR-9": 1,
+    "AUD-1": 1,
+    "AUD-3": 2,
+    "CORE-3": 1,
+    "CORE-6": 1,
+    "CORE-7": 1,
+    "CORE-8": 1,
+    "DES-1": 2,
+    "DES-2": 1,
+    "DES-4": 1,
+    "FE-1": 1,
+    "FE-2": 1,
+    "GIT-1": 1,
+    "GIT-2": 1,
+    "GIT-3": 1,
+    "GIT-4": 1,
+    "HAR-1": 1,
+    "HAR-2": 1,
+    "HAR-3": 1,
+    "HAR-4": 1,
+    "HAR-5": 1,
+    "MEM-1": 1,
+    "PERF-1": 1,
+    "PERF-2": 2,
+    "PERF-3": 1,
+    "PERF-4": 1,
+    "PERF-5": 1,
+    "PERF-6": 1,
+    "PERF-7": 3,
+    "PLAN-1": 2,
+    "PLAN-2": 1,
+    "PLAN-3": 1,
+    "QA-1": 1,
+    "QA-2": 1,
+    "QA-4": 1,
+    "QA-5": 1,
+    "QA-7": 1,
+    "REL-1": 1,
+    "REL-2": 1,
+    "REL-3": 1,
+    "REL-4": 1,
+    "SEC-1": 2,
+    "SEC-10": 1,
+    "SEC-11": 2,
+    "SEC-12": 1,
+    "SEC-2": 1,
+    "SEC-3": 1,
+    "SEC-4": 1,
+    "SEC-5": 1,
+    "SEC-6": 1,
+    "SEC-7": 1,
+    "SEC-8": 1,
+    "SEC-9": 1,
+    "SYS-1": 1,
+    "SYS-2": 1,
+    "SYS-3": 1,
+    "SYS-4": 1,
+    "UX-1": 2,
+    "UX-2": 1,
+    "UX-3": 1,
+    "UX-4": 1,
+    "UX-5": 1,
+    "UX-6": 1,
+    "UX-7": 3
+  },
+  "multiple_trailers": [],
+  "discovered_trailer_refs": {
+    "SYS-2": [
+      "25fbe0231633064adc546ce1bb1a24dd78421e66"
+    ],
+    "APR-4": [
+      "f4d31352c3fd348af6756ccde77c406f50364396"
+    ],
+    "APR-9": [
+      "0885aff668cefb645111cc0753f8a6af4690ef73"
+    ],
+    "HAR-4": [
+      "c549a11535db52404f79bd5224968f193769474b"
+    ]
+  },
+  "active_leases": [
+    {
+      "key": "PLAN-2",
+      "paths": [
+        "artifacts/plan-refresh-2026-11-06"
+      ],
+      "expires_at": "2026-11-08 18:02:42.062287+00:00",
+      "fence": 3
+    }
+  ],
+  "edge_kinds": {
+    "blocks": 82,
+    "parent": 4,
+    "related": 29
+  }
+}

@@ -1,0 +1,20 @@
+[
+  {
+    "key": "QA-3",
+    "before": "blocked",
+    "after": "pending",
+    "reason": "PLAN-2: прежний blocker устарел. UX-3done1436f06b и HAR-3donec764b024 содержат реальные маршруты palette/session; их отчёты и полныйcore1517PASS на411ef4f2 доступны. SEC-8done, активного перекрытия tests/core нет. QA-3 возвращён в pending для собственной сквозной/CI приёмки; done не объявлен."
+  },
+  {
+    "key": "QA-4",
+    "before": "blocked",
+    "after": "pending",
+    "reason": "PLAN-2: прежние path locks SEC-8 сняты (done); новый CI действительно запущен,результат получен:run42505812669 наd40a6683 failure(check/interface),core/coverage/deb skipped. QA-4 возвращён в pending для воспроизведения/исправления этого конкретного CI; не done. Исторический framer block отдельно закрыт PERF-1, последующий tests/core1517PASS относится411ef4f2."
+  },
+  {
+    "key": "QA-5",
+    "before": "blocked",
+    "after": "pending",
+    "reason": "PLAN-2: пользователь2026-11-08 явно подтвердил существующую MIT License ответом«оставляем»на вопросоMIT. LICENSE ужеотслеживается,повторнойзаменыфайланет. Прежниепутиtestsосвобождены. QA-5pendingдляпроверкиличныхпутей/гигиены/установки;doneнезаявлен."
+  }
+]

@@ -1,0 +1,42 @@
+"""Audit declared artifacts against reachable Git history; do not rewrite anything."""
+import json,re,subprocess
+from collections import Counter
+from pathlib import Path
+folder=Path(__file__).resolve().parent
+root=folder.parents[2]
+snapshot=json.loads((folder/'snapshot.json').read_text())
+nodes=snapshot['nodes'];byid={n['id']:n for n in nodes}
+run=lambda *args:subprocess.run(['git',*args],cwd=root,text=True,capture_output=True)
+refs=[]
+for node in nodes:
+    for artifact in node['artifacts']:
+        if artifact['kind']!='commit':continue
+        raw=artifact['ref'];matches=re.findall(r'(?<![a-fA-F0-9])[a-fA-F0-9]{7,40}(?![a-fA-F0-9])',raw)
+        resolved=run('rev-parse','--verify',matches[0]+'^{commit}') if len(matches)==1 else None
+        sha=resolved.stdout.strip() if resolved and resolved.returncode==0 else None
+        row={'key':node['key'],'ref':raw,'sha':sha,'reachable_from_base':False}
+        if sha:
+            row['reachable_from_base']=run('merge-base','--is-ancestor',sha,'HEAD').returncode==0
+            row['subject']=run('show','-s','--format=%s',sha).stdout.strip()
+        refs.append(row)
+log=run('-c','log.showSignature=false','log','--format=%H%x00%B%x00','HEAD');assert log.returncode==0
+pieces=log.stdout.split('\0');trailers=[]
+for i in range(0,len(pieces)-1,2):
+    sha,body=pieces[i].strip(),pieces[i+1]
+    keys=re.findall(r'^AConsole-Node:\s*(.+)$',body,re.MULTILINE)
+    if keys:trailers.append({'sha':sha,'trailers':keys})
+counts=Counter(key for row in trailers for key in row['trailers'])
+missing=[n['key'] for n in nodes if n['status']=='done' and not any(r['key']==n['key'] and r['reachable_from_base'] for r in refs)]
+leases=[{'key':n['key'],'paths':n['paths'],'expires_at':n['lease_expires_at'],'fence':n['fence']} for n in nodes if n['lease_expires_at'] and n['status'] in ['in_progress','verifying']]
+base=run('rev-parse','HEAD').stdout.strip()
+result={'base':base,'commit_artifacts':refs,'done_nodes_without_reachable_commit_artifact':missing,
+        'trailer_counts':dict(sorted(counts.items())),'multiple_trailers':[r for r in trailers if len(r['trailers'])>1],
+        'discovered_trailer_refs':{key:[row['sha'] for row in trailers if key in row['trailers']] for key in missing},
+        'active_leases':leases,'edge_kinds':dict(Counter(e['kind'] for e in snapshot['edges']))}
+(folder/'git-audit.json').write_text(json.dumps(result,ensure_ascii=False,indent=2)+'\n')
+for key in ['SEC-10','CORE-6','REL-4']:
+    rows=[r for r in refs if r['key']==key];assert rows and all(r['reachable_from_base'] for r in rows)
+    print(key,[(r['ref'],r['subject']) for r in rows])
+print('commit artifacts',len(refs),'resolved/reachable',sum(r['reachable_from_base'] for r in refs),'done without commit artifact',missing)
+print('active leases',leases)
+print('edge kinds',result['edge_kinds'])
