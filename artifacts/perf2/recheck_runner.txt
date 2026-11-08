@@ -1,0 +1,26 @@
+"""Serial fixed-source tests with bounded duration and original assertions."""
+import argparse,hashlib,json,os,subprocess,sys,time
+from pathlib import Path
+root=Path(__file__).resolve().parents[2]
+out=root/'artifacts/perf2'
+parser=argparse.ArgumentParser();parser.add_argument('--full',action='store_true');options=parser.parse_args()
+base=subprocess.check_output(['git','rev-parse','HEAD'],cwd=root,text=True).strip()
+source=['src/aconsole/core/infrastructure/persistence/writer.py','tests/core/test_persistence_b.py']
+for name in source:assert (root/name).read_bytes()==subprocess.check_output(['git','show','HEAD:'+name],cwd=root)
+labels=['full'] if options.full else ['isolated1','isolated2','isolated3']
+results=[]
+for label in labels:
+    report=out/('recheck-'+label)
+    metrics=report.with_suffix('.jsonl');metrics.write_text('')
+    env=dict(os.environ,PYTHONPATH=str(root/'src')+':'+str(out),PYTHON_GIL='0',ACONSOLE_PERF2_LOG=str(metrics))
+    command=[sys.executable,'-m','pytest','-o','addopts=','-q','-p','recheck_measure','--junitxml='+str(report.with_suffix('.xml'))]
+    command+=['tests/core'] if options.full else ['tests/core/test_persistence_b.py::test_persistence_b_tick']
+    started=time.monotonic()
+    with report.with_suffix('.log').open('w') as stream:
+        try:done=subprocess.run(command,cwd=root,env=env,stdout=stream,stderr=subprocess.STDOUT,timeout=480)
+        except subprocess.TimeoutExpired:
+            results.append({'label':label,'argv':command,'timeout_s':480,'exit_code':None});break
+    results.append({'label':label,'argv':command,'exit_code':done.returncode,'seconds':time.monotonic()-started})
+    print(label,done.returncode,report.with_suffix('.log').read_text()[-1000:],flush=True)
+(out/('recheck-full-run.json' if options.full else 'recheck-isolated-run.json')).write_text(json.dumps({'base':base,'cwd':str(root),'python':sys.version,'source_hashes':{name:hashlib.sha256((root/name).read_bytes()).hexdigest() for name in source},'results':results},indent=2)+'\n')
+raise SystemExit(0 if len(results)==len(labels) and all(r['exit_code']==0 for r in results) else 1)

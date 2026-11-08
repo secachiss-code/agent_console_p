@@ -1,0 +1,1 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="0" skipped="0" tests="1" time="4.642" timestamp="2026-11-08T20:15:51.324769+03:00" hostname="somovasnbook14"><testcase classname="tests.core.test_persistence_b" name="test_persistence_b_tick" time="4.117" /></testsuite></testsuites>

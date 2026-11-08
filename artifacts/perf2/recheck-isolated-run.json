@@ -1,0 +1,62 @@
+{
+  "base": "f5be4a2bf393c0813761ec55ae4b777a92c6323f",
+  "cwd": "/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca",
+  "python": "3.15.1 free-threading build (main, Oct 21 2026, 17:49:09) [Clang 23.1.3 ]",
+  "source_hashes": {
+    "src/aconsole/core/infrastructure/persistence/writer.py": "87f24b011d7e48794a2586d44a7585f8755f29c00afdc0e58ecae9d24a53858a",
+    "tests/core/test_persistence_b.py": "9c64f23dfc99d41fb4ebf5029dc709bde2c4257106c6782a0076d785513c5333"
+  },
+  "results": [
+    {
+      "label": "isolated1",
+      "argv": [
+        "/home/sas/Projects/sp_aconsole_prototype/.venv-core/bin/python",
+        "-m",
+        "pytest",
+        "-o",
+        "addopts=",
+        "-q",
+        "-p",
+        "recheck_measure",
+        "--junitxml=/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/artifacts/perf2/recheck-isolated1.xml",
+        "tests/core/test_persistence_b.py::test_persistence_b_tick"
+      ],
+      "exit_code": 0,
+      "seconds": 5.958340401004534
+    },
+    {
+      "label": "isolated2",
+      "argv": [
+        "/home/sas/Projects/sp_aconsole_prototype/.venv-core/bin/python",
+        "-m",
+        "pytest",
+        "-o",
+        "addopts=",
+        "-q",
+        "-p",
+        "recheck_measure",
+        "--junitxml=/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/artifacts/perf2/recheck-isolated2.xml",
+        "tests/core/test_persistence_b.py::test_persistence_b_tick"
+      ],
+      "exit_code": 0,
+      "seconds": 5.846041006996529
+    },
+    {
+      "label": "isolated3",
+      "argv": [
+        "/home/sas/Projects/sp_aconsole_prototype/.venv-core/bin/python",
+        "-m",
+        "pytest",
+        "-o",
+        "addopts=",
+        "-q",
+        "-p",
+        "recheck_measure",
+        "--junitxml=/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/artifacts/perf2/recheck-isolated3.xml",
+        "tests/core/test_persistence_b.py::test_persistence_b_tick"
+      ],
+      "exit_code": 0,
+      "seconds": 5.897426708004787
+    }
+  ]
+}
