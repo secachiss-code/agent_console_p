@@ -1,0 +1,87 @@
+{
+  "tracked_current": {
+    "argv": [
+      "git",
+      "grep",
+      "-n",
+      "-i",
+      "-E",
+      "(^|[^[:alnum:]])FE[-_. ]*0?(10|16|17)([^[:alnum:]]|$)"
+    ],
+    "exit": 0,
+    "stdout": "artifacts/fe1/REPORT.md:40:Ссылки FE-10, FE-16, FE-17 в исходном objective не содержат описаний; ни\nartifacts/plan3/live-snapshot.json:929:      \"objective\": \"Исключение подписчика store.apply запускает переподключение (FE-01), load_more дописывает старую область (FE-03), git-операции не сериализованы (FE-04), load_checkpoints без поколения (FE-05), граф пересоздаётся на каждый heartbeat (FE-06), InjectToTerminal для незапущенной вкладки теряется при ok=True (FE-02). Сначала воспроизвести. Также FE-10, FE-16, FE-17.\",\n",
+    "stderr": ""
+  },
+  "reachable_history": {
+    "argv": [
+      "git",
+      "log",
+      "--all",
+      "--regexp-ignore-case",
+      "-G",
+      "(^|[^[:alnum:]])FE[-_. ]*0?(10|16|17)([^[:alnum:]]|$)",
+      "--format=%H %s",
+      "--name-only"
+    ],
+    "exit": 0,
+    "stdout": "60275c63fca52fc26420d347a7f4ba7dd36fa079 fix(ui): reject stale responses and serialize review actions\n\nartifacts/fe1/REPORT.md\nb4183fcce13dafda9721eb281f362149093271e5 fix(core): finish checked plan work without manual review (PLAN-3)\n\nartifacts/plan3/live-snapshot.json\n",
+    "stderr": ""
+  },
+  "commit_messages": {
+    "argv": [
+      "git",
+      "log",
+      "--all",
+      "--extended-regexp",
+      "--regexp-ignore-case",
+      "--grep",
+      "(^|[^[:alnum:]])FE[-_. ]*0?(10|16|17)([^[:alnum:]]|$)",
+      "--format=%H %s"
+    ],
+    "exit": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  "shared_notes": {
+    "argv": [
+      "rg",
+      "-n",
+      "-i",
+      "--hidden",
+      "--no-ignore",
+      "FE[-_. #–‑]*0?(10|16|17)\\b",
+      "/home/sas/Projects/sp_aconsole_prototype/docs",
+      "/home/sas/Projects/sp_aconsole_prototype/.grok",
+      "-g",
+      "!**/.git/**"
+    ],
+    "exit": 1,
+    "stdout": "",
+    "stderr": ""
+  },
+  "source_sha256": {
+    "artifacts/fe1/REPORT.md": "50609af01f81cac4d6f71c9077241944a415618c80bbf643351c74a7acff1bb4",
+    "artifacts/plan3/live-snapshot.json": "d66c83217fc52acef65d424a12449285726241c75f8e569a2a0e90ba1554e91e",
+    "artifacts/ui-audit-2026-11-05/REPORT.md": "b42848b935a994fb97487d53c7803edaa8453c0826d999f54fcdfda1bfe45e93"
+  },
+  "base_commit": "173408c2cf5e4077ea55f9e6169306f43ba7c6d6",
+  "refs": [
+    "ac/claude-a17486fc9cb49e8c 4bd791b2144b2e4fef52854e165345dc063b1392",
+    "ac/codex-038657e1539f15ad 72612ff339c8be1dd0e78974f6a96610be478673",
+    "ac/codex-ff3f69f4401638ca 173408c2cf5e4077ea55f9e6169306f43ba7c6d6",
+    "ac/cursor-7363bef03e00720f bf46375e8fb25f9ed3e9bc1891ba2d2041465a96",
+    "ac/s-codex-94e0f4fd8c76a7fd 5f74c3cb64ec420fbc02647c6317f04fa1627f43",
+    "ac/s-cursor-310a36d4e392ef6c 23a79efa64153f92010d12c2ee833d5dc6deb77a",
+    "backup/dev-core-pre-initial 3f8a89e391e0b4e4036f28ca964df7d30c0d049c",
+    "backup/dev-front-pre-initial 35398b2bde0c5e5456cab5da5a5f86bc16081160",
+    "backup/pre-initial-20261027 dc8973685159b236126aee23d4d5683f7500f642",
+    "dev/core da9c3b1b9dd8b07a165012580a2a8e4bd81b818e",
+    "dev/front da9c3b1b9dd8b07a165012580a2a8e4bd81b818e",
+    "docs/0.1.1-project-docs acab39cb2e8e10b2032c13cdf4c450a3c4cc33de",
+    "main 173408c2cf5e4077ea55f9e6169306f43ba7c6d6",
+    "origin/ac/codex-144692d5df12db43 66caff56968ae9fae6ad55ffae248f6ac41ef57b",
+    "origin/ac/codex-ff3f69f4401638ca f91a332bd162e02e81a52f3a314df0441759fe57",
+    "origin/docs/0.1.1-project-docs acab39cb2e8e10b2032c13cdf4c450a3c4cc33de",
+    "origin/main 173408c2cf5e4077ea55f9e6169306f43ba7c6d6"
+  ]
+}
