@@ -73,6 +73,16 @@ class _RowWidget(Gtk.Box):
         self.cell: GraphCell = GraphCell()
         self.append(self.cell)
         self.title: Gtk.Label = Gtk.Label(xalign=0, hexpand=True, ellipsize=Pango.EllipsizeMode.END, width_chars=18)
+        # Setting tooltip-text on every recycled row triggers a display-wide tooltip
+        # query. Keep the text here and answer only when GTK actually asks for it.
+        self._tooltip_text: str = ""
+        self._tooltip_hovered: bool = False
+        self.title.set_has_tooltip(True)
+        _ = self.title.connect("query-tooltip", self._query_tooltip)
+        motion = Gtk.EventControllerMotion()
+        _ = motion.connect("enter", self._tooltip_enter)
+        _ = motion.connect("leave", self._tooltip_leave)
+        self.title.add_controller(motion)
         self.append(self.title)
         self.pills: Gtk.Box = Gtk.Box(spacing=4)
         self.append(self.pills)
@@ -80,6 +90,28 @@ class _RowWidget(Gtk.Box):
         self.when.add_css_class("dim-label")
         self.when.add_css_class("ac-git-when")
         self.append(self.when)
+
+    def _query_tooltip(
+        self, _widget: Gtk.Widget, _x: int, _y: int, _keyboard: bool, tooltip: Gtk.Tooltip,  # noqa: FBT001 -- GTK signal signature
+    ) -> bool:
+        tooltip.set_text(self._tooltip_text)
+        return bool(self._tooltip_text)
+
+    def _tooltip_enter(self, _motion: Gtk.EventControllerMotion, _x: float, _y: float) -> None:
+        self._tooltip_hovered = True
+
+    def _tooltip_leave(self, _motion: Gtk.EventControllerMotion) -> None:
+        self._tooltip_hovered = False
+
+    def _set_tooltip(self, text: str) -> None:
+        if text == self._tooltip_text:
+            return
+        self._tooltip_text = text
+        # tooltip-text also serves as an accessible description. Preserve it without
+        # making screen-reader access depend on a pointer or a tooltip being open.
+        self.title.update_property([Gtk.AccessibleProperty.DESCRIPTION], [text])
+        if self._tooltip_hovered:
+            self.title.trigger_tooltip_query()
 
     def show_row(self, row: GraphRow, state: GitStateResult | None) -> None:
         self.cell.set_row(
@@ -97,7 +129,7 @@ class _RowWidget(Gtk.Box):
     def _show_worktree(self, worktree: WorktreeGitState) -> None:
         name = worktree.branch or translate("git.detached")
         self.title.set_text(translate("git.uncommitted").format(branch=name))
-        self.title.set_tooltip_text(
+        self._set_tooltip(
             translate("git.uncommitted_counts").format(
                 staged=worktree.staged,
                 unstaged=worktree.unstaged,
@@ -116,7 +148,7 @@ class _RowWidget(Gtk.Box):
         else:
             text = node.subject
         self.title.set_text(text)
-        self.title.set_tooltip_text(f"{short(node.oid)} {node.author}")
+        self._set_tooltip(f"{short(node.oid)} {node.author}")
         self.when.set_text(format_date(node.at))
         for ref in node.refs:
             if ref.kind != "checkpoint":

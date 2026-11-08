@@ -1,0 +1,63 @@
+"""Private native GTK runs; each command starts and cleans up its own Xvfb."""
+import argparse
+import os
+from pathlib import Path
+import secrets
+import struct
+import subprocess
+import sys
+import tempfile
+import time
+
+root=Path(__file__).resolve().parents[2]
+parser=argparse.ArgumentParser()
+parser.add_argument('--mode',choices=['isolated','full','screenshots'],default='isolated')
+parser.add_argument('--label',default='')
+parser.add_argument('--renderer',default='')
+parser.add_argument('--profile',action='store_true')
+parser.add_argument('--labels',action='store_true')
+options=parser.parse_args()
+label=options.label or options.mode
+output=root/'artifacts/perf7'
+with tempfile.TemporaryDirectory(prefix='perf7-xvfb-') as directory:
+    temp=Path(directory)
+    subprocess.run(['/usr/bin/apt-get','download','xvfb'],cwd=temp,timeout=90,check=True)
+    packages=list(temp.glob('xvfb_*.deb')); assert len(packages)==1
+    subprocess.run(['/usr/bin/dpkg-deb','-x',str(packages[0]),str(temp/'package')],timeout=20,check=True)
+    number=next(n for n in range(101,120) if not Path(f'/tmp/.X11-unix/X{n}').exists())
+    display=str(number).encode();cookie=secrets.token_bytes(16);auth=temp/'Xauthority'
+    auth.write_bytes(struct.pack('>HH',65535,0)+struct.pack('>H',len(display))+display+struct.pack('>H',18)+b'MIT-MAGIC-COOKIE-1'+struct.pack('>H',16)+cookie)
+    auth.chmod(0o600)
+    server=subprocess.Popen([str(temp/'package/usr/bin/Xvfb'),f':{number}','-screen','0','1280x800x24','-nolisten','tcp','-auth',str(auth)])
+    try:
+        for _ in range(100):
+            if Path(f'/tmp/.X11-unix/X{number}').exists():break
+            if server.poll() is not None:raise RuntimeError('Xvfb failed')
+            time.sleep(.05)
+        env=dict(os.environ,DISPLAY=f':{number}',XAUTHORITY=str(auth),GDK_BACKEND='x11',GTK_A11Y='test',PYTHONPATH=str(root/'src')+':'+str(output),
+            XDG_STATE_HOME=str(temp/'state'),XDG_CONFIG_HOME=str(temp/'config'),XDG_CACHE_HOME=str(temp/'cache'))
+        env.pop('WAYLAND_DISPLAY',None);env.pop('BROADWAY_DISPLAY',None)
+        try:
+            gl=subprocess.run(['/usr/bin/glxinfo','-B'],env=env,timeout=15,capture_output=True,text=True)
+            (output/(label+'-gl.txt')).write_text(gl.stdout+gl.stderr)
+        except FileNotFoundError:
+            (output/(label+'-gl.txt')).write_text('glxinfo unavailable\n')
+        logfile=output/(label+'.jsonl');logfile.write_text('')
+        env['ACONSOLE_PERF7_LOG']=str(logfile)
+        env['ACONSOLE_SCALE_REPORT']=str(output/(label+'-scale.txt'))
+        if options.renderer: env['GSK_RENDERER']=options.renderer
+        if options.profile: env['ACONSOLE_PERF7_PROFILE']=str(output/(label+'.prof'))
+        if options.labels: env['ACONSOLE_PERF7_LABELS']='1'
+        tests=['tests/gui/front/test_git_scale_ui.py','tests/gui/front/test_git_row_tooltips.py'] if options.mode=='isolated' else ['tests/gui/front','tests/ui']
+        if options.mode=='screenshots':
+            command=[sys.executable,str(root/'tools/git_snapshot.py'),'--out',str(output/'real-git')]
+            subprocess.run(command,env=env,cwd=root,timeout=120,check=True)
+            raise SystemExit(0)
+        plugin=['-p','measure']
+        command=[sys.executable,'-m','pytest','-o','addopts=','-q',*plugin,'--junitxml='+str(output/(label+'.xml')),*tests]
+        with (output/(label+'.log')).open('w') as stream:
+            result=subprocess.run(command,env=env,cwd=root,timeout=360,stdout=stream,stderr=subprocess.STDOUT)
+        print((output/(label+'.log')).read_text()[-1800:])
+        raise SystemExit(result.returncode)
+    finally:
+        server.terminate();server.wait(timeout=5)
