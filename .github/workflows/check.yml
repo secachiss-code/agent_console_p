@@ -35,14 +35,20 @@ jobs:
         env:
           ACONSOLE_CONTRACT_BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
         run: tools/check.sh
+      - name: Core runtime budget
+        if: ${{ !cancelled() }}
+        run: >
+          .venv-core/bin/python -m pytest tests/core -m performance
+          -p no:cacheprovider --basetemp=/tmp/ac-core-performance
       - name: Core tests
+        if: ${{ !cancelled() }}
         env:
           COVERAGE_FILE: .coverage.core
         run: >
           .venv-core/bin/python -m pytest tests/core tests/contracts tests/gate tests/hostrun tests/smoke
           tests/test_package.py tests/test_packaging.py tests/test_contrast.py
           tests/test_build_guards.py tests/test_socket_paths.py
-          --cov --cov-branch --cov-report= --cov-fail-under=0
+          -m "not performance" --cov --cov-branch --cov-report= --cov-fail-under=0
           -p no:cacheprovider --basetemp=/tmp/ac-core
       - name: Interface tests
         env:

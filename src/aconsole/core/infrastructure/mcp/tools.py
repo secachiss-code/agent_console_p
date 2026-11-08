@@ -15,7 +15,7 @@ import threading
 from collections import OrderedDict
 from collections.abc import Callable
 from contextvars import ContextVar
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Annotated, ClassVar, Literal, NoReturn, Protocol
@@ -545,7 +545,15 @@ class PlanBoard:
         """What the vault should hold for one plan."""
         with self._lock:
             stored = self._plans.get(plan_id)
-            return () if stored is None else tuple(_node_note(stored, meta) for meta in stored.meta.values())
+            if stored is None:
+                return ()
+            # Every note uses the same immutable graph snapshot. Build it once while holding the board lock.
+            graph = Owners(
+                known_keys=frozenset(stored.meta),
+                edges=tuple((key, blocker) for key, blockers in stored.deps.items() for blocker in blockers),
+                blocker_status=tuple((key, stored.dag.get(key).status.value) for key in stored.meta),
+            )
+            return tuple(_node_note(stored, meta, graph) for meta in stored.meta.values())
 
     def apply_note(self, plan_id: str, key: str, note: VaultNote) -> None:
         """A person's edit the merge accepted. A status the rules refuse stays as it was, and the note follows."""
@@ -1249,7 +1257,7 @@ def _stored_node(stored: _Stored, meta: _Meta, layer: int, now: datetime) -> Sto
     )
 
 
-def _node_note(stored: _Stored, meta: _Meta) -> NodeNote:
+def _node_note(stored: _Stored, meta: _Meta, graph: Owners) -> NodeNote:
     node = stored.dag.get(meta.key)
     note = VaultNote(
         status=node.status.value,
@@ -1264,13 +1272,7 @@ def _node_note(stored: _Stored, meta: _Meta) -> NodeNote:
         title=meta.title,
         objective=meta.objective,
     )
-    owners = Owners(
-        node_key=meta.key,
-        known_keys=frozenset(stored.meta),
-        edges=tuple((key, blocker) for key, blockers in stored.deps.items() for blocker in blockers),
-        blocker_status=tuple((key, stored.dag.get(key).status.value) for key in stored.meta),
-        leased_by_other=node.lease_expires_at is not None,
-    )
+    owners = replace(graph, node_key=meta.key, leased_by_other=node.lease_expires_at is not None)
     return NodeNote(key=meta.key, note=note, owners=owners)
 
 

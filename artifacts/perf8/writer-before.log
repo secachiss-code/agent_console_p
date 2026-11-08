@@ -1,0 +1,191 @@
+Collected 0 items to run in parallel
+........palette median=31.59ms max=41.85ms items=403
+.....F
+=================================== FAILURES ===================================
+____________ test_palette_answers_while_the_database_writer_is_busy ____________
+
+fut = <coroutine object _Client.call at 0x271f1b45140>, timeout = 0.25
+
+    async def wait_for(fut, timeout):
+        """Wait for the single Future or coroutine to complete, with timeout.
+    
+        Returns result of the Future or coroutine.  When a timeout occurs,
+        it cancels fut and raises TimeoutError.  To prevent fut from being
+        cancelled, wrap it in shield().
+    
+        If the wait is cancelled, fut is also cancelled.
+    
+        If fut suppresses the cancellation and returns a value instead,
+        that value is returned.
+    
+        This function is a coroutine.
+        """
+        # The special case for timeout <= 0 is for the following case:
+        #
+        # async def test_waitfor():
+        #     func_started = False
+        #
+        #     async def func():
+        #         nonlocal func_started
+        #         func_started = True
+        #
+        #     try:
+        #         await asyncio.wait_for(func(), 0)
+        #     except asyncio.TimeoutError:
+        #         assert not func_started
+        #     else:
+        #         assert False
+        #
+        # asyncio.run(test_waitfor())
+    
+    
+        if timeout is not None and timeout <= 0:
+            fut = ensure_future(fut)
+    
+            if fut.done():
+                return fut.result()
+    
+            await _cancel_and_wait(fut)
+            try:
+                return fut.result()
+            except exceptions.CancelledError as exc:
+                raise TimeoutError from exc
+    
+        async with timeouts.timeout(timeout):
+>           return await fut
+                   ^^^^^^^^^
+
+../../../../uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/tasks.py:495: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/run/host/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_wire.py:84: in call
+    ???
+/run/host/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_wire.py:100: in raw
+    ???
+../../../../uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/streams.py:577: in readline
+    line = await self.readuntil(sep)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../../uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/streams.py:691: in readuntil
+    await self._wait_for_data('readuntil')
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <StreamReader eof transport=<_SelectorSocketTransport closed fd=14>>
+func_name = 'readuntil'
+
+    async def _wait_for_data(self, func_name):
+        """Wait until feed_data() or feed_eof() is called.
+    
+        If stream was paused, automatically resume it.
+        """
+        # StreamReader uses a future to link the protocol feed_data() method
+        # to a read coroutine. Running two read coroutines at the same time
+        # would have an unexpected behaviour. It would not possible to know
+        # which coroutine would get the next data.
+        if self._waiter is not None:
+            raise RuntimeError(
+                f'{func_name}() called while another coroutine is '
+                f'already waiting for incoming data')
+    
+        assert not self._eof, '_wait_for_data after EOF'
+    
+        # Waiting for data while paused will make deadlock, so prevent it.
+        # This is essential for readexactly(n) for case when n > self._limit.
+        if self._paused:
+            self._paused = False
+            self._transport.resume_reading()
+    
+        self._waiter = self._loop.create_future()
+        try:
+>           await self._waiter
+E           asyncio.exceptions.CancelledError
+
+../../../../uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/streams.py:554: CancelledError
+
+The above exception was the direct cause of the following exception:
+
+tmp_path = PosixPath('/tmp/ac-perf8/test_palette_answers_while_the0')
+
+    def test_palette_answers_while_the_database_writer_is_busy(tmp_path: Path) -> None:
+        repo = _git_repo(tmp_path / "repo")
+    
+        async def scenario() -> None:
+            daemon = _daemon(tmp_path, serve_ingest=False)
+            task = asyncio.create_task(daemon.serve())
+            client = await _connect(daemon.socket)
+            entered = threading.Event()
+            released = threading.Event()
+    
+            def hold(_session: object) -> None:
+                entered.set()
+                _ = released.wait(timeout=2)
+    
+            try:
+                project = await client.call("project/add", ProjectAddParams(root=str(repo)), ProjectView)
+                tab = await client.call("tab/open", _open(project.id), TabView)
+                daemon._plans.create(_context(project), "Navigation", "Read without database IO", [
+                    NodeIn(key="N-1", title="Available", objective="Navigate"),
+                ])
+                writer = daemon._writer
+                assert writer is not None
+                writer.post(hold)
+                assert await asyncio.to_thread(entered.wait, 2)
+                result = await asyncio.wait_for(client.call(
+                    "palette/items", PaletteQuery(tab_id=tab.id, project_id=project.id), PaletteItemsResult,
+                ), timeout=0.25)
+                assert not released.is_set(), "navigation must complete while the writer is still blocked"
+                assert {row.kind for row in result.items} >= {
+                    PaletteKind.COMMAND, PaletteKind.TAB, PaletteKind.PLAN_NODE,
+                }
+                assert any(row.title == "N-1: Available" for row in result.items)
+            finally:
+                released.set()
+                await _stop(daemon, task, client)
+    
+>       asyncio.run(scenario())
+
+tests/core/test_palette_wire.py:206: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+../../../../uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py:205: in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+../../../../uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py:128: in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../../uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/base_events.py:724: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+tests/core/test_palette_wire.py:194: in scenario
+    result = await asyncio.wait_for(client.call(
+../../../../uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/tasks.py:494: in wait_for
+    async with timeouts.timeout(timeout):
+               ^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <Timeout [expired]>
+exc_type = <class 'asyncio.exceptions.CancelledError'>
+exc_val = CancelledError(), exc_tb = <traceback object at 0x271f1baa100>
+
+    async def __aexit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: TracebackType | None,
+    ) -> bool | None:
+        assert self._state in (_State.ENTERED, _State.EXPIRING)
+    
+        if self._timeout_handler is not None:
+            self._timeout_handler.cancel()
+            self._timeout_handler = None
+    
+        if self._state is _State.EXPIRING:
+            self._state = _State.EXPIRED
+    
+            if self._task.uncancel() <= self._cancelling and exc_type is not None:
+                # Since there are no new cancel requests, we're
+                # handling this.
+                if issubclass(exc_type, exceptions.CancelledError):
+>                   raise TimeoutError from exc_val
+E                   TimeoutError
+
+../../../../uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/timeouts.py:115: TimeoutError
+=========================== short test summary info ============================
+FAILED tests/core/test_palette_wire.py::test_palette_answers_while_the_database_writer_is_busy

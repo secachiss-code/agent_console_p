@@ -1,0 +1,70 @@
+import argparse, os, subprocess, sys, tempfile, tarfile
+from pathlib import Path
+
+root = Path(__file__).resolve().parents[2]
+out = Path(__file__).resolve().parent
+p = argparse.ArgumentParser()
+p.add_argument("--full", action="store_true")
+p.add_argument("--regressions", action="store_true")
+p.add_argument("--coverage", action="store_true")
+p.add_argument("--profile", action="store_true")
+p.add_argument("--functional", action="store_true")
+p.add_argument("--baseline", action="store_true")
+p.add_argument("--label", required=True)
+a = p.parse_args()
+checkout = root
+held = None
+if a.baseline:
+    held = tempfile.TemporaryDirectory(prefix="perf8-baseline-")
+    checkout = Path(held.name) / "checkout"
+    checkout.mkdir()
+    archive = Path(held.name) / "source.tar"
+    subprocess.run(["git", "archive", "--output=" + str(archive), "f7146953"], cwd=root, check=True)
+    with tarfile.open(archive) as tar:
+        tar.extractall(checkout, filter="data")
+tests = (
+    [
+        "tests/core",
+        "tests/contracts",
+        "tests/gate",
+        "tests/hostrun",
+        "tests/smoke",
+        "tests/test_package.py",
+        "tests/test_packaging.py",
+        "tests/test_contrast.py",
+        "tests/test_build_guards.py",
+        "tests/test_socket_paths.py",
+    ]
+    if a.full
+    else ["tests/core/test_palette_wire.py::test_real_core_palette_route_and_latency"]
+)
+if a.regressions:
+    tests = ["tests/core/test_vault_wire.py", "tests/core/test_palette_wire.py"]
+command = [
+    sys.executable,
+    "-m",
+    "pytest",
+    "-q",
+    "-s",
+    "-p",
+    "probe",
+    *tests,
+    "--basetemp=/tmp/ac-perf8",
+    "--junitxml=" + str(out / (a.label + ".xml")),
+]
+if a.functional:
+    command += ["-m", "not performance"]
+if a.coverage:
+    command += ["--cov", "--cov-branch", "--cov-report=", "--cov-fail-under=0"]
+env = dict(
+    os.environ,
+    PYTHONPATH=str(checkout / "src") + ":" + str(out),
+    ACONSOLE_PERF8_LOG=str(out / (a.label + ".json")),
+    COVERAGE_FILE=str(out / (".coverage." + a.label)),
+)
+if a.profile:
+    env["ACONSOLE_PERF8_PROFILE"] = "1"
+with (out / (a.label + ".log")).open("w") as stream:
+    r = subprocess.run(command, cwd=checkout, env=env, stdout=stream, stderr=subprocess.STDOUT, timeout=900)
+print((out / (a.label + ".log")).read_text()[-2000:])
+raise SystemExit(r.returncode)

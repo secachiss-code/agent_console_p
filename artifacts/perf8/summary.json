@@ -1,0 +1,74 @@
+[
+  {
+    "run": "baseline-covered-resource",
+    "first_ms": 132.9591780086048,
+    "first_ten_max_ms": 132.9591780086048,
+    "all_observed_max_ms": 132.9591780086048
+  },
+  {
+    "run": "baseline-full",
+    "first_ms": 62.43394700868521,
+    "first_ten_max_ms": 62.43394700868521,
+    "all_observed_max_ms": 78.4593930002302
+  },
+  {
+    "run": "baseline-isolated",
+    "first_ms": 143.22353299940005,
+    "first_ten_max_ms": 143.22353299940005,
+    "all_observed_max_ms": 143.22353299940005
+  },
+  {
+    "run": "baseline-plain",
+    "first_ms": 6.320638000033796,
+    "first_ten_max_ms": 14.215006987797096,
+    "all_observed_max_ms": 59.3303899950115
+  },
+  {
+    "run": "candidate-covered-resource",
+    "first_ms": 178.69790800614282,
+    "first_ten_max_ms": 178.69790800614282,
+    "all_observed_max_ms": 178.69790800614282
+  },
+  {
+    "run": "candidate-full-plain",
+    "first_ms": 7.9104869946604595,
+    "first_ten_max_ms": 55.04794699663762,
+    "all_observed_max_ms": 131.26754999393597
+  },
+  {
+    "run": "candidate-isolated",
+    "first_ms": 145.35976000479423,
+    "first_ten_max_ms": 145.35976000479423,
+    "all_observed_max_ms": 145.35976000479423
+  },
+  {
+    "run": "candidate-plain",
+    "first_ms": 3.8308680086629465,
+    "first_ten_max_ms": 34.09343000384979,
+    "all_observed_max_ms": 56.444627000018954
+  },
+  {
+    "run": "candidate-profile",
+    "first_ms": 177.14014000375755,
+    "first_ten_max_ms": 177.14014000375755,
+    "all_observed_max_ms": 177.14014000375755
+  },
+  {
+    "run": "navigation-after",
+    "first_ms": 189.5857299969066,
+    "first_ten_max_ms": 189.5857299969066,
+    "all_observed_max_ms": 189.5857299969066
+  },
+  {
+    "run": "writer-before",
+    "first_ms": 8.810892002657056,
+    "first_ten_max_ms": 41.447921001235954,
+    "all_observed_max_ms": 41.447921001235954
+  },
+  {
+    "run": "final-full-plain",
+    "first_ms": 2.866780007025227,
+    "first_ten_max_ms": 3.022531993337907,
+    "all_observed_max_ms": 3.1021659960970283
+  }
+]

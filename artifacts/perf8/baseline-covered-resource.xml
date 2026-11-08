@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="4.252" timestamp="2026-11-08T22:50:48.721675+03:00" hostname="somovasnbook14"><testcase classname="tests.core.test_palette_wire" name="test_real_core_palette_route_and_latency" time="2.521"><failure message="assert 0.13478693099750672 &lt; 0.1&#10; +  where 0.13478693099750672 = max([0.13478693099750672, 0.014183292994857766, 0.011572964009246789, 0.012909543002024293, 0.017515954998089, 0.017107129999203607, ...])">tmp_path = PosixPath('/tmp/ac-perf8/test_real_core_palette_route_a0')
+
+    def test_real_core_palette_route_and_latency(tmp_path: Path) -&gt; None:
+        repo = _git_repo(tmp_path / "repo")
+    
+        async def scenario() -&gt; None:
+            daemon = _daemon(tmp_path, serve_ingest=False)
+            task = asyncio.create_task(daemon.serve())
+            client = await _connect(daemon.socket, stream_limit=16 * 1024 * 1024)
+            try:
+                project = await client.call("project/add", ProjectAddParams(root=str(repo)), ProjectView)
+                tab = await client.call("tab/open", _open(project.id), TabView)
+                vault = tmp_path / "vault"
+                vault.mkdir()
+                daemon.vault.use_root(vault)
+                daemon._plans.create(_context(project), "Palette plan", "Navigate", [
+                    NodeIn(key=f"N-{i}", title=f"Node {i}", objective="Work") for i in range(200)
+                ])
+                query = PaletteQuery(tab_id=tab.id, project_id=project.id)
+                times: list[float] = []
+                for _ in range(10):
+                    start = time.perf_counter()
+                    result = await client.call("palette/items", query, PaletteItemsResult)
+                    times.append(time.perf_counter() - start)
+                assert max(times) &lt; 0.1
+                assert {item.kind for item in result.items} &gt;= {
+                    PaletteKind.COMMAND, PaletteKind.TAB, PaletteKind.PLAN_NODE, PaletteKind.NOTE,
+                }
+                note_item = next(item for item in result.items if item.kind is PaletteKind.NOTE)
+                assert note_item.subtitle is not None
+                note_path = vault / note_item.subtitle
+                for _ in range(200):
+                    if note_path.is_file():
+                        break
+                    await asyncio.sleep(0.01)
+                opened_note = await client.call("palette/execute", PaletteExecuteParams(
+                    item_id=note_item.id, tab_id=tab.id, project_id=project.id, argument=None,
+                ), CommandResult)
+                assert opened_note.open_uri == note_path.as_uri()
+                target = next(item for item in result.items if item.kind is PaletteKind.TAB)
+                executed = await client.call("palette/execute", PaletteExecuteParams(
+                    item_id=target.id, tab_id=tab.id, project_id=project.id, argument=None,
+                ), CommandResult)
+                assert executed.opened_tab == tab.id
+                ranked = await client.call("palette/items", query, PaletteItemsResult)
+                assert next(item for item in ranked.items if item.id == target.id).score_hint == 1
+                await client.call("palette/resetRanking", ResetRankingParams(item_id=None), EmptyResult)
+                reset = await client.call("palette/items", query, PaletteItemsResult)
+                assert all(item.score_hint == 0 for item in reset.items)
+                stale = await client.call("palette/execute", PaletteExecuteParams(
+                    item_id="tab:missing", tab_id=tab.id, project_id=project.id, argument=None,
+                ), CommandResult)
+                assert not stale.ok
+                daemon._plans.create(_context(project), "Palette plan", "Navigate", [
+                    NodeIn(key="NEW-1", title="Fresh catalog entry", objective="Work"),
+                ])
+                changed = await client.call("palette/items", query, PaletteItemsResult)
+                assert any(item.title == "NEW-1: Fresh catalog entry" for item in changed.items)
+                print(  # noqa: T201 -- record real IPC latency for the acceptance report
+                    f"palette median={statistics.median(times)*1000:.2f}ms "
+                    f"max={max(times)*1000:.2f}ms items={len(result.items)}",
+                )
+            finally:
+                await _stop(daemon, task, client)
+    
+&gt;       asyncio.run(scenario())
+
+tests/core/test_palette_wire.py:97: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/home/sas/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py:205: in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+/home/sas/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py:128: in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/sas/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/base_events.py:724: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    async def scenario() -&gt; None:
+        daemon = _daemon(tmp_path, serve_ingest=False)
+        task = asyncio.create_task(daemon.serve())
+        client = await _connect(daemon.socket, stream_limit=16 * 1024 * 1024)
+        try:
+            project = await client.call("project/add", ProjectAddParams(root=str(repo)), ProjectView)
+            tab = await client.call("tab/open", _open(project.id), TabView)
+            vault = tmp_path / "vault"
+            vault.mkdir()
+            daemon.vault.use_root(vault)
+            daemon._plans.create(_context(project), "Palette plan", "Navigate", [
+                NodeIn(key=f"N-{i}", title=f"Node {i}", objective="Work") for i in range(200)
+            ])
+            query = PaletteQuery(tab_id=tab.id, project_id=project.id)
+            times: list[float] = []
+            for _ in range(10):
+                start = time.perf_counter()
+                result = await client.call("palette/items", query, PaletteItemsResult)
+                times.append(time.perf_counter() - start)
+&gt;           assert max(times) &lt; 0.1
+E           assert 0.13478693099750672 &lt; 0.1
+E            +  where 0.13478693099750672 = max([0.13478693099750672, 0.014183292994857766, 0.011572964009246789, 0.012909543002024293, 0.017515954998089, 0.017107129999203607, ...])
+
+tests/core/test_palette_wire.py:56: AssertionError</failure></testcase></testsuite></testsuites>

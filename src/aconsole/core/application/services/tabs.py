@@ -71,6 +71,7 @@ from aconsole.core.application.ports.tab_store import (
 )
 from aconsole.core.application.services.approval_policy import ApprovalPolicyBook
 from aconsole.core.application.services.git_state import GitProject, GitTab
+from aconsole.core.application.services.palette import NavigationSnapshot
 from aconsole.core.application.services.projects import ProjectCatalog
 from aconsole.core.application.services.work_session_history import WorkSessionHistory
 from aconsole.core.application.services.work_sessions import WorkSessionService, session_view
@@ -534,6 +535,15 @@ class TabService:
             return
         for saved in store.load_open():
             self._adopt(saved)
+
+    def navigation_snapshot(self) -> NavigationSnapshot:
+        """Navigation reads only the live book, so a busy database cannot delay opening the palette."""
+        catalog = self._catalog
+        return NavigationSnapshot(
+            projects=() if catalog is None else catalog.views(),
+            active_project=None if catalog is None else catalog.active,
+            tabs=tuple(self._view(tab) for tab in sorted(self._tabs.values(), key=_by_order)),
+        )
 
     def snapshot(self, *, include_runtime_details: bool = True) -> AppSnapshot:
         """The tabs the core would hand to `app/snapshot`, in display order."""

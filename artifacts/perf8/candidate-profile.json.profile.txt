@@ -1,0 +1,43 @@
+         11044 function calls (10856 primitive calls) in 0.164 seconds
+
+   Ordered by: cumulative time
+   List reduced from 582 to 35 due to restriction <35>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+        1    0.004    0.004    0.045    0.045 /home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/src/aconsole/core/infrastructure/vault/writer.py:49(_dump)
+        1    0.000    0.000    0.041    0.041 /home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/ruamel/yaml/main.py:583(dump)
+        1    0.002    0.002    0.041    0.041 /home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/ruamel/yaml/main.py:600(dump_all)
+  202/201    0.005    0.000    0.039    0.000 /home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/src/aconsole/core/infrastructure/mcp/tools.py:556(<genexpr>)
+        1    0.007    0.007    0.039    0.039 /home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/src/aconsole/core/application/services/tabs.py:798(_stored_settings)
+        1    0.004    0.004    0.032    0.032 /home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/src/aconsole/core/infrastructure/persistence/repositories/tabs.py:207(settings)
+        1    0.001    0.001    0.028    0.028 /home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/.aconsole-dev/perf8/probe.py:31(writer)
+      200    0.002    0.000    0.027    0.000 /home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/src/aconsole/core/infrastructure/mcp/tools.py:1260(_node_note)
+        1    0.006    0.006    0.026    0.026 /home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/src/aconsole/core/infrastructure/vault/sync.py:222(_front)
+        1    0.000    0.000    0.024    0.024 /home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/ruamel/yaml/serializer.py:97(serialize)
+        1    0.001    0.001    0.022    0.022 /home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/src/aconsole/core/infrastructure/persistence/writer.py:101(call)
+        1    0.000    0.000    0.020    0.020 /home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/ruamel/yaml/main.py:57(__init__)
+        1    0.003    0.003    0.020    0.020 /home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/ruamel/yaml/main.py:762(official_plug_ins)
+        1    0.001    0.001    0.018    0.018 /home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/src/aconsole/core/infrastructure/persistence/repositories/tabs.py:78(read_settings)
+      3/1    0.024    0.008    0.017    0.017 /home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/.aconsole-dev/perf8/probe.py:19(wrapped)
+        1    0.000    0.000    0.016    0.016 /home/sas/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/glob.py:16(glob)
+      4/1    0.000    0.000    0.016    0.016 /home/sas/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/glob.py:90(_iglob)
+  404/403    0.005    0.000    0.015    0.000 /home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/src/aconsole/core/application/services/palette.py:93(add)
+        2    0.000    0.000    0.014    0.007 /home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/src/aconsole/core/application/services/palette.py:103(<genexpr>)
+        1    0.010    0.010    0.010    0.010 /home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/src/aconsole/core/application/services/tabs.py:538(snapshot)
+        1    0.002    0.002    0.009    0.009 /home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/ruamel/yaml/main.py:662(get_serializer_representer_emitter)
+        1    0.000    0.000    0.007    0.007 /home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/ruamel/yaml/emitter.py:394(expect_document_root)
+        1    0.000    0.000    0.007    0.007 /home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/ruamel/yaml/emitter.py:400(expect_node)
+        1    0.000    0.000    0.007    0.007 /home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/ruamel/yaml/emitter.py:680(expect_block_mapping)
+        1    0.000    0.000    0.007    0.007 /home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/ruamel/yaml/emitter.py:686(expect_first_block_mapping_key)
+        3    0.000    0.000    0.006    0.002 /home/sas/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/re/__init__.py:289(compile)
+        1    0.000    0.000    0.006    0.006 /home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/ruamel/yaml/emitter.py:689(expect_block_mapping_key)
+      200    0.001    0.000    0.006    0.000 /home/sas/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/dataclasses.py:1776(replace)
+        1    0.000    0.000    0.006    0.006 /home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/orm/loading.py:535(_load_on_pk_identity)
+        1    0.000    0.000    0.006    0.006 /home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/result.py:1413(one)
+        1    0.006    0.006    0.006    0.006 /home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/src/aconsole/core/application/services/approval_broker.py:75(pending_views)
+        7    0.000    0.000    0.005    0.001 /home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/ruamel/yaml/resolver.py:352(resolve)
+        1    0.000    0.000    0.005    0.005 /home/sas/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/glob.py:198(_listdir)
+        2    0.000    0.000    0.005    0.002 /home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/ruamel/yaml/util.py:38(__getattribute__)
+        1    0.005    0.005    0.005    0.005 /home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/src/aconsole/core/application/services/projects.py:113(active)
+
+

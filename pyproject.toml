@@ -136,6 +136,7 @@ ignore = ["D", "COM812", "ISC001", "CPY"]
 addopts = "-q"
 pythonpath = ["src"]
 testpaths = ["tests"]
+markers = ["performance: runtime latency budgets measured without coverage instrumentation"]
 
 [tool.coverage.run]
 # pytest-cov 7 delegates child-process measurement to coverage.py.

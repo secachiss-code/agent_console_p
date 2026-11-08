@@ -1,0 +1,694 @@
+[
+  {
+    "name": "context",
+    "at": 97768.174634775,
+    "load": [
+      3.09033203125,
+      2.09619140625,
+      2.123046875
+    ],
+    "gc_counts": [
+      55728,
+      5,
+      0
+    ],
+    "gc_thresholds": [
+      2000,
+      10,
+      10
+    ],
+    "gil": false
+  },
+  {
+    "name": "Writer.read_settings",
+    "start": 97769.049478667,
+    "end": 97769.050165225,
+    "cpu": 8.795499999997292e-05,
+    "thread": "asyncio_0"
+  },
+  {
+    "name": "Writer.read_settings",
+    "start": 97769.055365444,
+    "end": 97769.057931154,
+    "cpu": 9.792599999999992e-05,
+    "thread": "asyncio_1"
+  },
+  {
+    "name": "Writer.read_settings",
+    "start": 97769.06055852,
+    "end": 97769.061144259,
+    "cpu": 5.0628000000000044e-05,
+    "thread": "aconsole-tabs_0"
+  },
+  {
+    "name": "gc",
+    "phase": "start",
+    "at": 97769.174994423,
+    "thread": "MainThread",
+    "generation": 0,
+    "collected": 0,
+    "uncollectable": 0,
+    "candidates": 0,
+    "duration": 0.0
+  },
+  {
+    "name": "gc",
+    "phase": "stop",
+    "at": 97769.23786652,
+    "thread": "MainThread",
+    "generation": 0,
+    "collected": 23158,
+    "uncollectable": 0,
+    "candidates": 360456,
+    "duration": 0.062559154
+  },
+  {
+    "name": "Writer.read_settings",
+    "start": 97769.526330472,
+    "end": 97769.527219557,
+    "cpu": 6.257499999999874e-05,
+    "thread": "aconsole-tabs_0"
+  },
+  {
+    "name": "Daemon._palette_snapshot",
+    "start": 97769.526306926,
+    "end": 97769.527294782,
+    "cpu": 0.00016042400000000102,
+    "thread": "aconsole-tabs_0",
+    "gil": false
+  },
+  {
+    "name": "PlanBoard.node_notes",
+    "start": 97769.525339409,
+    "end": 97769.527606765,
+    "cpu": 0.00205133,
+    "thread": "aconsole-vault_0",
+    "gil": false
+  },
+  {
+    "name": "PaletteService.dispatch",
+    "start": 97769.526175212,
+    "end": 97769.528101776,
+    "cpu": 0.0010987920000000012,
+    "thread": "aconsole-tabs_0",
+    "gil": false
+  },
+  {
+    "name": "Client.palette/items",
+    "start": 97769.525901191,
+    "end": 97769.529732059,
+    "cpu": 0.0014012059999997106,
+    "thread": "MainThread",
+    "before": {
+      "/proc/self/cgroup": "0::/user.slice/user-1000.slice/user@1000.service/app.slice/flatpak-session-helper.service\n",
+      "/sys/fs/cgroup/cpu.stat": "usage_usec 79533778000\nuser_usec 58509932000\nsystem_usec 21023846000\nnice_usec 5369000\ncore_sched.force_idle_usec 0\nnr_periods 0\nnr_throttled 0\nthrottled_usec 0\nnr_bursts 0\nburst_usec 0\n",
+      "/proc/pressure/cpu": "some avg10=1.76 avg60=2.14 avg300=1.91 total=2735356046\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n"
+    },
+    "after": {
+      "/proc/self/cgroup": "0::/user.slice/user-1000.slice/user@1000.service/app.slice/flatpak-session-helper.service\n",
+      "/sys/fs/cgroup/cpu.stat": "usage_usec 79533786000\nuser_usec 58509939000\nsystem_usec 21023847000\nnice_usec 5369000\ncore_sched.force_idle_usec 0\nnr_periods 0\nnr_throttled 0\nthrottled_usec 0\nnr_bursts 0\nburst_usec 0\n",
+      "/proc/pressure/cpu": "some avg10=1.76 avg60=2.14 avg300=1.91 total=2735356047\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n"
+    }
+  },
+  {
+    "name": "Writer.read_settings",
+    "start": 97769.530066576,
+    "end": 97769.531411858,
+    "cpu": 7.806199999999854e-05,
+    "thread": "aconsole-tabs_0"
+  },
+  {
+    "name": "Daemon._palette_snapshot",
+    "start": 97769.530049341,
+    "end": 97769.531494154,
+    "cpu": 0.0001761650000000007,
+    "thread": "aconsole-tabs_0",
+    "gil": false
+  },
+  {
+    "name": "PaletteService.dispatch",
+    "start": 97769.530028,
+    "end": 97769.532482506,
+    "cpu": 0.001186379999999999,
+    "thread": "aconsole-tabs_0",
+    "gil": false
+  },
+  {
+    "name": "Client.palette/items",
+    "start": 97769.529838652,
+    "end": 97769.534765333,
+    "cpu": 0.0017508140000002115,
+    "thread": "MainThread",
+    "before": {
+      "/proc/self/cgroup": "0::/user.slice/user-1000.slice/user@1000.service/app.slice/flatpak-session-helper.service\n",
+      "/sys/fs/cgroup/cpu.stat": "usage_usec 79533786000\nuser_usec 58509939000\nsystem_usec 21023847000\nnice_usec 5369000\ncore_sched.force_idle_usec 0\nnr_periods 0\nnr_throttled 0\nthrottled_usec 0\nnr_bursts 0\nburst_usec 0\n",
+      "/proc/pressure/cpu": "some avg10=1.76 avg60=2.14 avg300=1.91 total=2735356047\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n"
+    },
+    "after": {
+      "/proc/self/cgroup": "0::/user.slice/user-1000.slice/user@1000.service/app.slice/flatpak-session-helper.service\n",
+      "/sys/fs/cgroup/cpu.stat": "usage_usec 79533799000\nuser_usec 58509950000\nsystem_usec 21023849000\nnice_usec 5369000\ncore_sched.force_idle_usec 0\nnr_periods 0\nnr_throttled 0\nthrottled_usec 0\nnr_bursts 0\nburst_usec 0\n",
+      "/proc/pressure/cpu": "some avg10=1.76 avg60=2.14 avg300=1.91 total=2735357121\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n"
+    }
+  },
+  {
+    "name": "Writer.read_settings",
+    "start": 97769.535361542,
+    "end": 97769.543286286,
+    "cpu": 0.000156827,
+    "thread": "aconsole-tabs_0"
+  },
+  {
+    "name": "Daemon._palette_snapshot",
+    "start": 97769.535327543,
+    "end": 97769.543388407,
+    "cpu": 0.00029020800000000013,
+    "thread": "aconsole-tabs_0",
+    "gil": false
+  },
+  {
+    "name": "PaletteService.dispatch",
+    "start": 97769.535296716,
+    "end": 97769.544827895,
+    "cpu": 0.0017589669999999984,
+    "thread": "aconsole-tabs_0",
+    "gil": false
+  },
+  {
+    "name": "Client.palette/items",
+    "start": 97769.53503004,
+    "end": 97769.547434907,
+    "cpu": 0.001774069999999739,
+    "thread": "MainThread",
+    "before": {
+      "/proc/self/cgroup": "0::/user.slice/user-1000.slice/user@1000.service/app.slice/flatpak-session-helper.service\n",
+      "/sys/fs/cgroup/cpu.stat": "usage_usec 79533799000\nuser_usec 58509950000\nsystem_usec 21023849000\nnice_usec 5369000\ncore_sched.force_idle_usec 0\nnr_periods 0\nnr_throttled 0\nthrottled_usec 0\nnr_bursts 0\nburst_usec 0\n",
+      "/proc/pressure/cpu": "some avg10=1.76 avg60=2.14 avg300=1.91 total=2735357121\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n"
+    },
+    "after": {
+      "/proc/self/cgroup": "0::/user.slice/user-1000.slice/user@1000.service/app.slice/flatpak-session-helper.service\n",
+      "/sys/fs/cgroup/cpu.stat": "usage_usec 79533838000\nuser_usec 58509984000\nsystem_usec 21023854000\nnice_usec 5369000\ncore_sched.force_idle_usec 0\nnr_periods 0\nnr_throttled 0\nthrottled_usec 0\nnr_bursts 0\nburst_usec 0\n",
+      "/proc/pressure/cpu": "some avg10=1.76 avg60=2.14 avg300=1.91 total=2735361344\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n"
+    }
+  },
+  {
+    "name": "Writer.read_settings",
+    "start": 97769.547803179,
+    "end": 97769.562094787,
+    "cpu": 7.255300000000298e-05,
+    "thread": "aconsole-tabs_0"
+  },
+  {
+    "name": "Daemon._palette_snapshot",
+    "start": 97769.547786816,
+    "end": 97769.562166882,
+    "cpu": 0.00015455799999999909,
+    "thread": "aconsole-tabs_0",
+    "gil": false
+  },
+  {
+    "name": "PaletteService.dispatch",
+    "start": 97769.547772677,
+    "end": 97769.563328892,
+    "cpu": 0.0013307490000000026,
+    "thread": "aconsole-tabs_0",
+    "gil": false
+  },
+  {
+    "name": "Client.palette/items",
+    "start": 97769.547609871,
+    "end": 97769.565090723,
+    "cpu": 0.0015866470000003297,
+    "thread": "MainThread",
+    "before": {
+      "/proc/self/cgroup": "0::/user.slice/user-1000.slice/user@1000.service/app.slice/flatpak-session-helper.service\n",
+      "/sys/fs/cgroup/cpu.stat": "usage_usec 79533838000\nuser_usec 58509984000\nsystem_usec 21023854000\nnice_usec 5369000\ncore_sched.force_idle_usec 0\nnr_periods 0\nnr_throttled 0\nthrottled_usec 0\nnr_bursts 0\nburst_usec 0\n",
+      "/proc/pressure/cpu": "some avg10=1.76 avg60=2.14 avg300=1.91 total=2735361344\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n"
+    },
+    "after": {
+      "/proc/self/cgroup": "0::/user.slice/user-1000.slice/user@1000.service/app.slice/flatpak-session-helper.service\n",
+      "/sys/fs/cgroup/cpu.stat": "usage_usec 79533880000\nuser_usec 58510021000\nsystem_usec 21023859000\nnice_usec 5369000\ncore_sched.force_idle_usec 0\nnr_periods 0\nnr_throttled 0\nthrottled_usec 0\nnr_bursts 0\nburst_usec 0\n",
+      "/proc/pressure/cpu": "some avg10=1.76 avg60=2.14 avg300=1.91 total=2735364539\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n"
+    }
+  },
+  {
+    "name": "Writer.read_settings",
+    "start": 97769.565523273,
+    "end": 97769.582105671,
+    "cpu": 6.402600000000175e-05,
+    "thread": "aconsole-tabs_0"
+  },
+  {
+    "name": "Daemon._palette_snapshot",
+    "start": 97769.565502506,
+    "end": 97769.582162426,
+    "cpu": 0.00014032199999999828,
+    "thread": "aconsole-tabs_0",
+    "gil": false
+  },
+  {
+    "name": "PaletteService.dispatch",
+    "start": 97769.565486416,
+    "end": 97769.582825584,
+    "cpu": 0.0008189980000000013,
+    "thread": "aconsole-tabs_0",
+    "gil": false
+  },
+  {
+    "name": "Client.palette/items",
+    "start": 97769.565314431,
+    "end": 97769.584233247,
+    "cpu": 0.0012277670000000462,
+    "thread": "MainThread",
+    "before": {
+      "/proc/self/cgroup": "0::/user.slice/user-1000.slice/user@1000.service/app.slice/flatpak-session-helper.service\n",
+      "/sys/fs/cgroup/cpu.stat": "usage_usec 79533880000\nuser_usec 58510021000\nsystem_usec 21023859000\nnice_usec 5369000\ncore_sched.force_idle_usec 0\nnr_periods 0\nnr_throttled 0\nthrottled_usec 0\nnr_bursts 0\nburst_usec 0\n",
+      "/proc/pressure/cpu": "some avg10=1.76 avg60=2.14 avg300=1.91 total=2735364539\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n"
+    },
+    "after": {
+      "/proc/self/cgroup": "0::/user.slice/user-1000.slice/user@1000.service/app.slice/flatpak-session-helper.service\n",
+      "/sys/fs/cgroup/cpu.stat": "usage_usec 79533920000\nuser_usec 58510055000\nsystem_usec 21023865000\nnice_usec 5369000\ncore_sched.force_idle_usec 0\nnr_periods 0\nnr_throttled 0\nthrottled_usec 0\nnr_bursts 0\nburst_usec 0\n",
+      "/proc/pressure/cpu": "some avg10=1.76 avg60=2.14 avg300=1.91 total=2735366894\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n"
+    }
+  },
+  {
+    "name": "Writer.read_settings",
+    "start": 97769.584764266,
+    "end": 97769.606615664,
+    "cpu": 7.743299999999828e-05,
+    "thread": "aconsole-tabs_0"
+  },
+  {
+    "name": "Daemon._palette_snapshot",
+    "start": 97769.584736571,
+    "end": 97769.606675057,
+    "cpu": 0.00016297100000000134,
+    "thread": "aconsole-tabs_0",
+    "gil": false
+  },
+  {
+    "name": "PaletteService.dispatch",
+    "start": 97769.584715817,
+    "end": 97769.607374901,
+    "cpu": 0.0008828869999999989,
+    "thread": "aconsole-tabs_0",
+    "gil": false
+  },
+  {
+    "name": "Client.palette/items",
+    "start": 97769.58449413,
+    "end": 97769.608647949,
+    "cpu": 0.0011452549999999562,
+    "thread": "MainThread",
+    "before": {
+      "/proc/self/cgroup": "0::/user.slice/user-1000.slice/user@1000.service/app.slice/flatpak-session-helper.service\n",
+      "/sys/fs/cgroup/cpu.stat": "usage_usec 79533920000\nuser_usec 58510055000\nsystem_usec 21023865000\nnice_usec 5369000\ncore_sched.force_idle_usec 0\nnr_periods 0\nnr_throttled 0\nthrottled_usec 0\nnr_bursts 0\nburst_usec 0\n",
+      "/proc/pressure/cpu": "some avg10=1.76 avg60=2.14 avg300=1.91 total=2735366894\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n"
+    },
+    "after": {
+      "/proc/self/cgroup": "0::/user.slice/user-1000.slice/user@1000.service/app.slice/flatpak-session-helper.service\n",
+      "/sys/fs/cgroup/cpu.stat": "usage_usec 79533972000\nuser_usec 58510097000\nsystem_usec 21023875000\nnice_usec 5369000\ncore_sched.force_idle_usec 0\nnr_periods 0\nnr_throttled 0\nthrottled_usec 0\nnr_bursts 0\nburst_usec 0\n",
+      "/proc/pressure/cpu": "some avg10=1.76 avg60=2.14 avg300=1.91 total=2735369154\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n"
+    }
+  },
+  {
+    "name": "Writer.read_settings",
+    "start": 97769.609168246,
+    "end": 97769.623270427,
+    "cpu": 7.398999999999947e-05,
+    "thread": "aconsole-tabs_0"
+  },
+  {
+    "name": "Daemon._palette_snapshot",
+    "start": 97769.609150218,
+    "end": 97769.623328616,
+    "cpu": 0.00014836000000000016,
+    "thread": "aconsole-tabs_0",
+    "gil": false
+  },
+  {
+    "name": "PaletteService.dispatch",
+    "start": 97769.609125943,
+    "end": 97769.624090746,
+    "cpu": 0.0009347149999999992,
+    "thread": "aconsole-tabs_0",
+    "gil": false
+  },
+  {
+    "name": "Client.palette/items",
+    "start": 97769.608913882,
+    "end": 97769.625533208,
+    "cpu": 0.0012035710000000144,
+    "thread": "MainThread",
+    "before": {
+      "/proc/self/cgroup": "0::/user.slice/user-1000.slice/user@1000.service/app.slice/flatpak-session-helper.service\n",
+      "/sys/fs/cgroup/cpu.stat": "usage_usec 79533972000\nuser_usec 58510097000\nsystem_usec 21023875000\nnice_usec 5369000\ncore_sched.force_idle_usec 0\nnr_periods 0\nnr_throttled 0\nthrottled_usec 0\nnr_bursts 0\nburst_usec 0\n",
+      "/proc/pressure/cpu": "some avg10=1.76 avg60=2.14 avg300=1.91 total=2735369154\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n"
+    },
+    "after": {
+      "/proc/self/cgroup": "0::/user.slice/user-1000.slice/user@1000.service/app.slice/flatpak-session-helper.service\n",
+      "/sys/fs/cgroup/cpu.stat": "usage_usec 79534014000\nuser_usec 58510135000\nsystem_usec 21023879000\nnice_usec 5369000\ncore_sched.force_idle_usec 0\nnr_periods 0\nnr_throttled 0\nthrottled_usec 0\nnr_bursts 0\nburst_usec 0\n",
+      "/proc/pressure/cpu": "some avg10=1.76 avg60=2.14 avg300=1.91 total=2735371083\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n"
+    }
+  },
+  {
+    "name": "Writer.read_settings",
+    "start": 97769.625925361,
+    "end": 97769.645442495,
+    "cpu": 7.502799999999782e-05,
+    "thread": "aconsole-tabs_0"
+  },
+  {
+    "name": "Daemon._palette_snapshot",
+    "start": 97769.625909135,
+    "end": 97769.64549823,
+    "cpu": 0.00014549499999999896,
+    "thread": "aconsole-tabs_0",
+    "gil": false
+  },
+  {
+    "name": "PaletteService.dispatch",
+    "start": 97769.625894092,
+    "end": 97769.646145076,
+    "cpu": 0.0008070189999999991,
+    "thread": "aconsole-tabs_0",
+    "gil": false
+  },
+  {
+    "name": "Client.palette/items",
+    "start": 97769.625720142,
+    "end": 97769.6473476,
+    "cpu": 0.001069146999999937,
+    "thread": "MainThread",
+    "before": {
+      "/proc/self/cgroup": "0::/user.slice/user-1000.slice/user@1000.service/app.slice/flatpak-session-helper.service\n",
+      "/sys/fs/cgroup/cpu.stat": "usage_usec 79534014000\nuser_usec 58510135000\nsystem_usec 21023879000\nnice_usec 5369000\ncore_sched.force_idle_usec 0\nnr_periods 0\nnr_throttled 0\nthrottled_usec 0\nnr_bursts 0\nburst_usec 0\n",
+      "/proc/pressure/cpu": "some avg10=1.76 avg60=2.14 avg300=1.91 total=2735371083\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n"
+    },
+    "after": {
+      "/proc/self/cgroup": "0::/user.slice/user-1000.slice/user@1000.service/app.slice/flatpak-session-helper.service\n",
+      "/sys/fs/cgroup/cpu.stat": "usage_usec 79534059000\nuser_usec 58510177000\nsystem_usec 21023882000\nnice_usec 5369000\ncore_sched.force_idle_usec 0\nnr_periods 0\nnr_throttled 0\nthrottled_usec 0\nnr_bursts 0\nburst_usec 0\n",
+      "/proc/pressure/cpu": "some avg10=1.76 avg60=2.14 avg300=1.91 total=2735373465\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n"
+    }
+  },
+  {
+    "name": "Writer.read_settings",
+    "start": 97769.647867759,
+    "end": 97769.670573733,
+    "cpu": 7.930399999999879e-05,
+    "thread": "aconsole-tabs_0"
+  },
+  {
+    "name": "Daemon._palette_snapshot",
+    "start": 97769.647851557,
+    "end": 97769.670655243,
+    "cpu": 0.00017456199999999963,
+    "thread": "aconsole-tabs_0",
+    "gil": false
+  },
+  {
+    "name": "PaletteService.dispatch",
+    "start": 97769.647832943,
+    "end": 97769.671456484,
+    "cpu": 0.0009953769999999987,
+    "thread": "aconsole-tabs_0",
+    "gil": false
+  },
+  {
+    "name": "Client.palette/items",
+    "start": 97769.647602826,
+    "end": 97769.673324611,
+    "cpu": 0.0013166809999995976,
+    "thread": "MainThread",
+    "before": {
+      "/proc/self/cgroup": "0::/user.slice/user-1000.slice/user@1000.service/app.slice/flatpak-session-helper.service\n",
+      "/sys/fs/cgroup/cpu.stat": "usage_usec 79534059000\nuser_usec 58510177000\nsystem_usec 21023882000\nnice_usec 5369000\ncore_sched.force_idle_usec 0\nnr_periods 0\nnr_throttled 0\nthrottled_usec 0\nnr_bursts 0\nburst_usec 0\n",
+      "/proc/pressure/cpu": "some avg10=1.76 avg60=2.14 avg300=1.91 total=2735373465\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n"
+    },
+    "after": {
+      "/proc/self/cgroup": "0::/user.slice/user-1000.slice/user@1000.service/app.slice/flatpak-session-helper.service\n",
+      "/sys/fs/cgroup/cpu.stat": "usage_usec 79534114000\nuser_usec 58510223000\nsystem_usec 21023891000\nnice_usec 5369000\ncore_sched.force_idle_usec 0\nnr_periods 0\nnr_throttled 0\nthrottled_usec 0\nnr_bursts 0\nburst_usec 0\n",
+      "/proc/pressure/cpu": "some avg10=1.76 avg60=2.14 avg300=1.91 total=2735375800\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n"
+    }
+  },
+  {
+    "name": "Writer.read_settings",
+    "start": 97769.673730776,
+    "end": 97769.70576326,
+    "cpu": 5.77130000000009e-05,
+    "thread": "aconsole-tabs_0"
+  },
+  {
+    "name": "Daemon._palette_snapshot",
+    "start": 97769.673712237,
+    "end": 97769.70582103,
+    "cpu": 0.00013252399999999845,
+    "thread": "aconsole-tabs_0",
+    "gil": false
+  },
+  {
+    "name": "PaletteService.dispatch",
+    "start": 97769.67369609,
+    "end": 97769.706491968,
+    "cpu": 0.0008191910000000004,
+    "thread": "aconsole-tabs_0",
+    "gil": false
+  },
+  {
+    "name": "Client.palette/items",
+    "start": 97769.673525853,
+    "end": 97769.707619283,
+    "cpu": 0.0010292640000000297,
+    "thread": "MainThread",
+    "before": {
+      "/proc/self/cgroup": "0::/user.slice/user-1000.slice/user@1000.service/app.slice/flatpak-session-helper.service\n",
+      "/sys/fs/cgroup/cpu.stat": "usage_usec 79534114000\nuser_usec 58510223000\nsystem_usec 21023891000\nnice_usec 5369000\ncore_sched.force_idle_usec 0\nnr_periods 0\nnr_throttled 0\nthrottled_usec 0\nnr_bursts 0\nburst_usec 0\n",
+      "/proc/pressure/cpu": "some avg10=1.76 avg60=2.14 avg300=1.91 total=2735375800\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n"
+    },
+    "after": {
+      "/proc/self/cgroup": "0::/user.slice/user-1000.slice/user@1000.service/app.slice/flatpak-session-helper.service\n",
+      "/sys/fs/cgroup/cpu.stat": "usage_usec 79534188000\nuser_usec 58510283000\nsystem_usec 21023905000\nnice_usec 5369000\ncore_sched.force_idle_usec 0\nnr_periods 0\nnr_throttled 0\nthrottled_usec 0\nnr_bursts 0\nburst_usec 0\n",
+      "/proc/pressure/cpu": "some avg10=1.76 avg60=2.14 avg300=1.91 total=2735379708\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n"
+    }
+  },
+  {
+    "name": "Writer.read_settings",
+    "start": 97769.708123968,
+    "end": 97769.738458544,
+    "cpu": 6.573400000000132e-05,
+    "thread": "aconsole-tabs_0"
+  },
+  {
+    "name": "Daemon._palette_snapshot",
+    "start": 97769.708108344,
+    "end": 97769.738528962,
+    "cpu": 0.0001494049999999983,
+    "thread": "aconsole-tabs_0",
+    "gil": false
+  },
+  {
+    "name": "PaletteService.dispatch",
+    "start": 97769.707957556,
+    "end": 97769.740024978,
+    "cpu": 0.001797339000000002,
+    "thread": "aconsole-tabs_0",
+    "gil": false
+  },
+  {
+    "name": "Writer.read_settings",
+    "start": 97769.740836652,
+    "end": 97769.776341486,
+    "cpu": 7.090999999999695e-05,
+    "thread": "aconsole-tabs_0"
+  },
+  {
+    "name": "Daemon._palette_snapshot",
+    "start": 97769.740823945,
+    "end": 97769.776425236,
+    "cpu": 0.00016546199999999817,
+    "thread": "aconsole-tabs_0",
+    "gil": false
+  },
+  {
+    "name": "PaletteService.dispatch",
+    "start": 97769.740809369,
+    "end": 97769.777320451,
+    "cpu": 0.001074580000000002,
+    "thread": "aconsole-tabs_0",
+    "gil": false
+  },
+  {
+    "name": "Writer.read_settings",
+    "start": 97769.77789842,
+    "end": 97769.816297228,
+    "cpu": 0.00010275900000000088,
+    "thread": "aconsole-tabs_0"
+  },
+  {
+    "name": "Daemon._palette_snapshot",
+    "start": 97769.777884342,
+    "end": 97769.816391145,
+    "cpu": 0.0002084059999999978,
+    "thread": "aconsole-tabs_0",
+    "gil": false
+  },
+  {
+    "name": "PaletteService.dispatch",
+    "start": 97769.777869897,
+    "end": 97769.817504037,
+    "cpu": 0.0013345819999999974,
+    "thread": "aconsole-tabs_0",
+    "gil": false
+  },
+  {
+    "name": "Client.palette/items",
+    "start": 97769.7776971,
+    "end": 97769.819193537,
+    "cpu": 0.0015135410000000071,
+    "thread": "MainThread",
+    "before": {
+      "/proc/self/cgroup": "0::/user.slice/user-1000.slice/user@1000.service/app.slice/flatpak-session-helper.service\n",
+      "/sys/fs/cgroup/cpu.stat": "usage_usec 79534346000\nuser_usec 58510419000\nsystem_usec 21023927000\nnice_usec 5369000\ncore_sched.force_idle_usec 0\nnr_periods 0\nnr_throttled 0\nthrottled_usec 0\nnr_bursts 0\nburst_usec 0\n",
+      "/proc/pressure/cpu": "some avg10=1.76 avg60=2.14 avg300=1.91 total=2735385984\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n"
+    },
+    "after": {
+      "/proc/self/cgroup": "0::/user.slice/user-1000.slice/user@1000.service/app.slice/flatpak-session-helper.service\n",
+      "/sys/fs/cgroup/cpu.stat": "usage_usec 79534453000\nuser_usec 58510515000\nsystem_usec 21023938000\nnice_usec 5369000\ncore_sched.force_idle_usec 0\nnr_periods 0\nnr_throttled 0\nthrottled_usec 0\nnr_bursts 0\nburst_usec 0\n",
+      "/proc/pressure/cpu": "some avg10=1.76 avg60=2.14 avg300=1.91 total=2735391547\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n"
+    }
+  },
+  {
+    "name": "PaletteService.dispatch",
+    "start": 97769.819745133,
+    "end": 97769.819927398,
+    "cpu": 0.00018163100000000154,
+    "thread": "aconsole-tabs_0",
+    "gil": false
+  },
+  {
+    "name": "Writer.read_settings",
+    "start": 97769.820752358,
+    "end": 97769.872944595,
+    "cpu": 9.78960000000001e-05,
+    "thread": "aconsole-tabs_0"
+  },
+  {
+    "name": "Daemon._palette_snapshot",
+    "start": 97769.820737291,
+    "end": 97769.873102052,
+    "cpu": 0.0002674579999999982,
+    "thread": "aconsole-tabs_0",
+    "gil": false
+  },
+  {
+    "name": "PaletteService.dispatch",
+    "start": 97769.820726056,
+    "end": 97769.874648414,
+    "cpu": 0.0018238569999999982,
+    "thread": "aconsole-tabs_0",
+    "gil": false
+  },
+  {
+    "name": "Client.palette/items",
+    "start": 97769.820565943,
+    "end": 97769.87701057,
+    "cpu": 0.0020196539999997043,
+    "thread": "MainThread",
+    "before": {
+      "/proc/self/cgroup": "0::/user.slice/user-1000.slice/user@1000.service/app.slice/flatpak-session-helper.service\n",
+      "/sys/fs/cgroup/cpu.stat": "usage_usec 79534456000\nuser_usec 58510517000\nsystem_usec 21023939000\nnice_usec 5369000\ncore_sched.force_idle_usec 0\nnr_periods 0\nnr_throttled 0\nthrottled_usec 0\nnr_bursts 0\nburst_usec 0\n",
+      "/proc/pressure/cpu": "some avg10=1.76 avg60=2.14 avg300=1.91 total=2735392754\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n"
+    },
+    "after": {
+      "/proc/self/cgroup": "0::/user.slice/user-1000.slice/user@1000.service/app.slice/flatpak-session-helper.service\n",
+      "/sys/fs/cgroup/cpu.stat": "usage_usec 79534585000\nuser_usec 58510622000\nsystem_usec 21023963000\nnice_usec 5369000\ncore_sched.force_idle_usec 0\nnr_periods 0\nnr_throttled 0\nthrottled_usec 0\nnr_bursts 0\nburst_usec 0\n",
+      "/proc/pressure/cpu": "some avg10=1.76 avg60=2.14 avg300=1.91 total=2735403175\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n"
+    }
+  },
+  {
+    "name": "Writer.read_settings",
+    "start": 97769.877296637,
+    "end": 97769.921363171,
+    "cpu": 6.762800000000013e-05,
+    "thread": "aconsole-tabs_0"
+  },
+  {
+    "name": "Daemon._palette_snapshot",
+    "start": 97769.877265767,
+    "end": 97769.921451887,
+    "cpu": 0.00018533600000000122,
+    "thread": "aconsole-tabs_0",
+    "gil": false
+  },
+  {
+    "name": "PaletteService.dispatch",
+    "start": 97769.877252203,
+    "end": 97769.923288642,
+    "cpu": 0.0013063660000000032,
+    "thread": "aconsole-tabs_0",
+    "gil": false
+  },
+  {
+    "name": "Daemon._publish_notes",
+    "start": 97769.52530718,
+    "end": 97769.992037583,
+    "cpu": 0.402021027,
+    "thread": "aconsole-vault_0",
+    "gil": false
+  },
+  {
+    "name": "Writer.read_settings",
+    "start": 97770.181790621,
+    "end": 97770.182673742,
+    "cpu": 6.0534000000000976e-05,
+    "thread": "aconsole-tabs_0"
+  },
+  {
+    "name": "Daemon._palette_snapshot",
+    "start": 97770.181770214,
+    "end": 97770.182726125,
+    "cpu": 0.00013253299999999718,
+    "thread": "aconsole-tabs_0",
+    "gil": false
+  },
+  {
+    "name": "PlanBoard.node_notes",
+    "start": 97770.181090882,
+    "end": 97770.183155252,
+    "cpu": 0.0018790699999999827,
+    "thread": "aconsole-vault_0",
+    "gil": false
+  },
+  {
+    "name": "PaletteService.dispatch",
+    "start": 97770.181754123,
+    "end": 97770.183296233,
+    "cpu": 0.0007179709999999978,
+    "thread": "aconsole-tabs_0",
+    "gil": false
+  },
+  {
+    "name": "Client.palette/items",
+    "start": 97770.181498476,
+    "end": 97770.184833918,
+    "cpu": 0.001295916000000119,
+    "thread": "MainThread",
+    "before": {
+      "/proc/self/cgroup": "0::/user.slice/user-1000.slice/user@1000.service/app.slice/flatpak-session-helper.service\n",
+      "/sys/fs/cgroup/cpu.stat": "usage_usec 79535124000\nuser_usec 58511094000\nsystem_usec 21024030000\nnice_usec 5369000\ncore_sched.force_idle_usec 0\nnr_periods 0\nnr_throttled 0\nthrottled_usec 0\nnr_bursts 0\nburst_usec 0\n",
+      "/proc/pressure/cpu": "some avg10=2.53 avg60=2.27 avg300=1.94 total=2735427175\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n"
+    },
+    "after": {
+      "/proc/self/cgroup": "0::/user.slice/user-1000.slice/user@1000.service/app.slice/flatpak-session-helper.service\n",
+      "/sys/fs/cgroup/cpu.stat": "usage_usec 79535131000\nuser_usec 58511098000\nsystem_usec 21024033000\nnice_usec 5369000\ncore_sched.force_idle_usec 0\nnr_periods 0\nnr_throttled 0\nthrottled_usec 0\nnr_bursts 0\nburst_usec 0\n",
+      "/proc/pressure/cpu": "some avg10=2.53 avg60=2.27 avg300=1.94 total=2735427179\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n"
+    }
+  },
+  {
+    "name": "Daemon._publish_notes",
+    "start": 97770.180999939,
+    "end": 97770.860723508,
+    "cpu": 0.6772686040000001,
+    "thread": "aconsole-vault_0",
+    "gil": false
+  }
+]

@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="14" time="10.003" timestamp="2026-11-08T23:03:20.842580+03:00" hostname="somovasnbook14"><testcase classname="tests.core.test_vault_wire" name="test_notes_are_written_and_a_second_publish_changes_nothing" time="0.782" /><testcase classname="tests.core.test_vault_wire" name="test_an_edited_title_and_status_reach_the_board_and_the_body_stays" time="0.028" /><testcase classname="tests.core.test_vault_wire" name="test_an_illegal_status_is_written_back" time="0.024" /><testcase classname="tests.core.test_vault_wire" name="test_a_cycle_in_depends_on_is_refused" time="0.019" /><testcase classname="tests.core.test_vault_wire" name="test_a_missing_vault_is_not_created_and_a_ref_cannot_leave_it" time="0.007" /><testcase classname="tests.core.test_vault_wire" name="test_the_daemon_writes_notes_when_a_vault_is_chosen_and_keeps_edits_across_a_restart" time="1.379" /><testcase classname="tests.core.test_vault_wire" name="test_note_projection_reads_the_graph_linearly" time="1.020" /><testcase classname="tests.core.test_vault_wire" name="test_projected_graph_is_fresh_and_previous_notes_keep_their_state" time="0.002" /><testcase classname="tests.core.test_palette_wire" name="test_real_core_palette_route_and_latency" time="2.966" /><testcase classname="tests.core.test_palette_wire" name="test_catalog_contains_linked_notes_and_approvals_and_revalidates" time="0.004" /><testcase classname="tests.core.test_palette_wire" name="test_palette_plan_cache_is_seeded_after_restart" time="1.010" /><testcase classname="tests.core.test_palette_wire" name="test_palette_rejects_unknown_context[query0]" time="0.003" /><testcase classname="tests.core.test_palette_wire" name="test_palette_rejects_unknown_context[query1]" time="0.003" /><testcase classname="tests.core.test_palette_wire" name="test_palette_answers_while_the_database_writer_is_busy" time="1.243"><failure message="TimeoutError">fut = &lt;coroutine object _Client.call at 0x271f1b45140&gt;, timeout = 0.25
+
+    async def wait_for(fut, timeout):
+        """Wait for the single Future or coroutine to complete, with timeout.
+    
+        Returns result of the Future or coroutine.  When a timeout occurs,
+        it cancels fut and raises TimeoutError.  To prevent fut from being
+        cancelled, wrap it in shield().
+    
+        If the wait is cancelled, fut is also cancelled.
+    
+        If fut suppresses the cancellation and returns a value instead,
+        that value is returned.
+    
+        This function is a coroutine.
+        """
+        # The special case for timeout &lt;= 0 is for the following case:
+        #
+        # async def test_waitfor():
+        #     func_started = False
+        #
+        #     async def func():
+        #         nonlocal func_started
+        #         func_started = True
+        #
+        #     try:
+        #         await asyncio.wait_for(func(), 0)
+        #     except asyncio.TimeoutError:
+        #         assert not func_started
+        #     else:
+        #         assert False
+        #
+        # asyncio.run(test_waitfor())
+    
+    
+        if timeout is not None and timeout &lt;= 0:
+            fut = ensure_future(fut)
+    
+            if fut.done():
+                return fut.result()
+    
+            await _cancel_and_wait(fut)
+            try:
+                return fut.result()
+            except exceptions.CancelledError as exc:
+                raise TimeoutError from exc
+    
+        async with timeouts.timeout(timeout):
+&gt;           return await fut
+                   ^^^^^^^^^
+
+../../../../uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/tasks.py:495: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/run/host/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_wire.py:84: in call
+    ???
+/run/host/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_wire.py:100: in raw
+    ???
+../../../../uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/streams.py:577: in readline
+    line = await self.readuntil(sep)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../../uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/streams.py:691: in readuntil
+    await self._wait_for_data('readuntil')
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = &lt;StreamReader eof transport=&lt;_SelectorSocketTransport closed fd=14&gt;&gt;
+func_name = 'readuntil'
+
+    async def _wait_for_data(self, func_name):
+        """Wait until feed_data() or feed_eof() is called.
+    
+        If stream was paused, automatically resume it.
+        """
+        # StreamReader uses a future to link the protocol feed_data() method
+        # to a read coroutine. Running two read coroutines at the same time
+        # would have an unexpected behaviour. It would not possible to know
+        # which coroutine would get the next data.
+        if self._waiter is not None:
+            raise RuntimeError(
+                f'{func_name}() called while another coroutine is '
+                f'already waiting for incoming data')
+    
+        assert not self._eof, '_wait_for_data after EOF'
+    
+        # Waiting for data while paused will make deadlock, so prevent it.
+        # This is essential for readexactly(n) for case when n &gt; self._limit.
+        if self._paused:
+            self._paused = False
+            self._transport.resume_reading()
+    
+        self._waiter = self._loop.create_future()
+        try:
+&gt;           await self._waiter
+E           asyncio.exceptions.CancelledError
+
+../../../../uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/streams.py:554: CancelledError
+
+The above exception was the direct cause of the following exception:
+
+tmp_path = PosixPath('/tmp/ac-perf8/test_palette_answers_while_the0')
+
+    def test_palette_answers_while_the_database_writer_is_busy(tmp_path: Path) -&gt; None:
+        repo = _git_repo(tmp_path / "repo")
+    
+        async def scenario() -&gt; None:
+            daemon = _daemon(tmp_path, serve_ingest=False)
+            task = asyncio.create_task(daemon.serve())
+            client = await _connect(daemon.socket)
+            entered = threading.Event()
+            released = threading.Event()
+    
+            def hold(_session: object) -&gt; None:
+                entered.set()
+                _ = released.wait(timeout=2)
+    
+            try:
+                project = await client.call("project/add", ProjectAddParams(root=str(repo)), ProjectView)
+                tab = await client.call("tab/open", _open(project.id), TabView)
+                daemon._plans.create(_context(project), "Navigation", "Read without database IO", [
+                    NodeIn(key="N-1", title="Available", objective="Navigate"),
+                ])
+                writer = daemon._writer
+                assert writer is not None
+                writer.post(hold)
+                assert await asyncio.to_thread(entered.wait, 2)
+                result = await asyncio.wait_for(client.call(
+                    "palette/items", PaletteQuery(tab_id=tab.id, project_id=project.id), PaletteItemsResult,
+                ), timeout=0.25)
+                assert not released.is_set(), "navigation must complete while the writer is still blocked"
+                assert {row.kind for row in result.items} &gt;= {
+                    PaletteKind.COMMAND, PaletteKind.TAB, PaletteKind.PLAN_NODE,
+                }
+                assert any(row.title == "N-1: Available" for row in result.items)
+            finally:
+                released.set()
+                await _stop(daemon, task, client)
+    
+&gt;       asyncio.run(scenario())
+
+tests/core/test_palette_wire.py:206: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+../../../../uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py:205: in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+../../../../uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py:128: in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../../uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/base_events.py:724: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+tests/core/test_palette_wire.py:194: in scenario
+    result = await asyncio.wait_for(client.call(
+../../../../uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/tasks.py:494: in wait_for
+    async with timeouts.timeout(timeout):
+               ^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = &lt;Timeout [expired]&gt;
+exc_type = &lt;class 'asyncio.exceptions.CancelledError'&gt;
+exc_val = CancelledError(), exc_tb = &lt;traceback object at 0x271f1baa100&gt;
+
+    async def __aexit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: TracebackType | None,
+    ) -&gt; bool | None:
+        assert self._state in (_State.ENTERED, _State.EXPIRING)
+    
+        if self._timeout_handler is not None:
+            self._timeout_handler.cancel()
+            self._timeout_handler = None
+    
+        if self._state is _State.EXPIRING:
+            self._state = _State.EXPIRED
+    
+            if self._task.uncancel() &lt;= self._cancelling and exc_type is not None:
+                # Since there are no new cancel requests, we're
+                # handling this.
+                if issubclass(exc_type, exceptions.CancelledError):
+&gt;                   raise TimeoutError from exc_val
+E                   TimeoutError
+
+../../../../uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/timeouts.py:115: TimeoutError</failure></testcase></testsuite></testsuites>

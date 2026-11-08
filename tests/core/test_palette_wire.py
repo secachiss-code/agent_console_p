@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 import statistics
+import threading
 import time
 from typing import TYPE_CHECKING
 
@@ -31,6 +32,7 @@ if TYPE_CHECKING:
     from pathlib import Path
 
 
+@pytest.mark.performance
 def test_real_core_palette_route_and_latency(tmp_path: Path) -> None:
     repo = _git_repo(tmp_path / "repo")
 
@@ -163,3 +165,42 @@ def test_palette_rejects_unknown_context(query: PaletteQuery) -> None:
     service = PaletteService(demo_snapshot, lambda ref: f"file:///vault/{ref}")
     with pytest.raises(ValueError, match="context"):
         service.dispatch("palette/items", msgspec.json.encode(query))
+
+
+def test_palette_answers_while_the_database_writer_is_busy(tmp_path: Path) -> None:
+    repo = _git_repo(tmp_path / "repo")
+
+    async def scenario() -> None:
+        daemon = _daemon(tmp_path, serve_ingest=False)
+        task = asyncio.create_task(daemon.serve())
+        client = await _connect(daemon.socket)
+        entered = threading.Event()
+        released = threading.Event()
+
+        def hold(_session: object) -> None:
+            entered.set()
+            _ = released.wait(timeout=2)
+
+        try:
+            project = await client.call("project/add", ProjectAddParams(root=str(repo)), ProjectView)
+            tab = await client.call("tab/open", _open(project.id), TabView)
+            daemon._plans.create(_context(project), "Navigation", "Read without database IO", [
+                NodeIn(key="N-1", title="Available", objective="Navigate"),
+            ])
+            writer = daemon._writer
+            assert writer is not None
+            writer.post(hold)
+            assert await asyncio.to_thread(entered.wait, 2)
+            result = await asyncio.wait_for(client.call(
+                "palette/items", PaletteQuery(tab_id=tab.id, project_id=project.id), PaletteItemsResult,
+            ), timeout=0.25)
+            assert not released.is_set(), "navigation must complete while the writer is still blocked"
+            assert {row.kind for row in result.items} >= {
+                PaletteKind.COMMAND, PaletteKind.TAB, PaletteKind.PLAN_NODE,
+            }
+            assert any(row.title == "N-1: Available" for row in result.items)
+        finally:
+            released.set()
+            await _stop(daemon, task, client)
+
+    asyncio.run(scenario())

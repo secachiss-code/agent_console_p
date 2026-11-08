@@ -16,6 +16,7 @@ from aconsole.contracts.app import (
 from aconsole.contracts.common import NodeStatus, NoteRef
 from aconsole.contracts.settings import Settings, SettingsPatch
 from aconsole.core.domain.plan import NodeStatus as DomainStatus
+from aconsole.core.domain.plan import Plan
 from aconsole.core.infrastructure.mcp.tools import NodeIn, PlanBoard, TabContext
 from aconsole.core.infrastructure.vault.sync import VaultSync
 from aconsole.core.infrastructure.vault.writer import load_front, split_note
@@ -23,6 +24,10 @@ from tests.core.test_wire import _connect, _daemon, _git_repo, _stop
 
 if TYPE_CHECKING:
     from pathlib import Path
+
+    import pytest
+
+    from aconsole.core.domain.plan import Node
 
 _CTX = TabContext(tab_id="t1", project_id="p1", worktree=None, agent="claude")
 
@@ -191,3 +196,55 @@ def test_the_daemon_writes_notes_when_a_vault_is_chosen_and_keeps_edits_across_a
         await _stop(again, restarted, reader)
 
     asyncio.run(scenario())
+
+
+def test_note_projection_reads_the_graph_linearly(monkeypatch: pytest.MonkeyPatch) -> None:
+    count = 200
+    board = PlanBoard()
+    created = board.create(_CTX, "Large projection", "goal", [
+        NodeIn(key=f"N-{i}", title=f"Node {i}", objective="work",
+               depends_on=[] if i == 0 else [f"N-{i-1}"])
+        for i in range(count)
+    ])
+    original = Plan.get
+    reads = 0
+
+    def counted(plan: Plan, key: str) -> Node:
+        nonlocal reads
+        reads += 1
+        return original(plan, key)
+
+    monkeypatch.setattr(Plan, "get", counted)
+    notes = board.node_notes(created.plan_id)
+    assert len(notes) == count
+    assert reads <= 3 * count, "note projection must not traverse the entire graph once per note"
+    keys = frozenset(f"N-{i}" for i in range(count))
+    edges = tuple((f"N-{i}", f"N-{i-1}") for i in range(1, count))
+    states = tuple((f"N-{i}", "pending") for i in range(count))
+    for index, projected in enumerate(notes):
+        assert projected.key == projected.owners.node_key == f"N-{index}"
+        assert projected.owners.known_keys == keys
+        assert projected.owners.edges == edges
+        assert projected.owners.blocker_status == states
+        assert not projected.owners.leased_by_other
+        assert projected.note.depends_on == (() if index == 0 else (f"N-{index-1}",))
+
+
+def test_projected_graph_is_fresh_and_previous_notes_keep_their_state() -> None:
+    board, plan_id = _board()
+    before = board.node_notes(plan_id)
+    first_id = board.get(_CTX, plan_id, detailed=True).nodes[0].node_id
+    lease = board.claim(_CTX, first_id)
+    during = board.node_notes(plan_id)
+    assert during[0].owners.leased_by_other
+    assert not during[1].owners.leased_by_other
+    assert during[0].note.status == "in_progress"
+    assert during[1].owners.blocker_status == (("N-01", "in_progress"), ("N-02", "pending"))
+    _ = board.update(_CTX, first_id, lease.fence, "failed", "test refusal", None)
+    after = board.node_notes(plan_id)
+    assert not after[0].owners.leased_by_other
+    assert after[1].owners.blocker_status == (("N-01", "failed"), ("N-02", "pending"))
+    assert before[0].note.status == "pending"
+    assert before[1].owners.blocker_status == (("N-01", "pending"), ("N-02", "pending"))
+    assert during[0].note.status == "in_progress"
+    assert during[1].owners.blocker_status == (("N-01", "in_progress"), ("N-02", "pending"))

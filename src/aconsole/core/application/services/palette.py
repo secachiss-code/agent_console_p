@@ -7,6 +7,7 @@ from typing import Final
 import msgspec
 
 from aconsole.contracts.app import (
+    ApprovalView,
     AppSnapshot,
     CommandResult,
     EmptyResult,
@@ -15,12 +16,26 @@ from aconsole.contracts.app import (
     PaletteItem,
     PaletteItemsResult,
     PaletteQuery,
+    PlanView,
+    ProjectView,
     ResetRankingParams,
+    TabView,
 )
-from aconsole.contracts.common import NoteRef, PaletteKind
+from aconsole.contracts.common import NoteRef, PaletteKind, ProjectId
 from aconsole.contracts.messages import UiMessage
 
 PALETTE_METHODS: Final = frozenset({"palette/items", "palette/execute", "palette/resetRanking"})
+
+
+class NavigationSnapshot(msgspec.Struct, frozen=True, kw_only=True):
+    """In-memory navigation targets; application settings and runtime probes are unnecessary here."""
+
+    projects: tuple[ProjectView, ...]
+    active_project: ProjectId | None
+    tabs: tuple[TabView, ...]
+    plans: tuple[PlanView, ...] = ()
+    approvals: tuple[ApprovalView, ...] = ()
+    vault_ok: bool = False
 
 
 @dataclass(frozen=True)
@@ -32,10 +47,10 @@ class _Entry:
 
 class PaletteService:
     def __init__(
-        self, snapshot: Callable[[], AppSnapshot], note_uri: Callable[[str], str],
+        self, snapshot: Callable[[], AppSnapshot | NavigationSnapshot], note_uri: Callable[[str], str],
         note_ref: Callable[[str, str], str | None] | None = None,
     ) -> None:
-        self._snapshot: Callable[[], AppSnapshot] = snapshot
+        self._snapshot: Callable[[], AppSnapshot | NavigationSnapshot] = snapshot
         self._note_uri: Callable[[str], str] = note_uri
         self._note_ref: Callable[[str, str], str | None] | None = note_ref
         self._usage: dict[str, float] = {}

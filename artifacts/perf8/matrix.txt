@@ -1,0 +1,7 @@
+import subprocess,sys
+from pathlib import Path
+runner=Path(__file__).with_name('runner.txt')
+cases=[('baseline-plain',['--baseline']),('baseline-covered-resource',['--baseline','--coverage']),('candidate-plain',[]),('candidate-covered-resource',['--coverage'])]
+for label,args in cases:
+ result=subprocess.run([sys.executable,str(runner),'--label',label,*args],capture_output=True,text=True)
+ print(label,result.returncode,result.stdout[-180:],flush=True)

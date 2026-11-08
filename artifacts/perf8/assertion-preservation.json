@@ -1,0 +1,8 @@
+{
+  "baseline": "f71469537a32a409264e552a2c9e5734d0ffef94",
+  "test": "test_real_core_palette_route_and_latency",
+  "body_unchanged": true,
+  "body_ast_sha256": "e1bcf9ba48ee1b13f15e5da36347b33bea859a7d09a92018b8a3e87d3dca1c2e",
+  "limit_s": 0.1,
+  "measured_requests": 10
+}

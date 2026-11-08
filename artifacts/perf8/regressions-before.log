@@ -1,0 +1,33 @@
+Collected 0 items to run in parallel
+......F.
+=================================== FAILURES ===================================
+________________ test_note_projection_reads_the_graph_linearly _________________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x4bbf056c010>
+
+    def test_note_projection_reads_the_graph_linearly(monkeypatch: pytest.MonkeyPatch) -> None:
+        count = 200
+        board = PlanBoard()
+        created = board.create(_CTX, "Large projection", "goal", [
+            NodeIn(key=f"N-{i}", title=f"Node {i}", objective="work",
+                   depends_on=[] if i == 0 else [f"N-{i-1}"])
+            for i in range(count)
+        ])
+        original = Plan.get
+        reads = 0
+    
+        def counted(plan: Plan, key: str) -> Node:
+            nonlocal reads
+            reads += 1
+            return original(plan, key)
+    
+        monkeypatch.setattr(Plan, "get", counted)
+        notes = board.node_notes(created.plan_id)
+        assert len(notes) == count
+>       assert reads <= 3 * count, "note projection must not traverse the entire graph once per note"
+E       AssertionError: note projection must not traverse the entire graph once per note
+E       assert 40200 <= (3 * 200)
+
+tests/core/test_vault_wire.py:220: AssertionError
+=========================== short test summary info ============================
+FAILED tests/core/test_vault_wire.py::test_note_projection_reads_the_graph_linearly

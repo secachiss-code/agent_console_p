@@ -1,0 +1,359 @@
+[
+  {
+    "name": "context",
+    "at": 97460.286619018,
+    "load": [
+      1.79052734375,
+      1.3125,
+      2.009765625
+    ],
+    "gc_counts": [
+      83422,
+      5,
+      0
+    ],
+    "gc_thresholds": [
+      2000,
+      10,
+      10
+    ],
+    "gil": false
+  },
+  {
+    "name": "gc",
+    "phase": "start",
+    "at": 97460.741731641,
+    "thread": "asyncio_0",
+    "generation": 0,
+    "collected": 0,
+    "uncollectable": 0,
+    "candidates": 0,
+    "duration": 0.0
+  },
+  {
+    "name": "gc",
+    "phase": "stop",
+    "at": 97460.803789983,
+    "thread": "asyncio_0",
+    "generation": 0,
+    "collected": 6877,
+    "uncollectable": 0,
+    "candidates": 369718,
+    "duration": 0.061991892
+  },
+  {
+    "name": "Writer.read_settings",
+    "start": 97461.389510669,
+    "end": 97461.392739672,
+    "cpu": 0.0002386070000000018,
+    "thread": "asyncio_0"
+  },
+  {
+    "name": "Writer.read_settings",
+    "start": 97461.422092563,
+    "end": 97461.42357755,
+    "cpu": 0.0001694890000000001,
+    "thread": "asyncio_2"
+  },
+  {
+    "name": "Writer.read_settings",
+    "start": 97461.427439504,
+    "end": 97461.428511754,
+    "cpu": 0.00010579999999999964,
+    "thread": "aconsole-tabs_0"
+  },
+  {
+    "name": "PlanBoard.node_notes",
+    "start": 97461.994182913,
+    "end": 97462.043968459,
+    "cpu": 0.011007101,
+    "thread": "aconsole-vault_0"
+  },
+  {
+    "name": "Writer.read_settings",
+    "start": 97462.03167525,
+    "end": 97462.050890585,
+    "cpu": 0.00032925000000000315,
+    "thread": "aconsole-tabs_0"
+  },
+  {
+    "name": "Daemon._palette_snapshot",
+    "start": 97462.016795542,
+    "end": 97462.082781646,
+    "cpu": 0.004212866999999995,
+    "thread": "aconsole-tabs_0"
+  },
+  {
+    "name": "PaletteService.dispatch",
+    "start": 97462.002240115,
+    "end": 97462.134480256,
+    "cpu": 0.015870917,
+    "thread": "aconsole-tabs_0"
+  },
+  {
+    "name": "Client.palette/items",
+    "start": 97461.995521587,
+    "end": 97462.140881347,
+    "cpu": 0.0041145509999998,
+    "thread": "MainThread"
+  },
+  {
+    "name": "Writer.read_settings",
+    "start": 97462.14156891,
+    "end": 97462.143918788,
+    "cpu": 0.00015931599999999962,
+    "thread": "aconsole-tabs_0"
+  },
+  {
+    "name": "Daemon._palette_snapshot",
+    "start": 97462.141525051,
+    "end": 97462.144069411,
+    "cpu": 0.0003514459999999983,
+    "thread": "aconsole-tabs_0"
+  },
+  {
+    "name": "PaletteService.dispatch",
+    "start": 97462.141496952,
+    "end": 97462.145648031,
+    "cpu": 0.0019568680000000005,
+    "thread": "aconsole-tabs_0"
+  },
+  {
+    "name": "Client.palette/items",
+    "start": 97462.14092919,
+    "end": 97462.148567197,
+    "cpu": 0.0022695599999997818,
+    "thread": "MainThread"
+  },
+  {
+    "name": "Writer.read_settings",
+    "start": 97462.150332087,
+    "end": 97462.154844324,
+    "cpu": 0.0001660980000000034,
+    "thread": "aconsole-tabs_0"
+  },
+  {
+    "name": "Daemon._palette_snapshot",
+    "start": 97462.150301887,
+    "end": 97462.155175894,
+    "cpu": 0.00037015500000000395,
+    "thread": "aconsole-tabs_0"
+  },
+  {
+    "name": "PaletteService.dispatch",
+    "start": 97462.150280762,
+    "end": 97462.157870961,
+    "cpu": 0.0019882710000000067,
+    "thread": "aconsole-tabs_0"
+  },
+  {
+    "name": "Client.palette/items",
+    "start": 97462.148874817,
+    "end": 97462.160849586,
+    "cpu": 0.0016764739999999279,
+    "thread": "MainThread"
+  },
+  {
+    "name": "Writer.read_settings",
+    "start": 97462.162121556,
+    "end": 97462.170379267,
+    "cpu": 0.0001763780000000048,
+    "thread": "aconsole-tabs_0"
+  },
+  {
+    "name": "Daemon._palette_snapshot",
+    "start": 97462.162099437,
+    "end": 97462.17056632,
+    "cpu": 0.00035726699999999445,
+    "thread": "aconsole-tabs_0"
+  },
+  {
+    "name": "PaletteService.dispatch",
+    "start": 97462.162083892,
+    "end": 97462.17757971,
+    "cpu": 0.002815629,
+    "thread": "aconsole-tabs_0"
+  },
+  {
+    "name": "Client.palette/items",
+    "start": 97462.160991854,
+    "end": 97462.182071413,
+    "cpu": 0.0023713960000000256,
+    "thread": "MainThread"
+  },
+  {
+    "name": "Writer.read_settings",
+    "start": 97462.183285187,
+    "end": 97462.187978494,
+    "cpu": 0.00018784199999999363,
+    "thread": "aconsole-tabs_0"
+  },
+  {
+    "name": "Daemon._palette_snapshot",
+    "start": 97462.183253407,
+    "end": 97462.188162126,
+    "cpu": 0.000367266000000005,
+    "thread": "aconsole-tabs_0"
+  },
+  {
+    "name": "PaletteService.dispatch",
+    "start": 97462.183231316,
+    "end": 97462.189668966,
+    "cpu": 0.001853497999999995,
+    "thread": "aconsole-tabs_0"
+  },
+  {
+    "name": "Client.palette/items",
+    "start": 97462.182289051,
+    "end": 97462.191691917,
+    "cpu": 0.0017508969999999735,
+    "thread": "MainThread"
+  },
+  {
+    "name": "Writer.read_settings",
+    "start": 97462.199515976,
+    "end": 97462.207192918,
+    "cpu": 0.0002378820000000087,
+    "thread": "aconsole-tabs_0"
+  },
+  {
+    "name": "Daemon._palette_snapshot",
+    "start": 97462.199382614,
+    "end": 97462.208448798,
+    "cpu": 0.0004722060000000028,
+    "thread": "aconsole-tabs_0"
+  },
+  {
+    "name": "PaletteService.dispatch",
+    "start": 97462.199341132,
+    "end": 97462.210790621,
+    "cpu": 0.0027651000000000064,
+    "thread": "aconsole-tabs_0"
+  },
+  {
+    "name": "Client.palette/items",
+    "start": 97462.191841287,
+    "end": 97462.21430657,
+    "cpu": 0.001894999999999758,
+    "thread": "MainThread"
+  },
+  {
+    "name": "Writer.read_settings",
+    "start": 97462.215948606,
+    "end": 97462.248645058,
+    "cpu": 0.00016790699999999492,
+    "thread": "aconsole-tabs_0"
+  },
+  {
+    "name": "Daemon._palette_snapshot",
+    "start": 97462.215921127,
+    "end": 97462.248748279,
+    "cpu": 0.000296455000000001,
+    "thread": "aconsole-tabs_0"
+  },
+  {
+    "name": "PaletteService.dispatch",
+    "start": 97462.215899118,
+    "end": 97462.250211136,
+    "cpu": 0.0017802489999999976,
+    "thread": "aconsole-tabs_0"
+  },
+  {
+    "name": "Client.palette/items",
+    "start": 97462.214479487,
+    "end": 97462.252351444,
+    "cpu": 0.0018998230000000227,
+    "thread": "MainThread"
+  },
+  {
+    "name": "Writer.read_settings",
+    "start": 97462.254121889,
+    "end": 97462.273095241,
+    "cpu": 0.0001738820000000002,
+    "thread": "aconsole-tabs_0"
+  },
+  {
+    "name": "Daemon._palette_snapshot",
+    "start": 97462.254098209,
+    "end": 97462.273233887,
+    "cpu": 0.0003331710000000071,
+    "thread": "aconsole-tabs_0"
+  },
+  {
+    "name": "PaletteService.dispatch",
+    "start": 97462.254082808,
+    "end": 97462.274831697,
+    "cpu": 0.0019439839999999958,
+    "thread": "aconsole-tabs_0"
+  },
+  {
+    "name": "Client.palette/items",
+    "start": 97462.252489673,
+    "end": 97462.277132915,
+    "cpu": 0.002062146000000098,
+    "thread": "MainThread"
+  },
+  {
+    "name": "Writer.read_settings",
+    "start": 97462.277881408,
+    "end": 97462.296698646,
+    "cpu": 0.00013399099999999997,
+    "thread": "aconsole-tabs_0"
+  },
+  {
+    "name": "Daemon._palette_snapshot",
+    "start": 97462.277850754,
+    "end": 97462.296758054,
+    "cpu": 0.00022235499999999353,
+    "thread": "aconsole-tabs_0"
+  },
+  {
+    "name": "PaletteService.dispatch",
+    "start": 97462.277827189,
+    "end": 97462.297531306,
+    "cpu": 0.0010180809999999901,
+    "thread": "aconsole-tabs_0"
+  },
+  {
+    "name": "Client.palette/items",
+    "start": 97462.277373404,
+    "end": 97462.298585822,
+    "cpu": 0.0011948279999995925,
+    "thread": "MainThread"
+  },
+  {
+    "name": "Writer.read_settings",
+    "start": 97462.298893281,
+    "end": 97462.32078588,
+    "cpu": 6.263399999999197e-05,
+    "thread": "aconsole-tabs_0"
+  },
+  {
+    "name": "Daemon._palette_snapshot",
+    "start": 97462.298880567,
+    "end": 97462.3208425,
+    "cpu": 0.00012975999999999266,
+    "thread": "aconsole-tabs_0"
+  },
+  {
+    "name": "PaletteService.dispatch",
+    "start": 97462.298872711,
+    "end": 97462.321521642,
+    "cpu": 0.0008161760000000018,
+    "thread": "aconsole-tabs_0"
+  },
+  {
+    "name": "Client.palette/items",
+    "start": 97462.298665418,
+    "end": 97462.32255344,
+    "cpu": 0.0008760159999998685,
+    "thread": "MainThread"
+  },
+  {
+    "name": "Daemon._publish_notes",
+    "start": 97461.989510755,
+    "end": 97462.706836695,
+    "cpu": 0.413364791,
+    "thread": "aconsole-vault_0"
+  }
+]

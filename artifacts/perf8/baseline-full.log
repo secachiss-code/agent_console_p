@@ -1,0 +1,155 @@
+Collected 0 items to run in parallel
+.................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................projects 2 tabs 5
+agents_changed
+approval_requested
+approval_resolved
+banner
+checkpoint_created
+inject_to_terminal
+notify
+operation_progress
+plan_updated
+projects_changed
+quota_updated
+resync_required
+screen_text_requested
+settings_changed
+setup_required
+tab_added
+tab_focus_requested
+tab_removed
+tab_updated
+toast
+vault_edit_rejected
+....usage: devcli snapshot|events --socket PATH
+usage: python -m aconsole.core --fake SCENARIO [--socket PATH]
+       python -m aconsole.core --serve [--socket PATH] [--allow-gil]
+..........................................................................................................................................................usage: python -m aconsole.core --fake SCENARIO [--socket PATH]
+       python -m aconsole.core --serve [--socket PATH] [--allow-gil]
+usage: python -m aconsole.core --fake SCENARIO [--socket PATH]
+       python -m aconsole.core --serve [--socket PATH] [--allow-gil]
+................................................................................................................run=aconsole-mcp-bgt12qks port=41401
+cleanup=aconsole-mcp-bgt12qks
+.run=aconsole-mcp-qv50afr7 port=35443
+cleanup=aconsole-mcp-qv50afr7
+.run=aconsole-mcp-_y_gbes0 port=41809
+cleanup=aconsole-mcp-_y_gbes0
+..run=aconsole-mcp-4oodb51b port=34171
+.usage: python -m aconsole.devcli.mcp_conformance
+....managed conformance executable unavailable: 
+................................................................................palette median=18.45ms max=62.46ms items=403
+..................................................................................................................................................................................................................usage: python -m aconsole.sidecar -- COMMAND [ARG...]
+usage: python -m aconsole.sidecar -- COMMAND [ARG...]
+..usage: python -m aconsole.sidecar -- COMMAND [ARG...]
+............................................................................................................................................................................................................................................................................................................................................................s........................................................................................isolated_x: no Wayland socket in XDG_RUNTIME_DIR; Xwayland needs a Wayland session
+.usage: isolated_x.py -- COMMAND [ARG...]
+.usage: isolated_x.py -- COMMAND [ARG...]
+.usage: isolated_x.py -- COMMAND [ARG...]
+.............................hostrun refuses to run as root
+..............................................................................................................#000000 on #ffffff: 21.00
+#777777 on #888888: 1.26
+usage: contrast_check.py [FG BG ...]
+.........ownership: cannot compare main...HEAD: fatal: неоднозначный аргумент «main...HEAD»: неизвестная редакция или не путь в рабочем каталоге.
+Используйте «--» для отделения путей от редакций, вот так:
+«git <команда> [<редакция>...] -- [<файл>...]»
+.......
+python 3.15.1 gil=False
+
+=============================== warnings summary ===============================
+tests/core/test_launch_security.py::test_rpc_launch_spec_keeps_ingest_and_sidecar_secrets_out_of_argv[codex]
+  /home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/sql/type_api.py:1032: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x4b62e6f9300>
+    def _dialect_info(self, dialect: Dialect) -> _TypeMemoDict:
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/core/test_mcp_managed_conformance.py::test_run_managed_uses_a_live_loopback_endpoint_and_cleans_its_private_state[1]
+  /home/sas/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/locks.py:167: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x4b63ab82760>
+    def __init__(self):
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/core/test_persistence_b.py::test_persistence_b_reader_is_thread_local
+  /home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/sql/schema.py:2595: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x4b60af21500>
+    def _set_parent(  # type: ignore[override]
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/core/test_persistence_b.py::test_persistence_b_reader_is_thread_local
+  /home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/sql/schema.py:2595: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x4b613663c60>
+    def _set_parent(  # type: ignore[override]
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/core/test_persistence_b.py::test_persistence_b_reader_is_thread_local
+  /home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/sql/schema.py:2595: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x4b6050fe000>
+    def _set_parent(  # type: ignore[override]
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/core/test_persistence_b.py::test_persistence_b_reader_is_thread_local
+  /home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/sql/schema.py:2595: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x4b6050f6820>
+    def _set_parent(  # type: ignore[override]
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/core/test_persistence_b.py::test_persistence_b_reader_is_thread_local
+  /home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/sql/schema.py:2595: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x4b612fad120>
+    def _set_parent(  # type: ignore[override]
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/core/test_persistence_b.py::test_persistence_b_reader_is_thread_local
+  /home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/sql/schema.py:2595: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x4b612a7bd00>
+    def _set_parent(  # type: ignore[override]
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/core/test_persistence_b.py::test_persistence_b_reader_is_thread_local
+  /home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/sql/schema.py:2595: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x4b6024d87a0>
+    def _set_parent(  # type: ignore[override]
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/core/test_project_remove_files.py::test_remove_project_keeps_repository_and_worktree_across_restart
+  /home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/sql/base.py:797: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x4b61a8b1880>
+    d._reflection_only_keys = frozenset(
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/core/test_project_remove_files.py::test_remove_project_keeps_repository_and_worktree_across_restart
+  /home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/sql/base.py:797: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x4b6126f79a0>
+    d._reflection_only_keys = frozenset(
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/core/test_project_remove_files.py::test_remove_project_keeps_repository_and_worktree_across_restart
+  /home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/sql/base.py:797: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x4b6049938e0>
+    d._reflection_only_keys = frozenset(
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/core/test_project_remove_files.py::test_remove_project_keeps_repository_and_worktree_across_restart
+  /home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/sql/base.py:797: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x4b612795e80>
+    d._reflection_only_keys = frozenset(
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/core/test_project_remove_files.py::test_remove_project_keeps_repository_and_worktree_across_restart
+  /home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/sql/base.py:797: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x4b604143480>
+    d._reflection_only_keys = frozenset(
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/core/test_project_remove_files.py::test_remove_project_keeps_repository_and_worktree_across_restart
+  /home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/sql/base.py:797: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x4b61eea87a0>
+    d._reflection_only_keys = frozenset(
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/core/test_round6_k24.py: 4 warnings
+tests/core/test_sidecar.py: 6 warnings
+tests/core/test_sidecar_resilience.py: 2 warnings
+  /home/sas/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/pty.py:66: DeprecationWarning: This process (pid=1691686) is multi-threaded, use of forkpty() may lead to deadlocks in the child.
+    pid, fd = os.forkpty()
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html

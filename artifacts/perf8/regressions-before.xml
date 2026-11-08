@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="8" time="4.244" timestamp="2026-11-08T22:44:14.309806+03:00" hostname="somovasnbook14"><testcase classname="tests.core.test_vault_wire" name="test_notes_are_written_and_a_second_publish_changes_nothing" time="0.700" /><testcase classname="tests.core.test_vault_wire" name="test_an_edited_title_and_status_reach_the_board_and_the_body_stays" time="0.017" /><testcase classname="tests.core.test_vault_wire" name="test_an_illegal_status_is_written_back" time="0.019" /><testcase classname="tests.core.test_vault_wire" name="test_a_cycle_in_depends_on_is_refused" time="0.016" /><testcase classname="tests.core.test_vault_wire" name="test_a_missing_vault_is_not_created_and_a_ref_cannot_leave_it" time="0.008" /><testcase classname="tests.core.test_vault_wire" name="test_the_daemon_writes_notes_when_a_vault_is_chosen_and_keeps_edits_across_a_restart" time="1.186" /><testcase classname="tests.core.test_vault_wire" name="test_note_projection_reads_the_graph_linearly" time="0.940"><failure message="AssertionError: note projection must not traverse the entire graph once per note&#10;assert 40200 &lt;= (3 * 200)">monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x4bbf056c010&gt;
+
+    def test_note_projection_reads_the_graph_linearly(monkeypatch: pytest.MonkeyPatch) -&gt; None:
+        count = 200
+        board = PlanBoard()
+        created = board.create(_CTX, "Large projection", "goal", [
+            NodeIn(key=f"N-{i}", title=f"Node {i}", objective="work",
+                   depends_on=[] if i == 0 else [f"N-{i-1}"])
+            for i in range(count)
+        ])
+        original = Plan.get
+        reads = 0
+    
+        def counted(plan: Plan, key: str) -&gt; Node:
+            nonlocal reads
+            reads += 1
+            return original(plan, key)
+    
+        monkeypatch.setattr(Plan, "get", counted)
+        notes = board.node_notes(created.plan_id)
+        assert len(notes) == count
+&gt;       assert reads &lt;= 3 * count, "note projection must not traverse the entire graph once per note"
+E       AssertionError: note projection must not traverse the entire graph once per note
+E       assert 40200 &lt;= (3 * 200)
+
+tests/core/test_vault_wire.py:220: AssertionError</failure></testcase><testcase classname="tests.core.test_vault_wire" name="test_projected_graph_is_fresh_and_previous_notes_keep_their_state" time="0.003" /></testsuite></testsuites>

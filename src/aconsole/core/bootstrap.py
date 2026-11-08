@@ -25,7 +25,7 @@ from typing import TYPE_CHECKING, override
 import msgspec
 import uvicorn
 
-from aconsole.contracts.app import AccountView, AppSnapshot, CloseTabParams, CommandResult, HealthResult, PlanView
+from aconsole.contracts.app import AccountView, CloseTabParams, CommandResult, HealthResult, PlanView
 from aconsole.contracts.common import AccountId, AgentKind, ClientRole, QuotaLevel, TabId
 from aconsole.contracts.errors import ErrorData, ErrorObject, MessageTooLargeDetails, error_by_name
 from aconsole.contracts.events import (
@@ -52,7 +52,7 @@ from aconsole.core.application.services.git_merge import GitMergeService
 from aconsole.core.application.services.git_ops import GitOperationService
 from aconsole.core.application.services.git_rewrite import GitRewriteService
 from aconsole.core.application.services.git_state import GitStateService
-from aconsole.core.application.services.palette import PaletteService
+from aconsole.core.application.services.palette import NavigationSnapshot, PaletteService
 from aconsole.core.application.services.projects import ProjectCatalog
 from aconsole.core.application.services.quota_aggregator import QuotaAggregator
 from aconsole.core.application.services.review import ReviewService
@@ -1434,11 +1434,11 @@ class Daemon:
         self._sweeper = asyncio.create_task(self._sweep_loop(writer))
         self._health = asyncio.create_task(self._health_loop())
 
-    def _palette_snapshot(self) -> AppSnapshot:
+    def _palette_snapshot(self) -> NavigationSnapshot:
         with self._palette_plan_lock:
             plans = tuple(self._palette_plans.values())
         return msgspec.structs.replace(
-            self.tabs.snapshot(include_runtime_details=False), plans=plans,
+            self.tabs.navigation_snapshot(), plans=plans,
             approvals=self.approvals.pending_views(), vault_ok=self.vault.root is not None,
         )
 
