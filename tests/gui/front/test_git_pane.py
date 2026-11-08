@@ -234,11 +234,21 @@ def test_long_history_loads_in_pages(tmp_path: Path, monkeypatch: pytest.MonkeyP
     async def check(pane: GitPane, _toasts: list[str], _window: Adw.ApplicationWindow) -> None:
         # The first page arrives whole. Scrolling may ask for the next one by itself.
         await _settled(lambda: pane.store.get_n_items() >= 200)
+        before = pane.store.get_n_items()
+        additions: list[tuple[int, int, int]] = []
+
+        def changed(_store: object, position: int, removed: int, added: int) -> None:
+            additions.append((position, removed, added))
+
+        _ = pane.store.connect("items-changed", changed)
         for _ in range(4):
             await pane.load_more()
         await _settled(lambda: pane.store.get_n_items() == 450)
         keys = [item.row.key for item in _rows(pane)]
         assert len(set(keys)) == 450
+        assert sum(added for _position, _removed, added in additions) == 450 - before
+        assert all(removed == 0 for _position, removed, _added in additions)
+        assert len(additions) <= 2, "each loaded page should emit a single model change"
 
     _on_pane(tmp_path, monkeypatch, repo, check)
 

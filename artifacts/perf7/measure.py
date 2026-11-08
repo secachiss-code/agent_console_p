@@ -53,19 +53,39 @@ def pytest_runtest_call(item):
 
     def on_pane(tmp_path, monkeypatch, repo, check):
         async def observed(pane, toasts, window):
-            data = dict(renderer=window.get_renderer().__gtype__.name,
+            data = dict(gtk_version=[test.Gtk.get_major_version(),test.Gtk.get_minor_version(),test.Gtk.get_micro_version()],a11y=os.environ.get('GTK_A11Y'),display=os.environ.get('DISPLAY'),renderer=window.get_renderer().__gtype__.name,
                 python=os.sys.version, gtk_env={k:v for k,v in os.environ.items()
                     if k.startswith(('GSK_', 'GDK_', 'LIBGL_', 'LP_'))},
                 cpu_count=os.cpu_count(), affinity=sorted(os.sched_getaffinity(0)),
                 cpu_max=read('/sys/fs/cgroup/cpu.max'),
                 cpu_stat_before=read('/sys/fs/cgroup/cpu.stat'),
                 load_before=os.getloadavg(), proc_before=read('/proc/self/status'),
-                frames=[], gc=[])
+                frames=[], gc=[], phases=[])
+            phase_handles=[]
+            if os.environ.get('ACONSOLE_PERF7_PHASES'):
+                clock=window.get_frame_clock()
+                def phase(name):
+                    def record(clock):
+                        data['phases'].append(dict(name=name,wall=time.perf_counter_ns(),
+                            cpu=time.process_time_ns(),thread=time.thread_time_ns(),
+                            frame=clock.get_frame_counter(),rows=pane.store.get_n_items(),
+                            scroll=pane.scroller.get_vadjustment().get_value()))
+                    return record
+                for name in ('before-paint','update','layout','paint','after-paint'):
+                    connect=clock.connect if name=='before-paint' else clock.connect_after
+                    phase_handles.append((clock,connect(name,phase(name))))
+            data['refresh_info']=window.get_frame_clock().get_refresh_info(0)
             started=time.perf_counter()
             cpu=time.process_time()
             thread=time.thread_time()
             last=[started,cpu,thread]
+            sampling_marker=os.environ.get('ACONSOLE_NATIVE_STACK_MARKER')
+            marker_written=False
             def tick(widget, clock):
+                nonlocal marker_written
+                if sampling_marker and not marker_written and pane.scroller.get_vadjustment().get_value()>0:
+                    Path(sampling_marker).touch()
+                    marker_written=True
                 now=[time.perf_counter(),time.process_time(),time.thread_time()]
                 data['frames'].append(dict(at=now[0]-started,
                     wall=now[0]-last[0],cpu=now[1]-last[1],thread=now[2]-last[2],
@@ -84,6 +104,8 @@ def pytest_runtest_call(item):
                 if profile:
                     profile.disable()
                     profile.dump_stats(os.environ['ACONSOLE_PERF7_PROFILE'])
+                if sampling_marker: Path(sampling_marker).unlink(missing_ok=True)
+                for clock,handle in phase_handles: clock.disconnect(handle)
                 gc.callbacks.remove(collection)
                 pane.list_view.remove_tick_callback(handle)
                 data.update(label_stats=label_stats,cpu_stat_after=read('/sys/fs/cgroup/cpu.stat'),

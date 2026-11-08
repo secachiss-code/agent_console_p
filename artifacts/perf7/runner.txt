@@ -3,6 +3,9 @@ import argparse
 import os
 from pathlib import Path
 import secrets
+import shutil
+import signal
+import threading
 import struct
 import subprocess
 import sys
@@ -12,16 +15,46 @@ import time
 
 root=Path(__file__).resolve().parents[2]
 parser=argparse.ArgumentParser()
-parser.add_argument('--mode',choices=['isolated','full','screenshots'],default='isolated')
+parser.add_argument('--mode',choices=['isolated','full','screenshots','tools'],default='isolated')
 parser.add_argument('--label',default='')
 parser.add_argument('--renderer',default='')
 parser.add_argument('--profile',action='store_true')
 parser.add_argument('--checkout-ref',default='')
 parser.add_argument('--scale-only',action='store_true')
 parser.add_argument('--labels',action='store_true')
+parser.add_argument('--phases',action='store_true')
+parser.add_argument('--a11y-default',action='store_true')
+parser.add_argument('--desktop',action='store_true')
+parser.add_argument('--native-stack',action='store_true')
+parser.add_argument('--prepare-gdb',action='store_true')
 options=parser.parse_args()
 label=options.label or options.mode
 output=root/'artifacts/perf7'
+if options.mode=='tools':
+    if options.prepare_gdb:
+        native=root/'.aconsole-dev/perf7-gdb'
+        for package in sorted(native.glob('*.deb')):
+            subprocess.run(['/usr/bin/dpkg-deb','-x',str(package),str(native/'root')],check=True)
+        held=dict(os.environ,LD_LIBRARY_PATH=str(native/'root/usr/lib/x86_64-linux-gnu'))
+        check=subprocess.run([str(native/'root/usr/bin/gdb'),'--version'],env=held,capture_output=True,text=True,timeout=15)
+        print(check.stdout+check.stderr)
+    import json
+    found={name:shutil.which(name) for name in ('perf','sysprof-cli','valgrind','gdb','lldb','gcc')}
+    found['display_env']={k:os.environ.get(k) for k in ('DISPLAY','WAYLAND_DISPLAY','XDG_RUNTIME_DIR','XDG_SESSION_TYPE')}
+    found['dri']=list(map(str,Path('/dev/dri').glob('*')))
+    found['perf_event_paranoid']=Path('/proc/sys/kernel/perf_event_paranoid').read_text().strip()
+    if shutil.which('glxinfo'):
+        gl=subprocess.run(['glxinfo','-B'],capture_output=True,text=True,timeout=15)
+        found['desktop_gl']={'exit':gl.returncode,'output':gl.stdout+gl.stderr}
+    if shutil.which('xrandr'):
+        display=subprocess.run(['xrandr','--current'],capture_output=True,text=True,timeout=15)
+        found['xrandr']={'exit':display.returncode,'output':display.stdout+display.stderr}
+    if found['perf']:
+        done=subprocess.run([found['perf'],'stat','-e','task-clock','--','/usr/bin/true'],capture_output=True,text=True,timeout=15)
+        found['perf_probe']={'exit':done.returncode,'output':done.stdout+done.stderr}
+    (output/(label+'-tools.json')).write_text(json.dumps(found,indent=2)+'\n')
+    print(json.dumps(found,indent=2))
+    raise SystemExit(0)
 with tempfile.TemporaryDirectory(prefix='perf7-xvfb-') as directory:
     temp=Path(directory)
     checkout=root
@@ -34,21 +67,27 @@ with tempfile.TemporaryDirectory(prefix='perf7-xvfb-') as directory:
         with tarfile.open(archive) as held:
             held.extractall(checkout,filter='data')
         (output/(label+'-checkout.txt')).write_text(sha+'\n')
-    subprocess.run(['/usr/bin/apt-get','download','xvfb'],cwd=temp,timeout=90,check=True)
-    packages=list(temp.glob('xvfb_*.deb')); assert len(packages)==1
-    subprocess.run(['/usr/bin/dpkg-deb','-x',str(packages[0]),str(temp/'package')],timeout=20,check=True)
-    number=next(n for n in range(101,120) if not Path(f'/tmp/.X11-unix/X{n}').exists())
-    display=str(number).encode();cookie=secrets.token_bytes(16);auth=temp/'Xauthority'
-    auth.write_bytes(struct.pack('>HH',65535,0)+struct.pack('>H',len(display))+display+struct.pack('>H',18)+b'MIT-MAGIC-COOKIE-1'+struct.pack('>H',16)+cookie)
-    auth.chmod(0o600)
-    server=subprocess.Popen([str(temp/'package/usr/bin/Xvfb'),f':{number}','-screen','0','1280x800x24','-nolisten','tcp','-auth',str(auth)])
+    server=None
+    if not options.desktop:
+        subprocess.run(['/usr/bin/apt-get','download','xvfb'],cwd=temp,timeout=90,check=True)
+        packages=list(temp.glob('xvfb_*.deb')); assert len(packages)==1
+        subprocess.run(['/usr/bin/dpkg-deb','-x',str(packages[0]),str(temp/'package')],timeout=20,check=True)
+        number=next(n for n in range(101,120) if not Path(f'/tmp/.X11-unix/X{n}').exists())
+        display=str(number).encode();cookie=secrets.token_bytes(16);auth=temp/'Xauthority'
+        auth.write_bytes(struct.pack('>HH',65535,0)+struct.pack('>H',len(display))+display+struct.pack('>H',18)+b'MIT-MAGIC-COOKIE-1'+struct.pack('>H',16)+cookie)
+        auth.chmod(0o600)
+        server=subprocess.Popen([str(temp/'package/usr/bin/Xvfb'),f':{number}','-screen','0','1280x800x24','-nolisten','tcp','-auth',str(auth)])
     try:
-        for _ in range(100):
-            if Path(f'/tmp/.X11-unix/X{number}').exists():break
-            if server.poll() is not None:raise RuntimeError('Xvfb failed')
-            time.sleep(.05)
-        env=dict(os.environ,DISPLAY=f':{number}',XAUTHORITY=str(auth),GDK_BACKEND='x11',GTK_A11Y='test',PYTHONPATH=str(checkout/'src')+':'+str(output),
+        if server is not None:
+            for _ in range(100):
+                if Path(f'/tmp/.X11-unix/X{number}').exists():break
+                if server.poll() is not None:raise RuntimeError('Xvfb failed')
+                time.sleep(.05)
+        env=dict(os.environ,GDK_BACKEND='x11',GTK_A11Y='test',PYTHONPATH=str(checkout/'src')+':'+str(output),
             XDG_STATE_HOME=str(temp/'state'),XDG_CONFIG_HOME=str(temp/'config'),XDG_CACHE_HOME=str(temp/'cache'))
+        if options.a11y_default: env.pop('GTK_A11Y',None)
+        if not options.desktop: env.update(DISPLAY=f':{number}',XAUTHORITY=str(auth))
+        if options.desktop and not env.get('DISPLAY'): raise RuntimeError('no desktop DISPLAY')
         env.pop('WAYLAND_DISPLAY',None);env.pop('BROADWAY_DISPLAY',None)
         try:
             gl=subprocess.run(['/usr/bin/glxinfo','-B'],env=env,timeout=15,capture_output=True,text=True)
@@ -61,7 +100,8 @@ with tempfile.TemporaryDirectory(prefix='perf7-xvfb-') as directory:
         if options.renderer: env['GSK_RENDERER']=options.renderer
         if options.profile: env['ACONSOLE_PERF7_PROFILE']=str(output/(label+'.prof'))
         if options.labels: env['ACONSOLE_PERF7_LABELS']='1'
-        tests=['tests/gui/front/test_git_scale_ui.py','tests/gui/front/test_git_row_tooltips.py'] if options.mode=='isolated' else ['tests/gui/front','tests/ui']
+        if options.phases: env['ACONSOLE_PERF7_PHASES']='1'
+        tests=['tests/gui/front/test_git_scale_ui.py','tests/gui/front/test_git_row_tooltips.py','tests/gui/front/test_git_graph_redraw.py'] if options.mode=='isolated' else ['tests/gui/front','tests/ui']
         if options.mode=='screenshots':
             command=[sys.executable,str(root/'tools/git_snapshot.py'),'--out',str(output/(label+'-ui'))]
             subprocess.run(command,env=env,cwd=root,timeout=120,check=True)
@@ -69,9 +109,37 @@ with tempfile.TemporaryDirectory(prefix='perf7-xvfb-') as directory:
         if options.scale_only: tests=['tests/gui/front/test_git_scale_ui.py']
         plugin=['-p','measure']
         command=[sys.executable,'-m','pytest','-o','addopts=','-q',*plugin,'--junitxml='+str(output/(label+'.xml')),*tests]
+        sampler_stop=threading.Event()
+        sampler_thread=None
+        if options.native_stack:
+            native=root/'.aconsole-dev/perf7-gdb/root'
+            env['LD_LIBRARY_PATH']=str(native/'usr/lib/x86_64-linux-gnu')+':'+env.get('LD_LIBRARY_PATH','')
+            env['ACONSOLE_NATIVE_STACK_MARKER']=str(temp/'sample-scroll')
+            env['ACONSOLE_NATIVE_STACK_LOG']=str(output/(label+'-stacks.txt'))
+            env['ACONSOLE_NATIVE_STACK_PID']=str(temp/'sample-pid')
+            def sample_native():
+                count=0
+                while not sampler_stop.wait(.04):
+                    try:
+                        if not Path(env['ACONSOLE_NATIVE_STACK_MARKER']).exists():continue
+                        pid,start=Path(env['ACONSOLE_NATIVE_STACK_PID']).read_text().split()
+                        current=Path('/proc/'+pid+'/stat').read_text().rsplit(')',1)[1].split()[19]
+                        if current!=start:continue
+                        os.kill(int(pid),signal.SIGINT)
+                        count+=1
+                    except (OSError,ValueError,IndexError):pass
+                (output/(label+'-signals.txt')).write_text(str(count)+'\n')
+            sampler_thread=threading.Thread(target=sample_native,daemon=True)
+            sampler_thread.start()
+            command=[str(native/'usr/bin/gdb'),'--nx','--data-directory='+str(native/'usr/share/gdb'),'--batch','--return-child-result','-x',str(output/'native-sample.gdb'),'--args',*command]
         with (output/(label+'.log')).open('w') as stream:
-            result=subprocess.run(command,env=env,cwd=checkout,timeout=360,stdout=stream,stderr=subprocess.STDOUT)
+            try:
+                result=subprocess.run(command,env=env,cwd=checkout,timeout=360,stdout=stream,stderr=subprocess.STDOUT)
+            finally:
+                sampler_stop.set()
+                if sampler_thread is not None:sampler_thread.join(timeout=2)
         print((output/(label+'.log')).read_text()[-1800:])
         raise SystemExit(result.returncode)
     finally:
-        server.terminate();server.wait(timeout=5)
+        if server is not None:
+            server.terminate();server.wait(timeout=5)

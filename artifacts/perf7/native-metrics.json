@@ -1,0 +1,452 @@
+{
+  "phases-gl": {
+    "renderer": "GskGLRenderer",
+    "display": null,
+    "a11y": null,
+    "gtk_version": null,
+    "refresh_info": null,
+    "rows": 10000,
+    "load_before": [
+      2.1015625,
+      1.81005859375,
+      2.240234375
+    ],
+    "load_after": [
+      2.326171875,
+      1.86669921875,
+      2.25390625
+    ],
+    "scale": "git scale: 10000 rows, 108 frames in 4 s, median 34.8 ms, p95 49.3 ms, worst 160.1 ms, RSS 408 MB (start 362, first page 376, all rows 396 after 3.1 s)",
+    "suite": {
+      "name": "pytest",
+      "errors": "0",
+      "failures": "1",
+      "skipped": "0",
+      "tests": "4",
+      "time": "17.445",
+      "timestamp": "2026-11-08T18:41:04.232656+03:00",
+      "hostname": "somovasnbook14"
+    },
+    "diagnostic_only": true
+  },
+  "desktop-isolated": {
+    "renderer": "GskNglRenderer",
+    "display": ":0",
+    "a11y": null,
+    "gtk_version": null,
+    "refresh_info": null,
+    "rows": 10000,
+    "load_before": [
+      2.0458984375,
+      1.833984375,
+      2.2177734375
+    ],
+    "load_after": [
+      2.12255859375,
+      1.853515625,
+      2.22216796875
+    ],
+    "scale": "git scale: 10000 rows, 115 frames in 4 s, median 33.5 ms, p95 49.0 ms, worst 68.8 ms, RSS 268 MB (start 249, first page 250, all rows 268 after 3.2 s)",
+    "suite": {
+      "name": "pytest",
+      "errors": "0",
+      "failures": "1",
+      "skipped": "0",
+      "tests": "2",
+      "time": "17.282",
+      "timestamp": "2026-11-08T18:42:07.278190+03:00",
+      "hostname": "somovasnbook14"
+    },
+    "diagnostic_only": false
+  },
+  "inscription-desktop": {
+    "renderer": "GskNglRenderer",
+    "display": ":0",
+    "a11y": null,
+    "gtk_version": null,
+    "refresh_info": null,
+    "rows": 10000,
+    "load_before": [
+      2.6708984375,
+      2.09423828125,
+      2.28076171875
+    ],
+    "load_after": [
+      2.53662109375,
+      2.07568359375,
+      2.2734375
+    ],
+    "scale": "git scale: 10000 rows, 121 frames in 4 s, median 33.3 ms, p95 35.1 ms, worst 50.2 ms, RSS 269 MB (start 250, first page 251, all rows 269 after 3.2 s)",
+    "suite": {
+      "name": "pytest",
+      "errors": "0",
+      "failures": "1",
+      "skipped": "0",
+      "tests": "4",
+      "time": "17.138",
+      "timestamp": "2026-11-08T18:43:26.152900+03:00",
+      "hostname": "somovasnbook14"
+    },
+    "diagnostic_only": true
+  },
+  "cached-graph-desktop": {
+    "renderer": "GskNglRenderer",
+    "display": ":0",
+    "a11y": null,
+    "gtk_version": null,
+    "refresh_info": [
+      16667,
+      0
+    ],
+    "rows": 10000,
+    "load_before": [
+      2.60498046875,
+      2.26416015625,
+      2.2822265625
+    ],
+    "load_after": [
+      2.58544921875,
+      2.27197265625,
+      2.2841796875
+    ],
+    "scale": "git scale: 10000 rows, 118 frames in 4 s, median 33.5 ms, p95 48.1 ms, worst 64.8 ms, RSS 270 MB (start 250, first page 251, all rows 269 after 3.2 s)",
+    "suite": {
+      "name": "pytest",
+      "errors": "0",
+      "failures": "1",
+      "skipped": "0",
+      "tests": "5",
+      "time": "17.264",
+      "timestamp": "2026-11-08T18:48:39.522201+03:00",
+      "hostname": "somovasnbook14"
+    },
+    "diagnostic_only": true
+  },
+  "stable-graph-desktop": {
+    "renderer": "GskNglRenderer",
+    "display": ":0",
+    "a11y": null,
+    "gtk_version": null,
+    "refresh_info": [
+      16667,
+      0
+    ],
+    "rows": 10000,
+    "load_before": [
+      2.2333984375,
+      2.1552734375,
+      2.22705078125
+    ],
+    "load_after": [
+      2.11669921875,
+      2.1328125,
+      2.21875
+    ],
+    "scale": "git scale: 10000 rows, 119 frames in 4 s, median 33.4 ms, p95 36.2 ms, worst 53.1 ms, RSS 269 MB (start 250, first page 251, all rows 269 after 3.2 s)",
+    "suite": {
+      "name": "pytest",
+      "errors": "0",
+      "failures": "1",
+      "skipped": "0",
+      "tests": "5",
+      "time": "17.243",
+      "timestamp": "2026-11-08T18:52:33.767056+03:00",
+      "hostname": "somovasnbook14"
+    },
+    "diagnostic_only": true
+  },
+  "page-batch-desktop": {
+    "renderer": "GskNglRenderer",
+    "display": ":0",
+    "a11y": null,
+    "gtk_version": null,
+    "refresh_info": [
+      16667,
+      0
+    ],
+    "rows": 10000,
+    "load_before": [
+      2.65087890625,
+      2.2919921875,
+      2.26416015625
+    ],
+    "load_after": [
+      2.77880859375,
+      2.33251953125,
+      2.27783203125
+    ],
+    "scale": "git scale: 10000 rows, 119 frames in 4 s, median 33.4 ms, p95 35.8 ms, worst 51.0 ms, RSS 269 MB (start 250, first page 250, all rows 269 after 3.1 s)",
+    "suite": {
+      "name": "pytest",
+      "errors": "0",
+      "failures": "1",
+      "skipped": "0",
+      "tests": "6",
+      "time": "17.116",
+      "timestamp": "2026-11-08T18:55:24.655919+03:00",
+      "hostname": "somovasnbook14"
+    },
+    "diagnostic_only": true
+  },
+  "native-stack": {
+    "renderer": "GskNglRenderer",
+    "display": ":0",
+    "a11y": null,
+    "gtk_version": null,
+    "refresh_info": [
+      16667,
+      0
+    ],
+    "rows": 10000,
+    "load_before": [
+      2.48095703125,
+      2.35009765625,
+      2.29931640625
+    ],
+    "load_after": [
+      2.5673828125,
+      2.3720703125,
+      2.306640625
+    ],
+    "scale": "git scale: 10000 rows, 119 frames in 4 s, median 33.5 ms, p95 35.3 ms, worst 55.1 ms, RSS 269 MB (start 250, first page 250, all rows 268 after 3.0 s)",
+    "suite": {
+      "name": "pytest",
+      "errors": "0",
+      "failures": "1",
+      "skipped": "0",
+      "tests": "2",
+      "time": "17.390",
+      "timestamp": "2026-11-08T19:02:28.678833+03:00",
+      "hostname": "somovasnbook14"
+    },
+    "diagnostic_only": true
+  },
+  "native-stack-v2": {
+    "renderer": "GskNglRenderer",
+    "display": ":0",
+    "a11y": null,
+    "gtk_version": null,
+    "refresh_info": [
+      16667,
+      0
+    ],
+    "rows": 10000,
+    "load_before": [
+      2.322265625,
+      2.39501953125,
+      2.3271484375
+    ],
+    "load_after": [
+      2.376953125,
+      2.4052734375,
+      2.3310546875
+    ],
+    "scale": "git scale: 10000 rows, 119 frames in 4 s, median 33.5 ms, p95 49.2 ms, worst 52.5 ms, RSS 268 MB (start 250, first page 251, all rows 268 after 3.1 s)",
+    "suite": {
+      "name": "pytest",
+      "errors": "0",
+      "failures": "1",
+      "skipped": "0",
+      "tests": "2",
+      "time": "17.418",
+      "timestamp": "2026-11-08T19:04:26.406446+03:00",
+      "hostname": "somovasnbook14"
+    },
+    "diagnostic_only": true
+  },
+  "native-stack-v3": {
+    "renderer": "GskNglRenderer",
+    "display": ":0",
+    "a11y": null,
+    "gtk_version": null,
+    "refresh_info": [
+      16667,
+      0
+    ],
+    "rows": 10000,
+    "load_before": [
+      3.78759765625,
+      2.8759765625,
+      2.51025390625
+    ],
+    "load_after": [
+      3.82666015625,
+      2.9140625,
+      2.52685546875
+    ],
+    "scale": "git scale: 10000 rows, 106 frames in 4 s, median 33.6 ms, p95 59.5 ms, worst 98.0 ms, RSS 268 MB (start 249, first page 250, all rows 268 after 3.1 s)",
+    "suite": {
+      "name": "pytest",
+      "errors": "0",
+      "failures": "1",
+      "skipped": "0",
+      "tests": "2",
+      "time": "17.409",
+      "timestamp": "2026-11-08T19:06:24.241885+03:00",
+      "hostname": "somovasnbook14"
+    },
+    "diagnostic_only": true
+  },
+  "production-a11y-desktop": {
+    "renderer": "GskNglRenderer",
+    "display": ":0",
+    "a11y": null,
+    "gtk_version": null,
+    "refresh_info": [
+      16667,
+      0
+    ],
+    "rows": 10000,
+    "load_before": [
+      3.35498046875,
+      2.88134765625,
+      2.5419921875
+    ],
+    "load_after": [
+      3.2939453125,
+      2.88525390625,
+      2.546875
+    ],
+    "scale": "git scale: 10000 rows, 120 frames in 4 s, median 33.4 ms, p95 35.1 ms, worst 61.7 ms, RSS 270 MB (start 250, first page 251, all rows 269 after 3.1 s)",
+    "suite": {
+      "name": "pytest",
+      "errors": "0",
+      "failures": "1",
+      "skipped": "0",
+      "tests": "2",
+      "time": "16.996",
+      "timestamp": "2026-11-08T19:07:55.435806+03:00",
+      "hostname": "somovasnbook14"
+    },
+    "diagnostic_only": true
+  },
+  "fixed-text-desktop": {
+    "renderer": "GskNglRenderer",
+    "display": ":0",
+    "a11y": "test",
+    "gtk_version": null,
+    "refresh_info": [
+      16667,
+      0
+    ],
+    "rows": 10000,
+    "load_before": [
+      2.919921875,
+      2.65576171875,
+      2.53125
+    ],
+    "load_after": [
+      2.8525390625,
+      2.650390625,
+      2.53125
+    ],
+    "scale": "git scale: 10000 rows, 118 frames in 4 s, median 33.5 ms, p95 47.0 ms, worst 54.0 ms, RSS 269 MB (start 250, first page 251, all rows 269 after 3.1 s)",
+    "suite": {
+      "name": "pytest",
+      "errors": "0",
+      "failures": "1",
+      "skipped": "0",
+      "tests": "6",
+      "time": "17.137",
+      "timestamp": "2026-11-08T19:13:23.586729+03:00",
+      "hostname": "somovasnbook14"
+    },
+    "diagnostic_only": true
+  },
+  "native-final-full": {
+    "renderer": "GskGLRenderer",
+    "display": ":102",
+    "a11y": "test",
+    "gtk_version": [
+      4,
+      14,
+      5
+    ],
+    "refresh_info": [
+      16667,
+      0
+    ],
+    "rows": 10000,
+    "load_before": [
+      3.84423828125,
+      3.02978515625,
+      2.68359375
+    ],
+    "load_after": [
+      3.6962890625,
+      3.01220703125,
+      2.6796875
+    ],
+    "scale": "git scale: 10000 rows, 76 frames in 4 s, median 49.9 ms, p95 73.5 ms, worst 103.6 ms, RSS 2148 MB (start 2113, first page 2125, all rows 2145 after 3.0 s)",
+    "suite": {
+      "name": "pytest",
+      "errors": "0",
+      "failures": "1",
+      "skipped": "0",
+      "tests": "453",
+      "time": "171.747",
+      "timestamp": "2026-11-08T19:15:44.577951+03:00",
+      "hostname": "somovasnbook14"
+    },
+    "diagnostic_only": false
+  },
+  "native-final-desktop": {
+    "renderer": "GskNglRenderer",
+    "display": ":0",
+    "a11y": "test",
+    "gtk_version": [
+      4,
+      14,
+      5
+    ],
+    "refresh_info": [
+      16667,
+      0
+    ],
+    "rows": 10000,
+    "load_before": [
+      2.8857421875,
+      2.92919921875,
+      2.70654296875
+    ],
+    "load_after": [
+      3.05517578125,
+      2.9638671875,
+      2.71923828125
+    ],
+    "scale": "git scale: 10000 rows, 121 frames in 4 s, median 33.4 ms, p95 34.8 ms, worst 49.0 ms, RSS 268 MB (start 250, first page 250, all rows 268 after 3.0 s)",
+    "suite": {
+      "name": "pytest",
+      "errors": "0",
+      "failures": "1",
+      "skipped": "0",
+      "tests": "2",
+      "time": "17.065",
+      "timestamp": "2026-11-08T19:20:12.174332+03:00",
+      "hostname": "somovasnbook14"
+    },
+    "diagnostic_only": false
+  },
+  "stack_capture": {
+    "samples": 98,
+    "overlapping_family_counts": {
+      "libgtk": 66,
+      "g_signal_emit": 54,
+      "pygi_signal_closure_marshal": 20,
+      "poll ()": 33,
+      "pango": 4,
+      "cairo": 4,
+      "libgallium": 3
+    },
+    "period_ms": 40,
+    "cpu_percentages": false
+  },
+  "source_sha256": {
+    "src/aconsole/ui/views/review/git_pane.py": "293c353fe89209d8b0d0b3e5c4eb658fdfb8d8cb4239c5d58d7c58d7c98e523d",
+    "src/aconsole/ui/views/review/graph_cell.py": "56038137006acf77a99907152a35fbf6cf183e6724f4c41e221656b657cb65dc",
+    "tests/gui/front/test_git_pane.py": "38ddb8697289923b78b9db15a523e321082bb6ea0d0fc87784197ef37b9dd03b",
+    "tests/gui/front/test_git_graph_redraw.py": "5338449e92982028da88f7b844e197384ca620b1f9d8d7aac8b5ecad2c3e22a1",
+    "tests/gui/front/test_git_scale_ui.py": "c9455d75de02cde25f09cbc4f9e423d3e66a0a583c51f50ebac7eb9789634c4c"
+  },
+  "base_commit": "173408c2cf5e4077ea55f9e6169306f43ba7c6d6"
+}

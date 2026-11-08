@@ -1,0 +1,1 @@
+git scale: 10000 rows, 115 frames in 4 s, median 33.5 ms, p95 49.0 ms, worst 68.8 ms, RSS 268 MB (start 249, first page 250, all rows 268 after 3.2 s)

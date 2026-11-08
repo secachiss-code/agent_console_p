@@ -1,0 +1,14 @@
+{
+  "version": "GNU gdb 15.1 (Ubuntu 15.1-1ubuntu1~24.04.1)",
+  "scope": ".aconsole-dev/perf7-gdb/root",
+  "system_install": false,
+  "sysctl_changes": false,
+  "packages": {
+    "libbabeltrace1_1.5.11-3build3_amd64.deb": "30f0b9fbe68115d7b50d478458e4d830695bce579529b52c7827720da9c0c2df",
+    "libdebuginfod1t64_0.190-1.1ubuntu0.1_amd64.deb": "7ff18c57198200f4af7e50e0dce29366dc832c10d8c475ca7e0403083e042ea7",
+    "libipt2_2.0.6-1build1_amd64.deb": "c14702719d594c1ca099e2cd9ff0e9bbd0215c9bb6bebb4a0d7651f984600995",
+    "libsource-highlight4t64_3.1.9-4.3build1_amd64.deb": "e0ef35d9b76669f22c2ad4ab3b9141ac46d3662823c5bbea248c21db53879470",
+    "gdb_15.1-1ubuntu1~24.04.1_amd64.deb": "7069c23ce3bc350646498e6607749c568f5c403b0db2204310a94baff3d85745",
+    "libboost-regex1.83.0_1.83.0-2.1ubuntu3.2_amd64.deb": "ad62758e356034a6ef5cc3257bb527439687b6c1a68c65ad89e9dae994efffa5"
+  }
+}

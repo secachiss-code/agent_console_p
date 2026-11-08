@@ -79,3 +79,5 @@ or a green suite solely from cheaper tooltip updates.
 
 Follow-up after integration into main: [deferred unmapped row content](DEFERRED_MAP.md).
 PERF-7 performance acceptance remains open.
+
+Final native/hardware investigation and failed gate: [NATIVE.md](NATIVE.md).

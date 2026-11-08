@@ -485,8 +485,11 @@ class GitPane(Gtk.Box):
         finally:
             self._loading = False
         self._cursor = page.next_cursor
-        for node in page.nodes:
-            self.store.append(RowItem(self._builder.commit(node)))
+        # Publish a page atomically: one model notification instead of one per
+        # commit, so GTK does not repeatedly update its virtual row bookkeeping.
+        items = [RowItem(self._builder.commit(node)) for node in page.nodes]
+        if items:
+            self.store.splice(self.store.get_n_items(), 0, items)
 
     def _scope_changed(self, choice: Gtk.DropDown, _param: GObject.ParamSpec) -> None:
         if self._syncing:

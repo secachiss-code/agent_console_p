@@ -75,9 +75,12 @@ class GraphCell(Gtk.Widget):
         self.uncommitted: bool = False
 
     def set_row(self, row: RowLayout, *, snapshot_node: bool, uncommitted: bool) -> None:
+        same = row == self.row and snapshot_node == self.snapshot_node and uncommitted == self.uncommitted
         self.row = row
         self.snapshot_node = snapshot_node
         self.uncommitted = uncommitted
+        if same:
+            return  # retain GTK's snapshot for an unchanged graph, even when the commit changed
         self.set_size_request(int(lane_x(min(row.width, _MAX_LANES))) + _MARGIN // 2, ROW_HEIGHT)
         self.queue_draw()
 
