@@ -1,0 +1,37 @@
+{
+  "$defs": {
+    "SnapshotChunkResult": {
+      "properties": {
+        "data": {
+          "type": "string"
+        },
+        "next_cursor": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "seq": {
+          "type": "integer"
+        },
+        "total_bytes": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "data",
+        "next_cursor",
+        "seq",
+        "total_bytes"
+      ],
+      "title": "SnapshotChunkResult",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/SnapshotChunkResult",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

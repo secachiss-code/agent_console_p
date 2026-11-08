@@ -40,6 +40,11 @@ _WRITE = ToolAnnotations(read_only_hint=False, destructive_hint=False, idempoten
 _IDEMPOTENT = ToolAnnotations(read_only_hint=False, destructive_hint=False, idempotent_hint=True, open_world_hint=False)
 _MCP = "/mcp"
 _PAIR = 2
+_REQUEST_BYTES = 1024 * 1024
+_SESSION_LIMIT = 2048
+type _Id = Annotated[str, Field(max_length=128)]
+type _Text = Annotated[str, Field(max_length=2000)]
+type _Items = Annotated[list[_Text], Field(max_length=100)]
 
 
 class _Receive(Protocol):
@@ -95,6 +100,7 @@ class _LeanServer(MCPServer):
         listed = await super().list_tools()
         return [tool.model_copy(update={"input_schema": lean_schema(tool.input_schema)}) for tool in listed]
 
+
 def lean_schema(schema: dict[str, object]) -> dict[str, object]:
     """``schema`` without generated titles, ``null`` alternatives of optional fields, or ``null`` defaults."""
     lean: dict[str, object] = {}
@@ -113,6 +119,7 @@ def lean_schema(schema: dict[str, object]) -> dict[str, object]:
             lean[key] = _lean_any(value)
     return lean
 
+
 def _lean_any(value: object) -> object:
     if isinstance(value, dict):
         return lean_schema(value)  # pyright: ignore[reportUnknownArgumentType]
@@ -120,9 +127,8 @@ def _lean_any(value: object) -> object:
         return [_lean_any(item) for item in value]  # pyright: ignore[reportUnknownVariableType, reportUnknownArgumentType] -- JSON schema
     return value
 
-def build_server(
-    board: PlanBoard, context: TabContext, sent: Callable[[str, int], None] | None = None
-) -> MCPServer:
+
+def build_server(board: PlanBoard, context: TabContext, sent: Callable[[str, int], None] | None = None) -> MCPServer:
     """An in-process server. ``context`` serves a request with no bearer: it can list tools and call none.
 
     ``sent`` hears, per tab, the bytes of text each answer puts in that tab's agent's context.
@@ -130,6 +136,7 @@ def build_server(
     server = _LeanServer(name="aconsole", instructions="Plan, claim, and record knowledge for the current tab.")
     _register(server, board, context, sent)
     return server
+
 
 def http_app(server: MCPServer) -> _App:
     """Streamable HTTP on ``/mcp``, JSON responses, bound to loopback by the caller."""
@@ -139,6 +146,7 @@ def http_app(server: MCPServer) -> _App:
         stateless_http=False,
         host="127.0.0.1",
     )
+
 
 def beside_ingest(ingest: _App, mcp: _App, tokens: TabTokens) -> _App:
     """Serve MCP at ``/mcp`` and leave every other path on the ingest app."""
@@ -152,6 +160,7 @@ class _Beside:
         self._ingest: _App = ingest
         self._mcp: _App = mcp
         self._tokens: TabTokens = tokens
+        self._sessions: dict[str, str] = {}
 
     async def __call__(self, scope: Mapping[str, object], receive: _Receive, send: _Send) -> None:
         if scope.get("type") == "lifespan":
@@ -172,47 +181,118 @@ class _Beside:
         if resolved is None:
             await _unauthorized(send)
             return
+        owner = "absent" if resolved == "absent" else resolved.tab_id
+        session = _session_header(scope.get("headers"))
+        if session is not None and self._sessions.get(session) != owner:
+            await _forbidden(send)
+            return
+
+        async def bound_send(message: Mapping[str, object]) -> None:
+            issued = _session_header(message.get("headers"))
+            if issued is not None:
+                if issued not in self._sessions and len(self._sessions) >= _SESSION_LIMIT:
+                    del self._sessions[next(iter(self._sessions))]
+                self._sessions[issued] = owner
+            await send(message)
+
+        bounded = await _bounded_request(scope, receive, send)
+        if bounded is None:
+            return
         if resolved == "absent":
-            await self._mcp(scope, receive, send)
+            await self._mcp(scope, bounded, bound_send)
             return
         _token, reset = bind_tab(resolved)
         try:
-            await self._mcp(scope, receive, send)
+            await self._mcp(scope, bounded, bound_send)
         finally:
             reset()
+
+
+def _session_header(headers: object) -> str | None:
+    """A transport session is pinned to the tab that initialized it, never another bearer."""
+    if not isinstance(headers, list):
+        return None
+    for item in headers:  # pyright: ignore[reportUnknownVariableType] -- raw ASGI headers
+        pair = _header_pair(item)  # pyright: ignore[reportUnknownArgumentType] -- validated ASGI pair
+        if pair is not None and pair[0].lower() == b"mcp-session-id":
+            return pair[1].decode("latin-1")
+    return None
+
+
+async def _bounded_request(scope: Mapping[str, object], receive: _Receive, send: _Send) -> _Receive | None:
+    """Reject large POST bodies before the MCP transport parses JSON, including chunked requests."""
+    if scope.get("method") != "POST":
+        return receive
+    body = bytearray()
+    while True:
+        message = await receive()
+        if message.get("type") == "http.disconnect":
+            return None
+        chunk = message.get("body", b"")
+        if isinstance(chunk, bytes):
+            if len(body) + len(chunk) > _REQUEST_BYTES:
+                await send(
+                    {
+                        "type": "http.response.start",
+                        "status": 413,
+                        "headers": [
+                            (b"content-type", b"application/json"),
+                        ],
+                    }
+                )
+                await send({"type": "http.response.body", "body": b'{"reason":"REQUEST_TOO_LARGE"}'})
+                return None
+            body.extend(chunk)
+        if not message.get("more_body", False):
+            break
+    pending = True
+
+    async def replay() -> Mapping[str, object]:
+        nonlocal pending
+        if pending:
+            pending = False
+            return {"type": "http.request", "body": bytes(body), "more_body": False}
+        return await receive()
+
+    return replay
+
 
 def _register(  # noqa: C901 -- one nested function per MCP tool
     server: MCPServer, board: PlanBoard, context: TabContext, sent: Callable[[str, int], None] | None
 ) -> None:
-    def plan_create(title: str, goal: str, nodes: list[NodeIn] | None = None) -> PlanCreated:
+    def plan_create(
+        title: Annotated[str, Field(max_length=120)],
+        goal: Annotated[str, Field(max_length=8000)],
+        nodes: Annotated[list[NodeIn], Field(max_length=100)] | None = None,
+    ) -> PlanCreated:
         """Create a plan for this project. The same title returns the same plan."""
         return board.create(active(context), title, goal, [] if nodes is None else nodes)
 
-    def plan_add_nodes(plan_id: str, nodes: list[NodeIn]) -> Added:
+    def plan_add_nodes(plan_id: _Id, nodes: Annotated[list[NodeIn], Field(max_length=100)]) -> Added:
         """Add nodes. An existing key is left unchanged. A cycle adds nothing."""
         return board.add_nodes(active(context), plan_id, nodes)
 
     def plan_get(
-        plan_id: str, response_format: Literal["concise", "detailed"] = "concise", since: str | None = None
+        plan_id: _Id, response_format: Literal["concise", "detailed"] = "concise", since: _Id | None = None
     ) -> PlanGot:
-        """Read one plan. Detailed adds objective, acceptance, paths, and the lease.
+        """Read one plan. Detailed adds dependencies, objective, acceptance, paths, and the lease.
 
         Pass the revision of your last read as since to get only the nodes that changed (changed_only is true).
         """
         return board.get(active(context), plan_id, detailed=response_format == "detailed", since=since)
 
-    def plan_ready(plan_id: str | None = None, limit: Annotated[int, Field(ge=1, le=20)] = 5) -> PlanReady:
+    def plan_ready(plan_id: _Id | None = None, limit: Annotated[int, Field(ge=1, le=20)] = 5) -> PlanReady:
         """Claimable nodes, highest priority first."""
         return board.ready(active(context), plan_id, limit)
 
-    def node_claim(node_id: str) -> Claimed:
+    def node_claim(node_id: _Id) -> Claimed:
         """Take the lease. Returns the fence later calls must send."""
         return board.claim(active(context), node_id)
 
     def node_update(
-        node_id: str,
+        node_id: _Id,
         fence: int | None = None,
-        status: str | None = None,
+        status: Annotated[str, Field(max_length=32)] | None = None,
         note: Annotated[str, Field(max_length=2000)] | None = None,
         evidence: Annotated[str, Field(max_length=4000)] | None = None,
     ) -> Updated:
@@ -220,18 +300,18 @@ def _register(  # noqa: C901 -- one nested function per MCP tool
         return board.update(active(context), node_id, fence, status, note, evidence)
 
     def node_attach(
-        node_id: str,
+        node_id: _Id,
         fence: int,
         kind: Literal["commit", "file", "test_report", "url", "note"],
-        ref: str,
-        title: str | None = None,
+        ref: _Text,
+        title: Annotated[str, Field(max_length=300)] | None = None,
     ) -> Attached:
         """Attach one artifact. The same kind and ref return the same id."""
         return board.attach(active(context), node_id, fence, kind, ref, title)
 
     def ctx_get(
-        node_id: str | None = None,
-        query: str | None = None,
+        node_id: _Id | None = None,
+        query: _Text | None = None,
         max_items: Annotated[int, Field(ge=1, le=8)] = 6,
         response_format: Literal["concise", "detailed"] = "concise",
     ) -> CtxResult:
@@ -241,11 +321,11 @@ def _register(  # noqa: C901 -- one nested function per MCP tool
 
     def kb_add(  # noqa: PLR0913, PLR0917 -- MCP_TOOLS.md fixes these fields
         type: Literal["fact", "decision", "requirement"],  # noqa: A002 -- MCP field name is type
-        title: str,
+        title: Annotated[str, Field(max_length=300)],
         body: Annotated[str, Field(max_length=8000)],
-        source: str,
-        code_refs: list[str] | None = None,
-        supersedes: str | None = None,
+        source: _Text,
+        code_refs: _Items | None = None,
+        supersedes: _Id | None = None,
     ) -> KbAdded:
         """Record a fact, decision, or requirement. A fact's source must exist."""
         return board.kb_add(
@@ -253,22 +333,22 @@ def _register(  # noqa: C901 -- one nested function per MCP tool
         )
 
     def kb_impact(
-        target: str,
+        target: _Text,
         hops: Annotated[int, Field(ge=1, le=3)] = 3,
         limit: Annotated[int, Field(ge=1, le=30)] = 20,
-        kinds: list[str] | None = None,
+        kinds: Annotated[list[Annotated[str, Field(max_length=32)]], Field(max_length=10)] | None = None,
     ) -> Impact:
         """Neighbors of a file, module, or knowledge id, one list per hop."""
         return board.impact(active(context), target, hops, limit, kinds)
 
     def handover(  # noqa: PLR0913, PLR0917 -- MCP_TOOLS.md fixes these fields
         action: Literal["write", "read"],
-        goal: str | None = None,
-        done: list[str] | None = None,
-        decisions: list[str] | None = None,
-        open_questions: list[str] | None = None,
-        next_steps: list[str] | None = None,
-        failing_checks: list[str] | None = None,
+        goal: Annotated[str, Field(max_length=8000)] | None = None,
+        done: _Items | None = None,
+        decisions: _Items | None = None,
+        open_questions: _Items | None = None,
+        next_steps: _Items | None = None,
+        failing_checks: _Items | None = None,
     ) -> HandoverResult:
         """Write this tab's handover, or read the last one plus git diff --stat."""
         return board.handover(
@@ -300,6 +380,7 @@ def _register(  # noqa: C901 -- one nested function per MCP tool
         (handover, "Write or read a handover", _WRITE),
         (plan_list, "List plans", _READ),
     )
+
     def counted(size: int) -> None:
         tab = active(context).tab_id
         if sent is not None and tab:
@@ -309,6 +390,7 @@ def _register(  # noqa: C901 -- one nested function per MCP tool
         _ = server.tool(name=fn.__name__, description=description, annotations=marks, structured_output=False)(
             publish(fn, counted)
         )
+
 
 def _authorization(headers: object) -> str | None:
     if not isinstance(headers, list):
@@ -321,6 +403,7 @@ def _authorization(headers: object) -> str | None:
         if name.lower() == b"authorization":
             return value.decode("latin-1")
     return None
+
 
 def _header_pair(item: object) -> tuple[bytes, bytes] | None:
     if not isinstance(item, tuple) or len(item) != _PAIR:  # pyright: ignore[reportUnknownArgumentType] -- tuple items are Unknown
@@ -364,7 +447,14 @@ def _local_headers(raw: object) -> bool:
 
 async def _forbidden(send: _Send) -> None:
     body = b'{"reason":"INGEST_ORIGIN_FORBIDDEN"}'
-    await send({"type": "http.response.start", "status": 403, "headers": [
-        (b"content-type", b"application/json"), (b"content-length", str(len(body)).encode("ascii")),
-    ]})
+    await send(
+        {
+            "type": "http.response.start",
+            "status": 403,
+            "headers": [
+                (b"content-type", b"application/json"),
+                (b"content-length", str(len(body)).encode("ascii")),
+            ],
+        }
+    )
     await send({"type": "http.response.body", "body": body})

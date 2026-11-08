@@ -29,6 +29,18 @@ def _reply(home: Path) -> bytes:
     )
 
 
+def test_readme_matches_the_codex_capability_steps() -> None:
+    """The advertised Codex set starts without hooks, and the README says the same two steps."""
+    from aconsole.core.domain.agent import CAPABILITIES
+    from aconsole.core.domain.agent import AgentKind as DomainKind
+
+    readme = Path(__file__).parents[2].joinpath("README.md").read_text(encoding="utf-8")
+    assert not {"hooks", "approvals", "checkpoints"} & CAPABILITIES[DomainKind.CODEX].names()
+    assert "семь собственных hooks" in readme
+    assert "остаются в терминале" in readme
+    assert "открыть `/hooks`" in readme
+
+
 def test_runtime_probes_generated_hooks_before_enabling_them(tmp_path: Path) -> None:
     calls = []
 

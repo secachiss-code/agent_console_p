@@ -102,6 +102,7 @@ class IngestHandlers:
     on_prompt: Callable[[str, str], Awaitable[None]] | None = None
     on_session: Callable[[str, str], Awaitable[None]] | None = None
     on_cost: Callable[[str, float], Awaitable[None]] | None = None
+    on_loss: Callable[[str, int], Awaitable[None]] | None = None
 
 
 async def consume(
@@ -117,6 +118,7 @@ async def consume(
         _ = await ready.wait()
         ready.clear()
         while (item := queue.pop()) is not None:
+            failed = False
             try:
                 name = _event_name(item)
                 if name is not None:
@@ -132,6 +134,13 @@ async def consume(
                     await on_prompt(item.tab_id, prompt)
             except Exception:  # noqa: BLE001 -- one bad item must not stop the consumer
                 _LOG.exception("ingest item for %s failed", item.tab_id)
+                failed = True
+            lost = queue.take_applied_loss(item.tab_id) + int(failed)
+            if lost and found.on_loss is not None:
+                try:
+                    await found.on_loss(item.tab_id, lost)
+                except Exception:  # noqa: BLE001 -- a failed notification must not stop ingest
+                    _LOG.exception("ingest loss notification for %s failed", item.tab_id)
 
 
 class _HasSession(msgspec.Struct, frozen=True):

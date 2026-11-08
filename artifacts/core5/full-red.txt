@@ -1,0 +1,77 @@
+Collected 0 items to run in parallel
+........................................................................ [  3%]
+........................................................................ [  7%]
+........................................................................ [ 11%]
+........................................................................ [ 15%]
+........................................................................ [ 19%]
+........................................................................ [ 23%]
+........................................................................ [ 27%]
+........................................................................ [ 31%]
+........................................................................ [ 35%]
+........................................................................ [ 39%]
+........................................................................ [ 43%]
+...............F........................................................ [ 47%]
+........................................................................ [ 51%]
+..............................F......................................... [ 54%]
+........................................................................ [ 58%]
+........................................................................ [ 62%]
+........................................................................ [ 66%]
+........................................................................ [ 70%]
+........................................................................ [ 74%]
+........................................................................ [ 78%]
+........................................................................ [ 82%]
+........................................................................ [ 86%]
+........................................................................ [ 90%]
+........................................................................ [ 94%]
+........................................................................ [ 98%]
+...................................                                      [100%]
+python 3.15.1 gil=False
+
+=================================== FAILURES ===================================
+___________________ test_fake_methods_return_the_result_type ___________________
+
+    def test_fake_methods_return_the_result_type() -> None:
+>       assert covers_methods()
+E       assert False
+E        +  where False = covers_methods()
+
+/run/host/home/sas/Projects/sp_aconsole_prototype/tests/core/test_fake_core.py:127: AssertionError
+______________ test_other_namespace_cannot_initialize_as_the_host ______________
+
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-26/test_other_namespace_cannot_in0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x3b387b2bca0>
+caplog = <_pytest.logging.LogCaptureFixture object at 0x3b387ccba50>
+
+    def test_other_namespace_cannot_initialize_as_the_host(
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+        caplog: pytest.LogCaptureFixture,
+    ) -> None:
+        monkeypatch.setattr("aconsole.core.bootstrap.same_mnt_namespace", lambda _pid: False)
+        caplog.set_level(logging.WARNING)
+        messages = asyncio.run(_other_namespace(tmp_path))
+>       assert messages == (
+            "ROLE_FORBIDDEN",
+            "NOT_INITIALIZED",
+            "NOT_INITIALIZED",
+            "NOT_INITIALIZED",
+            "SIDECAR_TOKEN_INVALID",
+        )
+E       AssertionError: assert ('SERVER_BUSY..._INITIALIZED') == ('ROLE_FORBID...OKEN_INVALID')
+E
+E         At index 0 diff: 'SERVER_BUSY' != 'ROLE_FORBIDDEN'
+E         Use -v to get more diff
+
+tests/core/test_ipc_b.py:387: AssertionError
+------------------------------ Captured log call -------------------------------
+WARNING  aconsole.core.infrastructure.ipc.session:session.py:436 refused ui initialize from outside the core mount namespace
+=============================== warnings summary ===============================
+tests/core/test_round6_k24.py: 4 warnings
+tests/core/test_sidecar.py: 6 warnings
+  /home/sas/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/pty.py:66: DeprecationWarning: This process (pid=195512) is multi-threaded, use of forkpty() may lead to deadlocks in the child.
+    pid, fd = os.forkpty()
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/core/test_fake_core.py::test_fake_methods_return_the_result_type
+FAILED tests/core/test_ipc_b.py::test_other_namespace_cannot_initialize_as_the_host

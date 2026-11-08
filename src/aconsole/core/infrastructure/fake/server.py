@@ -14,6 +14,7 @@ from aconsole.contracts.app import (
     EmptyParams,
     PaletteItemsResult,
     SettingsUpdateParams,
+    SnapshotChunkParams,
     SnapshotResult,
     SubscribeResult,
 )
@@ -32,6 +33,7 @@ from aconsole.contracts.ipc import (
 )
 from aconsole.contracts.settings import Settings, commit_settings
 from aconsole.core.application.services.event_router import EventRouter
+from aconsole.core.domain.errors import DomainError
 from aconsole.core.infrastructure.fake.results import result_for
 from aconsole.core.infrastructure.fake.scenarios import (
     AT,
@@ -51,6 +53,7 @@ from aconsole.core.infrastructure.fake.scenarios import (
     waiting_snapshot,
 )
 from aconsole.core.infrastructure.ipc.framing import MessageTooLargeError, decode_envelope, encode_line, read_frame
+from aconsole.core.infrastructure.ipc.snapshot_chunks import SnapshotChunks
 
 _DROP_AFTER_S = 30.0
 _POLL_S = 0.05
@@ -301,6 +304,7 @@ class _Session:
         self.router = EventRouter()
         self.encoder = msgspec.json.Encoder()
         self._ring = None
+        self._chunks: SnapshotChunks = SnapshotChunks(ProtocolLimits().max_message_bytes)
         body = script.snapshot.snapshot
         self._settings = Settings(
             rev=body.settings_rev,
@@ -334,6 +338,8 @@ class _Session:
         return self.gap and request.method in {"app/snapshot", "events/subscribe"}
 
     def _dispatch(self, request: Request) -> tuple[bytes, ...]:
+        if request.method == "app/snapshotChunk":
+            return self._snapshot_chunk(request)
         if request.method == "events/subscribe":
             return self._subscribe(request)
         if request.method in {"settings/get", "settings/update"}:
@@ -343,6 +349,16 @@ class _Session:
             missing = named_error("METHOD_NOT_FOUND", MethodNotFoundDetails(method=request.method))
             return (self._error(request.id, missing),)
         return (self._ok(request.id, built),)
+
+    def _snapshot_chunk(self, request: Request) -> tuple[bytes, ...]:
+        try:
+            query = msgspec.json.decode(request.params, type=SnapshotChunkParams)
+            snapshot = self._snapshot_result() if query.cursor is None else None
+            return (self._ok(request.id, self._chunks.read(query, snapshot)),)
+        except DomainError as exc:
+            return (self._error(request.id, named_error(exc.name)),)
+        except msgspec.DecodeError, ValueError:
+            return (self._error(request.id, named_error("INVALID_PARAMS")),)
 
     def _settings_call(self, request: Request) -> tuple[bytes, ...]:
         if request.method == "settings/get":
@@ -402,7 +418,7 @@ class _Session:
             server_version="0.0.0",
             server_pid=os.getpid(),
             session_id="01JB2Z00000000000000000099",
-            capabilities=frozenset({"events.v1", "work_sessions.v1"}),
+            capabilities=frozenset({"events.v1", "work_sessions.v1", "snapshot.chunks.v1"}),
             limits=ProtocolLimits(),
         )
 

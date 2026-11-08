@@ -194,7 +194,8 @@ def test_round6_k25_listener_names_the_changed_fields() -> None:
         {"started", "status", "status_since", "attention", "agent_session_id"},
     )
     _ = service.apply_hook(str(tab), "Notification")
-    assert _last_update(events).changed == frozenset({"status", "status_since", "attention"})
+    # Exit stored the wait status in the detail. The hook replaces that with no detail.
+    assert _last_update(events).changed == frozenset({"status", "status_detail", "status_since", "attention"})
     _ = service.apply_hook(str(tab), "Stop")
     assert _last_update(events).changed == frozenset({"status", "status_since", "attention"})
     _ = service.apply_hook(str(tab), "UserPromptSubmit")

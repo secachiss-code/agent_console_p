@@ -39,6 +39,7 @@ from aconsole.contracts.app import (
     PreparedImagePaste,
     PrepareImagePasteParams,
     ProjectAddParams,
+    ProjectApprovalPolicyParams,
     ProjectIdParams,
     ProjectView,
     QuitCheckResult,
@@ -57,6 +58,8 @@ from aconsole.contracts.app import (
     SessionListResult,
     SetNodeStatusParams,
     SettingsUpdateParams,
+    SnapshotChunkParams,
+    SnapshotChunkResult,
     SnapshotResult,
     StartedParams,
     SubscribeParams,
@@ -175,6 +178,9 @@ class TypedFacade(Facade):
     async def app_snapshot(self, params: EmptyParams) -> SnapshotResult:
         return await self.typed("app/snapshot", params, SnapshotResult)
 
+    async def app_snapshot_chunk(self, params: SnapshotChunkParams) -> SnapshotChunkResult:
+        return await self.typed("app/snapshotChunk", params, SnapshotChunkResult)
+
     async def events_subscribe(self, params: SubscribeParams) -> SubscribeResult:
         return await self.typed("events/subscribe", params, SubscribeResult)
 
@@ -189,6 +195,9 @@ class TypedFacade(Facade):
 
     async def project_set_active(self, params: ProjectIdParams) -> EmptyResult:
         return await self.typed("project/setActive", params, EmptyResult)
+
+    async def project_set_approval_policy(self, params: ProjectApprovalPolicyParams) -> ProjectView:
+        return await self.typed("project/setApprovalPolicy", params, ProjectView)
 
     async def tab_open(self, params: OpenTabParams) -> TabView:
         return await self.typed("tab/open", params, TabView)

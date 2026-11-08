@@ -1,0 +1,99 @@
+Collected 0 items to run in parallel
+F..                                                                      [100%]
+=================================== FAILURES ===================================
+___ test_permission_request_and_decision_do_not_wait_for_a_large_checkpoint ____
+
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-13/test_permission_request_and_de0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x21e27188e90>
+
+    def test_permission_request_and_decision_do_not_wait_for_a_large_checkpoint(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        async def scenario() -> None:
+            async with _running(tmp_path, monkeypatch) as core:
+                folder = core.repo / "bulk"
+                folder.mkdir()
+                for index in range(1500):
+                    (folder / f"{index}.txt").write_text("data\n" * 800)
+                entered, release = threading.Event(), threading.Event()
+                capture = GitCheckpoints.capture
+
+                def delayed(self: GitCheckpoints, repo: Path, ref: str, label: str) -> TreeCapture:
+                    if not entered.is_set():
+                        entered.set()
+                        _ = release.wait(_STALL_S)
+                    before = time.perf_counter()
+                    result = capture(self, repo, ref, label)
+                    _measure("git_capture", time.perf_counter() - before)
+                    return result
+
+                monkeypatch.setattr(GitCheckpoints, "capture", delayed)
+                hook = None
+                try:
+                    await asyncio.to_thread(_hook, core.port, str(core.tab.id), core.spec.env["ACONSOLE_TAB_TOKEN"],
+                        {"hook_event_name": "UserPromptSubmit", "session_id": "latency", "prompt": "snapshot"})
+                    assert await asyncio.to_thread(entered.wait, 3)
+                    before = time.perf_counter()
+                    hook = await _permission(core)
+                    await _decide(core, 3)
+                    status, _body = await asyncio.wait_for(hook, 3)
+                    elapsed = time.perf_counter() - before
+                    _measure("approval_during_checkpoint", elapsed)
+                    assert status == 200
+                    assert elapsed < _LIMIT_S
+                finally:
+                    release.set()
+                    if hook is not None:
+                        await asyncio.gather(hook, return_exceptions=True)
+>       asyncio.run(scenario())
+
+tests/core/test_core_latency.py:153:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+../../.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py:205: in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py:128: in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/base_events.py:724: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    async def scenario() -> None:
+        async with _running(tmp_path, monkeypatch) as core:
+            folder = core.repo / "bulk"
+            folder.mkdir()
+            for index in range(1500):
+                (folder / f"{index}.txt").write_text("data\n" * 800)
+            entered, release = threading.Event(), threading.Event()
+            capture = GitCheckpoints.capture
+
+            def delayed(self: GitCheckpoints, repo: Path, ref: str, label: str) -> TreeCapture:
+                if not entered.is_set():
+                    entered.set()
+                    _ = release.wait(_STALL_S)
+                before = time.perf_counter()
+                result = capture(self, repo, ref, label)
+                _measure("git_capture", time.perf_counter() - before)
+                return result
+
+            monkeypatch.setattr(GitCheckpoints, "capture", delayed)
+            hook = None
+            try:
+                await asyncio.to_thread(_hook, core.port, str(core.tab.id), core.spec.env["ACONSOLE_TAB_TOKEN"],
+                    {"hook_event_name": "UserPromptSubmit", "session_id": "latency", "prompt": "snapshot"})
+                assert await asyncio.to_thread(entered.wait, 3)
+                before = time.perf_counter()
+                hook = await _permission(core)
+                await _decide(core, 3)
+                status, _body = await asyncio.wait_for(hook, 3)
+                elapsed = time.perf_counter() - before
+                _measure("approval_during_checkpoint", elapsed)
+                assert status == 200
+>               assert elapsed < _LIMIT_S
+E               assert 1.4058228620006048 < 0.25
+
+tests/core/test_core_latency.py:148: AssertionError
+=========================== short test summary info ============================
+FAILED tests/core/test_core_latency.py::test_permission_request_and_decision_do_not_wait_for_a_large_checkpoint

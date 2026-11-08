@@ -1,0 +1,812 @@
+============================= test session starts ==============================
+platform linux -- Python 3.15.1, pytest-9.1.1, pluggy-1.7.0 -- /home/sas/Projects/sp_aconsole_prototype/.venv-ui/bin/python
+cachedir: .pytest_cache
+hypothesis profile 'default'
+rootdir: /home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca
+configfile: pyproject.toml
+plugins: run-parallel-0.10.0, cov-7.1.0, anyio-4.15.1, hypothesis-6.170.9, schemathesis-4.32.7
+collecting ... collected 451 items
+Collected 0 items to run in parallel
+
+tests/gui/front/test_approval_alerts.py::test_a_request_in_an_inactive_window_rings_once_with_the_tab PASSED [  0%]
+tests/gui/front/test_approval_alerts.py::test_an_active_window_does_not_ring PASSED [  0%]
+tests/gui/front/test_approval_alerts.py::test_notification_policy_always_never_and_live_change PASSED [  0%]
+tests/gui/front/test_approval_alerts.py::test_an_inactive_tab_rings_in_an_active_window PASSED [  0%]
+tests/gui/front/test_approval_alerts.py::test_switching_to_a_notified_tab_withdraws_without_repeating_its_episode PASSED [  1%]
+tests/gui/front/test_approval_alerts.py::test_an_active_window_without_a_selected_tab_does_not_hide_requests PASSED [  1%]
+tests/gui/front/test_approval_alerts.py::test_a_decision_withdraws_and_the_next_request_is_a_new_episode PASSED [  1%]
+tests/gui/front/test_approval_alerts.py::test_coming_back_withdraws_and_leaving_again_does_not_ring_again PASSED [  1%]
+tests/gui/front/test_approval_alerts.py::test_leaving_a_window_with_an_open_request_rings_once PASSED [  1%]
+tests/gui/front/test_approval_alerts.py::test_each_tab_has_its_own_episode_and_only_the_decided_one_goes PASSED [  2%]
+tests/gui/front/test_approval_alerts.py::test_a_tab_title_that_is_unknown_still_rings PASSED [  2%]
+tests/gui/front/test_approval_alerts.py::test_a_closing_window_takes_its_notifications_along PASSED [  2%]
+tests/gui/front/test_approval_alerts.py::test_the_notification_does_not_show_the_command PASSED [  2%]
+tests/gui/front/test_approval_alerts.py::test_the_window_rings_withdraws_and_a_click_opens_the_tab[waiting] PASSED [  3%]
+tests/gui/front/test_approval_panel.py::test_cards_show_what_is_asked_and_take_no_focus[waiting] PASSED [  3%]
+tests/gui/front/test_approval_panel.py::test_a_decision_closes_the_card_and_the_next_press_cannot_land_on_the_next_one[waiting] PASSED [  3%]
+tests/gui/front/test_approval_panel.py::test_keys_move_between_cards_and_open_the_tab[waiting] PASSED [  3%]
+tests/gui/front/test_approval_panel.py::test_release_leaves_the_request_to_the_agent[waiting] PASSED [  3%]
+tests/gui/front/test_approval_panel.py::test_a_closed_request_says_the_decision_did_not_apply[approval-expired] PASSED [  4%]
+tests/gui/front/test_approval_panel.py::test_a_lost_call_keeps_the_card_for_another_try[waiting] PASSED [  4%]
+tests/gui/front/test_approval_panel.py::test_only_the_open_tab_shows_its_request_and_the_rest_are_counted[waiting] PASSED [  4%]
+tests/gui/front/test_approval_panel.py::test_a_risky_allow_waits_half_a_second_and_is_never_the_default[waiting] PASSED [  4%]
+tests/gui/front/test_approval_panel.py::test_a_new_card_cannot_be_decided_by_the_press_that_met_it[waiting] PASSED [  5%]
+tests/gui/front/test_approval_panel.py::test_the_checkbox_widens_the_allow_to_the_tab[waiting] PASSED [  5%]
+tests/gui/front/test_approval_panel.py::test_tab_reaches_the_details_the_checkbox_and_every_button[waiting] PASSED [  5%]
+tests/gui/front/test_approval_panel.py::test_buttons_keep_one_row_against_the_end_when_there_is_room[waiting] PASSED [  5%]
+tests/gui/front/test_approval_panel.py::test_expired_approval_disables_allow_and_blocks_keyboard_decision[waiting] PASSED [  5%]
+tests/gui/front/test_approval_panel.py::test_the_card_leaves_the_terminal_alone_and_its_buttons_on_screen[waiting] PASSED [  6%]
+tests/gui/front/test_approval_panel.py::test_the_window_routes_keys_to_a_card_only_when_it_has_focus[waiting] PASSED [  6%]
+tests/gui/front/test_b0_window.py::test_sidebar_lists_demo_tabs[1280-False] PASSED [  6%]
+tests/gui/front/test_b0_window.py::test_sidebar_lists_demo_tabs[700-True] PASSED [  6%]
+tests/gui/front/test_b0_window.py::test_collapsed_sidebar_button_opens_and_closes_sidebar PASSED [  7%]
+tests/gui/front/test_b0_window.py::test_system_title_buttons_keep_clear_header_space[1280-False-left] PASSED [  7%]
+tests/gui/front/test_b0_window.py::test_system_title_buttons_keep_clear_header_space[1280-False-right] PASSED [  7%]
+tests/gui/front/test_b0_window.py::test_system_title_buttons_keep_clear_header_space[1280-False-both] PASSED [  7%]
+tests/gui/front/test_b0_window.py::test_system_title_buttons_keep_clear_header_space[700-True-left] PASSED [  7%]
+tests/gui/front/test_b0_window.py::test_system_title_buttons_keep_clear_header_space[700-True-right] PASSED [  8%]
+tests/gui/front/test_b0_window.py::test_system_title_buttons_keep_clear_header_space[700-True-both] PASSED [  8%]
+tests/gui/front/test_b0_window.py::test_snapshot_connection_error_exits_without_a_window PASSED [  8%]
+tests/gui/front/test_b0_window.py::test_startup_error_offers_retry_and_opens_the_window PASSED [  8%]
+tests/gui/front/test_b0_window.py::test_startup_connection_error_says_so_and_exits_once_closed PASSED [  9%]
+tests/gui/front/test_b10_setup.py::test_b10_setup_load_and_preview_never_apply_without_explicit_action PASSED [  9%]
+tests/gui/front/test_b10_setup.py::test_b10_setup_checks_keep_newer_result_when_older_request_finishes_late PASSED [  9%]
+tests/gui/front/test_b10_setup.py::test_b10_setup_apply_uses_exact_visible_preview_id_and_token PASSED [  9%]
+tests/gui/front/test_b10_setup.py::test_b10_setup_rejects_absent_and_expired_previews_without_apply PASSED [  9%]
+tests/gui/front/test_b10_setup.py::test_b10_setup_latest_preview_wins_when_older_response_arrives_late PASSED [ 10%]
+tests/gui/front/test_b10_setup.py::test_b10_setup_discard_invalidates_pending_preview PASSED [ 10%]
+tests/gui/front/test_b10_setup.py::test_b10_setup_blocks_double_apply_while_first_call_is_pending PASSED [ 10%]
+tests/gui/front/test_b10_setup.py::test_b10_preferences_load_and_update_publish_server_settings_to_two_subscribers PASSED [ 10%]
+tests/gui/front/test_b10_setup.py::test_b10_preferences_distinguish_none_from_unset_and_use_returned_revisions PASSED [ 11%]
+tests/gui/front/test_b10_setup.py::test_b10_preferences_serialize_concurrent_updates_using_latest_revision PASSED [ 11%]
+tests/gui/front/test_b10_setup.py::test_b10_preferences_update_error_propagates_without_publication PASSED [ 11%]
+tests/gui/front/test_b10_setup.py::test_b10_preferences_unsubscribe_is_idempotent PASSED [ 11%]
+tests/gui/front/test_b10_views.py::test_b10_wizard_later_closes_without_finishing_and_finish_persists_completion PASSED [ 11%]
+tests/gui/front/test_b10_views.py::test_b10_wizard_apply_button_sends_exact_visible_preview_token PASSED [ 12%]
+tests/gui/front/test_b10_views.py::test_b10_preferences_save_updates_two_retained_terminals_without_restart PASSED [ 12%]
+tests/gui/front/test_b10_views.py::test_preferences_keep_drafts_when_remote_settings_change PASSED [ 12%]
+tests/gui/front/test_b10_views.py::test_window_shows_connection_loss_and_recovers_controls PASSED [ 12%]
+tests/gui/front/test_b10_views.py::test_new_tab_uses_selected_workspace_and_guards_duplicate_launches[0] PASSED [ 13%]
+tests/gui/front/test_b10_views.py::test_new_tab_uses_selected_workspace_and_guards_duplicate_launches[1] PASSED [ 13%]
+tests/gui/front/test_b10_views.py::test_new_tab_uses_selected_workspace_and_guards_duplicate_launches[2] PASSED [ 13%]
+tests/gui/front/test_b10_views.py::test_b10_wizard_refreshes_agents_live_and_projects_when_reopened PASSED [ 13%]
+tests/gui/front/test_b10_views.py::test_b10_wizard_says_why_a_check_failed_and_gives_the_command PASSED [ 13%]
+tests/gui/front/test_b10_views.py::test_b10_wizard_without_an_agent_says_what_to_do_next PASSED [ 14%]
+tests/gui/front/test_b1_keys.py::test_b1_keys_settings_override_updates_controller PASSED [ 14%]
+tests/gui/front/test_b1_keys.py::test_b1_keys_older_settings_response_cannot_replace_keymap PASSED [ 14%]
+tests/gui/front/test_b1_keys.py::test_b1_keys_palette_shortcut_action_dispatches PASSED [ 14%]
+tests/gui/front/test_b1_keys.py::test_b1_keys_terminal_passthrough PASSED [ 15%]
+tests/gui/front/test_b1_keys.py::test_b1_keys_initial_shortcut_controller PASSED [ 15%]
+tests/gui/front/test_b1_keys.py::test_b1_keys_narrow_window PASSED       [ 15%]
+tests/gui/front/test_b2_dnd.py::test_b2_drag_prepare_and_drop_signals_request_reorder PASSED [ 15%]
+tests/gui/front/test_b2_menu.py::test_b2_row_menu_rename_starts_editing_the_bound_row PASSED [ 15%]
+tests/gui/front/test_b2_menu.py::test_b2_context_menu_opens_from_shift_f10 PASSED [ 16%]
+tests/gui/front/test_b2_menu.py::test_b2_close_intent_is_disabled_without_handler_and_targets_bound_row PASSED [ 16%]
+tests/gui/front/test_b2_menu.py::test_b2_unbind_rebind_closes_menu_and_discards_old_row_target PASSED [ 16%]
+tests/gui/front/test_b2_menu.py::test_the_menu_opens_the_health_dialog_with_the_core_s_answer PASSED [ 16%]
+tests/gui/front/test_b2_sections.py::test_b2_tab_section_and_header_follow_tab_and_account_updates PASSED [ 17%]
+tests/gui/front/test_b2_sections.py::test_b2_tab_row_edit_and_close_controls_have_explicit_behavior PASSED [ 17%]
+tests/gui/front/test_b2_status.py::test_b2_status_tooltips_distinguish_waiting_states_and_show_working_spinner PASSED [ 17%]
+tests/gui/front/test_b2_tabs.py::test_b2_tab_updated_changes_one_row PASSED [ 17%]
+tests/gui/front/test_b2_tabs.py::test_b2_reorder_requests_core PASSED    [ 17%]
+tests/gui/front/test_b2_tabs.py::test_b2_reorder_partial_failure_keeps_store_state PASSED [ 18%]
+tests/gui/front/test_b2_tabs.py::test_b2_rename_requests_core PASSED     [ 18%]
+tests/gui/front/test_b2_tabs.py::test_b2_rebinding_while_editing_does_not_rename_new_tab PASSED [ 18%]
+tests/gui/front/test_b2_tabs.py::test_b2_focus_requests_core PASSED      [ 18%]
+tests/gui/front/test_b2_tabs.py::test_b2_empty_state PASSED              [ 19%]
+tests/gui/front/test_b4a_plan.py::test_b4a_plan_card_demo_shows_plan_and_ready_nodes PASSED [ 19%]
+tests/gui/front/test_b4a_plan.py::test_b4a_plan_card_activation_and_page PASSED [ 19%]
+tests/gui/front/test_b4a_plan.py::test_b4a_plan_card_empty_state_explains_missing_plan PASSED [ 19%]
+tests/gui/front/test_b4a_plan.py::test_b4a_plan_graph_shows_all_nodes_and_emphasizes_hovered_node_neighbors PASSED [ 19%]
+tests/gui/front/test_b4a_plan.py::test_b4a_plan_graph_tab_action_targets_hovered_nodes_tab PASSED [ 20%]
+tests/gui/front/test_b4a_plan.py::test_b4a_window_plan_card_demo PASSED  [ 20%]
+tests/gui/front/test_b4a_plan.py::test_b4a_window_plan_card_opens_page PASSED [ 20%]
+tests/gui/front/test_b4a_plan.py::test_window_actions_reach_the_core PASSED [ 20%]
+tests/gui/front/test_b4a_plan.py::test_a_summary_section_folds_and_remembers_it PASSED [ 21%]
+tests/gui/front/test_b4a_plan.py::test_a_person_accepts_or_sends_back_a_step_on_verification PASSED [ 21%]
+tests/gui/front/test_b4a_plan.py::test_without_a_decision_handler_no_step_offers_to_be_accepted PASSED [ 21%]
+tests/gui/front/test_b4a_plan.py::test_heartbeat_keeps_plan_buttons_and_selection PASSED [ 21%]
+tests/gui/front/test_b4b_quota.py::test_the_main_pool_is_named_by_its_days_and_api_stays_api PASSED [ 21%]
+tests/gui/front/test_b4b_quota.py::test_the_cursor_card_counts_its_main_pool_in_percent_and_api_in_dollars[en_US-$6.68 / $11.25] PASSED [ 22%]
+tests/gui/front/test_b4b_quota.py::test_the_cursor_card_counts_its_main_pool_in_percent_and_api_in_dollars[ru_RU-$6,68 / $11,25] PASSED [ 22%]
+tests/gui/front/test_b4b_quota.py::test_the_sidebar_shows_every_window_of_an_account_shortest_first[claude-windows0-expected0] PASSED [ 22%]
+tests/gui/front/test_b4b_quota.py::test_the_sidebar_shows_every_window_of_an_account_shortest_first[codex-windows1-expected1] PASSED [ 22%]
+tests/gui/front/test_b4b_quota.py::test_the_sidebar_shows_every_window_of_an_account_shortest_first[cursor-windows2-expected2] PASSED [ 23%]
+tests/gui/front/test_b4b_quota.py::test_the_sidebar_shows_every_window_of_an_account_shortest_first[opencode-windows3-expected3] PASSED [ 23%]
+tests/gui/front/test_b4b_quota.py::test_opencode_without_go_says_so_instead_of_waiting_for_numbers PASSED [ 23%]
+tests/gui/front/test_b4b_quota.py::test_b4b_quota_card_shows_normal_unknown_estimated_and_critical_windows PASSED [ 23%]
+tests/gui/front/test_b4b_quota.py::test_b4b_summary_card_combines_plan_and_quota_and_tracks_live_updates PASSED [ 23%]
+tests/gui/front/test_b5a_page.py::test_b5a_terminal_page_starts_once_and_shows_three_actions_after_exit PASSED [ 24%]
+tests/gui/front/test_b5a_page.py::test_shared_workspace_waits_for_confirmed_handoff_after_failed_launch PASSED [ 24%]
+tests/gui/front/test_b5a_page.py::test_b5a_closed_terminal_page_does_not_start_queued_worker PASSED [ 24%]
+tests/gui/front/test_b5a_page.py::test_failed_terminal_spawn_can_be_retried PASSED [ 24%]
+tests/gui/front/test_b5a_page.py::test_b5a_window_creates_terminal_pages_on_selection_and_reuses_them PASSED [ 25%]
+tests/gui/front/test_b5a_page.py::test_b5a_disposed_window_ignores_later_store_and_selection_updates PASSED [ 25%]
+tests/gui/front/test_b5a_terminal.py::test_b5a_terminal_session_spawn PASSED [ 25%]
+tests/gui/front/test_b5a_terminal.py::test_b5a_restart_on_one_terminal_keeps_a_single_exit_handler PASSED [ 25%]
+tests/gui/front/test_b5a_terminal.py::test_b5a_terminal_start_is_lazy_and_cancelled_waiter_does_not_cancel_worker PASSED [ 25%]
+tests/gui/front/test_b5a_terminal.py::test_b5a_terminal_reports_raw_exit_status_after_started_attempt PASSED [ 26%]
+tests/gui/front/test_b5a_terminal.py::test_b5a_terminal_reports_spawn_and_launch_errors_without_lifecycle PASSED [ 26%]
+tests/gui/front/test_b5a_terminal.py::test_b5a_terminal_cancel_before_spawn_cancels_spec_fetch PASSED [ 26%]
+tests/gui/front/test_b5a_terminal.py::test_b5a_terminal_cancel_before_worker_starts_settles_all_waiters PASSED [ 26%]
+tests/gui/front/test_b5a_terminal.py::test_b5a_terminal_late_success_after_cancel_still_reports_lifecycle PASSED [ 27%]
+tests/gui/front/test_b5a_terminal.py::test_b5a_real_vte_spawn_async_reports_exit_and_raw_wait_status PASSED [ 27%]
+tests/gui/front/test_b5a_terminal.py::test_b5a_real_vte_does_not_inherit_parent_environment PASSED [ 27%]
+tests/gui/front/test_b5a_terminal.py::test_b5a_terminal_palette_binding_initial_theme_uses_exact_design_colors[light-#241f31-#ffffff-palette0] PASSED [ 27%]
+tests/gui/front/test_b5a_terminal.py::test_b5a_terminal_palette_binding_initial_theme_uses_exact_design_colors[dark-#deddda-#1e1e1e-palette1] PASSED [ 27%]
+tests/gui/front/test_b5a_terminal.py::test_b5a_terminal_palette_binding_updates_on_theme PASSED [ 28%]
+tests/gui/front/test_b7_dialog.py::test_b7_palette_search_is_local_and_executes_selected_argument PASSED [ 28%]
+tests/gui/front/test_b7_dialog.py::test_b7_palette_row_activation_uses_activated_row PASSED [ 28%]
+tests/gui/front/test_b7_dialog.py::test_b7_main_window_opens_palette_lazily_with_selected_context PASSED [ 28%]
+tests/gui/front/test_b7_palette.py::test_b7_palette_loads_once_and_searches_cached_items_locally PASSED [ 29%]
+tests/gui/front/test_b7_palette.py::test_b7_palette_execute_sends_argument_and_opening_context PASSED [ 29%]
+tests/gui/front/test_b7_palette.py::test_b7_palette_rejects_disabled_invalid_selection_and_arguments PASSED [ 29%]
+tests/gui/front/test_b7_palette.py::test_b7_palette_rejects_argument_for_item_without_argument_spec PASSED [ 29%]
+tests/gui/front/test_b7_palette.py::test_b7_palette_close_discards_pending_load_and_new_open_wins PASSED [ 29%]
+tests/gui/front/test_b7_palette.py::test_b7_palette_uses_latest_query_when_load_finishes PASSED [ 30%]
+tests/gui/front/test_b7_palette.py::test_b7_palette_changed_search_clears_selection_before_execute PASSED [ 30%]
+tests/gui/front/test_b7_palette.py::test_b7_palette_repeating_query_preserves_selection PASSED [ 30%]
+tests/gui/front/test_b7_palette.py::test_b7_palette_back_keeps_query_and_results PASSED [ 30%]
+tests/gui/front/test_b7_palette.py::test_b7_palette_ignores_second_execute_while_first_is_pending PASSED [ 31%]
+tests/gui/front/test_b7_palette.py::test_b7_palette_late_execute_result_does_not_change_new_opening PASSED [ 31%]
+tests/gui/front/test_b7_palette.py::test_b7_palette_pending_execute_blocks_new_opening_without_mutating_it PASSED [ 31%]
+tests/gui/front/test_b7_palette.py::test_b7_palette_execute_error_propagates_and_keeps_selection PASSED [ 31%]
+tests/gui/front/test_clipboard_routing.py::test_real_clipboard_shortcuts[text] PASSED [ 31%]
+tests/gui/front/test_clipboard_routing.py::test_real_clipboard_shortcuts[image] PASSED [ 32%]
+tests/gui/front/test_clipboard_routing.py::test_real_clipboard_shortcuts[mixed] PASSED [ 32%]
+tests/gui/front/test_clipboard_routing.py::test_real_clipboard_shortcuts[empty] PASSED [ 32%]
+tests/gui/front/test_clipboard_routing.py::test_real_clipboard_shortcuts[cancel] PASSED [ 32%]
+tests/gui/front/test_clipboard_routing.py::test_real_clipboard_shortcuts[copy] PASSED [ 33%]
+tests/gui/front/test_close_confirmation.py::test_quit_checks_counts_and_cancel_preserves_the_window[0-0] PASSED [ 33%]
+tests/gui/front/test_close_confirmation.py::test_quit_checks_counts_and_cancel_preserves_the_window[2-0] PASSED [ 33%]
+tests/gui/front/test_close_confirmation.py::test_quit_checks_counts_and_cancel_preserves_the_window[0-3] PASSED [ 33%]
+tests/gui/front/test_close_confirmation.py::test_quit_checks_counts_and_cancel_preserves_the_window[2-3] PASSED [ 33%]
+tests/gui/front/test_close_confirmation.py::test_unknown_core_state_requires_confirmation PASSED [ 34%]
+tests/gui/front/test_close_confirmation.py::test_clean_running_tab_is_not_closed_before_confirmation[False-False] PASSED [ 34%]
+tests/gui/front/test_close_confirmation.py::test_clean_running_tab_is_not_closed_before_confirmation[True-False] PASSED [ 34%]
+tests/gui/front/test_close_confirmation.py::test_clean_running_tab_is_not_closed_before_confirmation[False-True] PASSED [ 34%]
+tests/gui/front/test_close_confirmation.py::test_repeated_window_close_uses_one_check PASSED [ 35%]
+tests/gui/front/test_contrast_table.py::test_the_table_is_the_floor_theme_and_the_dim_label_is_readable PASSED [ 35%]
+tests/gui/front/test_des2_accessibility.py::test_every_plan_state_is_visible_and_updates_on_heartbeat PASSED [ 35%]
+tests/gui/front/test_des2_accessibility.py::test_tab_states_have_visible_text_when_colours_are_unavailable PASSED [ 35%]
+tests/gui/front/test_des2_accessibility.py::test_keyboard_reorder_reaches_rpc_and_respects_section_and_busy PASSED [ 35%]
+tests/gui/front/test_des2_accessibility.py::test_sidebar_controls_have_accessible_names PASSED [ 36%]
+tests/gui/front/test_des4_localization.py::test_refused_comment_is_localized_and_keeps_draft[en_US-Start the agent in this tab first] PASSED [ 36%]
+tests/gui/front/test_des4_localization.py::test_refused_comment_is_localized_and_keeps_draft[ru_RU-\u0421\u043d\u0430\u0447\u0430\u043b\u0430 \u0437\u0430\u043f\u0443\u0441\u0442\u0438\u0442\u0435 \u0430\u0433\u0435\u043d\u0442\u0430 \u0432\u043e \u0432\u043a\u043b\u0430\u0434\u043a\u0435] PASSED [ 36%]
+tests/gui/front/test_des4_localization.py::test_palette_caption_preserves_user_title_and_identity[en_US-Open plan: ] PASSED [ 36%]
+tests/gui/front/test_des4_localization.py::test_palette_caption_preserves_user_title_and_identity[ru_RU-\u041e\u0442\u043a\u0440\u044b\u0442\u044c \u043f\u043b\u0430\u043d: ] PASSED [ 37%]
+tests/gui/front/test_fe_races.py::test_event_subscriber_failure_keeps_sequence_and_other_subscribers PASSED [ 37%]
+tests/gui/front/test_fe_races.py::test_late_graph_page_does_not_append_to_new_scope PASSED [ 37%]
+tests/gui/front/test_fe_races.py::test_older_checkpoints_cannot_replace_newer_result PASSED [ 37%]
+tests/gui/front/test_fe_races.py::test_git_operations_do_not_overlap PASSED [ 37%]
+tests/gui/front/test_fe_races.py::test_snapshot_and_connection_subscribers_fail_independently PASSED [ 38%]
+tests/gui/front/test_fe_races.py::test_clearing_git_inspector_discards_pending_detail PASSED [ 38%]
+tests/gui/front/test_git_actions.py::test_stage_commit_and_file_buttons_in_the_inspector PASSED [ 38%]
+tests/gui/front/test_git_actions.py::test_merge_removes_the_worktree_unless_told_not_to PASSED [ 38%]
+tests/gui/front/test_git_actions.py::test_a_conflicted_rebase_offers_abort_and_a_stale_commit_is_refused PASSED [ 39%]
+tests/gui/front/test_git_actions.py::test_restore_a_file_from_a_commit PASSED [ 39%]
+tests/gui/front/test_git_actions.py::test_what_a_row_offers PASSED       [ 39%]
+tests/gui/front/test_git_actions.py::test_a_tab_shows_its_branch_node_and_size PASSED [ 39%]
+tests/gui/front/test_git_actions.py::test_the_sidebar_item_follows_git_state PASSED [ 39%]
+tests/gui/front/test_git_actions.py::test_the_facts_banner_shows_what_the_core_found PASSED [ 40%]
+tests/gui/front/test_git_lanes.py::test_a_line_stays_on_one_lane PASSED  [ 40%]
+tests/gui/front/test_git_lanes.py::test_base_keeps_lane_zero_even_when_branches_come_first PASSED [ 40%]
+tests/gui/front/test_git_lanes.py::test_base_keeps_its_lane_when_a_branch_claimed_its_parent_first PASSED [ 40%]
+tests/gui/front/test_git_lanes.py::test_a_branch_joins_its_parent_lane_and_the_lane_frees PASSED [ 41%]
+tests/gui/front/test_git_lanes.py::test_merge_opens_a_lane_for_the_second_parent PASSED [ 41%]
+tests/gui/front/test_git_lanes.py::test_a_merge_into_a_lane_that_also_passes_keeps_the_lane_whole PASSED [ 41%]
+tests/gui/front/test_git_lanes.py::test_snapshot_order_is_dashed_and_separate_from_git_edges PASSED [ 41%]
+tests/gui/front/test_git_lanes.py::test_pages_continue_the_same_edges PASSED [ 41%]
+tests/gui/front/test_git_lanes.py::test_tab_color_is_stable_and_never_the_base PASSED [ 42%]
+tests/gui/front/test_git_pane.py::test_graph_rows_and_inspector_on_a_real_repository PASSED [ 42%]
+tests/gui/front/test_git_pane.py::test_long_history_loads_in_pages PASSED [ 42%]
+tests/gui/front/test_git_pane.py::test_behind_dirty_and_conflict_are_separate_badges PASSED [ 42%]
+tests/gui/front/test_git_row_tooltips.py::test_recycled_tooltip_is_current_for_pointer_and_keyboard PASSED [ 43%]
+tests/gui/front/test_git_scale_ui.py::test_a_narrow_page_puts_the_inspector_under_the_graph PASSED [ 43%]
+tests/gui/front/test_git_scale_ui.py::test_scrolling_a_long_history FAILED [ 43%]
+
+=================================== FAILURES ===================================
+________________________ test_scrolling_a_long_history _________________________
+
+tmp_path = PosixPath('/tmp/pytest-of-sas/pytest-154/test_scrolling_a_long_history0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7240bc10e580>
+
+    def test_scrolling_a_long_history(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+        repo = tmp_path / "repo"
+        repo.mkdir()
+        _ = _git(repo, "init", "-q", "-b", "develop")
+        lines: list[str] = []
+        for number in range(_COMMITS):
+            message = f"commit {number}"
+            lines.extend((
+                "commit refs/heads/develop",
+                f"committer t <t@e> {1_700_000_000 + number} +0000",
+                f"data {len(message)}",
+                message,
+                f"M 100644 inline f{number % 200}.txt",
+                f"data {len(message)}",
+                message,
+                "",
+            ))
+        _ = subprocess.run(
+            [_GIT, "-C", str(repo), "fast-import", "--quiet"], input="\n".join(lines), text=True, check=True
+        )
+        _ = _git(repo, "checkout", "-qf", "develop")
+
+        async def check(pane: GitPane, _toasts: list[str], _window: Adw.ApplicationWindow) -> None:
+            before = _rss_mb()
+            marks = [f"start {before:.0f}"]
+            await _settled(lambda: pane.store.get_n_items() >= 200)
+            marks.append(f"first page {_rss_mb():.0f}")
+            loading = time.perf_counter()
+            for _ in range(_PAGE_ATTEMPTS):
+                if pane.store.get_n_items() >= _COMMITS:
+                    break
+                await pane.load_more()
+            await _settled(lambda: pane.store.get_n_items() >= _COMMITS)
+            loaded = time.perf_counter() - loading
+            marks.append(f"all rows {_rss_mb():.0f} after {loaded:.1f} s")
+            adjustment = pane.scroller.get_vadjustment()
+            frames: list[float] = []
+            started = time.perf_counter()
+            last = started
+
+            def tick(_widget: Gtk.Widget, _clock: Gdk.FrameClock) -> bool:
+                nonlocal last
+                now = time.perf_counter()
+                frames.append(now - last)
+                last = now
+                span = adjustment.get_upper() - adjustment.get_page_size()
+                progress = (now - started) / _SCROLL_S
+                adjustment.set_value(span * min(progress, 1.0))
+                return now - started < _SCROLL_S
+
+            _ = pane.list_view.add_tick_callback(tick)
+            await _settled(lambda: time.perf_counter() - started >= _SCROLL_S)
+            assert len(frames) >= _MIN_FRAMES, f"only {len(frames)} frames"
+            median = statistics.median(frames) * _MS
+            p95 = statistics.quantiles(frames, n=_PERCENTILES)[_P95_INDEX] * _MS
+            rss = _rss_mb()
+            line = (
+                f"git scale: {pane.store.get_n_items()} rows, {len(frames)} frames in {_SCROLL_S:.0f} s, "
+                f"median {median:.1f} ms, p95 {p95:.1f} ms, worst {max(frames) * _MS:.1f} ms, "
+                f"RSS {rss:.0f} MB ({', '.join(marks)})"
+            )
+            _report(line)
+            assert adjustment.get_value() > 0, "the list never moved"
+            assert median <= _FRAME_LIMIT_MS, line
+            assert rss - before <= _GROWTH_LIMIT_MB, line
+
+>       _on_pane(tmp_path, monkeypatch, repo, check)
+
+tests/gui/front/test_git_scale_ui.py:148:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+artifacts/main-merge/measure.py:86: in on_pane
+    return original(tmp_path,monkeypatch,repo,observed)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/gui/front/test_git_pane.py:127: in _on_pane
+    raise failures[0]
+tests/gui/front/test_git_pane.py:108: in _run
+    await check(pane, toasts, window)
+artifacts/main-merge/measure.py:74: in observed
+    await check(pane,toasts,window)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+pane = <git_pane.GitPane object at 0x72409f90b380 (aconsole+ui+views+review+git_pane+GitPane at 0xb0aeac70)>
+_toasts = []
+_window = <Adw.ApplicationWindow object at 0x72409d6aee40 (AdwApplicationWindow at 0x7891a0b0)>
+
+    async def check(pane: GitPane, _toasts: list[str], _window: Adw.ApplicationWindow) -> None:
+        before = _rss_mb()
+        marks = [f"start {before:.0f}"]
+        await _settled(lambda: pane.store.get_n_items() >= 200)
+        marks.append(f"first page {_rss_mb():.0f}")
+        loading = time.perf_counter()
+        for _ in range(_PAGE_ATTEMPTS):
+            if pane.store.get_n_items() >= _COMMITS:
+                break
+            await pane.load_more()
+        await _settled(lambda: pane.store.get_n_items() >= _COMMITS)
+        loaded = time.perf_counter() - loading
+        marks.append(f"all rows {_rss_mb():.0f} after {loaded:.1f} s")
+        adjustment = pane.scroller.get_vadjustment()
+        frames: list[float] = []
+        started = time.perf_counter()
+        last = started
+
+        def tick(_widget: Gtk.Widget, _clock: Gdk.FrameClock) -> bool:
+            nonlocal last
+            now = time.perf_counter()
+            frames.append(now - last)
+            last = now
+            span = adjustment.get_upper() - adjustment.get_page_size()
+            progress = (now - started) / _SCROLL_S
+            adjustment.set_value(span * min(progress, 1.0))
+            return now - started < _SCROLL_S
+
+        _ = pane.list_view.add_tick_callback(tick)
+        await _settled(lambda: time.perf_counter() - started >= _SCROLL_S)
+        assert len(frames) >= _MIN_FRAMES, f"only {len(frames)} frames"
+        median = statistics.median(frames) * _MS
+        p95 = statistics.quantiles(frames, n=_PERCENTILES)[_P95_INDEX] * _MS
+        rss = _rss_mb()
+        line = (
+            f"git scale: {pane.store.get_n_items()} rows, {len(frames)} frames in {_SCROLL_S:.0f} s, "
+            f"median {median:.1f} ms, p95 {p95:.1f} ms, worst {max(frames) * _MS:.1f} ms, "
+            f"RSS {rss:.0f} MB ({', '.join(marks)})"
+        )
+        _report(line)
+        assert adjustment.get_value() > 0, "the list never moved"
+>       assert median <= _FRAME_LIMIT_MS, line
+E       AssertionError: git scale: 10000 rows, 54 frames in 4 s, median 69.4 ms, p95 119.9 ms, worst 136.8 ms, RSS 2156 MB (start 2121, first page 2134, all rows 2153 after 3.4 s)
+E       assert 69.36523649346782 <= 17.5
+
+tests/gui/front/test_git_scale_ui.py:145: AssertionError
+----------------------------- Captured stderr call -----------------------------
+[11/08/26 17:41:53] INFO     Context impl SQLiteImpl.           migration.py:205
+                    INFO     Will assume non-transactional DDL. migration.py:208
+                    INFO     Running upgrade  -> 0001_initial,  migration.py:611
+                             Initial schema from DATA_MODEL §3,
+                             written out table by table.
+                    INFO     Running upgrade 0001_initial ->    migration.py:611
+                             0002_plan_node_details, Keep what
+                             an agent wrote on a plan node: its
+                             boundaries, output format, and
+                             note.
+                    INFO     Running upgrade                    migration.py:611
+                             0002_plan_node_details ->
+                             0003_knowledge_details, Keep what
+                             a fact says and what a handover
+                             packet lists, not only their
+                             titles.
+                    INFO     Running upgrade                    migration.py:611
+                             0003_knowledge_details ->
+                             0004_git_operations, A journal of
+                             merges and rebases, so a restart
+                             can say what happened to a branch.
+                    INFO     Running upgrade                    migration.py:611
+                             0004_git_operations ->
+                             0005_work_sessions, Task sessions
+                             retain existing workspaces without
+                             executing Git or moving refs.
+                    INFO     Running upgrade 0005_work_sessions migration.py:611
+                             -> 0006_session_history, Durable
+                             session snapshots retain actors
+                             even after a tab is pruned.
+                    INFO     Running upgrade                    migration.py:611
+                             0006_session_history ->
+                             0007_git_ref_deletions, Durable
+                             outbox for expired legacy
+                             checkpoint refs.
+                    INFO     Running upgrade                    migration.py:611
+                             0007_git_ref_deletions ->
+                             0008_pending_session_fork, Keep a
+                             native CLI fork distinct from a
+                             resume across core restarts.
+[11/08/26 17:41:54] INFO     Running upgrade                    migration.py:611
+                             0007_git_ref_deletions ->
+                             0008_approval_policy, Project
+                             approval-policy override. Null
+                             inherits the global choice stored
+                             in settings.
+                    INFO     Running upgrade                    migration.py:611
+                             0008_approval_policy,
+                             0008_pending_session_fork ->
+                             0009_merge_approval_fork, Join
+                             approval-policy and pending-fork
+                             migration histories without
+                             rewriting either.
+                    INFO     StreamableHTTP       streamable_http_manager.py:162
+                             session manager
+                             started
+                    WARNING  cannot read HOME of container           tabs.py:257
+                             agent-codex
+                             ╭─ Traceback (most recent call last) ─╮
+                             │ /home/sas/.local/share/aconsole/wor │
+                             │ ktrees/sp_aconsole_prototype/ff3f69 │
+                             │ f4401638ca/src/aconsole/core/infras │
+                             │ tructure/tabs.py:254 in agent_home  │
+                             │                                     │
+                             │   251 │   │   if cached is not None │
+                             │   252 │   │   │   return cached     │
+                             │   253 │   │   try:                  │
+                             │ ❱ 254 │   │   │   inspected = self. │
+                             │   255 │   │   │   text = inspected. │
+                             │       "-c", 'printf %s "$HOME"'))   │
+                             │   256 │   │   except (ContainerErro │
+                             │   257 │   │   │   _LOG.warning("can │
+                             │                                     │
+                             │ /home/sas/.local/share/aconsole/wor │
+                             │ ktrees/sp_aconsole_prototype/ff3f69 │
+                             │ f4401638ca/src/aconsole/core/infras │
+                             │ tructure/containers/podman.py:111   │
+                             │ in inspect                          │
+                             │                                     │
+                             │   108 │   def inspect(self, name: s │
+                             │   109 │   │   """Return id, name, a │
+                             │   110 │   │   check_container_name( │
+                             │ ❱ 111 │   │   text = self._run(("in │
+                             │   112 │   │   try:                  │
+                             │   113 │   │   │   rows = msgspec.js │
+                             │   114 │   │   except msgspec.Decode │
+                             │                                     │
+                             │ /home/sas/.local/share/aconsole/wor │
+                             │ ktrees/sp_aconsole_prototype/ff3f69 │
+                             │ f4401638ca/src/aconsole/core/infras │
+                             │ tructure/containers/podman.py:216   │
+                             │ in _run                             │
+                             │                                     │
+                             │   213 │   │   except FileNotFoundEr │
+                             │   214 │   │   │   raise ContainerEr │
+                             │   215 │   │   if completed.returnco │
+                             │ ❱ 216 │   │   │   raise ContainerEr │
+                             │       detail=completed.stderr)      │
+                             │   217 │   │   return completed.stdo │
+                             │   218                               │
+                             ╰─────────────────────────────────────╯
+                             ContainerError: podman command failed
+[11/08/26 17:41:55] WARNING  cannot read HOME of container           tabs.py:257
+                             agent-codex
+                             ╭─ Traceback (most recent call last) ─╮
+                             │ /home/sas/.local/share/aconsole/wor │
+                             │ ktrees/sp_aconsole_prototype/ff3f69 │
+                             │ f4401638ca/src/aconsole/core/infras │
+                             │ tructure/tabs.py:254 in agent_home  │
+                             │                                     │
+                             │   251 │   │   if cached is not None │
+                             │   252 │   │   │   return cached     │
+                             │   253 │   │   try:                  │
+                             │ ❱ 254 │   │   │   inspected = self. │
+                             │   255 │   │   │   text = inspected. │
+                             │       "-c", 'printf %s "$HOME"'))   │
+                             │   256 │   │   except (ContainerErro │
+                             │   257 │   │   │   _LOG.warning("can │
+                             │                                     │
+                             │ /home/sas/.local/share/aconsole/wor │
+                             │ ktrees/sp_aconsole_prototype/ff3f69 │
+                             │ f4401638ca/src/aconsole/core/infras │
+                             │ tructure/containers/podman.py:111   │
+                             │ in inspect                          │
+                             │                                     │
+                             │   108 │   def inspect(self, name: s │
+                             │   109 │   │   """Return id, name, a │
+                             │   110 │   │   check_container_name( │
+                             │ ❱ 111 │   │   text = self._run(("in │
+                             │   112 │   │   try:                  │
+                             │   113 │   │   │   rows = msgspec.js │
+                             │   114 │   │   except msgspec.Decode │
+                             │                                     │
+                             │ /home/sas/.local/share/aconsole/wor │
+                             │ ktrees/sp_aconsole_prototype/ff3f69 │
+                             │ f4401638ca/src/aconsole/core/infras │
+                             │ tructure/containers/podman.py:216   │
+                             │ in _run                             │
+                             │                                     │
+                             │   213 │   │   except FileNotFoundEr │
+                             │   214 │   │   │   raise ContainerEr │
+                             │   215 │   │   if completed.returnco │
+                             │ ❱ 216 │   │   │   raise ContainerEr │
+                             │       detail=completed.stderr)      │
+                             │   217 │   │   return completed.stdo │
+                             │   218                               │
+                             ╰─────────────────────────────────────╯
+                             ContainerError: podman command failed
+[11/08/26 17:41:56] WARNING  cannot read HOME of container           tabs.py:257
+                             agent-codex
+                             ╭─ Traceback (most recent call last) ─╮
+                             │ /home/sas/.local/share/aconsole/wor │
+                             │ ktrees/sp_aconsole_prototype/ff3f69 │
+                             │ f4401638ca/src/aconsole/core/infras │
+                             │ tructure/tabs.py:254 in agent_home  │
+                             │                                     │
+                             │   251 │   │   if cached is not None │
+                             │   252 │   │   │   return cached     │
+                             │   253 │   │   try:                  │
+                             │ ❱ 254 │   │   │   inspected = self. │
+                             │   255 │   │   │   text = inspected. │
+                             │       "-c", 'printf %s "$HOME"'))   │
+                             │   256 │   │   except (ContainerErro │
+                             │   257 │   │   │   _LOG.warning("can │
+                             │                                     │
+                             │ /home/sas/.local/share/aconsole/wor │
+                             │ ktrees/sp_aconsole_prototype/ff3f69 │
+                             │ f4401638ca/src/aconsole/core/infras │
+                             │ tructure/containers/podman.py:111   │
+                             │ in inspect                          │
+                             │                                     │
+                             │   108 │   def inspect(self, name: s │
+                             │   109 │   │   """Return id, name, a │
+                             │   110 │   │   check_container_name( │
+                             │ ❱ 111 │   │   text = self._run(("in │
+                             │   112 │   │   try:                  │
+                             │   113 │   │   │   rows = msgspec.js │
+                             │   114 │   │   except msgspec.Decode │
+                             │                                     │
+                             │ /home/sas/.local/share/aconsole/wor │
+                             │ ktrees/sp_aconsole_prototype/ff3f69 │
+                             │ f4401638ca/src/aconsole/core/infras │
+                             │ tructure/containers/podman.py:216   │
+                             │ in _run                             │
+                             │                                     │
+                             │   213 │   │   except FileNotFoundEr │
+                             │   214 │   │   │   raise ContainerEr │
+                             │   215 │   │   if completed.returnco │
+                             │ ❱ 216 │   │   │   raise ContainerEr │
+                             │       detail=completed.stderr)      │
+                             │   217 │   │   return completed.stdo │
+                             │   218                               │
+                             ╰─────────────────────────────────────╯
+                             ContainerError: podman command failed
+[11/08/26 17:41:57] WARNING  cannot read HOME of container           tabs.py:257
+                             agent-codex
+                             ╭─ Traceback (most recent call last) ─╮
+                             │ /home/sas/.local/share/aconsole/wor │
+                             │ ktrees/sp_aconsole_prototype/ff3f69 │
+                             │ f4401638ca/src/aconsole/core/infras │
+                             │ tructure/tabs.py:254 in agent_home  │
+                             │                                     │
+                             │   251 │   │   if cached is not None │
+                             │   252 │   │   │   return cached     │
+                             │   253 │   │   try:                  │
+                             │ ❱ 254 │   │   │   inspected = self. │
+                             │   255 │   │   │   text = inspected. │
+                             │       "-c", 'printf %s "$HOME"'))   │
+                             │   256 │   │   except (ContainerErro │
+                             │   257 │   │   │   _LOG.warning("can │
+                             │                                     │
+                             │ /home/sas/.local/share/aconsole/wor │
+                             │ ktrees/sp_aconsole_prototype/ff3f69 │
+                             │ f4401638ca/src/aconsole/core/infras │
+                             │ tructure/containers/podman.py:111   │
+                             │ in inspect                          │
+                             │                                     │
+                             │   108 │   def inspect(self, name: s │
+                             │   109 │   │   """Return id, name, a │
+                             │   110 │   │   check_container_name( │
+                             │ ❱ 111 │   │   text = self._run(("in │
+                             │   112 │   │   try:                  │
+                             │   113 │   │   │   rows = msgspec.js │
+                             │   114 │   │   except msgspec.Decode │
+                             │                                     │
+                             │ /home/sas/.local/share/aconsole/wor │
+                             │ ktrees/sp_aconsole_prototype/ff3f69 │
+                             │ f4401638ca/src/aconsole/core/infras │
+                             │ tructure/containers/podman.py:216   │
+                             │ in _run                             │
+                             │                                     │
+                             │   213 │   │   except FileNotFoundEr │
+                             │   214 │   │   │   raise ContainerEr │
+                             │   215 │   │   if completed.returnco │
+                             │ ❱ 216 │   │   │   raise ContainerEr │
+                             │       detail=completed.stderr)      │
+                             │   217 │   │   return completed.stdo │
+                             │   218                               │
+                             ╰─────────────────────────────────────╯
+                             ContainerError: podman command failed
+[11/08/26 17:41:58] WARNING  cannot read HOME of container           tabs.py:257
+                             agent-codex
+                             ╭─ Traceback (most recent call last) ─╮
+                             │ /home/sas/.local/share/aconsole/wor │
+                             │ ktrees/sp_aconsole_prototype/ff3f69 │
+                             │ f4401638ca/src/aconsole/core/infras │
+                             │ tructure/tabs.py:254 in agent_home  │
+                             │                                     │
+                             │   251 │   │   if cached is not None │
+                             │   252 │   │   │   return cached     │
+                             │   253 │   │   try:                  │
+                             │ ❱ 254 │   │   │   inspected = self. │
+                             │   255 │   │   │   text = inspected. │
+                             │       "-c", 'printf %s "$HOME"'))   │
+                             │   256 │   │   except (ContainerErro │
+                             │   257 │   │   │   _LOG.warning("can │
+                             │                                     │
+                             │ /home/sas/.local/share/aconsole/wor │
+                             │ ktrees/sp_aconsole_prototype/ff3f69 │
+                             │ f4401638ca/src/aconsole/core/infras │
+                             │ tructure/containers/podman.py:111   │
+                             │ in inspect                          │
+                             │                                     │
+                             │   108 │   def inspect(self, name: s │
+                             │   109 │   │   """Return id, name, a │
+                             │   110 │   │   check_container_name( │
+                             │ ❱ 111 │   │   text = self._run(("in │
+                             │   112 │   │   try:                  │
+                             │   113 │   │   │   rows = msgspec.js │
+                             │   114 │   │   except msgspec.Decode │
+                             │                                     │
+                             │ /home/sas/.local/share/aconsole/wor │
+                             │ ktrees/sp_aconsole_prototype/ff3f69 │
+                             │ f4401638ca/src/aconsole/core/infras │
+                             │ tructure/containers/podman.py:216   │
+                             │ in _run                             │
+                             │                                     │
+                             │   213 │   │   except FileNotFoundEr │
+                             │   214 │   │   │   raise ContainerEr │
+                             │   215 │   │   if completed.returnco │
+                             │ ❱ 216 │   │   │   raise ContainerEr │
+                             │       detail=completed.stderr)      │
+                             │   217 │   │   return completed.stdo │
+                             │   218                               │
+                             ╰─────────────────────────────────────╯
+                             ContainerError: podman command failed
+[11/08/26 17:41:59] WARNING  cannot read HOME of container           tabs.py:257
+                             agent-codex
+                             ╭─ Traceback (most recent call last) ─╮
+                             │ /home/sas/.local/share/aconsole/wor │
+                             │ ktrees/sp_aconsole_prototype/ff3f69 │
+                             │ f4401638ca/src/aconsole/core/infras │
+                             │ tructure/tabs.py:254 in agent_home  │
+                             │                                     │
+                             │   251 │   │   if cached is not None │
+                             │   252 │   │   │   return cached     │
+                             │   253 │   │   try:                  │
+                             │ ❱ 254 │   │   │   inspected = self. │
+                             │   255 │   │   │   text = inspected. │
+                             │       "-c", 'printf %s "$HOME"'))   │
+                             │   256 │   │   except (ContainerErro │
+                             │   257 │   │   │   _LOG.warning("can │
+                             │                                     │
+                             │ /home/sas/.local/share/aconsole/wor │
+                             │ ktrees/sp_aconsole_prototype/ff3f69 │
+                             │ f4401638ca/src/aconsole/core/infras │
+                             │ tructure/containers/podman.py:111   │
+                             │ in inspect                          │
+                             │                                     │
+                             │   108 │   def inspect(self, name: s │
+                             │   109 │   │   """Return id, name, a │
+                             │   110 │   │   check_container_name( │
+                             │ ❱ 111 │   │   text = self._run(("in │
+                             │   112 │   │   try:                  │
+                             │   113 │   │   │   rows = msgspec.js │
+                             │   114 │   │   except msgspec.Decode │
+                             │                                     │
+                             │ /home/sas/.local/share/aconsole/wor │
+                             │ ktrees/sp_aconsole_prototype/ff3f69 │
+                             │ f4401638ca/src/aconsole/core/infras │
+                             │ tructure/containers/podman.py:216   │
+                             │ in _run                             │
+                             │                                     │
+                             │   213 │   │   except FileNotFoundEr │
+                             │   214 │   │   │   raise ContainerEr │
+                             │   215 │   │   if completed.returnco │
+                             │ ❱ 216 │   │   │   raise ContainerEr │
+                             │       detail=completed.stderr)      │
+                             │   217 │   │   return completed.stdo │
+                             │   218                               │
+                             ╰─────────────────────────────────────╯
+                             ContainerError: podman command failed
+[11/08/26 17:42:00] WARNING  cannot read HOME of container           tabs.py:257
+                             agent-codex
+                             ╭─ Traceback (most recent call last) ─╮
+                             │ /home/sas/.local/share/aconsole/wor │
+                             │ ktrees/sp_aconsole_prototype/ff3f69 │
+                             │ f4401638ca/src/aconsole/core/infras │
+                             │ tructure/tabs.py:254 in agent_home  │
+                             │                                     │
+                             │   251 │   │   if cached is not None │
+                             │   252 │   │   │   return cached     │
+                             │   253 │   │   try:                  │
+                             │ ❱ 254 │   │   │   inspected = self. │
+                             │   255 │   │   │   text = inspected. │
+                             │       "-c", 'printf %s "$HOME"'))   │
+                             │   256 │   │   except (ContainerErro │
+                             │   257 │   │   │   _LOG.warning("can │
+                             │                                     │
+                             │ /home/sas/.local/share/aconsole/wor │
+                             │ ktrees/sp_aconsole_prototype/ff3f69 │
+                             │ f4401638ca/src/aconsole/core/infras │
+                             │ tructure/containers/podman.py:111   │
+                             │ in inspect                          │
+                             │                                     │
+                             │   108 │   def inspect(self, name: s │
+                             │   109 │   │   """Return id, name, a │
+                             │   110 │   │   check_container_name( │
+                             │ ❱ 111 │   │   text = self._run(("in │
+                             │   112 │   │   try:                  │
+                             │   113 │   │   │   rows = msgspec.js │
+                             │   114 │   │   except msgspec.Decode │
+                             │                                     │
+                             │ /home/sas/.local/share/aconsole/wor │
+                             │ ktrees/sp_aconsole_prototype/ff3f69 │
+                             │ f4401638ca/src/aconsole/core/infras │
+                             │ tructure/containers/podman.py:216   │
+                             │ in _run                             │
+                             │                                     │
+                             │   213 │   │   except FileNotFoundEr │
+                             │   214 │   │   │   raise ContainerEr │
+                             │   215 │   │   if completed.returnco │
+                             │ ❱ 216 │   │   │   raise ContainerEr │
+                             │       detail=completed.stderr)      │
+                             │   217 │   │   return completed.stdo │
+                             │   218                               │
+                             ╰─────────────────────────────────────╯
+                             ContainerError: podman command failed
+[11/08/26 17:42:01] WARNING  cannot read HOME of container           tabs.py:257
+                             agent-codex
+                             ╭─ Traceback (most recent call last) ─╮
+                             │ /home/sas/.local/share/aconsole/wor │
+                             │ ktrees/sp_aconsole_prototype/ff3f69 │
+                             │ f4401638ca/src/aconsole/core/infras │
+                             │ tructure/tabs.py:254 in agent_home  │
+                             │                                     │
+                             │   251 │   │   if cached is not None │
+                             │   252 │   │   │   return cached     │
+                             │   253 │   │   try:                  │
+                             │ ❱ 254 │   │   │   inspected = self. │
+                             │   255 │   │   │   text = inspected. │
+                             │       "-c", 'printf %s "$HOME"'))   │
+                             │   256 │   │   except (ContainerErro │
+                             │   257 │   │   │   _LOG.warning("can │
+                             │                                     │
+                             │ /home/sas/.local/share/aconsole/wor │
+                             │ ktrees/sp_aconsole_prototype/ff3f69 │
+                             │ f4401638ca/src/aconsole/core/infras │
+                             │ tructure/containers/podman.py:111   │
+                             │ in inspect                          │
+                             │                                     │
+                             │   108 │   def inspect(self, name: s │
+                             │   109 │   │   """Return id, name, a │
+                             │   110 │   │   check_container_name( │
+                             │ ❱ 111 │   │   text = self._run(("in │
+                             │   112 │   │   try:                  │
+                             │   113 │   │   │   rows = msgspec.js │
+                             │   114 │   │   except msgspec.Decode │
+                             │                                     │
+                             │ /home/sas/.local/share/aconsole/wor │
+                             │ ktrees/sp_aconsole_prototype/ff3f69 │
+                             │ f4401638ca/src/aconsole/core/infras │
+                             │ tructure/containers/podman.py:216   │
+                             │ in _run                             │
+                             │                                     │
+                             │   213 │   │   except FileNotFoundEr │
+                             │   214 │   │   │   raise ContainerEr │
+                             │   215 │   │   if completed.returnco │
+                             │ ❱ 216 │   │   │   raise ContainerEr │
+                             │       detail=completed.stderr)      │
+                             │   217 │   │   return completed.stdo │
+                             │   218                               │
+                             ╰─────────────────────────────────────╯
+                             ContainerError: podman command failed
+[11/08/26 17:42:02] INFO     StreamableHTTP       streamable_http_manager.py:166
+                             session manager
+                             shutting down
+=============================== warnings summary ===============================
+../../../../../../Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/events.py:803
+  /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/events.py:803: DeprecationWarning: 'asyncio.AbstractEventLoopPolicy' is deprecated and slated for removal in Python 3.16
+    AbstractEventLoopPolicy = getattr(asyncio, "AbstractEventLoopPolicy", object)
+
+tests/gui/front/test_clipboard_routing.py::test_real_clipboard_shortcuts[text]
+  /home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/gui/front/test_clipboard_routing.py:146: DeprecationWarning: Vte.Pty.close is deprecated
+    pty.close()
+
+tests/gui/front/test_contrast_table.py: 400 warnings
+  /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/events.py:890: DeprecationWarning: 'asyncio.get_event_loop_policy' is deprecated and slated for removal in Python 3.16
+    if not isinstance(_get_event_loop_policy(), GLibEventLoopPolicy):
+
+tests/gui/front/test_contrast_table.py::test_the_table_is_the_floor_theme_and_the_dim_label_is_readable
+  /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/overrides/GLib.py:631: RuntimeWarning: coroutine 'HealthDialog.refresh' was never awaited
+    return super().iteration(may_block)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/gui/front/test_des2_accessibility.py::test_every_plan_state_is_visible_and_updates_on_heartbeat
+  /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/_pytest/runner.py:180: RuntimeWarning: coroutine 'MainWindow._renew_git_watch' was never awaited
+    del sys.last_exc  # type:ignore[attr-defined]
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/gui/front/test_git_actions.py::test_stage_commit_and_file_buttons_in_the_inspector
+  /home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/src/aconsole/ui/views/review/graph_cell.py:110: DeprecationWarning: Gtk.Widget.get_style_context is deprecated
+    _found, background = self.get_style_context().lookup_color("view_bg_color")
+
+tests/gui/front/test_git_actions.py::test_stage_commit_and_file_buttons_in_the_inspector
+  /home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/src/aconsole/ui/views/review/graph_cell.py:110: DeprecationWarning: Gtk.StyleContext.lookup_color is deprecated
+    _found, background = self.get_style_context().lookup_color("view_bg_color")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+- generated xml file: /home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/artifacts/main-merge/focused.xml -
+=========================== short test summary info ============================
+FAILED tests/gui/front/test_git_scale_ui.py::test_scrolling_a_long_history - AssertionError: git scale: 10000 rows, 54 frames in 4 s, median 69.4 ms, p95 119.9 ms, worst 136.8 ms, RSS 2156 MB (start 2121, first page 2134, all rows 2153 after 3.4 s)
+assert 69.36523649346782 <= 17.5
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+=========== 1 failed, 195 passed, 406 warnings in 108.63s (0:01:48) ============

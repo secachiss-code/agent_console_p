@@ -90,6 +90,9 @@ class ProjectView(msgspec.Struct, frozen=True, kw_only=True):
     default_branch: str
     vault_folder: NoteRef | None
     languages: frozenset[str]
+    # Null inherits the global approval policy. A set value replaces it, including the dangerous submode.
+    approval_policy: Literal["ask", "allow", "deny", "scenario"] | None = None
+    approval_dangerous: Literal["ask", "allow"] | None = None
 
 
 class TabView(msgspec.Struct, frozen=True, kw_only=True):
@@ -234,6 +237,18 @@ class EmptyResult(msgspec.Struct, frozen=True, kw_only=True):
     pass
 
 
+class SnapshotChunkParams(msgspec.Struct, frozen=True, kw_only=True):
+    cursor: Annotated[str, msgspec.Meta(max_length=128)] | None = None
+    max_bytes: Annotated[int, msgspec.Meta(ge=1, le=1048576)] = 1048576
+
+
+class SnapshotChunkResult(msgspec.Struct, frozen=True, kw_only=True):
+    data: str
+    next_cursor: str | None
+    seq: int
+    total_bytes: int
+
+
 class SnapshotResult(msgspec.Struct, frozen=True, kw_only=True):
     snapshot: AppSnapshot
     seq: int
@@ -253,6 +268,15 @@ class ProjectAddParams(msgspec.Struct, frozen=True, kw_only=True):
 
 class ProjectIdParams(msgspec.Struct, frozen=True, kw_only=True):
     project_id: ProjectId
+
+
+class ProjectApprovalPolicyParams(msgspec.Struct, frozen=True, kw_only=True):
+    """Set or clear one project's override. `inherit` drops it so the global choice applies."""
+
+    project_id: ProjectId
+    inherit: bool = False
+    approval_policy: Literal["ask", "allow", "deny", "scenario"] = "ask"
+    approval_dangerous: Literal["ask", "allow"] = "ask"
 
 
 class TabIdParams(msgspec.Struct, frozen=True, kw_only=True):

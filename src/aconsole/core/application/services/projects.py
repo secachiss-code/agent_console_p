@@ -3,13 +3,15 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from dataclasses import replace
 from datetime import datetime
 from pathlib import Path
-from typing import Final, Protocol, final
+from typing import Final, Literal, Protocol, final
 
 from aconsole.contracts.app import ProjectView
 from aconsole.contracts.common import ProjectId
 from aconsole.core.application.ports.tab_store import ProjectRecord, ProjectStore, StoredProjects
+from aconsole.core.domain.approval_policy import ApprovalPolicyChoice, PolicyOrigin, require_ui
 
 _NAME: Final = 120
 
@@ -56,8 +58,11 @@ class ProjectCatalog:
             if record.root == str(top):
                 return record
         record = ProjectRecord(
-            id=self._new_id(), name=top.name[:_NAME] or str(top)[:_NAME], root=str(top),
-            default_branch=branch, created_at=self._now(),
+            id=self._new_id(),
+            name=top.name[:_NAME] or str(top)[:_NAME],
+            root=str(top),
+            default_branch=branch,
+            created_at=self._now(),
         )
         self._records[record.id] = record
         if self._store is not None:
@@ -81,6 +86,30 @@ class ProjectCatalog:
         if self._store is not None:
             self._store.save_active_project(project_id)
 
+    def set_approval_policy(
+        self,
+        project_id: str,
+        choice: ApprovalPolicyChoice | None,
+        *,
+        origin: PolicyOrigin,
+    ) -> ProjectRecord:
+        """Replace or clear the override. Only the UI may call this."""
+        require_ui(origin)
+        current = self._records[project_id]
+        updated = replace(
+            current,
+            approval_policy=None if choice is None else choice.mode.value,
+            approval_dangerous=None if choice is None else choice.dangerous.value,
+        )
+        if self._store is not None and not self._store.save_project_policy(
+            project_id,
+            updated.approval_policy,
+            updated.approval_dangerous,
+        ):
+            raise KeyError(project_id)
+        self._records[project_id] = updated
+        return updated
+
     @property
     def active(self) -> ProjectId | None:
         return None if self._active is None else ProjectId(self._active)
@@ -89,8 +118,37 @@ class ProjectCatalog:
         ordered = sorted(self._records.values(), key=lambda record: (record.created_at, record.id))
         return tuple(
             ProjectView(
-                id=ProjectId(record.id), name=record.name, root=record.root, default_branch=record.default_branch,
-                vault_folder=None, languages=frozenset(),
+                id=ProjectId(record.id),
+                name=record.name,
+                root=record.root,
+                default_branch=record.default_branch,
+                vault_folder=None,
+                languages=frozenset(),
+                approval_policy=_policy_mode(record.approval_policy),
+                approval_dangerous=_dangerous_mode(record.approval_policy, record.approval_dangerous),
             )
             for record in ordered
         )
+
+
+_POLICY_VALUES: dict[str, Literal["ask", "allow", "deny", "scenario"]] = {
+    "ask": "ask",
+    "allow": "allow",
+    "deny": "deny",
+    "scenario": "scenario",
+}
+
+
+def _policy_mode(value: str | None) -> Literal["ask", "allow", "deny", "scenario"] | None:
+    if value is None:
+        return None
+    return _POLICY_VALUES.get(value)
+
+
+def _dangerous_mode(policy: str | None, value: str | None) -> Literal["ask", "allow"] | None:
+    """A dangerous submode without a mode is not an override."""
+    if _policy_mode(policy) is None:
+        return None
+    if value == "allow":
+        return "allow"
+    return "ask"

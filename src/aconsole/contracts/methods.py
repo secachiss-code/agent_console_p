@@ -67,6 +67,8 @@ METHODS: tuple[Method, ...] = (
            errors=_SESSIONS, capability="work_sessions.v1"),
     Method(name="shutdown", params="EmptyParams", result="EmptyResult", roles=ALL_ROLES),
     Method(name="app/snapshot", params="EmptyParams", result="SnapshotResult"),
+    Method(name="app/snapshotChunk", params="SnapshotChunkParams", result="SnapshotChunkResult",
+           errors=("RESYNC_REQUIRED", "MESSAGE_TOO_LARGE"), capability="snapshot.chunks.v1"),
     Method(
         name="events/subscribe",
         params="SubscribeParams",
@@ -82,6 +84,13 @@ METHODS: tuple[Method, ...] = (
     ),
     Method(name="project/remove", params="ProjectIdParams", result="EmptyResult", errors=("TAB_STATE_CONFLICT",)),
     Method(name="project/setActive", params="ProjectIdParams", result="EmptyResult", errors=("PROJECT_NOT_FOUND",)),
+    Method(
+        name="project/setApprovalPolicy",
+        params="ProjectApprovalPolicyParams",
+        result="ProjectView",
+        errors=("PROJECT_NOT_FOUND", "ROLE_FORBIDDEN"),
+        roles=("ui",),
+    ),
     Method(
         name="tab/open",
         params="OpenTabParams",

@@ -1,0 +1,40 @@
+{
+  "source_commit": "ecac0a6",
+  "old_pid": 174617,
+  "first_activated_pid": 243631,
+  "current_pid": 11440,
+  "server_version": "0.1.1",
+  "core_executable": "/opt/aconsole/core/bin/python3.15t",
+  "tabs_before": 1,
+  "tabs_after": 2,
+  "native_session_ids_preserved": true,
+  "missing_agent_processes_same_boot": null,
+  "previous_boot_cli_pids": [
+    10447,
+    10552,
+    19145,
+    22922
+  ],
+  "missing_auxiliary_processes": [
+    {
+      "pid": 26233,
+      "comm": "codex-code-mode"
+    }
+  ],
+  "current_boot_utc": "2026-11-07T06:56:53+00:00",
+  "reboot_after_activation": true,
+  "all_observed_processes_preserved_at_restart": true,
+  "installed_source_hashes": {
+    "core/bootstrap.py": "e4b55cbb6e4e6507d29bf7b14aa99120e3bbbc6e63b228676de50e682d91fcae",
+    "core/domain/approvals.py": "a7499d3f13d6ae1a17ae05ec5eec3436427b7f672a987baa7130d202a7417bd1",
+    "core/domain/plan.py": "9c6dbfd7f349cba1f0d40da55bf6aced71e3f7891ec1f1ce6aff50a08d709bec",
+    "core/infrastructure/mcp/tools.py": "9666859ce20d09071fd5509b725089b7a856aecbc5945c4d768303030a167f18",
+    "core/infrastructure/mcp/server.py": "43a8eacdf4c3325f160f5bbdca344e5698a14d9c33cc0b03b671c14f5e5d1ea9"
+  },
+  "isolated_installed_sec5_smoke": "PASS",
+  "done_before": 17,
+  "done_after": 17,
+  "total": 75,
+  "package_sha256": "71a979140b8c50c0d43e95bb864664d9310edcc5799a7f871dd23041cbf7f9cb",
+  "package_size": 67573736
+}

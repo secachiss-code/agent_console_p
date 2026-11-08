@@ -1,0 +1,654 @@
+Collected 0 items to run in parallel
+FFFFFFF                                                                  [100%]
+=================================== FAILURES ===================================
+________ test_bad_json_gets_an_error_and_the_same_socket_remains_usable ________
+
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-17/test_bad_json_gets_an_error_an0')
+
+    def test_bad_json_gets_an_error_and_the_same_socket_remains_usable(tmp_path: Path) -> None:
+        async def scenario() -> None:
+            daemon = _daemon(tmp_path, serve_ingest=False)
+            serving = asyncio.create_task(daemon.serve())
+            client = await _connect(daemon.socket)
+            try:
+                client.writer.write(b"{not json}\n")
+                await client.writer.drain()
+                line = await asyncio.wait_for(client.reader.readline(), 1)
+                assert line, "recoverable malformed frame closed the socket"
+                error = decode_envelope(line)
+                assert isinstance(error, ResponseErr)
+                assert error.error.message == "PARSE_ERROR"
+                assert error.id is None
+                assert (await client.snapshot()).api_version
+            finally:
+                await _stop(daemon, serving, client)
+>       asyncio.run(scenario())
+
+tests/core/test_transport_resilience.py:47:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+../../.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py:205: in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py:128: in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/base_events.py:724: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    async def scenario() -> None:
+        daemon = _daemon(tmp_path, serve_ingest=False)
+        serving = asyncio.create_task(daemon.serve())
+        client = await _connect(daemon.socket)
+        try:
+            client.writer.write(b"{not json}\n")
+            await client.writer.drain()
+            line = await asyncio.wait_for(client.reader.readline(), 1)
+>           assert line, "recoverable malformed frame closed the socket"
+E           AssertionError: recoverable malformed frame closed the socket
+E           assert b''
+
+tests/core/test_transport_resilience.py:39: AssertionError
+___ test_turn_handler_crash_answers_once_and_keeps_processing[setup/checks] ____
+
+fut = <coroutine object _Client.raw at 0x569b59d4880>, timeout = 1
+
+    async def wait_for(fut, timeout):
+        """Wait for the single Future or coroutine to complete, with timeout.
+
+        Returns result of the Future or coroutine.  When a timeout occurs,
+        it cancels fut and raises TimeoutError.  To prevent fut from being
+        cancelled, wrap it in shield().
+
+        If the wait is cancelled, fut is also cancelled.
+
+        If fut suppresses the cancellation and returns a value instead,
+        that value is returned.
+
+        This function is a coroutine.
+        """
+        # The special case for timeout <= 0 is for the following case:
+        #
+        # async def test_waitfor():
+        #     func_started = False
+        #
+        #     async def func():
+        #         nonlocal func_started
+        #         func_started = True
+        #
+        #     try:
+        #         await asyncio.wait_for(func(), 0)
+        #     except asyncio.TimeoutError:
+        #         assert not func_started
+        #     else:
+        #         assert False
+        #
+        # asyncio.run(test_waitfor())
+
+
+        if timeout is not None and timeout <= 0:
+            fut = ensure_future(fut)
+
+            if fut.done():
+                return fut.result()
+
+            await _cancel_and_wait(fut)
+            try:
+                return fut.result()
+            except exceptions.CancelledError as exc:
+                raise TimeoutError from exc
+
+        async with timeouts.timeout(timeout):
+>           return await fut
+                   ^^^^^^^^^
+
+../../.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/tasks.py:495:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests/core/test_wire.py:100: in raw
+    envelope = decode_envelope(await self.reader.readline())
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/streams.py:577: in readline
+    line = await self.readuntil(sep)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/streams.py:691: in readuntil
+    await self._wait_for_data('readuntil')
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <StreamReader eof transport=<_SelectorSocketTransport closed fd=20>>
+func_name = 'readuntil'
+
+    async def _wait_for_data(self, func_name):
+        """Wait until feed_data() or feed_eof() is called.
+
+        If stream was paused, automatically resume it.
+        """
+        # StreamReader uses a future to link the protocol feed_data() method
+        # to a read coroutine. Running two read coroutines at the same time
+        # would have an unexpected behaviour. It would not possible to know
+        # which coroutine would get the next data.
+        if self._waiter is not None:
+            raise RuntimeError(
+                f'{func_name}() called while another coroutine is '
+                f'already waiting for incoming data')
+
+        assert not self._eof, '_wait_for_data after EOF'
+
+        # Waiting for data while paused will make deadlock, so prevent it.
+        # This is essential for readexactly(n) for case when n > self._limit.
+        if self._paused:
+            self._paused = False
+            self._transport.resume_reading()
+
+        self._waiter = self._loop.create_future()
+        try:
+>           await self._waiter
+E           asyncio.exceptions.CancelledError
+
+../../.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/streams.py:554: CancelledError
+
+The above exception was the direct cause of the following exception:
+
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-17/test_turn_handler_crash_answer0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x569b5b90510>
+method = 'setup/checks'
+
+    @pytest.mark.parametrize("method", ["setup/checks", "app/snapshot"])
+    def test_turn_handler_crash_answers_once_and_keeps_processing(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch, method: str,
+    ) -> None:
+        def broken_checks(_self: SetupService) -> ChecksResult:
+            message = "private failure detail must not reach the client"
+            raise RuntimeError(message)
+
+        def broken_snapshot(_self: TabService) -> AppSnapshot:
+            message = "private failure detail must not reach the client"
+            raise RuntimeError(message)
+
+        async def scenario() -> None:
+            daemon = _daemon(tmp_path, serve_ingest=False)
+            serving = asyncio.create_task(daemon.serve())
+            client = await _connect(daemon.socket)
+            try:
+                with monkeypatch.context() as patch:
+                    if method == "setup/checks":
+                        patch.setattr(SetupService, "checks", broken_checks)
+                    else:
+                        patch.setattr(TabService, "snapshot", broken_snapshot)
+                    result = await asyncio.wait_for(client.raw(method, EmptyParams()), 1)
+                    assert isinstance(result, ResponseErr)
+                    assert result.error.message == "INTERNAL_ERROR"
+                    assert "private failure" not in msgspec.json.encode(result).decode()
+                assert (await client.snapshot()).api_version
+            finally:
+                await _stop(daemon, serving, client)
+>       asyncio.run(scenario())
+
+tests/core/test_transport_resilience.py:79:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+../../.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py:205: in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py:128: in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/base_events.py:724: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+tests/core/test_transport_resilience.py:72: in scenario
+    result = await asyncio.wait_for(client.raw(method, EmptyParams()), 1)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/tasks.py:494: in wait_for
+    async with timeouts.timeout(timeout):
+               ^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <Timeout [expired]>
+exc_type = <class 'asyncio.exceptions.CancelledError'>
+exc_val = CancelledError(), exc_tb = <traceback object at 0x569b5b17b00>
+
+    async def __aexit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: TracebackType | None,
+    ) -> bool | None:
+        assert self._state in (_State.ENTERED, _State.EXPIRING)
+
+        if self._timeout_handler is not None:
+            self._timeout_handler.cancel()
+            self._timeout_handler = None
+
+        if self._state is _State.EXPIRING:
+            self._state = _State.EXPIRED
+
+            if self._task.uncancel() <= self._cancelling and exc_type is not None:
+                # Since there are no new cancel requests, we're
+                # handling this.
+                if issubclass(exc_type, exceptions.CancelledError):
+>                   raise TimeoutError from exc_val
+E                   TimeoutError
+
+../../.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/timeouts.py:115: TimeoutError
+___ test_turn_handler_crash_answers_once_and_keeps_processing[app/snapshot] ____
+
+fut = <coroutine object _Client.raw at 0x569b52c49c0>, timeout = 1
+
+    async def wait_for(fut, timeout):
+        """Wait for the single Future or coroutine to complete, with timeout.
+
+        Returns result of the Future or coroutine.  When a timeout occurs,
+        it cancels fut and raises TimeoutError.  To prevent fut from being
+        cancelled, wrap it in shield().
+
+        If the wait is cancelled, fut is also cancelled.
+
+        If fut suppresses the cancellation and returns a value instead,
+        that value is returned.
+
+        This function is a coroutine.
+        """
+        # The special case for timeout <= 0 is for the following case:
+        #
+        # async def test_waitfor():
+        #     func_started = False
+        #
+        #     async def func():
+        #         nonlocal func_started
+        #         func_started = True
+        #
+        #     try:
+        #         await asyncio.wait_for(func(), 0)
+        #     except asyncio.TimeoutError:
+        #         assert not func_started
+        #     else:
+        #         assert False
+        #
+        # asyncio.run(test_waitfor())
+
+
+        if timeout is not None and timeout <= 0:
+            fut = ensure_future(fut)
+
+            if fut.done():
+                return fut.result()
+
+            await _cancel_and_wait(fut)
+            try:
+                return fut.result()
+            except exceptions.CancelledError as exc:
+                raise TimeoutError from exc
+
+        async with timeouts.timeout(timeout):
+>           return await fut
+                   ^^^^^^^^^
+
+../../.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/tasks.py:495:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests/core/test_wire.py:100: in raw
+    envelope = decode_envelope(await self.reader.readline())
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/streams.py:577: in readline
+    line = await self.readuntil(sep)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/streams.py:691: in readuntil
+    await self._wait_for_data('readuntil')
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <StreamReader eof transport=<_SelectorSocketTransport closed fd=20>>
+func_name = 'readuntil'
+
+    async def _wait_for_data(self, func_name):
+        """Wait until feed_data() or feed_eof() is called.
+
+        If stream was paused, automatically resume it.
+        """
+        # StreamReader uses a future to link the protocol feed_data() method
+        # to a read coroutine. Running two read coroutines at the same time
+        # would have an unexpected behaviour. It would not possible to know
+        # which coroutine would get the next data.
+        if self._waiter is not None:
+            raise RuntimeError(
+                f'{func_name}() called while another coroutine is '
+                f'already waiting for incoming data')
+
+        assert not self._eof, '_wait_for_data after EOF'
+
+        # Waiting for data while paused will make deadlock, so prevent it.
+        # This is essential for readexactly(n) for case when n > self._limit.
+        if self._paused:
+            self._paused = False
+            self._transport.resume_reading()
+
+        self._waiter = self._loop.create_future()
+        try:
+>           await self._waiter
+E           asyncio.exceptions.CancelledError
+
+../../.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/streams.py:554: CancelledError
+
+The above exception was the direct cause of the following exception:
+
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-17/test_turn_handler_crash_answer1')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x569b5b9add0>
+method = 'app/snapshot'
+
+    @pytest.mark.parametrize("method", ["setup/checks", "app/snapshot"])
+    def test_turn_handler_crash_answers_once_and_keeps_processing(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch, method: str,
+    ) -> None:
+        def broken_checks(_self: SetupService) -> ChecksResult:
+            message = "private failure detail must not reach the client"
+            raise RuntimeError(message)
+
+        def broken_snapshot(_self: TabService) -> AppSnapshot:
+            message = "private failure detail must not reach the client"
+            raise RuntimeError(message)
+
+        async def scenario() -> None:
+            daemon = _daemon(tmp_path, serve_ingest=False)
+            serving = asyncio.create_task(daemon.serve())
+            client = await _connect(daemon.socket)
+            try:
+                with monkeypatch.context() as patch:
+                    if method == "setup/checks":
+                        patch.setattr(SetupService, "checks", broken_checks)
+                    else:
+                        patch.setattr(TabService, "snapshot", broken_snapshot)
+                    result = await asyncio.wait_for(client.raw(method, EmptyParams()), 1)
+                    assert isinstance(result, ResponseErr)
+                    assert result.error.message == "INTERNAL_ERROR"
+                    assert "private failure" not in msgspec.json.encode(result).decode()
+                assert (await client.snapshot()).api_version
+            finally:
+                await _stop(daemon, serving, client)
+>       asyncio.run(scenario())
+
+tests/core/test_transport_resilience.py:79:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+../../.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py:205: in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py:128: in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/base_events.py:724: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+tests/core/test_transport_resilience.py:72: in scenario
+    result = await asyncio.wait_for(client.raw(method, EmptyParams()), 1)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/tasks.py:494: in wait_for
+    async with timeouts.timeout(timeout):
+               ^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <Timeout [expired]>
+exc_type = <class 'asyncio.exceptions.CancelledError'>
+exc_val = CancelledError(), exc_tb = <traceback object at 0x569b5cffe40>
+
+    async def __aexit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: TracebackType | None,
+    ) -> bool | None:
+        assert self._state in (_State.ENTERED, _State.EXPIRING)
+
+        if self._timeout_handler is not None:
+            self._timeout_handler.cancel()
+            self._timeout_handler = None
+
+        if self._state is _State.EXPIRING:
+            self._state = _State.EXPIRED
+
+            if self._task.uncancel() <= self._cancelling and exc_type is not None:
+                # Since there are no new cancel requests, we're
+                # handling this.
+                if issubclass(exc_type, exceptions.CancelledError):
+>                   raise TimeoutError from exc_val
+E                   TimeoutError
+
+../../.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/timeouts.py:115: TimeoutError
+__ test_the_last_oversized_event_triggers_automatic_resync_without_reconnect ___
+
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-17/test_the_last_oversized_event_0')
+
+    def test_the_last_oversized_event_triggers_automatic_resync_without_reconnect(tmp_path: Path) -> None:
+        async def scenario() -> None:
+            daemon = _daemon(tmp_path, serve_ingest=False)
+            daemon._frame_limit = 16 * 1024
+            serving = asyncio.create_task(daemon.serve())
+            ipc = await _connect(daemon.socket)
+            client = CoreClient(str(daemon.socket))
+            try:
+                _ = await client.connect()
+                _ = await client.pull_snapshot()
+                daemon._approval_event(Notify(tab_id=None, title="large", body="x" * 32768,
+                    priority="normal", episode_id="oversized-last-event"))
+                for _attempt in range(150):
+                    if client.resync_count > 0 and not client.store.reconnecting:
+                        break
+                    await asyncio.sleep(0.01)
+                assert client.resync_count > 0, "the final dropped event gave the UI no reason to resync"
+                assert client.store.seq == daemon._ring.current_seq
+                assert client.connects == 1
+                assert not client.store.reconnecting
+            finally:
+                await client.close()
+                await _stop(daemon, serving, ipc)
+>       asyncio.run(scenario())
+
+tests/core/test_transport_resilience.py:105:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+../../.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py:205: in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py:128: in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/base_events.py:724: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    async def scenario() -> None:
+        daemon = _daemon(tmp_path, serve_ingest=False)
+        daemon._frame_limit = 16 * 1024
+        serving = asyncio.create_task(daemon.serve())
+        ipc = await _connect(daemon.socket)
+        client = CoreClient(str(daemon.socket))
+        try:
+            _ = await client.connect()
+            _ = await client.pull_snapshot()
+            daemon._approval_event(Notify(tab_id=None, title="large", body="x" * 32768,
+                priority="normal", episode_id="oversized-last-event"))
+            for _attempt in range(150):
+                if client.resync_count > 0 and not client.store.reconnecting:
+                    break
+                await asyncio.sleep(0.01)
+>           assert client.resync_count > 0, "the final dropped event gave the UI no reason to resync"
+E           AssertionError: the final dropped event gave the UI no reason to resync
+E           assert 0 > 0
+E            +  where 0 = <aconsole.ui.client.core_client.CoreClient object at 0x569afb5c610>.resync_count
+
+tests/core/test_transport_resilience.py:98: AssertionError
+------------------------------ Captured log call -------------------------------
+WARNING  aconsole.core.bootstrap:bootstrap.py:881 event 1 is 33003 bytes, over the limit; not sent
+_____ test_a_new_item_cannot_jump_ahead_of_older_overflow_for_the_same_tab _____
+
+    def test_a_new_item_cannot_jump_ahead_of_older_overflow_for_the_same_tab() -> None:
+        queue = IngestQueue(limit=1)
+        first, old, new = _item("first", b"first"), _item("tab", b"old"), _item("tab", b"new")
+        queue.push(first)
+        queue.push(old)
+        assert queue.pop() == first
+        queue.push(new)
+        assert queue.pop() == new
+>       assert queue.pop() is None, "an old overflow item was applied after its newer replacement"
+E       AssertionError: an old overflow item was applied after its newer replacement
+E       assert IngestItem(tab_id='tab', kind='claude.hook', body=b'old') is None
+E        +  where IngestItem(tab_id='tab', kind='claude.hook', body=b'old') = pop()
+E        +    where pop = <aconsole.core.infrastructure.http.routes.IngestQueue object at 0x569b5f9a3d0>.pop
+
+tests/core/test_transport_resilience.py:120: AssertionError
+_________ test_coalesced_tabs_follow_the_order_of_their_latest_updates _________
+
+    def test_coalesced_tabs_follow_the_order_of_their_latest_updates() -> None:
+        queue = IngestQueue(limit=1)
+        first, a1, b1, a2 = _item("first", b"first"), _item("a", b"1"), _item("b", b"1"), _item("a", b"2")
+        for item in (first, a1, b1, a2):
+            queue.push(item)
+        assert queue.pop() == first
+>       assert queue.pop() == b1
+E       AssertionError: assert IngestItem(ta...k', body=b'2') == IngestItem(ta...k', body=b'1')
+E
+E         Omitting 1 identical items, use -vv to show
+E         Differing attributes:
+E         ['tab_id', 'body']
+E
+E         Drill down into differing attribute tab_id:
+E           tab_id: 'a' != 'b'...
+E
+E         ...Full output truncated (7 lines hidden), use '-vv' to show
+
+tests/core/test_transport_resilience.py:129: AssertionError
+____ test_ingest_overflow_is_reported_after_latest_state_and_resyncs_the_ui ____
+
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-17/test_ingest_overflow_is_report0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x569b29e85f0>
+
+    def test_ingest_overflow_is_reported_after_latest_state_and_resyncs_the_ui(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        home = tmp_path / "home"
+        home.mkdir()
+        monkeypatch.setenv("FAKE_HOME", str(home))
+        repo = _git_repo(tmp_path / "repo")
+
+        async def scenario() -> None:
+            from aconsole.core.bootstrap import Daemon
+
+            entered, release = asyncio.Event(), asyncio.Event()
+            applied = []
+            original = Daemon._apply_hook
+
+            async def delayed(self: Daemon, tab_id: str, event: str) -> None:
+                if not entered.is_set():
+                    entered.set()
+                    await asyncio.wait_for(release.wait(), 5)
+                applied.append(event)
+                await original(self, tab_id, event)
+
+            monkeypatch.setattr(Daemon, "_apply_hook", delayed)
+            daemon = _daemon(tmp_path)
+            daemon._ingest_queue = IngestQueue(limit=1)
+            serving = asyncio.create_task(daemon.serve())
+            ipc = await _connect(daemon.socket)
+            client = CoreClient(str(daemon.socket))
+            try:
+                project = await ipc.call("project/add", ProjectAddParams(root=str(repo)), ProjectView)
+                tab = await ipc.call("tab/open", _open(project.id), TabView)
+                spec = await ipc.call("tab/launchSpec", TabIdParams(tab_id=tab.id), TerminalLaunchSpec)
+                _ = await client.connect()
+                _ = await client.pull_snapshot()
+                port = daemon.ingest_port
+                assert port is not None
+
+                async def post(name: str) -> None:
+                    await asyncio.to_thread(_hook, port, str(tab.id), spec.env["ACONSOLE_TAB_TOKEN"], {
+                        "hook_event_name": name, "session_id": "s", "tool_name": "Bash", "stop_hook_active": False,
+                    })
+
+                await post("PreToolUse")
+                await asyncio.wait_for(entered.wait(), 2)
+                for name in ("PostToolUse", "PreToolUse", "Stop"):
+                    await post(name)
+                assert daemon._ingest_queue.needs_resync(str(tab.id))
+                release.set()
+                for _attempt in range(200):
+                    if client.resync_count > 0 and not client.store.reconnecting:
+                        break
+                    await asyncio.sleep(0.01)
+                assert applied == ["PreToolUse", "PostToolUse", "Stop"]
+                assert client.resync_count > 0, "ingest loss was cleared without notifying the UI"
+                assert not client.store.reconnecting
+                assert client.connects == 1
+            finally:
+                release.set()
+                await client.close()
+                await _stop(daemon, serving, ipc)
+>       asyncio.run(scenario())
+
+tests/core/test_transport_resilience.py:193:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+../../.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py:205: in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py:128: in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/base_events.py:724: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    async def scenario() -> None:
+        from aconsole.core.bootstrap import Daemon
+
+        entered, release = asyncio.Event(), asyncio.Event()
+        applied = []
+        original = Daemon._apply_hook
+
+        async def delayed(self: Daemon, tab_id: str, event: str) -> None:
+            if not entered.is_set():
+                entered.set()
+                await asyncio.wait_for(release.wait(), 5)
+            applied.append(event)
+            await original(self, tab_id, event)
+
+        monkeypatch.setattr(Daemon, "_apply_hook", delayed)
+        daemon = _daemon(tmp_path)
+        daemon._ingest_queue = IngestQueue(limit=1)
+        serving = asyncio.create_task(daemon.serve())
+        ipc = await _connect(daemon.socket)
+        client = CoreClient(str(daemon.socket))
+        try:
+            project = await ipc.call("project/add", ProjectAddParams(root=str(repo)), ProjectView)
+            tab = await ipc.call("tab/open", _open(project.id), TabView)
+            spec = await ipc.call("tab/launchSpec", TabIdParams(tab_id=tab.id), TerminalLaunchSpec)
+            _ = await client.connect()
+            _ = await client.pull_snapshot()
+            port = daemon.ingest_port
+            assert port is not None
+
+            async def post(name: str) -> None:
+                await asyncio.to_thread(_hook, port, str(tab.id), spec.env["ACONSOLE_TAB_TOKEN"], {
+                    "hook_event_name": name, "session_id": "s", "tool_name": "Bash", "stop_hook_active": False,
+                })
+
+            await post("PreToolUse")
+            await asyncio.wait_for(entered.wait(), 2)
+            for name in ("PostToolUse", "PreToolUse", "Stop"):
+                await post(name)
+            assert daemon._ingest_queue.needs_resync(str(tab.id))
+            release.set()
+            for _attempt in range(200):
+                if client.resync_count > 0 and not client.store.reconnecting:
+                    break
+                await asyncio.sleep(0.01)
+            assert applied == ["PreToolUse", "PostToolUse", "Stop"]
+>           assert client.resync_count > 0, "ingest loss was cleared without notifying the UI"
+E           AssertionError: ingest loss was cleared without notifying the UI
+E           assert 0 > 0
+E            +  where 0 = <aconsole.ui.client.core_client.CoreClient object at 0x569ca601410>.resync_count
+
+tests/core/test_transport_resilience.py:186: AssertionError
+=========================== short test summary info ============================
+FAILED tests/core/test_transport_resilience.py::test_bad_json_gets_an_error_and_the_same_socket_remains_usable
+FAILED tests/core/test_transport_resilience.py::test_turn_handler_crash_answers_once_and_keeps_processing[setup/checks]
+FAILED tests/core/test_transport_resilience.py::test_turn_handler_crash_answers_once_and_keeps_processing[app/snapshot]
+FAILED tests/core/test_transport_resilience.py::test_the_last_oversized_event_triggers_automatic_resync_without_reconnect
+FAILED tests/core/test_transport_resilience.py::test_a_new_item_cannot_jump_ahead_of_older_overflow_for_the_same_tab
+FAILED tests/core/test_transport_resilience.py::test_coalesced_tabs_follow_the_order_of_their_latest_updates
+FAILED tests/core/test_transport_resilience.py::test_ingest_overflow_is_reported_after_latest_state_and_resyncs_the_ui

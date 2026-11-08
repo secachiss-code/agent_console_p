@@ -1942,3 +1942,66 @@ msgstr "{0}: {1} → {2} (read-only)"
 
 msgid "setup.isolation.metadata_only"
 msgstr "No sensitive host binds detected; this metadata check does not guarantee isolation."
+
+msgid "prefs.policy"
+msgstr "Who decides"
+
+msgid "prefs.policy_ask"
+msgstr "Ask"
+
+msgid "prefs.policy_allow"
+msgstr "Allow"
+
+msgid "prefs.policy_deny"
+msgstr "Deny"
+
+msgid "prefs.policy_scenario"
+msgstr "Scenario"
+
+msgid "prefs.policy_scenario_unavailable"
+msgstr "Scenario is not available in this version. It still asks."
+
+msgid "prefs.policy_project"
+msgstr "This project"
+
+msgid "prefs.policy_inherit"
+msgstr "Use the global choice ({mode})"
+
+msgid "prefs.dangerous"
+msgstr "Also allow dangerous calls"
+
+msgid "prefs.dangerous_confirm_title"
+msgstr "Allow dangerous calls?"
+
+msgid "prefs.dangerous_confirm_body"
+msgstr "Tagged calls, including destructive ones, will be allowed when this mode is applied."
+
+msgid "prefs.dangerous_cancel"
+msgstr "Cancel"
+
+msgid "prefs.dangerous_allow"
+msgstr "Allow dangerous calls"
+
+msgid "prefs.harness"
+msgstr "What each agent does now"
+
+msgid "prefs.harness_no_hooks"
+msgstr "No hooks. Requests stay in its terminal, so this mode does not apply."
+
+msgid "prefs.harness_asks"
+msgstr "Hooks can ask. Allow and deny are not applied to this CLI yet."
+
+msgid "prefs.banner_allow"
+msgstr "Allow is on for untagged calls. Agents still ask until their adapter applies it."
+
+msgid "prefs.banner_allow_dangerous"
+msgstr "Allow is on, including dangerous calls. Agents still ask until their adapter applies it."
+
+msgid "prefs.banner_deny"
+msgstr "Deny is on. Agents still ask until their adapter applies it."
+
+msgid "tabs.status.answer_in_terminal"
+msgstr "Answer in the terminal. There is no approval card for this request."
+
+msgid "tabs.no_hooks"
+msgstr "No hooks: requests stay in the agent's terminal"

@@ -1,0 +1,154 @@
+Collected 0 items to run in parallel
+...F..FF.FFF............................                                 [100%]
+=================================== FAILURES ===================================
+__ test_environment_cannot_restore_askpass_or_an_editor[process-GIT_ASKPASS] ___
+
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-8/test_environment_cannot_restor0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x55e99c1bb90>
+name = 'GIT_ASKPASS', source = 'process'
+
+    @pytest.mark.parametrize("name", ["GIT_ASKPASS", "SSH_ASKPASS", "GIT_EDITOR", "GIT_SEQUENCE_EDITOR"])
+    @pytest.mark.parametrize("source", ["process", "call"])
+    def test_environment_cannot_restore_askpass_or_an_editor(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch, name: str, source: str,
+    ) -> None:
+        repo, marker, script = _repo(tmp_path)
+        if source == "process":
+            monkeypatch.setenv(name, str(script))
+            extra = None
+        else:
+            extra = {name: str(script)}
+        key = "core.askPass" if "ASKPASS" in name else "sequence.editor" if "SEQUENCE" in name else "core.editor"
+        _ = _exercise(repo, key, extra)
+>       assert not marker.exists()
+E       AssertionError: assert not True
+E        +  where True = exists()
+E        +    where exists = PosixPath('/tmp/pytest-of-root/pytest-8/test_environment_cannot_restor0/ran').exists
+
+tests/core/test_git_security_environment.py:49: AssertionError
+_ test_environment_cannot_restore_askpass_or_an_editor[process-GIT_SEQUENCE_EDITOR] _
+
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-8/test_environment_cannot_restor3')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x55e9673b910>
+name = 'GIT_SEQUENCE_EDITOR', source = 'process'
+
+    @pytest.mark.parametrize("name", ["GIT_ASKPASS", "SSH_ASKPASS", "GIT_EDITOR", "GIT_SEQUENCE_EDITOR"])
+    @pytest.mark.parametrize("source", ["process", "call"])
+    def test_environment_cannot_restore_askpass_or_an_editor(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch, name: str, source: str,
+    ) -> None:
+        repo, marker, script = _repo(tmp_path)
+        if source == "process":
+            monkeypatch.setenv(name, str(script))
+            extra = None
+        else:
+            extra = {name: str(script)}
+        key = "core.askPass" if "ASKPASS" in name else "sequence.editor" if "SEQUENCE" in name else "core.editor"
+        _ = _exercise(repo, key, extra)
+>       assert not marker.exists()
+E       AssertionError: assert not True
+E        +  where True = exists()
+E        +    where exists = PosixPath('/tmp/pytest-of-root/pytest-8/test_environment_cannot_restor3/ran').exists
+
+tests/core/test_git_security_environment.py:49: AssertionError
+____ test_environment_cannot_restore_askpass_or_an_editor[call-GIT_ASKPASS] ____
+
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-8/test_environment_cannot_restor4')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x55e9673ba10>
+name = 'GIT_ASKPASS', source = 'call'
+
+    @pytest.mark.parametrize("name", ["GIT_ASKPASS", "SSH_ASKPASS", "GIT_EDITOR", "GIT_SEQUENCE_EDITOR"])
+    @pytest.mark.parametrize("source", ["process", "call"])
+    def test_environment_cannot_restore_askpass_or_an_editor(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch, name: str, source: str,
+    ) -> None:
+        repo, marker, script = _repo(tmp_path)
+        if source == "process":
+            monkeypatch.setenv(name, str(script))
+            extra = None
+        else:
+            extra = {name: str(script)}
+        key = "core.askPass" if "ASKPASS" in name else "sequence.editor" if "SEQUENCE" in name else "core.editor"
+        _ = _exercise(repo, key, extra)
+>       assert not marker.exists()
+E       AssertionError: assert not True
+E        +  where True = exists()
+E        +    where exists = PosixPath('/tmp/pytest-of-root/pytest-8/test_environment_cannot_restor4/ran').exists
+
+tests/core/test_git_security_environment.py:49: AssertionError
+____ test_environment_cannot_restore_askpass_or_an_editor[call-GIT_EDITOR] _____
+
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-8/test_environment_cannot_restor6')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x55e967a7e10>
+name = 'GIT_EDITOR', source = 'call'
+
+    @pytest.mark.parametrize("name", ["GIT_ASKPASS", "SSH_ASKPASS", "GIT_EDITOR", "GIT_SEQUENCE_EDITOR"])
+    @pytest.mark.parametrize("source", ["process", "call"])
+    def test_environment_cannot_restore_askpass_or_an_editor(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch, name: str, source: str,
+    ) -> None:
+        repo, marker, script = _repo(tmp_path)
+        if source == "process":
+            monkeypatch.setenv(name, str(script))
+            extra = None
+        else:
+            extra = {name: str(script)}
+        key = "core.askPass" if "ASKPASS" in name else "sequence.editor" if "SEQUENCE" in name else "core.editor"
+        _ = _exercise(repo, key, extra)
+>       assert not marker.exists()
+E       AssertionError: assert not True
+E        +  where True = exists()
+E        +    where exists = PosixPath('/tmp/pytest-of-root/pytest-8/test_environment_cannot_restor6/ran').exists
+
+tests/core/test_git_security_environment.py:49: AssertionError
+_ test_environment_cannot_restore_askpass_or_an_editor[call-GIT_SEQUENCE_EDITOR] _
+
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-8/test_environment_cannot_restor7')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x55e967a71d0>
+name = 'GIT_SEQUENCE_EDITOR', source = 'call'
+
+    @pytest.mark.parametrize("name", ["GIT_ASKPASS", "SSH_ASKPASS", "GIT_EDITOR", "GIT_SEQUENCE_EDITOR"])
+    @pytest.mark.parametrize("source", ["process", "call"])
+    def test_environment_cannot_restore_askpass_or_an_editor(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch, name: str, source: str,
+    ) -> None:
+        repo, marker, script = _repo(tmp_path)
+        if source == "process":
+            monkeypatch.setenv(name, str(script))
+            extra = None
+        else:
+            extra = {name: str(script)}
+        key = "core.askPass" if "ASKPASS" in name else "sequence.editor" if "SEQUENCE" in name else "core.editor"
+        _ = _exercise(repo, key, extra)
+>       assert not marker.exists()
+E       AssertionError: assert not True
+E        +  where True = exists()
+E        +    where exists = PosixPath('/tmp/pytest-of-root/pytest-8/test_environment_cannot_restor7/ran').exists
+
+tests/core/test_git_security_environment.py:49: AssertionError
+__________ test_safety_programs_are_not_resolved_in_an_untrusted_path __________
+
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-8/test_safety_programs_are_not_r0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x55e96858290>
+
+    def test_safety_programs_are_not_resolved_in_an_untrusted_path(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        repo, marker, _script_path = _repo(tmp_path)
+        binaries = tmp_path / "bin"
+        _script(binaries / "true", marker)
+        monkeypatch.setenv("PATH", f"{binaries}:{os.environ.get('PATH', '')}")
+        _ = _exercise(repo, "core.editor")
+>       assert not marker.exists()
+E       AssertionError: assert not True
+E        +  where True = exists()
+E        +    where exists = PosixPath('/tmp/pytest-of-root/pytest-8/test_safety_programs_are_not_r0/ran').exists
+
+tests/core/test_git_security_environment.py:60: AssertionError
+=========================== short test summary info ============================
+FAILED tests/core/test_git_security_environment.py::test_environment_cannot_restore_askpass_or_an_editor[process-GIT_ASKPASS]
+FAILED tests/core/test_git_security_environment.py::test_environment_cannot_restore_askpass_or_an_editor[process-GIT_SEQUENCE_EDITOR]
+FAILED tests/core/test_git_security_environment.py::test_environment_cannot_restore_askpass_or_an_editor[call-GIT_ASKPASS]
+FAILED tests/core/test_git_security_environment.py::test_environment_cannot_restore_askpass_or_an_editor[call-GIT_EDITOR]
+FAILED tests/core/test_git_security_environment.py::test_environment_cannot_restore_askpass_or_an_editor[call-GIT_SEQUENCE_EDITOR]
+FAILED tests/core/test_git_security_environment.py::test_safety_programs_are_not_resolved_in_an_untrusted_path

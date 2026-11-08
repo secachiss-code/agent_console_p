@@ -18,6 +18,9 @@ class Settings(msgspec.Struct, frozen=True, kw_only=True):
     worktrees_dir: str
     approvals_mode: Literal["inline", "native"] = "inline"
     approval_hold_seconds: Annotated[int, Meta(ge=30, le=540)] = 540
+    # Who decides. Separate from `approvals_mode`, which only chooses where the question is shown.
+    approval_policy: Literal["ask", "allow", "deny", "scenario"] = "ask"
+    approval_dangerous: Literal["ask", "allow"] = "ask"
     notify_when: Literal["unfocused", "always", "never"] = "unfocused"
     terminal_font: str | None = None
     terminal_font_size: Annotated[int, Meta(ge=8, le=32)] = 11
@@ -38,6 +41,8 @@ class SettingsPatch(msgspec.Struct, frozen=True, kw_only=True):
     worktrees_dir: str | UnsetType = UNSET
     approvals_mode: Literal["inline", "native"] | UnsetType = UNSET
     approval_hold_seconds: Annotated[int, Meta(ge=30, le=540)] | UnsetType = UNSET
+    approval_policy: Literal["ask", "allow", "deny", "scenario"] | UnsetType = UNSET
+    approval_dangerous: Literal["ask", "allow"] | UnsetType = UNSET
     notify_when: Literal["unfocused", "always", "never"] | UnsetType = UNSET
     terminal_font: str | UnsetType | None = UNSET
     terminal_font_size: Annotated[int, Meta(ge=8, le=32)] | UnsetType = UNSET
@@ -67,6 +72,8 @@ def commit_settings(current: Settings, patch: SettingsPatch) -> Settings:
         worktrees_dir=_keep(patch.worktrees_dir, current.worktrees_dir),
         approvals_mode=_keep(patch.approvals_mode, current.approvals_mode),
         approval_hold_seconds=_keep(patch.approval_hold_seconds, current.approval_hold_seconds),
+        approval_policy=_keep(patch.approval_policy, current.approval_policy),
+        approval_dangerous=_keep(patch.approval_dangerous, current.approval_dangerous),
         notify_when=_keep(patch.notify_when, current.notify_when),
         terminal_font=_keep(patch.terminal_font, current.terminal_font),
         terminal_font_size=_keep(patch.terminal_font_size, current.terminal_font_size),

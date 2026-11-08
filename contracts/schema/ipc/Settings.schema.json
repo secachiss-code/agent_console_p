@@ -2,11 +2,27 @@
   "$defs": {
     "Settings": {
       "properties": {
+        "approval_dangerous": {
+          "default": "ask",
+          "enum": [
+            "allow",
+            "ask"
+          ]
+        },
         "approval_hold_seconds": {
           "default": 540,
           "maximum": 540,
           "minimum": 30,
           "type": "integer"
+        },
+        "approval_policy": {
+          "default": "ask",
+          "enum": [
+            "allow",
+            "ask",
+            "deny",
+            "scenario"
+          ]
         },
         "approvals_mode": {
           "default": "inline",

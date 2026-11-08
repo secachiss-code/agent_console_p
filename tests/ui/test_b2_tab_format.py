@@ -218,6 +218,14 @@ def test_b2_tab_format_unknown_account_does_not_use_another_accounts_plan() -> N
     assert presentation.section_title == "CLAUDE"
 
 
+def test_a_wait_without_a_card_names_the_terminal() -> None:
+    from aconsole.ui.viewmodels.logic.tab_format import format_tab
+
+    tab = msgspec.structs.replace(_demo_tab(TabStatus.WAITING_APPROVAL), status_detail="ANSWER_IN_TERMINAL")
+    assert format_tab(tab, (), NOW).status_note == "tabs.status.answer_in_terminal"
+    assert format_tab(_demo_tab(TabStatus.WAITING_APPROVAL), (), NOW).status_note == ""
+
+
 @pytest.mark.parametrize(("lang", "amount", "small"), [
     ("en_US", "$1,234.50", "$0.42"), ("ru_RU", "$1\N{NO-BREAK SPACE}234,50", "$0,42"),
 ])

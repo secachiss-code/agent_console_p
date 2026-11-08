@@ -57,10 +57,10 @@ class KnowledgeDatabase:
 
 
 def save_fact(session: Session, fact: StoredFact, supersedes: str | None) -> None:
-    """Add one fact. A project that is not in the database has nowhere to keep it, as with plans."""
+    """Add one fact, or fail if its project has nowhere to keep it."""
     if session.get(Project, fact.project_id) is None:
-        _LOG.warning("fact %s has no project row; it is not saved", fact.id)
-        return
+        message = f"fact {fact.id} has no project row; it was not saved"
+        raise ValueError(message)
     session.add(
         KbNode(
             id=fact.id,

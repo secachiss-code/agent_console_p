@@ -1,0 +1,69 @@
+Collected 0 items to run in parallel
+F                                                                        [100%]
+=================================== FAILURES ===================================
+________ test_framed_oversize_error_can_be_followed_by_a_valid_request _________
+
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-20/test_framed_oversize_error_can0')
+
+    def test_framed_oversize_error_can_be_followed_by_a_valid_request(tmp_path: Path) -> None:
+        async def scenario() -> None:
+            daemon = _daemon(tmp_path, serve_ingest=False)
+            daemon._frame_limit = 16 * 1024
+            serving = asyncio.create_task(daemon.serve())
+            client = await _connect(daemon.socket)
+            try:
+                client.writer.write(b'{"pad":"' + b'x' * 20000 + b'"}\n')
+                await client.writer.drain()
+                error = decode_envelope(await asyncio.wait_for(client.reader.readline(), 1))
+                assert isinstance(error, ResponseErr)
+                assert error.error.message == "MESSAGE_TOO_LARGE"
+                assert (await client.snapshot()).api_version
+            finally:
+                await _stop(daemon, serving, client)
+>       asyncio.run(scenario())
+
+tests/core/test_transport_resilience.py:229:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+../../.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py:205: in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py:128: in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/base_events.py:724: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+tests/core/test_transport_resilience.py:226: in scenario
+    assert (await client.snapshot()).api_version
+            ^^^^^^^^^^^^^^^^^^^^^^^
+tests/core/test_wire.py:105: in snapshot
+    return (await self.call("app/snapshot", EmptyParams(), SnapshotResult)).snapshot
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/core/test_wire.py:84: in call
+    reply = await self.raw(method, params)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/core/test_wire.py:100: in raw
+    envelope = decode_envelope(await self.reader.readline())
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/streams.py:577: in readline
+    line = await self.readuntil(sep)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/streams.py:691: in readuntil
+    await self._wait_for_data('readuntil')
+../../.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/streams.py:554: in _wait_for_data
+    await self._waiter
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <_SelectorSocketTransport closed fd=20>
+
+    def _read_ready__data_received(self):
+        if self._conn_lost:
+            return
+        try:
+>           data = self._sock.recv(self.max_size)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           ConnectionResetError: [Errno 104] Connection reset by peer
+
+../../.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/selector_events.py:1018: ConnectionResetError
+=========================== short test summary info ============================
+FAILED tests/core/test_transport_resilience.py::test_framed_oversize_error_can_be_followed_by_a_valid_request

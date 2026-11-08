@@ -46,7 +46,7 @@ from aconsole.contracts.work_sessions import (
     WorkSessionView,
 )
 from aconsole.core.infrastructure.persistence.engine import migrate, write_engine
-from aconsole.core.infrastructure.persistence.models import Project, WorkSessionRow, Workspace
+from aconsole.core.infrastructure.persistence.models import WorkSessionRow, Workspace
 from tests.core.git_helpers import commit, git, new_repo
 from tests.core.test_wire import _connect, _daemon, _open, _stop
 
@@ -229,7 +229,10 @@ def test_migration_keeps_closed_workspaces_and_groups_path_aliases(tmp_path: Pat
     alias = tmp_path / "alias"
     alias.symlink_to(root, target_is_directory=True)
     with Session(engine) as database:
-        database.add(Project(id="p", name="p", root_path=str(root), languages=[], created_at=now))
+        legacy_projects = Table("projects", MetaData(), autoload_with=engine)
+        database.execute(legacy_projects.insert().values(
+            id="p", name="p", root_path=str(root), default_branch="main", languages=[], created_at=now.isoformat(),
+        ))
         database.flush()
         database.add_all(
             Workspace(

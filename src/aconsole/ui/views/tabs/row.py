@@ -227,9 +227,11 @@ class TabRow(Gtk.Box):
         if not self.title_label.get_editing():
             self.title_label.set_text(str(item.title))
         status = translate(f"tabs.status.{item.status_code or 'unknown'}")
-        subtitle = str(item.subtitle)
-        detail = str(item.detail)
-        self.subtitle_label.set_label(" · ".join(value for value in (status, subtitle, detail) if value))
+        parts = [value for value in (status, str(item.subtitle), str(item.detail)) if value]
+        hooks = str(item.hooks_note)
+        if hooks:
+            parts.append(translate(hooks))
+        self.subtitle_label.set_label(" · ".join(parts))
         self.subtitle_label.set_tooltip_text(self.subtitle_label.get_label())
         self.update_property(
             [Gtk.AccessibleProperty.LABEL],
@@ -247,6 +249,10 @@ class TabRow(Gtk.Box):
         self.waiting_label.set_visible(minutes >= 0)
         self.waiting_label.set_label(_wait_text(minutes) if minutes >= 0 else "")
         self.status_label.set_label("")
+        status = translate(f"tabs.status.{item.status_code or 'unknown'}")
+        note = str(item.status_note)
+        if note:
+            status = f"{status}. {translate(note)}"
         if self._status_class is not None:
             self.status_label.remove_css_class(self._status_class)
         self._status_class = f"ac-status-{item.status_code or 'unknown'}"

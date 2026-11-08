@@ -1954,3 +1954,66 @@ msgstr "{0}: {1} → {2} (только чтение)"
 
 msgid "setup.isolation.metadata_only"
 msgstr "Чувствительные монтирования хоста не найдены; проверка метаданных не гарантирует изоляцию."
+
+msgid "prefs.policy"
+msgstr "Кто решает"
+
+msgid "prefs.policy_ask"
+msgstr "Спрашивать"
+
+msgid "prefs.policy_allow"
+msgstr "Разрешать"
+
+msgid "prefs.policy_deny"
+msgstr "Запрещать"
+
+msgid "prefs.policy_scenario"
+msgstr "Сценарий"
+
+msgid "prefs.policy_scenario_unavailable"
+msgstr "Сценарий в этой версии недоступен. Пока он спрашивает."
+
+msgid "prefs.policy_project"
+msgstr "Этот проект"
+
+msgid "prefs.policy_inherit"
+msgstr "Как в общих настройках ({mode})"
+
+msgid "prefs.dangerous"
+msgstr "Разрешать и опасные вызовы"
+
+msgid "prefs.dangerous_confirm_title"
+msgstr "Разрешать опасные вызовы?"
+
+msgid "prefs.dangerous_confirm_body"
+msgstr "Вызовы с меткой риска, в том числе разрушительные, будут разрешены, когда режим начнёт применяться."
+
+msgid "prefs.dangerous_cancel"
+msgstr "Отмена"
+
+msgid "prefs.dangerous_allow"
+msgstr "Разрешать опасные"
+
+msgid "prefs.harness"
+msgstr "Что каждый агент делает сейчас"
+
+msgid "prefs.harness_no_hooks"
+msgstr "Нет hooks. Запросы остаются в его терминале, поэтому режим не применяется."
+
+msgid "prefs.harness_asks"
+msgstr "Hooks умеют спрашивать. Разрешать и запрещать этот CLI пока не применяет."
+
+msgid "prefs.banner_allow"
+msgstr "Разрешение включено для вызовов без метки риска. Агенты всё ещё спрашивают, пока адаптер не применяет режим."
+
+msgid "prefs.banner_allow_dangerous"
+msgstr "Разрешение включено и для опасных вызовов. Агенты всё ещё спрашивают, пока адаптер не применяет режим."
+
+msgid "prefs.banner_deny"
+msgstr "Запрет включён. Агенты всё ещё спрашивают, пока адаптер не применяет режим."
+
+msgid "tabs.status.answer_in_terminal"
+msgstr "Ответьте в терминале. Карточки согласования для этого запроса нет."
+
+msgid "tabs.no_hooks"
+msgstr "Нет hooks: запросы остаются в терминале агента"

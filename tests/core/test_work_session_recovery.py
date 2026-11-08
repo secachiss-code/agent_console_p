@@ -14,7 +14,7 @@ from aconsole.contracts.app import ProjectAddParams, ProjectView, TabIdParams, T
 from aconsole.contracts.common import WorkspaceMode
 from aconsole.contracts.work_sessions import WorkSessionHandoffParams, WorkSessionHistoryResult, WorkSessionParams
 from aconsole.core.infrastructure.persistence.engine import migrate, write_engine
-from aconsole.core.infrastructure.persistence.models import Project, Workspace
+from aconsole.core.infrastructure.persistence.models import Workspace
 from tests.core.git_helpers import commit, git, new_repo
 from tests.core.test_wire import _connect, _daemon, _open, _stop
 
@@ -124,7 +124,10 @@ def test_legacy_checkpoints_are_adopted_without_rewriting_refs(tmp_path: Path) -
         engine = write_engine(url)
         now = datetime(2026, 11, 6, tzinfo=UTC)
         with Session(engine) as db:
-            db.add(Project(id="p", name="p", root_path=str(repo), languages=[], created_at=now))
+            legacy_projects = Table("projects", MetaData(), autoload_with=engine)
+            db.execute(legacy_projects.insert().values(
+                id="p", name="p", root_path=str(repo), default_branch="main", languages=[], created_at=now.isoformat(),
+            ))
             db.flush()
             db.add(
                 Workspace(

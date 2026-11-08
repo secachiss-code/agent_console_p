@@ -1,0 +1,499 @@
+Collected 0 items to run in parallel
+..........................F..F.................                          [100%]
+=================================== FAILURES ===================================
+__________ test_legacy_checkpoints_are_adopted_without_rewriting_refs __________
+
+self = <sqlalchemy.engine.base.Connection object at 0x4bc4fa43210>
+dialect = <sqlalchemy.dialects.sqlite.pysqlite.SQLiteDialect_pysqlite object at 0x4bc4fe47090>
+context = <sqlalchemy.dialects.sqlite.base.SQLiteExecutionContext object at 0x4bc4c334990>
+statement = <sqlalchemy.dialects.sqlite.base.SQLiteCompiler object at 0x4bc4ff86910>
+parameters = [('p', 'p', '/tmp/pytest-of-sas/pytest-161/test_legacy_checkpoints_are_ad0/repo', '[]', datetime.datetime(2026, 11, 6, 0, 0, tzinfo=datetime.timezone.utc))]
+
+    def _exec_single_context(
+        self,
+        dialect: Dialect,
+        context: ExecutionContext,
+        statement: Union[str, Compiled],
+        parameters: Optional[_AnyMultiExecuteParams],
+    ) -> CursorResult[Unpack[TupleAny]]:
+        """continue the _execute_context() method for a single DBAPI
+        cursor.execute() or cursor.executemany() call.
+
+        """
+        if dialect.bind_typing is BindTyping.SETINPUTSIZES:
+            generic_setinputsizes = context._prepare_set_input_sizes()
+
+            if generic_setinputsizes:
+                try:
+                    dialect.do_set_input_sizes(
+                        context.cursor, generic_setinputsizes, context
+                    )
+                except BaseException as e:
+                    self._handle_dbapi_exception(
+                        e, str(statement), parameters, None, context
+                    )
+
+        cursor, str_statement, parameters = (
+            context.cursor,
+            context.statement,
+            context.parameters,
+        )
+
+        effective_parameters: Optional[_AnyExecuteParams]
+
+        if not context.executemany:
+            effective_parameters = parameters[0]
+        else:
+            effective_parameters = parameters
+
+        evt_handled: bool = False
+        try:
+            if self._has_events or self.engine._has_events:
+                for fn in self.dispatch.before_cursor_execute:
+                    str_statement, effective_parameters = fn(
+                        self,
+                        cursor,
+                        str_statement,
+                        effective_parameters,
+                        context,
+                        context.executemany,
+                    )
+
+            if self._echo:
+                self._log_info(str_statement)
+
+                stats = context._get_cache_stats()
+
+                if not self.engine.hide_parameters:
+                    self._log_info(
+                        "[%s] %r",
+                        stats,
+                        sql_util._repr_params(
+                            effective_parameters,
+                            batches=10,
+                            ismulti=context.executemany,
+                        ),
+                    )
+                else:
+                    self._log_info(
+                        "[%s] [SQL parameters hidden due to "
+                        "hide_parameters=True]",
+                        stats,
+                    )
+            if context.execute_style is ExecuteStyle.EXECUTEMANY:
+                effective_parameters = cast(
+                    "_CoreMultiExecuteParams", effective_parameters
+                )
+                if self.dialect._has_events:
+                    for fn in self.dialect.dispatch.do_executemany:
+                        if fn(
+                            cursor,
+                            str_statement,
+                            effective_parameters,
+                            context,
+                        ):
+                            evt_handled = True
+                            break
+                if not evt_handled:
+                    self.dialect.do_executemany(
+                        cursor,
+                        str_statement,
+                        effective_parameters,
+                        context,
+                    )
+            elif not effective_parameters and context.no_parameters:
+                if self.dialect._has_events:
+                    for fn in self.dialect.dispatch.do_execute_no_params:
+                        if fn(cursor, str_statement, context):
+                            evt_handled = True
+                            break
+                if not evt_handled:
+                    self.dialect.do_execute_no_params(
+                        cursor, str_statement, context
+                    )
+            else:
+                effective_parameters = cast(
+                    "_CoreSingleExecuteParams", effective_parameters
+                )
+                if self.dialect._has_events:
+                    for fn in self.dialect.dispatch.do_execute:
+                        if fn(
+                            cursor,
+                            str_statement,
+                            effective_parameters,
+                            context,
+                        ):
+                            evt_handled = True
+                            break
+                if not evt_handled:
+>                   self.dialect.do_execute(
+                        cursor, str_statement, effective_parameters, context
+                    )
+
+/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/base.py:1958:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <sqlalchemy.dialects.sqlite.pysqlite.SQLiteDialect_pysqlite object at 0x4bc4fe47090>
+cursor = <sqlite3.Cursor object at 0x4bc4df6fe00>
+statement = 'INSERT INTO projects (id, name, root_path, languages, created_at) VALUES (?, ?, ?, ?, ?)'
+parameters = ('p', 'p', '/tmp/pytest-of-sas/pytest-161/test_legacy_checkpoints_are_ad0/repo', '[]', datetime.datetime(2026, 11, 6, 0, 0, tzinfo=datetime.timezone.utc))
+context = <sqlalchemy.dialects.sqlite.base.SQLiteExecutionContext object at 0x4bc4c334990>
+
+    def do_execute(self, cursor, statement, parameters, context=None):
+>       cursor.execute(statement, parameters)
+E       sqlite3.IntegrityError: NOT NULL constraint failed: projects.default_branch
+
+/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/default.py:1192: IntegrityError
+
+The above exception was the direct cause of the following exception:
+
+tmp_path = PosixPath('/tmp/pytest-of-sas/pytest-161/test_legacy_checkpoints_are_ad0')
+
+    def test_legacy_checkpoints_are_adopted_without_rewriting_refs(tmp_path: Path) -> None:
+        async def scenario() -> None:
+            repo = new_repo(tmp_path / "repo")
+            head = commit(repo, "a", "base\n", "first")
+            ref = "refs/aconsole/checkpoints/old-tab/1"
+            _ = git(repo, "update-ref", ref, head)
+            database = tmp_path / "aconsole.db"
+            url = f"sqlite:///{database}"
+            migrate(url, "0004_git_operations")
+            engine = write_engine(url)
+            now = datetime(2026, 11, 6, tzinfo=UTC)
+            with Session(engine) as db:
+                legacy_projects = Table("projects", MetaData(), autoload_with=engine)
+                db.execute(legacy_projects.insert().values(
+                    id="p", name="p", root_path=str(repo), languages=[], created_at=now,
+                ))
+                db.flush()
+                db.add(
+                    Workspace(
+                        id="w",
+                        project_id="p",
+                        mode=WorkspaceMode.MAIN_CHECKOUT,
+                        path=str(repo),
+                        branch="trunk",
+                        base_branch="trunk",
+                        base_commit=head,
+                        locked=False,
+                        dirty_cached=False,
+                        created_at=now,
+                        removed_at=None,
+                    )
+                )
+                db.commit()
+            with engine.begin() as connection:
+                metadata = MetaData()
+                tabs = Table("tabs", metadata, autoload_with=connection)
+                checkpoints = Table("checkpoints", metadata, autoload_with=connection)
+                connection.execute(
+                    tabs.insert().values(
+                        id="old-tab",
+                        project_id="p",
+                        workspace_id="w",
+                        agent_kind="claude",
+                        title="Old actor",
+                        tab_order=0,
+                        last_status="exited",
+                        agent_session_id="native-conversation",
+                        created_at=now.isoformat(),
+                        updated_at=now.isoformat(),
+                    )
+                )
+                connection.execute(
+                    checkpoints.insert().values(
+                        id="old-point",
+                        tab_id="old-tab",
+                        turn=1,
+                        git_ref=ref,
+                        tree_sha=git(repo, "rev-parse", "HEAD^{tree}"),
+                        label="Old point",
+                        files_changed=0,
+                        insertions=0,
+                        deletions=0,
+                        created_at=now.isoformat(),
+                    )
+                )
+            engine.dispose()
+            daemon = _daemon(tmp_path, serve_ingest=False)
+            task = asyncio.create_task(daemon.serve())
+            client = await _connect(daemon.socket)
+            tab = (await client.snapshot()).tabs[0]
+            assert tab.agent_session_id == "native-conversation"
+            assert tab.work_session_id is not None
+            history = await client.call(
+                "workSession/history",
+                WorkSessionParams(
+                    project_id=tab.project_id,
+                    work_session_id=tab.work_session_id,
+                ),
+                WorkSessionHistoryResult,
+            )
+            assert len(history.snapshots) == 1
+            point = history.snapshots[0]
+            assert point.kind == "legacy_checkpoint"
+            assert point.ref == ref
+            assert point.oid == head
+            assert point.actor_title == "Old actor"
+            assert git(repo, "rev-parse", ref) == head
+            await _stop(daemon, task, client)
+
+>       asyncio.run(scenario())
+
+tests/core/test_work_session_recovery.py:204:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+../../../../uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py:205: in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+../../../../uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py:128: in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../../uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/base_events.py:724: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+tests/core/test_work_session_recovery.py:128: in scenario
+    db.execute(legacy_projects.insert().values(
+/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/orm/session.py:2473: in execute
+    return self._execute_internal(
+/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/orm/session.py:2373: in _execute_internal
+    result = conn.execute(
+/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/base.py:1463: in execute
+    return meth(
+/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/sql/elements.py:533: in _execute_on_connection
+    return connection._execute_clauseelement(
+/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/base.py:1683: in _execute_clauseelement
+    ret = self._execute_context(
+/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/base.py:1837: in _execute_context
+    return self._exec_single_context(
+/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/base.py:1977: in _exec_single_context
+    self._handle_dbapi_exception(
+/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/base.py:2347: in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/base.py:1958: in _exec_single_context
+    self.dialect.do_execute(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <sqlalchemy.dialects.sqlite.pysqlite.SQLiteDialect_pysqlite object at 0x4bc4fe47090>
+cursor = <sqlite3.Cursor object at 0x4bc4df6fe00>
+statement = 'INSERT INTO projects (id, name, root_path, languages, created_at) VALUES (?, ?, ?, ?, ?)'
+parameters = ('p', 'p', '/tmp/pytest-of-sas/pytest-161/test_legacy_checkpoints_are_ad0/repo', '[]', datetime.datetime(2026, 11, 6, 0, 0, tzinfo=datetime.timezone.utc))
+context = <sqlalchemy.dialects.sqlite.base.SQLiteExecutionContext object at 0x4bc4c334990>
+
+    def do_execute(self, cursor, statement, parameters, context=None):
+>       cursor.execute(statement, parameters)
+E       sqlalchemy.exc.IntegrityError: (sqlite3.IntegrityError) NOT NULL constraint failed: projects.default_branch
+E       [SQL: INSERT INTO projects (id, name, root_path, languages, created_at) VALUES (?, ?, ?, ?, ?)]
+E       [parameters: ('p', 'p', '/tmp/pytest-of-sas/pytest-161/test_legacy_checkpoints_are_ad0/repo', '[]', datetime.datetime(2026, 11, 6, 0, 0, tzinfo=datetime.timezone.utc))]
+E       (Background on this error at: https://sqlalche.me/e/21/gkpj)
+
+/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/default.py:1192: IntegrityError
+________ test_migration_keeps_closed_workspaces_and_groups_path_aliases ________
+
+self = <sqlalchemy.engine.base.Connection object at 0x4bc4fa4da10>
+dialect = <sqlalchemy.dialects.sqlite.pysqlite.SQLiteDialect_pysqlite object at 0x4bc4fe4d850>
+context = <sqlalchemy.dialects.sqlite.base.SQLiteExecutionContext object at 0x4bc4c33a810>
+statement = <sqlalchemy.dialects.sqlite.base.SQLiteCompiler object at 0x4bc4fe43d50>
+parameters = [('p', 'p', '/tmp/pytest-of-sas/pytest-161/test_migration_keeps_closed_wo0/workspace', '[]', datetime.datetime(2026, 11, 6, 0, 0, tzinfo=datetime.timezone.utc))]
+
+    def _exec_single_context(
+        self,
+        dialect: Dialect,
+        context: ExecutionContext,
+        statement: Union[str, Compiled],
+        parameters: Optional[_AnyMultiExecuteParams],
+    ) -> CursorResult[Unpack[TupleAny]]:
+        """continue the _execute_context() method for a single DBAPI
+        cursor.execute() or cursor.executemany() call.
+
+        """
+        if dialect.bind_typing is BindTyping.SETINPUTSIZES:
+            generic_setinputsizes = context._prepare_set_input_sizes()
+
+            if generic_setinputsizes:
+                try:
+                    dialect.do_set_input_sizes(
+                        context.cursor, generic_setinputsizes, context
+                    )
+                except BaseException as e:
+                    self._handle_dbapi_exception(
+                        e, str(statement), parameters, None, context
+                    )
+
+        cursor, str_statement, parameters = (
+            context.cursor,
+            context.statement,
+            context.parameters,
+        )
+
+        effective_parameters: Optional[_AnyExecuteParams]
+
+        if not context.executemany:
+            effective_parameters = parameters[0]
+        else:
+            effective_parameters = parameters
+
+        evt_handled: bool = False
+        try:
+            if self._has_events or self.engine._has_events:
+                for fn in self.dispatch.before_cursor_execute:
+                    str_statement, effective_parameters = fn(
+                        self,
+                        cursor,
+                        str_statement,
+                        effective_parameters,
+                        context,
+                        context.executemany,
+                    )
+
+            if self._echo:
+                self._log_info(str_statement)
+
+                stats = context._get_cache_stats()
+
+                if not self.engine.hide_parameters:
+                    self._log_info(
+                        "[%s] %r",
+                        stats,
+                        sql_util._repr_params(
+                            effective_parameters,
+                            batches=10,
+                            ismulti=context.executemany,
+                        ),
+                    )
+                else:
+                    self._log_info(
+                        "[%s] [SQL parameters hidden due to "
+                        "hide_parameters=True]",
+                        stats,
+                    )
+            if context.execute_style is ExecuteStyle.EXECUTEMANY:
+                effective_parameters = cast(
+                    "_CoreMultiExecuteParams", effective_parameters
+                )
+                if self.dialect._has_events:
+                    for fn in self.dialect.dispatch.do_executemany:
+                        if fn(
+                            cursor,
+                            str_statement,
+                            effective_parameters,
+                            context,
+                        ):
+                            evt_handled = True
+                            break
+                if not evt_handled:
+                    self.dialect.do_executemany(
+                        cursor,
+                        str_statement,
+                        effective_parameters,
+                        context,
+                    )
+            elif not effective_parameters and context.no_parameters:
+                if self.dialect._has_events:
+                    for fn in self.dialect.dispatch.do_execute_no_params:
+                        if fn(cursor, str_statement, context):
+                            evt_handled = True
+                            break
+                if not evt_handled:
+                    self.dialect.do_execute_no_params(
+                        cursor, str_statement, context
+                    )
+            else:
+                effective_parameters = cast(
+                    "_CoreSingleExecuteParams", effective_parameters
+                )
+                if self.dialect._has_events:
+                    for fn in self.dialect.dispatch.do_execute:
+                        if fn(
+                            cursor,
+                            str_statement,
+                            effective_parameters,
+                            context,
+                        ):
+                            evt_handled = True
+                            break
+                if not evt_handled:
+>                   self.dialect.do_execute(
+                        cursor, str_statement, effective_parameters, context
+                    )
+
+/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/base.py:1958:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <sqlalchemy.dialects.sqlite.pysqlite.SQLiteDialect_pysqlite object at 0x4bc4fe4d850>
+cursor = <sqlite3.Cursor object at 0x4bc4df6db00>
+statement = 'INSERT INTO projects (id, name, root_path, languages, created_at) VALUES (?, ?, ?, ?, ?)'
+parameters = ('p', 'p', '/tmp/pytest-of-sas/pytest-161/test_migration_keeps_closed_wo0/workspace', '[]', datetime.datetime(2026, 11, 6, 0, 0, tzinfo=datetime.timezone.utc))
+context = <sqlalchemy.dialects.sqlite.base.SQLiteExecutionContext object at 0x4bc4c33a810>
+
+    def do_execute(self, cursor, statement, parameters, context=None):
+>       cursor.execute(statement, parameters)
+E       sqlite3.IntegrityError: NOT NULL constraint failed: projects.default_branch
+
+/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/default.py:1192: IntegrityError
+
+The above exception was the direct cause of the following exception:
+
+tmp_path = PosixPath('/tmp/pytest-of-sas/pytest-161/test_migration_keeps_closed_wo0')
+
+    def test_migration_keeps_closed_workspaces_and_groups_path_aliases(tmp_path: Path) -> None:
+        url = f"sqlite:///{tmp_path / 'old.db'}"
+        migrate(url, "0004_git_operations")
+        engine = write_engine(url)
+        now = datetime(2026, 11, 6, tzinfo=UTC)
+        root = tmp_path / "workspace"
+        root.mkdir()
+        alias = tmp_path / "alias"
+        alias.symlink_to(root, target_is_directory=True)
+        with Session(engine) as database:
+            legacy_projects = Table("projects", MetaData(), autoload_with=engine)
+>           database.execute(legacy_projects.insert().values(
+                id="p", name="p", root_path=str(root), languages=[], created_at=now,
+            ))
+
+tests/core/test_work_sessions.py:233:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/orm/session.py:2473: in execute
+    return self._execute_internal(
+/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/orm/session.py:2373: in _execute_internal
+    result = conn.execute(
+/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/base.py:1463: in execute
+    return meth(
+/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/sql/elements.py:533: in _execute_on_connection
+    return connection._execute_clauseelement(
+/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/base.py:1683: in _execute_clauseelement
+    ret = self._execute_context(
+/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/base.py:1837: in _execute_context
+    return self._exec_single_context(
+/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/base.py:1977: in _exec_single_context
+    self._handle_dbapi_exception(
+/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/base.py:2347: in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/base.py:1958: in _exec_single_context
+    self.dialect.do_execute(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <sqlalchemy.dialects.sqlite.pysqlite.SQLiteDialect_pysqlite object at 0x4bc4fe4d850>
+cursor = <sqlite3.Cursor object at 0x4bc4df6db00>
+statement = 'INSERT INTO projects (id, name, root_path, languages, created_at) VALUES (?, ?, ?, ?, ?)'
+parameters = ('p', 'p', '/tmp/pytest-of-sas/pytest-161/test_migration_keeps_closed_wo0/workspace', '[]', datetime.datetime(2026, 11, 6, 0, 0, tzinfo=datetime.timezone.utc))
+context = <sqlalchemy.dialects.sqlite.base.SQLiteExecutionContext object at 0x4bc4c33a810>
+
+    def do_execute(self, cursor, statement, parameters, context=None):
+>       cursor.execute(statement, parameters)
+E       sqlalchemy.exc.IntegrityError: (sqlite3.IntegrityError) NOT NULL constraint failed: projects.default_branch
+E       [SQL: INSERT INTO projects (id, name, root_path, languages, created_at) VALUES (?, ?, ?, ?, ?)]
+E       [parameters: ('p', 'p', '/tmp/pytest-of-sas/pytest-161/test_migration_keeps_closed_wo0/workspace', '[]', datetime.datetime(2026, 11, 6, 0, 0, tzinfo=datetime.timezone.utc))]
+E       (Background on this error at: https://sqlalche.me/e/21/gkpj)
+
+/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/default.py:1192: IntegrityError
+=============================== warnings summary ===============================
+tests/core/test_work_session_recovery.py::test_legacy_checkpoints_are_adopted_without_rewriting_refs
+tests/core/test_work_sessions.py::test_migration_keeps_closed_workspaces_and_groups_path_aliases
+  /home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/default.py:1192: DeprecationWarning: The default datetime adapter is deprecated as of Python 3.12; see the sqlite3 documentation for suggested replacement recipes
+    cursor.execute(statement, parameters)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/core/test_work_session_recovery.py::test_legacy_checkpoints_are_adopted_without_rewriting_refs
+FAILED tests/core/test_work_sessions.py::test_migration_keeps_closed_workspaces_and_groups_path_aliases
+2 failed, 45 passed, 2 warnings in 43.21s

@@ -8,6 +8,8 @@ A repository config can name programs (`core.fsmonitor`, `diff.external`, `core.
 A user commit or merge (`hooks=True`) runs the hooks in the repository's own `hooks` directory, not the path from
 that config. The permission requires a write with `commit` or `merge` as its first argument; read calls and
 other commands cannot enable hooks. Diffs also pass `--no-ext-diff` and `--no-textconv`.
+Executable environment overrides are removed after merging per-call options. Neutral programs use absolute host
+paths so an inherited PATH cannot replace them with a program from the repository.
 """
 
 from __future__ import annotations
@@ -33,24 +35,27 @@ _TIMED_OUT: Final = "git timed out"
 _MISSING: Final = "git binary missing"
 _TOO_LARGE: Final = "git answer is over the byte cap"
 _ABSOLUTE: Final = "git and repository paths must be absolute"
+_TRUE: Final = str(host_binary("true"))
+_FALSE: Final = str(host_binary("false"))
+_CAT: Final = str(host_binary("cat"))
 # These override the repository config for this one process. `core.hooksPath` is added per call.
 _SAFE_CONFIG: Final = (
     "core.fsmonitor=false",
     f"core.sshCommand={host_binary('true')}",
     "diff.external=",
-    "core.pager=cat",
+    f"core.pager={_CAT}",
     "core.askPass=",
-    "core.editor=true",
-    "sequence.editor=true",
+    f"core.editor={_TRUE}",
+    f"sequence.editor={_TRUE}",
     "core.gitProxy=",
     "credential.helper=",
     "protocol.ext.allow=never",
     # A repository can ask for signing and name the signing program. The core's commits go unsigned.
     "commit.gpgSign=false",
     "tag.gpgSign=false",
-    "gpg.program=true",
-    "gpg.ssh.program=true",
-    "gpg.x509.program=true",
+    f"gpg.program={_TRUE}",
+    f"gpg.ssh.program={_TRUE}",
+    f"gpg.x509.program={_TRUE}",
     "gpg.ssh.defaultKeyCommand=",
     "log.showSignature=false",
 )
@@ -64,7 +69,16 @@ _NO_MATCH: Final = 1
 _NO_HOOKS: Final = "/dev/null"
 _DIFF_GUARDS: Final = ("--no-ext-diff", "--no-textconv")
 # Environment forms of the same programs. The child must not inherit them.
-_DROPPED_ENV: Final = ("GIT_EXTERNAL_DIFF", "GIT_SSH_COMMAND")
+_DROPPED_ENV: Final = (
+    "GIT_EXTERNAL_DIFF",
+    "GIT_SSH_COMMAND",
+    "GIT_SSH",
+    "GIT_PROXY_COMMAND",
+    "GIT_ASKPASS",
+    "SSH_ASKPASS",
+    "GIT_SEQUENCE_EDITOR",
+    "GIT_EXEC_PATH",
+)
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -170,7 +184,10 @@ class GitRunner:
         limit = self._timeout_s if call.timeout_s is None else call.timeout_s
         prefix = (str(self._git), *_config(hooks_path), "-C", str(repo))
         listed = self._execute(
-            (*prefix, "config", "--null", "--name-only", "--get-regexp", _DRIVER_KEYS), None, child, limit,
+            (*prefix, "config", "--null", "--name-only", "--get-regexp", _DRIVER_KEYS),
+            None,
+            child,
+            limit,
         )
         if listed.code not in {0, _NO_MATCH}:
             return listed  # Unreadable config or no such folder: the command itself would stop here too.
@@ -178,7 +195,11 @@ class GitRunner:
         return self._execute((*prefix, *_guard_diff(args)), call.stdin, drivers, limit)
 
     def _execute(
-        self, argv: tuple[str, ...], stdin: bytes | None, env: Mapping[str, str], limit: float,
+        self,
+        argv: tuple[str, ...],
+        stdin: bytes | None,
+        env: Mapping[str, str],
+        limit: float,
     ) -> GitOutput:
         try:
             completed = subprocess.run(  # noqa: S603 -- argv is a list; the git path is absolute
@@ -220,9 +241,9 @@ def _neutral(name: str) -> tuple[tuple[str, str], ...]:
         base = name.rpartition(".")[0]
         return ((name, ""), (f"{base}.required", "false"))
     if name.startswith("trailer."):
-        return ((name, "true"), (f"{name.rpartition('.')[0]}.ifMissing", "doNothing"))
+        return ((name, _TRUE), (f"{name.rpartition('.')[0]}.ifMissing", "doNothing"))
     # A failing merge driver reports a conflict for a person to see. An empty one would keep "ours" silently.
-    return ((name, "false"),) if name.startswith("merge.") else ((name, "cat"),)
+    return ((name, _FALSE),) if name.startswith("merge.") else ((name, _CAT),)
 
 
 def _config(hooks_path: str) -> tuple[str, ...]:
@@ -248,17 +269,13 @@ def _environment(
     drop: tuple[str, ...],
     write: bool,
 ) -> dict[str, str]:
-    env = {
-        **os.environ,
-        "LC_ALL": "C",
-        "GIT_TERMINAL_PROMPT": "0",
-        "GIT_EDITOR": "true",
-        "GIT_PAGER": "cat",
-    }
-    for name in (*_DROPPED_ENV, *drop):
-        _ = env.pop(name, None)
-    if not write:
-        env["GIT_OPTIONAL_LOCKS"] = "0"
+    env = dict(os.environ)
     if extra:
         env.update(extra)
+    # Safety takes precedence over both inherited variables and per-call index/identity overrides.
+    for name in (*_DROPPED_ENV, *drop):
+        _ = env.pop(name, None)
+    env.update({"LC_ALL": "C", "GIT_TERMINAL_PROMPT": "0", "GIT_EDITOR": _TRUE, "GIT_PAGER": _CAT})
+    if not write:
+        env["GIT_OPTIONAL_LOCKS"] = "0"
     return env

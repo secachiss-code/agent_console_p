@@ -28,12 +28,22 @@ import uvicorn
 from aconsole.contracts.app import AccountView, AppSnapshot, CloseTabParams, CommandResult, HealthResult, PlanView
 from aconsole.contracts.common import AccountId, AgentKind, ClientRole, QuotaLevel, TabId
 from aconsole.contracts.errors import ErrorData, ErrorObject, MessageTooLargeDetails, error_by_name
-from aconsole.contracts.events import Notify, PlanUpdated, QuotaUpdated, TabAdded, TabRemoved, TabUpdated, UiEvent
+from aconsole.contracts.events import (
+    Notify,
+    PlanUpdated,
+    QuotaUpdated,
+    ResyncRequired,
+    TabAdded,
+    TabRemoved,
+    TabUpdated,
+    UiEvent,
+)
 from aconsole.contracts.ipc import InitializeParams, Notification, ProtocolLimits, Request, ResponseErr
 from aconsole.contracts.messages import UiMessage
 from aconsole.core.application.ports.events import EventSink
 from aconsole.core.application.ports.git_repo import GitCommandError
 from aconsole.core.application.services.approval_broker import ApprovalHold
+from aconsole.core.application.services.approval_policy import ApprovalPolicyBook
 from aconsole.core.application.services.checkpoints import CheckpointService
 from aconsole.core.application.services.diff import DiffService
 from aconsole.core.application.services.git import GitService
@@ -80,6 +90,7 @@ from aconsole.core.infrastructure.ipc.framing import (
     MAX_MESSAGE_BYTES,
     MessageTooLargeError,
     decode_envelope,
+    discard_frame,
     encode_line,
     read_frame,
 )
@@ -502,6 +513,9 @@ class Daemon:
             notify=self._approval_notify, audit=self._approval_audit, now=lambda: datetime.now(UTC))
         self._host: HostTabs = HostTabs(socket_path=str(socket)) if host is None else host
         self.tabs: TabService = TabService(Clock(), self._host, listener=self._from_worker)
+        # The loop consumes immutable policy and loop-published paths without queueing behind tab/Git work.
+        self._permission_settings: Settings = self.tabs.current_settings()
+        self._permission_worktrees: dict[str, str] = {}
         self.tabs.on_ingest = self._ingest_minted
         self._catalog: ProjectCatalog = ProjectCatalog(
             HostRepos(), new_id=self._host.new_id, now=lambda: datetime.now(UTC),
@@ -603,6 +617,7 @@ class Daemon:
         self.vault.on_edit = self._vault_edited
         self._plans.note_ref = self.vault.note_ref
         self.vault_default: Path | None = None
+        self.tabs.on_settings_changed = self._use_vault
         code_graph = CodeGraphIndex(
             ExtractorRunner(), self._project_root, languages=lambda: self.tabs.current_settings().codegraph_languages,
         )
@@ -773,6 +788,7 @@ class Daemon:
         return Path(settings.vault_path) if settings.vault_path else self.vault_default
 
     def _use_vault(self, settings: Settings) -> None:
+        self._permission_settings = settings
         self._to_vault(self._switch_vault, self._vault_root(settings))
         loop = self._loop
         if loop is not None:
@@ -818,6 +834,7 @@ class Daemon:
 
     def _register_tab(self, tab: TabView, token: str) -> None:
         tab_id = str(tab.id)
+        self._permission_worktrees[tab_id] = tab.worktree_path
         if self._recovery is not None and self._recovery.tokens.get(tab_id) != token:
             self._recovery.tokens[tab_id] = token
             _write_recovery(self._recovery_path, self._recovery)
@@ -859,15 +876,14 @@ class Daemon:
             _LOG.error("approval audit failed: %s", future.exception())
 
     async def _permission(self, item: IngestItem) -> HttpResponse:
-        settings = await self._in_worker(self.tabs.current_settings)
+        settings = self._permission_settings
         if settings.approvals_mode == "native" or not self._has_approval_ui() or self._stop_requested:
             return json_response(empty_json())
-        snapshot = await self._in_worker(self.tabs.snapshot)
-        tab = next((tab for tab in snapshot.tabs if str(tab.id) == item.tab_id), None)
-        if tab is None or not self._has_approval_ui() or self._stop_requested:
+        worktree = self._permission_worktrees.get(item.tab_id)
+        if worktree is None:
             return json_response(empty_json())
         return await handle_permission(
-            item, self.approvals, hold_seconds=settings.approval_hold_seconds, worktree=tab.worktree_path,
+            item, self.approvals, hold_seconds=settings.approval_hold_seconds, worktree=worktree,
         )
 
     def _has_approval_ui(self) -> bool:
@@ -876,9 +892,12 @@ class Daemon:
 
     def _publish(self, event: UiEvent, live: int, token: str | None) -> None:
         """Number the event once, send it to every subscribed connection, and keep tokens and liveness current."""
+        if isinstance(event, (TabAdded, TabUpdated)):
+            self._permission_worktrees[str(event.tab.id)] = event.tab.worktree_path
         if isinstance(event, TabAdded) and token is not None:
             self._register_tab(event.tab, token)
         if isinstance(event, TabRemoved):
+            _ = self._permission_worktrees.pop(str(event.tab_id), None)
             self.approvals.drop_tab(str(event.tab_id))
             self._tokens.drop(str(event.tab_id))
             self._mcp_tokens.drop(str(event.tab_id))
@@ -944,6 +963,7 @@ class Daemon:
                     self._ingest_queue, ready, self._apply_hook,
                     IngestHandlers(
                         on_prompt=self._prompt_sent, on_session=self._reported_session, on_cost=self._session_cost,
+                        on_loss=self._ingest_lost,
                     ),
                 ),
             ),
@@ -956,6 +976,17 @@ class Daemon:
         # uvicorn exposes only a `started` flag, no event to wait on.
         while not server.started and not self._ingest_tasks[0].done():  # noqa: ASYNC110
             await asyncio.sleep(0.01)
+
+    async def _ingest_lost(self, tab_id: str, count: int) -> None:
+        _LOG.warning("ingest lost/coalesced %d events for %s", count, tab_id)
+        if tab_id not in self._permission_worktrees:
+            return
+        self._approval_event(Notify(
+            tab_id=TabId(tab_id), title="История событий агента может быть неполной",
+            body="Состояние обновлено после перегрузки. Проверьте историю действий агента.",
+            priority="high", episode_id=f"ingest-loss:{tab_id}:{self._ring.current_seq}",
+        ))
+        self._approval_event(ResyncRequired(reason="backpressure"))
 
     async def _apply_hook(self, tab_id: str, event_name: str) -> None:
         _ = await self._in_worker(lambda: self.tabs.apply_hook(tab_id, event_name))
@@ -1357,6 +1388,9 @@ class Daemon:
         await asyncio.to_thread(self.vault.use_bases, VaultFileDatabase(writer))
         self.tabs.use_store(store)
         self.tabs.use_projects(self._catalog, store)
+        policy = ApprovalPolicyBook()
+        await asyncio.to_thread(policy.attach, store)
+        self.tabs.use_policy(policy)
         await asyncio.to_thread(self.tabs.work_sessions.use_store, WorkSessionDatabase(writer))
         if self.tabs.history is not None:
             await asyncio.to_thread(self.tabs.history.use_store, WorkSessionHistoryDatabase(writer))
@@ -1571,6 +1605,7 @@ class Daemon:
     async def _answer(self, connection: Connection, writer: asyncio.StreamWriter, frame: bytes) -> bool:
         """Handle one frame on the worker and write the replies. False when the frame cannot be decoded."""
         started = time.perf_counter()
+        envelope: Envelope | None = None
         try:
             envelope = decode_envelope(frame)
             if _route(envelope, ready=connection.ready) is _Route.NOW:
@@ -1585,7 +1620,7 @@ class Daemon:
             else:
                 payloads = await self._in_worker(lambda: connection.receive(frame))
         except msgspec.DecodeError:
-            return False
+            payloads = connection.receive(frame)
         self._ipc.note(time.perf_counter() - started)
         for payload in payloads:
             writer.write(self._within_limit(payload, envelope))
@@ -1593,7 +1628,7 @@ class Daemon:
         connection.drained()
         return True
 
-    def _within_limit(self, payload: bytes, envelope: Envelope) -> bytes:
+    def _within_limit(self, payload: bytes, envelope: Envelope | None) -> bytes:
         """The reply itself, or a typed refusal when the client could not read it."""
         if len(payload) <= self._frame_limit + 1:
             return payload
@@ -1613,20 +1648,28 @@ class Daemon:
         try:
             envelope = decode_envelope(frame)
         except msgspec.DecodeError:
-            await turns.put(frame)  # Its turn closes the connection, after what was read before it.
+            await turns.put(frame)  # Its turn returns PARSE_ERROR without discarding later valid frames.
             return
         route = _route(envelope, ready=connection.ready)
         if route is _Route.NOW:
             _ = await self._answer(connection, writer, frame)
             return
         request_id = envelope.id if isinstance(envelope, Request) else None
-        # A page's reads may fill the git slots at any moment. A merge pressed then waits its turn, it is not refused.
-        if (route is _Route.APART and len(apart) < _MAX_APART) or (route is _Route.GIT and len(apart) < _MAX_QUEUED):
+        # Register accepted queued work before it can receive a timeout cancellation.
+        apart_ready = ((route is _Route.APART and len(apart) < _MAX_APART)
+                       or (route is _Route.GIT and len(apart) < _MAX_QUEUED))
+        turn_ready = route is _Route.TURN and not turns.full()
+        if (connection.ready and (apart_ready or turn_ready)
+                and request_id is not None and not connection.admit(request_id)):
+            writer.write(connection.busy(request_id))
+            await writer.drain()
+            return
+        if apart_ready:
             task = asyncio.create_task(self._answer_apart(connection, writer, frame))
             apart.add(task)
             task.add_done_callback(apart.discard)
             return
-        if route is _Route.TURN and not turns.full():
+        if turn_ready:
             turns.put_nowait(frame)
             return
         if request_id is None:
@@ -1671,7 +1714,7 @@ class Daemon:
         connection = Connection(
             self._ring, tabs=self.tabs, approval_hold=self.approvals, setup_service=self.setup_service,
             review=self.review, knowledge=self.knowledge, git=self.git,
-            host_namespace=same_mnt_namespace(pid), palette=self.palette, peer_pid=pid,
+            host_namespace=same_mnt_namespace(pid), palette=self.palette, peer_pid=pid, frame_limit=self._frame_limit,
         )
         connection.on_agent_notice = self._agent_notice
         connection.on_screen_signal = self._screen_signal
@@ -1686,10 +1729,12 @@ class Daemon:
             while True:
                 try:
                     frame = await read_frame(reader, limit=self._frame_limit)
-                except MessageTooLargeError:
+                except MessageTooLargeError as exc:
                     writer.write(_too_large(self._encoder, self._frame_limit))
                     await writer.drain()
-                    break
+                    if not exc.frame_consumed and not await discard_frame(reader, limit=self._frame_limit):
+                        break
+                    continue
                 if frame is None:
                     break
                 await self._admit(connection, writer, frame, turns, apart)

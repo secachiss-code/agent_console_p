@@ -3,9 +3,10 @@
 from dataclasses import dataclass
 from datetime import datetime
 
-from aconsole.contracts.app import AccountView, TabView
+from aconsole.contracts.app import AccountView, AgentInfo, TabView
 from aconsole.contracts.common import TabStatus
 from aconsole.ui.i18n import format_number
+from aconsole.ui.viewmodels.logic.approval_modes import NO_HOOKS_TAB
 
 _CENT = 0.01
 _SYMBOLS = {
@@ -31,6 +32,8 @@ class TabPresentation:
     spinning: bool
     attention: bool
     waiting_minutes: int | None
+    status_note: str = ""
+    hooks_note: str = ""
 
 
 def session_cost(tab: TabView) -> str:
@@ -39,9 +42,12 @@ def session_cost(tab: TabView) -> str:
     return f"${format_number(cost, 2)}" if cost is not None and cost >= _CENT else ""
 
 
-def format_tab(tab: TabView, _accounts: tuple[AccountView, ...], now: datetime) -> TabPresentation:
+def format_tab(
+    tab: TabView, _accounts: tuple[AccountView, ...], now: datetime, agents: tuple[AgentInfo, ...] = (),
+) -> TabPresentation:
     """Convert a tab snapshot into the visible row fields."""
     section_title = tab.work_session_title or tab.agent.value.upper()
+    agent = next((item for item in agents if item.kind is tab.agent), None)
     return TabPresentation(
         section_key=(
             f"session:{tab.work_session_id}" if tab.work_session_id else f"{tab.agent.value}:{tab.account_id or ''}"
@@ -57,4 +63,6 @@ def format_tab(tab: TabView, _accounts: tuple[AccountView, ...], now: datetime) 
             max(0, int((now - tab.status_since).total_seconds()) // 60)
             if tab.status in (TabStatus.WAITING_APPROVAL, TabStatus.WAITING_INPUT) else None
         ),
+        status_note="tabs.status.answer_in_terminal" if tab.status_detail == "ANSWER_IN_TERMINAL" else "",
+        hooks_note=NO_HOOKS_TAB if agent is not None and "hooks" not in agent.capabilities else "",
     )

@@ -1,0 +1,807 @@
+Collected 0 items to run in parallel
+........................................................................ [  4%]
+........................................................................ [  9%]
+........................................................................ [ 14%]
+........................................................................ [ 18%]
+........................................................................ [ 23%]
+........................................................................ [ 28%]
+........................................................................ [ 32%]
+........................................................................ [ 37%]
+........................................................................ [ 42%]
+........................................................................ [ 47%]
+...............................F........................................ [ 51%]
+..............................F.......F...........F..................... [ 56%]
+.........................................................F.............. [ 61%]
+........................................................................ [ 65%]
+........................................................................ [ 70%]
+........................................................................ [ 75%]
+........................................................................ [ 80%]
+........................................................................ [ 84%]
+........................................................................ [ 89%]
+........................................................................ [ 94%]
+......................................F........F........................ [ 98%]
+..............F.                                                         [100%]
+=================================== FAILURES ===================================
+________________ test_readme_matches_the_codex_capability_steps ________________
+
+    def test_readme_matches_the_codex_capability_steps() -> None:
+        """The advertised Codex set starts without hooks, and the README says the same two steps."""
+        from aconsole.core.domain.agent import CAPABILITIES
+        from aconsole.core.domain.agent import AgentKind as DomainKind
+
+        readme = Path(__file__).parents[2].joinpath("README.md").read_text(encoding="utf-8")
+        assert not {"hooks", "approvals", "checkpoints"} & CAPABILITIES[DomainKind.CODEX].names()
+>       assert "семь собственных hooks" in readme
+E       AssertionError: assert 'семь собственных hooks' in '# AConsole\n\n**AConsole** — настольная консоль для работы с CLI-агентами. Она запускает Claude Code,\nCodex CLI, Ope...к тому,\n  что не готовы потерять.\n\n## Лицензия\n\nMIT, см. [LICENSE](LICENSE). Copyright (c) 2026 secachiss-code.\n'
+
+tests/core/test_codex_hook_runtime.py:39: AssertionError
+___________________ test_fake_methods_return_the_result_type ___________________
+
+    def test_fake_methods_return_the_result_type() -> None:
+>       assert covers_methods()
+E       assert False
+E        +  where False = covers_methods()
+
+/run/host/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_fake_core.py:127: AssertionError
+__ test_a_merge_moves_its_plan_node_only_as_far_as_review_allows[False-done] ___
+
+tmp_path = PosixPath('/tmp/pytest-of-sas/pytest-158/test_a_merge_moves_its_plan_no0')
+review = False, expected = 'done'
+
+    @pytest.mark.parametrize(
+        ("review", "expected"),
+        [(False, NodeStatus.DONE.value), (True, NodeStatus.VERIFYING.value)],
+    )
+    def test_a_merge_moves_its_plan_node_only_as_far_as_review_allows(tmp_path: Path, review: bool, expected: str) -> None:  # noqa: FBT001
+        async def scenario() -> None:
+            repo = new_repo(tmp_path / "repo")
+            _ = commit(repo, "a.txt", "1\n", "first")
+            base = git(repo, "rev-parse", "--abbrev-ref", "HEAD")
+            daemon, task, client, project = await _start(tmp_path, repo)
+            tab = await client.call(
+                "tab/open", msgspec.structs.replace(_open(project), workspace=WorkspaceMode.NEW_WORKTREE), TabView
+            )
+            assert tab.agent is AgentKind.CLAUDE
+            tree = Path(tab.worktree_path)
+            _ = commit(tree, "w.txt", "w\n", "work")
+            ctx = TabContext(tab_id=str(tab.id), project_id=str(project), worktree=tree, agent="claude")
+            board = daemon._plans
+            created = board.create(ctx, "plan", "goal", [_node("AB-1", review=review)])
+            node_id = created.nodes[0].node_id
+            _ = board.claim(ctx, node_id)
+            result = await _merge(client, project, git(tree, "rev-parse", "--abbrev-ref", "HEAD"), base)
+            assert result.operation.status == "finished", result.operation.message
+            oid = result.operation.result_oid
+            node = next(item for item in board.view(created.plan_id).nodes if str(item.id) == node_id)
+            assert node.status.value == expected
+            stored = board._plans[created.plan_id]
+            assert ("commit", oid) in next(iter(stored.meta.values())).artifacts
+            await _stop(daemon, task, client)
+
+>       asyncio.run(scenario())
+
+/run/host/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_git_cleanup.py:91:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+../../../../uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py:205: in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+../../../../uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py:128: in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../../uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/base_events.py:724: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+/run/host/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_git_cleanup.py:70: in scenario
+    daemon, task, client, project = await _start(tmp_path, repo)
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/run/host/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_git_cleanup.py:34: in _start
+    client = await _connect(daemon.socket)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/run/host/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_wire.py:109: in _connect
+    await wait_for_socket(socket)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+path = PosixPath('/tmp/pytest-of-sas/pytest-158/test_a_merge_moves_its_plan_no0/xdg-runtime/ac-wire-e_moves_its_plan_no0.sock')
+
+    async def wait_for_socket(path: Path) -> None:
+        """Poll until the daemon has bound its socket. Fails after about a second."""
+        for _ in range(100):
+            if await asyncio.to_thread(path.exists):
+                return
+            await asyncio.sleep(0.01)
+        message = "socket did not appear"
+>       raise RuntimeError(message)
+E       RuntimeError: socket did not appear
+
+tests/core/conftest.py:152: RuntimeError
+_______ test_a_merge_with_no_worktree_asks_the_hooks[squash-pre-commit] ________
+
+tmp_path = PosixPath('/tmp/pytest-of-sas/pytest-158/test_a_merge_with_no_worktree_1')
+mode = 'squash', first = 'pre-commit'
+
+    @pytest.mark.parametrize(("mode", "first"), [("merge", "pre-merge-commit"), ("squash", "pre-commit")])
+    def test_a_merge_with_no_worktree_asks_the_hooks(tmp_path: Path, mode: MergeMode, first: str) -> None:
+        async def scenario() -> None:
+            repo = new_repo(tmp_path / "repo")
+            start = commit(repo, "a.txt", "1\n", "first")
+            tree = add_worktree(repo, tmp_path / "tree", "work")
+            _ = commit(tree, "w.txt", "w\n", "work")
+            _ = git(repo, "branch", "release", start)
+            _ = commit(repo, "b.txt", "b\n", "base")
+            _ = git(repo, "branch", "-f", "release", "HEAD")
+            before = git(repo, "rev-parse", "release")
+            daemon, task, client, project = await _start(tmp_path, repo)
+
+            _hook(repo, first, "echo 'merge says no' >&2; exit 1")
+            params = await _merge_params(client, project, "work", "release", mode)
+            refused = await client.call("git/mergeWorktree", params, GitOperationResult)
+            assert refused.operation.status == "failed"
+            assert "merge says no" in (refused.operation.message or "")
+            assert git(repo, "rev-parse", "release") == before
+
+            (repo / ".git" / "hooks" / first).unlink()
+            _hook(repo, "commit-msg", "echo 'message says no'; exit 1")
+            params = await _merge_params(client, project, "work", "release", mode)
+            refused = await client.call("git/mergeWorktree", params, GitOperationResult)
+            assert refused.operation.status == "failed"
+            assert "message says no" in (refused.operation.message or "")
+            assert git(repo, "rev-parse", "release") == before
+
+            # A hook sees the merged tree in the index, and may edit the message, as with a real commit.
+            _hook(repo, "commit-msg", 'git ls-files | grep -q w.txt || exit 1; echo "edited by hook" >> "$1"')
+            params = await _merge_params(client, project, "work", "release", mode)
+            done = await client.call("git/mergeWorktree", params, GitOperationResult)
+            assert done.operation.status == "finished", done.operation.message
+            assert "edited by hook" in git(repo, "log", "-1", "--format=%B", "release")
+            await _stop(daemon, task, client)
+
+>       asyncio.run(scenario())
+
+/run/host/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_git_durability.py:206:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+../../../../uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py:205: in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+../../../../uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py:128: in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../../uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/base_events.py:724: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+/run/host/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_git_durability.py:181: in scenario
+    daemon, task, client, project = await _start(tmp_path, repo)
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/run/host/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_git_durability.py:36: in _start
+    client = await _connect(daemon.socket)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/run/host/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_wire.py:109: in _connect
+    await wait_for_socket(socket)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+path = PosixPath('/tmp/pytest-of-sas/pytest-158/test_a_merge_with_no_worktree_1/xdg-runtime/ac-wire-e_with_no_worktree_1.sock')
+
+    async def wait_for_socket(path: Path) -> None:
+        """Poll until the daemon has bound its socket. Fails after about a second."""
+        for _ in range(100):
+            if await asyncio.to_thread(path.exists):
+                return
+            await asyncio.sleep(0.01)
+        message = "socket did not appear"
+>       raise RuntimeError(message)
+E       RuntimeError: socket did not appear
+
+tests/core/conftest.py:152: RuntimeError
+___________________ test_external_change_reaches_subscribers ___________________
+
+tmp_path = PosixPath('/tmp/pytest-of-sas/pytest-158/test_external_change_reaches_s0')
+
+    def test_external_change_reaches_subscribers(tmp_path: Path) -> None:
+        async def scenario() -> None:
+            repo = new_repo(tmp_path / "repo")
+            _ = commit(repo, "a.txt", "1\n", "first")
+            daemon = _daemon(tmp_path, serve_ingest=False)
+            task = asyncio.create_task(daemon.serve())
+            client = await _connect(daemon.socket)
+            project = await client.call("project/add", ProjectAddParams(root=str(repo)), ProjectView)
+            _ = await client.call("git/state", GitStateParams(project_id=project.id), GitStateResult)
+
+            (repo / "z.txt").write_text("z\n", encoding="utf-8")
+            assert await asyncio.to_thread(daemon.git.announce, str(project.id))
+            assert not await asyncio.to_thread(daemon.git.announce, str(project.id))
+            await _stop(daemon, task, client)
+
+>       asyncio.run(scenario())
+
+/run/host/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_git_wire.py:122:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+../../../../uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py:205: in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+../../../../uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py:128: in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../../uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/base_events.py:724: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+/run/host/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_git_wire.py:113: in scenario
+    client = await _connect(daemon.socket)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/run/host/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_wire.py:109: in _connect
+    await wait_for_socket(socket)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+path = PosixPath('/tmp/pytest-of-sas/pytest-158/test_external_change_reaches_s0/xdg-runtime/ac-wire-al_change_reaches_s0.sock')
+
+    async def wait_for_socket(path: Path) -> None:
+        """Poll until the daemon has bound its socket. Fails after about a second."""
+        for _ in range(100):
+            if await asyncio.to_thread(path.exists):
+                return
+            await asyncio.sleep(0.01)
+        message = "socket did not appear"
+>       raise RuntimeError(message)
+E       RuntimeError: socket did not appear
+
+tests/core/conftest.py:152: RuntimeError
+__________ test_legacy_checkpoints_are_adopted_without_rewriting_refs __________
+
+self = <sqlalchemy.engine.base.Connection object at 0x52692fdf910>
+dialect = <sqlalchemy.dialects.sqlite.pysqlite.SQLiteDialect_pysqlite object at 0x526962c7a90>
+context = <sqlalchemy.dialects.sqlite.base.SQLiteExecutionContext object at 0x52694b13110>
+statement = <sqlalchemy.dialects.sqlite.base.SQLiteCompiler object at 0x526962c1550>
+parameters = [('p', 'p', '/tmp/pytest-of-sas/pytest-158/test_legacy_checkpoints_are_ad0/repo', 'main', None, '[]', ...)]
+
+    def _exec_single_context(
+        self,
+        dialect: Dialect,
+        context: ExecutionContext,
+        statement: Union[str, Compiled],
+        parameters: Optional[_AnyMultiExecuteParams],
+    ) -> CursorResult[Unpack[TupleAny]]:
+        """continue the _execute_context() method for a single DBAPI
+        cursor.execute() or cursor.executemany() call.
+
+        """
+        if dialect.bind_typing is BindTyping.SETINPUTSIZES:
+            generic_setinputsizes = context._prepare_set_input_sizes()
+
+            if generic_setinputsizes:
+                try:
+                    dialect.do_set_input_sizes(
+                        context.cursor, generic_setinputsizes, context
+                    )
+                except BaseException as e:
+                    self._handle_dbapi_exception(
+                        e, str(statement), parameters, None, context
+                    )
+
+        cursor, str_statement, parameters = (
+            context.cursor,
+            context.statement,
+            context.parameters,
+        )
+
+        effective_parameters: Optional[_AnyExecuteParams]
+
+        if not context.executemany:
+            effective_parameters = parameters[0]
+        else:
+            effective_parameters = parameters
+
+        evt_handled: bool = False
+        try:
+            if self._has_events or self.engine._has_events:
+                for fn in self.dispatch.before_cursor_execute:
+                    str_statement, effective_parameters = fn(
+                        self,
+                        cursor,
+                        str_statement,
+                        effective_parameters,
+                        context,
+                        context.executemany,
+                    )
+
+            if self._echo:
+                self._log_info(str_statement)
+
+                stats = context._get_cache_stats()
+
+                if not self.engine.hide_parameters:
+                    self._log_info(
+                        "[%s] %r",
+                        stats,
+                        sql_util._repr_params(
+                            effective_parameters,
+                            batches=10,
+                            ismulti=context.executemany,
+                        ),
+                    )
+                else:
+                    self._log_info(
+                        "[%s] [SQL parameters hidden due to "
+                        "hide_parameters=True]",
+                        stats,
+                    )
+            if context.execute_style is ExecuteStyle.EXECUTEMANY:
+                effective_parameters = cast(
+                    "_CoreMultiExecuteParams", effective_parameters
+                )
+                if self.dialect._has_events:
+                    for fn in self.dialect.dispatch.do_executemany:
+                        if fn(
+                            cursor,
+                            str_statement,
+                            effective_parameters,
+                            context,
+                        ):
+                            evt_handled = True
+                            break
+                if not evt_handled:
+                    self.dialect.do_executemany(
+                        cursor,
+                        str_statement,
+                        effective_parameters,
+                        context,
+                    )
+            elif not effective_parameters and context.no_parameters:
+                if self.dialect._has_events:
+                    for fn in self.dialect.dispatch.do_execute_no_params:
+                        if fn(cursor, str_statement, context):
+                            evt_handled = True
+                            break
+                if not evt_handled:
+                    self.dialect.do_execute_no_params(
+                        cursor, str_statement, context
+                    )
+            else:
+                effective_parameters = cast(
+                    "_CoreSingleExecuteParams", effective_parameters
+                )
+                if self.dialect._has_events:
+                    for fn in self.dialect.dispatch.do_execute:
+                        if fn(
+                            cursor,
+                            str_statement,
+                            effective_parameters,
+                            context,
+                        ):
+                            evt_handled = True
+                            break
+                if not evt_handled:
+>                   self.dialect.do_execute(
+                        cursor, str_statement, effective_parameters, context
+                    )
+
+/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/base.py:1958:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <sqlalchemy.dialects.sqlite.pysqlite.SQLiteDialect_pysqlite object at 0x526962c7a90>
+cursor = <sqlite3.Cursor object at 0x526a246b280>
+statement = 'INSERT INTO projects (id, name, root_path, default_branch, vault_folder, languages, created_at, approval_policy, approval_dangerous) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
+parameters = ('p', 'p', '/tmp/pytest-of-sas/pytest-158/test_legacy_checkpoints_are_ad0/repo', 'main', None, '[]', ...)
+context = <sqlalchemy.dialects.sqlite.base.SQLiteExecutionContext object at 0x52694b13110>
+
+    def do_execute(self, cursor, statement, parameters, context=None):
+>       cursor.execute(statement, parameters)
+E       sqlite3.OperationalError: table projects has no column named approval_policy
+
+/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/default.py:1192: OperationalError
+
+The above exception was the direct cause of the following exception:
+
+tmp_path = PosixPath('/tmp/pytest-of-sas/pytest-158/test_legacy_checkpoints_are_ad0')
+
+    def test_legacy_checkpoints_are_adopted_without_rewriting_refs(tmp_path: Path) -> None:
+        async def scenario() -> None:
+            repo = new_repo(tmp_path / "repo")
+            head = commit(repo, "a", "base\n", "first")
+            ref = "refs/aconsole/checkpoints/old-tab/1"
+            _ = git(repo, "update-ref", ref, head)
+            database = tmp_path / "aconsole.db"
+            url = f"sqlite:///{database}"
+            migrate(url, "0004_git_operations")
+            engine = write_engine(url)
+            now = datetime(2026, 11, 6, tzinfo=UTC)
+            with Session(engine) as db:
+                db.add(Project(id="p", name="p", root_path=str(repo), languages=[], created_at=now))
+                db.flush()
+                db.add(
+                    Workspace(
+                        id="w",
+                        project_id="p",
+                        mode=WorkspaceMode.MAIN_CHECKOUT,
+                        path=str(repo),
+                        branch="trunk",
+                        base_branch="trunk",
+                        base_commit=head,
+                        locked=False,
+                        dirty_cached=False,
+                        created_at=now,
+                        removed_at=None,
+                    )
+                )
+                db.commit()
+            with engine.begin() as connection:
+                metadata = MetaData()
+                tabs = Table("tabs", metadata, autoload_with=connection)
+                checkpoints = Table("checkpoints", metadata, autoload_with=connection)
+                connection.execute(
+                    tabs.insert().values(
+                        id="old-tab",
+                        project_id="p",
+                        workspace_id="w",
+                        agent_kind="claude",
+                        title="Old actor",
+                        tab_order=0,
+                        last_status="exited",
+                        agent_session_id="native-conversation",
+                        created_at=now.isoformat(),
+                        updated_at=now.isoformat(),
+                    )
+                )
+                connection.execute(
+                    checkpoints.insert().values(
+                        id="old-point",
+                        tab_id="old-tab",
+                        turn=1,
+                        git_ref=ref,
+                        tree_sha=git(repo, "rev-parse", "HEAD^{tree}"),
+                        label="Old point",
+                        files_changed=0,
+                        insertions=0,
+                        deletions=0,
+                        created_at=now.isoformat(),
+                    )
+                )
+            engine.dispose()
+            daemon = _daemon(tmp_path, serve_ingest=False)
+            task = asyncio.create_task(daemon.serve())
+            client = await _connect(daemon.socket)
+            tab = (await client.snapshot()).tabs[0]
+            assert tab.agent_session_id == "native-conversation"
+            assert tab.work_session_id is not None
+            history = await client.call(
+                "workSession/history",
+                WorkSessionParams(
+                    project_id=tab.project_id,
+                    work_session_id=tab.work_session_id,
+                ),
+                WorkSessionHistoryResult,
+            )
+            assert len(history.snapshots) == 1
+            point = history.snapshots[0]
+            assert point.kind == "legacy_checkpoint"
+            assert point.ref == ref
+            assert point.oid == head
+            assert point.actor_title == "Old actor"
+            assert git(repo, "rev-parse", ref) == head
+            await _stop(daemon, task, client)
+
+>       asyncio.run(scenario())
+
+/run/host/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_work_session_recovery.py:201:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+../../../../uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py:205: in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+../../../../uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py:128: in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../../uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/base_events.py:724: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+/run/host/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_work_session_recovery.py:128: in scenario
+    db.flush()
+/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/orm/session.py:4543: in flush
+    self._flush(objects)
+<sqlalchemy generated warned() wrapper for sqlalchemy.orm.session.Session._flush>:2: in _flush
+    return target(fn, self, objects=objects)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/util/deprecations.py:281: in warned
+    return fn(*args, **kwargs)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^
+/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/orm/session.py:4686: in _flush
+    with util.safe_reraise():
+         ^^^^^^^^^^^^^^^^^^^
+/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/util/langhelpers.py:166: in __exit__
+    raise exc_value.with_traceback(exc_tb)
+/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/orm/session.py:4647: in _flush
+    flush_context.execute()
+/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/orm/unitofwork.py:467: in execute
+    rec.execute(self)
+/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/orm/unitofwork.py:643: in execute
+    util.preloaded.orm_persistence._save_obj(
+/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/orm/persistence.py:92: in _save_obj
+    _emit_insert_statements(
+/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/orm/persistence.py:1052: in _emit_insert_statements
+    result = connection.execute(
+/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/base.py:1463: in execute
+    return meth(
+/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/sql/elements.py:533: in _execute_on_connection
+    return connection._execute_clauseelement(
+/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/base.py:1683: in _execute_clauseelement
+    ret = self._execute_context(
+/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/base.py:1837: in _execute_context
+    return self._exec_single_context(
+/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/base.py:1977: in _exec_single_context
+    self._handle_dbapi_exception(
+/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/base.py:2347: in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/base.py:1958: in _exec_single_context
+    self.dialect.do_execute(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <sqlalchemy.dialects.sqlite.pysqlite.SQLiteDialect_pysqlite object at 0x526962c7a90>
+cursor = <sqlite3.Cursor object at 0x526a246b280>
+statement = 'INSERT INTO projects (id, name, root_path, default_branch, vault_folder, languages, created_at, approval_policy, approval_dangerous) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
+parameters = ('p', 'p', '/tmp/pytest-of-sas/pytest-158/test_legacy_checkpoints_are_ad0/repo', 'main', None, '[]', ...)
+context = <sqlalchemy.dialects.sqlite.base.SQLiteExecutionContext object at 0x52694b13110>
+
+    def do_execute(self, cursor, statement, parameters, context=None):
+>       cursor.execute(statement, parameters)
+E       sqlalchemy.exc.OperationalError: (sqlite3.OperationalError) table projects has no column named approval_policy
+E       [SQL: INSERT INTO projects (id, name, root_path, default_branch, vault_folder, languages, created_at, approval_policy, approval_dangerous) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)]
+E       [parameters: ('p', 'p', '/tmp/pytest-of-sas/pytest-158/test_legacy_checkpoints_are_ad0/repo', 'main', None, '[]', '2026-11-06T00:00:00+00:00', None, None)]
+E       (Background on this error at: https://sqlalche.me/e/21/e3q8)
+
+/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/default.py:1192: OperationalError
+________ test_migration_keeps_closed_workspaces_and_groups_path_aliases ________
+
+self = <sqlalchemy.engine.base.Connection object at 0x52692fd9b10>
+dialect = <sqlalchemy.dialects.sqlite.pysqlite.SQLiteDialect_pysqlite object at 0x52696338490>
+context = <sqlalchemy.dialects.sqlite.base.SQLiteExecutionContext object at 0x526a22b8a50>
+statement = <sqlalchemy.dialects.sqlite.base.SQLiteCompiler object at 0x52696338710>
+parameters = [('p', 'p', '/tmp/pytest-of-sas/pytest-158/test_migration_keeps_closed_wo0/workspace', 'main', None, '[]', ...)]
+
+    def _exec_single_context(
+        self,
+        dialect: Dialect,
+        context: ExecutionContext,
+        statement: Union[str, Compiled],
+        parameters: Optional[_AnyMultiExecuteParams],
+    ) -> CursorResult[Unpack[TupleAny]]:
+        """continue the _execute_context() method for a single DBAPI
+        cursor.execute() or cursor.executemany() call.
+
+        """
+        if dialect.bind_typing is BindTyping.SETINPUTSIZES:
+            generic_setinputsizes = context._prepare_set_input_sizes()
+
+            if generic_setinputsizes:
+                try:
+                    dialect.do_set_input_sizes(
+                        context.cursor, generic_setinputsizes, context
+                    )
+                except BaseException as e:
+                    self._handle_dbapi_exception(
+                        e, str(statement), parameters, None, context
+                    )
+
+        cursor, str_statement, parameters = (
+            context.cursor,
+            context.statement,
+            context.parameters,
+        )
+
+        effective_parameters: Optional[_AnyExecuteParams]
+
+        if not context.executemany:
+            effective_parameters = parameters[0]
+        else:
+            effective_parameters = parameters
+
+        evt_handled: bool = False
+        try:
+            if self._has_events or self.engine._has_events:
+                for fn in self.dispatch.before_cursor_execute:
+                    str_statement, effective_parameters = fn(
+                        self,
+                        cursor,
+                        str_statement,
+                        effective_parameters,
+                        context,
+                        context.executemany,
+                    )
+
+            if self._echo:
+                self._log_info(str_statement)
+
+                stats = context._get_cache_stats()
+
+                if not self.engine.hide_parameters:
+                    self._log_info(
+                        "[%s] %r",
+                        stats,
+                        sql_util._repr_params(
+                            effective_parameters,
+                            batches=10,
+                            ismulti=context.executemany,
+                        ),
+                    )
+                else:
+                    self._log_info(
+                        "[%s] [SQL parameters hidden due to "
+                        "hide_parameters=True]",
+                        stats,
+                    )
+            if context.execute_style is ExecuteStyle.EXECUTEMANY:
+                effective_parameters = cast(
+                    "_CoreMultiExecuteParams", effective_parameters
+                )
+                if self.dialect._has_events:
+                    for fn in self.dialect.dispatch.do_executemany:
+                        if fn(
+                            cursor,
+                            str_statement,
+                            effective_parameters,
+                            context,
+                        ):
+                            evt_handled = True
+                            break
+                if not evt_handled:
+                    self.dialect.do_executemany(
+                        cursor,
+                        str_statement,
+                        effective_parameters,
+                        context,
+                    )
+            elif not effective_parameters and context.no_parameters:
+                if self.dialect._has_events:
+                    for fn in self.dialect.dispatch.do_execute_no_params:
+                        if fn(cursor, str_statement, context):
+                            evt_handled = True
+                            break
+                if not evt_handled:
+                    self.dialect.do_execute_no_params(
+                        cursor, str_statement, context
+                    )
+            else:
+                effective_parameters = cast(
+                    "_CoreSingleExecuteParams", effective_parameters
+                )
+                if self.dialect._has_events:
+                    for fn in self.dialect.dispatch.do_execute:
+                        if fn(
+                            cursor,
+                            str_statement,
+                            effective_parameters,
+                            context,
+                        ):
+                            evt_handled = True
+                            break
+                if not evt_handled:
+>                   self.dialect.do_execute(
+                        cursor, str_statement, effective_parameters, context
+                    )
+
+/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/base.py:1958:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <sqlalchemy.dialects.sqlite.pysqlite.SQLiteDialect_pysqlite object at 0x52696338490>
+cursor = <sqlite3.Cursor object at 0x526a2469e00>
+statement = 'INSERT INTO projects (id, name, root_path, default_branch, vault_folder, languages, created_at, approval_policy, approval_dangerous) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
+parameters = ('p', 'p', '/tmp/pytest-of-sas/pytest-158/test_migration_keeps_closed_wo0/workspace', 'main', None, '[]', ...)
+context = <sqlalchemy.dialects.sqlite.base.SQLiteExecutionContext object at 0x526a22b8a50>
+
+    def do_execute(self, cursor, statement, parameters, context=None):
+>       cursor.execute(statement, parameters)
+E       sqlite3.OperationalError: table projects has no column named approval_policy
+
+/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/default.py:1192: OperationalError
+
+The above exception was the direct cause of the following exception:
+
+tmp_path = PosixPath('/tmp/pytest-of-sas/pytest-158/test_migration_keeps_closed_wo0')
+
+    def test_migration_keeps_closed_workspaces_and_groups_path_aliases(tmp_path: Path) -> None:
+        url = f"sqlite:///{tmp_path / 'old.db'}"
+        migrate(url, "0004_git_operations")
+        engine = write_engine(url)
+        now = datetime(2026, 11, 6, tzinfo=UTC)
+        root = tmp_path / "workspace"
+        root.mkdir()
+        alias = tmp_path / "alias"
+        alias.symlink_to(root, target_is_directory=True)
+        with Session(engine) as database:
+            database.add(Project(id="p", name="p", root_path=str(root), languages=[], created_at=now))
+>           database.flush()
+
+/run/host/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_work_sessions.py:233:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/orm/session.py:4543: in flush
+    self._flush(objects)
+<sqlalchemy generated warned() wrapper for sqlalchemy.orm.session.Session._flush>:2: in _flush
+    return target(fn, self, objects=objects)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/util/deprecations.py:281: in warned
+    return fn(*args, **kwargs)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^
+/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/orm/session.py:4686: in _flush
+    with util.safe_reraise():
+         ^^^^^^^^^^^^^^^^^^^
+/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/util/langhelpers.py:166: in __exit__
+    raise exc_value.with_traceback(exc_tb)
+/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/orm/session.py:4647: in _flush
+    flush_context.execute()
+/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/orm/unitofwork.py:467: in execute
+    rec.execute(self)
+/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/orm/unitofwork.py:643: in execute
+    util.preloaded.orm_persistence._save_obj(
+/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/orm/persistence.py:92: in _save_obj
+    _emit_insert_statements(
+/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/orm/persistence.py:1052: in _emit_insert_statements
+    result = connection.execute(
+/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/base.py:1463: in execute
+    return meth(
+/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/sql/elements.py:533: in _execute_on_connection
+    return connection._execute_clauseelement(
+/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/base.py:1683: in _execute_clauseelement
+    ret = self._execute_context(
+/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/base.py:1837: in _execute_context
+    return self._exec_single_context(
+/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/base.py:1977: in _exec_single_context
+    self._handle_dbapi_exception(
+/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/base.py:2347: in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/base.py:1958: in _exec_single_context
+    self.dialect.do_execute(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <sqlalchemy.dialects.sqlite.pysqlite.SQLiteDialect_pysqlite object at 0x52696338490>
+cursor = <sqlite3.Cursor object at 0x526a2469e00>
+statement = 'INSERT INTO projects (id, name, root_path, default_branch, vault_folder, languages, created_at, approval_policy, approval_dangerous) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
+parameters = ('p', 'p', '/tmp/pytest-of-sas/pytest-158/test_migration_keeps_closed_wo0/workspace', 'main', None, '[]', ...)
+context = <sqlalchemy.dialects.sqlite.base.SQLiteExecutionContext object at 0x526a22b8a50>
+
+    def do_execute(self, cursor, statement, parameters, context=None):
+>       cursor.execute(statement, parameters)
+E       sqlalchemy.exc.OperationalError: (sqlite3.OperationalError) table projects has no column named approval_policy
+E       [SQL: INSERT INTO projects (id, name, root_path, default_branch, vault_folder, languages, created_at, approval_policy, approval_dangerous) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)]
+E       [parameters: ('p', 'p', '/tmp/pytest-of-sas/pytest-158/test_migration_keeps_closed_wo0/workspace', 'main', None, '[]', '2026-11-06T00:00:00+00:00', None, None)]
+E       (Background on this error at: https://sqlalche.me/e/21/e3q8)
+
+/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/default.py:1192: OperationalError
+______________ test_a_graph_snapshot_and_a_look_at_every_worktree ______________
+
+large_repo = PosixPath('/tmp/pytest-of-sas/pytest-158/scale0/repo')
+
+    def test_a_graph_snapshot_and_a_look_at_every_worktree(large_repo: Path) -> None:
+        catalog = _Catalog(large_repo)
+        graphs: list[float] = []
+        looks: list[float] = []
+        for _ in range(_RUNS):
+            # A new service each time: the probe cache must not hide the first look's cost.
+            service = GitStateService(GitHistory(), lambda: catalog)
+            started = time.perf_counter()
+            state = service.state(_PROJECT)
+            looked = time.perf_counter()
+            graph = service.graph(GitGraphParams(project_id=ProjectId(_PROJECT)))
+            looks.append(looked - started)
+            graphs.append(time.perf_counter() - looked)
+            assert len(state.worktrees) == _BRANCHES + 1
+            assert graph.nodes
+        assert _median_ms(graphs) <= _SNAPSHOT_LIMIT_MS, f"graph: {_median_ms(graphs):.0f} ms"
+>       assert _median_ms(looks) <= _LOOK_LIMIT_MS, f"state: {_median_ms(looks):.0f} ms"
+E       AssertionError: state: 547 ms
+E       assert 547.1532910014503 <= 400.0
+E        +  where 547.1532910014503 = _median_ms([0.5337064920022385, 0.5758237859990913, 0.5402528230042662, 0.5471532910014503, 0.5494333089882275])
+
+tests/unit/test_git_scale.py:117: AssertionError
+=============================== warnings summary ===============================
+tests/core/test_round6_k24.py: 4 warnings
+tests/core/test_sidecar.py: 6 warnings
+tests/core/test_sidecar_resilience.py: 2 warnings
+  /home/sas/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/pty.py:66: DeprecationWarning: This process (pid=293014) is multi-threaded, use of forkpty() may lead to deadlocks in the child.
+    pid, fd = os.forkpty()
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/core/test_codex_hook_runtime.py::test_readme_matches_the_codex_capability_steps
+FAILED tests/core/test_fake_core.py::test_fake_methods_return_the_result_type
+FAILED tests/core/test_git_cleanup.py::test_a_merge_moves_its_plan_node_only_as_far_as_review_allows[False-done]
+FAILED tests/core/test_git_durability.py::test_a_merge_with_no_worktree_asks_the_hooks[squash-pre-commit]
+FAILED tests/core/test_git_wire.py::test_external_change_reaches_subscribers
+FAILED tests/core/test_work_session_recovery.py::test_legacy_checkpoints_are_adopted_without_rewriting_refs
+FAILED tests/core/test_work_sessions.py::test_migration_keeps_closed_workspaces_and_groups_path_aliases
+FAILED tests/unit/test_git_scale.py::test_a_graph_snapshot_and_a_look_at_every_worktree
+8 failed, 1520 passed, 12 warnings in 339.17s (0:05:39)

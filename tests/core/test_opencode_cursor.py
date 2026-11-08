@@ -1,6 +1,6 @@
 """OpenCode and Cursor CLI: the launch, the status they report, and what is refused.
 
-The real CLIs are not used. Event shapes follow OpenCode's documentation, not a recorded stream.
+Recorded Cursor and OpenCode output lives in tests/fixtures/screen. These tests do not launch the CLIs.
 """
 
 from __future__ import annotations
@@ -310,11 +310,40 @@ def test_screen_watch_forgets_what_was_answered() -> None:
     assert watch.tick(2.0) == (QUIET, "done")
 
 
+def test_typing_keeps_the_question_and_its_echo_is_not_a_new_turn() -> None:
+    watch = ScreenWatch()
+    assert watch.output(b"Run command? [y/n]", 0.0) is None
+    assert watch.tick(1.0) == (QUIET, "Run command? [y/n]")
+    assert watch.input(b"n") is None
+    assert watch.output(b"n", 1.1) is None
+    said = watch.tick(2.2)
+    assert said is not None
+    assert said[0] == QUIET
+    assert said[1] is not None
+    assert "Run command? [y/n]" in said[1]
+
+
 def test_visible_tail_removes_controls_and_keeps_the_last_lines() -> None:
     raw = b"".join(b"line %d\r\n" % number for number in range(30)) + b"\x1b]0;title\x07\x1b[31mred\x1b[0m\x07"
     tail = visible_tail(raw).splitlines()
     assert tail[-1] == "red"
     assert len(tail) == 12
+    assert visible_tail(b"Hello\x1b[2K\x1b[GWorld") == "World"
+    assert visible_tail(b"Ask\x1b[1C[y/n]") == "Ask [y/n]"
+    assert visible_tail(b"old line\rnew line") == "new line"
+
+
+def test_captured_cursor_and_opencode_output_stays_readable() -> None:
+    folder = Path(__file__).parents[1] / "fixtures/screen"
+    cursor = visible_tail((folder / "cursor-agent-2026.11.05.bin").read_bytes())
+    assert "Cursor Agent" in cursor
+    assert "Plan, search, build anything" in cursor
+    assert "Run Everything" in cursor
+    version = (folder / "opencode-2.1.2-version.txt").read_text(encoding="utf-8")
+    help_text = (folder / "opencode-2.1.2-help.txt").read_text(encoding="utf-8")
+    assert version.startswith("opencode v2.1.2")
+    assert "--auto" in help_text
+    assert "Auto-approve permissions" in help_text
 
 
 def test_opencode_sessions_skip_subagents_and_other_projects() -> None:
