@@ -1,0 +1,2 @@
+
+(orca:1490287): dbind-WARNING **: 19:51:30.244: AT-SPI: Error in GetItems, sender=:1.4, error=Объект по пути «/org/a11y/atspi/cache» не существует

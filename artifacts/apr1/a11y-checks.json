@@ -1,0 +1,24 @@
+[
+  {
+    "argv": [
+      "python3",
+      "artifacts/apr1/check-a11y.txt"
+    ],
+    "exit_code": 0,
+    "stdout": "PASS: request name, risk, command, directory and buttons exported; Orca speech output verified\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "python3",
+      "artifacts/apr1/check-a11y.txt",
+      "--tree",
+      "artifacts/apr1/atspi-tree-baseline.json",
+      "--speech",
+      "artifacts/apr1/orca-debug-baseline.txt"
+    ],
+    "exit_code": 1,
+    "stdout": "",
+    "stderr": "Traceback (most recent call last):\n  File \"/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/artifacts/apr1/check-a11y.txt\", line 10, in <module>\n    assert len(requests)==1, 'the focused details must expose the request name through AT-SPI'\n           ^^^^^^^^^^^^^^^^\nAssertionError: the focused details must expose the request name through AT-SPI\n"
+  }
+]

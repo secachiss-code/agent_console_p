@@ -234,9 +234,11 @@ class ApprovalCard(Gtk.Box):
             ))
         self._detail(body)
         # The card's first stop: a long command can be read from the keyboard, with the page keys.
+        # An explicit role lets AT-SPI expose the supplied name of this focusable container.
         details = Gtk.ScrolledWindow(
             child=body, hscrollbar_policy=Gtk.PolicyType.NEVER, focusable=True,
             propagate_natural_height=True, max_content_height=_DETAILS_HEIGHT,
+            accessible_role=Gtk.AccessibleRole.GROUP,
         )
         details.add_css_class("ac-approval-details")
         return details

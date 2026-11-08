@@ -1,0 +1,1387 @@
+[
+  {
+    "role": "application",
+    "name": "aconsole-des4-preview",
+    "description": "aconsole-des4-preview"
+  },
+  {
+    "role": "frame",
+    "name": "claude 1 — alpha — AConsole",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "scroll bar",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "label",
+    "name": "Сессия завершена",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "push button",
+    "name": "Возобновить",
+    "description": "Нет сохранённой сессии или агент не поддерживает продолжение. Выберите новую сессию."
+  },
+  {
+    "role": "label",
+    "name": "Возобновить",
+    "description": ""
+  },
+  {
+    "role": "push button",
+    "name": "Новая",
+    "description": ""
+  },
+  {
+    "role": "label",
+    "name": "Новая",
+    "description": ""
+  },
+  {
+    "role": "push button",
+    "name": "Закрыть",
+    "description": ""
+  },
+  {
+    "role": "label",
+    "name": "Закрыть",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "push button",
+    "name": "Закрыть",
+    "description": "Закрыть окно"
+  },
+  {
+    "role": "push button",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "label",
+    "name": "claude 1 · claude",
+    "description": ""
+  },
+  {
+    "role": "label",
+    "name": "alpha · ac/demo-1",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "push button",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "toggle button",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "push button",
+    "name": "Развернуть",
+    "description": "Окно максимального размера"
+  },
+  {
+    "role": "panel",
+    "name": "Связь с ядром потеряна. Переподключаемся; данные на экране могут быть устаревшими.",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "Использовано не менее 95 % лимита аккаунта",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "label",
+    "name": "Claude хочет выполнить команду",
+    "description": "claude 1"
+  },
+  {
+    "role": "label",
+    "name": "Осталось 8:30",
+    "description": ""
+  },
+  {
+    "role": "label",
+    "name": "⚠ Удаляет данные",
+    "description": ""
+  },
+  {
+    "role": "scroll pane",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "label",
+    "name": "rm -rf build",
+    "description": ""
+  },
+  {
+    "role": "label",
+    "name": "В /wt/1",
+    "description": ""
+  },
+  {
+    "role": "check box",
+    "name": "Разрешать до закрытия вкладки",
+    "description": "Также разрешить такую команду до конца сессии этой вкладки"
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "label",
+    "name": "Разрешать до закрытия вкладки",
+    "description": ""
+  },
+  {
+    "role": "text",
+    "name": "Пояснение при отказе (необязательно)",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "push button",
+    "name": "В терминале",
+    "description": "Передать запрос собственному диалогу агента"
+  },
+  {
+    "role": "label",
+    "name": "В терминале",
+    "description": ""
+  },
+  {
+    "role": "push button",
+    "name": "Отклонить",
+    "description": ""
+  },
+  {
+    "role": "label",
+    "name": "Отклонить",
+    "description": ""
+  },
+  {
+    "role": "push button",
+    "name": "Разрешить",
+    "description": ""
+  },
+  {
+    "role": "label",
+    "name": "Разрешить",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "label",
+    "name": "ещё 1 запрос здесь",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "combo box",
+    "name": "alpha",
+    "description": "Проект"
+  },
+  {
+    "role": "toggle button",
+    "name": "alpha",
+    "description": "Проект"
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "label",
+    "name": "alpha",
+    "description": ""
+  },
+  {
+    "role": "push button",
+    "name": "Убрать проект из списка",
+    "description": "Сначала закройте вкладки проекта"
+  },
+  {
+    "role": "entry",
+    "name": "Поиск сессий",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "scroll pane",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "list",
+    "name": "Вкладки",
+    "description": ""
+  },
+  {
+    "role": "row header",
+    "name": "CLAUDE",
+    "description": ""
+  },
+  {
+    "role": "label",
+    "name": "CLAUDE",
+    "description": ""
+  },
+  {
+    "role": "list item",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "label",
+    "name": "Запускается",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "label",
+    "name": "claude 1",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "label",
+    "name": "Запускается · ac/demo-1",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "push button",
+    "name": "Закрыть…",
+    "description": ""
+  },
+  {
+    "role": "push button",
+    "name": "Меню вкладки",
+    "description": ""
+  },
+  {
+    "role": "toggle button",
+    "name": "Меню вкладки",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "list item",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "label",
+    "name": "Свободен",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "label",
+    "name": "claude 2",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "label",
+    "name": "Свободен · ac/demo-2",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "push button",
+    "name": "Закрыть…",
+    "description": ""
+  },
+  {
+    "role": "push button",
+    "name": "Меню вкладки",
+    "description": ""
+  },
+  {
+    "role": "toggle button",
+    "name": "Меню вкладки",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "list item",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "label",
+    "name": "claude 3",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "label",
+    "name": "Работает · ac/demo-3",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "push button",
+    "name": "Закрыть…",
+    "description": ""
+  },
+  {
+    "role": "push button",
+    "name": "Меню вкладки",
+    "description": ""
+  },
+  {
+    "role": "toggle button",
+    "name": "Меню вкладки",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "row header",
+    "name": "CODEX",
+    "description": ""
+  },
+  {
+    "role": "label",
+    "name": "CODEX",
+    "description": ""
+  },
+  {
+    "role": "list item",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "label",
+    "name": "Ждёт подтверждения",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "label",
+    "name": "codex 4",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "label",
+    "name": "Ждёт подтверждения · ac/demo-4",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "push button",
+    "name": "Закрыть…",
+    "description": ""
+  },
+  {
+    "role": "label",
+    "name": "15 д",
+    "description": ""
+  },
+  {
+    "role": "push button",
+    "name": "Меню вкладки",
+    "description": ""
+  },
+  {
+    "role": "toggle button",
+    "name": "Меню вкладки",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "list item",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "label",
+    "name": "Ошибка",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "label",
+    "name": "codex 5",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "label",
+    "name": "Ошибка · ac/demo-5",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "push button",
+    "name": "Закрыть…",
+    "description": ""
+  },
+  {
+    "role": "push button",
+    "name": "Меню вкладки",
+    "description": ""
+  },
+  {
+    "role": "toggle button",
+    "name": "Меню вкладки",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "scroll bar",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "push button",
+    "name": "План: Свернуть",
+    "description": "Свернуть"
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "image",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "label",
+    "name": "ПЛАН",
+    "description": ""
+  },
+  {
+    "role": "label",
+    "name": "1/7",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "push button",
+    "name": "План: Localization check: Выполнено 1 из 7: Show the UI",
+    "description": "Show the UI"
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "label",
+    "name": "Localization check",
+    "description": ""
+  },
+  {
+    "role": "label",
+    "name": "Выполнено 1 из 7",
+    "description": ""
+  },
+  {
+    "role": "progress bar",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "label",
+    "name": "Show the UI",
+    "description": ""
+  },
+  {
+    "role": "separator",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "push button",
+    "name": "Лимиты: Свернуть",
+    "description": "Свернуть"
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "image",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "label",
+    "name": "ЛИМИТЫ",
+    "description": ""
+  },
+  {
+    "role": "label",
+    "name": "до 80 %",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "push button",
+    "name": "Лимиты",
+    "description": "Claude · Pro\n5 ч: 10 %\n7 д: 5 % Codex · Pro\n5 ч: 80 %\n7 д: ≈40 %"
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "label",
+    "name": "Claude",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "label",
+    "name": "5 ч",
+    "description": ""
+  },
+  {
+    "role": "level bar",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "label",
+    "name": "10 %",
+    "description": ""
+  },
+  {
+    "role": "label",
+    "name": "—",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "label",
+    "name": "7 д",
+    "description": ""
+  },
+  {
+    "role": "level bar",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "label",
+    "name": "5 %",
+    "description": ""
+  },
+  {
+    "role": "label",
+    "name": "—",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "label",
+    "name": "Codex",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "label",
+    "name": "5 ч",
+    "description": ""
+  },
+  {
+    "role": "level bar",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "label",
+    "name": "80 %",
+    "description": ""
+  },
+  {
+    "role": "label",
+    "name": "—",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "label",
+    "name": "7 д",
+    "description": ""
+  },
+  {
+    "role": "level bar",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "label",
+    "name": "≈40 %",
+    "description": ""
+  },
+  {
+    "role": "label",
+    "name": "—",
+    "description": ""
+  },
+  {
+    "role": "label",
+    "name": "на 24.10 15:00",
+    "description": ""
+  },
+  {
+    "role": "separator",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "push button",
+    "name": "Git: Свернуть",
+    "description": "Свернуть"
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "image",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "label",
+    "name": "GIT",
+    "description": ""
+  },
+  {
+    "role": "label",
+    "name": "main",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "push button",
+    "name": "Git и снимки",
+    "description": "Рабочих копий: 0 · с изменениями: 0\nСливать нечего"
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "image",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "label",
+    "name": "Git и снимки",
+    "description": ""
+  },
+  {
+    "role": "label",
+    "name": "Рабочих копий: 0 · с изменениями: 0",
+    "description": ""
+  },
+  {
+    "role": "label",
+    "name": "Сливать нечего",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "label",
+    "name": "AConsole",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "push button",
+    "name": "Новая вкладка",
+    "description": ""
+  },
+  {
+    "role": "push button",
+    "name": "Настройки",
+    "description": ""
+  },
+  {
+    "role": "toggle button",
+    "name": "Настройки",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  },
+  {
+    "role": "panel",
+    "name": "",
+    "description": ""
+  }
+]

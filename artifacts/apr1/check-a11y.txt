@@ -1,0 +1,18 @@
+"""Assert the external AT-SPI and Orca outputs, independent of GTK implementation."""
+import argparse,json
+from pathlib import Path
+parser=argparse.ArgumentParser()
+parser.add_argument('--tree',type=Path,default=Path(__file__).with_name('atspi-tree.json'))
+parser.add_argument('--speech',type=Path,default=Path(__file__).with_name('orca-debug.txt'))
+args=parser.parse_args()
+tree=json.loads(args.tree.read_text())
+requests=[obj for obj in tree if obj.get('role')=='scroll pane' and 'Claude хочет выполнить команду' in obj.get('name','')]
+assert len(requests)==1, 'the focused details must expose the request name through AT-SPI'
+request=requests[0]
+assert 'Удаляет данные' in request['name'] and 'rm -rf build' in request['name']
+assert request['description']=='В /wt/1'
+for text in ['В терминале','Отклонить','Разрешить']:
+    assert any(obj.get('name')==text and obj.get('role')=='push button' for obj in tree), text
+speech=[line for line in args.speech.read_text().splitlines() if 'SPEECH OUTPUT:' in line]
+assert any(all(text in line for text in ['Claude хочет выполнить команду','Удаляет данные','rm -rf build']) for line in speech), 'Orca must speak the request, risk and command'
+print('PASS: request name, risk, command, directory and buttons exported; Orca speech output verified')

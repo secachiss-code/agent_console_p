@@ -1,0 +1,23 @@
+{
+  "base": "503e3de771d903dc08915ba09e933bbc7eb0f214",
+  "existing_overlay_commit": "14666d84",
+  "source_sha256": {
+    "src/aconsole/ui/views/approvals/panel.py": "b88575590f275d63624baf5758fb52af06d00d5732307d00b5515764d26a7e85",
+    "src/aconsole/ui/views/window.py": "79a3ba5e2930ba7404c0be84c9d36f4e2bcfeca6a5957bd55903b44c841ea621",
+    "src/aconsole/ui/style/style.css": "9fff9c71f958ef96b677ff0c68137d29b353202fb4854ac3e5ab0fd0d3a9c5e4",
+    "src/aconsole/ui/viewmodels/approvals_vm.py": "beec216a66dd6c9eab7315e337af58df7fb44fdaa054578bc5eb5851c83b21dd",
+    "tests/gui/front/test_approval_panel.py": "43c0643d4e95f73b1021d9a02b2f48469900004464c6f5e473df84cf081a00dc",
+    "tests/gui/front/test_approval_alerts.py": "e8c493ee6fe9c3c8759d76aecc1e1cd489fdd37b51f61d191d583aaa1e0be8c0",
+    "tests/ui/test_approvals_vm.py": "e0967424dda41ab6bd09751d9ec2b2228b329d509910e9e38ca880001344f6ad"
+  },
+  "screenshot_fixture": "artifacts/des4/capture.txt; FakeCore demo; ru-approvals; 1280/700x800; screenshot assertions are not real-agent approval acceptance",
+  "candidate_source_sha256": {
+    "src/aconsole/ui/views/approvals/panel.py": "0d9d3e08445f0ed141f7247fdef05c03f1cba4833e564e27cbf1a5b14a03f9ba",
+    "src/aconsole/ui/views/window.py": "79a3ba5e2930ba7404c0be84c9d36f4e2bcfeca6a5957bd55903b44c841ea621",
+    "src/aconsole/ui/style/style.css": "9fff9c71f958ef96b677ff0c68137d29b353202fb4854ac3e5ab0fd0d3a9c5e4",
+    "src/aconsole/ui/viewmodels/approvals_vm.py": "beec216a66dd6c9eab7315e337af58df7fb44fdaa054578bc5eb5851c83b21dd",
+    "tests/gui/front/test_approval_panel.py": "43c0643d4e95f73b1021d9a02b2f48469900004464c6f5e473df84cf081a00dc",
+    "tests/gui/front/test_approval_alerts.py": "e8c493ee6fe9c3c8759d76aecc1e1cd489fdd37b51f61d191d583aaa1e0be8c0",
+    "tests/ui/test_approvals_vm.py": "e0967424dda41ab6bd09751d9ec2b2228b329d509910e9e38ca880001344f6ad"
+  }
+}

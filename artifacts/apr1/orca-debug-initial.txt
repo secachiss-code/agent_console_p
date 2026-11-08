@@ -1,0 +1,1248 @@
+19:45:27.688930 - INFO: Preparing to launch.
+19:45:27.727401 - SCRIPT MANAGER: Initializing
+19:45:27.727432 - SCRIPT MANAGER: Initialized
+19:45:27.743782 - SETTINGS MANAGER: Initializing
+19:45:27.747718 - SETTINGS MANAGER: Initialized
+19:45:27.822817 - BRAILLE: About to import brlapi.
+19:45:27.826557 - BRAILLE: brlapi imported <module 'brlapi' from '/usr/lib/python3/dist-packages/brlapi.cpython-312-x86_64-linux-gnu.so'>
+19:45:27.826596 - BRAILLE: About to import louis.
+19:45:27.830864 - BRAILLE: liblouis imported <module 'louis' from '/usr/lib/python3/dist-packages/louis/__init__.py'>
+19:45:27.830898 - BRAILLE: tables location: /usr/share/liblouis/tables
+19:45:27.846081 - BRAILLE: User locale is ru_RU
+19:45:27.847457 - BRAILLE: 1 candidate tables for locale found: ru-ru-g1.ctb
+19:45:27.847490 - BRAILLE: Default contraction table is: /usr/share/liblouis/tables/ru-ru-g1.ctb
+19:45:27.856615 - EVENT MANAGER: Initializing
+19:45:27.857112 - Event manager initialized
+19:45:27.862354 - MOUSE REVIEW: Refreshing handlers.
+19:45:27.862386 - MOUSE REVIEW: Handlers set up.
+19:45:28.239130 - INFO: About to activate settings manager.
+19:45:28.239200 - SETTINGS MANAGER: Activating
+19:45:28.239520 - SETTINGS MANAGER: Attempt to load orca-customizations from /tmp/apr1-xvfb-_9usfw0s/orca/orca-customizations.py failed. File not found.
+19:45:28.240398 - SETTINGS MANAGER: Activated
+19:45:28.240463 - SETTINGS MANAGER: Current profile is None
+19:45:28.240488 - SETTINGS MANAGER: Current profile is now default
+19:45:28.240511 - SETTINGS MANAGER: Setting profile to: default
+19:45:28.240563 - SETTINGS MANAGER: Loading settings for default profile
+19:45:28.241031 - SETTINGS MANAGER: Settings for default profile loaded
+19:45:28.241057 - SETTINGS MANAGER: Merging settings.
+19:45:28.241078 - SETTINGS MANAGER: Settings merged.
+19:45:28.241089 - SETTINGS MANAGER: Setting runtime settings.
+19:45:28.241655 - SETTINGS MANAGER: Attempt to load orca-customizations from /tmp/apr1-xvfb-_9usfw0s/orca/orca-customizations.py succeeded.
+19:45:28.241761 - SETTINGS MANAGER: Runtime settings set.
+19:45:28.260474 - INFO: About to launch Orca.
+19:45:28.260635 - ORCA: Launching version 46.1 AT-SPI2 version: 2.52.0 Session: x11 pantheon
+19:45:28.260841 - ORCA: Enabling accessibility (if needed).
+19:45:28.260857 - SETTINGS MANAGER: Checking if accessibility is enabled.
+19:45:28.262229 - SETTINGS MANAGER: Accessibility enabled: False
+19:45:28.262259 - SETTINGS MANAGER: Attempting to set accessibility to True.
+19:45:28.271235 - SETTINGS MANAGER: Finished setting accessibility to True.
+19:45:28.271289 - ORCA: Initializing.
+19:45:28.271306 - ORCA: Initializing
+19:45:28.271355 - ORCA: Loading User Settings
+19:45:28.271702 - SPEECH: Shutting down
+19:45:28.271725 - BRAILLE: Attempting braille shutdown.
+19:45:28.271734 - BRAILLE: Braille was not running.
+19:45:28.271771 - SCRIPT MANAGER: Deactivating
+19:45:28.271787 - SCRIPT MANAGER: Deactivated
+19:45:28.308744 - ACTION PRESENTER: Refreshing handlers.
+19:45:28.308804 - ACTION PRESENTER: Handlers set up.
+19:45:28.331790 - WHERE AM I PRESENTER: Refreshing handlers.
+19:45:28.331854 - FLAT REVIEW PRESENTER: Handlers set up.
+19:45:28.344892 - LEARN MODE PRESENTER: Refreshing handlers.
+19:45:28.344925 - LEARN MODE PRESENTER: Handlers set up.
+19:45:28.347193 - NOTIFICATION PRESENTER: Refreshing handlers.
+19:45:28.347219 - NOTIFICATION PRESENTER: Handlers set up.
+19:45:28.349061 - OBJECT NAVIGATOR: Refreshing handlers.
+19:45:28.349086 - OBJECT NAVIGATOR: Handlers set up.
+19:45:28.389455 - SLEEP MODE MANAGER: Refreshing handlers.
+19:45:28.389491 - SLEEP MODE MANAGER: Handlers set up.
+19:45:28.392458 - SPEECH AND VERBOSITY MANAGER: Refreshing handlers.
+19:45:28.392503 - SPEECH AND VERBOSITY MANAGER: Handlers set up.
+19:45:28.409577 - SYSTEM INFORMATION PRESENTER: Refreshing handlers.
+19:45:28.409622 - SYSTEM INFORMATION PRESENTER: Handlers set up.
+19:45:28.413798 - TABLE NAVIGATOR: Refreshing handlers.
+19:45:28.413855 - TABLE NAVIGATOR: Handlers set up. Suspended: False
+19:45:28.421442 - WHERE AM I PRESENTER: Refreshing handlers.
+19:45:28.421488 - WHERE AM I PRESENTER: Handlers set up.
+19:45:28.421762 - STRUCTURAL NAVIGATION: Refreshing handlers.
+19:45:28.421842 - BOOKMARKS: Refreshing handlers.
+19:45:28.421884 - BOOKMARKS: Handlers set up.
+19:45:28.422045 - DEFAULT: Getting braille bindings.
+19:45:28.422079 - DEFAULT: Finished getting braille bindings.
+19:45:28.433419 - SCRIPT: default (module=orca.scripts.default) initialized
+19:45:28.433459 - ORCA: About to enable speech
+19:45:28.433472 - SPEECH: Initializing
+19:45:28.814830 - SPEECH: Using speech server factory: speechdispatcherfactory
+19:45:28.814873 - SPEECH: Initialized
+19:45:28.814890 - ORCA: About to enable braille
+19:45:28.814925 - BRAILLE: Initializing. Callback: EventManager.process_braille_event
+19:45:28.814953 - BRAILLE: WINDOWPATH= None
+19:45:28.814972 - BRAILLE: XDG_VTNR= None
+19:45:28.814983 - BRAILLE: Attempting connection with BrlAPI.
+19:45:28.815240 - WARNING: Braille initialization failed: couldn't connect to b':0' with key b'keyfile:/etc/brlapi.key+polkit': connect: ������ ������������ ���������� ������ ����������������
+                  (brlerrno 11, libcerrno 2, gaierrno 0)
+                  Is BRLTTY really running?
+19:45:28.815341 - ORCA MODIFIER MANAGER: Refreshing Orca modifiers: Loading user settings.
+19:45:28.815356 - ORCA MODIFIER MANAGER: Attempting to restore original xmodmap: Loading user settings.
+19:45:28.815364 - ORCA MODIFIER MANAGER: No stored xmodmap found
+19:45:28.820931 - ORCA MODIFIER MANAGER: Creating Orca xmodmap
+19:45:28.821039 - EVENT MANAGER: Activating
+19:45:28.840053 - EVENT MANAGER: Activated
+19:45:28.840208 - SCRIPT MANAGER: Activating
+19:45:28.840382 - SCRIPT MANAGER: Getting script for None None sanity check: False
+19:45:28.840627 - SCRIPT MANAGER: Script is app script default (module=orca.scripts.default)
+19:45:28.840795 - EVENT MANAGER: Registering listeners for: default (module=orca.scripts.default)
+19:45:28.840846 - EVENT MANAGER: registering listener for: focus:
+19:45:28.842166 - EVENT MANAGER: registering listener for: document:reload
+19:45:28.842759 - EVENT MANAGER: registering listener for: document:attributes-changed
+19:45:28.843405 - EVENT MANAGER: registering listener for: document:load-complete
+19:45:28.843885 - EVENT MANAGER: registering listener for: document:load-stopped
+19:45:28.844248 - EVENT MANAGER: registering listener for: document:page-changed
+19:45:28.844543 - EVENT MANAGER: registering listener for: mouse:button
+19:45:28.844826 - EVENT MANAGER: registering listener for: object:announcement
+19:45:28.845104 - EVENT MANAGER: registering listener for: object:attributes-changed
+19:45:28.845665 - EVENT MANAGER: registering listener for: object:property-change:accessible-name
+19:45:28.846717 - EVENT MANAGER: registering listener for: object:property-change:accessible-description
+19:45:28.847868 - EVENT MANAGER: registering listener for: object:text-caret-moved
+19:45:28.848872 - EVENT MANAGER: registering listener for: object:text-changed:delete
+19:45:28.849377 - EVENT MANAGER: registering listener for: object:text-changed:insert
+19:45:28.850065 - EVENT MANAGER: registering listener for: object:active-descendant-changed
+19:45:28.850331 - EVENT MANAGER: registering listener for: object:children-changed:add
+19:45:28.850658 - EVENT MANAGER: registering listener for: object:children-changed:remove
+19:45:28.851543 - EVENT MANAGER: registering listener for: object:state-changed:active
+19:45:28.852302 - EVENT MANAGER: registering listener for: object:state-changed:busy
+19:45:28.852609 - EVENT MANAGER: registering listener for: object:state-changed:focused
+19:45:28.852947 - EVENT MANAGER: registering listener for: object:state-changed:showing
+19:45:28.853242 - EVENT MANAGER: registering listener for: object:state-changed:checked
+19:45:28.853632 - EVENT MANAGER: registering listener for: object:state-changed:pressed
+19:45:28.853999 - EVENT MANAGER: registering listener for: object:state-changed:indeterminate
+19:45:28.854299 - EVENT MANAGER: registering listener for: object:state-changed:expanded
+19:45:28.854612 - EVENT MANAGER: registering listener for: object:state-changed:selected
+19:45:28.854951 - EVENT MANAGER: registering listener for: object:state-changed:sensitive
+19:45:28.855684 - EVENT MANAGER: registering listener for: object:text-attributes-changed
+19:45:28.855951 - EVENT MANAGER: registering listener for: object:text-selection-changed
+19:45:28.856196 - EVENT MANAGER: registering listener for: object:selection-changed
+19:45:28.856438 - EVENT MANAGER: registering listener for: object:property-change:accessible-value
+19:45:28.856754 - EVENT MANAGER: registering listener for: object:value-changed
+19:45:28.857014 - EVENT MANAGER: registering listener for: object:column-reordered
+19:45:28.857301 - EVENT MANAGER: registering listener for: object:row-reordered
+19:45:28.857520 - EVENT MANAGER: registering listener for: window:activate
+19:45:28.857739 - EVENT MANAGER: registering listener for: window:deactivate
+19:45:28.857964 - EVENT MANAGER: registering listener for: window:create
+19:45:28.858166 - EVENT MANAGER: registering listener for: window:destroy
+19:45:28.858863 - SCRIPT MANAGER: Setting active script to default (module=orca.scripts.default) reason: activate
+19:45:28.858898 - DEFAULT: Activating script for None
+19:45:28.858913 - BRAILLE: Checking braille setting.
+19:45:28.858927 - BRAILLE: Setting up key ranges.
+19:45:28.858951 - BRAILLE: Initializing. Callback: EventManager.process_braille_event
+19:45:28.858983 - BRAILLE: WINDOWPATH= None
+19:45:28.859003 - BRAILLE: XDG_VTNR= None
+19:45:28.859011 - BRAILLE: Attempting connection with BrlAPI.
+19:45:28.859323 - WARNING: Braille initialization failed: couldn't connect to b':0' with key b'keyfile:/etc/brlapi.key+polkit': connect: ������ ������������ ���������� ������ ����������������
+                  (brlerrno 11, libcerrno 2, gaierrno 0)
+                  Is BRLTTY really running?
+19:45:28.859342 - BRAILLE: Not setting up key ranges: BrlAPI not running.
+19:45:28.859358 - SPEECH: Checking speech setting.
+19:45:28.859367 - SPEECH: Initializing
+19:45:28.859374 - SPEECH: Already initialized
+19:45:28.860889 - DEFAULT: Setting up key bindings
+19:45:28.860927 - DEFAULT: Getting keybindings for default (module=orca.scripts.default) script_manager.setActiveScript > default.activate > default.addKeyGrabs > default.getKeyBindings
+19:45:28.873828 - SLEEP MODE MANAGER: Refreshing bindings.
+19:45:28.873899 - SLEEP MODE MANAGER: Bindings set up.
+19:45:28.873913 - NOTIFICATION PRESENTER: Refreshing bindings.
+19:45:28.873928 - NOTIFICATION PRESENTER: Bindings set up.
+19:45:28.873941 - FLAT REVIEW PRESENTER: Refreshing bindings.
+19:45:28.873994 - FLAT REVIEW PRESENTER: Desktop bindings set up.
+19:45:28.874038 - FLAT REVIEW PRESENTER: Laptop bindings set up.
+19:45:28.874075 - WHERE AM I PRESENTER: Refreshing bindings.
+19:45:28.874100 - WHERE AM I PRESENTER: Desktop bindings set up.
+19:45:28.874117 - WHERE AM I PRESENTER: Laptop bindings set up.
+19:45:28.874143 - LEARN MODE PRESENTER: Refreshing bindings.
+19:45:28.874154 - LEARN MODE PRESENTER: Bindings set up.
+19:45:28.874168 - SPEECH AND VERBOSITY MANAGER: Refreshing bindings.
+19:45:28.874191 - SPEECH AND VERBOSITY MANAGER: Bindings set up.
+19:45:28.874211 - SYSTEM INFORMATION PRESENTER: Refreshing bindings.
+19:45:28.874226 - SYSTEM INFORMATION PRESENTER: Bindings set up.
+19:45:28.874243 - OBJECT NAVIGATOR: Refreshing bindings.
+19:45:28.874260 - OBJECT NAVIGATOR: Bindings set up.
+19:45:28.874293 - TABLE NAVIGATOR: Refreshing bindings.
+19:45:28.874336 - TABLE NAVIGATOR: Bindings set up. Suspended: False
+19:45:28.874494 - ENABLED BINDING for 'Включить или выключить клавиши табличной навигации (enabled: True)': t mods=257 clicks=1 grab ids=[]
+                  ENABLED BINDING for 'Перейти к ячейке слева (enabled: True)': Left mods=9 clicks=1 grab ids=[]
+                  ENABLED BINDING for 'Перейти к ячейке справа (enabled: True)': Right mods=9 clicks=1 grab ids=[]
+                  ENABLED BINDING for 'Перейти к ячейке сверху (enabled: True)': Up mods=9 clicks=1 grab ids=[]
+                  ENABLED BINDING for 'Перейти к ячейке снизу (enabled: True)': Down mods=9 clicks=1 grab ids=[]
+                  ENABLED BINDING for 'Перейти к первой ячейке в таблице (enabled: True)': Home mods=9 clicks=1 grab ids=[]
+                  ENABLED BINDING for 'Перейти к последней ячейке в таблице (enabled: True)': End mods=9 clicks=1 grab ids=[]
+                  ENABLED BINDING for 'Перейти к началу ряда (enabled: True)': Left mods=265 clicks=1 grab ids=[]
+                  ENABLED BINDING for 'Перейти к концу ряда (enabled: True)': Right mods=265 clicks=1 grab ids=[]
+                  ENABLED BINDING for 'Перейти в верхнюю часть столбца (enabled: True)': Up mods=265 clicks=1 grab ids=[]
+                  ENABLED BINDING for 'Перейти в нижнюю часть столбца (enabled: True)': Down mods=265 clicks=1 grab ids=[]
+                  ENABLED BINDING for 'Задать строку для использования в качестве динамических заголовков столбцов (enabled: True)': r mods=257 clicks=1 grab ids=[]
+                  ENABLED BINDING for 'Очистить временные заголовки столбцов (enabled: True)': r mods=257 clicks=2 grab ids=[]
+                  ENABLED BINDING for 'Задать столбец для использования в качестве динамических заголовков строк (enabled: True)': c mods=257 clicks=1 grab ids=[]
+                  ENABLED BINDING for 'Очистить временные заголовки строк (enabled: True)': c mods=257 clicks=2 grab ids=[]
+
+19:45:28.874574 - BOOKMARKS: Refreshing bindings.
+19:45:28.874612 - BOOKMARKS: Bindings set up.
+19:45:28.874701 - MOUSE REVIEW: Refreshing bindings.
+19:45:28.874718 - MOUSE REVIEW: Bindings set up.
+19:45:28.874731 - ACTION PRESENTER: Refreshing bindings.
+19:45:28.874742 - ACTION PRESENTER: Bindings set up.
+19:45:28.875056 - KEYBINDINGS: Adding key grabs
+19:45:28.875590 - GRABS ADDED: ENABLED BINDING for 'Переместить указатель на текущий элемент (enabled: True)': KP_Divide mods=256 clicks=1 grab ids=[1, 2]
+19:45:28.875767 - GRABS ADDED: ENABLED BINDING for 'Щёлкнуть левой кнопкой мыши по текущему элементу в режиме общего осмотра (enabled: True)': KP_Divide mods=0 clicks=1 grab ids=[0]
+19:45:28.875948 - GRABS ADDED: ENABLED BINDING for 'Щёлкнуть правой кнопкой мыши по текущему элементу в режиме общего осмотра (enabled: True)': KP_Multiply mods=0 clicks=1 grab ids=[0]
+19:45:28.876096 - GRABS ADDED: ENABLED BINDING for 'Прочитать весь документ (enabled: True)': KP_Add mods=0 clicks=1 grab ids=[0]
+19:45:28.876187 - GRABS ADDED: ENABLED BINDING for 'Открыть диалоговое окно поиска (enabled: True)': KP_Delete mods=0 clicks=1 grab ids=[0]
+19:45:28.876273 - GRABS ADDED: ENABLED BINDING for 'Найти следующее вхождение строки (enabled: True)': KP_Delete mods=256 clicks=1 grab ids=[3, 4]
+19:45:28.876352 - GRABS ADDED: ENABLED BINDING for 'Найти предыдущее вхождение строки (enabled: True)': KP_Delete mods=257 clicks=1 grab ids=[5, 6]
+19:45:28.876461 - GRABS ADDED: ENABLED BINDING for 'Показать диалог настройки параметров (enabled: True)': space mods=256 clicks=1 grab ids=[7, 8]
+19:45:28.876539 - GRABS ADDED: ENABLED BINDING for 'Показать диалог настройки параметров приложения (enabled: True)': space mods=260 clicks=1 grab ids=[9, 10]
+19:45:28.876643 - GRABS ADDED: ENABLED BINDING for 'Передавать следующие команды непосредственно в приложение (enabled: True)': BackSpace mods=256 clicks=1 grab ids=[11, 12]
+19:45:28.877042 - GRABS ADDED: ENABLED BINDING for 'Переключить режим сна для текущего приложения (enabled: True)': q mods=13 clicks=1 grab ids=[0]
+19:45:28.877190 - GRABS ADDED: ENABLED BINDING for 'Войти или выйти из режима общего осмотра (enabled: True)': KP_Subtract mods=0 clicks=1 grab ids=[0]
+19:45:28.877251 - GRABS ADDED: ENABLED BINDING for 'Произнести всё окно в режиме общего осмотра (enabled: True)': KP_Add mods=0 clicks=2 grab ids=[0]
+19:45:28.877363 - GRABS ADDED: ENABLED BINDING for 'Переместить общий осмотр в начало (enabled: True)': KP_Home mods=256 clicks=1 grab ids=[13, 14]
+19:45:28.877423 - GRABS ADDED: ENABLED BINDING for 'Переместить общий осмотр к началу предыдущей строки (enabled: True)': KP_Home mods=0 clicks=1 grab ids=[0]
+19:45:28.877511 - GRABS ADDED: ENABLED BINDING for 'Произнести текущую строку в режиме общего осмотра (enabled: True)': KP_Up mods=0 clicks=1 grab ids=[0]
+19:45:28.877571 - GRABS ADDED: ENABLED BINDING for 'Произнести текущую строку по буквам в режиме общего осмотра (enabled: True)': KP_Up mods=0 clicks=2 grab ids=[0]
+19:45:28.877630 - GRABS ADDED: ENABLED BINDING for 'Произнести фонетически текущую строку в режиме общего осмотра (enabled: True)': KP_Up mods=0 clicks=3 grab ids=[0]
+19:45:28.877716 - GRABS ADDED: ENABLED BINDING for 'Переместить общий осмотр в начало следующей строки (enabled: True)': KP_Page_Up mods=0 clicks=1 grab ids=[0]
+19:45:28.877801 - GRABS ADDED: ENABLED BINDING for 'Переместить общий осмотр в конец (enabled: True)': KP_Page_Up mods=256 clicks=1 grab ids=[15, 16]
+19:45:28.877888 - GRABS ADDED: ENABLED BINDING for 'Переместить общий осмотр к предыдущему элементу или слову (enabled: True)': KP_Left mods=0 clicks=1 grab ids=[0]
+19:45:28.878019 - GRABS ADDED: ENABLED BINDING for 'Переместить общий осмотр к слову над текущим словом (enabled: True)': KP_Left mods=256 clicks=1 grab ids=[17, 18]
+19:45:28.878111 - GRABS ADDED: ENABLED BINDING for 'Произнести текущий элемент или слово в режиме общего осмотра (enabled: True)': KP_Begin mods=0 clicks=1 grab ids=[0]
+19:45:28.878174 - GRABS ADDED: ENABLED BINDING for 'Произнести по буквам текущий элемент или слово в режиме общего осмотра (enabled: True)': KP_Begin mods=0 clicks=2 grab ids=[0]
+19:45:28.878233 - GRABS ADDED: ENABLED BINDING for 'Произнести фонетически текущий элемент или слово в режиме общего осмотра (enabled: True)': KP_Begin mods=0 clicks=3 grab ids=[0]
+19:45:28.878312 - GRABS ADDED: ENABLED BINDING for 'Произнести текущий объект в режиме общего осмотра (enabled: True)': KP_Begin mods=256 clicks=1 grab ids=[19, 20]
+19:45:28.878400 - GRABS ADDED: ENABLED BINDING for 'Переместить общий осмотр к следующему элементу или слову (enabled: True)': KP_Right mods=0 clicks=1 grab ids=[0]
+19:45:28.878478 - GRABS ADDED: ENABLED BINDING for 'Переместить общий осмотр к слову под текущим словом (enabled: True)': KP_Right mods=256 clicks=1 grab ids=[21, 22]
+19:45:28.878564 - GRABS ADDED: ENABLED BINDING for 'Переместить общий осмотр к предыдущему символу (enabled: True)': KP_End mods=0 clicks=1 grab ids=[0]
+19:45:28.878643 - GRABS ADDED: ENABLED BINDING for 'Переместить общий осмотр в конец строки (enabled: True)': KP_End mods=256 clicks=1 grab ids=[23, 24]
+19:45:28.878730 - GRABS ADDED: ENABLED BINDING for 'Произнести текущий символ в режиме общего осмотра (enabled: True)': KP_Down mods=0 clicks=1 grab ids=[0]
+19:45:28.878806 - GRABS ADDED: ENABLED BINDING for 'Произнести фонетически текущий символ в режиме общего осмотра (enabled: True)': KP_Down mods=0 clicks=2 grab ids=[0]
+19:45:28.878867 - GRABS ADDED: ENABLED BINDING for 'Произнести значение символа в кодировке Unicode в режиме общего осмотра (enabled: True)': KP_Down mods=0 clicks=3 grab ids=[0]
+19:45:28.878955 - GRABS ADDED: ENABLED BINDING for 'Переместить общий осмотр к следующему символу (enabled: True)': KP_Page_Down mods=0 clicks=1 grab ids=[0]
+19:45:28.879063 - GRABS ADDED: ENABLED BINDING for 'Произносить атрибуты текущего символа (enabled: True)': f mods=256 clicks=1 grab ids=[25, 26]
+19:45:28.879169 - GRABS ADDED: ENABLED BINDING for 'Отобразить кнопку по умолчанию (enabled: True)': e mods=256 clicks=1 grab ids=[27, 28]
+19:45:28.879276 - GRABS ADDED: ENABLED BINDING for 'Отобразить заголовок окна (enabled: True)': KP_Enter mods=256 clicks=1 grab ids=[29, 30]
+19:45:28.879354 - GRABS ADDED: ENABLED BINDING for 'Отобразить содержимое строки состояния (enabled: True)': KP_Enter mods=256 clicks=2 grab ids=[31, 32]
+19:45:28.879412 - GRABS ADDED: ENABLED BINDING for 'Сообщить о текущем положении (enabled: True)': KP_Enter mods=0 clicks=1 grab ids=[0]
+19:45:28.879471 - GRABS ADDED: ENABLED BINDING for 'Сообщить о текущем положении подробно (enabled: True)': KP_Enter mods=0 clicks=2 grab ids=[0]
+19:45:28.879580 - GRABS ADDED: ENABLED BINDING for 'Произнести текущее выделение (enabled: True)': Up mods=257 clicks=1 grab ids=[33, 34]
+19:45:28.879687 - GRABS ADDED: ENABLED BINDING for 'Войти в режим изучения клавиатуры. Нажмите escape для выхода из этого режима (enabled: True)': h mods=256 clicks=1 grab ids=[35, 36]
+19:45:28.879804 - GRABS ADDED: ENABLED BINDING for 'Временно включить или отключить речь (enabled: True)': s mods=256 clicks=1 grab ids=[37, 38]
+19:45:28.879911 - GRABS ADDED: ENABLED BINDING for 'Переключить уровень информативности речи (enabled: True)': v mods=256 clicks=1 grab ids=[39, 40]
+19:45:28.880022 - GRABS ADDED: ENABLED BINDING for 'Произносить только текущую ячейку таблицы или всю строку (enabled: True)': F11 mods=256 clicks=1 grab ids=[41, 42]
+19:45:28.880131 - GRABS ADDED: ENABLED BINDING for 'Сообщить текущее время (enabled: True)': t mods=256 clicks=1 grab ids=[43, 44]
+19:45:28.880213 - GRABS ADDED: ENABLED BINDING for 'Сообщить текущую дату (enabled: True)': t mods=256 clicks=2 grab ids=[45, 46]
+19:45:28.880460 - GRABS ADDED: ENABLED BINDING for 'Перейти к родительскому объекту с фокусом навигатора. (enabled: True)': Up mods=260 clicks=1 grab ids=[47, 48]
+19:45:28.880899 - GRABS ADDED: ENABLED BINDING for 'Перейти к первому дочернему объекту с фокусом навигатора. (enabled: True)': Down mods=260 clicks=1 grab ids=[49, 50]
+19:45:28.881450 - GRABS ADDED: ENABLED BINDING for 'Перейти к следующему родственному объекту с фокусом навигатора. (enabled: True)': Right mods=260 clicks=1 grab ids=[51, 52]
+19:45:28.881810 - GRABS ADDED: ENABLED BINDING for 'Перейти к предыдующему родственному объекту с фокусом навигатора. (enabled: True)': Left mods=260 clicks=1 grab ids=[53, 54]
+19:45:28.882218 - GRABS ADDED: ENABLED BINDING for 'Щелкните на объекте с фокусом навигатора. (enabled: True)': Return mods=260 clicks=1 grab ids=[55, 56]
+19:45:28.882446 - GRABS ADDED: ENABLED BINDING for 'Переключить упрощенную навигацию по объектам. (enabled: True)': s mods=260 clicks=1 grab ids=[57, 58]
+19:45:28.882724 - GRABS ADDED: ENABLED BINDING for 'Включить или выключить клавиши табличной навигации (enabled: True)': t mods=257 clicks=1 grab ids=[59, 60]
+19:45:28.883140 - GRABS ADDED: ENABLED BINDING for 'Перейти к ячейке слева (enabled: True)': Left mods=9 clicks=1 grab ids=[0]
+19:45:28.883375 - GRABS ADDED: ENABLED BINDING for 'Перейти к ячейке справа (enabled: True)': Right mods=9 clicks=1 grab ids=[0]
+19:45:28.883579 - GRABS ADDED: ENABLED BINDING for 'Перейти к ячейке сверху (enabled: True)': Up mods=9 clicks=1 grab ids=[0]
+19:45:28.883729 - GRABS ADDED: ENABLED BINDING for 'Перейти к ячейке снизу (enabled: True)': Down mods=9 clicks=1 grab ids=[0]
+19:45:28.883940 - GRABS ADDED: ENABLED BINDING for 'Перейти к первой ячейке в таблице (enabled: True)': Home mods=9 clicks=1 grab ids=[0]
+19:45:28.884062 - GRABS ADDED: ENABLED BINDING for 'Перейти к последней ячейке в таблице (enabled: True)': End mods=9 clicks=1 grab ids=[0]
+19:45:28.884148 - GRABS ADDED: ENABLED BINDING for 'Перейти к началу ряда (enabled: True)': Left mods=265 clicks=1 grab ids=[61, 62]
+19:45:28.884230 - GRABS ADDED: ENABLED BINDING for 'Перейти к концу ряда (enabled: True)': Right mods=265 clicks=1 grab ids=[63, 64]
+19:45:28.884308 - GRABS ADDED: ENABLED BINDING for 'Перейти в верхнюю часть столбца (enabled: True)': Up mods=265 clicks=1 grab ids=[65, 66]
+19:45:28.884386 - GRABS ADDED: ENABLED BINDING for 'Перейти в нижнюю часть столбца (enabled: True)': Down mods=265 clicks=1 grab ids=[67, 68]
+19:45:28.884808 - GRABS ADDED: ENABLED BINDING for 'Задать строку для использования в качестве динамических заголовков столбцов (enabled: True)': r mods=257 clicks=1 grab ids=[69, 70]
+19:45:28.885206 - GRABS ADDED: ENABLED BINDING for 'Очистить временные заголовки столбцов (enabled: True)': r mods=257 clicks=2 grab ids=[71, 72]
+19:45:28.885513 - GRABS ADDED: ENABLED BINDING for 'Задать столбец для использования в качестве динамических заголовков строк (enabled: True)': c mods=257 clicks=1 grab ids=[73, 74]
+19:45:28.885680 - GRABS ADDED: ENABLED BINDING for 'Очистить временные заголовки строк (enabled: True)': c mods=257 clicks=2 grab ids=[75, 76]
+19:45:28.885933 - GRABS ADDED: ENABLED BINDING for 'Перейти к следующей закладке (enabled: True)': b mods=256 clicks=1 grab ids=[77, 78]
+19:45:28.886098 - GRABS ADDED: ENABLED BINDING for 'Перейти к предыдущей закладке (enabled: True)': b mods=257 clicks=1 grab ids=[79, 80]
+19:45:28.886185 - GRABS ADDED: ENABLED BINDING for 'Сохранить закладки (enabled: True)': b mods=264 clicks=1 grab ids=[81, 82]
+19:45:28.886309 - GRABS ADDED: ENABLED BINDING for 'Перейти к закладке (enabled: True)': 1 mods=256 clicks=1 grab ids=[83, 84]
+19:45:28.886399 - GRABS ADDED: ENABLED BINDING for 'Добавить закладку (enabled: True)': 1 mods=264 clicks=1 grab ids=[85, 86]
+19:45:28.886557 - GRABS ADDED: ENABLED BINDING for 'Перейти к закладке (enabled: True)': 2 mods=256 clicks=1 grab ids=[87, 88]
+19:45:28.886665 - GRABS ADDED: ENABLED BINDING for 'Добавить закладку (enabled: True)': 2 mods=264 clicks=1 grab ids=[89, 90]
+19:45:28.886987 - GRABS ADDED: ENABLED BINDING for 'Перейти к закладке (enabled: True)': 3 mods=256 clicks=1 grab ids=[91, 92]
+19:45:28.887171 - GRABS ADDED: ENABLED BINDING for 'Добавить закладку (enabled: True)': 3 mods=264 clicks=1 grab ids=[93, 94]
+19:45:28.887355 - GRABS ADDED: ENABLED BINDING for 'Перейти к закладке (enabled: True)': 4 mods=256 clicks=1 grab ids=[95, 96]
+19:45:28.887457 - GRABS ADDED: ENABLED BINDING for 'Добавить закладку (enabled: True)': 4 mods=264 clicks=1 grab ids=[97, 98]
+19:45:28.887611 - GRABS ADDED: ENABLED BINDING for 'Перейти к закладке (enabled: True)': 5 mods=256 clicks=1 grab ids=[99, 100]
+19:45:28.887777 - GRABS ADDED: ENABLED BINDING for 'Добавить закладку (enabled: True)': 5 mods=264 clicks=1 grab ids=[101, 102]
+19:45:28.888119 - GRABS ADDED: ENABLED BINDING for 'Перейти к закладке (enabled: True)': 6 mods=256 clicks=1 grab ids=[103, 104]
+19:45:28.888369 - GRABS ADDED: ENABLED BINDING for 'Добавить закладку (enabled: True)': 6 mods=264 clicks=1 grab ids=[105, 106]
+19:45:28.889202 - GRABS ADDED: ENABLED BINDING for 'Показывать меню действий (enabled: True)': a mods=257 clicks=1 grab ids=[107, 108]
+19:45:28.889389 - DEFAULT: Script for None activated
+19:45:28.889430 - SCRIPT MANAGER: Activated
+19:45:28.889450 - ORCA: User Settings Loaded
+19:45:28.889607 - ORCA: Initialized
+19:45:28.889619 - ORCA: Initialized.
+19:45:28.889660 - SETTINGS MANAGER: Setting runtime settings.
+19:45:28.889673 - SETTINGS MANAGER: Runtime settings set.
+19:45:28.889946 - SETTINGS MANAGER: Setting runtime settings.
+19:45:28.889966 - SETTINGS MANAGER: Runtime settings set.
+19:45:28.890070 - SPEECH: Speak 'Чтение с экрана включено.' acss: {'established': False}
+19:45:28.890141 - SPEECH OUTPUT: 'Чтение с экрана включено.' {'established': False, 'family': {'name': None, 'gender': None, 'lang': None, 'dialect': None, 'variant': None}}
+19:45:28.890159 - SPEECH DISPATCHER: Speaking 'Чтение с экрана включено.' as string
+19:45:28.890221 - SCRIPT MANAGER: Active script is: default (module=orca.scripts.default) speechdispatcherfactory.speak > speechdispatcherfactory._speak > ssml.markupText > script_manager.getActiveScript
+19:45:28.892717 - SPEECH DISPATCHER: Speaking '<speak><mark name="0:6"/>Чтение <mark name="7:8"/>с <mark name="9:15"/>экрана <mark name="16:25"/>включено.</speak>'
+                  ORCA rate 5.0, pitch 5.0, volume 5.0, language ru, punctuation: NONE
+                  SD rate 2, pitch 10, volume 100, language ru-ru
+19:45:28.893007 - SETTINGS MANAGER: Setting runtime settings.
+19:45:28.893028 - SETTINGS MANAGER: Runtime settings set.
+19:45:28.893111 - SETTINGS MANAGER: Setting runtime settings.
+19:45:28.893126 - SETTINGS MANAGER: Runtime settings set.
+19:45:28.893345 - BRAILLE: Not contracting 'Чтение с экрана включено.' because contracted braille is not enabled.
+19:45:28.893829 - BRAILLE: Refresh. Pan: True target: 0
+19:45:28.893885 - BRAILLE: Last text object: None (Caret: 0, Line: 0, Cell: 0)
+19:45:28.893928 - BRAILLE: Current text object: None (Caret: 0, Line: 0). On same line: False
+19:45:28.893965 - BRAILLE: Line 0: 'Чтение с экрана включено.' focusOffset: 0 [[0, 25]]
+19:45:28.893981 - BRAILLE: Cursor offset in line string is: -1
+19:45:28.893996 - BRAILLE: Current range: (0, 32). Target cell: 0
+19:45:28.894010 - BRAILLE LINE:  'Чтение с экрана включено.'
+19:45:28.894194 -      VISIBLE:  'Чтение с экрана включено.', cursor=0
+19:45:28.894289 - BRAILLE: Enabling braille. BrlAPI running: False
+19:45:28.894307 - BRAILLE: Need to initialize first.
+19:45:28.894334 - BRAILLE: Initializing. Callback: EventManager.process_braille_event
+19:45:28.894365 - BRAILLE: WINDOWPATH= None
+19:45:28.894390 - BRAILLE: XDG_VTNR= None
+19:45:28.894401 - BRAILLE: Attempting connection with BrlAPI.
+19:45:28.894693 - WARNING: Braille initialization failed: couldn't connect to b':0' with key b'keyfile:/etc/brlapi.key+polkit': connect: ������ ������������ ���������� ������ ����������������
+                  (brlerrno 11, libcerrno 2, gaierrno 0)
+                  Is BRLTTY really running?
+19:45:28.896184 - FOCUS MANAGER: Unable to find active window from []
+19:45:28.896261 - ORCA: Starting ATSPI registry.
+19:45:28.896293 - ORCA: Starting
+19:45:28.896978 - ORCA: Startup complete notification made
+19:45:28.896999 - ORCA: Starting Atspi main event loop
+
+19:45:28.899217 - EVENT MANAGER: object:children-changed:add for [desktop frame: 'main'] in None (0, 0, [application: 'orca'])
+19:45:28.899345 - FOCUS MANAGER: Locus of focus is None
+19:45:28.900043 - SCRIPT MANAGER: Active script is: default (module=orca.scripts.default) orca.start > event_manager._enqueue_object_event > event_manager._ignore > script_manager.getActiveScript
+19:45:28.902203 - EVENT MANAGER: Queueing object:children-changed:add for [desktop frame: 'main'] in None (0, 0, [application: 'orca'])
+19:45:28.902312 - EVENT MANAGER: App for event source is None
+19:45:28.902395 - SCRIPT MANAGER: Getting script for None [desktop frame: 'main'] sanity check: False
+19:45:28.902911 - SCRIPT MANAGER: Script is app script default (module=orca.scripts.default)
+19:45:28.903317 - EVENT MANAGER: Dequeued object:children-changed:add for [desktop frame: 'main'] in None (0, 0, [application: 'orca'])
+
+vvvvv PROCESS OBJECT EVENT object:children-changed:add (queue size: 0) vvvvv
+19:45:28.903521 - EVENT MANAGER: object:children-changed:add for [desktop frame: 'main'] in None (0, 0, [application: 'orca']) is not obsoleted
+19:45:28.903796 - OBJECT EVENT: object:children-changed:add for [desktop frame: 'main'] in None (0, 0, [application: 'orca'])
+                                app='' name='main' role='desktop frame'
+                                description=''
+                                states=''
+                                relations=''
+                                actions=''
+                                interfaces='Component'
+                                attributes=''
+                                path=[-1]
+
+                                ANY DATA:
+                                name='orca' role='application'
+                                description=''
+                                states=''
+                                relations=''
+                                actions=''
+                                interfaces='Collection'
+                                attributes=''
+                                path=[-1]
+
+19:45:28.907965 - EVENT MANAGER: Getting script for event for None check: False
+19:45:28.908035 - SCRIPT MANAGER: Getting script for None [desktop frame: 'main'] sanity check: False
+19:45:28.908203 - SCRIPT MANAGER: Script is app script default (module=orca.scripts.default)
+19:45:28.908231 - EVENT MANAGER: Script for event is default (module=orca.scripts.default)
+19:45:28.908260 - SCRIPT MANAGER: Active script is: default (module=orca.scripts.default) event_manager._dequeue_object_event > event_manager._processObjectEvent > event_manager._isActivatableEvent > script_manager.getActiveScript
+19:45:28.909204 - EVENT MANAGER: Change active script: False (The script for this event is already active.)
+19:45:28.909232 - SCRIPT MANAGER: Active script is: default (module=orca.scripts.default) orca.start > event_manager._dequeue_object_event > event_manager._processObjectEvent > script_manager.getActiveScript
+19:45:28.910043 - EVENT MANAGER: Processing object:children-changed:add: script for event is active
+19:45:28.910107 - AXObject: Clearing local cache. Reason: children-changed event.
+19:45:28.910135 - AXObject: Clearing known dead-or-alive state for 2 objects
+19:45:28.910155 - AXObject: Clearing 0 real apps for mutter frames
+19:45:28.910173 - AXObject: Clearing 0 real frames for mutter frames
+19:45:28.910193 - AXObject: Clearing cached object attributes for 2 objects
+TOTAL PROCESSING TIME: 0.0069
+^^^^^ PROCESS OBJECT EVENT object:children-changed:add ^^^^^
+
+
+19:45:30.909453 - EVENT MANAGER: object:children-changed:add for [desktop frame: 'main'] in None (1, 0, [application: 'xdg-desktop-portal-gtk'])
+19:45:30.909557 - FOCUS MANAGER: Locus of focus is None
+19:45:30.909680 - SCRIPT MANAGER: Active script is: default (module=orca.scripts.default) orca.start > event_manager._enqueue_object_event > event_manager._ignore > script_manager.getActiveScript
+19:45:30.910595 - EVENT MANAGER: Queueing object:children-changed:add for [desktop frame: 'main'] in None (1, 0, [application: 'xdg-desktop-portal-gtk'])
+19:45:30.910636 - EVENT MANAGER: App for event source is None
+19:45:30.910672 - SCRIPT MANAGER: Getting script for None [desktop frame: 'main'] sanity check: False
+19:45:30.910903 - SCRIPT MANAGER: Script is app script default (module=orca.scripts.default)
+19:45:30.911160 - EVENT MANAGER: Dequeued object:children-changed:add for [desktop frame: 'main'] in None (1, 0, [application: 'xdg-desktop-portal-gtk'])
+
+vvvvv PROCESS OBJECT EVENT object:children-changed:add (queue size: 0) vvvvv
+19:45:30.911250 - EVENT MANAGER: object:children-changed:add for [desktop frame: 'main'] in None (1, 0, [application: 'xdg-desktop-portal-gtk']) is not obsoleted
+19:45:30.911353 - OBJECT EVENT: object:children-changed:add for [desktop frame: 'main'] in None (1, 0, [application: 'xdg-desktop-portal-gtk'])
+                                app='' name='main' role='desktop frame'
+                                description=''
+                                states=''
+                                relations=''
+                                actions=''
+                                interfaces='Component'
+                                attributes=''
+                                path=[-1]
+
+                                ANY DATA:
+                                name='xdg-desktop-portal-gtk' role='application'
+                                description=''
+                                states=''
+                                relations=''
+                                actions=''
+                                interfaces='Collection'
+                                attributes=''
+                                path=[-1]
+
+19:45:30.912760 - EVENT MANAGER: Getting script for event for None check: False
+19:45:30.912817 - SCRIPT MANAGER: Getting script for None [desktop frame: 'main'] sanity check: False
+19:45:30.913016 - SCRIPT MANAGER: Script is app script default (module=orca.scripts.default)
+19:45:30.913048 - EVENT MANAGER: Script for event is default (module=orca.scripts.default)
+19:45:30.913081 - SCRIPT MANAGER: Active script is: default (module=orca.scripts.default) event_manager._dequeue_object_event > event_manager._processObjectEvent > event_manager._isActivatableEvent > script_manager.getActiveScript
+19:45:30.913997 - EVENT MANAGER: Change active script: False (The script for this event is already active.)
+19:45:30.914026 - SCRIPT MANAGER: Active script is: default (module=orca.scripts.default) orca.start > event_manager._dequeue_object_event > event_manager._processObjectEvent > script_manager.getActiveScript
+19:45:30.914852 - EVENT MANAGER: Processing object:children-changed:add: script for event is active
+19:45:30.914909 - AXObject: Clearing local cache. Reason: children-changed event.
+19:45:30.914937 - AXObject: Clearing known dead-or-alive state for 2 objects
+19:45:30.914958 - AXObject: Clearing 0 real apps for mutter frames
+19:45:30.914976 - AXObject: Clearing 0 real frames for mutter frames
+19:45:30.914994 - AXObject: Clearing cached object attributes for 2 objects
+TOTAL PROCESSING TIME: 0.0039
+^^^^^ PROCESS OBJECT EVENT object:children-changed:add ^^^^^
+
+
+19:45:30.999251 - EVENT MANAGER: object:children-changed:add for [desktop frame: 'main'] in None (2, 0, [application: 'io.elementary.files.xdg-desktop-portal'])
+19:45:30.999321 - FOCUS MANAGER: Locus of focus is None
+19:45:30.999416 - SCRIPT MANAGER: Active script is: default (module=orca.scripts.default) orca.start > event_manager._enqueue_object_event > event_manager._ignore > script_manager.getActiveScript
+19:45:31.000414 - EVENT MANAGER: Queueing object:children-changed:add for [desktop frame: 'main'] in None (2, 0, [application: 'io.elementary.files.xdg-desktop-portal'])
+19:45:31.000461 - EVENT MANAGER: App for event source is None
+19:45:31.000500 - SCRIPT MANAGER: Getting script for None [desktop frame: 'main'] sanity check: False
+19:45:31.000720 - SCRIPT MANAGER: Script is app script default (module=orca.scripts.default)
+19:45:31.000973 - EVENT MANAGER: Dequeued object:children-changed:add for [desktop frame: 'main'] in None (2, 0, [application: 'io.elementary.files.xdg-desktop-portal'])
+
+vvvvv PROCESS OBJECT EVENT object:children-changed:add (queue size: 0) vvvvv
+19:45:31.001055 - EVENT MANAGER: object:children-changed:add for [desktop frame: 'main'] in None (2, 0, [application: 'io.elementary.files.xdg-desktop-portal']) is not obsoleted
+19:45:31.001147 - OBJECT EVENT: object:children-changed:add for [desktop frame: 'main'] in None (2, 0, [application: 'io.elementary.files.xdg-desktop-portal'])
+                                app='' name='main' role='desktop frame'
+                                description=''
+                                states=''
+                                relations=''
+                                actions=''
+                                interfaces='Component'
+                                attributes=''
+                                path=[-1]
+
+                                ANY DATA:
+                                name='io.elementary.files.xdg-desktop-portal' role='application'
+                                description=''
+                                states=''
+                                relations=''
+                                actions=''
+                                interfaces='Collection'
+                                attributes=''
+                                path=[-1]
+
+19:45:31.003634 - EVENT MANAGER: Getting script for event for None check: False
+19:45:31.003700 - SCRIPT MANAGER: Getting script for None [desktop frame: 'main'] sanity check: False
+19:45:31.003879 - SCRIPT MANAGER: Script is app script default (module=orca.scripts.default)
+19:45:31.003908 - EVENT MANAGER: Script for event is default (module=orca.scripts.default)
+19:45:31.003937 - SCRIPT MANAGER: Active script is: default (module=orca.scripts.default) event_manager._dequeue_object_event > event_manager._processObjectEvent > event_manager._isActivatableEvent > script_manager.getActiveScript
+19:45:31.004868 - EVENT MANAGER: Change active script: False (The script for this event is already active.)
+19:45:31.004899 - SCRIPT MANAGER: Active script is: default (module=orca.scripts.default) orca.start > event_manager._dequeue_object_event > event_manager._processObjectEvent > script_manager.getActiveScript
+19:45:31.005811 - EVENT MANAGER: Processing object:children-changed:add: script for event is active
+19:45:31.005870 - AXObject: Clearing local cache. Reason: children-changed event.
+19:45:31.005898 - AXObject: Clearing known dead-or-alive state for 2 objects
+19:45:31.005919 - AXObject: Clearing 0 real apps for mutter frames
+19:45:31.005938 - AXObject: Clearing 0 real frames for mutter frames
+19:45:31.005956 - AXObject: Clearing cached object attributes for 2 objects
+TOTAL PROCESSING TIME: 0.0050
+^^^^^ PROCESS OBJECT EVENT object:children-changed:add ^^^^^
+
+19:45:31.411646 - FOCUS MANAGER: Focus and window are unknown
+19:45:33.417953 - FOCUS MANAGER: Focus and window are unknown
+19:45:33.506349 - FOCUS MANAGER: Focus and window are unknown
+19:45:33.893889 - BRAILLE: Refresh. Pan: False target: 0
+19:45:33.894096 - BRAILLE: Initializing. Callback: EventManager.process_braille_event
+19:45:33.894186 - BRAILLE: WINDOWPATH= None
+19:45:33.894248 - BRAILLE: XDG_VTNR= None
+19:45:33.894274 - BRAILLE: Attempting connection with BrlAPI.
+19:45:33.894807 - WARNING: Braille initialization failed: couldn't connect to b':0' with key b'keyfile:/etc/brlapi.key+polkit': connect: ������ ������������ ���������� ������ ����������������
+                  (brlerrno 11, libcerrno 2, gaierrno 0)
+                  Is BRLTTY really running?
+
+19:45:57.333906 - AXObject: Exception in get_role_name: atspi_error: Объект по пути «/io/github/aconsole/AConsole/a11y/f1e000de_e0f5_4334_b8bc_70f3395241f5» не существует (1)
+19:45:57.335012 - AXObject: Exception in get_role_name: atspi_error: Объект по пути «/org/a11y/atspi/accessible/root» не существует (1)
+19:45:57.335257 - EVENT MANAGER: object:state-changed:showing for [DEAD] in [DEAD] (0, 0, 0)
+19:45:57.335304 - FOCUS MANAGER: Locus of focus is None
+19:45:57.335776 - AXObject: Exception in get_role: atspi_error: Объект по пути «/io/github/aconsole/AConsole/a11y/f1e000de_e0f5_4334_b8bc_70f3395241f5» не существует (1)
+19:45:57.335818 - EVENT MANAGER: Ignoring event type due to role
+
+19:45:57.336183 - AXObject: Exception in get_role_name: atspi_error: Объект по пути «/io/github/aconsole/AConsole/a11y/f1e000de_e0f5_4334_b8bc_70f3395241f5» не существует (1)
+19:45:57.337216 - AXObject: Exception in get_role_name: atspi_error: Объект по пути «/org/a11y/atspi/accessible/root» не существует (1)
+19:45:57.337772 - AXObject: Exception in get_role_name: atspi_error: Объект по пути «/io/github/aconsole/AConsole/a11y/45e64541_d8e3_4882_9dc1_6db284b03ae4» не существует (1)
+19:45:57.338093 - EVENT MANAGER: object:children-changed:add for [DEAD] in [DEAD] (1, 0, [DEAD])
+19:45:57.338164 - FOCUS MANAGER: Locus of focus is None
+19:45:57.339154 - AXObject: Exception in get_role: atspi_error: Объект по пути «/io/github/aconsole/AConsole/a11y/45e64541_d8e3_4882_9dc1_6db284b03ae4» не существует (1)
+19:45:57.339402 - AXObject: Exception in get_role: atspi_error: Объект по пути «/io/github/aconsole/AConsole/a11y/45e64541_d8e3_4882_9dc1_6db284b03ae4» не существует (1)
+19:45:57.340403 - SCRIPT MANAGER: Active script is: default (module=orca.scripts.default) orca.start > event_manager._enqueue_object_event > event_manager._ignore > script_manager.getActiveScript
+19:45:57.342738 - EVENT MANAGER: Ignoring because event is not from active app
+
+19:45:57.343869 - AXObject: Exception in get_role_name: atspi_error: Объект по пути «/io/github/aconsole/AConsole/a11y/cc202f41_a3b5_4464_9077_86304f38fe12» не существует (1)
+19:45:57.345166 - AXObject: Exception in get_role_name: atspi_error: Объект по пути «/org/a11y/atspi/accessible/root» не существует (1)
+19:45:57.345423 - EVENT MANAGER: object:state-changed:focused for [DEAD] in [DEAD] (1, 0, 0)
+19:45:57.345468 - FOCUS MANAGER: Locus of focus is None
+19:45:57.345866 - AXObject: Exception in get_role: atspi_error: Объект по пути «/io/github/aconsole/AConsole/a11y/cc202f41_a3b5_4464_9077_86304f38fe12» не существует (1)
+19:45:57.346085 - AXObject: Exception in get_role_name: atspi_error: Объект по пути «/io/github/aconsole/AConsole/a11y/cc202f41_a3b5_4464_9077_86304f38fe12» не существует (1)
+19:45:57.347030 - AXObject: Exception in get_role_name: atspi_error: Объект по пути «/org/a11y/atspi/accessible/root» не существует (1)
+19:45:57.347262 - EVENT MANAGER: Queueing object:state-changed:focused for [DEAD] in [DEAD] (1, 0, 0)
+19:45:57.348049 - AXObject: Exception in get_role_name: atspi_error: Объект по пути «/org/a11y/atspi/accessible/root» не существует (1)
+19:45:57.348245 - EVENT MANAGER: App for event source is [DEAD]
+19:45:57.348454 - AXObject: Exception in get_role_name: atspi_error: Объект по пути «/org/a11y/atspi/accessible/root» не существует (1)
+19:45:57.348879 - AXObject: Exception in get_role_name: atspi_error: Объект по пути «/io/github/aconsole/AConsole/a11y/cc202f41_a3b5_4464_9077_86304f38fe12» не существует (1)
+19:45:57.349154 - SCRIPT MANAGER: Getting script for [DEAD] [DEAD] sanity check: False
+19:45:57.349404 - AXObject: Exception in get_role: atspi_error: Объект по пути «/io/github/aconsole/AConsole/a11y/cc202f41_a3b5_4464_9077_86304f38fe12» не существует (1)
+19:45:57.349788 - SCRIPT MANAGER: Cannot get module name for nameless app
+19:45:57.350791 - STRUCTURAL NAVIGATION: Refreshing handlers.
+19:45:57.350885 - BOOKMARKS: Refreshing handlers.
+19:45:57.350916 - BOOKMARKS: Handlers set up.
+19:45:57.351017 - DEFAULT: Getting braille bindings.
+19:45:57.351045 - DEFAULT: Finished getting braille bindings.
+19:45:57.362644 - SCRIPT: default (module=orca.scripts.default) initialized
+19:45:57.363063 - AXObject: Exception in get_role_name: atspi_error: Объект по пути «/org/a11y/atspi/accessible/root» не существует (1)
+19:45:57.363315 - SCRIPT MANAGER: Default script created for [DEAD] (obj: None)
+19:45:57.363356 - SCRIPT MANAGER: Script is app script default (module=orca.scripts.default)
+
+19:45:57.363661 - AXObject: Exception in get_role_name: atspi_error: Объект по пути «/io/github/aconsole/AConsole/a11y/f1e000de_e0f5_4334_b8bc_70f3395241f5» не существует (1)
+19:45:57.364979 - AXObject: Exception in get_role_name: atspi_error: Объект по пути «/org/a11y/atspi/accessible/root» не существует (1)
+19:45:57.365326 - EVENT MANAGER: object:state-changed:active for [DEAD] in [DEAD] (1, 0, 0)
+19:45:57.365391 - FOCUS MANAGER: Locus of focus is None
+19:45:57.365970 - AXObject: Exception in get_role: atspi_error: Объект по пути «/io/github/aconsole/AConsole/a11y/f1e000de_e0f5_4334_b8bc_70f3395241f5» не существует (1)
+19:45:57.366301 - AXObject: Exception in get_role_name: atspi_error: Объект по пути «/io/github/aconsole/AConsole/a11y/f1e000de_e0f5_4334_b8bc_70f3395241f5» не существует (1)
+19:45:57.367970 - AXObject: Exception in get_role_name: atspi_error: Объект по пути «/org/a11y/atspi/accessible/root» не существует (1)
+19:45:57.368276 - EVENT MANAGER: Queueing object:state-changed:active for [DEAD] in [DEAD] (1, 0, 0)
+19:45:57.369061 - AXObject: Exception in get_role_name: atspi_error: Объект по пути «/org/a11y/atspi/accessible/root» не существует (1)
+19:45:57.369245 - EVENT MANAGER: App for event source is [DEAD]
+19:45:57.369433 - AXObject: Exception in get_role_name: atspi_error: Объект по пути «/org/a11y/atspi/accessible/root» не существует (1)
+19:45:57.369745 - AXObject: Exception in get_role_name: atspi_error: Объект по пути «/io/github/aconsole/AConsole/a11y/f1e000de_e0f5_4334_b8bc_70f3395241f5» не существует (1)
+19:45:57.369982 - SCRIPT MANAGER: Getting script for [DEAD] [DEAD] sanity check: False
+19:45:57.370328 - AXObject: Exception in get_role: atspi_error: Объект по пути «/io/github/aconsole/AConsole/a11y/f1e000de_e0f5_4334_b8bc_70f3395241f5» не существует (1)
+19:45:57.370592 - SCRIPT MANAGER: Script is app script default (module=orca.scripts.default)
+19:45:57.371828 - AXObject: Exception in get_role_name: atspi_error: Объект по пути «/io/github/aconsole/AConsole/a11y/cc202f41_a3b5_4464_9077_86304f38fe12» не существует (1)
+19:45:57.376266 - AXObject: Exception in get_role_name: atspi_error: Объект по пути «/org/a11y/atspi/accessible/root» не существует (1)
+19:45:57.376571 - EVENT MANAGER: Dequeued object:state-changed:focused for [DEAD] in [DEAD] (1, 0, 0)
+
+vvvvv PROCESS OBJECT EVENT object:state-changed:focused (queue size: 1) vvvvv
+19:45:57.376882 - AXObject: Exception in get_role_name: atspi_error: Объект по пути «/io/github/aconsole/AConsole/a11y/cc202f41_a3b5_4464_9077_86304f38fe12» не существует (1)
+19:45:57.377923 - AXObject: Exception in get_role_name: atspi_error: Объект по пути «/org/a11y/atspi/accessible/root» не существует (1)
+19:45:57.378174 - EVENT MANAGER: object:state-changed:focused for [DEAD] in [DEAD] (1, 0, 0) is not obsoleted
+19:45:57.379027 - AXObject: Exception in get_role_name: atspi_error: Объект по пути «/io/github/aconsole/AConsole/a11y/cc202f41_a3b5_4464_9077_86304f38fe12» не существует (1)
+19:45:57.379236 - EVENT MANAGER: Ignoring defunct object: [DEAD]
+TOTAL PROCESSING TIME: 0.0027
+^^^^^ PROCESS OBJECT EVENT object:state-changed:focused ^^^^^
+
+19:45:57.379518 - AXObject: Exception in get_role_name: atspi_error: Объект по пути «/io/github/aconsole/AConsole/a11y/f1e000de_e0f5_4334_b8bc_70f3395241f5» не существует (1)
+19:45:57.380492 - AXObject: Exception in get_role_name: atspi_error: Объект по пути «/org/a11y/atspi/accessible/root» не существует (1)
+19:45:57.380732 - EVENT MANAGER: Dequeued object:state-changed:active for [DEAD] in [DEAD] (1, 0, 0)
+
+vvvvv PROCESS OBJECT EVENT object:state-changed:active (queue size: 0) vvvvv
+19:45:57.380971 - AXObject: Exception in get_role_name: atspi_error: Объект по пути «/io/github/aconsole/AConsole/a11y/f1e000de_e0f5_4334_b8bc_70f3395241f5» не существует (1)
+19:45:57.381989 - AXObject: Exception in get_role_name: atspi_error: Объект по пути «/org/a11y/atspi/accessible/root» не существует (1)
+19:45:57.382220 - EVENT MANAGER: object:state-changed:active for [DEAD] in [DEAD] (1, 0, 0) is not obsoleted
+19:45:57.382772 - AXObject: Exception in get_role_name: atspi_error: Объект по пути «/io/github/aconsole/AConsole/a11y/f1e000de_e0f5_4334_b8bc_70f3395241f5» не существует (1)
+19:45:57.382973 - EVENT MANAGER: Ignoring defunct object: [DEAD]
+TOTAL PROCESSING TIME: 0.0022
+^^^^^ PROCESS OBJECT EVENT object:state-changed:active ^^^^^
+
+
+19:45:58.144415 - EVENT MANAGER: object:children-changed:add for [desktop frame: 'main'] in None (3, 0, [application: 'aconsole-des4-preview'])
+19:45:58.144500 - FOCUS MANAGER: Locus of focus is None
+19:45:58.144606 - SCRIPT MANAGER: Active script is: default (module=orca.scripts.default) orca.start > event_manager._enqueue_object_event > event_manager._ignore > script_manager.getActiveScript
+19:45:58.145528 - EVENT MANAGER: Queueing object:children-changed:add for [desktop frame: 'main'] in None (3, 0, [application: 'aconsole-des4-preview'])
+19:45:58.145570 - EVENT MANAGER: App for event source is None
+19:45:58.145606 - SCRIPT MANAGER: Getting script for None [desktop frame: 'main'] sanity check: False
+19:45:58.145791 - SCRIPT MANAGER: Script is app script default (module=orca.scripts.default)
+19:45:58.146021 - EVENT MANAGER: Dequeued object:children-changed:add for [desktop frame: 'main'] in None (3, 0, [application: 'aconsole-des4-preview'])
+
+vvvvv PROCESS OBJECT EVENT object:children-changed:add (queue size: 0) vvvvv
+19:45:58.146100 - EVENT MANAGER: object:children-changed:add for [desktop frame: 'main'] in None (3, 0, [application: 'aconsole-des4-preview']) is not obsoleted
+19:45:58.146192 - OBJECT EVENT: object:children-changed:add for [desktop frame: 'main'] in None (3, 0, [application: 'aconsole-des4-preview'])
+                                app='' name='main' role='desktop frame'
+                                description=''
+                                states=''
+                                relations=''
+                                actions=''
+                                interfaces='Component'
+                                attributes=''
+                                path=[-1]
+
+                                ANY DATA:
+                                name='aconsole-des4-preview' role='application'
+                                description='aconsole-des4-preview'
+                                states=''
+                                relations=''
+                                actions=''
+                                interfaces=''
+                                attributes='toolkit:GTK'
+                                path=[-1]
+
+19:45:58.148131 - EVENT MANAGER: Getting script for event for None check: False
+19:45:58.148183 - SCRIPT MANAGER: Getting script for None [desktop frame: 'main'] sanity check: False
+19:45:58.148322 - SCRIPT MANAGER: Script is app script default (module=orca.scripts.default)
+19:45:58.148347 - EVENT MANAGER: Script for event is default (module=orca.scripts.default)
+19:45:58.148373 - SCRIPT MANAGER: Active script is: default (module=orca.scripts.default) event_manager._dequeue_object_event > event_manager._processObjectEvent > event_manager._isActivatableEvent > script_manager.getActiveScript
+19:45:58.149247 - EVENT MANAGER: Change active script: False (The script for this event is already active.)
+19:45:58.149270 - SCRIPT MANAGER: Active script is: default (module=orca.scripts.default) orca.start > event_manager._dequeue_object_event > event_manager._processObjectEvent > script_manager.getActiveScript
+19:45:58.150065 - EVENT MANAGER: Processing object:children-changed:add: script for event is active
+19:45:58.150119 - AXObject: Clearing local cache. Reason: children-changed event.
+19:45:58.150144 - AXObject: Clearing known dead-or-alive state for 5 objects
+19:45:58.150164 - AXObject: Clearing 0 real apps for mutter frames
+19:45:58.150181 - AXObject: Clearing 0 real frames for mutter frames
+19:45:58.150198 - AXObject: Clearing cached object attributes for 2 objects
+TOTAL PROCESSING TIME: 0.0042
+^^^^^ PROCESS OBJECT EVENT object:children-changed:add ^^^^^
+
+
+19:45:58.527978 - EVENT MANAGER: object:state-changed:focused for [panel] in [application: 'aconsole-des4-preview'] (0, 0, 0)
+19:45:58.528038 - FOCUS MANAGER: Locus of focus is None
+19:45:58.528155 - EVENT MANAGER: Queueing object:state-changed:focused for [panel] in [application: 'aconsole-des4-preview'] (0, 0, 0)
+19:45:58.528201 - EVENT MANAGER: App for event source is [application: 'aconsole-des4-preview']
+19:45:58.528244 - SCRIPT MANAGER: Getting script for [application: 'aconsole-des4-preview'] [panel] sanity check: False
+19:45:58.614043 - SCRIPT MANAGER: Mapped [application: 'aconsole-des4-preview'] to aconsole-des4-preview
+19:45:58.627471 - SCRIPT MANAGER: Found orca.scripts.toolkits.gtk
+19:45:58.627553 - STRUCTURAL NAVIGATION: Refreshing handlers.
+19:45:58.627602 - BOOKMARKS: Refreshing handlers.
+19:45:58.627620 - BOOKMARKS: Handlers set up.
+19:45:58.627681 - DEFAULT: Getting braille bindings.
+19:45:58.627697 - DEFAULT: Finished getting braille bindings.
+19:45:58.637142 - SCRIPT: aconsole-des4-preview (module=orca.scripts.toolkits.gtk.script) initialized
+19:45:58.637249 - SCRIPT MANAGER: Script is toolkit script aconsole-des4-preview (module=orca.scripts.toolkits.gtk.script)
+19:45:58.637471 - EVENT MANAGER: Dequeued object:state-changed:focused for [panel] in [application: 'aconsole-des4-preview'] (0, 0, 0)
+
+vvvvv PROCESS OBJECT EVENT object:state-changed:focused (queue size: 0) vvvvv
+19:45:58.637552 - EVENT MANAGER: object:state-changed:focused for [panel] in [application: 'aconsole-des4-preview'] (0, 0, 0) is not obsoleted
+19:45:58.637744 - OBJECT EVENT: object:state-changed:focused for [panel] in [application: 'aconsole-des4-preview'] (0, 0, 0)
+
+19:45:58.638447 - EVENT MANAGER: object:state-changed:focused for [scroll pane] in [application: 'aconsole-des4-preview'] (1, 0, 0)
+19:45:58.638488 - FOCUS MANAGER: Locus of focus is None
+19:45:58.638590 - EVENT MANAGER: Queueing object:state-changed:focused for [scroll pane] in [application: 'aconsole-des4-preview'] (1, 0, 0)
+19:45:58.638634 - EVENT MANAGER: App for event source is [application: 'aconsole-des4-preview']
+19:45:58.638680 - SCRIPT MANAGER: Getting script for [application: 'aconsole-des4-preview'] [scroll pane] sanity check: False
+19:45:58.639108 - SCRIPT MANAGER: Script is toolkit script aconsole-des4-preview (module=orca.scripts.toolkits.gtk.script)
+
+19:45:58.639240 - EVENT MANAGER: object:children-changed:add for [panel] in [application: 'aconsole-des4-preview'] (2, 0, [scroll pane])
+19:45:58.639270 - FOCUS MANAGER: Locus of focus is None
+19:45:58.639356 - SCRIPT MANAGER: Active script is: default (module=orca.scripts.default) ax_object.get_application_toolkit_name > event_manager._enqueue_object_event > event_manager._ignore > script_manager.getActiveScript
+19:45:58.640821 - EVENT MANAGER: Ignoring because event is not from active app
+                                app='aconsole-des4-preview (GTK 4.14.5)' name='' role='panel'
+                                description=''
+                                states='focusable, sensitive, showing, visible'
+                                relations=''
+                                actions=''
+                                interfaces='Action, Component'
+                                attributes='toolkit:GTK'
+                                path=[-1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0]
+
+19:45:58.643651 - EVENT MANAGER: Getting script for event for [application: 'aconsole-des4-preview'] check: True
+19:45:58.643713 - SCRIPT MANAGER: Getting script for [application: 'aconsole-des4-preview'] [panel] sanity check: True
+19:45:58.643771 - SCRIPT MANAGER: Script is toolkit script aconsole-des4-preview (module=orca.scripts.toolkits.gtk.script)
+19:45:58.643791 - EVENT MANAGER: Script for event is aconsole-des4-preview (module=orca.scripts.toolkits.gtk.script)
+19:45:58.643815 - SCRIPT MANAGER: Active script is: default (module=orca.scripts.default) event_manager._dequeue_object_event > event_manager._processObjectEvent > event_manager._isActivatableEvent > script_manager.getActiveScript
+19:45:58.644737 - EVENT MANAGER: Change active script: False (The script says not to activate for this event.)
+19:45:58.644772 - SCRIPT MANAGER: Active script is: default (module=orca.scripts.default) orca.start > event_manager._dequeue_object_event > event_manager._processObjectEvent > script_manager.getActiveScript
+19:45:58.645569 - EVENT MANAGER: Processing object:state-changed:focused: script handles events when inactive
+19:45:58.645665 - GTK: Event source believed to be useless panel
+TOTAL PROCESSING TIME: 0.0082
+^^^^^ PROCESS OBJECT EVENT object:state-changed:focused ^^^^^
+
+19:45:58.645836 - EVENT MANAGER: Dequeued object:state-changed:focused for [scroll pane] in [application: 'aconsole-des4-preview'] (1, 0, 0)
+
+vvvvv PROCESS OBJECT EVENT object:state-changed:focused (queue size: 0) vvvvv
+19:45:58.645914 - EVENT MANAGER: object:state-changed:focused for [scroll pane] in [application: 'aconsole-des4-preview'] (1, 0, 0) is not obsoleted
+19:45:58.646004 - OBJECT EVENT: object:state-changed:focused for [scroll pane] in [application: 'aconsole-des4-preview'] (1, 0, 0)
+                                app='aconsole-des4-preview (GTK 4.14.5)' name='' role='scroll pane'
+                                description=''
+                                states='focusable, focused, sensitive, showing, visible'
+                                relations=''
+                                actions=''
+                                interfaces='Action, Component'
+                                attributes='toolkit:GTK'
+                                path=[-1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 2]
+
+19:45:58.647551 - EVENT MANAGER: Getting script for event for [application: 'aconsole-des4-preview'] check: True
+19:45:58.647595 - SCRIPT MANAGER: Getting script for [application: 'aconsole-des4-preview'] [scroll pane] sanity check: True
+19:45:58.647633 - SCRIPT MANAGER: Script is toolkit script aconsole-des4-preview (module=orca.scripts.toolkits.gtk.script)
+19:45:58.647651 - EVENT MANAGER: Script for event is aconsole-des4-preview (module=orca.scripts.toolkits.gtk.script)
+19:45:58.647672 - SCRIPT MANAGER: Active script is: default (module=orca.scripts.default) event_manager._dequeue_object_event > event_manager._processObjectEvent > event_manager._isActivatableEvent > script_manager.getActiveScript
+19:45:58.648545 - EVENT MANAGER: Change active script: True (Event source claimed focus.)
+19:45:58.648566 - KEYBINDINGS: Removing key grabs: script deactivation
+19:45:58.648612 - GRABS REMOVED: ENABLED BINDING for 'Переместить указатель на текущий элемент (enabled: True)': KP_Divide mods=256 clicks=1 grab ids=[]
+19:45:58.648638 - GRABS REMOVED: ENABLED BINDING for 'Щёлкнуть левой кнопкой мыши по текущему элементу в режиме общего осмотра (enabled: True)': KP_Divide mods=0 clicks=1 grab ids=[]
+19:45:58.648655 - GRABS REMOVED: ENABLED BINDING for 'Щёлкнуть правой кнопкой мыши по текущему элементу в режиме общего осмотра (enabled: True)': KP_Multiply mods=0 clicks=1 grab ids=[]
+19:45:58.648671 - GRABS REMOVED: ENABLED BINDING for 'Прочитать весь документ (enabled: True)': KP_Add mods=0 clicks=1 grab ids=[]
+19:45:58.648685 - GRABS REMOVED: ENABLED BINDING for 'Открыть диалоговое окно поиска (enabled: True)': KP_Delete mods=0 clicks=1 grab ids=[]
+19:45:58.648700 - GRABS REMOVED: ENABLED BINDING for 'Найти следующее вхождение строки (enabled: True)': KP_Delete mods=256 clicks=1 grab ids=[]
+19:45:58.648715 - GRABS REMOVED: ENABLED BINDING for 'Найти предыдущее вхождение строки (enabled: True)': KP_Delete mods=257 clicks=1 grab ids=[]
+19:45:58.648730 - GRABS REMOVED: ENABLED BINDING for 'Показать диалог настройки параметров (enabled: True)': space mods=256 clicks=1 grab ids=[]
+19:45:58.648744 - GRABS REMOVED: ENABLED BINDING for 'Показать диалог настройки параметров приложения (enabled: True)': space mods=260 clicks=1 grab ids=[]
+19:45:58.648766 - GRABS REMOVED: ENABLED BINDING for 'Передавать следующие команды непосредственно в приложение (enabled: True)': BackSpace mods=256 clicks=1 grab ids=[]
+19:45:58.648782 - GRABS REMOVED: ENABLED BINDING for 'Переключить режим сна для текущего приложения (enabled: True)': q mods=13 clicks=1 grab ids=[]
+19:45:58.648796 - GRABS REMOVED: ENABLED BINDING for 'Войти или выйти из режима общего осмотра (enabled: True)': KP_Subtract mods=0 clicks=1 grab ids=[]
+19:45:58.648808 - GRABS REMOVED: ENABLED BINDING for 'Произнести всё окно в режиме общего осмотра (enabled: True)': KP_Add mods=0 clicks=2 grab ids=[]
+19:45:58.648822 - GRABS REMOVED: ENABLED BINDING for 'Переместить общий осмотр в начало (enabled: True)': KP_Home mods=256 clicks=1 grab ids=[]
+19:45:58.648836 - GRABS REMOVED: ENABLED BINDING for 'Переместить общий осмотр к началу предыдущей строки (enabled: True)': KP_Home mods=0 clicks=1 grab ids=[]
+19:45:58.648848 - GRABS REMOVED: ENABLED BINDING for 'Произнести текущую строку в режиме общего осмотра (enabled: True)': KP_Up mods=0 clicks=1 grab ids=[]
+19:45:58.648861 - GRABS REMOVED: ENABLED BINDING for 'Произнести текущую строку по буквам в режиме общего осмотра (enabled: True)': KP_Up mods=0 clicks=2 grab ids=[]
+19:45:58.648924 - GRABS REMOVED: ENABLED BINDING for 'Произнести фонетически текущую строку в режиме общего осмотра (enabled: True)': KP_Up mods=0 clicks=3 grab ids=[]
+19:45:58.648940 - GRABS REMOVED: ENABLED BINDING for 'Переместить общий осмотр в начало следующей строки (enabled: True)': KP_Page_Up mods=0 clicks=1 grab ids=[]
+19:45:58.648955 - GRABS REMOVED: ENABLED BINDING for 'Переместить общий осмотр в конец (enabled: True)': KP_Page_Up mods=256 clicks=1 grab ids=[]
+19:45:58.648968 - GRABS REMOVED: ENABLED BINDING for 'Переместить общий осмотр к предыдущему элементу или слову (enabled: True)': KP_Left mods=0 clicks=1 grab ids=[]
+19:45:58.648982 - GRABS REMOVED: ENABLED BINDING for 'Переместить общий осмотр к слову над текущим словом (enabled: True)': KP_Left mods=256 clicks=1 grab ids=[]
+19:45:58.648995 - GRABS REMOVED: ENABLED BINDING for 'Произнести текущий элемент или слово в режиме общего осмотра (enabled: True)': KP_Begin mods=0 clicks=1 grab ids=[]
+19:45:58.649007 - GRABS REMOVED: ENABLED BINDING for 'Произнести по буквам текущий элемент или слово в режиме общего осмотра (enabled: True)': KP_Begin mods=0 clicks=2 grab ids=[]
+19:45:58.649020 - GRABS REMOVED: ENABLED BINDING for 'Произнести фонетически текущий элемент или слово в режиме общего осмотра (enabled: True)': KP_Begin mods=0 clicks=3 grab ids=[]
+19:45:58.649035 - GRABS REMOVED: ENABLED BINDING for 'Произнести текущий объект в режиме общего осмотра (enabled: True)': KP_Begin mods=256 clicks=1 grab ids=[]
+19:45:58.649047 - GRABS REMOVED: ENABLED BINDING for 'Переместить общий осмотр к следующему элементу или слову (enabled: True)': KP_Right mods=0 clicks=1 grab ids=[]
+19:45:58.649061 - GRABS REMOVED: ENABLED BINDING for 'Переместить общий осмотр к слову под текущим словом (enabled: True)': KP_Right mods=256 clicks=1 grab ids=[]
+19:45:58.649073 - GRABS REMOVED: ENABLED BINDING for 'Переместить общий осмотр к предыдущему символу (enabled: True)': KP_End mods=0 clicks=1 grab ids=[]
+19:45:58.649087 - GRABS REMOVED: ENABLED BINDING for 'Переместить общий осмотр в конец строки (enabled: True)': KP_End mods=256 clicks=1 grab ids=[]
+19:45:58.649100 - GRABS REMOVED: ENABLED BINDING for 'Произнести текущий символ в режиме общего осмотра (enabled: True)': KP_Down mods=0 clicks=1 grab ids=[]
+19:45:58.649112 - GRABS REMOVED: ENABLED BINDING for 'Произнести фонетически текущий символ в режиме общего осмотра (enabled: True)': KP_Down mods=0 clicks=2 grab ids=[]
+19:45:58.649124 - GRABS REMOVED: ENABLED BINDING for 'Произнести значение символа в кодировке Unicode в режиме общего осмотра (enabled: True)': KP_Down mods=0 clicks=3 grab ids=[]
+19:45:58.649137 - GRABS REMOVED: ENABLED BINDING for 'Переместить общий осмотр к следующему символу (enabled: True)': KP_Page_Down mods=0 clicks=1 grab ids=[]
+19:45:58.649152 - GRABS REMOVED: ENABLED BINDING for 'Произносить атрибуты текущего символа (enabled: True)': f mods=256 clicks=1 grab ids=[]
+19:45:58.649166 - GRABS REMOVED: ENABLED BINDING for 'Отобразить кнопку по умолчанию (enabled: True)': e mods=256 clicks=1 grab ids=[]
+19:45:58.649180 - GRABS REMOVED: ENABLED BINDING for 'Отобразить заголовок окна (enabled: True)': KP_Enter mods=256 clicks=1 grab ids=[]
+19:45:58.649193 - GRABS REMOVED: ENABLED BINDING for 'Отобразить содержимое строки состояния (enabled: True)': KP_Enter mods=256 clicks=2 grab ids=[]
+19:45:58.649205 - GRABS REMOVED: ENABLED BINDING for 'Сообщить о текущем положении (enabled: True)': KP_Enter mods=0 clicks=1 grab ids=[]
+19:45:58.649217 - GRABS REMOVED: ENABLED BINDING for 'Сообщить о текущем положении подробно (enabled: True)': KP_Enter mods=0 clicks=2 grab ids=[]
+19:45:58.649231 - GRABS REMOVED: ENABLED BINDING for 'Произнести текущее выделение (enabled: True)': Up mods=257 clicks=1 grab ids=[]
+19:45:58.649245 - GRABS REMOVED: ENABLED BINDING for 'Войти в режим изучения клавиатуры. Нажмите escape для выхода из этого режима (enabled: True)': h mods=256 clicks=1 grab ids=[]
+19:45:58.649260 - GRABS REMOVED: ENABLED BINDING for 'Временно включить или отключить речь (enabled: True)': s mods=256 clicks=1 grab ids=[]
+19:45:58.649274 - GRABS REMOVED: ENABLED BINDING for 'Переключить уровень информативности речи (enabled: True)': v mods=256 clicks=1 grab ids=[]
+19:45:58.649287 - GRABS REMOVED: ENABLED BINDING for 'Произносить только текущую ячейку таблицы или всю строку (enabled: True)': F11 mods=256 clicks=1 grab ids=[]
+19:45:58.649301 - GRABS REMOVED: ENABLED BINDING for 'Сообщить текущее время (enabled: True)': t mods=256 clicks=1 grab ids=[]
+19:45:58.649314 - GRABS REMOVED: ENABLED BINDING for 'Сообщить текущую дату (enabled: True)': t mods=256 clicks=2 grab ids=[]
+19:45:58.649328 - GRABS REMOVED: ENABLED BINDING for 'Перейти к родительскому объекту с фокусом навигатора. (enabled: True)': Up mods=260 clicks=1 grab ids=[]
+19:45:58.649341 - GRABS REMOVED: ENABLED BINDING for 'Перейти к первому дочернему объекту с фокусом навигатора. (enabled: True)': Down mods=260 clicks=1 grab ids=[]
+19:45:58.649355 - GRABS REMOVED: ENABLED BINDING for 'Перейти к следующему родственному объекту с фокусом навигатора. (enabled: True)': Right mods=260 clicks=1 grab ids=[]
+19:45:58.649369 - GRABS REMOVED: ENABLED BINDING for 'Перейти к предыдующему родственному объекту с фокусом навигатора. (enabled: True)': Left mods=260 clicks=1 grab ids=[]
+19:45:58.649383 - GRABS REMOVED: ENABLED BINDING for 'Щелкните на объекте с фокусом навигатора. (enabled: True)': Return mods=260 clicks=1 grab ids=[]
+19:45:58.649397 - GRABS REMOVED: ENABLED BINDING for 'Переключить упрощенную навигацию по объектам. (enabled: True)': s mods=260 clicks=1 grab ids=[]
+19:45:58.649411 - GRABS REMOVED: ENABLED BINDING for 'Включить или выключить клавиши табличной навигации (enabled: True)': t mods=257 clicks=1 grab ids=[]
+19:45:58.649423 - GRABS REMOVED: ENABLED BINDING for 'Перейти к ячейке слева (enabled: True)': Left mods=9 clicks=1 grab ids=[]
+19:45:58.649435 - GRABS REMOVED: ENABLED BINDING for 'Перейти к ячейке справа (enabled: True)': Right mods=9 clicks=1 grab ids=[]
+19:45:58.649447 - GRABS REMOVED: ENABLED BINDING for 'Перейти к ячейке сверху (enabled: True)': Up mods=9 clicks=1 grab ids=[]
+19:45:58.649458 - GRABS REMOVED: ENABLED BINDING for 'Перейти к ячейке снизу (enabled: True)': Down mods=9 clicks=1 grab ids=[]
+19:45:58.649470 - GRABS REMOVED: ENABLED BINDING for 'Перейти к первой ячейке в таблице (enabled: True)': Home mods=9 clicks=1 grab ids=[]
+19:45:58.649482 - GRABS REMOVED: ENABLED BINDING for 'Перейти к последней ячейке в таблице (enabled: True)': End mods=9 clicks=1 grab ids=[]
+19:45:58.649529 - GRABS REMOVED: ENABLED BINDING for 'Перейти к началу ряда (enabled: True)': Left mods=265 clicks=1 grab ids=[]
+19:45:58.649545 - GRABS REMOVED: ENABLED BINDING for 'Перейти к концу ряда (enabled: True)': Right mods=265 clicks=1 grab ids=[]
+19:45:58.649559 - GRABS REMOVED: ENABLED BINDING for 'Перейти в верхнюю часть столбца (enabled: True)': Up mods=265 clicks=1 grab ids=[]
+19:45:58.649572 - GRABS REMOVED: ENABLED BINDING for 'Перейти в нижнюю часть столбца (enabled: True)': Down mods=265 clicks=1 grab ids=[]
+19:45:58.649586 - GRABS REMOVED: ENABLED BINDING for 'Задать строку для использования в качестве динамических заголовков столбцов (enabled: True)': r mods=257 clicks=1 grab ids=[]
+19:45:58.649600 - GRABS REMOVED: ENABLED BINDING for 'Очистить временные заголовки столбцов (enabled: True)': r mods=257 clicks=2 grab ids=[]
+19:45:58.649614 - GRABS REMOVED: ENABLED BINDING for 'Задать столбец для использования в качестве динамических заголовков строк (enabled: True)': c mods=257 clicks=1 grab ids=[]
+19:45:58.649628 - GRABS REMOVED: ENABLED BINDING for 'Очистить временные заголовки строк (enabled: True)': c mods=257 clicks=2 grab ids=[]
+19:45:58.649642 - GRABS REMOVED: ENABLED BINDING for 'Перейти к следующей закладке (enabled: True)': b mods=256 clicks=1 grab ids=[]
+19:45:58.649656 - GRABS REMOVED: ENABLED BINDING for 'Перейти к предыдущей закладке (enabled: True)': b mods=257 clicks=1 grab ids=[]
+19:45:58.649669 - GRABS REMOVED: ENABLED BINDING for 'Сохранить закладки (enabled: True)': b mods=264 clicks=1 grab ids=[]
+19:45:58.649683 - GRABS REMOVED: ENABLED BINDING for 'Перейти к закладке (enabled: True)': 1 mods=256 clicks=1 grab ids=[]
+19:45:58.649697 - GRABS REMOVED: ENABLED BINDING for 'Добавить закладку (enabled: True)': 1 mods=264 clicks=1 grab ids=[]
+19:45:58.649710 - GRABS REMOVED: ENABLED BINDING for 'Перейти к закладке (enabled: True)': 2 mods=256 clicks=1 grab ids=[]
+19:45:58.649724 - GRABS REMOVED: ENABLED BINDING for 'Добавить закладку (enabled: True)': 2 mods=264 clicks=1 grab ids=[]
+19:45:58.649737 - GRABS REMOVED: ENABLED BINDING for 'Перейти к закладке (enabled: True)': 3 mods=256 clicks=1 grab ids=[]
+19:45:58.649756 - GRABS REMOVED: ENABLED BINDING for 'Добавить закладку (enabled: True)': 3 mods=264 clicks=1 grab ids=[]
+19:45:58.649770 - GRABS REMOVED: ENABLED BINDING for 'Перейти к закладке (enabled: True)': 4 mods=256 clicks=1 grab ids=[]
+19:45:58.649783 - GRABS REMOVED: ENABLED BINDING for 'Добавить закладку (enabled: True)': 4 mods=264 clicks=1 grab ids=[]
+19:45:58.649796 - GRABS REMOVED: ENABLED BINDING for 'Перейти к закладке (enabled: True)': 5 mods=256 clicks=1 grab ids=[]
+19:45:58.649810 - GRABS REMOVED: ENABLED BINDING for 'Добавить закладку (enabled: True)': 5 mods=264 clicks=1 grab ids=[]
+19:45:58.649823 - GRABS REMOVED: ENABLED BINDING for 'Перейти к закладке (enabled: True)': 6 mods=256 clicks=1 grab ids=[]
+19:45:58.649836 - GRABS REMOVED: ENABLED BINDING for 'Добавить закладку (enabled: True)': 6 mods=264 clicks=1 grab ids=[]
+19:45:58.649850 - GRABS REMOVED: ENABLED BINDING for 'Показывать меню действий (enabled: True)': a mods=257 clicks=1 grab ids=[]
+19:45:58.649858 - DEFAULT: Clearing key bindings
+19:45:58.649896 - SCRIPT MANAGER: Setting active script to aconsole-des4-preview (module=orca.scripts.toolkits.gtk.script) reason: Event source claimed focus.
+19:45:58.649924 - DEFAULT: Activating script for [application: 'aconsole-des4-preview']
+19:45:58.649992 - SETTINGS MANAGER: Loading settings for None profile
+19:45:58.650429 - SETTINGS MANAGER: Settings for default profile loaded
+19:45:58.650447 - SETTINGS MANAGER: Merging settings.
+19:45:58.650466 - SETTINGS MANAGER: Settings merged.
+19:45:58.650474 - SETTINGS MANAGER: Setting runtime settings.
+19:45:58.650518 - SETTINGS MANAGER: Runtime settings set.
+19:45:58.650530 - BRAILLE: Checking braille setting.
+19:45:58.650539 - BRAILLE: Setting up key ranges.
+19:45:58.650559 - BRAILLE: Initializing. Callback: EventManager.process_braille_event
+19:45:58.650583 - BRAILLE: WINDOWPATH= None
+19:45:58.650602 - BRAILLE: XDG_VTNR= None
+19:45:58.650610 - BRAILLE: Attempting connection with BrlAPI.
+19:45:58.650816 - WARNING: Braille initialization failed: couldn't connect to b':0' with key b'keyfile:/etc/brlapi.key+polkit': connect: ������ ������������ ���������� ������ ����������������
+                  (brlerrno 11, libcerrno 2, gaierrno 0)
+                  Is BRLTTY really running?
+19:45:58.650835 - BRAILLE: Not setting up key ranges: BrlAPI not running.
+19:45:58.650845 - SPEECH: Checking speech setting.
+19:45:58.650852 - SPEECH: Initializing
+19:45:58.650859 - SPEECH: Already initialized
+19:45:58.651213 - DEFAULT: Setting up key bindings
+19:45:58.651242 - DEFAULT: Getting keybindings for aconsole-des4-preview (module=orca.scripts.toolkits.gtk.script) script_manager.setActiveScript > default.activate > default.addKeyGrabs > default.getKeyBindings
+19:45:58.652257 - SLEEP MODE MANAGER: Refreshing bindings.
+19:45:58.652274 - SLEEP MODE MANAGER: Bindings set up.
+19:45:58.652284 - NOTIFICATION PRESENTER: Refreshing bindings.
+19:45:58.652299 - NOTIFICATION PRESENTER: Bindings set up.
+19:45:58.652309 - FLAT REVIEW PRESENTER: Refreshing bindings.
+19:45:58.652357 - FLAT REVIEW PRESENTER: Desktop bindings set up.
+19:45:58.652404 - FLAT REVIEW PRESENTER: Laptop bindings set up.
+19:45:58.652438 - WHERE AM I PRESENTER: Refreshing bindings.
+19:45:58.652457 - WHERE AM I PRESENTER: Desktop bindings set up.
+19:45:58.652474 - WHERE AM I PRESENTER: Laptop bindings set up.
+19:45:58.652498 - LEARN MODE PRESENTER: Refreshing bindings.
+19:45:58.652508 - LEARN MODE PRESENTER: Bindings set up.
+19:45:58.652518 - SPEECH AND VERBOSITY MANAGER: Refreshing bindings.
+19:45:58.652541 - SPEECH AND VERBOSITY MANAGER: Bindings set up.
+19:45:58.652561 - SYSTEM INFORMATION PRESENTER: Refreshing bindings.
+19:45:58.652574 - SYSTEM INFORMATION PRESENTER: Bindings set up.
+19:45:58.652589 - OBJECT NAVIGATOR: Refreshing bindings.
+19:45:58.652604 - OBJECT NAVIGATOR: Bindings set up.
+19:45:58.652635 - TABLE NAVIGATOR: Refreshing bindings.
+19:45:58.652671 - TABLE NAVIGATOR: Bindings set up. Suspended: False
+19:45:58.652814 - ENABLED BINDING for 'Включить или выключить клавиши табличной навигации (enabled: True)': t mods=257 clicks=1 grab ids=[]
+                  ENABLED BINDING for 'Перейти к ячейке слева (enabled: True)': Left mods=9 clicks=1 grab ids=[]
+                  ENABLED BINDING for 'Перейти к ячейке справа (enabled: True)': Right mods=9 clicks=1 grab ids=[]
+                  ENABLED BINDING for 'Перейти к ячейке сверху (enabled: True)': Up mods=9 clicks=1 grab ids=[]
+                  ENABLED BINDING for 'Перейти к ячейке снизу (enabled: True)': Down mods=9 clicks=1 grab ids=[]
+                  ENABLED BINDING for 'Перейти к первой ячейке в таблице (enabled: True)': Home mods=9 clicks=1 grab ids=[]
+                  ENABLED BINDING for 'Перейти к последней ячейке в таблице (enabled: True)': End mods=9 clicks=1 grab ids=[]
+                  ENABLED BINDING for 'Перейти к началу ряда (enabled: True)': Left mods=265 clicks=1 grab ids=[]
+                  ENABLED BINDING for 'Перейти к концу ряда (enabled: True)': Right mods=265 clicks=1 grab ids=[]
+                  ENABLED BINDING for 'Перейти в верхнюю часть столбца (enabled: True)': Up mods=265 clicks=1 grab ids=[]
+                  ENABLED BINDING for 'Перейти в нижнюю часть столбца (enabled: True)': Down mods=265 clicks=1 grab ids=[]
+                  ENABLED BINDING for 'Задать строку для использования в качестве динамических заголовков столбцов (enabled: True)': r mods=257 clicks=1 grab ids=[]
+                  ENABLED BINDING for 'Очистить временные заголовки столбцов (enabled: True)': r mods=257 clicks=2 grab ids=[]
+                  ENABLED BINDING for 'Задать столбец для использования в качестве динамических заголовков строк (enabled: True)': c mods=257 clicks=1 grab ids=[]
+                  ENABLED BINDING for 'Очистить временные заголовки строк (enabled: True)': c mods=257 clicks=2 grab ids=[]
+
+19:45:58.652935 - BOOKMARKS: Refreshing bindings.
+19:45:58.652969 - BOOKMARKS: Bindings set up.
+19:45:58.653058 - MOUSE REVIEW: Refreshing bindings.
+19:45:58.653068 - MOUSE REVIEW: Bindings set up.
+19:45:58.653076 - ACTION PRESENTER: Refreshing bindings.
+19:45:58.653086 - ACTION PRESENTER: Bindings set up.
+19:45:58.653384 - KEYBINDINGS: Adding key grabs
+19:45:58.653542 - GRABS ADDED: ENABLED BINDING for 'Переместить указатель на текущий элемент (enabled: True)': KP_Divide mods=256 clicks=1 grab ids=[111, 112]
+19:45:58.653691 - GRABS ADDED: ENABLED BINDING for 'Щёлкнуть левой кнопкой мыши по текущему элементу в режиме общего осмотра (enabled: True)': KP_Divide mods=0 clicks=1 grab ids=[113]
+19:45:58.653841 - GRABS ADDED: ENABLED BINDING for 'Щёлкнуть правой кнопкой мыши по текущему элементу в режиме общего осмотра (enabled: True)': KP_Multiply mods=0 clicks=1 grab ids=[114]
+19:45:58.653932 - GRABS ADDED: ENABLED BINDING for 'Прочитать весь документ (enabled: True)': KP_Add mods=0 clicks=1 grab ids=[115]
+19:45:58.654007 - GRABS ADDED: ENABLED BINDING for 'Открыть диалоговое окно поиска (enabled: True)': KP_Delete mods=0 clicks=1 grab ids=[116]
+19:45:58.654090 - GRABS ADDED: ENABLED BINDING for 'Найти следующее вхождение строки (enabled: True)': KP_Delete mods=256 clicks=1 grab ids=[117, 118]
+19:45:58.654171 - GRABS ADDED: ENABLED BINDING for 'Найти предыдущее вхождение строки (enabled: True)': KP_Delete mods=257 clicks=1 grab ids=[119, 120]
+19:45:58.654252 - GRABS ADDED: ENABLED BINDING for 'Показать диалог настройки параметров (enabled: True)': space mods=256 clicks=1 grab ids=[121, 122]
+19:45:58.654533 - GRABS ADDED: ENABLED BINDING for 'Показать диалог настройки параметров приложения (enabled: True)': space mods=260 clicks=1 grab ids=[123, 124]
+19:45:58.654991 - GRABS ADDED: ENABLED BINDING for 'Передавать следующие команды непосредственно в приложение (enabled: True)': BackSpace mods=256 clicks=1 grab ids=[125, 126]
+19:45:58.655191 - GRABS ADDED: ENABLED BINDING for 'Переключить режим сна для текущего приложения (enabled: True)': q mods=13 clicks=1 grab ids=[127]
+19:45:58.655301 - GRABS ADDED: ENABLED BINDING for 'Войти или выйти из режима общего осмотра (enabled: True)': KP_Subtract mods=0 clicks=1 grab ids=[128]
+19:45:58.655339 - GRABS ADDED: ENABLED BINDING for 'Произнести всё окно в режиме общего осмотра (enabled: True)': KP_Add mods=0 clicks=2 grab ids=[129]
+19:45:58.655443 - GRABS ADDED: ENABLED BINDING for 'Переместить общий осмотр в начало (enabled: True)': KP_Home mods=256 clicks=1 grab ids=[130, 131]
+19:45:58.655523 - GRABS ADDED: ENABLED BINDING for 'Переместить общий осмотр к началу предыдущей строки (enabled: True)': KP_Home mods=0 clicks=1 grab ids=[132]
+19:45:58.655595 - GRABS ADDED: ENABLED BINDING for 'Произнести текущую строку в режиме общего осмотра (enabled: True)': KP_Up mods=0 clicks=1 grab ids=[133]
+19:45:58.655620 - GRABS ADDED: ENABLED BINDING for 'Произнести текущую строку по буквам в режиме общего осмотра (enabled: True)': KP_Up mods=0 clicks=2 grab ids=[134]
+19:45:58.655643 - GRABS ADDED: ENABLED BINDING for 'Произнести фонетически текущую строку в режиме общего осмотра (enabled: True)': KP_Up mods=0 clicks=3 grab ids=[135]
+19:45:58.655708 - GRABS ADDED: ENABLED BINDING for 'Переместить общий осмотр в начало следующей строки (enabled: True)': KP_Page_Up mods=0 clicks=1 grab ids=[136]
+19:45:58.655802 - GRABS ADDED: ENABLED BINDING for 'Переместить общий осмотр в конец (enabled: True)': KP_Page_Up mods=256 clicks=1 grab ids=[137, 138]
+19:45:58.655874 - GRABS ADDED: ENABLED BINDING for 'Переместить общий осмотр к предыдущему элементу или слову (enabled: True)': KP_Left mods=0 clicks=1 grab ids=[139]
+19:45:58.655960 - GRABS ADDED: ENABLED BINDING for 'Переместить общий осмотр к слову над текущим словом (enabled: True)': KP_Left mods=256 clicks=1 grab ids=[140, 141]
+19:45:58.656055 - GRABS ADDED: ENABLED BINDING for 'Произнести текущий элемент или слово в режиме общего осмотра (enabled: True)': KP_Begin mods=0 clicks=1 grab ids=[142]
+19:45:58.656084 - GRABS ADDED: ENABLED BINDING for 'Произнести по буквам текущий элемент или слово в режиме общего осмотра (enabled: True)': KP_Begin mods=0 clicks=2 grab ids=[143]
+19:45:58.656110 - GRABS ADDED: ENABLED BINDING for 'Произнести фонетически текущий элемент или слово в режиме общего осмотра (enabled: True)': KP_Begin mods=0 clicks=3 grab ids=[144]
+19:45:58.656232 - GRABS ADDED: ENABLED BINDING for 'Произнести текущий объект в режиме общего осмотра (enabled: True)': KP_Begin mods=256 clicks=1 grab ids=[145, 146]
+19:45:58.656382 - GRABS ADDED: ENABLED BINDING for 'Переместить общий осмотр к следующему элементу или слову (enabled: True)': KP_Right mods=0 clicks=1 grab ids=[147]
+19:45:58.656572 - GRABS ADDED: ENABLED BINDING for 'Переместить общий осмотр к слову под текущим словом (enabled: True)': KP_Right mods=256 clicks=1 grab ids=[148, 149]
+19:45:58.656813 - GRABS ADDED: ENABLED BINDING for 'Переместить общий осмотр к предыдущему символу (enabled: True)': KP_End mods=0 clicks=1 grab ids=[150]
+19:45:58.656994 - GRABS ADDED: ENABLED BINDING for 'Переместить общий осмотр в конец строки (enabled: True)': KP_End mods=256 clicks=1 grab ids=[151, 152]
+19:45:58.657217 - GRABS ADDED: ENABLED BINDING for 'Произнести текущий символ в режиме общего осмотра (enabled: True)': KP_Down mods=0 clicks=1 grab ids=[153]
+19:45:58.657267 - GRABS ADDED: ENABLED BINDING for 'Произнести фонетически текущий символ в режиме общего осмотра (enabled: True)': KP_Down mods=0 clicks=2 grab ids=[154]
+19:45:58.657309 - GRABS ADDED: ENABLED BINDING for 'Произнести значение символа в кодировке Unicode в режиме общего осмотра (enabled: True)': KP_Down mods=0 clicks=3 grab ids=[155]
+19:45:58.657447 - GRABS ADDED: ENABLED BINDING for 'Переместить общий осмотр к следующему символу (enabled: True)': KP_Page_Down mods=0 clicks=1 grab ids=[156]
+19:45:58.657593 - GRABS ADDED: ENABLED BINDING for 'Произносить атрибуты текущего символа (enabled: True)': f mods=256 clicks=1 grab ids=[157, 158]
+19:45:58.657719 - GRABS ADDED: ENABLED BINDING for 'Отобразить кнопку по умолчанию (enabled: True)': e mods=256 clicks=1 grab ids=[159, 160]
+19:45:58.657848 - GRABS ADDED: ENABLED BINDING for 'Отобразить заголовок окна (enabled: True)': KP_Enter mods=256 clicks=1 grab ids=[161, 162]
+19:45:58.658051 - GRABS ADDED: ENABLED BINDING for 'Отобразить содержимое строки состояния (enabled: True)': KP_Enter mods=256 clicks=2 grab ids=[163, 164]
+19:45:58.658235 - GRABS ADDED: ENABLED BINDING for 'Сообщить о текущем положении (enabled: True)': KP_Enter mods=0 clicks=1 grab ids=[165]
+19:45:58.658394 - GRABS ADDED: ENABLED BINDING for 'Сообщить о текущем положении подробно (enabled: True)': KP_Enter mods=0 clicks=2 grab ids=[166]
+19:45:58.658607 - GRABS ADDED: ENABLED BINDING for 'Произнести текущее выделение (enabled: True)': Up mods=257 clicks=1 grab ids=[167, 168]
+19:45:58.658817 - GRABS ADDED: ENABLED BINDING for 'Войти в режим изучения клавиатуры. Нажмите escape для выхода из этого режима (enabled: True)': h mods=256 clicks=1 grab ids=[169, 170]
+19:45:58.658969 - GRABS ADDED: ENABLED BINDING for 'Временно включить или отключить речь (enabled: True)': s mods=256 clicks=1 grab ids=[171, 172]
+19:45:58.659054 - GRABS ADDED: ENABLED BINDING for 'Переключить уровень информативности речи (enabled: True)': v mods=256 clicks=1 grab ids=[173, 174]
+19:45:58.659137 - GRABS ADDED: ENABLED BINDING for 'Произносить только текущую ячейку таблицы или всю строку (enabled: True)': F11 mods=256 clicks=1 grab ids=[175, 176]
+19:45:58.659218 - GRABS ADDED: ENABLED BINDING for 'Сообщить текущее время (enabled: True)': t mods=256 clicks=1 grab ids=[177, 178]
+19:45:58.659298 - GRABS ADDED: ENABLED BINDING for 'Сообщить текущую дату (enabled: True)': t mods=256 clicks=2 grab ids=[179, 180]
+19:45:58.659379 - GRABS ADDED: ENABLED BINDING for 'Перейти к родительскому объекту с фокусом навигатора. (enabled: True)': Up mods=260 clicks=1 grab ids=[181, 182]
+19:45:58.659459 - GRABS ADDED: ENABLED BINDING for 'Перейти к первому дочернему объекту с фокусом навигатора. (enabled: True)': Down mods=260 clicks=1 grab ids=[183, 184]
+19:45:58.659538 - GRABS ADDED: ENABLED BINDING for 'Перейти к следующему родственному объекту с фокусом навигатора. (enabled: True)': Right mods=260 clicks=1 grab ids=[185, 186]
+19:45:58.659618 - GRABS ADDED: ENABLED BINDING for 'Перейти к предыдующему родственному объекту с фокусом навигатора. (enabled: True)': Left mods=260 clicks=1 grab ids=[187, 188]
+19:45:58.659699 - GRABS ADDED: ENABLED BINDING for 'Щелкните на объекте с фокусом навигатора. (enabled: True)': Return mods=260 clicks=1 grab ids=[189, 190]
+19:45:58.659782 - GRABS ADDED: ENABLED BINDING for 'Переключить упрощенную навигацию по объектам. (enabled: True)': s mods=260 clicks=1 grab ids=[191, 192]
+19:45:58.659862 - GRABS ADDED: ENABLED BINDING for 'Включить или выключить клавиши табличной навигации (enabled: True)': t mods=257 clicks=1 grab ids=[193, 194]
+19:45:58.659977 - GRABS ADDED: ENABLED BINDING for 'Перейти к ячейке слева (enabled: True)': Left mods=9 clicks=1 grab ids=[195]
+19:45:58.660086 - GRABS ADDED: ENABLED BINDING for 'Перейти к ячейке справа (enabled: True)': Right mods=9 clicks=1 grab ids=[196]
+19:45:58.660196 - GRABS ADDED: ENABLED BINDING for 'Перейти к ячейке сверху (enabled: True)': Up mods=9 clicks=1 grab ids=[197]
+19:45:58.660317 - GRABS ADDED: ENABLED BINDING for 'Перейти к ячейке снизу (enabled: True)': Down mods=9 clicks=1 grab ids=[198]
+19:45:58.660435 - GRABS ADDED: ENABLED BINDING for 'Перейти к первой ячейке в таблице (enabled: True)': Home mods=9 clicks=1 grab ids=[199]
+19:45:58.660553 - GRABS ADDED: ENABLED BINDING for 'Перейти к последней ячейке в таблице (enabled: True)': End mods=9 clicks=1 grab ids=[200]
+19:45:58.660637 - GRABS ADDED: ENABLED BINDING for 'Перейти к началу ряда (enabled: True)': Left mods=265 clicks=1 grab ids=[201, 202]
+19:45:58.660721 - GRABS ADDED: ENABLED BINDING for 'Перейти к концу ряда (enabled: True)': Right mods=265 clicks=1 grab ids=[203, 204]
+19:45:58.660812 - GRABS ADDED: ENABLED BINDING for 'Перейти в верхнюю часть столбца (enabled: True)': Up mods=265 clicks=1 grab ids=[205, 206]
+19:45:58.660902 - GRABS ADDED: ENABLED BINDING for 'Перейти в нижнюю часть столбца (enabled: True)': Down mods=265 clicks=1 grab ids=[207, 208]
+19:45:58.660985 - GRABS ADDED: ENABLED BINDING for 'Задать строку для использования в качестве динамических заголовков столбцов (enabled: True)': r mods=257 clicks=1 grab ids=[209, 210]
+19:45:58.661067 - GRABS ADDED: ENABLED BINDING for 'Очистить временные заголовки столбцов (enabled: True)': r mods=257 clicks=2 grab ids=[211, 212]
+19:45:58.661146 - GRABS ADDED: ENABLED BINDING for 'Задать столбец для использования в качестве динамических заголовков строк (enabled: True)': c mods=257 clicks=1 grab ids=[213, 214]
+19:45:58.661227 - GRABS ADDED: ENABLED BINDING for 'Очистить временные заголовки строк (enabled: True)': c mods=257 clicks=2 grab ids=[215, 216]
+19:45:58.661308 - GRABS ADDED: ENABLED BINDING for 'Перейти к следующей закладке (enabled: True)': b mods=256 clicks=1 grab ids=[217, 218]
+19:45:58.661406 - GRABS ADDED: ENABLED BINDING for 'Перейти к предыдущей закладке (enabled: True)': b mods=257 clicks=1 grab ids=[219, 220]
+19:45:58.661496 - GRABS ADDED: ENABLED BINDING for 'Сохранить закладки (enabled: True)': b mods=264 clicks=1 grab ids=[221, 222]
+19:45:58.661663 - GRABS ADDED: ENABLED BINDING for 'Перейти к закладке (enabled: True)': 1 mods=256 clicks=1 grab ids=[223, 224]
+19:45:58.661782 - GRABS ADDED: ENABLED BINDING for 'Добавить закладку (enabled: True)': 1 mods=264 clicks=1 grab ids=[225, 226]
+19:45:58.661888 - GRABS ADDED: ENABLED BINDING for 'Перейти к закладке (enabled: True)': 2 mods=256 clicks=1 grab ids=[227, 228]
+19:45:58.661995 - GRABS ADDED: ENABLED BINDING for 'Добавить закладку (enabled: True)': 2 mods=264 clicks=1 grab ids=[229, 230]
+19:45:58.662174 - GRABS ADDED: ENABLED BINDING for 'Перейти к закладке (enabled: True)': 3 mods=256 clicks=1 grab ids=[231, 232]
+19:45:58.662424 - GRABS ADDED: ENABLED BINDING for 'Добавить закладку (enabled: True)': 3 mods=264 clicks=1 grab ids=[233, 234]
+19:45:58.662619 - GRABS ADDED: ENABLED BINDING for 'Перейти к закладке (enabled: True)': 4 mods=256 clicks=1 grab ids=[235, 236]
+19:45:58.662720 - GRABS ADDED: ENABLED BINDING for 'Добавить закладку (enabled: True)': 4 mods=264 clicks=1 grab ids=[237, 238]
+19:45:58.662813 - GRABS ADDED: ENABLED BINDING for 'Перейти к закладке (enabled: True)': 5 mods=256 clicks=1 grab ids=[239, 240]
+19:45:58.662899 - GRABS ADDED: ENABLED BINDING for 'Добавить закладку (enabled: True)': 5 mods=264 clicks=1 grab ids=[241, 242]
+19:45:58.662982 - GRABS ADDED: ENABLED BINDING for 'Перейти к закладке (enabled: True)': 6 mods=256 clicks=1 grab ids=[243, 244]
+19:45:58.663063 - GRABS ADDED: ENABLED BINDING for 'Добавить закладку (enabled: True)': 6 mods=264 clicks=1 grab ids=[245, 246]
+19:45:58.663146 - GRABS ADDED: ENABLED BINDING for 'Показывать меню действий (enabled: True)': a mods=257 clicks=1 grab ids=[247, 248]
+19:45:58.663206 - DEFAULT: Script for [application: 'aconsole-des4-preview'] activated
+19:45:58.663232 - SCRIPT MANAGER: Active script is: aconsole-des4-preview (module=orca.scripts.toolkits.gtk.script) orca.start > event_manager._dequeue_object_event > event_manager._processObjectEvent > script_manager.getActiveScript
+19:45:58.664138 - EVENT MANAGER: Processing object:state-changed:focused: script for event is active
+19:45:58.664285 - FOCUS MANAGER: Locus of focus is None
+19:45:58.664722 - SCRIPT UTILITIES: [frame: 'claude 1 — alpha — AConsole'] is top-level object for: [scroll pane]
+19:45:58.665957 - SCRIPT UTILITIES: [scroll pane] is in frame [frame: 'claude 1 — alpha — AConsole'] and dialog None
+19:45:58.666028 - AXObject: Clearing AT-SPI cache on [frame: 'claude 1 — alpha — AConsole'] Recursive: False. Reason: Checking if window can be the active window
+19:45:58.667517 - FOCUS MANAGER: [frame: 'claude 1 — alpha — AConsole'] from [application: 'aconsole-des4-preview'] can be active window
+19:45:58.667575 - SCRIPT UTILITIES: Selected children not retrieved via selection interface.
+19:45:58.667622 - FOCUS MANAGER: Request to set locus of focus to [scroll pane] script.processObjectEvent > script.onFocusedChanged > default.onFocusedChanged > focus_manager.set_locus_of_focus
+19:45:58.670160 - AXObject: Clearing AT-SPI cache on [scroll pane] Recursive: False. Reason: Setting locus of focus.
+19:45:58.670204 - SCRIPT MANAGER: Active script is: aconsole-des4-preview (module=orca.scripts.toolkits.gtk.script) script.onFocusedChanged > default.onFocusedChanged > focus_manager.set_locus_of_focus > script_manager.getActiveScript
+19:45:58.673485 - FOCUS MANAGER: Changing locus of focus from None to [scroll pane]. Notify: True
+19:45:58.673648 - FOCUS MANAGER: Switching mode from None to focus-tracking
+19:45:58.674676 - FOCUS MANAGER: Region of interest: [scroll pane] (0, 0)
+19:45:58.676186 - FOCUS MANAGER: Switching object of interest from None to [scroll pane]
+19:45:58.679984 - FOCUS MANAGER: Locus of focus is [scroll pane]
+19:45:58.681920 - SCRIPT UTILITIES: [frame: 'claude 1 — alpha — AConsole'] is top-level object for: [scroll pane]
+19:45:58.682323 - SCRIPT UTILITIES: [scroll pane] is top-level object: False
+19:45:58.682910 - FOCUS MANAGER: Locus of focus is [scroll pane]
+19:45:58.684771 - SCRIPT UTILITIES: [frame: 'claude 1 — alpha — AConsole'] is top-level object for: [scroll pane]
+19:45:58.685154 - SCRIPT UTILITIES: [scroll pane] is top-level object: False
+19:45:58.686222 - SCRIPT UTILITIES: [frame: 'claude 1 — alpha — AConsole'] is top-level object for: [scroll pane]
+19:45:58.686262 - FOCUS MANAGER: Request to set active window to [frame: 'claude 1 — alpha — AConsole']
+19:45:58.686913 - FOCUS MANAGER: Locus of focus is [scroll pane]
+19:45:58.686992 - BRAILLE GENERATOR: Starting focused generation for [scroll pane] (using role: scroll-pane)
+19:45:58.690303 - SCRIPT UTILITIES: [panel] is deemed to be layout only
+19:45:58.691442 - SCRIPT UTILITIES: [panel] is deemed to be layout only
+19:45:58.691995 - SCRIPT UTILITIES: [panel] is deemed to be layout only
+19:45:58.692700 - SCRIPT UTILITIES: [panel] is deemed to be layout only
+19:45:58.693089 - SCRIPT UTILITIES: [panel] is deemed to be layout only
+19:45:58.693435 - SCRIPT UTILITIES: [panel] is deemed to be layout only
+19:45:58.693781 - SCRIPT UTILITIES: [panel] is deemed to be layout only
+19:45:58.694131 - SCRIPT UTILITIES: [panel] is deemed to be layout only
+19:45:58.694463 - SCRIPT UTILITIES: [panel] is deemed to be layout only
+19:45:58.694945 - SCRIPT UTILITIES: [panel] is deemed to be layout only
+19:45:58.695509 - SCRIPT UTILITIES: [panel] is deemed to be layout only
+19:45:58.696121 - SCRIPT UTILITIES: [panel] is deemed to be layout only
+19:45:58.697618 - BRAILLE GENERATOR: Starting focused generation for [frame: 'claude 1 — alpha — AConsole'] (using role: frame)
+                  GENERATION TIME: 0.0005 ----> labelOrName=[claude 1 — alpha — AConsole]
+                  GENERATION TIME: 0.0010 ----> roleName=[frame]
+19:45:58.700126 - SCRIPT UTILITIES: [frame: 'claude 1 — alpha — AConsole'] is top-level object for: [frame: 'claude 1 — alpha — AConsole']
+                  GENERATION TIME: 0.0015 ----> alertAndDialogCount=[]
+19:45:58.700844 - BRAILLE: Not contracting 'claude 1 — alpha — AConsole frame' because contracted braille is not enabled.
+                  COMPLETION TIME: 0.0033
+                  BRAILLE GENERATOR: Results:
+                  'Component: 'claude 1 — alpha — AConsole frame', 0'
+19:45:58.702409 - BRAILLE GENERATOR: Starting focused generation for [application: 'aconsole-des4-preview'] (using role: application)
+                  GENERATION TIME: 0.0003 ----> name=[aconsole-des4-preview]
+                  GENERATION TIME: 0.0003 ----> roleName=[application]
+19:45:58.703071 - BRAILLE: Not contracting 'aconsole-des4-preview application' because contracted braille is not enabled.
+                  COMPLETION TIME: 0.0007
+                  BRAILLE GENERATOR: Results:
+                  'Component: 'aconsole-des4-preview application', 0'
+                  GENERATION TIME: 0.0154 ----> ancestors=[Component: 'aconsole-des4-preview application', 0 Region: ' ', 0 Component: 'claude 1 — alpha — AConsole frame', 0]
+                  GENERATION TIME: 0.0003 ----> rowHeader=[]
+                  GENERATION TIME: 0.0003 ----> columnHeader=[]
+                  GENERATION TIME: 0.0003 ----> radioButtonGroup=[]
+19:45:58.705024 - BRAILLE GENERATOR: Starting focused generation for [scroll pane] (using role: REAL_ROLE_SCROLL_PANE)
+                  GENERATION TIME: 0.0007 ----> label=[]
+                  GENERATION TIME: 0.0006 ----> displayedText=[]
+                  GENERATION TIME: 0.0009 ----> value=[]
+                  GENERATION TIME: 0.0003 ----> roleName=[]
+                  GENERATION TIME: 0.0002 ----> required=[]
+                  GENERATION TIME: 0.0004 ----> invalid=[]
+                  COMPLETION TIME: 0.0035
+                  BRAILLE GENERATOR: Results:
+                  'Component: '', 0'
+                  GENERATION TIME: 0.0045 ----> asPageTabOrScrollPane=[Component: '', 0]
+                  GENERATION TIME: 0.0025 ----> nodeLevel=[]
+                  COMPLETION TIME: 0.0242
+                  BRAILLE GENERATOR: Results:
+                  'Component: 'aconsole-des4-preview application', 0'
+                  'Region: ' ', 0'
+                  'Component: 'claude 1 — alpha — AConsole frame', 0'
+                  'Region: ' ', 0'
+                  'Component: '', 0'
+19:45:58.711298 - BRAILLE: Refresh. Pan: True target: 0
+19:45:58.711350 - BRAILLE: Last text object: None (Caret: 0, Line: 0, Cell: 0)
+19:45:58.711378 - BRAILLE: Current text object: None (Caret: 0, Line: 0). On same line: False
+19:45:58.711409 - BRAILLE: Line 0: 'aconsole-des4-preview application claude 1 — alpha — AConsole frame ' focusOffset: 68 [[0, 22], [22, 53], [53, 68]]
+19:45:58.711421 - BRAILLE: Cursor offset in line string is: 68
+19:45:58.711454 - BRAILLE: Adjusting offset to 53 (unhandled condition)
+19:45:58.711466 - BRAILLE: Current range: (53, 85). Target cell: 0
+19:45:58.711477 - BRAILLE LINE:  'aconsole-des4-preview application claude 1 — alpha — AConsole frame '
+19:45:58.711548 -      VISIBLE:  'AConsole frame ', cursor=16
+19:45:58.711601 - BRAILLE: Enabling braille. BrlAPI running: False
+19:45:58.711612 - BRAILLE: Need to initialize first.
+19:45:58.711631 - BRAILLE: Initializing. Callback: EventManager.process_braille_event
+19:45:58.711655 - BRAILLE: WINDOWPATH= None
+19:45:58.711674 - BRAILLE: XDG_VTNR= None
+19:45:58.711682 - BRAILLE: Attempting connection with BrlAPI.
+19:45:58.711892 - WARNING: Braille initialization failed: couldn't connect to b':0' with key b'keyfile:/etc/brlapi.key+polkit': connect: ������ ������������ ���������� ������ ����������������
+                  (brlerrno 11, libcerrno 2, gaierrno 0)
+                  Is BRLTTY really running?
+19:45:58.711984 - SPEECH GENERATOR: Starting unfocused generation for [scroll pane] (using role: scroll-pane)
+19:45:58.712260 - FOCUS MANAGER: Locus of focus is [scroll pane]
+                  GENERATION TIME: 0.0003 ----> oldAncestors=[]
+19:45:58.712512 - FOCUS MANAGER: Locus of focus is [scroll pane]
+19:45:58.713315 - SCRIPT UTILITIES: [frame: 'claude 1 — alpha — AConsole'] is top-level object for: [scroll pane]
+19:45:58.714387 - SCRIPT UTILITIES: [scroll pane] is in frame [frame: 'claude 1 — alpha — AConsole'] and dialog None
+                  GENERATION TIME: 0.0022 ----> newAncestors=[]
+                  GENERATION TIME: 0.0003 ----> currentLineText=[]
+                  GENERATION TIME: 0.0002 ----> allTextSelection=[]
+                  GENERATION TIME: 0.0002 ----> labelOrName=[]
+19:45:58.716741 - SPEECH GENERATOR: system voice requested with language='None', dialect=''
+                  GENERATION TIME: 0.0016 ----> roleName=[scroll pane]
+                  GENERATION TIME: 0.0013 ----> newNodeLevel=[]
+                  GENERATION TIME: 0.0002 ----> unselectedCell=[]
+                  GENERATION TIME: 0.0002 ----> clickable=[]
+                  GENERATION TIME: 0.0002 ----> pause=[PAUSE]
+                  GENERATION TIME: 0.0002 ----> hasLongDesc=[]
+                  GENERATION TIME: 0.0002 ----> hasDetails=[]
+                  GENERATION TIME: 0.0002 ----> detailsFor=[]
+                  GENERATION TIME: 0.0002 ----> tutorial=[]
+                  GENERATION TIME: 0.0006 ----> description=[]
+                  GENERATION TIME: 0.0002 ----> hasPopup=[]
+                  COMPLETION TIME: 0.0086
+                  SPEECH GENERATOR: Results:
+                  'scroll pane'
+                  '{'established': False}'
+                  'PAUSE'
+                  'PAUSE'
+19:45:58.720834 - DEFAULT: Interrupting presentation
+19:45:58.720979 - SPEECH: Last spoke 29.8309 seconds ago
+19:45:58.721038 - SPEECH: Speak [scroll pane, {'established': False}, PAUSE, PAUSE], acss: None
+19:45:58.721094 - SPEECH OUTPUT: 'scroll pane.' {'established': False, 'family': {'name': None, 'gender': None, 'lang': None, 'dialect': None, 'variant': None}}
+19:45:58.721114 - SPEECH DISPATCHER: Speaking 'scroll pane.' as string
+19:45:58.721168 - SCRIPT MANAGER: Active script is: aconsole-des4-preview (module=orca.scripts.toolkits.gtk.script) speechdispatcherfactory.speak > speechdispatcherfactory._speak > ssml.markupText > script_manager.getActiveScript
+19:45:58.724019 - SPEECH DISPATCHER: Speaking '<speak><mark name="0:6"/>scroll <mark name="7:12"/>pane.</speak>'
+                  ORCA rate 5.0, pitch 5.0, volume 5.0, language ru, punctuation: MOST
+                  SD rate 2, pitch 10, volume 100, language ru-ru
+19:45:58.724395 - FOCUS MANAGER: Active window is [frame: 'claude 1 — alpha — AConsole'] script.locusOfFocusChanged > default.locusOfFocusChanged > default._saveFocusedObjectInfo > focus_manager.get_active_window
+19:45:58.726240 - SCRIPT UTILITIES: New selection for [scroll pane] is '' (0, 0)
+TOTAL PROCESSING TIME: 0.0854
+^^^^^ PROCESS OBJECT EVENT object:state-changed:focused ^^^^^
+
+19:45:59.884885 - SCRIPT MANAGER: Active script is: aconsole-des4-preview (module=orca.scripts.toolkits.gtk.script) None.<module> > orca.start > event_manager._onNoFocus > script_manager.getActiveScript
+
+19:46:00.535587 - AXObject: Exception in get_role_name: app no longer exists
+19:46:00.535670 - AXObject: Exception in get_name: app no longer exists
+19:46:00.535712 - EVENT MANAGER: object:children-changed:remove for [desktop frame: 'main'] in None (3, 0, [DEAD])
+19:46:00.535784 - AXObject: Exception in get_role_name: app no longer exists
+19:46:00.535798 - AXObject: Adding to known dead objects focus_manager.get_locus_of_focus > ax_object.get_role_name > ax_object.handle_error > ax_object._set_known_dead_status
+19:46:00.536814 - FOCUS MANAGER: Locus of focus is [DEAD]
+19:46:00.536940 - AXObject: Exception in get_role_name: app no longer exists
+19:46:00.536967 - AXObject: Exception in get_name: app no longer exists
+19:46:00.536990 - EVENT MANAGER: Queueing object:children-changed:remove for [desktop frame: 'main'] in None (3, 0, [DEAD])
+19:46:00.537021 - EVENT MANAGER: App for event source is None
+19:46:00.537056 - SCRIPT MANAGER: Getting script for None [desktop frame: 'main'] sanity check: False
+19:46:00.537258 - SCRIPT MANAGER: Script is app script default (module=orca.scripts.default)
+19:46:00.537381 - AXObject: Exception in get_role_name: app no longer exists
+19:46:00.537407 - AXObject: Exception in get_name: app no longer exists
+19:46:00.537426 - EVENT MANAGER: Dequeued object:children-changed:remove for [desktop frame: 'main'] in None (3, 0, [DEAD])
+
+vvvvv PROCESS OBJECT EVENT object:children-changed:remove (queue size: 0) vvvvv
+19:46:00.537502 - AXObject: Exception in get_role_name: app no longer exists
+19:46:00.537524 - AXObject: Exception in get_name: app no longer exists
+19:46:00.537544 - EVENT MANAGER: object:children-changed:remove for [desktop frame: 'main'] in None (3, 0, [DEAD]) is not obsoleted
+19:46:00.537574 - SCRIPT MANAGER: Checking and cleaning up scripts.
+19:46:00.539454 - ORCA: Shutting down and exiting due to signal=15 (Завершено)
+19:46:00.539564 - ORCA: Shutting down
+19:46:00.539657 - SCRIPT MANAGER: Active script is: aconsole-des4-preview (module=orca.scripts.toolkits.gtk.script) ax_object.get_child > orca.shutdownOnSignal > orca.shutdown > script_manager.getActiveScript
+19:46:00.541362 - DEFAULT: Interrupting presentation
+19:46:00.541553 - SPEECH: Last spoke 1.8205 seconds ago
+19:46:00.541601 - SPEECH: Speak 'Чтение с экрана выключено.' acss: {'established': False}
+19:46:00.541656 - SPEECH OUTPUT: 'Чтение с экрана выключено.' {'established': False, 'family': {'name': None, 'gender': None, 'lang': None, 'dialect': None, 'variant': None}}
+19:46:00.541677 - SPEECH DISPATCHER: Speaking 'Чтение с экрана выключено.' as string
+19:46:00.541745 - SCRIPT MANAGER: Active script is: aconsole-des4-preview (module=orca.scripts.toolkits.gtk.script) speechdispatcherfactory.speak > speechdispatcherfactory._speak > ssml.markupText > script_manager.getActiveScript
+19:46:00.544465 - SPEECH DISPATCHER: Speaking '<speak><mark name="0:6"/>Чтение <mark name="7:8"/>с <mark name="9:15"/>экрана <mark name="16:26"/>выключено.</speak>'
+                  ORCA rate 5.0, pitch 5.0, volume 5.0, language ru, punctuation: MOST
+                  SD rate 2, pitch 10, volume 100, language ru-ru
+19:46:00.545089 - BRAILLE: Not contracting 'Чтение с экрана выключено.' because contracted braille is not enabled.
+19:46:00.545207 - BRAILLE: Refresh. Pan: True target: 0
+19:46:00.545282 - BRAILLE: Last text object: None (Caret: 0, Line: 0, Cell: 0)
+19:46:00.545330 - BRAILLE: Current text object: None (Caret: 0, Line: 0). On same line: False
+19:46:00.545373 - BRAILLE: Line 0: 'Чтение с экрана выключено.' focusOffset: 0 [[0, 26]]
+19:46:00.545392 - BRAILLE: Cursor offset in line string is: -1
+19:46:00.545410 - BRAILLE: Current range: (0, 32). Target cell: 0
+19:46:00.545426 - BRAILLE LINE:  'Чтение с экрана выключено.'
+19:46:00.545557 -      VISIBLE:  'Чтение с экрана выключено.', cursor=0
+19:46:00.545611 - BRAILLE: Enabling braille. BrlAPI running: False
+19:46:00.545620 - BRAILLE: Need to initialize first.
+19:46:00.545649 - BRAILLE: Initializing. Callback: EventManager.process_braille_event
+19:46:00.545692 - BRAILLE: WINDOWPATH= None
+19:46:00.545726 - BRAILLE: XDG_VTNR= None
+19:46:00.545742 - BRAILLE: Attempting connection with BrlAPI.
+19:46:00.546219 - WARNING: Braille initialization failed: couldn't connect to b':0' with key b'keyfile:/etc/brlapi.key+polkit': connect: ������ ������������ ���������� ������ ����������������
+                  (brlerrno 11, libcerrno 2, gaierrno 0)
+                  Is BRLTTY really running?
+19:46:00.546271 - EVENT MANAGER: Pause queueing: True. Clear queue: True. Shutting down.
+19:46:00.546316 - SCRIPT MANAGER: Deactivating
+19:46:00.546362 - EVENT MANAGER: De-registering listeners for: default (module=orca.scripts.default)
+19:46:00.546381 - EVENT MANAGER: deregistering listener for: focus:
+19:46:00.546775 - EVENT MANAGER: deregistering listener for: document:reload
+19:46:00.547003 - EVENT MANAGER: deregistering listener for: document:attributes-changed
+19:46:00.547495 - EVENT MANAGER: deregistering listener for: document:load-complete
+19:46:00.548121 - EVENT MANAGER: deregistering listener for: document:load-stopped
+19:46:00.548834 - EVENT MANAGER: deregistering listener for: document:page-changed
+19:46:00.549369 - EVENT MANAGER: deregistering listener for: mouse:button
+19:46:00.550609 - EVENT MANAGER: deregistering listener for: object:announcement
+19:46:00.551317 - EVENT MANAGER: deregistering listener for: object:attributes-changed
+19:46:00.551694 - EVENT MANAGER: deregistering listener for: object:property-change:accessible-name
+19:46:00.552291 - EVENT MANAGER: deregistering listener for: object:property-change:accessible-description
+19:46:00.552840 - EVENT MANAGER: deregistering listener for: object:text-caret-moved
+19:46:00.553921 - EVENT MANAGER: deregistering listener for: object:text-changed:delete
+19:46:00.554434 - EVENT MANAGER: deregistering listener for: object:text-changed:insert
+19:46:00.554895 - EVENT MANAGER: deregistering listener for: object:active-descendant-changed
+19:46:00.555373 - EVENT MANAGER: deregistering listener for: object:children-changed:add
+19:46:00.555924 - EVENT MANAGER: deregistering listener for: object:children-changed:remove
+19:46:00.556370 - EVENT MANAGER: deregistering listener for: object:state-changed:active
+19:46:00.556792 - EVENT MANAGER: deregistering listener for: object:state-changed:busy
+19:46:00.557126 - EVENT MANAGER: deregistering listener for: object:state-changed:focused
+19:46:00.557735 - EVENT MANAGER: deregistering listener for: object:state-changed:showing
+19:46:00.558159 - EVENT MANAGER: deregistering listener for: object:state-changed:checked
+19:46:00.558804 - EVENT MANAGER: deregistering listener for: object:state-changed:pressed
+19:46:00.560815 - EVENT MANAGER: deregistering listener for: object:state-changed:indeterminate
+19:46:00.561349 - EVENT MANAGER: deregistering listener for: object:state-changed:expanded
+19:46:00.561848 - EVENT MANAGER: deregistering listener for: object:state-changed:selected
+19:46:00.563827 - EVENT MANAGER: deregistering listener for: object:state-changed:sensitive
+19:46:00.564085 - EVENT MANAGER: deregistering listener for: object:text-attributes-changed
+19:46:00.564288 - EVENT MANAGER: deregistering listener for: object:text-selection-changed
+19:46:00.564475 - EVENT MANAGER: deregistering listener for: object:selection-changed
+19:46:00.564652 - EVENT MANAGER: deregistering listener for: object:property-change:accessible-value
+19:46:00.564842 - EVENT MANAGER: deregistering listener for: object:value-changed
+19:46:00.565003 - EVENT MANAGER: deregistering listener for: object:column-reordered
+19:46:00.565208 - EVENT MANAGER: deregistering listener for: object:row-reordered
+19:46:00.565395 - EVENT MANAGER: deregistering listener for: window:activate
+19:46:00.565563 - EVENT MANAGER: deregistering listener for: window:deactivate
+19:46:00.565758 - EVENT MANAGER: deregistering listener for: window:create
+19:46:00.565943 - EVENT MANAGER: deregistering listener for: window:destroy
+19:46:00.566234 - KEYBINDINGS: Removing key grabs: script deactivation
+19:46:00.566275 - GRABS REMOVED: ENABLED BINDING for 'Переместить указатель на текущий элемент (enabled: True)': KP_Divide mods=256 clicks=1 grab ids=[]
+19:46:00.566316 - GRABS REMOVED: ENABLED BINDING for 'Щёлкнуть левой кнопкой мыши по текущему элементу в режиме общего осмотра (enabled: True)': KP_Divide mods=0 clicks=1 grab ids=[]
+19:46:00.566341 - GRABS REMOVED: ENABLED BINDING for 'Щёлкнуть правой кнопкой мыши по текущему элементу в режиме общего осмотра (enabled: True)': KP_Multiply mods=0 clicks=1 grab ids=[]
+19:46:00.566357 - GRABS REMOVED: ENABLED BINDING for 'Прочитать весь документ (enabled: True)': KP_Add mods=0 clicks=1 grab ids=[]
+19:46:00.566375 - GRABS REMOVED: ENABLED BINDING for 'Открыть диалоговое окно поиска (enabled: True)': KP_Delete mods=0 clicks=1 grab ids=[]
+19:46:00.566391 - GRABS REMOVED: ENABLED BINDING for 'Найти следующее вхождение строки (enabled: True)': KP_Delete mods=256 clicks=1 grab ids=[]
+19:46:00.566406 - GRABS REMOVED: ENABLED BINDING for 'Найти предыдущее вхождение строки (enabled: True)': KP_Delete mods=257 clicks=1 grab ids=[]
+19:46:00.566420 - GRABS REMOVED: ENABLED BINDING for 'Показать диалог настройки параметров (enabled: True)': space mods=256 clicks=1 grab ids=[]
+19:46:00.566435 - GRABS REMOVED: ENABLED BINDING for 'Показать диалог настройки параметров приложения (enabled: True)': space mods=260 clicks=1 grab ids=[]
+19:46:00.566449 - GRABS REMOVED: ENABLED BINDING for 'Передавать следующие команды непосредственно в приложение (enabled: True)': BackSpace mods=256 clicks=1 grab ids=[]
+19:46:00.566466 - GRABS REMOVED: ENABLED BINDING for 'Переключить режим сна для текущего приложения (enabled: True)': q mods=13 clicks=1 grab ids=[]
+19:46:00.566482 - GRABS REMOVED: ENABLED BINDING for 'Войти или выйти из режима общего осмотра (enabled: True)': KP_Subtract mods=0 clicks=1 grab ids=[]
+19:46:00.566496 - GRABS REMOVED: ENABLED BINDING for 'Произнести всё окно в режиме общего осмотра (enabled: True)': KP_Add mods=0 clicks=2 grab ids=[]
+19:46:00.566511 - GRABS REMOVED: ENABLED BINDING for 'Переместить общий осмотр в начало (enabled: True)': KP_Home mods=256 clicks=1 grab ids=[]
+19:46:00.566525 - GRABS REMOVED: ENABLED BINDING for 'Переместить общий осмотр к началу предыдущей строки (enabled: True)': KP_Home mods=0 clicks=1 grab ids=[]
+19:46:00.566538 - GRABS REMOVED: ENABLED BINDING for 'Произнести текущую строку в режиме общего осмотра (enabled: True)': KP_Up mods=0 clicks=1 grab ids=[]
+19:46:00.566551 - GRABS REMOVED: ENABLED BINDING for 'Произнести текущую строку по буквам в режиме общего осмотра (enabled: True)': KP_Up mods=0 clicks=2 grab ids=[]
+19:46:00.566566 - GRABS REMOVED: ENABLED BINDING for 'Произнести фонетически текущую строку в режиме общего осмотра (enabled: True)': KP_Up mods=0 clicks=3 grab ids=[]
+19:46:00.566580 - GRABS REMOVED: ENABLED BINDING for 'Переместить общий осмотр в начало следующей строки (enabled: True)': KP_Page_Up mods=0 clicks=1 grab ids=[]
+19:46:00.566594 - GRABS REMOVED: ENABLED BINDING for 'Переместить общий осмотр в конец (enabled: True)': KP_Page_Up mods=256 clicks=1 grab ids=[]
+19:46:00.566608 - GRABS REMOVED: ENABLED BINDING for 'Переместить общий осмотр к предыдущему элементу или слову (enabled: True)': KP_Left mods=0 clicks=1 grab ids=[]
+19:46:00.566623 - GRABS REMOVED: ENABLED BINDING for 'Переместить общий осмотр к слову над текущим словом (enabled: True)': KP_Left mods=256 clicks=1 grab ids=[]
+19:46:00.566635 - GRABS REMOVED: ENABLED BINDING for 'Произнести текущий элемент или слово в режиме общего осмотра (enabled: True)': KP_Begin mods=0 clicks=1 grab ids=[]
+19:46:00.566647 - GRABS REMOVED: ENABLED BINDING for 'Произнести по буквам текущий элемент или слово в режиме общего осмотра (enabled: True)': KP_Begin mods=0 clicks=2 grab ids=[]
+19:46:00.566662 - GRABS REMOVED: ENABLED BINDING for 'Произнести фонетически текущий элемент или слово в режиме общего осмотра (enabled: True)': KP_Begin mods=0 clicks=3 grab ids=[]
+19:46:00.566676 - GRABS REMOVED: ENABLED BINDING for 'Произнести текущий объект в режиме общего осмотра (enabled: True)': KP_Begin mods=256 clicks=1 grab ids=[]
+19:46:00.566744 - GRABS REMOVED: ENABLED BINDING for 'Переместить общий осмотр к следующему элементу или слову (enabled: True)': KP_Right mods=0 clicks=1 grab ids=[]
+19:46:00.566770 - GRABS REMOVED: ENABLED BINDING for 'Переместить общий осмотр к слову под текущим словом (enabled: True)': KP_Right mods=256 clicks=1 grab ids=[]
+19:46:00.566785 - GRABS REMOVED: ENABLED BINDING for 'Переместить общий осмотр к предыдущему символу (enabled: True)': KP_End mods=0 clicks=1 grab ids=[]
+19:46:00.566800 - GRABS REMOVED: ENABLED BINDING for 'Переместить общий осмотр в конец строки (enabled: True)': KP_End mods=256 clicks=1 grab ids=[]
+19:46:00.566813 - GRABS REMOVED: ENABLED BINDING for 'Произнести текущий символ в режиме общего осмотра (enabled: True)': KP_Down mods=0 clicks=1 grab ids=[]
+19:46:00.566825 - GRABS REMOVED: ENABLED BINDING for 'Произнести фонетически текущий символ в режиме общего осмотра (enabled: True)': KP_Down mods=0 clicks=2 grab ids=[]
+19:46:00.566839 - GRABS REMOVED: ENABLED BINDING for 'Произнести значение символа в кодировке Unicode в режиме общего осмотра (enabled: True)': KP_Down mods=0 clicks=3 grab ids=[]
+19:46:00.566853 - GRABS REMOVED: ENABLED BINDING for 'Переместить общий осмотр к следующему символу (enabled: True)': KP_Page_Down mods=0 clicks=1 grab ids=[]
+19:46:00.566869 - GRABS REMOVED: ENABLED BINDING for 'Произносить атрибуты текущего символа (enabled: True)': f mods=256 clicks=1 grab ids=[]
+19:46:00.566883 - GRABS REMOVED: ENABLED BINDING for 'Отобразить кнопку по умолчанию (enabled: True)': e mods=256 clicks=1 grab ids=[]
+19:46:00.566898 - GRABS REMOVED: ENABLED BINDING for 'Отобразить заголовок окна (enabled: True)': KP_Enter mods=256 clicks=1 grab ids=[]
+19:46:00.566912 - GRABS REMOVED: ENABLED BINDING for 'Отобразить содержимое строки состояния (enabled: True)': KP_Enter mods=256 clicks=2 grab ids=[]
+19:46:00.566924 - GRABS REMOVED: ENABLED BINDING for 'Сообщить о текущем положении (enabled: True)': KP_Enter mods=0 clicks=1 grab ids=[]
+19:46:00.566938 - GRABS REMOVED: ENABLED BINDING for 'Сообщить о текущем положении подробно (enabled: True)': KP_Enter mods=0 clicks=2 grab ids=[]
+19:46:00.566953 - GRABS REMOVED: ENABLED BINDING for 'Произнести текущее выделение (enabled: True)': Up mods=257 clicks=1 grab ids=[]
+19:46:00.566967 - GRABS REMOVED: ENABLED BINDING for 'Войти в режим изучения клавиатуры. Нажмите escape для выхода из этого режима (enabled: True)': h mods=256 clicks=1 grab ids=[]
+19:46:00.566983 - GRABS REMOVED: ENABLED BINDING for 'Временно включить или отключить речь (enabled: True)': s mods=256 clicks=1 grab ids=[]
+19:46:00.566997 - GRABS REMOVED: ENABLED BINDING for 'Переключить уровень информативности речи (enabled: True)': v mods=256 clicks=1 grab ids=[]
+19:46:00.567011 - GRABS REMOVED: ENABLED BINDING for 'Произносить только текущую ячейку таблицы или всю строку (enabled: True)': F11 mods=256 clicks=1 grab ids=[]
+19:46:00.567025 - GRABS REMOVED: ENABLED BINDING for 'Сообщить текущее время (enabled: True)': t mods=256 clicks=1 grab ids=[]
+19:46:00.567039 - GRABS REMOVED: ENABLED BINDING for 'Сообщить текущую дату (enabled: True)': t mods=256 clicks=2 grab ids=[]
+19:46:00.567053 - GRABS REMOVED: ENABLED BINDING for 'Перейти к родительскому объекту с фокусом навигатора. (enabled: True)': Up mods=260 clicks=1 grab ids=[]
+19:46:00.567067 - GRABS REMOVED: ENABLED BINDING for 'Перейти к первому дочернему объекту с фокусом навигатора. (enabled: True)': Down mods=260 clicks=1 grab ids=[]
+19:46:00.567082 - GRABS REMOVED: ENABLED BINDING for 'Перейти к следующему родственному объекту с фокусом навигатора. (enabled: True)': Right mods=260 clicks=1 grab ids=[]
+19:46:00.567096 - GRABS REMOVED: ENABLED BINDING for 'Перейти к предыдующему родственному объекту с фокусом навигатора. (enabled: True)': Left mods=260 clicks=1 grab ids=[]
+19:46:00.567111 - GRABS REMOVED: ENABLED BINDING for 'Щелкните на объекте с фокусом навигатора. (enabled: True)': Return mods=260 clicks=1 grab ids=[]
+19:46:00.567125 - GRABS REMOVED: ENABLED BINDING for 'Переключить упрощенную навигацию по объектам. (enabled: True)': s mods=260 clicks=1 grab ids=[]
+19:46:00.567138 - GRABS REMOVED: ENABLED BINDING for 'Включить или выключить клавиши табличной навигации (enabled: True)': t mods=257 clicks=1 grab ids=[]
+19:46:00.567152 - GRABS REMOVED: ENABLED BINDING for 'Перейти к ячейке слева (enabled: True)': Left mods=9 clicks=1 grab ids=[]
+19:46:00.567166 - GRABS REMOVED: ENABLED BINDING for 'Перейти к ячейке справа (enabled: True)': Right mods=9 clicks=1 grab ids=[]
+19:46:00.567179 - GRABS REMOVED: ENABLED BINDING for 'Перейти к ячейке сверху (enabled: True)': Up mods=9 clicks=1 grab ids=[]
+19:46:00.567192 - GRABS REMOVED: ENABLED BINDING for 'Перейти к ячейке снизу (enabled: True)': Down mods=9 clicks=1 grab ids=[]
+19:46:00.567206 - GRABS REMOVED: ENABLED BINDING for 'Перейти к первой ячейке в таблице (enabled: True)': Home mods=9 clicks=1 grab ids=[]
+19:46:00.567220 - GRABS REMOVED: ENABLED BINDING for 'Перейти к последней ячейке в таблице (enabled: True)': End mods=9 clicks=1 grab ids=[]
+19:46:00.567234 - GRABS REMOVED: ENABLED BINDING for 'Перейти к началу ряда (enabled: True)': Left mods=265 clicks=1 grab ids=[]
+19:46:00.567248 - GRABS REMOVED: ENABLED BINDING for 'Перейти к концу ряда (enabled: True)': Right mods=265 clicks=1 grab ids=[]
+19:46:00.567262 - GRABS REMOVED: ENABLED BINDING for 'Перейти в верхнюю часть столбца (enabled: True)': Up mods=265 clicks=1 grab ids=[]
+19:46:00.567275 - GRABS REMOVED: ENABLED BINDING for 'Перейти в нижнюю часть столбца (enabled: True)': Down mods=265 clicks=1 grab ids=[]
+19:46:00.567289 - GRABS REMOVED: ENABLED BINDING for 'Задать строку для использования в качестве динамических заголовков столбцов (enabled: True)': r mods=257 clicks=1 grab ids=[]
+19:46:00.567304 - GRABS REMOVED: ENABLED BINDING for 'Очистить временные заголовки столбцов (enabled: True)': r mods=257 clicks=2 grab ids=[]
+19:46:00.567318 - GRABS REMOVED: ENABLED BINDING for 'Задать столбец для использования в качестве динамических заголовков строк (enabled: True)': c mods=257 clicks=1 grab ids=[]
+19:46:00.567332 - GRABS REMOVED: ENABLED BINDING for 'Очистить временные заголовки строк (enabled: True)': c mods=257 clicks=2 grab ids=[]
+19:46:00.567346 - GRABS REMOVED: ENABLED BINDING for 'Перейти к следующей закладке (enabled: True)': b mods=256 clicks=1 grab ids=[]
+19:46:00.567360 - GRABS REMOVED: ENABLED BINDING for 'Перейти к предыдущей закладке (enabled: True)': b mods=257 clicks=1 grab ids=[]
+19:46:00.567374 - GRABS REMOVED: ENABLED BINDING for 'Сохранить закладки (enabled: True)': b mods=264 clicks=1 grab ids=[]
+19:46:00.567409 - GRABS REMOVED: ENABLED BINDING for 'Перейти к закладке (enabled: True)': 1 mods=256 clicks=1 grab ids=[]
+19:46:00.567426 - GRABS REMOVED: ENABLED BINDING for 'Добавить закладку (enabled: True)': 1 mods=264 clicks=1 grab ids=[]
+19:46:00.567440 - GRABS REMOVED: ENABLED BINDING for 'Перейти к закладке (enabled: True)': 2 mods=256 clicks=1 grab ids=[]
+19:46:00.567454 - GRABS REMOVED: ENABLED BINDING for 'Добавить закладку (enabled: True)': 2 mods=264 clicks=1 grab ids=[]
+19:46:00.567467 - GRABS REMOVED: ENABLED BINDING for 'Перейти к закладке (enabled: True)': 3 mods=256 clicks=1 grab ids=[]
+19:46:00.567481 - GRABS REMOVED: ENABLED BINDING for 'Добавить закладку (enabled: True)': 3 mods=264 clicks=1 grab ids=[]
+19:46:00.567495 - GRABS REMOVED: ENABLED BINDING for 'Перейти к закладке (enabled: True)': 4 mods=256 clicks=1 grab ids=[]
+19:46:00.567508 - GRABS REMOVED: ENABLED BINDING for 'Добавить закладку (enabled: True)': 4 mods=264 clicks=1 grab ids=[]
+19:46:00.567521 - GRABS REMOVED: ENABLED BINDING for 'Перейти к закладке (enabled: True)': 5 mods=256 clicks=1 grab ids=[]
+19:46:00.567535 - GRABS REMOVED: ENABLED BINDING for 'Добавить закладку (enabled: True)': 5 mods=264 clicks=1 grab ids=[]
+19:46:00.567548 - GRABS REMOVED: ENABLED BINDING for 'Перейти к закладке (enabled: True)': 6 mods=256 clicks=1 grab ids=[]
+19:46:00.567561 - GRABS REMOVED: ENABLED BINDING for 'Добавить закладку (enabled: True)': 6 mods=264 clicks=1 grab ids=[]
+19:46:00.567576 - GRABS REMOVED: ENABLED BINDING for 'Показывать меню действий (enabled: True)': a mods=257 clicks=1 grab ids=[]
+19:46:00.567584 - DEFAULT: Clearing key bindings
+19:46:00.567608 - SCRIPT MANAGER: Deactivated
+19:46:00.567621 - EVENT MANAGER: Deactivating
+19:46:00.570012 - EVENT MANAGER: Deactivated
+19:46:00.570054 - SPEECH: Shutting down
+19:46:00.570318 - BRAILLE: Attempting braille shutdown.
+19:46:00.570346 - BRAILLE: Braille was not running.
+19:46:00.570371 - ORCA MODIFIER MANAGER: Attempting to restore original xmodmap: Shutting down.
+19:46:00.579263 - ORCA MODIFIER MANAGER: Original xmodmap restored
+19:46:00.579319 - ORCA: Quitting Atspi main event loop
+19:46:00.579371 - ORCA: Shutdown complete
+19:46:00.580572 - AXObject: Exception in get_role_name: app no longer exists
+19:46:00.580610 - AXObject: Adding to known dead objects ax_utilities.is_application_in_desktop > ax_object.get_role_name > ax_object.handle_error > ax_object._set_known_dead_status
+19:46:00.581686 - WARNING: [DEAD] is not in [desktop frame: 'main']
+19:46:00.581725 - SCRIPT MANAGER: [DEAD] not found in appScripts
+TOTAL PROCESSING TIME: 0.0443
+^^^^^ PROCESS OBJECT EVENT object:children-changed:remove ^^^^^
