@@ -1,0 +1,20 @@
+"""Measure the same CI slices, including Python children, sequentially on the host."""
+import os,subprocess,sys
+from pathlib import Path
+root=Path(__file__).resolve().parents[2]
+out=root/'artifacts/qa4-recheck'
+core=[sys.executable,'-m','pytest','-q','-x','tests/core','tests/contracts','tests/gate','tests/hostrun','tests/smoke','tests/test_package.py','tests/test_packaging.py','tests/test_contrast.py','tests/test_build_guards.py','tests/test_socket_paths.py','--cov','--cov-branch','--cov-report=','--cov-fail-under=0','--basetemp=/tmp/ac-qa4-cov','--junitxml='+str(out/'core-coverage.xml')]
+ui=[str(Path(sys.executable).parents[2]/'.venv-ui/bin/python'),str(out/'gtk-runner.txt'),'--full-ui','--coverage']
+for name,command in [('core',core),('ui',ui)]:
+ env=dict(os.environ,PYTHONPATH=str(root/'src'),COVERAGE_FILE=str(out/('.coverage.'+name)))
+ with (out/(name+'-coverage-runner.log')).open('w') as stream:
+  result=subprocess.run(command,cwd=root,env=env,stdout=stream,stderr=subprocess.STDOUT,timeout=900)
+ print(name,result.returncode,flush=True)
+ if result.returncode:raise SystemExit(result.returncode)
+env=dict(os.environ,COVERAGE_FILE=str(out/'.coverage'))
+raw=root/'.aconsole-dev/qa4-coverage';raw.mkdir(parents=True,exist_ok=True)
+for args in [['combine',str(out)],['json','--fail-under=0','-o',str(raw/'children.json')],['report','--precision=2']]:
+ result=subprocess.run([sys.executable,'-m','coverage',*args],cwd=root,env=env,capture_output=True,text=True)
+ with (out/'coverage-children.log').open('a') as stream:stream.write(result.stdout+result.stderr)
+ print(args[0],result.returncode,flush=True)
+ if result.returncode:raise SystemExit(result.returncode)

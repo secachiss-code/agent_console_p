@@ -1,0 +1,123 @@
+Collected 0 items to run in parallel
+........................................................................ [  3%]
+........................................................................ [  7%]
+........................................................................ [ 10%]
+........................................................................ [ 14%]
+........................................................................ [ 18%]
+........................................................................ [ 21%]
+........................................................................ [ 25%]
+........................................................................ [ 29%]
+........................................................................ [ 32%]
+........................................................................ [ 36%]
+........................................................................ [ 39%]
+........................................................................ [ 43%]
+........................................................................ [ 47%]
+........................................................................ [ 50%]
+........................................................................ [ 54%]
+........................................................................ [ 58%]
+........................................................................ [ 61%]
+........................................................................ [ 65%]
+........................................................................ [ 68%]
+........................................................................ [ 72%]
+........................................................................ [ 76%]
+........................................................................ [ 79%]
+........................................................................ [ 83%]
+........................................................................ [ 87%]
+........s............................................................... [ 90%]
+........................................................................ [ 94%]
+........................................................................ [ 98%]
+.......................................                                  [100%]
+python 3.15.1 gil=False
+
+=============================== warnings summary ===============================
+tests/core/test_launch_security.py::test_rpc_launch_spec_keeps_ingest_and_sidecar_secrets_out_of_argv[opencode]
+  /home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/sql/compiler.py:7898: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x30c19330c40>
+    def _render_string_type(
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/core/test_mcp_managed_conformance.py::test_run_managed_uses_a_live_loopback_endpoint_and_cleans_its_private_state[124]
+  /home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/sql/base.py:2241: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x30c3c4a0c40>
+    object.__setattr__(self, "_colset", set())
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/core/test_persistence_b.py::test_persistence_b_event_rate
+  /home/sas/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/typing.py:411: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x30c30f59680>
+    @functools.wraps(func)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/core/test_persistence_b.py::test_persistence_b_event_rate
+  /home/sas/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/typing.py:411: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x30c13f56ac0>
+    @functools.wraps(func)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/core/test_persistence_b.py::test_persistence_b_event_rate
+  /home/sas/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/typing.py:411: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x30c13ddf260>
+    @functools.wraps(func)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/core/test_persistence_b.py::test_persistence_b_event_rate
+  /home/sas/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/typing.py:411: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x30c13dd25a0>
+    @functools.wraps(func)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/core/test_persistence_b.py::test_persistence_b_event_rate
+  /home/sas/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/typing.py:411: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x30c117bec40>
+    @functools.wraps(func)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/core/test_persistence_b.py::test_persistence_b_event_rate
+  /home/sas/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/typing.py:411: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x30c10533640>
+    @functools.wraps(func)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/core/test_persistence_b.py::test_persistence_b_event_rate
+  /home/sas/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/typing.py:411: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x30c126315e0>
+    @functools.wraps(func)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/core/test_queued_cancellation.py::test_client_timeout_cancels_a_queued_settings_write
+  <frozen abc>:106: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x30c48c7ce80>
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/core/test_queued_cancellation.py::test_client_timeout_cancels_a_queued_settings_write
+  <frozen abc>:106: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x30c48c71340>
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/core/test_queued_cancellation.py::test_client_timeout_cancels_a_queued_settings_write
+  <frozen abc>:106: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x30c2d7e1ce0>
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/core/test_queued_cancellation.py::test_client_timeout_cancels_a_queued_settings_write
+  <frozen abc>:106: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x30c103f01c0>
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/core/test_queued_cancellation.py::test_client_timeout_cancels_a_queued_settings_write
+  <frozen abc>:106: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x30c2d253e20>
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/core/test_queued_cancellation.py::test_client_timeout_cancels_a_queued_settings_write
+  <frozen abc>:106: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x30c1309a720>
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/core/test_round6_k24.py: 4 warnings
+tests/core/test_sidecar.py: 6 warnings
+tests/core/test_sidecar_resilience.py: 2 warnings
+  /home/sas/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/pty.py:66: DeprecationWarning: This process (pid=1647383) is multi-threaded, use of forkpty() may lead to deadlocks in the child.
+    pid, fd = os.forkpty()
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html

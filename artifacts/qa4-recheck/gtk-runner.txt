@@ -2,11 +2,11 @@ import argparse,os,secrets,struct,subprocess,sys,tempfile,time,tarfile
 from pathlib import Path
 root=Path(__file__).resolve().parents[2]
 output=root/'artifacts/qa4-recheck'
-parser=argparse.ArgumentParser();parser.add_argument('--baseline',action='store_true');parser.add_argument('--full-ui',action='store_true');options=parser.parse_args()
+parser=argparse.ArgumentParser();parser.add_argument('--baseline',action='store_true');parser.add_argument('--full-ui',action='store_true');parser.add_argument('--coverage',action='store_true');options=parser.parse_args()
 options.checkout_ref='5ce55295' if options.baseline else ''
 options.desktop=False
 options.a11y_default=False
-label='locale-before' if options.baseline else 'full-ui' if options.full_ui else 'locale-after'
+label='locale-before' if options.baseline else 'full-ui-coverage' if options.coverage else 'full-ui' if options.full_ui else 'locale-after'
 with tempfile.TemporaryDirectory(prefix='perf7-xvfb-') as directory:
     temp=Path(directory)
     checkout=root
@@ -44,6 +44,9 @@ with tempfile.TemporaryDirectory(prefix='perf7-xvfb-') as directory:
         tests=['tests/gui/front/test_b4b_quota.py::test_the_sidebar_shows_every_window_of_an_account_shortest_first']
         if options.full_ui:tests=['tests/gui','tests/ui','tests/smoke','--deselect','tests/gui/front/test_git_scale_ui.py::test_scrolling_a_long_history']
         args=['-q','-o','addopts=','--junitxml='+str(output/(label+'.xml')),*tests]
+        if options.coverage:
+            args+=['--cov','--cov-branch','--cov-report=','--cov-fail-under=0']
+            env['COVERAGE_FILE']=str(output/'.coverage.ui')
         command=[sys.executable,'-c',"import locale,pytest; locale.getlocale=lambda:('en_US','UTF-8'); raise SystemExit(pytest.main("+repr(args)+"))"]
         with (output/(label+'.log')).open('w') as stream:
             result=subprocess.run(command,env=env,cwd=checkout,timeout=360,stdout=stream,stderr=subprocess.STDOUT)

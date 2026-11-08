@@ -138,8 +138,11 @@ pythonpath = ["src"]
 testpaths = ["tests"]
 
 [tool.coverage.run]
+# pytest-cov 7 delegates child-process measurement to coverage.py.
+patch = ["subprocess"]
+sigterm = true
 branch = true
-source = ["aconsole"]
+source = ["src/aconsole"]
 
 [tool.coverage.report]
 fail_under = 90

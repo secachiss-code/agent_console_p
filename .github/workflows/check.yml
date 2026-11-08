@@ -42,7 +42,7 @@ jobs:
           .venv-core/bin/python -m pytest tests/core tests/contracts tests/gate tests/hostrun tests/smoke
           tests/test_package.py tests/test_packaging.py tests/test_contrast.py
           tests/test_build_guards.py tests/test_socket_paths.py
-          --cov=aconsole --cov-branch --cov-report= --cov-fail-under=0
+          --cov --cov-branch --cov-report= --cov-fail-under=0
           -p no:cacheprovider --basetemp=/tmp/ac-core
       - name: Interface tests
         env:
@@ -51,13 +51,14 @@ jobs:
         if: ${{ !cancelled() }}
         run: >
           xvfb-run -a .venv-ui/bin/python -m pytest tests/gui tests/ui tests/smoke
-          --cov=aconsole --cov-branch --cov-report= --cov-fail-under=0
+          --cov --cov-branch --cov-report= --cov-fail-under=0
           -p no:cacheprovider --basetemp=/tmp/ac-ui
           --deselect tests/gui/front/test_git_scale_ui.py::test_scrolling_a_long_history
       - name: Enforce combined coverage
+        if: ${{ !cancelled() }}
         run: |
           .venv-core/bin/python -m coverage combine
-          .venv-core/bin/python -m coverage report
+          .venv-core/bin/python -m coverage report --precision=2
       - name: Build and install Debian package
         # Package failures must remain visible even when another check fails.
         if: ${{ !cancelled() }}

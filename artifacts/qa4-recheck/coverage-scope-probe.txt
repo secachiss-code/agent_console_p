@@ -1,0 +1,14 @@
+import os,subprocess,sys
+from pathlib import Path
+root=Path(__file__).resolve().parents[2];out=root/'artifacts/qa4-recheck'
+env=dict(os.environ,PYTHONPATH=str(root/'src'),COVERAGE_FILE=str(out/'.coverage.scope'))
+args=[sys.executable,'-m','pytest','-q','tests/ui/test_i18n.py::test_deb_source_copy_can_translate_without_the_checkout','--cov','--cov-report=','--cov-fail-under=0','--junitxml='+str(out/'coverage-scope.xml')]
+with (out/'coverage-scope.log').open('w') as stream:
+ result=subprocess.run(args,cwd=root,env=env,stdout=stream,stderr=subprocess.STDOUT,timeout=90)
+print('pytest',result.returncode)
+if result.returncode:raise SystemExit(result.returncode)
+from coverage import CoverageData
+held=CoverageData(basename=env['COVERAGE_FILE']);held.read();paths=list(held.measured_files())
+assert paths
+assert all('/src/aconsole/' in path for path in paths),paths
+print('all',len(paths),'measured files belong to the checkout source tree')

@@ -1,0 +1,1 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="0" skipped="0" tests="1" time="0.337" timestamp="2026-11-08T22:11:57.143160+03:00" hostname="somovasnbook14"><testcase classname="tests.ui.test_i18n" name="test_deb_source_copy_can_translate_without_the_checkout" time="0.255" /></testsuite></testsuites>
