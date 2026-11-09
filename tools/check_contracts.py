@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
 import os
 import re
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 import msgspec
@@ -16,6 +18,85 @@ from jsonschema.validators import Draft202012Validator
 from aconsole.contracts.errors import ERRORS
 from aconsole.contracts.generate import documents, struct_types
 from aconsole.contracts.methods import METHODS
+
+
+async def probe_method_routes(socket: Path, names: tuple[str, ...]) -> list[str]:
+    """Probe the assembled core, using invalid params so mutating handlers cannot run."""
+    from aconsole.contracts.common import ClientRole  # noqa: PLC0415
+    from aconsole.contracts.ipc import InitializeParams, ProtocolVersion, Request, ResponseErr, ResponseOk  # noqa: PLC0415
+    from aconsole.core.infrastructure.ipc.framing import decode_envelope, encode_line  # noqa: PLC0415
+
+    encoder = msgspec.json.Encoder()
+    reader, writer = await asyncio.open_unix_connection(socket)
+    problems: list[str] = []
+
+    async def exchange(ident: int, method: str, params: msgspec.Raw) -> ResponseOk | ResponseErr:
+        writer.write(encode_line(encoder, Request(id=ident, method=method, params=params)))
+        await writer.drain()
+        while True:
+            line = await asyncio.wait_for(reader.readline(), 5)
+            if not line:
+                message = f"core disconnected during {method}"
+                raise RuntimeError(message)
+            reply = decode_envelope(line)
+            if isinstance(reply, (ResponseOk, ResponseErr)) and reply.id == ident:
+                return reply
+
+    try:
+        version = ProtocolVersion(major=1, minor=0)
+        initialized = await exchange(1, "initialize", msgspec.Raw(encoder.encode(InitializeParams(
+            protocol=(version, version), role=ClientRole.UI, client_name="contract-routes",
+            client_version="0", pid=os.getpid(), capabilities=frozenset(),
+        ))))
+        if isinstance(initialized, ResponseErr):
+            return [f"route handshake failed: {initialized.error.message}"]
+        for ident, name in enumerate(names, 2):
+            reply = await exchange(ident, name, msgspec.Raw(b"[]"))
+            if isinstance(reply, ResponseErr) and reply.error.message not in {"INVALID_PARAMS", "ALREADY_INITIALIZED"}:
+                problems.append(f"core route {name}: {reply.error.message}")
+    finally:
+        writer.close()
+        await writer.wait_closed()
+    return problems
+
+
+async def _route_daemon(root: Path) -> list[str]:
+    from aconsole.core.bootstrap import Daemon  # noqa: PLC0415
+
+    daemon = Daemon(root / "core.sock", database=root / "core.db", idle_s=30)
+    daemon.serve_ingest = False
+    serving = asyncio.create_task(daemon.serve())
+    try:
+        for _ in range(500):
+            if serving.done():
+                return [f"route daemon stopped before accepting connections: {await serving}"]
+            if daemon.socket.exists():
+                return await probe_method_routes(daemon.socket, tuple(method.name for method in METHODS))
+            await asyncio.sleep(0.01)
+        return ["route daemon did not open its socket within 5 seconds"]
+    finally:
+        daemon.request_stop()
+        await asyncio.wait_for(serving, 15)
+
+
+def check_method_routes(repo: Path) -> list[str]:
+    """Run real IPC in a child with private HOME, XDG state, database and socket."""
+    with tempfile.TemporaryDirectory(prefix="ac-routes-", dir="/tmp") as directory:
+        env = os.environ.copy()
+        env.update({
+            "PYTHONPATH": str(repo.resolve() / "src"),
+            "HOME": directory,
+            "XDG_CONFIG_HOME": f"{directory}/config",
+            "XDG_CACHE_HOME": f"{directory}/cache",
+            "XDG_DATA_HOME": f"{directory}/data",
+            "XDG_STATE_HOME": f"{directory}/state",
+            "XDG_RUNTIME_DIR": f"{directory}/run",
+        })
+        proc = subprocess.run(
+            [sys.executable, str(Path(__file__).resolve()), "--routes-only", directory],
+            cwd=repo, env=env, capture_output=True, text=True, check=False, timeout=60,
+        )
+    return [] if proc.returncode == 0 else ["core route check failed", proc.stdout.strip(), proc.stderr.strip()]
 
 
 def check_schema_regen(repo: Path) -> list[str]:
@@ -273,6 +354,7 @@ CHECKS = (
     check_contracts_types,
     check_both_interpreters,
     check_typed_facade,
+    check_method_routes,
     check_mcp_conformance,
 )
 # The documents live in a separate repository and are linked in as docs/. A clean checkout does not have them.
@@ -296,4 +378,9 @@ def main(argv: list[str]) -> int:
 
 
 if __name__ == "__main__":
+    if len(sys.argv) == 3 and sys.argv[1] == "--routes-only":
+        route_problems = asyncio.run(_route_daemon(Path(sys.argv[2])))
+        for problem in route_problems:
+            sys.stdout.write(problem + "\n")
+        sys.exit(bool(route_problems))
     sys.exit(main(sys.argv[1:]))
