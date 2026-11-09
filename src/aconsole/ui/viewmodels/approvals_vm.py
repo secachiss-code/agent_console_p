@@ -37,14 +37,14 @@ def is_risky(view: ApprovalView) -> bool:
     return not _RISKY.isdisjoint(view.risk)
 
 
-def safe_text(text: str, limit: int = _TEXT_LIMIT) -> str:
+def safe_text(text: str, limit: int | None = _TEXT_LIMIT) -> str:
     """What the agent sent, unable to hide anything from the person deciding.
 
     Terminal escapes and direction overrides can make a command read as a different one, so they
     are shown as code points. A cut is marked: an unmarked one would hide the end of a command.
     """
     shown = "".join(_visible(char) for char in text)
-    if len(shown) <= limit:
+    if limit is None or len(shown) <= limit:
         return shown
     return f"{shown[:limit]}… (+{len(shown) - limit})"
 

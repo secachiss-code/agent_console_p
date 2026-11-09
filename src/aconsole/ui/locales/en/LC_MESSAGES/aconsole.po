@@ -32,6 +32,18 @@ msgstr "Message if denied (optional)"
 msgid "approvals.failed"
 msgstr "Could not send the decision: {error}. The request is still open"
 
+msgid "approvals.full_text"
+msgstr "Read full text"
+
+msgid "approvals.full_input"
+msgstr "All arguments"
+
+msgid "approvals.diff_preview"
+msgstr "Proposed changes (up to 200 lines)"
+
+msgid "approvals.risk.protected"
+msgstr "Changes protected files"
+
 msgid "approvals.left"
 msgstr "{time} left"
 

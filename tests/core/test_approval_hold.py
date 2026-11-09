@@ -4,12 +4,14 @@ from __future__ import annotations
 
 import asyncio
 import os
+import socket
 from datetime import UTC, datetime, timedelta
 from http.client import HTTPConnection
 from typing import TYPE_CHECKING
 
 import msgspec
 import pytest
+import uvicorn
 from sqlalchemy.orm import Session
 
 from aconsole.contracts.app import (
@@ -17,7 +19,9 @@ from aconsole.contracts.app import (
     ApprovalView,
     CommandDetail,
     DecideParams,
+    EditDetail,
     EmptyParams,
+    GenericDetail,
     SettingsUpdateParams,
     SubscribeParams,
 )
@@ -48,7 +52,8 @@ from aconsole.core.application.services.approval_broker import ApprovalHold, Hoo
 from aconsole.core.bootstrap import Daemon
 from aconsole.core.domain.approvals import Approval, ApprovalBook, ApprovalPhase, OpenRequest
 from aconsole.core.domain.errors import DomainError
-from aconsole.core.infrastructure.http.app import IngestApp
+from aconsole.core.infrastructure.http.app import IngestApp, serve_config
+from aconsole.core.infrastructure.http.approval import handle_permission
 from aconsole.core.infrastructure.http.auth import TokenBook
 from aconsole.core.infrastructure.http.problem import HttpResponse, json_response
 from aconsole.core.infrastructure.http.routes import IngestItem, IngestQueue
@@ -239,6 +244,117 @@ async def _duplicate_hold_waiter_cancellation_does_not_cancel_shared_future() ->
         _ = harness.service.decide(_decide(request, ContractDecision.ALLOW), at=request.expires_at)
 
 
+def test_last_waiter_cancellation_resolves_and_removes_the_card() -> None:
+    asyncio.run(_last_waiter_cancellation_resolves_and_removes_the_card())
+
+
+async def _last_waiter_cancellation_resolves_and_removes_the_card() -> None:
+    harness = _Harness()
+    request = _request()
+    first = asyncio.create_task(harness.service.hold(request, _view(request)))
+    await harness.requested.wait()
+    duplicate = asyncio.create_task(harness.service.hold(request, _view(request)))
+    await asyncio.sleep(0)
+    first.cancel()
+    _ = await asyncio.gather(first, return_exceptions=True)
+    assert len(harness.service.pending_views()) == 1
+    duplicate.cancel()
+    _ = await asyncio.gather(duplicate, return_exceptions=True)
+    assert harness.service.pending_views() == ()
+    assert harness.book.get(request.approval_id).phase is ApprovalPhase.CANCELLED
+    assert len(harness.audit) == 1
+    assert isinstance(harness.events[-1], ApprovalResolved)
+    assert harness.events[-1].outcome == "cancelled"
+    with pytest.raises(DomainError, match="ALREADY_DECIDED"):
+        _ = harness.service.decide(_decide(request, ContractDecision.ALLOW), at=_AT)
+
+
+@pytest.mark.parametrize("tool", ["Write", "Edit", "mcp__example__send"])
+def test_real_permission_handler_publishes_details_and_returns_user_decision(tool: str) -> None:
+    asyncio.run(_real_permission_handler_publishes_details_and_returns_user_decision(tool))
+
+
+async def _real_permission_handler_publishes_details_and_returns_user_decision(tool: str) -> None:
+    harness = _Harness()
+    body = msgspec.json.encode({"session_id": "s", "tool_name": tool,
+        "tool_input": {"file_path": "/wt/.codex/config.toml", "content": "new", "old_string": "old",
+            "new_string": "new", "replace_all": True}})
+    waiting = asyncio.create_task(handle_permission(
+        IngestItem(tab_id="tab-1", kind="claude.hook", body=body), harness.service,
+        hold_seconds=60, worktree="/wt"))
+    await asyncio.wait_for(harness.requested.wait(), 2)
+    view = harness.service.pending_views()[0]
+    # Exercise the IPC representation too, rather than inspecting only a presenter object.
+    view = msgspec.json.decode(msgspec.json.encode(view), type=ApprovalView)
+    assert view.cwd == "/wt"
+    assert not view.allow_tab_session
+    if tool == "mcp__example__send":
+        assert isinstance(view.detail, GenericDetail)
+        assert view.tool == tool
+        assert "replace_all" in view.detail.json_preview
+    else:
+        assert isinstance(view.detail, EditDetail)
+        assert view.detail.files == ("/wt/.codex/config.toml",)
+        assert view.detail.input_json is not None
+        assert "replace_all" in view.detail.input_json
+        assert "destructive" in view.risk
+    _ = harness.service.decide(DecideParams(approval_id=view.id, nonce=view.nonce,
+        decision=ContractDecision.DENY), at=view.requested_at)
+    response = await waiting
+    assert msgspec.json.decode(response.body, type=HookResponse).hook_specific_output.decision.behavior == "deny"
+
+
+def test_tcp_disconnect_cancels_real_permission_hold() -> None:
+    asyncio.run(_tcp_disconnect_cancels_real_permission_hold())
+
+
+async def _tcp_disconnect_cancels_real_permission_hold() -> None:
+    harness = _Harness()
+    tokens = TokenBook()
+    token = tokens.issue("tab-1")
+
+    async def permission(item: IngestItem) -> HttpResponse:
+        return await handle_permission(item, harness.service, hold_seconds=60, worktree="/wt")
+
+    app = IngestApp(tokens, IngestQueue(), permission_handler=permission)
+    server = uvicorn.Server(serve_config(app, port=0))
+    with socket.socket() as listener:
+        listener.bind(("127.0.0.1", 0))
+        listener.listen()
+        serving = asyncio.create_task(server.serve(sockets=[listener]))
+        writer: asyncio.StreamWriter | None = None
+        try:
+            for _ in range(200):
+                if server.started:
+                    break
+                await asyncio.sleep(0.01)
+            assert server.started
+            _reader, writer = await asyncio.open_connection("127.0.0.1", listener.getsockname()[1])
+            body = (b'{"session_id":"s","hook_event_name":"PermissionRequest","tool_name":"Bash",'
+                b'"tool_input":{"command":"git status"}}')
+            writer.write(("POST /v1/tabs/tab-1/claude/hook HTTP/1.1\r\nHost: localhost\r\n"
+                f"Authorization: Bearer {token}\r\nContent-Length: {len(body)}\r\n\r\n").encode() + body)
+            await writer.drain()
+            await asyncio.wait_for(harness.requested.wait(), 2)
+            assert len(harness.service.pending_views()) == 1
+            writer.close()
+            await writer.wait_closed()
+            for _ in range(200):
+                if not harness.service.pending_views():
+                    break
+                await asyncio.sleep(0.01)
+            assert harness.service.pending_views() == ()
+            assert isinstance(harness.events[-1], ApprovalResolved)
+            assert harness.events[-1].outcome == "cancelled"
+            assert len(harness.audit) == 1
+        finally:
+            if writer is not None:
+                writer.close()
+                await writer.wait_closed()
+            server.should_exit = True
+            await asyncio.wait_for(serving, 5)
+
+
 def test_remembered_deny_rule_returns_deny_outcome_not_native() -> None:
     asyncio.run(_remembered_deny_rule_returns_deny_outcome_not_native())
 
@@ -427,7 +543,7 @@ async def _http_request(
     async def receive() -> Mapping[str, object]:
         nonlocal received
         if received:
-            return {"type": "http.disconnect"}
+            await asyncio.Future[None]()  # An open HTTP client waits until a response is sent.
         received = True
         return {"type": "http.request", "body": body, "more_body": False}
 

@@ -15,8 +15,8 @@ gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
 from gi.repository import Adw, Gdk, GLib, Gtk  # noqa: E402
 
-from aconsole.contracts.app import ApprovalView, CommandDetail  # noqa: E402
-from aconsole.contracts.common import ApprovalDecision, ApprovalScope, RiskTag, TabId  # noqa: E402
+from aconsole.contracts.app import ApprovalView, CommandDetail, EditDetail, GenericDetail  # noqa: E402
+from aconsole.contracts.common import ApprovalDecision, ApprovalId, ApprovalScope, RiskTag, TabId  # noqa: E402
 from aconsole.core.infrastructure.fake.server import FakeCore  # noqa: E402
 from aconsole.ui.bootstrap import run_app, spawn_task  # noqa: E402
 from aconsole.ui.client.core_client import CoreClient  # noqa: E402
@@ -128,6 +128,56 @@ def _labels(widget: Gtk.Widget) -> list[str]:
         found.extend(_labels(child))
         child = child.get_next_sibling()
     return found
+
+
+def _expanders(widget: Gtk.Widget) -> list[Gtk.Expander]:
+    found: list[Gtk.Expander] = []
+    child = widget.get_first_child()
+    while child is not None:
+        if isinstance(child, Gtk.Expander):
+            found.append(child)
+        found.extend(_expanders(child))
+        child = child.get_next_sibling()
+    return found
+
+
+@pytest.mark.parametrize("core", ["waiting"], indirect=True)
+@pytest.mark.parametrize("kind", ["command", "edit", "generic"])
+def test_full_approval_text_can_be_read_without_losing_the_decision_buttons(core: str, kind: str) -> None:
+    async def check(panel: ApprovalPanel, _seen: _Seen, window: Gtk.Window) -> None:
+        source = panel.cards[0].view
+        full = "x" * 4500 + "\nEND OF REQUEST\x1b[2K"
+        if kind == "command":
+            detail = CommandDetail(command=full, args_preview=None)
+        elif kind == "edit":
+            detail = EditDetail(files=tuple(f"file-{number}.py" for number in range(10)),
+                diff_preview="-before\n+after", input_json=full)
+        else:
+            detail = GenericDetail(json_preview=full)
+        view = msgspec.structs.replace(source, id=ApprovalId("full-request"), detail=detail)
+        window.set_default_size(700, 800)
+        panel.update((view,), {}, view.tab_id)
+        card = panel.cards[0]
+        assert "END OF REQUEST" not in "\n".join(_labels(card))
+        expanders = _expanders(card.details)
+        assert expanders
+        for expander in expanders:
+            expander.set_expanded(True)
+        await _settled(lambda: "END OF REQUEST" in "\n".join(_labels(card)))
+        labels = "\n".join(_labels(card))
+        assert "END OF REQUEST[U+001B][2K" in labels
+        assert "\x1b" not in labels
+        if kind == "edit":
+            assert "file-9.py" in labels
+            assert "-before\n+after" in labels
+            assert any(text in labels for text in ("Changes protected files", "Меняет защищённые файлы"))
+        await _settled(lambda: card.allow_button.get_height() > 0)
+        assert card.details.get_height() <= 180
+        assert card.allow_button.get_mapped()
+        assert card.deny_button.get_mapped()
+        assert card.release_button.get_mapped()
+
+    _on_panel(core, check)
 
 
 @pytest.mark.parametrize("core", ["waiting"], indirect=True)

@@ -1,0 +1,43 @@
+{
+  "base": "d4f0eae4673f2f8cc6806dbb2434c205316331cc",
+  "source_sha256": {
+    "contracts/schema/ipc/AppSnapshot.schema.json": "d03427a7947bc98b5dc462827c4e414e1f4b25f5dd0d535739e14c4ca41e4b51",
+    "contracts/schema/ipc/ApprovalRequested.schema.json": "c5f5c1717b0089d8416a05c9f57303caf7eb4ab295c76c77cd621e3ef51ed889",
+    "contracts/schema/ipc/ApprovalView.schema.json": "00153dcf2dcb432015a310621ffa19f2df652595ead4207078caba771f778d55",
+    "contracts/schema/ipc/EditDetail.schema.json": "dd2bf3e4c8a6068d9310faa6300c54602c5088be36805c790b676106116210fb",
+    "contracts/schema/ipc/EventEnvelope.schema.json": "dcceb76c7b509a415266bd142e7a8474480c7cecd79d1f0137dd4fd68589e95f",
+    "contracts/schema/ipc/SnapshotResult.schema.json": "90698135ef79c45f7fd45c7786867f0a61a9d41098f2ed6d944093041d89f0a7",
+    "src/aconsole/contracts/app.py": "ada47f9d21b3d515cccdf8020643f99963f427d2975109d3b1bb16cb94338a51",
+    "src/aconsole/core/application/services/approval_broker.py": "cba64fdd350c72429f059be1c7b79ff54bffbaef62e1b48bed2d0fd9283cced5",
+    "src/aconsole/core/domain/risk.py": "8913ba30b55731460da2c0a372ef2270ed336908554064fb4b12b2c4be34a98c",
+    "src/aconsole/core/infrastructure/http/app.py": "ba15918c9af2e1fbe88dcad1cf23aa9c782e970c5e158ec36f3c208cdce74d6e",
+    "src/aconsole/core/infrastructure/http/approval.py": "011a00291c5948d84dadb451c6b11de2c459afebe0327bf837cd8b45e2ce362c",
+    "src/aconsole/ui/locales/en/LC_MESSAGES/aconsole.mo": "1234004bb00a6936ba7e9d662c416cc66e8ebfe338ead29cc241e88e85d3d333",
+    "src/aconsole/ui/locales/en/LC_MESSAGES/aconsole.po": "6227496f0ea37148756c008632739169524f7918089eb5df5c363bb1e46d7338",
+    "src/aconsole/ui/locales/ru/LC_MESSAGES/aconsole.mo": "7b9e5a07a0a045798c9fa0528724661c427cac08907fc401b5a86b53602e8b7a",
+    "src/aconsole/ui/locales/ru/LC_MESSAGES/aconsole.po": "d558025e3362167bdcef5d26e34aa66233c0cd5bfa3f6ed698d4733651b8e14d",
+    "src/aconsole/ui/viewmodels/approvals_vm.py": "5fcad7b93bcc5aadddb3767cb7bc1f885b279f490cf86f941c1ae4bf6d76dce0",
+    "src/aconsole/ui/views/approvals/panel.py": "4d2e8449f10d3e4713e8b035328f76878bbe51b92b524381c052f9fc774ae4ce",
+    "tests/core/test_approval_hold.py": "8e412261d224b6be69705bee48414d885ef13fa538f7b087c93f8e0f92d17699",
+    "tests/gui/front/test_approval_panel.py": "19877924a7e266ad6478f46c638751fb4b2afe6dfb3639ecc81de2325101d129",
+    "src/aconsole/core/infrastructure/http/permission_details.py": "64971a178f61d3bbc895e945f690d431d31cfa66af617bd25242d130a2592d8e",
+    "tests/core/test_permission_details.py": "e23c6416ace032829c636b2289e76635a4b4601c24883b393dc21bc85e3fc754"
+  },
+  "screenshot_fixture": "artifacts/apr2/capture.txt; private Xvfb; FakeCore demo; synthetic requests; no real CLI validation",
+  "screenshot_sha256": {
+    "artifacts/apr2/ui/edit-dark.png": "914e20b0e362a6b55b8a14769849717a55591b5fdf1db077b90faaf8adc8fa26",
+    "artifacts/apr2/ui/edit-light.png": "18d21c6194e4a0154e2cdd002339fcf043a95ad3bf00856559e7c0089a4289bc",
+    "artifacts/apr2/ui/edit-narrow.png": "29332a9880537da06dc0297401a44fcf776156011a28905dd9e318b2d62c9c44",
+    "artifacts/apr2/ui/long-dark.png": "4a70749d1de4e16d9d9c9a491c532cd2c6039477886e5189f4953e43cb252f81",
+    "artifacts/apr2/ui/long-light.png": "335b74d79cc09e9acee3f886166a50ebac49508ff10c4f04a5546f28a2338aaa",
+    "artifacts/apr2/ui/long-narrow.png": "ede21a2ede0990c875d0f4e7f75a2579190679cc31d25d4720ef4f2ae99edb60",
+    "artifacts/apr2/ui/mcp-dark.png": "de9149501849983777da5e139830a3f9d11f929e8992b47abe9ef0b56f7c413b",
+    "artifacts/apr2/ui/mcp-light.png": "31d1b788cd68c47bef6bde64b5fa1398ba14421378a52d5273b6d8e03508e1fb",
+    "artifacts/apr2/ui/mcp-narrow.png": "cd7e4d522c3fe14b896ee9fea13bbcfa7a360e468a0bc344c706a2d3aad593dc"
+  },
+  "core_tests": 182,
+  "gtk_viewmodel_tests": 35,
+  "overlapping_viewmodel_tests": 3,
+  "contract_checks": 11,
+  "skipped_docs_contract_checks": 2
+}

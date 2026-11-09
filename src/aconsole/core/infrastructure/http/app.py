@@ -128,7 +128,7 @@ class IngestApp:
         body = await _read_body(receive, limit=self._body_limit)
         if body is None:
             return _problem("MESSAGE_TOO_LARGE", instance)
-        return await self._accept(route, body)
+        return await self._accept(route, body, receive)
 
     def _refused(self, tab_id: str, headers: dict[str, str], instance: str) -> HttpResponse | None:
         decision = self._book.check(headers.get("authorization"), tab_id)
@@ -138,7 +138,7 @@ class IngestApp:
             return _problem("INGEST_UNAUTHORIZED", instance)
         return None
 
-    async def _accept(self, route: Route, body: bytes) -> HttpResponse:
+    async def _accept(self, route: Route, body: bytes, receive: Receive) -> HttpResponse:
         parsed = classify(route.kind, body)
         if parsed is None:
             self._invalid += 1
@@ -153,7 +153,7 @@ class IngestApp:
             and route.kind in {"claude.hook", "codex.hook"}
             and getattr(parsed, "hook_event_name", None) == "PermissionRequest"
         ):
-            return await handler(item)
+            return await _permission_response(handler, item, receive)
         if route.kind in _NO_CONTENT_KINDS:
             return no_content()
         return json_response(empty_json())
@@ -258,6 +258,28 @@ async def _lifespan(receive: Receive, send: Send) -> None:
         if kind == "lifespan.shutdown":
             await send({"type": "lifespan.shutdown.complete"})
         return
+
+
+async def _permission_response(handler: PermissionHandler, item: IngestItem, receive: Receive) -> HttpResponse:
+    """ASGI does not cancel a handler on disconnect: explicitly end the abandoned hold."""
+    response = asyncio.create_task(handler(item))
+    disconnected = asyncio.create_task(_disconnected(receive))
+    try:
+        done, _pending = await asyncio.wait((response, disconnected), return_when=asyncio.FIRST_COMPLETED)
+        if response in done:
+            return await response
+        # Propagate a receive error too, after the finally block releases the hold.
+        await disconnected
+        return no_content()
+    finally:
+        _ = response.cancel()
+        _ = disconnected.cancel()
+        _ = await asyncio.gather(response, disconnected, return_exceptions=True)
+
+
+async def _disconnected(receive: Receive) -> None:
+    while (await receive()).get("type") != "http.disconnect":
+        pass
 
 
 async def _send(send: Send, response: HttpResponse) -> None:

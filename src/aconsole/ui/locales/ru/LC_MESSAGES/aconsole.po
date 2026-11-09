@@ -5,6 +5,18 @@ msgstr "Project-Id-Version: AConsole 0.1.1\nLanguage: ru\nContent-Type: text/pla
 msgid "approvals.alert.open"
 msgstr "Открыть"
 
+msgid "approvals.full_text"
+msgstr "Прочитать целиком"
+
+msgid "approvals.full_input"
+msgstr "Все аргументы"
+
+msgid "approvals.diff_preview"
+msgstr "Предлагаемые изменения (до 200 строк)"
+
+msgid "approvals.risk.protected"
+msgstr "Меняет защищённые файлы"
+
 msgid "approvals.alert.title"
 msgstr "Агент ждёт решения"
 

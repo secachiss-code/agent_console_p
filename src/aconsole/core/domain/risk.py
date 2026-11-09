@@ -750,3 +750,25 @@ def classify(command: str, *, cwd: str, worktree: str) -> frozenset[RiskTag]:
     fail closed with every tag.
     """
     return _classify_text(command, cwd=cwd, worktree=worktree, depth=0)
+
+
+def classify_write_paths(paths: tuple[str, ...], *, cwd: str, worktree: str) -> frozenset[RiskTag]:
+    """Classify literal hook paths without interpreting their names as shell commands.
+
+    Paths are lexical: the core cannot resolve links in an agent's separate mount namespace.
+    Both the supplied and normalized path count for protected directories.
+    """
+    tags: set[RiskTag] = set()
+    protected = _PROTECTED_DIRS | {".agents", ".cursor", ".opencode"}
+    configs = {"AGENTS.md", "CLAUDE.md", "GEMINI.md", ".cursorrules", "opencode.json", "opencode.jsonc"}
+    root = Path(os.path.normpath(worktree))
+    for name in paths:
+        path = Path(name)
+        target = Path(os.path.normpath(path if path.is_absolute() else Path(cwd) / path))
+        if protected.intersection((*path.parts, *target.parts)) or target.name in configs:
+            tags.add(RiskTag.DESTRUCTIVE)
+        if any(secret in name.lower() for secret in _SECRET_NAMES):
+            tags.add(RiskTag.SECRETS)
+        if not worktree or not target.is_absolute() or not target.is_relative_to(root) or name.startswith("~"):
+            tags.add(RiskTag.OUTSIDE_WORKTREE)
+    return frozenset(tags)

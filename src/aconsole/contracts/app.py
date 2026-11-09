@@ -138,6 +138,8 @@ class CommandDetail(msgspec.Struct, frozen=True, kw_only=True, tag="command", ta
 class EditDetail(msgspec.Struct, frozen=True, kw_only=True, tag="edit", tag_field="type"):
     files: tuple[str, ...]
     diff_preview: str | None
+    # Full hook arguments remain available when the bounded diff preview omits content.
+    input_json: str | None = None
 
 
 class GenericDetail(msgspec.Struct, frozen=True, kw_only=True, tag="generic", tag_field="type"):

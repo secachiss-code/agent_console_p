@@ -20,12 +20,11 @@ gi.require_version("Adw", "1")
 from gi.repository import Gdk, GLib, GObject, Gtk, Pango  # noqa: E402
 
 from aconsole.contracts.app import ApprovalView, CommandDetail, EditDetail  # noqa: E402
-from aconsole.contracts.common import ApprovalDecision, ApprovalId, ApprovalScope, TabId  # noqa: E402
+from aconsole.contracts.common import ApprovalDecision, ApprovalId, ApprovalScope, RiskTag, TabId  # noqa: E402
 from aconsole.ui.bootstrap import spawn_task  # noqa: E402
 from aconsole.ui.client.core_client import CoreCallError  # noqa: E402
 from aconsole.ui.viewmodels.approvals_vm import CLOSED_CODES, ApprovalsViewModel, is_risky, safe_text, time_left  # noqa: E402
 from aconsole.ui.viewmodels.logic.quota_fmt import agent_name  # noqa: E402
-from aconsole.ui.viewmodels.review_vm import files_preview  # noqa: E402
 from aconsole.ui.views.approvals.messages import _ as translate  # noqa: E402
 
 if TYPE_CHECKING:
@@ -40,9 +39,10 @@ _SHIFT_GUARD_S: Final = 0.6
 _TICK_S: Final = 1
 
 
-def _mono(text: str) -> Gtk.Label:
+def _mono(text: str, *, full: bool = False) -> Gtk.Label:
     label = Gtk.Label(
-        label=safe_text(text), xalign=0, wrap=True, wrap_mode=Pango.WrapMode.WORD_CHAR, selectable=True,
+        label=safe_text(text, limit=None) if full else safe_text(text),
+        xalign=0, wrap=True, wrap_mode=Pango.WrapMode.WORD_CHAR, selectable=True,
         max_width_chars=_NATURAL_CHARS,
     )
     # Selectable labels take focus and would leave a stop between a card and its buttons.
@@ -50,6 +50,24 @@ def _mono(text: str) -> Gtk.Label:
     label.add_css_class("monospace")
     label.add_css_class("ac-approval-command")
     return label
+
+
+def _expand_text(text: str, key: str) -> Gtk.Expander:
+    expander = Gtk.Expander(label=translate(key))
+    # Allocate long labels only when requested, keeping new approval cards cheap to display.
+    _ = expander.connect("notify::expanded", _reveal_text, text)
+    return expander
+
+
+def _reveal_text(expander: Gtk.Expander, _property: GObject.ParamSpec, text: str) -> None:
+    if expander.get_expanded() and expander.get_child() is None:
+        expander.set_child(_mono(text, full=True))
+
+
+def _readable(body: Gtk.Box, text: str) -> None:
+    body.append(_mono(text))
+    if safe_text(text) != safe_text(text, limit=None):
+        body.append(_expand_text(text, "approvals.full_text"))
 
 
 def place_at_bottom(overlay: Gtk.Overlay, child: Gtk.Widget, allocation: Gdk.Rectangle) -> bool:
@@ -211,7 +229,12 @@ class ApprovalCard(Gtk.Box):
         return translate("approvals.title.tool").format(agent=agent, tool=safe_text(self.view.tool))
 
     def _risk_text(self) -> str:
-        return " · ".join(translate(f"approvals.risk.{risk.value}") for risk in sorted(self.view.risk))
+        return " · ".join(
+            translate("approvals.risk.protected")
+            if isinstance(self.view.detail, EditDetail) and risk is RiskTag.DESTRUCTIVE
+            else translate(f"approvals.risk.{risk.value}")
+            for risk in sorted(self.view.risk)
+        )
 
     def _risks(self) -> Gtk.Label | None:
         if not self.view.risk:
@@ -246,19 +269,17 @@ class ApprovalCard(Gtk.Box):
     def _detail(self, body: Gtk.Box) -> None:
         detail = self.view.detail
         if isinstance(detail, CommandDetail):
-            body.append(_mono(detail.command))
+            _readable(body, detail.command)
             if detail.args_preview:
-                body.append(_mono(detail.args_preview))
+                _readable(body, detail.args_preview)
         elif isinstance(detail, EditDetail):
-            named, rest = files_preview(detail.files)
-            lines = list(named)
-            if rest:
-                lines.append(translate("approvals.more_files", rest).format(count=rest))
-            body.append(_mono("\n".join(lines)))
+            _readable(body, "\n".join(detail.files))
             if detail.diff_preview:
-                body.append(_mono(detail.diff_preview))
+                body.append(_expand_text(detail.diff_preview, "approvals.diff_preview"))
+            if detail.input_json is not None:
+                body.append(_expand_text(detail.input_json, "approvals.full_input"))
         else:
-            body.append(_mono(detail.json_preview))
+            _readable(body, detail.json_preview)
 
     def _buttons(self) -> Gtk.Box:
         # Wraps rather than clips: the window can be narrow and the text large.

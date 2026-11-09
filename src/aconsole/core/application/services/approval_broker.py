@@ -66,6 +66,7 @@ class ApprovalHold:
         self._audit = audit
         self._now = now
         self._pending: dict[str, asyncio.Future[HookOutcome]] = {}
+        self._waiters: dict[str, int] = {}
         self._timers: dict[str, asyncio.TimerHandle] = {}
         self._decisions: dict[str, tuple[str, ApprovalDecision]] = {}
         self._settled: set[str] = set()
@@ -92,7 +93,23 @@ class ApprovalHold:
             self._timers[approval.id] = loop.call_later(delay, self._expire_due, approval.expires_at)
             self._publish(ApprovalRequested(approval=view))
             self._notify(approval)
-        return await asyncio.shield(future)
+        self._waiters[approval.id] = self._waiters.get(approval.id, 0) + 1
+        try:
+            return await asyncio.shield(future)
+        finally:
+            remaining = self._waiters[approval.id] - 1
+            if remaining:
+                self._waiters[approval.id] = remaining
+            else:
+                del self._waiters[approval.id]
+                # The last HTTP caller left. Do not keep a decision card for a tool call
+                # that can no longer receive its answer; another duplicate caller still can.
+                if approval.id in self._pending:
+                    at = self._now()
+                    if at >= approval.expires_at:
+                        self.expire(at=at)
+                    else:
+                        self._settle(self._book.cancel(approval.id, at=at), None)
 
     def decide(self, params: DecideParams, *, at: datetime) -> AppliedResult:
         approval_id = str(params.approval_id)
