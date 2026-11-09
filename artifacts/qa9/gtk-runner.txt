@@ -1,0 +1,58 @@
+import argparse,os,secrets,struct,subprocess,sys,tempfile,time
+from pathlib import Path
+root=Path(__file__).resolve().parents[2]
+output=root/'artifacts/qa9'
+parser=argparse.ArgumentParser();parser.add_argument('--label',default='');parser.add_argument('--repeat',type=int,default=1);parser.add_argument('--diagnostics',action='store_true');parser.add_argument('--full-ui',action='store_true');parser.add_argument('--coverage',action='store_true');parser.add_argument('--git-actions',action='store_true');options=parser.parse_args()
+options.desktop=False
+options.a11y_default=False
+label='full-ui-coverage' if options.coverage else 'full-ui'
+if options.git_actions: label='git-actions-focused'
+if options.label: label=options.label
+with tempfile.TemporaryDirectory(prefix='qa9-xvfb-') as directory:
+    temp=Path(directory)
+    checkout=root
+    server=None
+    if not options.desktop:
+        subprocess.run(['/usr/bin/apt-get','download','xvfb'],cwd=temp,timeout=90,check=True)
+        packages=list(temp.glob('xvfb_*.deb')); assert len(packages)==1
+        subprocess.run(['/usr/bin/dpkg-deb','-x',str(packages[0]),str(temp/'package')],timeout=20,check=True)
+        number=next(n for n in range(101,120) if not Path(f'/tmp/.X11-unix/X{n}').exists())
+        display=str(number).encode();cookie=secrets.token_bytes(16);auth=temp/'Xauthority'
+        auth.write_bytes(struct.pack('>HH',65535,0)+struct.pack('>H',len(display))+display+struct.pack('>H',18)+b'MIT-MAGIC-COOKIE-1'+struct.pack('>H',16)+cookie)
+        auth.chmod(0o600)
+        server=subprocess.Popen([str(temp/'package/usr/bin/Xvfb'),f':{number}','-screen','0','1280x800x24','-nolisten','tcp','-auth',str(auth)])
+    try:
+        if server is not None:
+            for _ in range(100):
+                if Path(f'/tmp/.X11-unix/X{number}').exists():break
+                if server.poll() is not None:raise RuntimeError('Xvfb failed')
+                time.sleep(.05)
+        env=dict(os.environ,GDK_BACKEND='x11',GTK_A11Y='test',PYTHONPATH=str(checkout/'src')+':'+str(output),
+            XDG_STATE_HOME=str(temp/'state'),XDG_CONFIG_HOME=str(temp/'config'),XDG_CACHE_HOME=str(temp/'cache'))
+        if options.a11y_default: env.pop('GTK_A11Y',None)
+        if not options.desktop: env.update(DISPLAY=f':{number}',XAUTHORITY=str(auth))
+        if options.desktop and not env.get('DISPLAY'): raise RuntimeError('no desktop DISPLAY')
+        env.pop('WAYLAND_DISPLAY',None);env.pop('BROADWAY_DISPLAY',None)
+        tests=['tests/gui/front/test_b4b_quota.py::test_the_sidebar_shows_every_window_of_an_account_shortest_first']
+        if options.full_ui:tests=['tests/gui','tests/ui','tests/smoke','--deselect','tests/gui/front/test_git_scale_ui.py::test_scrolling_a_long_history']
+        if options.git_actions:tests=['tests/gui/front','-k','test_a_conflicted_rebase_offers_abort_and_a_stale_commit_is_refused']
+        args=['-q','-o','addopts=','--junitxml='+str(output/(label+'.xml')),*tests]
+        if options.coverage:
+            args+=['--cov','--cov-branch','--cov-report=','--cov-fail-under=0']
+        if options.diagnostics:
+            args += ['-p','qa9_probe']
+            env['ACONSOLE_QA9_TRACE']=str(output/(label+'-trace.log'))
+        command=[sys.executable,'-c',"import locale,pytest; locale.getlocale=lambda:('en_US','UTF-8'); raise SystemExit(pytest.main("+repr(args)+"))"]
+        failed=False
+        for iteration in range(options.repeat):
+            run_label=label if options.repeat==1 else f'{label}-{iteration+1:02}'
+            run_command=[part.replace(label+'.xml',run_label+'.xml') for part in command]
+            if options.coverage:env['COVERAGE_FILE']=str(output/('.coverage.'+run_label))
+            if options.diagnostics:env['ACONSOLE_QA9_TRACE']=str(output/(run_label+'-trace.txt'))
+            with (output/(run_label+'.log')).open('w') as stream:
+                result=subprocess.run(run_command,env=env,cwd=checkout,timeout=360,stdout=stream,stderr=subprocess.STDOUT)
+            print((output/(run_label+'.log')).read_text()[-1800:],flush=True)
+            failed=failed or result.returncode!=0
+        raise SystemExit(1 if failed else 0)
+    finally:
+        if server is not None:server.terminate();server.wait(timeout=5)

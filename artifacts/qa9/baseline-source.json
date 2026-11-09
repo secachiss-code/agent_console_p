@@ -1,0 +1,6 @@
+{
+  "commit": "61257760e032814ec2d371a6e4ded4e84ceb8cb9",
+  "product_changes": "",
+  "coverage": true,
+  "excluded": "tests/gui/front/test_git_scale_ui.py::test_scrolling_a_long_history (existing PERF-7 exclusion)"
+}

@@ -1,0 +1,129 @@
+[
+  {
+    "file": "baseline-full.xml",
+    "tests": 507,
+    "failures": [],
+    "seconds": 198.039
+  },
+  {
+    "file": "final-full.xml",
+    "tests": 507,
+    "failures": [],
+    "seconds": 192.834,
+    "abort_requests": 1,
+    "abort_ok": 1,
+    "restored_expected_head": true,
+    "rebase_conflicted": true,
+    "abort_errors": []
+  },
+  {
+    "file": "isolated-probe-01.xml",
+    "tests": 1,
+    "failures": [],
+    "seconds": 10.059,
+    "abort_requests": 1,
+    "abort_ok": 1,
+    "restored_expected_head": true,
+    "rebase_conflicted": true,
+    "abort_errors": []
+  },
+  {
+    "file": "isolated-probe-02.xml",
+    "tests": 1,
+    "failures": [],
+    "seconds": 9.064,
+    "abort_requests": 1,
+    "abort_ok": 1,
+    "restored_expected_head": true,
+    "rebase_conflicted": true,
+    "abort_errors": []
+  },
+  {
+    "file": "isolated-probe-03.xml",
+    "tests": 1,
+    "failures": [],
+    "seconds": 9.25,
+    "abort_requests": 1,
+    "abort_ok": 1,
+    "restored_expected_head": true,
+    "rebase_conflicted": true,
+    "abort_errors": []
+  },
+  {
+    "file": "isolated-probe-04.xml",
+    "tests": 1,
+    "failures": [],
+    "seconds": 9.096,
+    "abort_requests": 1,
+    "abort_ok": 1,
+    "restored_expected_head": true,
+    "rebase_conflicted": true,
+    "abort_errors": []
+  },
+  {
+    "file": "isolated-probe-05.xml",
+    "tests": 1,
+    "failures": [],
+    "seconds": 9.728,
+    "abort_requests": 1,
+    "abort_ok": 1,
+    "restored_expected_head": true,
+    "rebase_conflicted": true,
+    "abort_errors": []
+  },
+  {
+    "file": "isolated-probe-06.xml",
+    "tests": 1,
+    "failures": [],
+    "seconds": 9.335,
+    "abort_requests": 1,
+    "abort_ok": 1,
+    "restored_expected_head": true,
+    "rebase_conflicted": true,
+    "abort_errors": []
+  },
+  {
+    "file": "isolated-probe-07.xml",
+    "tests": 1,
+    "failures": [],
+    "seconds": 9.175,
+    "abort_requests": 1,
+    "abort_ok": 1,
+    "restored_expected_head": true,
+    "rebase_conflicted": true,
+    "abort_errors": []
+  },
+  {
+    "file": "isolated-probe-08.xml",
+    "tests": 1,
+    "failures": [],
+    "seconds": 8.883,
+    "abort_requests": 1,
+    "abort_ok": 1,
+    "restored_expected_head": true,
+    "rebase_conflicted": true,
+    "abort_errors": []
+  },
+  {
+    "file": "isolated-probe-09.xml",
+    "tests": 1,
+    "failures": [],
+    "seconds": 10.0,
+    "abort_requests": 1,
+    "abort_ok": 1,
+    "restored_expected_head": true,
+    "rebase_conflicted": true,
+    "abort_errors": []
+  },
+  {
+    "file": "isolated-probe-10.xml",
+    "tests": 1,
+    "failures": [],
+    "seconds": 9.353,
+    "abort_requests": 1,
+    "abort_ok": 1,
+    "restored_expected_head": true,
+    "rebase_conflicted": true,
+    "abort_errors": []
+  }
+]

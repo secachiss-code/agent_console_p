@@ -1,0 +1,9 @@
+{
+  "base_commit": "61257760e032814ec2d371a6e4ded4e84ceb8cb9",
+  "changes": "Failure diagnostics in the GUI test; optional RPC probe. No product edits.",
+  "sha256": {
+    "tests/gui/front/test_git_actions.py": "457d43b179a823c7b01e238b2cc380932165d59b70ba90f3fa09e8a6042bb026",
+    "artifacts/qa9/qa9_probe.py": "23c56fe217a60c218c85c2464aa049e5bf08b0d705cd3f307a9f999778a15201",
+    "artifacts/qa9/gtk-runner.txt": "3859b082a4022c282bc3d7627ae2422deadd36dcc5c04ac5e1f7878b3e29b92c"
+  }
+}

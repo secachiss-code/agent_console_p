@@ -166,7 +166,17 @@ def test_a_conflicted_rebase_offers_abort_and_a_stale_commit_is_refused(
         assert not pane.git_actions.offered("merge")
         _press(pane, "abort")
         _answer(pane)
-        await _settled(lambda: _git(tree, "status", "--porcelain") == "" and _git(tree, "rev-parse", "HEAD") == before)
+        try:
+            await _settled(
+                lambda: _git(tree, "status", "--porcelain") == "" and _git(tree, "rev-parse", "HEAD") == before
+            )
+        except AssertionError as error:
+            error.add_note(f"Abort messages: {toasts!r}; selected row: {pane.selected_row()!r}")
+            error.add_note(
+                f"Expected HEAD: {before}; actual HEAD: {_git(tree, 'rev-parse', 'HEAD')}; "
+                f"status: {_git(tree, '--no-optional-locks', 'status', '--porcelain')!r}"
+            )
+            raise
 
         # The user looks, another terminal stages something, then the user commits what they saw.
         (repo / "x.txt").write_text("x\n", encoding="utf-8")

@@ -1,0 +1,28 @@
+"""Summarize saved JUnit verdicts and real rewrite replies."""
+from pathlib import Path
+import json
+import re
+import xml.etree.ElementTree as ET
+
+root = Path(__file__).resolve().parent
+runs = []
+for path in sorted(root.glob('*.xml')):
+    suite = ET.parse(path).getroot().find('testsuite')
+    cases = list(suite.iter('testcase'))
+    failures = [case.attrib['classname'] + '::' + case.attrib['name']
+                for case in cases if case.find('failure') is not None or case.find('error') is not None]
+    item = dict(file=path.name, tests=len(cases), failures=failures, seconds=float(suite.attrib['time']))
+    trace = root / (path.stem + '-trace.txt')
+    if trace.exists():
+        lines = trace.read_text().splitlines()
+        item['abort_requests'] = sum(' request git/abort ' in line for line in lines)
+        item['abort_ok'] = sum(' result git/abort GitChangeResult(ok=True,' in line for line in lines)
+        expected = re.search(r"expect_head='([a-f0-9]+)'", trace.read_text())
+        aborted = re.search(r"result git/abort GitChangeResult\(ok=True, head_oid='([a-f0-9]+)'", trace.read_text())
+        item['restored_expected_head'] = bool(expected and aborted and expected[1] == aborted[1])
+        item['rebase_conflicted'] = any("result git/rebase " in line and "status='conflicted'" in line for line in lines)
+        item['abort_errors'] = [line for line in lines if 'error git/abort ' in line or
+                                ' result git/abort GitChangeResult(ok=False,' in line]
+    runs.append(item)
+(root / 'results.json').write_text(json.dumps(runs, indent=2) + '\n')
+print(json.dumps(runs, indent=2))
