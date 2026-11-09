@@ -1,0 +1,208 @@
+{
+  "source_commit": "1c503c82bd2032d7858f3523669da3a9e8cbd7bc",
+  "source_unchanged": true,
+  "baseline_inputs": [
+    "artifacts/qa11/.coverage.core",
+    "artifacts/qa9/.coverage.final-full"
+  ],
+  "candidate_extra_input": "artifacts/qa12/.coverage.legacy",
+  "before": {
+    "covered_lines": 26587,
+    "num_statements": 28988,
+    "percent_covered": 89.4220646090763,
+    "percent_covered_display": "89",
+    "missing_lines": 2401,
+    "excluded_lines": 381,
+    "percent_statements_covered": 91.71726231544088,
+    "percent_statements_covered_display": "92",
+    "num_branches": 7106,
+    "num_partial_branches": 1055,
+    "covered_branches": 5689,
+    "missing_branches": 1417,
+    "percent_branches_covered": 80.0591049817056,
+    "percent_branches_covered_display": "80"
+  },
+  "after": {
+    "covered_lines": 26628,
+    "num_statements": 28988,
+    "percent_covered": 89.59383831107664,
+    "percent_covered_display": "90",
+    "missing_lines": 2360,
+    "excluded_lines": 381,
+    "percent_statements_covered": 91.85870015178695,
+    "percent_statements_covered_display": "92",
+    "num_branches": 7106,
+    "num_partial_branches": 1052,
+    "covered_branches": 5710,
+    "missing_branches": 1396,
+    "percent_branches_covered": 80.35462989023361,
+    "percent_branches_covered_display": "80"
+  },
+  "files": {
+    "src/aconsole/core/application/services/tabs.py": {
+      "before": {
+        "covered_lines": 1012,
+        "num_statements": 1113,
+        "percent_covered": 87.6748834110593,
+        "percent_covered_display": "88",
+        "missing_lines": 101,
+        "excluded_lines": 51,
+        "percent_statements_covered": 90.92542677448338,
+        "percent_statements_covered_display": "91",
+        "num_branches": 388,
+        "num_partial_branches": 60,
+        "covered_branches": 304,
+        "missing_branches": 84,
+        "percent_branches_covered": 78.35051546391753,
+        "percent_branches_covered_display": "78"
+      },
+      "after": {
+        "covered_lines": 1053,
+        "num_statements": 1113,
+        "percent_covered": 91.80546302465024,
+        "percent_covered_display": "92",
+        "missing_lines": 60,
+        "excluded_lines": 51,
+        "percent_statements_covered": 94.60916442048517,
+        "percent_statements_covered_display": "95",
+        "num_branches": 388,
+        "num_partial_branches": 57,
+        "covered_branches": 325,
+        "missing_branches": 63,
+        "percent_branches_covered": 83.76288659793815,
+        "percent_branches_covered_display": "84"
+      },
+      "added_lines": [
+        1362,
+        1363,
+        1364,
+        1365,
+        1366,
+        1367,
+        1368,
+        1369,
+        1370,
+        1373,
+        1374,
+        1375,
+        1376,
+        1377,
+        1378,
+        1379,
+        1380,
+        1381,
+        1393,
+        1401,
+        1405,
+        1406,
+        1585,
+        1586,
+        1587,
+        1588,
+        1589,
+        1590,
+        1594,
+        1595,
+        1596,
+        1597,
+        1598,
+        1599,
+        1603,
+        1604,
+        1605,
+        1606,
+        1607,
+        1608,
+        1609
+      ],
+      "added_branch_exits": [
+        [
+          1352,
+          1362
+        ],
+        [
+          1363,
+          1364
+        ],
+        [
+          1363,
+          1367
+        ],
+        [
+          1367,
+          1368
+        ],
+        [
+          1367,
+          1369
+        ],
+        [
+          1370,
+          1373
+        ],
+        [
+          1378,
+          1379
+        ],
+        [
+          1378,
+          1380
+        ],
+        [
+          1392,
+          1393
+        ],
+        [
+          1397,
+          1401
+        ],
+        [
+          1404,
+          1405
+        ],
+        [
+          1585,
+          1586
+        ],
+        [
+          1585,
+          1587
+        ],
+        [
+          1588,
+          1589
+        ],
+        [
+          1588,
+          1590
+        ],
+        [
+          1594,
+          1595
+        ],
+        [
+          1594,
+          1596
+        ],
+        [
+          1596,
+          1597
+        ],
+        [
+          1596,
+          1599
+        ],
+        [
+          1607,
+          1608
+        ],
+        [
+          1607,
+          1609
+        ]
+      ]
+    }
+  },
+  "added_lines": 41,
+  "added_branch_exits": 21
+}
