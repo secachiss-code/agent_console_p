@@ -1,0 +1,52 @@
+"""Compare coverage against QA-8 on the identical source tree; keep fresh full-run totals separate."""
+import json
+from pathlib import Path
+import tempfile
+
+import coverage
+
+root = Path(__file__).resolve().parents[2]
+out = root / 'artifacts/qa11'
+old = root / 'artifacts/qa4-scenarios'
+
+
+def combine(label, inputs):
+    cov = coverage.Coverage(data_file=str(out / ('.coverage.' + label)))
+    cov.combine([str(path) for path in inputs], keep=True)
+    cov.save()
+    with tempfile.TemporaryDirectory(prefix='qa11-summary-') as directory:
+        path = Path(directory) / 'coverage.json'
+        cov.json_report(outfile=str(path))
+        return json.loads(path.read_text())
+
+
+baseline = combine('baseline', [old / '.coverage.combined'])
+candidate = combine('candidate', [old / '.coverage.combined', out / '.coverage.focused'])
+summary = {
+    'source_commit': '4559120751b55be5808af7d68cfbb2e18c16f3a9',
+    'source_same_as_qa8': True,
+    'baseline_inputs': ['artifacts/qa4-scenarios/.coverage.combined'],
+    'candidate_extra_input': 'artifacts/qa11/.coverage.focused',
+    'before': baseline['totals'], 'after': candidate['totals'], 'files': {},
+}
+for name, value in candidate['files'].items():
+    old_value = baseline['files'][name]
+    lines = sorted(set(value['executed_lines']) - set(old_value['executed_lines']))
+    branches = sorted(set(map(tuple, value['executed_branches']))
+                      - set(map(tuple, old_value['executed_branches'])))
+    if lines or branches:
+        summary['files'][name] = {'before': old_value['summary'], 'after': value['summary'],
+                                  'added_lines': lines, 'added_branch_exits': branches}
+summary['added_lines'] = candidate['totals']['covered_lines'] - baseline['totals']['covered_lines']
+summary['added_branch_exits'] = candidate['totals']['covered_branches'] - baseline['totals']['covered_branches']
+(out / 'coverage-delta.json').write_text(json.dumps(summary, indent=2) + '\n')
+print('Same-source delta:', summary['added_lines'], 'lines,', summary['added_branch_exits'], 'branch exits')
+print('Coverage:', baseline['totals']['percent_covered'], '->', candidate['totals']['percent_covered'])
+if (out / '.coverage.core').exists():
+    fresh = combine('combined', [out / '.coverage.core', root / 'artifacts/qa9/.coverage.final-full'])
+    (out / 'full-coverage-summary.json').write_text(json.dumps({
+        'inputs': ['artifacts/qa11/.coverage.core', 'artifacts/qa9/.coverage.final-full'],
+        'totals': fresh['totals'],
+        'files': {name: value['summary'] for name, value in fresh['files'].items()},
+    }, indent=2) + '\n')
+    print('Fresh core + QA-9 GUI:', fresh['totals']['percent_covered'])
