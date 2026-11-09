@@ -79,10 +79,14 @@ class TabSidebar(Gtk.Stack):
         scroll = Gtk.ScrolledWindow(hscrollbar_policy=Gtk.PolicyType.NEVER)
         scroll.set_child(self.tab_list)
         _ = self.add_named(scroll, "tabs")
-        self.empty_page: Adw.StatusPage = Adw.StatusPage(description=translate("tabs.empty"))
+        self.empty_page: Adw.StatusPage = Adw.StatusPage(
+            title=translate("tabs.list"), icon_name="tab-new-symbolic", description=translate("tabs.empty"),
+        )
+        self.empty_page.add_css_class("ac-empty")
         self.empty_page.add_css_class("compact")
-        button = Gtk.Button(label=translate("tabs.new"))
+        button = Gtk.Button(label=translate("tabs.new"), halign=Gtk.Align.CENTER)
         button.set_action_name("win.new-tab")
+        button.add_css_class("suggested-action")
         self.empty_page.set_child(button)
         _ = self.add_named(self.empty_page, "empty")
         _ = tabs.model.connect("items-changed", self._model_changed)

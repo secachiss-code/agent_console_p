@@ -23,6 +23,7 @@ from aconsole.ui.bootstrap import spawn_task  # noqa: E402
 from aconsole.ui.client.core_age import core_is_older_than_code  # noqa: E402
 from aconsole.ui.client.error_text import core_log_path  # noqa: E402
 from aconsole.ui.snapshot import after_first_paint, capture_window  # noqa: E402
+from aconsole.ui.style import stylesheet  # noqa: E402
 from aconsole.ui.viewmodels.tabs_vm import TabsViewModel  # noqa: E402
 from aconsole.ui.views.approvals.alert import OPEN_APPROVAL_ACTION  # noqa: E402
 from aconsole.ui.views.setup.messages import _ as translate  # noqa: E402
@@ -78,7 +79,7 @@ class AConsoleApp(Adw.Application):
     def do_startup(self) -> None:
         Adw.Application.do_startup(self)
         provider = Gtk.CssProvider()
-        provider.load_from_path(str(Path(__file__).parents[1] / "style" / "style.css"))
+        provider.load_from_string(stylesheet())
         display = Gdk.Display.get_default()
         if display is not None:
             Gtk.StyleContext.add_provider_for_display(display, provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
@@ -106,6 +107,7 @@ class AConsoleApp(Adw.Application):
 
     def _show_startup(self) -> None:
         self.startup_page = Adw.StatusPage(title=translate("startup.loading"))
+        self.startup_page.add_css_class("ac-empty")
         actions = Gtk.Box(spacing=12, halign=Gtk.Align.CENTER)
         self.startup_retry = Gtk.Button(label=translate("startup.retry"), visible=False)
         self.startup_retry.add_css_class("suggested-action")

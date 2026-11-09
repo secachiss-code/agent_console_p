@@ -25,6 +25,7 @@ from aconsole.ui.bootstrap import run_app, spawn_task  # noqa: E402
 from aconsole.ui.client.core_client import CoreClient  # noqa: E402
 from aconsole.ui.client.daemon import core_python  # noqa: E402
 from aconsole.ui.snapshot import capture_window  # noqa: E402
+from aconsole.ui.style import stylesheet  # noqa: E402
 from aconsole.ui.viewmodels.git_vm import GitViewModel  # noqa: E402
 from aconsole.ui.views.review.git_pane import GitPane, RowItem  # noqa: E402
 
@@ -36,7 +37,6 @@ _SETTLE_S: Final = 0.5
 _SOCKET_WAIT: Final = 0.05
 _POLL_S: Final = 0.02
 _DIRTY: Final = "ac/docs-update"
-_STYLE: Final = Path(__file__).parents[1] / "src" / "aconsole" / "ui" / "style" / "style.css"
 # Without a window manager GTK draws the window's shadow inside the size it asks for.
 _SHADOW: Final = 10
 
@@ -109,7 +109,7 @@ async def _settled(pane: GitPane) -> None:
 
 def _load_style() -> None:
     provider = Gtk.CssProvider()
-    provider.load_from_path(str(_STYLE))
+    provider.load_from_string(stylesheet())
     display = Gdk.Display.get_default()
     if display is not None:
         Gtk.StyleContext.add_provider_for_display(display, provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)

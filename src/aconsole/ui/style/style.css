@@ -1,5 +1,7 @@
+/* Sizes use tokens from style/__init__.py; load through stylesheet(), not as raw CSS. */
 /* tools/contrast_check.py holds every color here to WCAG AA in both themes. A mix with the text color
    moves away from the background whichever theme is on, and @define-color cannot differ between them. */
+@define-color ac_info_text mix(@accent_color, @window_fg_color, 0.4);
 @define-color ac_dim_text alpha(@window_fg_color, 0.78);
 @define-color ac_success_text mix(@success_color, @window_fg_color, 0.3);
 @define-color ac_warning_text mix(@warning_color, @window_fg_color, 0.35);
@@ -17,30 +19,30 @@ button:focus-visible, entry:focus-visible, dropdown:focus-visible {
 button.suggested-action { background-color: @ac_accent_button; }
 
 /* The left column: window buttons in one island, the application name, the tab list. */
-.ac-window-island { background-color: alpha(@window_fg_color, 0.07); border-radius: 999px; padding: 2px; }
+.ac-window-island { background-color: alpha(@window_fg_color, 0.07); border-radius: $radius_pill; padding: $space_xxs; }
 .ac-window-island-floating { background-color: @headerbar_bg_color; box-shadow: 0 1px 6px alpha(black, 0.3), 0 0 0 1px alpha(@window_fg_color, 0.08); opacity: 0.75; transition: opacity 120ms ease-out; }
 .ac-window-island-floating:hover { opacity: 1; }
-.ac-window-island windowcontrols { margin: 0; border-spacing: 2px; }
-.ac-window-island windowcontrols > button { min-width: 24px; min-height: 24px; padding: 0; margin: 0; border-radius: 999px; background: none; box-shadow: none; border: none; transition: background-color 120ms ease-out; }
+.ac-window-island windowcontrols { margin: 0; border-spacing: $space_xxs; }
+.ac-window-island windowcontrols > button { min-width: 24px; min-height: 24px; padding: 0; margin: 0; border-radius: $radius_pill; background: none; box-shadow: none; border: none; transition: background-color 120ms ease-out; }
 .ac-window-island windowcontrols > button > image { background: none; box-shadow: none; padding: 0; }
 .ac-window-island windowcontrols > button:hover { background-color: alpha(@window_fg_color, 0.12); }
 .ac-window-island windowcontrols > button:active { background-color: alpha(@window_fg_color, 0.18); }
 .ac-app-title { font-weight: 600; color: @ac_dim_text; }
 
-.ac-tabs row { min-height: 40px; margin: 1px 8px; border-radius: 8px; transition: background-color 120ms ease-out; }
+.ac-tabs row { min-height: 40px; margin: $space_xxs $space_md; border-radius: $radius_control; transition: background-color 120ms ease-out; }
 .ac-tabs row:selected { background-color: alpha(@window_fg_color, 0.1); color: @window_fg_color; }
 .ac-tabs row:focus-visible { outline: 2px solid @accent_color; outline-offset: -2px; }
-.ac-tab-row { min-height: 40px; padding: 3px 4px; }
+.ac-tab-row { min-height: 40px; padding: $space_xs $space_xs; }
 .ac-tab-name { font-weight: 500; }
-.ac-tab-subtitle { color: @ac_dim_text; font-size: 9pt; }
-.ac-tab-close { opacity: 0; min-width: 20px; min-height: 20px; padding: 0; border-radius: 999px; transition: opacity 120ms ease-out; }
+.ac-tab-subtitle { color: @ac_dim_text; font-size: $font_caption; }
+.ac-tab-close { opacity: 0; min-width: 20px; min-height: 20px; padding: 0; border-radius: $radius_pill; transition: opacity 120ms ease-out; }
 .ac-tab-row:hover .ac-tab-close, .ac-tab-row:focus-within .ac-tab-close { opacity: 1; }
-.ac-tab-wait { color: @ac_dim_text; font-size: 9pt; transition: opacity 120ms ease-out; }
+.ac-tab-wait { color: @ac_dim_text; font-size: $font_caption; transition: opacity 120ms ease-out; }
 .ac-tab-row:hover .ac-tab-wait, .ac-tab-row:focus-within .ac-tab-wait { opacity: 0; }
-.ac-tab-menu-anchor > button { min-width: 20px; min-height: 20px; padding: 0; border-radius: 999px; }
-.ac-tab-section { padding: 10px 18px 2px; font-size: 9pt; font-weight: 600; color: @ac_dim_text; }
+.ac-tab-menu-anchor > button { min-width: 20px; min-height: 20px; padding: 0; border-radius: $radius_pill; }
+.ac-tab-section { padding: $space_lg $space_xl $space_xxs; font-size: $font_caption; font-weight: 600; color: @ac_dim_text; }
 /* The status mark is drawn here: a ring when the agent waits on nobody, a filled dot when it needs someone. */
-.ac-tab-status { min-width: 10px; min-height: 10px; padding: 0; border-radius: 999px; font-size: 0; transition: background-color 200ms ease-out, box-shadow 200ms ease-out; }
+.ac-tab-status { min-width: 10px; min-height: 10px; padding: 0; border-radius: $radius_pill; font-size: 0; transition: background-color 200ms ease-out, box-shadow 200ms ease-out; }
 .ac-status-starting { box-shadow: inset 0 0 0 2px alpha(@accent_color, 0.55); }
 .ac-status-working { box-shadow: inset 0 0 0 2px @accent_color; }
 .ac-status-idle { box-shadow: inset 0 0 0 2px @success_color; }
@@ -48,65 +50,65 @@ button.suggested-action { background-color: @ac_accent_button; }
 .ac-status-error { background-color: @ac_error_shape; box-shadow: 0 0 0 3px alpha(@ac_error_shape, 0.2); }
 .ac-status-exited { box-shadow: inset 0 0 0 2px @ac_quiet_shape; }
 .ac-status-unknown { background-color: @ac_quiet_shape; }
-.ac-attention-ring { border-radius: 999px; box-shadow: 0 0 0 4px alpha(@accent_bg_color, 0.35); }
+.ac-attention-ring { border-radius: $radius_pill; box-shadow: 0 0 0 4px alpha(@accent_bg_color, 0.35); }
 @keyframes ac-attention-pulse { from { opacity: 1; } to { opacity: 0.35; } }
 .ac-attention-animated { animation: ac-attention-pulse 1.6s ease-in-out infinite alternate; }
 
-.ac-new-tab-body { margin: 4px 16px 16px; }
+.ac-new-tab-body { margin: $space_xs $space_xl $space_xl; }
 
 /* Plan and limits card. */
-.ac-summary-card { background-color: alpha(@window_fg_color, 0.05); border-radius: 12px; margin: 8px 10px 10px; box-shadow: inset 0 0 0 1px alpha(@window_fg_color, 0.05); }
-.ac-summary-card > separator { margin: 0 12px; background-color: alpha(@window_fg_color, 0.08); }
-.ac-summary-section { padding: 11px 12px; border-radius: 12px; font-weight: normal; transition: background-color 120ms ease-out; }
+.ac-summary-card { background-color: alpha(@window_fg_color, 0.05); border-radius: $radius_card; margin: $space_md $space_lg $space_lg; box-shadow: inset 0 0 0 1px alpha(@window_fg_color, 0.05); }
+.ac-summary-card > separator { margin: 0 $space_lg; background-color: alpha(@window_fg_color, 0.08); }
+.ac-summary-section { padding: $space_lg $space_lg; border-radius: $radius_card; font-weight: normal; transition: background-color 120ms ease-out; }
 /* A foldable section: the header folds it, the card under it opens its page. */
-.ac-section-header { padding: 8px 12px; margin: 0; min-height: 0; border-radius: 12px; font-weight: normal; transition: background-color 120ms ease-out; }
+.ac-section-header { padding: $space_md $space_lg; margin: 0; min-height: 0; border-radius: $radius_card; font-weight: normal; transition: background-color 120ms ease-out; }
 .ac-section-header:hover { background-color: alpha(@window_fg_color, 0.04); }
-.ac-section-header .caption-heading { color: @ac_dim_text; font-size: 8pt; }
-.ac-section-detail { color: @ac_dim_text; font-size: 9pt; }
+.ac-section-header .caption-heading { color: @ac_dim_text; font-size: $font_caption; }
+.ac-section-detail { color: @ac_dim_text; font-size: $font_caption; }
 .ac-section-detail.warning { color: @ac_warning_text; }
 .ac-section-detail.error { color: @ac_error_text; }
 .ac-section-chevron { color: @ac_dim_text; transition: -gtk-icon-transform 180ms ease-out; }
 .ac-folded .ac-section-chevron { -gtk-icon-transform: rotate(-90deg); }
-.ac-summary-block .ac-summary-section { padding-top: 2px; }
+.ac-summary-block .ac-summary-section { padding-top: $space_xxs; }
 .ac-git-card-icon { color: @ac_dim_text; }
 .ac-summary-section:hover { background-color: alpha(@window_fg_color, 0.04); }
 .ac-summary-section:active { background-color: alpha(@window_fg_color, 0.07); }
-.ac-summary-detail { color: @ac_dim_text; font-size: 9pt; }
-.ac-summary-name { font-size: 10pt; font-weight: 600; }
-.ac-summary-card .caption-heading { color: @ac_dim_text; font-size: 8pt; }
-.ac-project-bar { margin: 6px 12px 6px; }
-.ac-quota-key, .ac-quota-percent { font-size: 9pt; }
+.ac-summary-detail { color: @ac_dim_text; font-size: $font_caption; }
+.ac-summary-name { font-size: $font_body; font-weight: 600; }
+.ac-summary-card .caption-heading { color: @ac_dim_text; font-size: $font_caption; }
+.ac-project-bar { margin: $space_sm $space_lg $space_sm; }
+.ac-quota-key, .ac-quota-percent { font-size: $font_caption; }
 .ac-quota-key { color: @ac_dim_text; }
 
 progressbar.horizontal > trough, levelbar.horizontal > trough { min-height: 4px; }
-.ac-summary-card progressbar trough, .ac-summary-card progressbar progress, .ac-quota-row levelbar trough, .ac-quota-row levelbar block { min-height: 4px; border-radius: 999px; }
+.ac-summary-card progressbar trough, .ac-summary-card progressbar progress, .ac-quota-row levelbar trough, .ac-quota-row levelbar block { min-height: 4px; border-radius: $radius_pill; }
 .ac-summary-card progressbar trough, .ac-quota-row levelbar trough { background-color: alpha(@window_fg_color, 0.1); border: none; box-shadow: none; padding: 0; }
 .ac-quota-row levelbar block { border: none; box-shadow: none; margin: 0; }
 .ac-quota-row levelbar block.empty { background: none; }
 .ac-quota-warn levelbar block.filled { background-color: @ac_warning_shape; }
 .ac-quota-critical levelbar block.filled { background-color: @ac_error_shape; }
 
-.ac-quota-details { margin: 4px 16px 16px; }
-button.ac-quota-group { background-color: alpha(@window_fg_color, 0.05); border-radius: 12px; padding: 14px; font-weight: normal; }
+.ac-quota-details { margin: $space_xs $space_xl $space_xl; }
+button.ac-quota-group { background-color: alpha(@window_fg_color, 0.05); border-radius: $radius_card; padding: $space_xl; font-weight: normal; }
 button.ac-quota-group:hover { background-color: alpha(@window_fg_color, 0.09); }
 button.ac-quota-group-open { background-color: alpha(@accent_bg_color, 0.18); }
-.ac-quota-panel { margin: 4px 0 16px; padding: 0 16px; border-left: 1px solid alpha(@window_fg_color, 0.1); }
+.ac-quota-panel { margin: $space_xs 0 $space_xl; padding: 0 $space_xl; border-left: 1px solid alpha(@window_fg_color, 0.1); }
 .ac-quota-panel-heading { color: @ac_dim_text; }
 
 /* The right column: the terminal reaches the window frame. */
-.ac-terminal { padding: 10px 12px; }
+.ac-terminal { padding: $space_lg $space_lg; }
 /* Below the window buttons, which float over the terminal's corner. */
 .ac-terminal-scrollbar { background: none; border: none; margin-top: 46px; }
-.ac-session-ended { padding: 20px 24px; border-radius: 14px; background-color: @popover_bg_color; box-shadow: 0 8px 28px alpha(black, 0.35), 0 0 0 1px alpha(@window_fg_color, 0.08); }
-.ac-session-error { padding: 12px; margin: 12px; border-radius: 8px; background-color: @popover_bg_color; }
+.ac-session-ended { padding: $space_xxl $space_xxl; border-radius: $radius_card; background-color: @popover_bg_color; box-shadow: 0 8px 28px alpha(black, 0.35), 0 0 0 1px alpha(@window_fg_color, 0.08); }
+.ac-session-error { padding: $space_lg; margin: $space_lg; border-radius: $radius_control; background-color: @popover_bg_color; }
 
 /* The plan page, in place of the terminal. */
 .ac-plan-page { background-color: @view_bg_color; }
-.ac-plan-heading { padding: 18px 24px 14px; }
-.ac-plan-back { padding: 4px 14px; min-height: 24px; }
-.ac-plan-details { padding: 14px 24px; background-color: alpha(@window_fg_color, 0.03); box-shadow: inset 0 1px alpha(@window_fg_color, 0.07); }
-.ac-plan-details-text { font-size: 10pt; }
-.ac-plan-node { padding: 2px 8px; border-radius: 10px; font-size: 9pt; font-weight: normal; line-height: 1.15; background-color: @view_bg_color; background-image: linear-gradient(alpha(@window_fg_color, 0.05), alpha(@window_fg_color, 0.05)); box-shadow: inset 0 0 0 1px alpha(@window_fg_color, 0.12), 0 1px 2px alpha(black, 0.06); transition: background-image 150ms ease-out, box-shadow 150ms ease-out, opacity 150ms ease-out; }
+.ac-plan-heading { padding: $space_xl $space_xxl $space_xl; }
+.ac-plan-back { padding: $space_xs $space_xl; min-height: 24px; }
+.ac-plan-details { padding: $space_xl $space_xxl; background-color: alpha(@window_fg_color, 0.03); box-shadow: inset 0 1px alpha(@window_fg_color, 0.07); }
+.ac-plan-details-text { font-size: $font_body; }
+.ac-plan-node { padding: $space_xxs $space_md; border-radius: $radius_card; font-size: $font_caption; font-weight: normal; line-height: 1.15; background-color: @view_bg_color; background-image: linear-gradient(alpha(@window_fg_color, 0.05), alpha(@window_fg_color, 0.05)); box-shadow: inset 0 0 0 1px alpha(@window_fg_color, 0.12), 0 1px 2px alpha(black, 0.06); transition: background-image 150ms ease-out, box-shadow 150ms ease-out, opacity 150ms ease-out; }
 .ac-plan-node:hover { background-image: linear-gradient(alpha(@window_fg_color, 0.09), alpha(@window_fg_color, 0.09)); box-shadow: inset 0 0 0 1px alpha(@window_fg_color, 0.18), 0 3px 8px alpha(black, 0.10); }
 .ac-plan-node:focus-visible { outline: 2px solid @accent_color; outline-offset: 1px; }
 .ac-plan-done { color: @ac_success_text; background-image: linear-gradient(alpha(@success_color, 0.12), alpha(@success_color, 0.12)); box-shadow: inset 0 0 0 1px alpha(@success_color, 0.3), 0 1px 2px alpha(black, 0.06); }
@@ -114,50 +116,58 @@ button.ac-quota-group-open { background-color: alpha(@accent_bg_color, 0.18); }
 .ac-plan-failed { color: @ac_error_text; background-image: linear-gradient(alpha(@error_color, 0.12), alpha(@error_color, 0.12)); box-shadow: inset 0 0 0 1px alpha(@error_color, 0.36), 0 1px 2px alpha(black, 0.06); }
 .ac-plan-ready { color: @accent_color; box-shadow: 0 1px 2px alpha(black, 0.06); border: 1px dashed alpha(@accent_color, 0.65); }
 
-.ac-palette { margin: 12px; }
-.ac-palette-row { padding: 8px 12px; }
-.ac-palette-group { padding: 8px 4px 4px; font-size: 9pt; font-weight: bold; }
-.ac-setup { margin: 16px; }
+.ac-palette { margin: $space_lg; }
+.ac-palette-row { padding: $space_md $space_lg; }
+.ac-palette-group { padding: $space_md $space_xs $space_xs; font-size: $font_caption; font-weight: bold; }
+.ac-setup { margin: $space_xl; }
 
 /* The review page, in place of the terminal. */
-.ac-review-diff { padding: 12px 16px; }
-.ac-review-hunk { border-radius: 8px; box-shadow: inset 0 0 0 1px alpha(@window_fg_color, 0.1); }
-.ac-review-hunk-head { padding: 2px 4px 2px 10px; background-color: alpha(@window_fg_color, 0.04); border-radius: 8px 8px 0 0; font-size: 9pt; }
-.ac-review-text { padding: 4px 0 6px; background: none; font-size: 10pt; }
-.ac-review-file { padding: 4px 6px; }
-.ac-review-checkpoints { margin: 12px 16px; }
+.ac-review-diff { padding: $space_lg $space_xl; }
+.ac-review-hunk { border-radius: $radius_control; box-shadow: inset 0 0 0 1px alpha(@window_fg_color, 0.1); }
+.ac-review-hunk-head { padding: $space_xxs $space_xs $space_xxs $space_lg; background-color: alpha(@window_fg_color, 0.04); border-radius: $radius_control $radius_control 0 0; font-size: $font_caption; }
+.ac-review-text { padding: $space_xs 0 $space_sm; background: none; font-size: $font_body; }
+.ac-review-file { padding: $space_xs $space_sm; }
+.ac-review-checkpoints { margin: $space_lg $space_xl; }
 
 /* Git & checkpoints. Pills are plain CSS: libadwaita 1.5 has no tag widget. */
-.ac-git-toolbar { padding: 6px 16px; }
-.ac-git-inspector-meta { padding: 0 12px 6px; font-size: 9pt; }
-.ac-git-actions { padding: 0 12px 6px; }
-.ac-git-commit { padding: 6px 12px; }
-.ac-git-message { padding: 6px; border-radius: 6px; background-color: alpha(currentColor, 0.06); }
-.ac-git-row { padding: 0 8px 0 0; min-height: 36px; }
+.ac-git-toolbar { padding: $space_sm $space_xl; }
+.ac-git-inspector-meta { padding: 0 $space_lg $space_sm; font-size: $font_caption; }
+.ac-git-actions { padding: 0 $space_lg $space_sm; }
+.ac-git-commit { padding: $space_sm $space_lg; }
+.ac-git-message { padding: $space_sm; border-radius: $radius_control; background-color: alpha(currentColor, 0.06); }
+.ac-git-row { padding: 0 $space_md 0 0; min-height: 36px; }
 .ac-git-list > row { padding: 0; min-height: 36px; }
-.ac-git-when { font-size: 9pt; }
-.ac-git-pill { padding: 1px 8px; border-radius: 999px; font-size: 8pt; font-weight: 600; background-color: alpha(currentColor, 0.12); }
+.ac-git-when { font-size: $font_caption; }
+.ac-git-pill { padding: $space_xxs $space_md; border-radius: $radius_pill; font-size: $font_caption; font-weight: 600; background-color: alpha(currentColor, 0.12); }
 .ac-git-ref-base { font-weight: 700; }
-.ac-git-inspector-head { padding: 6px 10px; }
+.ac-git-inspector-head { padding: $space_sm $space_lg; }
 
 /* Floats over the terminal, so it needs a background of its own and an edge against any terminal theme. */
-.ac-approval-panel { margin: 56px 12px 12px; border-radius: 14px; background-color: @window_bg_color; box-shadow: 0 0 0 1px alpha(@window_fg_color, 0.16), 0 6px 20px alpha(black, 0.28); }
+.ac-approval-panel { margin: 56px $space_lg $space_lg; border-radius: $radius_card; background-color: @window_bg_color; box-shadow: 0 0 0 1px alpha(@window_fg_color, 0.16), 0 6px 20px alpha(black, 0.28); }
 /* A scrollbar's own minimum would leave empty space under a one-line command. */
 .ac-approval-details scrollbar, .ac-approval-details scrollbar trough, .ac-approval-details scrollbar slider { min-height: 12px; }
-.ac-approval-more { padding: 0 14px 10px; }
-.ac-approval-body { padding: 12px 14px; border-radius: 14px; }
-.ac-approval-body button { border-radius: 8px; padding-left: 10px; padding-right: 10px; }
-.ac-approval-command { padding: 7px 10px; border-radius: 8px; font-size: 10pt; background-color: alpha(@window_fg_color, 0.06); box-shadow: inset 0 0 0 1px alpha(@window_fg_color, 0.05); }
-.ac-approval-risk { padding: 1px 9px; border-radius: 9px; font-weight: 600; color: @ac_error_text; background-color: alpha(@error_color, 0.14); }
+.ac-approval-more { padding: 0 $space_xl $space_lg; }
+.ac-approval-body { padding: $space_lg $space_xl; border-radius: $radius_card; }
+.ac-approval-body button { border-radius: $radius_control; padding-left: $space_lg; padding-right: $space_lg; }
+.ac-approval-command { padding: $space_md $space_lg; border-radius: $radius_control; font-size: $font_body; background-color: alpha(@window_fg_color, 0.06); box-shadow: inset 0 0 0 1px alpha(@window_fg_color, 0.05); }
+.ac-approval-risk { padding: $space_xxs $space_md; border-radius: $radius_control; font-weight: 600; color: @ac_info_text; background-color: alpha(@accent_color, 0.14); }
+.ac-risk-info { color: @ac_info_text; background-color: alpha(@accent_color, 0.14); }
+.ac-risk-warning { color: @ac_warning_text; background-color: alpha(@warning_color, 0.14); }
+.ac-risk-danger { color: @ac_error_text; background-color: alpha(@error_color, 0.14); }
 .ac-approval-busy { opacity: 0.55; }
-.ac-approval-details:focus-visible { outline: 2px solid @accent_color; outline-offset: -2px; border-radius: 8px; }
+.ac-approval-details:focus-visible { outline: 2px solid @accent_color; outline-offset: -2px; border-radius: $radius_control; }
 
 /* Motion. GTK runs none of it when the system turns animations off. */
 @keyframes ac-page-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 @keyframes ac-card-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
 .ac-plan-page { animation: ac-page-in 180ms ease-out; }
 .ac-approval-panel .ac-attention-card { animation: ac-card-in 200ms ease-out; }
-.ac-session-ended { animation: ac-page-in 220ms ease-out; }
+.ac-session-ended { animation: ac-page-in 200ms ease-out; }
 
 /* Terminal search, over the terminal's top right corner. */
-.ac-terminal-search { padding: 6px; margin: 8px 20px 0 0; border-radius: 10px; background-color: @popover_bg_color; box-shadow: 0 4px 16px alpha(black, 0.3), 0 0 0 1px alpha(@window_fg_color, 0.08); }
+.ac-terminal-search { padding: $space_sm; margin: $space_md $space_xxl 0 0; border-radius: $radius_card; background-color: @popover_bg_color; box-shadow: 0 4px 16px alpha(black, 0.3), 0 0 0 1px alpha(@window_fg_color, 0.08); }
+
+/* Shared text roles and empty states; em respects the desktop font scale. */
+.ac-approval-body .heading, .ac-summary-name { font-size: $font_heading; }
+.ac-empty { padding: $space_xl; }
+.ac-empty button { border-radius: $radius_control; }

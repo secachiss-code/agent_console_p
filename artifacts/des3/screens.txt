@@ -1,0 +1,20 @@
+"""Native pages without unrelated pending approvals obscuring the inspected view."""
+import sys
+from pathlib import Path
+import msgspec
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'tools'))
+import ui_snapshot
+original_factory = ui_snapshot._preview_app
+
+def factory(client, request, scenario):
+    original_request = client.request
+    async def call(method, params, result_type):
+        result = await original_request(method, params, result_type)
+        if method == 'app/snapshot':
+            return msgspec.structs.replace(result, snapshot=msgspec.structs.replace(result.snapshot, approvals=()))
+        return result
+    client.request = call
+    return original_factory(client, request, scenario)
+
+ui_snapshot._preview_app = factory
+raise SystemExit(ui_snapshot.main(sys.argv[1:]))

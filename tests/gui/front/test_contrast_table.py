@@ -17,6 +17,8 @@ sys.path.insert(0, str(_ROOT / "tools"))
 
 import contrast_check  # noqa: E402
 
+from aconsole.ui.style import stylesheet  # noqa: E402
+
 _ALLOWED_DRIFT = 1 / 255 + 1e-6
 _FLOOR = (1, 5)
 
@@ -37,7 +39,7 @@ def test_the_table_is_the_floor_theme_and_the_dim_label_is_readable() -> None:
     probes = Gtk.CssProvider()
     probes.load_from_string("".join(f".probe-{name} {{ color: @{name}; }}" for name in names))
     sheet = Gtk.CssProvider()
-    sheet.load_from_path(str(_ROOT / "src" / "aconsole" / "ui" / "style" / "style.css"))
+    sheet.load_from_string(stylesheet())
     Gtk.StyleContext.add_provider_for_display(display, probes, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
     Gtk.StyleContext.add_provider_for_display(display, sheet, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
     box = Gtk.Box()

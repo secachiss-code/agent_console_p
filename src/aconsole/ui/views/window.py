@@ -249,8 +249,13 @@ class MainWindow(Adw.ApplicationWindow):
         self.terminal_pages: dict[str, TerminalPage] = {}
         self.terminal_stack: Gtk.Stack = Gtk.Stack()
         self.terminal_stack.set_transition_type(Gtk.StackTransitionType.NONE)
-        self.empty_terminal_page: Adw.StatusPage = Adw.StatusPage(title=terminal_text("terminal.empty"))
-        self.empty_terminal_page.set_child(Gtk.Button(label=tabs_text("tabs.new"), action_name="win.new-tab"))
+        self.empty_terminal_page: Adw.StatusPage = Adw.StatusPage(
+            title=terminal_text("terminal.empty"), icon_name="tab-new-symbolic",
+        )
+        self.empty_terminal_page.add_css_class("ac-empty")
+        new_tab = Gtk.Button(label=tabs_text("tabs.new"), action_name="win.new-tab", halign=Gtk.Align.CENTER)
+        new_tab.add_css_class("suggested-action")
+        self.empty_terminal_page.set_child(new_tab)
         _ = self.terminal_stack.add_named(self.empty_terminal_page, "empty")
         content.set_content(self.terminal_stack)
 

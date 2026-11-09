@@ -1,0 +1,71 @@
+import os
+from pathlib import Path
+import secrets
+import struct
+import subprocess
+import sys
+import argparse
+import tempfile
+import time
+
+root = Path(__file__).resolve().parents[2]
+parser=argparse.ArgumentParser()
+parser.add_argument("--captures-only",action="store_true")
+parser.add_argument("--tests-only",action="store_true")
+parser.add_argument("--record-baselines",action="store_true")
+parser.add_argument("--screens-only",action="store_true")
+parser.add_argument("--focused",action="store_true")
+parser.add_argument("--git-only",action="store_true")
+parser.add_argument("--empty-only",action="store_true")
+options=parser.parse_args()
+with tempfile.TemporaryDirectory(prefix='des3-xvfb-') as directory:
+    temp = Path(directory)
+    subprocess.run(['/usr/bin/apt-get', 'download', 'xvfb'], cwd=temp, timeout=90, check=True)
+    packages = list(temp.glob('xvfb_*.deb'))
+    assert len(packages) == 1
+    subprocess.run(['/usr/bin/dpkg-deb', '-x', str(packages[0]), str(temp/'package')], timeout=20, check=True)
+    number = next(n for n in range(101,120) if not Path(f'/tmp/.X11-unix/X{n}').exists())
+    display = str(number).encode()
+    cookie = secrets.token_bytes(16)
+    auth = temp/'Xauthority'
+    auth.write_bytes(struct.pack('>HH',65535,0)+struct.pack('>H',len(display))+display+struct.pack('>H',18)+b'MIT-MAGIC-COOKIE-1'+struct.pack('>H',16)+cookie)
+    auth.chmod(0o600)
+    server = subprocess.Popen([str(temp/'package/usr/bin/Xvfb'),f':{number}','-screen','0','1280x800x24','-nolisten','tcp','-auth',str(auth)])
+    try:
+        for _ in range(100):
+            if Path(f'/tmp/.X11-unix/X{number}').exists():
+                break
+            if server.poll() is not None:
+                raise RuntimeError('temporary Xvfb failed to start')
+            time.sleep(0.05)
+        env = dict(os.environ, DISPLAY=f':{number}',XAUTHORITY=str(auth),GDK_BACKEND='x11',GTK_A11Y='test',PYTHONPATH=str(root/'src'))
+        env.pop('WAYLAND_DISPLAY',None)
+        env.pop('BROADWAY_DISPLAY',None)
+        output=root/'artifacts/des3/ui'
+        output.mkdir(parents=True,exist_ok=True)
+        env.update(XDG_STATE_HOME=str(temp/'state'),XDG_CONFIG_HOME=str(temp/'config'),XDG_CACHE_HOME=str(temp/'cache'))
+        tests=['tests/gui/front','tests/ui','tests/test_contrast.py']
+        if options.focused:
+            tests=['tests/gui/front','tests/ui/test_i18n.py','tests/test_packaging.py','-k','des3 or i18n or packaging or b0_window or b2_tabs']
+        test_root=root
+        report=root/('artifacts/des3/focused-tests.xml' if options.focused else 'artifacts/des3/final-tests.xml')
+        if options.record_baselines:
+            baseline=root/'tests/gui/snapshots/DES3'
+            baseline.mkdir(parents=True,exist_ok=True)
+            for theme,width,name in [('light','1280','light'),('dark','1280','dark'),('light','700','narrow')]:
+                subprocess.run([sys.executable,'-m','tests.gui.style_preview',theme,width,str(baseline/(name+'.png'))],env={**env,'GSK_RENDERER':'cairo','GDK_SCALE':'1','GDK_DPI_SCALE':'1','TZ':'UTC'},cwd=root,timeout=25,check=True)
+        if not options.captures_only and not options.screens_only and not options.git_only and not options.empty_only:
+            subprocess.run([sys.executable,'-m','pytest','-o','addopts=','-q','--junitxml='+str(report),'--deselect=tests/gui/front/test_git_scale_ui.py::test_scrolling_a_long_history',*tests],env=env,cwd=test_root,timeout=360,check=True)
+        for view in ([] if options.tests_only or options.screens_only or options.git_only or options.empty_only else ['edit', 'mcp', 'long']):
+            for theme,size,name in [('light','1280','light'),('dark','1280','dark'),('light','700','narrow')]:
+                subprocess.run([sys.executable,str(root/'artifacts/des3/capture.txt'),view,theme,size,str(output/(view+'-'+name+'.png'))],env=env,cwd=root,timeout=25,check=True)
+        if options.screens_only or options.empty_only:
+            for view in (['window'] if options.empty_only else ['plan-graph','git','quota-dialog','prefs','window']):
+                for theme,width,name in [('light','1280','light'),('dark','1280','dark'),('light','700','narrow')]:
+                    scenario='empty' if view=='window' else 'demo'
+                    subprocess.run([sys.executable,str(root/'artifacts/des3/screens.txt'),'--scenario',scenario,'--view',view,'--theme',theme,'--size',width+'x800','--out',str(output/(view+'-'+name+'.png'))],env=env,cwd=root,timeout=30,check=True)
+        if options.git_only:
+            subprocess.run([sys.executable,str(root/'tools/git_snapshot.py'),'--out',str(output/'git-populated')],env=env,cwd=root,timeout=90,check=True)
+    finally:
+        server.terminate()
+        server.wait(timeout=5)

@@ -1,0 +1,105 @@
+"""Private FakeCore preview; does not submit any real agent request."""
+import asyncio
+import sys
+import tempfile
+from pathlib import Path
+import gi
+import msgspec
+gi.require_version('Gtk', '4.0')
+gi.require_version('Adw', '1')
+from gi.repository import Gtk
+from aconsole.ui import i18n
+i18n.locale.getlocale = lambda: ('ru_RU', 'UTF-8')
+from aconsole.contracts.app import EditDetail
+from aconsole.contracts.common import RiskTag
+from aconsole.core.infrastructure.http.permission_details import permission_detail
+from aconsole.core.infrastructure.fake.server import FakeCore
+from aconsole.ui.bootstrap import run_app, spawn_task
+from aconsole.ui.client.core_client import CoreClient
+from aconsole.ui.snapshot import capture_window
+from aconsole.ui.views.app import AConsoleApp, SnapshotRequest
+
+kind, theme, width, output = sys.argv[1:]
+if kind == 'edit':
+    tool = 'Edit'
+    arguments = {'file_path': '.codex/config.toml', 'old_string': 'approval_policy = "on-request"\n',
+                 'new_string': 'approval_policy = "never"\n', 'replace_all': False}
+elif kind == 'mcp':
+    tool = 'mcp__documents__update'
+    arguments = {'document': 'Release notes', 'changes': ['Уточнить описание выпуска', 'Добавить результаты проверок'],
+                 'publish': False}
+else:
+    tool = 'Bash'
+    arguments = {'command': 'printf "%s\\n" начало\n' + '# строка команды для проверки прокрутки\n' * 120 + 'printf "%s\\n" конец'}
+detail = permission_detail(tool, msgspec.Raw(msgspec.json.encode(arguments)))
+
+def expand_preview(widget):
+    child = widget.get_first_child()
+    while child is not None:
+        if isinstance(child, Gtk.Expander):
+            child.set_expanded(True)
+            return True
+        if expand_preview(child):
+            return True
+        child = child.get_next_sibling()
+    return False
+
+class Preview(AConsoleApp):
+    def do_activate(self):
+        super().do_activate()
+        spawn_task(self.ready())
+    def _capture(self):
+        pass
+    async def ready(self):
+        for _ in range(100):
+            if self.window is not None and self.window.approval_panel.shown is not None:
+                break
+            await asyncio.sleep(.05)
+        else:
+            raise RuntimeError('approval card unavailable')
+        self.target = self.window
+        if kind == 'edit':
+            expand_preview(self.window.approval_panel.shown.details)
+        await asyncio.sleep(.5)
+        self.attempts = 0
+        self.capture()
+    def capture(self):
+        clock = self.target.get_frame_clock()
+        def painted(clock):
+            clock.disconnect(handle)
+            try:
+                capture_window(self.target, Path(output))
+            except RuntimeError:
+                self.attempts += 1
+                if self.attempts < 20:
+                    self.capture()
+                    return
+                self.failed = True
+            spawn_task(self._finish())
+        handle = clock.connect('after-paint', painted)
+        self.target.queue_draw()
+
+with tempfile.TemporaryDirectory(prefix='des3-preview-') as directory:
+    path = str(Path(directory) / 'core.sock')
+    fake = FakeCore(path, 'demo')
+    fake.start()
+    def factory():
+        client = CoreClient(path)
+        original = client.request
+        async def request(method, params, result_type):
+            result = await original(method, params, result_type)
+            if method == 'app/snapshot':
+                source = result.snapshot.approvals[0]
+                view = msgspec.structs.replace(source, tool=tool, summary=tool, detail=detail,
+                    risk=frozenset({RiskTag.DESTRUCTIVE}) if kind == 'edit' else frozenset(), allow_tab_session=False)
+                return msgspec.structs.replace(result, snapshot=msgspec.structs.replace(result.snapshot, approvals=(view,)))
+            return result
+        client.request = request
+        return Preview(client, snapshot=SnapshotRequest(view='window', theme=theme, width=int(width), height=800, out=Path(output)))
+    try:
+        result = run_app(factory, ['aconsole-des3-preview'])
+    finally:
+        fake.stop()
+    if not Path(output).is_file():
+        raise RuntimeError('snapshot missing')
+    raise SystemExit(result)

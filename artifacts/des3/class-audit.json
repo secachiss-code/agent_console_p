@@ -1,0 +1,21 @@
+{
+  "classes": 93,
+  "dynamic_references": {
+    "ac-git-ref-base": "git_pane.py: f\"ac-git-ref-{ref.kind}\"",
+    "ac-plan-done": "plan_graph.py: NodeStatus",
+    "ac-plan-failed": "plan_graph.py: NodeStatus",
+    "ac-plan-in_progress": "plan_graph.py: NodeStatus",
+    "ac-plan-verifying": "plan_graph.py: NodeStatus",
+    "ac-quota-critical": "sidebar/quota_row.py: quota_level",
+    "ac-quota-warn": "sidebar/quota_row.py: quota_level",
+    "ac-status-error": "tabs/row.py: status_code",
+    "ac-status-exited": "tabs/row.py: status_code",
+    "ac-status-idle": "tabs/row.py: status_code",
+    "ac-status-starting": "tabs/row.py: status_code",
+    "ac-status-unknown": "tabs/row.py: status_code",
+    "ac-status-waiting_approval": "tabs/row.py: status_code",
+    "ac-status-waiting_input": "tabs/row.py: status_code",
+    "ac-status-working": "tabs/row.py: status_code"
+  },
+  "unreferenced": []
+}

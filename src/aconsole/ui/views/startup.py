@@ -21,6 +21,7 @@ class StartupWindow(Adw.ApplicationWindow):
     def __init__(self, application: Adw.Application) -> None:
         super().__init__(application=application, title="AConsole", default_width=560, default_height=420)
         self.status: Adw.StatusPage = Adw.StatusPage(title=translate("startup.starting"))
+        self.status.add_css_class("ac-empty")
         self.spinner: Gtk.Spinner = Gtk.Spinner(spinning=True, width_request=32, height_request=32)
         self.status.set_child(self.spinner)
         content = Adw.ToolbarView(content=self.status)

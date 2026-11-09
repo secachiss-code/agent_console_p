@@ -23,6 +23,7 @@ from aconsole.contracts.app import ApprovalView, CommandDetail, EditDetail  # no
 from aconsole.contracts.common import ApprovalDecision, ApprovalId, ApprovalScope, RiskTag, TabId  # noqa: E402
 from aconsole.ui.bootstrap import spawn_task  # noqa: E402
 from aconsole.ui.client.core_client import CoreCallError  # noqa: E402
+from aconsole.ui.style import SPACE  # noqa: E402
 from aconsole.ui.viewmodels.approvals_vm import CLOSED_CODES, ApprovalsViewModel, is_risky, safe_text, time_left  # noqa: E402
 from aconsole.ui.viewmodels.logic.quota_fmt import agent_name  # noqa: E402
 from aconsole.ui.views.approvals.messages import _ as translate  # noqa: E402
@@ -32,7 +33,7 @@ if TYPE_CHECKING:
 
 _DETAILS_HEIGHT: Final = 180
 _NATURAL_CHARS: Final = 70
-_BUTTON_GAP: Final = 6
+_BUTTON_GAP: Final = SPACE["sm"]
 _RISKY_ALLOW_MS: Final = 500
 # Longer than the risky wait, so a key cannot do what the disabled button refuses.
 _SHIFT_GUARD_S: Final = 0.6
@@ -140,7 +141,7 @@ def _rows(
 
 class ApprovalCard(Gtk.Box):
     def __init__(self, view: ApprovalView, tab_title: str, panel: ApprovalPanel) -> None:
-        super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+        super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=SPACE["sm"])
         self.add_css_class("ac-attention-card")
         self.add_css_class("ac-approval-body")
         self.view: ApprovalView = view
@@ -206,7 +207,7 @@ class ApprovalCard(Gtk.Box):
             self._allow_timer = None
 
     def _heading(self, tab_title: str) -> Gtk.Box:
-        heading = Gtk.Box(spacing=12)
+        heading = Gtk.Box(spacing=SPACE["lg"])
         self.title: Gtk.Label = Gtk.Label(
             label=self._title_text(), xalign=0, hexpand=True, wrap=True, wrap_mode=Pango.WrapMode.WORD_CHAR,
             tooltip_text=tab_title or None,
@@ -244,11 +245,19 @@ class ApprovalCard(Gtk.Box):
             wrap=True, wrap_mode=Pango.WrapMode.WORD_CHAR,
         )
         label.add_css_class("ac-approval-risk")
+        severe = self.view.risk & {RiskTag.PUBLISH, RiskTag.SECRETS, RiskTag.PRIVILEGE}
+        protected = isinstance(self.view.detail, EditDetail)
+        if severe or (RiskTag.DESTRUCTIVE in self.view.risk and not protected):
+            label.add_css_class("ac-risk-danger")
+        elif self.view.risk & {RiskTag.OUTSIDE_WORKTREE, RiskTag.DESTRUCTIVE}:
+            label.add_css_class("ac-risk-warning")
+        else:
+            label.add_css_class("ac-risk-info")
         label.add_css_class("caption")
         return label
 
     def _details(self) -> Gtk.ScrolledWindow:
-        body = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+        body = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=SPACE["sm"])
         view = self.view
         if not isinstance(view.detail, CommandDetail) or view.detail.command != view.summary:
             body.append(Gtk.Label(
