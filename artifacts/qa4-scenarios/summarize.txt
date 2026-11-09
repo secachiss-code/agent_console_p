@@ -1,0 +1,51 @@
+"""Summarize reader test contexts; optionally combine the complete core/UI runs."""
+import argparse
+import json
+from pathlib import Path
+import tempfile
+
+import coverage
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--combined', action='store_true')
+options = parser.parse_args()
+root = Path(__file__).resolve().parents[2]
+out = root / 'artifacts/qa4-scenarios'
+cov = coverage.Coverage(data_file=str(out / '.coverage.readers'))
+cov.load()
+documents = {}
+for label, contexts in [('before', [r'^(?!tests/core/test_native_log_recovery\.py)']), ('after', None)]:
+    path = out / f'readers-{label}.json'
+    cov.json_report(outfile=str(path), contexts=contexts, include=[
+        '*/agents/usage_log.py', '*/agents/claude/sessions.py', '*/agents/codex/rollout.py'])
+    documents[label] = json.loads(path.read_text())
+before, after = documents['before'], documents['after']
+summary = {
+    'source_commit': '964f1a25ab0bd132d2d860abd3bde4b500bb9ab1',
+    'scope': 'three native CLI readers; dynamic test contexts in the same run; not whole application coverage',
+    'before': before['totals'], 'after': after['totals'],
+    'added_lines': after['totals']['covered_lines'] - before['totals']['covered_lines'],
+    'added_branch_exits': after['totals']['covered_branches'] - before['totals']['covered_branches'],
+    'files': {},
+}
+for path, value in after['files'].items():
+    old = before['files'][path]
+    summary['files'][path] = {
+        'before': old['summary'], 'after': value['summary'],
+        'added_lines': sorted(set(value['executed_lines']) - set(old['executed_lines'])),
+        'added_branch_exits': sorted(set(map(tuple, value['executed_branches']))
+                                   - set(map(tuple, old['executed_branches']))),
+    }
+(out / 'reader-coverage-summary.json').write_text(json.dumps(summary, indent=2) + '\n')
+print('Reader coverage:', before['totals']['percent_covered'], '->', after['totals']['percent_covered'])
+if options.combined:
+    combined = coverage.Coverage(data_file=str(out / '.coverage.combined'))
+    combined.combine([str(out / '.coverage.core'), str(out / '.coverage.ui'), str(out / '.coverage.readers')], keep=True)
+    combined.save()
+    with tempfile.TemporaryDirectory(prefix='qa4-coverage-summary-') as directory:
+        temporary = Path(directory) / 'combined.json'
+        combined.json_report(outfile=str(temporary))
+        raw = json.loads(temporary.read_text())
+    total = {'totals': raw['totals'], 'files': {key: value['summary'] for key, value in raw['files'].items()}}
+    (out / 'combined-summary.json').write_text(json.dumps(total, indent=2) + '\n')
+    print('Combined application coverage:', raw['totals']['percent_covered'])

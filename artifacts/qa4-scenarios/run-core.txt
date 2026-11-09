@@ -1,0 +1,41 @@
+"""Run from the host core environment; keep the measured coverage inputs."""
+import argparse
+import os
+from pathlib import Path
+import subprocess
+import sys
+
+root = Path(__file__).resolve().parents[2]
+out = root / 'artifacts/qa4-scenarios'
+parser = argparse.ArgumentParser()
+parser.add_argument('--readers', action='store_true')
+options = parser.parse_args()
+if options.readers:
+    label = 'readers'
+    tests = [
+        'tests/core/test_native_log_recovery.py', 'tests/core/test_claude_sessions.py',
+        'tests/core/test_codex_rollout.py',
+        'tests/core/test_resource_retention.py::test_usage_append_reads_only_new_bytes_and_handles_partial_lines',
+        'tests/core/test_resource_retention.py::test_codex_append_keeps_model_and_duplicate_total_state',
+        'tests/core/test_opencode_cursor.py::test_claude_log_counts_a_reply_once_and_only_since_the_moment',
+        'tests/core/test_opencode_cursor.py::test_codex_log_splits_cached_input_and_skips_a_repeated_total',
+        '--cov-context=test',
+    ]
+else:
+    label = 'core'
+    tests = [
+        'tests/core', 'tests/contracts', 'tests/gate', 'tests/hostrun', 'tests/smoke',
+        'tests/test_package.py', 'tests/test_packaging.py', 'tests/test_contrast.py',
+        'tests/test_build_guards.py', 'tests/test_socket_paths.py', '-m', 'not performance',
+        '-o', 'faulthandler_timeout=90', '--basetemp=/tmp/ac-qa4-scenarios-host',
+    ]
+env = dict(os.environ, COVERAGE_FILE=str(out / ('.coverage.' + label)), PYTHONUNBUFFERED='1')
+if options.readers:
+    # sysmon does not record dynamic contexts on this Python version.
+    env['COVERAGE_CORE'] = 'pytrace'
+args = [sys.executable, '-m', 'pytest', *tests, '--cov', '--cov-branch', '--cov-report=',
+        '--cov-fail-under=0', '--junitxml=' + str(out / (label + '.xml'))]
+with (out / (label + '-runner.log')).open('w') as stream:
+    result = subprocess.run(args, cwd=root, env=env, stdout=stream, stderr=subprocess.STDOUT, timeout=900)
+print(label, result.returncode)
+raise SystemExit(result.returncode)
