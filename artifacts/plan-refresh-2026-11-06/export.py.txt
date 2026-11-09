@@ -13,7 +13,7 @@ def test_export_plan_graph_read_only() -> None:
     root = Path(__file__).resolve().parents[2]
     folder = root / "artifacts/plan-refresh-2026-11-06"
     folder.mkdir(parents=True, exist_ok=True)
-    engine = create_engine("sqlite:///file:/home/sas/.local/share/aconsole/aconsole.db?mode=ro&uri=true")
+    engine = create_engine("sqlite:///file:/home/example/.local/share/aconsole/aconsole.db?mode=ro&uri=true")
     try:
         with Session(engine) as session:
             plan = session.get(Plan, "plan-1")

@@ -20,7 +20,7 @@ from tests.core.test_wire import _FAKE_PODMAN, _daemon, _git_repo, _open
 
 _FIXTURES = Path(__file__).parents[1] / "fixtures/codex/0.164.0"
 _TOKEN = "secret" + "-token"
-_COMMAND = "/home/sas/.containers/containers/agent-codex/.aconsole/bin/aconsole-hook codex"
+_COMMAND = "/home/example/.containers/containers/agent-codex/.aconsole/bin/aconsole-hook codex"
 
 
 def _reply(home: Path) -> bytes:

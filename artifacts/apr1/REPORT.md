@@ -66,8 +66,8 @@ hostrun snapshot обращается к общему main, а проверяе�
 На хосте с существующим UI environment:
 
 ```sh
-distrobox-host-exec /home/sas/Projects/sp_aconsole_prototype/.venv-ui/bin/python artifacts/apr1/runner.txt
-distrobox-host-exec /usr/bin/dbus-run-session -- /home/sas/Projects/sp_aconsole_prototype/.venv-ui/bin/python artifacts/apr1/a11y-runner.txt
+distrobox-host-exec /home/example/Projects/sp_aconsole_prototype/.venv-ui/bin/python artifacts/apr1/runner.txt
+distrobox-host-exec /usr/bin/dbus-run-session -- /home/example/Projects/sp_aconsole_prototype/.venv-ui/bin/python artifacts/apr1/a11y-runner.txt
 python3 artifacts/apr1/check-a11y.txt
 python3 artifacts/apr1/check-a11y.txt --tree artifacts/apr1/atspi-tree-baseline.json --speech artifacts/apr1/orca-debug-baseline.txt
 ```

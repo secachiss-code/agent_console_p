@@ -39,23 +39,23 @@ The XKEYBOARD keymap compiler (xkbcomp) reports:
 > Warning:          Could not resolve keysym XF86NavInfo
 Errors from xkbcomp are not fatal to the X server
 is_the_floor_theme_and_the_dim_label_is_readable
-  /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/overrides/GLib.py:631: RuntimeWarning: coroutine 'HealthDialog.refresh' was never awaited
+  /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/overrides/GLib.py:631: RuntimeWarning: coroutine 'HealthDialog.refresh' was never awaited
     return super().iteration(may_block)
   Enable tracemalloc to get traceback where the object was allocated.
   See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
 
 tests/gui/front/test_des2_accessibility.py::test_every_plan_state_is_visible_and_updates_on_heartbeat
-  /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/_pytest/runner.py:180: RuntimeWarning: coroutine 'MainWindow._renew_git_watch' was never awaited
+  /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/_pytest/runner.py:180: RuntimeWarning: coroutine 'MainWindow._renew_git_watch' was never awaited
     del sys.last_exc  # type:ignore[attr-defined]
   Enable tracemalloc to get traceback where the object was allocated.
   See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
 
 tests/gui/front/test_git_actions.py::test_stage_commit_and_file_buttons_in_the_inspector
-  /home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/src/aconsole/ui/views/review/graph_cell.py:113: DeprecationWarning: Gtk.Widget.get_style_context is deprecated
+  /home/example/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/src/aconsole/ui/views/review/graph_cell.py:113: DeprecationWarning: Gtk.Widget.get_style_context is deprecated
     _found, background = self.get_style_context().lookup_color("view_bg_color")
 
 tests/gui/front/test_git_actions.py::test_stage_commit_and_file_buttons_in_the_inspector
-  /home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/src/aconsole/ui/views/review/graph_cell.py:113: DeprecationWarning: Gtk.StyleContext.lookup_color is deprecated
+  /home/example/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/src/aconsole/ui/views/review/graph_cell.py:113: DeprecationWarning: Gtk.StyleContext.lookup_color is deprecated
     _found, background = self.get_style_context().lookup_color("view_bg_color")
 
 -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html

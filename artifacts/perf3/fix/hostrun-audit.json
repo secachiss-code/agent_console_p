@@ -11,7 +11,7 @@
       "tests/core/test_writer_first_flush.py",
       "tests/core/test_persistence_b.py"
     ],
-    "cwd": "/home/sas/Projects/sp_aconsole_prototype",
+    "cwd": "/home/example/Projects/sp_aconsole_prototype",
     "argv": [
       "podman",
       "start",
@@ -19,13 +19,13 @@
       "podman",
       "exec",
       "--workdir",
-      "/home/sas/Projects/sp_aconsole_prototype",
+      "/home/example/Projects/sp_aconsole_prototype",
       "-e",
       "PYTHON_GIL=0",
       "-e",
       "HOSTRUN_CONTAINER=agent-codex",
       "devtools",
-      "/home/sas/Projects/sp_aconsole_prototype/.venv-core/bin/python",
+      "/home/example/Projects/sp_aconsole_prototype/.venv-core/bin/python",
       "-m",
       "pytest",
       "-q",
@@ -47,7 +47,7 @@
     "args": [
       "core"
     ],
-    "cwd": "/home/sas/Projects/sp_aconsole_prototype",
+    "cwd": "/home/example/Projects/sp_aconsole_prototype",
     "argv": [
       "podman",
       "start",
@@ -55,13 +55,13 @@
       "podman",
       "exec",
       "--workdir",
-      "/home/sas/Projects/sp_aconsole_prototype",
+      "/home/example/Projects/sp_aconsole_prototype",
       "-e",
       "PYTHON_GIL=0",
       "-e",
       "HOSTRUN_CONTAINER=agent-codex",
       "devtools",
-      "/home/sas/Projects/sp_aconsole_prototype/.venv-core/bin/python",
+      "/home/example/Projects/sp_aconsole_prototype/.venv-core/bin/python",
       "-m",
       "pytest",
       "-q",
@@ -82,7 +82,7 @@
     "peer_pid": 88843,
     "action": "check",
     "args": [],
-    "cwd": "/home/sas/Projects/sp_aconsole_prototype",
+    "cwd": "/home/example/Projects/sp_aconsole_prototype",
     "argv": [
       "podman",
       "start",
@@ -90,12 +90,12 @@
       "podman",
       "exec",
       "--workdir",
-      "/home/sas/Projects/sp_aconsole_prototype",
+      "/home/example/Projects/sp_aconsole_prototype",
       "-e",
       "HOSTRUN_CONTAINER=agent-codex",
       "devtools",
       "sh",
-      "/home/sas/Projects/sp_aconsole_prototype/tools/check.sh"
+      "/home/example/Projects/sp_aconsole_prototype/tools/check.sh"
     ],
     "exit": 0,
     "duration_ms": 42581,

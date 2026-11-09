@@ -1,10 +1,10 @@
 ruff
 All checks passed!
 basedpyright
-/home/sas/Projects/sp_aconsole_prototype/src/aconsole/core/domain/plan.py
-  /home/sas/Projects/sp_aconsole_prototype/src/aconsole/core/domain/plan.py:315:14 - error: Type annotation for attribute `_checked_completion` is required because this class is not decorated with `@final` (reportUnannotatedClassAttribute)
-/home/sas/Projects/sp_aconsole_prototype/src/aconsole/core/infrastructure/mcp/tools.py
-  /home/sas/Projects/sp_aconsole_prototype/src/aconsole/core/infrastructure/mcp/tools.py:357:14 - error: Type annotation for attribute `_checked_completion` is required because this class is not decorated with `@final` (reportUnannotatedClassAttribute)
+/home/example/Projects/sp_aconsole_prototype/src/aconsole/core/domain/plan.py
+  /home/example/Projects/sp_aconsole_prototype/src/aconsole/core/domain/plan.py:315:14 - error: Type annotation for attribute `_checked_completion` is required because this class is not decorated with `@final` (reportUnannotatedClassAttribute)
+/home/example/Projects/sp_aconsole_prototype/src/aconsole/core/infrastructure/mcp/tools.py
+  /home/example/Projects/sp_aconsole_prototype/src/aconsole/core/infrastructure/mcp/tools.py:357:14 - error: Type annotation for attribute `_checked_completion` is required because this class is not decorated with `@final` (reportUnannotatedClassAttribute)
 2 errors, 0 warnings, 0 notes
 import-linter
 
@@ -39,16 +39,16 @@ contrast_check
 contrast_check: 0 below the minimum
 check_contracts
 basedpyright failed
-/home/sas/Projects/sp_aconsole_prototype/src/aconsole/core/domain/plan.py
-  /home/sas/Projects/sp_aconsole_prototype/src/aconsole/core/domain/plan.py:315:14 - error: Type annotation for attribute `_checked_completion` is required because this class is not decorated with `@final` (reportUnannotatedClassAttribute)
-/home/sas/Projects/sp_aconsole_prototype/src/aconsole/core/infrastructure/mcp/tools.py
-  /home/sas/Projects/sp_aconsole_prototype/src/aconsole/core/infrastructure/mcp/tools.py:357:14 - error: Type annotation for attribute `_checked_completion` is required because this class is not decorated with `@final` (reportUnannotatedClassAttribute)
+/home/example/Projects/sp_aconsole_prototype/src/aconsole/core/domain/plan.py
+  /home/example/Projects/sp_aconsole_prototype/src/aconsole/core/domain/plan.py:315:14 - error: Type annotation for attribute `_checked_completion` is required because this class is not decorated with `@final` (reportUnannotatedClassAttribute)
+/home/example/Projects/sp_aconsole_prototype/src/aconsole/core/infrastructure/mcp/tools.py
+  /home/example/Projects/sp_aconsole_prototype/src/aconsole/core/infrastructure/mcp/tools.py:357:14 - error: Type annotation for attribute `_checked_completion` is required because this class is not decorated with `@final` (reportUnannotatedClassAttribute)
 2 errors, 0 warnings, 0 notes
 api_floor_check
 api_floor_check: clean
 api_floor_fixture
-/home/sas/Projects/sp_aconsole_prototype/tests/fixtures/ui_banned/spinner.py:9: Adw.Spinner
-/home/sas/Projects/sp_aconsole_prototype/tests/fixtures/ui_banned/spinner.py:10: Adw.Spinner
+/home/example/Projects/sp_aconsole_prototype/tests/fixtures/ui_banned/spinner.py:9: Adw.Spinner
+/home/example/Projects/sp_aconsole_prototype/tests/fixtures/ui_banned/spinner.py:10: Adw.Spinner
 ownership
 warning: Not a git repository. Use --no-index to compare two paths outside a working tree
 usage: git diff --no-index [<options>] <path> <path> [<pathspec>...]

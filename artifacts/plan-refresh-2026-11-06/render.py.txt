@@ -2,7 +2,7 @@ from pathlib import Path
 from collections import Counter, defaultdict, deque
 from html import escape
 import json, textwrap
-root=Path('/home/sas/Projects/sp_aconsole_prototype')
+root=Path('/home/example/Projects/sp_aconsole_prototype')
 folder=root/'artifacts/plan-refresh-2026-11-06'
 p=json.loads((folder/'snapshot.json').read_text())
 nodes={n['id']:n for n in p['nodes']}

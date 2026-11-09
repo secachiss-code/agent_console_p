@@ -1,25 +1,25 @@
 {
   "typeCheckingMode": "all",
   "pythonVersion": "3.15",
-  "venvPath": "/home/sas/Projects/sp_aconsole_prototype",
+  "venvPath": "/home/example/Projects/sp_aconsole_prototype",
   "venv": ".venv-ui",
   "extraPaths": [
-    "/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/src"
+    "/home/example/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/src"
   ],
-  "stubPath": "/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/stubs",
+  "stubPath": "/home/example/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/stubs",
   "reportMissingModuleSource": "none",
   "enableTypeIgnoreComments": false,
   "include": [
-    "/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/src/aconsole/ui/views/setup/preferences.py",
-    "/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/src/aconsole/ui/viewmodels/logic/quota_fmt.py",
-    "/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/src/aconsole/ui/viewmodels/approval_alerts.py",
-    "/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/src/aconsole/ui/views/sidebar/quota_row.py",
-    "/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/src/aconsole/ui/views/sidebar/quota_card.py",
-    "/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/src/aconsole/ui/views/quota_dialog.py",
-    "/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/src/aconsole/ui/views/window.py",
-    "/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/src/aconsole/core/bootstrap.py",
-    "/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/src/aconsole/contracts/settings.py",
-    "/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/src/aconsole/ui/views/app.py",
-    "/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/src/aconsole/core/infrastructure/codegraph/index.py"
+    "/home/example/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/src/aconsole/ui/views/setup/preferences.py",
+    "/home/example/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/src/aconsole/ui/viewmodels/logic/quota_fmt.py",
+    "/home/example/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/src/aconsole/ui/viewmodels/approval_alerts.py",
+    "/home/example/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/src/aconsole/ui/views/sidebar/quota_row.py",
+    "/home/example/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/src/aconsole/ui/views/sidebar/quota_card.py",
+    "/home/example/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/src/aconsole/ui/views/quota_dialog.py",
+    "/home/example/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/src/aconsole/ui/views/window.py",
+    "/home/example/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/src/aconsole/core/bootstrap.py",
+    "/home/example/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/src/aconsole/contracts/settings.py",
+    "/home/example/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/src/aconsole/ui/views/app.py",
+    "/home/example/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/src/aconsole/core/infrastructure/codegraph/index.py"
   ]
 }

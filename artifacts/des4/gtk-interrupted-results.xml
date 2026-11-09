@@ -187,109 +187,109 @@ E             At index 0 diff: b'\xd0' != b'\x1b'
 E             Use -v to get more diff
 
 tests/gui/front/test_clipboard_routing.py:109: AssertionError</failure></testcase><testcase classname="tests.gui.front.test_clipboard_routing" name="test_real_clipboard_shortcuts[empty]" time="1.453" /><testcase classname="tests.gui.front.test_clipboard_routing" name="test_real_clipboard_shortcuts[cancel]" time="1.536" /><testcase classname="tests.gui.front.test_clipboard_routing" name="test_real_clipboard_shortcuts[copy]" time="1.341" /><testcase classname="tests.gui.front.test_close_confirmation" name="test_quit_checks_counts_and_cancel_preserves_the_window[0-0]" time="0.005" /><testcase classname="tests.gui.front.test_close_confirmation" name="test_quit_checks_counts_and_cancel_preserves_the_window[2-0]" time="0.065" /><testcase classname="tests.gui.front.test_close_confirmation" name="test_quit_checks_counts_and_cancel_preserves_the_window[0-3]" time="0.053" /><testcase classname="tests.gui.front.test_close_confirmation" name="test_quit_checks_counts_and_cancel_preserves_the_window[2-3]" time="0.059" /><testcase classname="tests.gui.front.test_close_confirmation" name="test_unknown_core_state_requires_confirmation" time="0.030" /><testcase classname="tests.gui.front.test_close_confirmation" name="test_clean_running_tab_is_not_closed_before_confirmation[False-False]" time="0.002" /><testcase classname="tests.gui.front.test_close_confirmation" name="test_clean_running_tab_is_not_closed_before_confirmation[True-False]" time="0.030" /><testcase classname="tests.gui.front.test_close_confirmation" name="test_clean_running_tab_is_not_closed_before_confirmation[False-True]" time="0.026" /><testcase classname="tests.gui.front.test_close_confirmation" name="test_repeated_window_close_uses_one_check" time="0.002" /><testcase classname="tests.gui.front.test_contrast_table" name="test_the_table_is_the_floor_theme_and_the_dim_label_is_readable" time="3.454" /><testcase classname="tests.gui.front.test_des2_accessibility" name="test_every_plan_state_is_visible_and_updates_on_heartbeat" time="0.013" /><testcase classname="tests.gui.front.test_des2_accessibility" name="test_tab_states_have_visible_text_when_colours_are_unavailable" time="0.015" /><testcase classname="tests.gui.front.test_des2_accessibility" name="test_keyboard_reorder_reaches_rpc_and_respects_section_and_busy" time="0.203" /><testcase classname="tests.gui.front.test_des2_accessibility" name="test_sidebar_controls_have_accessible_names" time="0.013" /><testcase classname="tests.gui.front.test_fe_races" name="test_event_subscriber_failure_keeps_sequence_and_other_subscribers" time="0.002" /><testcase classname="tests.gui.front.test_fe_races" name="test_late_graph_page_does_not_append_to_new_scope" time="0.002" /><testcase classname="tests.gui.front.test_fe_races" name="test_older_checkpoints_cannot_replace_newer_result" time="0.002" /><testcase classname="tests.gui.front.test_fe_races" name="test_git_operations_do_not_overlap" time="0.002" /><testcase classname="tests.gui.front.test_fe_races" name="test_snapshot_and_connection_subscribers_fail_independently" time="0.002" /><testcase classname="tests.gui.front.test_fe_races" name="test_clearing_git_inspector_discards_pending_detail" time="0.001" /><testcase classname="tests.gui.front.test_git_actions" name="test_stage_commit_and_file_buttons_in_the_inspector" time="4.122" /><testcase classname="tests.gui.front.test_git_actions" name="test_merge_removes_the_worktree_unless_told_not_to" time="4.643" /><testcase classname="tests.gui.front.test_git_actions" name="test_a_conflicted_rebase_offers_abort_and_a_stale_commit_is_refused" time="4.943" /><testcase classname="tests.gui.front.test_git_actions" name="test_restore_a_file_from_a_commit" time="4.404" /><testcase classname="tests.gui.front.test_git_actions" name="test_what_a_row_offers" time="0.001" /><testcase classname="tests.gui.front.test_git_actions" name="test_a_tab_shows_its_branch_node_and_size" time="0.001" /><testcase classname="tests.gui.front.test_git_actions" name="test_the_sidebar_item_follows_git_state" time="0.002" /><testcase classname="tests.gui.front.test_git_actions" name="test_the_facts_banner_shows_what_the_core_found" time="4.135" /><testcase classname="tests.gui.front.test_git_lanes" name="test_a_line_stays_on_one_lane" time="0.001" /><testcase classname="tests.gui.front.test_git_lanes" name="test_base_keeps_lane_zero_even_when_branches_come_first" time="0.001" /><testcase classname="tests.gui.front.test_git_lanes" name="test_base_keeps_its_lane_when_a_branch_claimed_its_parent_first" time="0.001" /><testcase classname="tests.gui.front.test_git_lanes" name="test_a_branch_joins_its_parent_lane_and_the_lane_frees" time="0.001" /><testcase classname="tests.gui.front.test_git_lanes" name="test_merge_opens_a_lane_for_the_second_parent" time="0.001" /><testcase classname="tests.gui.front.test_git_lanes" name="test_a_merge_into_a_lane_that_also_passes_keeps_the_lane_whole" time="0.001" /><testcase classname="tests.gui.front.test_git_lanes" name="test_snapshot_order_is_dashed_and_separate_from_git_edges" time="0.001" /><testcase classname="tests.gui.front.test_git_lanes" name="test_pages_continue_the_same_edges" time="0.001" /><testcase classname="tests.gui.front.test_git_lanes" name="test_tab_color_is_stable_and_never_the_base" time="0.001" /><testcase classname="tests.gui.front.test_git_pane" name="test_graph_rows_and_inspector_on_a_real_repository" time="4.253" /><testcase time="0.001" /><testcase classname="pytest" name="internal" time="0.000"><error message="internal error">Traceback (most recent call last):
-  File "/home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/_pytest/main.py", line 330, in wrap_session
+  File "/home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/_pytest/main.py", line 330, in wrap_session
     session.exitstatus = doit(config, session) or 0
                          ~~~~^^^^^^^^^^^^^^^^^
-  File "/home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/_pytest/main.py", line 384, in _main
+  File "/home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/_pytest/main.py", line 384, in _main
     config.hook.pytest_runtestloop(session=session)
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
-  File "/home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/pluggy/_caller.py", line 197, in __call__
+  File "/home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/pluggy/_caller.py", line 197, in __call__
     return self._hookexec(
            ~~~~~~~~~~~~~~^
         self.name, self._hookimpls.copy(), call_kwargs, firstresult
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     )
     ^
-  File "/home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/pluggy/_manager.py", line 183, in _hookexec
+  File "/home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/pluggy/_manager.py", line 183, in _hookexec
     return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
            ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/pluggy/_execution.py", line 195, in _multicall
+  File "/home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/pluggy/_execution.py", line 195, in _multicall
     raise exception
-  File "/home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/pluggy/_execution.py", line 167, in _multicall
+  File "/home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/pluggy/_execution.py", line 167, in _multicall
     teardown.throw(exception)
     ~~~~~~~~~~~~~~^^^^^^^^^^^
-  File "/home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/_pytest/logging.py", line 816, in pytest_runtestloop
+  File "/home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/_pytest/logging.py", line 816, in pytest_runtestloop
     return (yield)  # Run all the tests.
             ^^^^^
-  File "/home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/pluggy/_execution.py", line 167, in _multicall
+  File "/home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/pluggy/_execution.py", line 167, in _multicall
     teardown.throw(exception)
     ~~~~~~~~~~~~~~^^^^^^^^^^^
-  File "/home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/_pytest/terminal.py", line 708, in pytest_runtestloop
+  File "/home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/_pytest/terminal.py", line 708, in pytest_runtestloop
     result = yield
              ^^^^^
-  File "/home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/pluggy/_execution.py", line 147, in _multicall
+  File "/home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/pluggy/_execution.py", line 147, in _multicall
     res = hook_impl.function(*args)
-  File "/home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/_pytest/main.py", line 408, in pytest_runtestloop
+  File "/home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/_pytest/main.py", line 408, in pytest_runtestloop
     item.config.hook.pytest_runtest_protocol(item=item, nextitem=nextitem)
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/pluggy/_caller.py", line 197, in __call__
+  File "/home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/pluggy/_caller.py", line 197, in __call__
     return self._hookexec(
            ~~~~~~~~~~~~~~^
         self.name, self._hookimpls.copy(), call_kwargs, firstresult
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     )
     ^
-  File "/home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/pluggy/_manager.py", line 183, in _hookexec
+  File "/home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/pluggy/_manager.py", line 183, in _hookexec
     return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
            ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/pluggy/_execution.py", line 195, in _multicall
+  File "/home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/pluggy/_execution.py", line 195, in _multicall
     raise exception
-  File "/home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/pluggy/_execution.py", line 167, in _multicall
+  File "/home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/pluggy/_execution.py", line 167, in _multicall
     teardown.throw(exception)
     ~~~~~~~~~~~~~~^^^^^^^^^^^
-  File "/home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/_pytest/warnings.py", line 90, in pytest_runtest_protocol
+  File "/home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/_pytest/warnings.py", line 90, in pytest_runtest_protocol
     return (yield)
             ^^^^^
-  File "/home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/pluggy/_execution.py", line 167, in _multicall
+  File "/home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/pluggy/_execution.py", line 167, in _multicall
     teardown.throw(exception)
     ~~~~~~~~~~~~~~^^^^^^^^^^^
-  File "/home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/_pytest/assertion/__init__.py", line 205, in pytest_runtest_protocol
+  File "/home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/_pytest/assertion/__init__.py", line 205, in pytest_runtest_protocol
     return (yield)
             ^^^^^
-  File "/home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/pluggy/_execution.py", line 167, in _multicall
+  File "/home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/pluggy/_execution.py", line 167, in _multicall
     teardown.throw(exception)
     ~~~~~~~~~~~~~~^^^^^^^^^^^
-  File "/home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/_pytest/unittest.py", line 612, in pytest_runtest_protocol
+  File "/home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/_pytest/unittest.py", line 612, in pytest_runtest_protocol
     return (yield)
             ^^^^^
-  File "/home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/pluggy/_execution.py", line 167, in _multicall
+  File "/home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/pluggy/_execution.py", line 167, in _multicall
     teardown.throw(exception)
     ~~~~~~~~~~~~~~^^^^^^^^^^^
-  File "/home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/_pytest/faulthandler.py", line 102, in pytest_runtest_protocol
+  File "/home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/_pytest/faulthandler.py", line 102, in pytest_runtest_protocol
     return (yield)
             ^^^^^
-  File "/home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/pluggy/_execution.py", line 147, in _multicall
+  File "/home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/pluggy/_execution.py", line 147, in _multicall
     res = hook_impl.function(*args)
-  File "/home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/_pytest/runner.py", line 118, in pytest_runtest_protocol
+  File "/home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/_pytest/runner.py", line 118, in pytest_runtest_protocol
     runtestprotocol(item, nextitem=nextitem)
     ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/_pytest/runner.py", line 139, in runtestprotocol
+  File "/home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/_pytest/runner.py", line 139, in runtestprotocol
     reports.append(call_and_report(item, "call", log))
                    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
-  File "/home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/_pytest/runner.py", line 256, in call_and_report
+  File "/home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/_pytest/runner.py", line 256, in call_and_report
     ihook.pytest_runtest_logreport(report=report)
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
-  File "/home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/pluggy/_caller.py", line 197, in __call__
+  File "/home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/pluggy/_caller.py", line 197, in __call__
     return self._hookexec(
            ~~~~~~~~~~~~~~^
         self.name, self._hookimpls.copy(), call_kwargs, firstresult
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     )
     ^
-  File "/home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/pluggy/_manager.py", line 183, in _hookexec
+  File "/home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/pluggy/_manager.py", line 183, in _hookexec
     return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
            ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/pluggy/_execution.py", line 195, in _multicall
+  File "/home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/pluggy/_execution.py", line 195, in _multicall
     raise exception
-  File "/home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/pluggy/_execution.py", line 147, in _multicall
+  File "/home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/pluggy/_execution.py", line 147, in _multicall
     res = hook_impl.function(*args)
-  File "/home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/_pytest/terminal.py", line 699, in pytest_runtest_logreport
+  File "/home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/_pytest/terminal.py", line 699, in pytest_runtest_logreport
     self.flush()
     ~~~~~~~~~~^^
-  File "/home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/_pytest/terminal.py", line 532, in flush
+  File "/home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/_pytest/terminal.py", line 532, in flush
     self._tw.flush()
     ~~~~~~~~~~~~~~^^
-  File "/home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/_pytest/_io/terminalwriter.py", line 187, in flush
+  File "/home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/_pytest/_io/terminalwriter.py", line 187, in flush
     self._file.flush()
     ~~~~~~~~~~~~~~~~^^
 BrokenPipeError: [Errno 32] Обрыв канала</error></testcase></testsuite></testsuites>

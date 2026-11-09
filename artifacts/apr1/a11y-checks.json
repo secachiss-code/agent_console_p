@@ -19,6 +19,6 @@
     ],
     "exit_code": 1,
     "stdout": "",
-    "stderr": "Traceback (most recent call last):\n  File \"/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/artifacts/apr1/check-a11y.txt\", line 10, in <module>\n    assert len(requests)==1, 'the focused details must expose the request name through AT-SPI'\n           ^^^^^^^^^^^^^^^^\nAssertionError: the focused details must expose the request name through AT-SPI\n"
+    "stderr": "Traceback (most recent call last):\n  File \"/home/example/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/artifacts/apr1/check-a11y.txt\", line 10, in <module>\n    assert len(requests)==1, 'the focused details must expose the request name through AT-SPI'\n           ^^^^^^^^^^^^^^^^\nAssertionError: the focused details must expose the request name through AT-SPI\n"
   }
 ]

@@ -72,9 +72,9 @@ SEC-11 сохраняет своё отдельное основание и ог
 Из корня worktree с существующим core environment:
 
 ```sh
-PYTHONPATH=src /home/sas/Projects/sp_aconsole_prototype/.venv-core/bin/python -m pytest -q artifacts/sec11/race_probe.py
-PYTHONPATH=src:artifacts/sec11/exec-boundary /home/sas/Projects/sp_aconsole_prototype/.venv-core/bin/python -m pytest -q -p guard_plugin artifacts/sec11/race_probe.py tests/core/test_git_host_exec.py
-distrobox-host-exec /home/sas/Projects/sp_aconsole_prototype/.venv-core/bin/python -m pytest -q tests/core/test_git_host_exec.py tests/core/test_git_security_environment.py tests/core/test_git_history.py tests/core/test_git_operations.py tests/core/test_git_merge.py tests/core/test_git_wire.py tests/core/test_checkpoints_git.py
+PYTHONPATH=src /home/example/Projects/sp_aconsole_prototype/.venv-core/bin/python -m pytest -q artifacts/sec11/race_probe.py
+PYTHONPATH=src:artifacts/sec11/exec-boundary /home/example/Projects/sp_aconsole_prototype/.venv-core/bin/python -m pytest -q -p guard_plugin artifacts/sec11/race_probe.py tests/core/test_git_host_exec.py
+distrobox-host-exec /home/example/Projects/sp_aconsole_prototype/.venv-core/bin/python -m pytest -q tests/core/test_git_host_exec.py tests/core/test_git_security_environment.py tests/core/test_git_history.py tests/core/test_git_operations.py tests/core/test_git_merge.py tests/core/test_git_wire.py tests/core/test_checkpoints_git.py
 ```
 
 Первые две команды должны вернуть exit1 по разным причинам, указанным выше.

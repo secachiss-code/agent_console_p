@@ -8,7 +8,7 @@ monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x2059eee3490&gt;
         home = tmp_path / "home"
         home.mkdir()
         monkeypatch.setenv("FAKE_HOME", str(home))
-    
+
         async def scenario() -&gt; None:
             daemon = _daemon(tmp_path)
             task = asyncio.create_task(daemon.serve())
@@ -47,24 +47,24 @@ monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x2059eee3490&gt;
                 assert str(tab.id) not in _read_recovery(daemon._recovery_path).tokens
             finally:
                 await _stop(daemon, task, client)
-    
+
 &gt;       asyncio.run(scenario())
 
-tests/core/test_core_recovery.py:157: 
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-/home/sas/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py:205: in run
+tests/core/test_core_recovery.py:157:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+/home/example/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py:205: in run
     return runner.run(main)
            ^^^^^^^^^^^^^^^^
-/home/sas/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py:128: in run
+/home/example/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py:128: in run
     return self._loop.run_until_complete(task)
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-/home/sas/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/base_events.py:724: in run_until_complete
+/home/example/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/base_events.py:724: in run_until_complete
     return future.result()
            ^^^^^^^^^^^^^^^
 tests/core/test_core_recovery.py:145: in scenario
     again = await client.call("tab/launchSpec", TabIdParams(tab_id=tab.id), TerminalLaunchSpec)
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 self = &lt;tests.core.test_wire._Client object at 0x2059f27a2d0&gt;
 method = 'tab/launchSpec', params = TabIdParams(tab_id='e03862cbbd2434d1')
@@ -114,12 +114,12 @@ tests/core/test_wire.py:85: AssertionError</failure></testcase><testcase classna
 &gt;           if _gone(pid):
                ^^^^^^^^^^
 
-tests/core/test_opencode_cursor.py:209: 
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/core/test_opencode_cursor.py:209:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 tests/core/test_opencode_cursor.py:683: in _gone
     return "Z" in Path(f"/proc/{pid}/stat").read_text(encoding="utf-8").split()[2]
                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 self = PosixPath('/proc/796187/stat'), encoding = 'utf-8', errors = None
 newline = None
@@ -136,11 +136,11 @@ newline = None
                    ^^^^^^^^
 E           ProcessLookupError: [Errno 3] No such process
 
-/home/sas/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/pathlib/__init__.py:987: ProcessLookupError</failure></testcase><testcase classname="tests.core.test_opencode_cursor" name="test_opencode_script_says_when_it_is_not_installed" time="0.007" /><testcase classname="tests.core.test_opencode_cursor" name="test_cursor_entry_keeps_other_servers_and_holds_no_secret" time="0.008" /><testcase classname="tests.core.test_opencode_cursor" name="test_cursor_leaves_a_file_it_cannot_read_alone" time="0.008" /><testcase classname="tests.core.test_opencode_cursor" name="test_only_a_claude_transcript_counts_as_a_session_to_resume" time="0.005" /><testcase classname="tests.core.test_opencode_cursor" name="test_commands_start_and_stop_one_stream_per_tab" time="0.005" /><testcase classname="tests.core.test_opencode_cursor" name="test_host_agents_lists_all_four" time="0.005" /><testcase classname="tests.core.test_opencode_cursor" name="test_setup_check_asks_the_right_binary" time="0.005" /><testcase classname="tests.core.test_opencode_cursor" name="test_screen_watch_reports_quiet_once_and_activity_after" time="0.005" /><testcase classname="tests.core.test_opencode_cursor" name="test_screen_watch_forgets_what_was_answered" time="0.005" /><testcase classname="tests.core.test_opencode_cursor" name="test_visible_tail_removes_controls_and_keeps_the_last_lines" time="0.004" /><testcase classname="tests.core.test_opencode_cursor" name="test_opencode_sessions_skip_subagents_and_other_projects" time="0.005" /><testcase classname="tests.core.test_opencode_cursor" name="test_command_files_find_commands_and_rules" time="0.006" /><testcase classname="tests.core.test_opencode_cursor" name="test_an_agent_without_limits_gets_a_card_saying_they_are_unknown" time="0.005" /><testcase classname="tests.core.test_opencode_cursor" name="test_an_agent_without_a_login_has_no_card" time="0.005" /><testcase classname="tests.core.test_opencode_cursor" name="test_numbers_left_by_an_old_login_are_not_shown" time="0.005" /><testcase classname="tests.core.test_opencode_cursor" name="test_the_login_is_a_file_in_the_containers_home" time="0.005" /><testcase classname="tests.core.test_opencode_cursor" name="test_host_agents_ask_about_the_login_only_of_an_existing_container" time="0.005" /><testcase classname="tests.core.test_opencode_cursor" name="test_the_cursor_card_gives_way_to_its_numbers" time="0.005" /><testcase classname="tests.core.test_opencode_cursor" name="test_cursor_usage_becomes_a_monthly_window" time="0.004" /><testcase classname="tests.core.test_opencode_cursor" name="test_cursor_plan_has_two_pools_with_the_money_each_spent" time="0.006" /><testcase classname="tests.core.test_opencode_cursor" name="test_cursor_pools_keep_their_shares_without_the_money" time="0.005" /><testcase classname="tests.core.test_opencode_cursor" name="test_claude_log_counts_a_reply_once_and_only_since_the_moment" time="0.007" /><testcase classname="tests.core.test_opencode_cursor" name="test_codex_log_splits_cached_input_and_skips_a_repeated_total" time="0.006" /><testcase classname="tests.core.test_opencode_cursor" name="test_tokens_are_counted_over_the_weekly_window" time="0.005" /><testcase classname="tests.core.test_opencode_cursor" name="test_cursor_on_demand_pool_is_a_budget_in_dollars" time="0.006" /><testcase classname="tests.core.test_opencode_cursor" name="test_opencode_go_counts_five_hours_a_week_and_a_month" time="0.005" /><testcase classname="tests.core.test_opencode_cursor" name="test_opencode_early_shape_and_refusals" time="0.005" /><testcase classname="tests.core.test_opencode_cursor" name="test_opencode_2_login_is_read_from_its_database" time="0.038" /><testcase classname="tests.core.test_opencode_cursor" name="test_opencode_login_to_another_provider_connects_it_but_cannot_ask_usage" time="0.022" /><testcase classname="tests.core.test_opencode_cursor" name="test_a_database_without_logins_is_no_login" time="0.020" /><testcase classname="tests.core.test_opencode_cursor" name="test_opencode_usage_is_not_asked_under_pythons_default_name" time="0.007" /><testcase classname="tests.core.test_opencode_cursor" name="test_opencode_refusal_for_no_subscription_becomes_a_plan_without_windows" time="0.005" /><testcase classname="tests.core.test_opencode_cursor" name="test_opencode_key_is_read_from_the_cli_login" time="0.005" /><testcase classname="tests.core.test_opencode_cursor" name="test_opencode_and_cursor_now_report_limits" time="0.005" /><testcase classname="tests.core.test_opencode_cursor" name="test_cursor_reply_without_usage_gives_nothing[]" time="0.004" /><testcase classname="tests.core.test_opencode_cursor" name="test_cursor_reply_without_usage_gives_nothing[{}]" time="0.005" /><testcase classname="tests.core.test_opencode_cursor" name="test_cursor_reply_without_usage_gives_nothing[{&quot;planUsage&quot;: {}}]" time="0.006" /><testcase classname="tests.core.test_opencode_cursor" name="test_cursor_reply_without_usage_gives_nothing[not json]" time="0.005" /><testcase classname="tests.core.test_opencode_cursor" name="test_cursor_reply_without_usage_gives_nothing[{&quot;code&quot;:&quot;unauthenticated&quot;}]" time="0.005" /><testcase classname="tests.core.test_opencode_cursor" name="test_cursor_token_is_read_from_the_cli_login" time="0.005" /><testcase classname="tests.core.test_opencode_cursor" name="test_codex_limits_are_asked_again_soon_after_silence" time="0.004" /><testcase classname="tests.core.test_palette_wire" name="test_real_core_palette_route_and_latency" time="1.953"><failure message="assert 0.15150494000408798 &lt; 0.1&#10; +  where 0.15150494000408798 = max([0.005432320998806972, 0.15150494000408798, 0.03949934100091923, 0.012393510005495045, 0.011062973993830383, 0.01855980899563292, ...])">tmp_path = PosixPath('/tmp/pytest-of-sas/pytest-86/test_real_core_palette_route_a0')
+/home/example/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/pathlib/__init__.py:987: ProcessLookupError</failure></testcase><testcase classname="tests.core.test_opencode_cursor" name="test_opencode_script_says_when_it_is_not_installed" time="0.007" /><testcase classname="tests.core.test_opencode_cursor" name="test_cursor_entry_keeps_other_servers_and_holds_no_secret" time="0.008" /><testcase classname="tests.core.test_opencode_cursor" name="test_cursor_leaves_a_file_it_cannot_read_alone" time="0.008" /><testcase classname="tests.core.test_opencode_cursor" name="test_only_a_claude_transcript_counts_as_a_session_to_resume" time="0.005" /><testcase classname="tests.core.test_opencode_cursor" name="test_commands_start_and_stop_one_stream_per_tab" time="0.005" /><testcase classname="tests.core.test_opencode_cursor" name="test_host_agents_lists_all_four" time="0.005" /><testcase classname="tests.core.test_opencode_cursor" name="test_setup_check_asks_the_right_binary" time="0.005" /><testcase classname="tests.core.test_opencode_cursor" name="test_screen_watch_reports_quiet_once_and_activity_after" time="0.005" /><testcase classname="tests.core.test_opencode_cursor" name="test_screen_watch_forgets_what_was_answered" time="0.005" /><testcase classname="tests.core.test_opencode_cursor" name="test_visible_tail_removes_controls_and_keeps_the_last_lines" time="0.004" /><testcase classname="tests.core.test_opencode_cursor" name="test_opencode_sessions_skip_subagents_and_other_projects" time="0.005" /><testcase classname="tests.core.test_opencode_cursor" name="test_command_files_find_commands_and_rules" time="0.006" /><testcase classname="tests.core.test_opencode_cursor" name="test_an_agent_without_limits_gets_a_card_saying_they_are_unknown" time="0.005" /><testcase classname="tests.core.test_opencode_cursor" name="test_an_agent_without_a_login_has_no_card" time="0.005" /><testcase classname="tests.core.test_opencode_cursor" name="test_numbers_left_by_an_old_login_are_not_shown" time="0.005" /><testcase classname="tests.core.test_opencode_cursor" name="test_the_login_is_a_file_in_the_containers_home" time="0.005" /><testcase classname="tests.core.test_opencode_cursor" name="test_host_agents_ask_about_the_login_only_of_an_existing_container" time="0.005" /><testcase classname="tests.core.test_opencode_cursor" name="test_the_cursor_card_gives_way_to_its_numbers" time="0.005" /><testcase classname="tests.core.test_opencode_cursor" name="test_cursor_usage_becomes_a_monthly_window" time="0.004" /><testcase classname="tests.core.test_opencode_cursor" name="test_cursor_plan_has_two_pools_with_the_money_each_spent" time="0.006" /><testcase classname="tests.core.test_opencode_cursor" name="test_cursor_pools_keep_their_shares_without_the_money" time="0.005" /><testcase classname="tests.core.test_opencode_cursor" name="test_claude_log_counts_a_reply_once_and_only_since_the_moment" time="0.007" /><testcase classname="tests.core.test_opencode_cursor" name="test_codex_log_splits_cached_input_and_skips_a_repeated_total" time="0.006" /><testcase classname="tests.core.test_opencode_cursor" name="test_tokens_are_counted_over_the_weekly_window" time="0.005" /><testcase classname="tests.core.test_opencode_cursor" name="test_cursor_on_demand_pool_is_a_budget_in_dollars" time="0.006" /><testcase classname="tests.core.test_opencode_cursor" name="test_opencode_go_counts_five_hours_a_week_and_a_month" time="0.005" /><testcase classname="tests.core.test_opencode_cursor" name="test_opencode_early_shape_and_refusals" time="0.005" /><testcase classname="tests.core.test_opencode_cursor" name="test_opencode_2_login_is_read_from_its_database" time="0.038" /><testcase classname="tests.core.test_opencode_cursor" name="test_opencode_login_to_another_provider_connects_it_but_cannot_ask_usage" time="0.022" /><testcase classname="tests.core.test_opencode_cursor" name="test_a_database_without_logins_is_no_login" time="0.020" /><testcase classname="tests.core.test_opencode_cursor" name="test_opencode_usage_is_not_asked_under_pythons_default_name" time="0.007" /><testcase classname="tests.core.test_opencode_cursor" name="test_opencode_refusal_for_no_subscription_becomes_a_plan_without_windows" time="0.005" /><testcase classname="tests.core.test_opencode_cursor" name="test_opencode_key_is_read_from_the_cli_login" time="0.005" /><testcase classname="tests.core.test_opencode_cursor" name="test_opencode_and_cursor_now_report_limits" time="0.005" /><testcase classname="tests.core.test_opencode_cursor" name="test_cursor_reply_without_usage_gives_nothing[]" time="0.004" /><testcase classname="tests.core.test_opencode_cursor" name="test_cursor_reply_without_usage_gives_nothing[{}]" time="0.005" /><testcase classname="tests.core.test_opencode_cursor" name="test_cursor_reply_without_usage_gives_nothing[{&quot;planUsage&quot;: {}}]" time="0.006" /><testcase classname="tests.core.test_opencode_cursor" name="test_cursor_reply_without_usage_gives_nothing[not json]" time="0.005" /><testcase classname="tests.core.test_opencode_cursor" name="test_cursor_reply_without_usage_gives_nothing[{&quot;code&quot;:&quot;unauthenticated&quot;}]" time="0.005" /><testcase classname="tests.core.test_opencode_cursor" name="test_cursor_token_is_read_from_the_cli_login" time="0.005" /><testcase classname="tests.core.test_opencode_cursor" name="test_codex_limits_are_asked_again_soon_after_silence" time="0.004" /><testcase classname="tests.core.test_palette_wire" name="test_real_core_palette_route_and_latency" time="1.953"><failure message="assert 0.15150494000408798 &lt; 0.1&#10; +  where 0.15150494000408798 = max([0.005432320998806972, 0.15150494000408798, 0.03949934100091923, 0.012393510005495045, 0.011062973993830383, 0.01855980899563292, ...])">tmp_path = PosixPath('/tmp/pytest-of-sas/pytest-86/test_real_core_palette_route_a0')
 
     def test_real_core_palette_route_and_latency(tmp_path: Path) -&gt; None:
         repo = _git_repo(tmp_path / "repo")
-    
+
         async def scenario() -&gt; None:
             daemon = _daemon(tmp_path, serve_ingest=False)
             task = asyncio.create_task(daemon.serve())
@@ -200,21 +200,21 @@ E           ProcessLookupError: [Errno 3] No such process
                 )
             finally:
                 await _stop(daemon, task, client)
-    
+
 &gt;       asyncio.run(scenario())
 
-/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_palette_wire.py:97: 
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-/home/sas/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py:205: in run
+/home/example/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_palette_wire.py:97:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+/home/example/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py:205: in run
     return runner.run(main)
            ^^^^^^^^^^^^^^^^
-/home/sas/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py:128: in run
+/home/example/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py:128: in run
     return self._loop.run_until_complete(task)
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-/home/sas/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/base_events.py:724: in run_until_complete
+/home/example/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/base_events.py:724: in run_until_complete
     return future.result()
            ^^^^^^^^^^^^^^^
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
     async def scenario() -&gt; None:
         daemon = _daemon(tmp_path, serve_ingest=False)
@@ -239,7 +239,7 @@ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 E           assert 0.15150494000408798 &lt; 0.1
 E            +  where 0.15150494000408798 = max([0.005432320998806972, 0.15150494000408798, 0.03949934100091923, 0.012393510005495045, 0.011062973993830383, 0.01855980899563292, ...])
 
-/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_palette_wire.py:56: AssertionError</failure></testcase><testcase classname="tests.core.test_palette_wire" name="test_catalog_contains_linked_notes_and_approvals_and_revalidates" time="0.005" /><testcase classname="tests.core.test_palette_wire" name="test_palette_plan_cache_is_seeded_after_restart" time="0.820" /><testcase classname="tests.core.test_palette_wire" name="test_palette_rejects_unknown_context[query0]" time="0.005" /><testcase classname="tests.core.test_palette_wire" name="test_palette_rejects_unknown_context[query1]" time="0.006" /><testcase classname="tests.core.test_persistence_a" name="test_persistence_a_migrations_go_up_and_down" time="1.030" /><testcase classname="tests.core.test_persistence_a" name="test_persistence_a_round_trip_and_pragmas" time="0.610" /><testcase classname="tests.core.test_persistence_a" name="test_migrations_are_found_in_a_package_and_in_a_checkout" time="0.005" /><testcase classname="tests.core.test_persistence_a" name="test_wal_pinned_reader_is_not_interrupted_and_compacts_after_release" time="0.583" /><testcase classname="tests.core.test_persistence_b" name="test_persistence_b_repositories" time="0.778" /><testcase classname="tests.core.test_persistence_b" name="test_persistence_b_writer_round_trip" time="0.678" /><testcase classname="tests.core.test_persistence_b" name="test_persistence_b_reader_is_thread_local" time="0.590" /><testcase classname="tests.core.test_persistence_b" name="test_persistence_b_event_rate" time="1.354" /><testcase classname="tests.core.test_persistence_b" name="test_persistence_b_tick" time="4.029"><failure message="AssertionError: p50=4.645997250918299e-06 p99=1.0604002454783767e-05 max=0.006478310002421495 n=487722&#10;assert 0.006478310002421495 &lt; 0.005">tmp_path = PosixPath('/tmp/pytest-of-sas/pytest-86/test_persistence_b_tick0')
+/home/example/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_palette_wire.py:56: AssertionError</failure></testcase><testcase classname="tests.core.test_palette_wire" name="test_catalog_contains_linked_notes_and_approvals_and_revalidates" time="0.005" /><testcase classname="tests.core.test_palette_wire" name="test_palette_plan_cache_is_seeded_after_restart" time="0.820" /><testcase classname="tests.core.test_palette_wire" name="test_palette_rejects_unknown_context[query0]" time="0.005" /><testcase classname="tests.core.test_palette_wire" name="test_palette_rejects_unknown_context[query1]" time="0.006" /><testcase classname="tests.core.test_persistence_a" name="test_persistence_a_migrations_go_up_and_down" time="1.030" /><testcase classname="tests.core.test_persistence_a" name="test_persistence_a_round_trip_and_pragmas" time="0.610" /><testcase classname="tests.core.test_persistence_a" name="test_migrations_are_found_in_a_package_and_in_a_checkout" time="0.005" /><testcase classname="tests.core.test_persistence_a" name="test_wal_pinned_reader_is_not_interrupted_and_compacts_after_release" time="0.583" /><testcase classname="tests.core.test_persistence_b" name="test_persistence_b_repositories" time="0.778" /><testcase classname="tests.core.test_persistence_b" name="test_persistence_b_writer_round_trip" time="0.678" /><testcase classname="tests.core.test_persistence_b" name="test_persistence_b_reader_is_thread_local" time="0.590" /><testcase classname="tests.core.test_persistence_b" name="test_persistence_b_event_rate" time="1.354" /><testcase classname="tests.core.test_persistence_b" name="test_persistence_b_tick" time="4.029"><failure message="AssertionError: p50=4.645997250918299e-06 p99=1.0604002454783767e-05 max=0.006478310002421495 n=487722&#10;assert 0.006478310002421495 &lt; 0.005">tmp_path = PosixPath('/tmp/pytest-of-sas/pytest-86/test_persistence_b_tick0')
 
     def test_persistence_b_tick(tmp_path: Path) -&gt; None:
         lags, stored = asyncio.run(_tick_lags(tmp_path))

@@ -29,3 +29,16 @@ def test_the_package_carries_what_runs_and_nothing_else() -> None:
     assert "pygobject" not in core, "GTK cannot load under free threading"
     assert not {"pytest", "ruff", "basedpyright", "pygobject-stubs"} & ui, "tools for development stay out"
     assert not {"pywin32", "httpx2-jsfetch"} & ui, "other platforms' dependencies stay out"
+
+
+def test_package_includes_license_and_only_application_sources(tmp_path: Path) -> None:
+    builder = _builder()
+    builder._share(tmp_path)
+    license_file = tmp_path / "usr/share/doc/aconsole/copyright"
+    assert license_file.read_bytes() == (_SCRIPT.parents[1] / "LICENSE").read_bytes()
+    site = tmp_path / "site"
+    builder._copy_app(site)
+    assert (site / "aconsole/__init__.py").is_file()
+    assert (site / "aconsole/_migrations/env.py").is_file()
+    assert {path.name for path in site.iterdir()} == {"aconsole"}
+    assert not tuple(site.rglob("spikes"))

@@ -36,11 +36,11 @@ src/aconsole/ui/client/core_client.py:175: in connect
 src/aconsole/ui/client/core_client.py:383: in _open_socket
     self._reader, self._writer = await asyncio.open_unix_connection(self.path, limit=_READ_LIMIT)
                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-/home/sas/.local/share/uv/python/cpython-3.15.1-linux-x86_64-gnu/lib/python3.15/asyncio/streams.py:97: in open_unix_connection
+/home/example/.local/share/uv/python/cpython-3.15.1-linux-x86_64-gnu/lib/python3.15/asyncio/streams.py:97: in open_unix_connection
     transport, _ = await loop.create_unix_connection(
-/home/sas/.local/share/uv/python/cpython-3.15.1-linux-x86_64-gnu/lib/python3.15/asyncio/unix_events.py:253: in create_unix_connection
+/home/example/.local/share/uv/python/cpython-3.15.1-linux-x86_64-gnu/lib/python3.15/asyncio/unix_events.py:253: in create_unix_connection
     await self.sock_connect(sock, path)
-/home/sas/.local/share/uv/python/cpython-3.15.1-linux-x86_64-gnu/lib/python3.15/asyncio/selector_events.py:646: in sock_connect
+/home/example/.local/share/uv/python/cpython-3.15.1-linux-x86_64-gnu/lib/python3.15/asyncio/selector_events.py:646: in sock_connect
     return await fut
            ^^^^^^^^^
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
@@ -55,7 +55,7 @@ address = '/tmp/pytest-of-sas/pytest-122/test_a_narrow_page_puts_the_in0/s/core.
 &gt;           sock.connect(address)
 E           FileNotFoundError: [Errno 2] Нет такого файла или каталога
 
-/home/sas/.local/share/uv/python/cpython-3.15.1-linux-x86_64-gnu/lib/python3.15/asyncio/selector_events.py:654: FileNotFoundError</failure></testcase><testcase classname="tests.gui.front.test_git_scale_ui" name="test_scrolling_a_long_history" time="31.764"><failure message="FileNotFoundError: [Errno 2] Нет такого файла или каталога">tmp_path = PosixPath('/tmp/pytest-of-sas/pytest-122/test_scrolling_a_long_history0')
+/home/example/.local/share/uv/python/cpython-3.15.1-linux-x86_64-gnu/lib/python3.15/asyncio/selector_events.py:654: FileNotFoundError</failure></testcase><testcase classname="tests.gui.front.test_git_scale_ui" name="test_scrolling_a_long_history" time="31.764"><failure message="FileNotFoundError: [Errno 2] Нет такого файла или каталога">tmp_path = PosixPath('/tmp/pytest-of-sas/pytest-122/test_scrolling_a_long_history0')
 monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7786a495b2f0&gt;
 
     def test_scrolling_a_long_history(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -&gt; None:
@@ -140,11 +140,11 @@ src/aconsole/ui/client/core_client.py:175: in connect
 src/aconsole/ui/client/core_client.py:383: in _open_socket
     self._reader, self._writer = await asyncio.open_unix_connection(self.path, limit=_READ_LIMIT)
                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-/home/sas/.local/share/uv/python/cpython-3.15.1-linux-x86_64-gnu/lib/python3.15/asyncio/streams.py:97: in open_unix_connection
+/home/example/.local/share/uv/python/cpython-3.15.1-linux-x86_64-gnu/lib/python3.15/asyncio/streams.py:97: in open_unix_connection
     transport, _ = await loop.create_unix_connection(
-/home/sas/.local/share/uv/python/cpython-3.15.1-linux-x86_64-gnu/lib/python3.15/asyncio/unix_events.py:253: in create_unix_connection
+/home/example/.local/share/uv/python/cpython-3.15.1-linux-x86_64-gnu/lib/python3.15/asyncio/unix_events.py:253: in create_unix_connection
     await self.sock_connect(sock, path)
-/home/sas/.local/share/uv/python/cpython-3.15.1-linux-x86_64-gnu/lib/python3.15/asyncio/selector_events.py:646: in sock_connect
+/home/example/.local/share/uv/python/cpython-3.15.1-linux-x86_64-gnu/lib/python3.15/asyncio/selector_events.py:646: in sock_connect
     return await fut
            ^^^^^^^^^
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
@@ -159,4 +159,4 @@ address = '/tmp/pytest-of-sas/pytest-122/test_scrolling_a_long_history0/s/core.s
 &gt;           sock.connect(address)
 E           FileNotFoundError: [Errno 2] Нет такого файла или каталога
 
-/home/sas/.local/share/uv/python/cpython-3.15.1-linux-x86_64-gnu/lib/python3.15/asyncio/selector_events.py:654: FileNotFoundError</failure></testcase></testsuite></testsuites>
+/home/example/.local/share/uv/python/cpython-3.15.1-linux-x86_64-gnu/lib/python3.15/asyncio/selector_events.py:654: FileNotFoundError</failure></testcase></testsuite></testsuites>

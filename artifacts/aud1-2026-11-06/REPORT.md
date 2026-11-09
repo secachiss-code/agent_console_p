@@ -9,7 +9,7 @@ local Git repositories, isolated HOME/XDG, and a fake container only for session
 ```sh
 mkdir -p .aconsole-dev/aud1-replay
 cp artifacts/aud1-2026-11-06/reproduce.py.txt .aconsole-dev/aud1-replay/test_audit.py
-HOSTRUN_CWD=/home/sas/Projects/sp_aconsole_prototype hostrun test core .aconsole-dev/aud1-replay/test_audit.py
+HOSTRUN_CWD=/home/example/Projects/sp_aconsole_prototype hostrun test core .aconsole-dev/aud1-replay/test_audit.py
 ```
 
 Thirteen probes completed. `observations.json` preserves the baseline results.

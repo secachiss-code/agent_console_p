@@ -51,9 +51,9 @@
 
 ../../../../uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/tasks.py:495: 
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-/run/host/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_wire.py:84: in call
+/run/host/home/example/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_wire.py:84: in call
     ???
-/run/host/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_wire.py:100: in raw
+/run/host/home/example/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_wire.py:100: in raw
     ???
 ../../../../uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/streams.py:577: in readline
     line = await self.readuntil(sep)

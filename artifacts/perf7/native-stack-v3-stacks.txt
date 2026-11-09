@@ -1,7 +1,7 @@
 SAMPLE 0
-#0  0x00007ffff7b2a050 in gi_base_info_unref () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/sysroot/usr/lib/x86_64-linux-gnu/libgirepository-2.0.so.0
-#1  0x00007ffff417bbf0 in _pygi_argument_from_g_value () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#2  0x00007ffff416ee9f in pygi_signal_closure_marshal () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#0  0x00007ffff7b2a050 in gi_base_info_unref () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/sysroot/usr/lib/x86_64-linux-gnu/libgirepository-2.0.so.0
+#1  0x00007ffff417bbf0 in _pygi_argument_from_g_value () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#2  0x00007ffff416ee9f in pygi_signal_closure_marshal () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #3  0x00007ffff34c72fa in g_closure_invoke () from /lib/x86_64-linux-gnu/libgobject-2.0.so.0
 #4  0x00007ffff34f690c in ?? () from /lib/x86_64-linux-gnu/libgobject-2.0.so.0
 #5  0x00007ffff34e7591 in ?? () from /lib/x86_64-linux-gnu/libgobject-2.0.so.0
@@ -23,11 +23,11 @@ SAMPLE 0
 #21 0x00007ffff7b19b16 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #22 0x00007ffff7b163ef in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #23 0x00007ffff7b190be in ffi_call () from /lib/x86_64-linux-gnu/libffi.so.8
-#24 0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#25 0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#24 0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#25 0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #26 0x00000000018084d0 in _TAIL_CALL_CALL_NON_PY_GENERAL ()
 #27 0x0000000001813e4d in _PyFunction_Vectorcall ()
-#28 0x00007ffff416d4e8 in _pygi_closure_handle () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#28 0x00007ffff416d4e8 in _pygi_closure_handle () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #29 0x00007ffff7b19641 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #30 0x00007ffff7b19d38 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #31 0x00007fffefe8d9d5 in ?? () from /lib/x86_64-linux-gnu/libgtk-4.so.1
@@ -76,7 +76,7 @@ SAMPLE 2
 #0  0x00007ffff7c2a6e0 in __errno_location () from /lib/x86_64-linux-gnu/libc.so.6
 #1  0x0000000001906199 in take_gil ()
 #2  0x00000000019097a0 in PyGILState_Ensure ()
-#3  0x00007ffff4166950 in source_check () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#3  0x00007ffff4166950 in source_check () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #4  0x00007ffff15152b7 in ?? () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
 #5  0x00007ffff1573b07 in ?? () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
 #6  0x00007ffff1513ad3 in g_main_context_iteration () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
@@ -84,8 +84,8 @@ SAMPLE 2
 #8  0x00007ffff7b19b16 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #9  0x00007ffff7b163ef in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #10 0x00007ffff7b190be in ffi_call () from /lib/x86_64-linux-gnu/libffi.so.8
-#11 0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#12 0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#11 0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#12 0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #13 0x000000000180f74e in _TAIL_CALL_CALL_EX_NON_PY_GENERAL ()
 #14 0x0000000001813e4d in _PyFunction_Vectorcall ()
 #15 0x000000000192d9c2 in slot_tp_call ()
@@ -117,8 +117,8 @@ SAMPLE 3
 #4  0x00007ffff7b19b16 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #5  0x00007ffff7b163ef in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #6  0x00007ffff7b190be in ffi_call () from /lib/x86_64-linux-gnu/libffi.so.8
-#7  0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#8  0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#7  0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#8  0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #9  0x000000000180f74e in _TAIL_CALL_CALL_EX_NON_PY_GENERAL ()
 #10 0x0000000001813e4d in _PyFunction_Vectorcall ()
 #11 0x000000000192d9c2 in slot_tp_call ()
@@ -154,8 +154,8 @@ SAMPLE 4
 #4  0x00007ffff7b19b16 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #5  0x00007ffff7b163ef in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #6  0x00007ffff7b190be in ffi_call () from /lib/x86_64-linux-gnu/libffi.so.8
-#7  0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#8  0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#7  0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#8  0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #9  0x000000000180f74e in _TAIL_CALL_CALL_EX_NON_PY_GENERAL ()
 #10 0x0000000001813e4d in _PyFunction_Vectorcall ()
 #11 0x000000000192d9c2 in slot_tp_call ()
@@ -216,8 +216,8 @@ SAMPLE 5
 #29 0x00007ffff7b19b16 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #30 0x00007ffff7b163ef in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #31 0x00007ffff7b190be in ffi_call () from /lib/x86_64-linux-gnu/libffi.so.8
-#32 0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#33 0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#32 0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#33 0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #34 0x000000000180f74e in _TAIL_CALL_CALL_EX_NON_PY_GENERAL ()
 
 SAMPLE 6
@@ -227,12 +227,12 @@ SAMPLE 6
 #3  0x00007ffff7b19b16 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #4  0x00007ffff7b163ef in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #5  0x00007ffff7b190be in ffi_call () from /lib/x86_64-linux-gnu/libffi.so.8
-#6  0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#7  0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#6  0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#7  0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #8  0x00000000018084d0 in _TAIL_CALL_CALL_NON_PY_GENERAL ()
 #9  0x0000000001813e4d in _PyFunction_Vectorcall ()
 #10 0x000000000181389a in method_vectorcall ()
-#11 0x00007ffff416ed62 in pygi_signal_closure_marshal () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#11 0x00007ffff416ed62 in pygi_signal_closure_marshal () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #12 0x00007ffff34c72fa in g_closure_invoke () from /lib/x86_64-linux-gnu/libgobject-2.0.so.0
 #13 0x00007ffff34f690c in ?? () from /lib/x86_64-linux-gnu/libgobject-2.0.so.0
 #14 0x00007ffff34e7591 in ?? () from /lib/x86_64-linux-gnu/libgobject-2.0.so.0
@@ -264,12 +264,12 @@ SAMPLE 7
 #3  0x00007ffff7b19b16 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #4  0x00007ffff7b163ef in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #5  0x00007ffff7b190be in ffi_call () from /lib/x86_64-linux-gnu/libffi.so.8
-#6  0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#7  0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#6  0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#7  0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #8  0x00000000018084d0 in _TAIL_CALL_CALL_NON_PY_GENERAL ()
 #9  0x0000000001813e4d in _PyFunction_Vectorcall ()
 #10 0x000000000181389a in method_vectorcall ()
-#11 0x00007ffff416ed62 in pygi_signal_closure_marshal () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#11 0x00007ffff416ed62 in pygi_signal_closure_marshal () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #12 0x00007ffff34c72fa in g_closure_invoke () from /lib/x86_64-linux-gnu/libgobject-2.0.so.0
 #13 0x00007ffff34f690c in ?? () from /lib/x86_64-linux-gnu/libgobject-2.0.so.0
 #14 0x00007ffff34e7591 in ?? () from /lib/x86_64-linux-gnu/libgobject-2.0.so.0
@@ -297,13 +297,13 @@ SAMPLE 7
 SAMPLE 8
 #0  0x00007ffff7c97acf in dlerror () from /lib/x86_64-linux-gnu/libc.so.6
 #1  0x00007ffff4139889 in g_module_symbol () from /lib/x86_64-linux-gnu/libgmodule-2.0.so.0
-#2  0x00007ffff7b36b80 in gi_typelib_symbol () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/sysroot/usr/lib/x86_64-linux-gnu/libgirepository-2.0.so.0
-#3  0x00007ffff7b343de in gi_registered_type_info_get_g_type () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/sysroot/usr/lib/x86_64-linux-gnu/libgirepository-2.0.so.0
-#4  0x00007ffff4175a6c in pygi_arg_interface_new_from_info () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#5  0x00007ffff4177374 in pygi_arg_gobject_new_from_info () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#6  0x00007ffff4171264 in pygi_arg_cache_new () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#7  0x00007ffff4166ff4 in pygi_argument_to_py () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#8  0x00007ffff416ef57 in pygi_signal_closure_marshal () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#2  0x00007ffff7b36b80 in gi_typelib_symbol () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/sysroot/usr/lib/x86_64-linux-gnu/libgirepository-2.0.so.0
+#3  0x00007ffff7b343de in gi_registered_type_info_get_g_type () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/sysroot/usr/lib/x86_64-linux-gnu/libgirepository-2.0.so.0
+#4  0x00007ffff4175a6c in pygi_arg_interface_new_from_info () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#5  0x00007ffff4177374 in pygi_arg_gobject_new_from_info () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#6  0x00007ffff4171264 in pygi_arg_cache_new () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#7  0x00007ffff4166ff4 in pygi_argument_to_py () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#8  0x00007ffff416ef57 in pygi_signal_closure_marshal () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #9  0x00007ffff34c72fa in g_closure_invoke () from /lib/x86_64-linux-gnu/libgobject-2.0.so.0
 #10 0x00007ffff34f690c in ?? () from /lib/x86_64-linux-gnu/libgobject-2.0.so.0
 #11 0x00007ffff34e7591 in ?? () from /lib/x86_64-linux-gnu/libgobject-2.0.so.0
@@ -325,11 +325,11 @@ SAMPLE 8
 #27 0x00007ffff7b19b16 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #28 0x00007ffff7b163ef in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #29 0x00007ffff7b190be in ffi_call () from /lib/x86_64-linux-gnu/libffi.so.8
-#30 0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#31 0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#30 0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#31 0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #32 0x00000000018084d0 in _TAIL_CALL_CALL_NON_PY_GENERAL ()
 #33 0x0000000001813e4d in _PyFunction_Vectorcall ()
-#34 0x00007ffff416d4e8 in _pygi_closure_handle () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#34 0x00007ffff416d4e8 in _pygi_closure_handle () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 
 SAMPLE 9
 #0  0x00007ffff7d1b79d in poll () from /lib/x86_64-linux-gnu/libc.so.6
@@ -339,8 +339,8 @@ SAMPLE 9
 #4  0x00007ffff7b19b16 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #5  0x00007ffff7b163ef in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #6  0x00007ffff7b190be in ffi_call () from /lib/x86_64-linux-gnu/libffi.so.8
-#7  0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#8  0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#7  0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#8  0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #9  0x000000000180f74e in _TAIL_CALL_CALL_EX_NON_PY_GENERAL ()
 #10 0x0000000001813e4d in _PyFunction_Vectorcall ()
 #11 0x000000000192d9c2 in slot_tp_call ()
@@ -370,7 +370,7 @@ SAMPLE 9
 
 SAMPLE 10
 #0  0x0000000001813e55 in _PyFunction_Vectorcall ()
-#1  0x00007ffff416d4e8 in _pygi_closure_handle () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#1  0x00007ffff416d4e8 in _pygi_closure_handle () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #2  0x00007ffff7b19641 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #3  0x00007ffff7b19d38 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #4  0x00007fffefea1b54 in ?? () from /lib/x86_64-linux-gnu/libgtk-4.so.1
@@ -440,7 +440,7 @@ SAMPLE 11
 #31 0x00007ffff7b19b16 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #32 0x00007ffff7b163ef in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #33 0x00007ffff7b190be in ffi_call () from /lib/x86_64-linux-gnu/libffi.so.8
-#34 0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#34 0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 
 SAMPLE 12
 #0  0x00007ffff7d1b79d in poll () from /lib/x86_64-linux-gnu/libc.so.6
@@ -450,8 +450,8 @@ SAMPLE 12
 #4  0x00007ffff7b19b16 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #5  0x00007ffff7b163ef in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #6  0x00007ffff7b190be in ffi_call () from /lib/x86_64-linux-gnu/libffi.so.8
-#7  0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#8  0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#7  0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#8  0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #9  0x000000000180f74e in _TAIL_CALL_CALL_EX_NON_PY_GENERAL ()
 #10 0x0000000001813e4d in _PyFunction_Vectorcall ()
 #11 0x000000000192d9c2 in slot_tp_call ()
@@ -487,8 +487,8 @@ SAMPLE 13
 #4  0x00007ffff7b19b16 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #5  0x00007ffff7b163ef in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #6  0x00007ffff7b190be in ffi_call () from /lib/x86_64-linux-gnu/libffi.so.8
-#7  0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#8  0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#7  0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#8  0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #9  0x000000000180f74e in _TAIL_CALL_CALL_EX_NON_PY_GENERAL ()
 #10 0x0000000001813e4d in _PyFunction_Vectorcall ()
 #11 0x000000000192d9c2 in slot_tp_call ()
@@ -521,7 +521,7 @@ SAMPLE 14
 #1  0x000000000180d2b7 in _TAIL_CALL_CALL_METHOD_DESCRIPTOR_FAST ()
 #2  0x0000000001813e4d in _PyFunction_Vectorcall ()
 #3  0x000000000181389a in method_vectorcall ()
-#4  0x00007ffff416ed62 in pygi_signal_closure_marshal () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#4  0x00007ffff416ed62 in pygi_signal_closure_marshal () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #5  0x00007ffff34c72fa in g_closure_invoke () from /lib/x86_64-linux-gnu/libgobject-2.0.so.0
 #6  0x00007ffff34f690c in ?? () from /lib/x86_64-linux-gnu/libgobject-2.0.so.0
 #7  0x00007ffff34e7591 in ?? () from /lib/x86_64-linux-gnu/libgobject-2.0.so.0
@@ -542,11 +542,11 @@ SAMPLE 14
 #22 0x00007ffff7b19b16 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #23 0x00007ffff7b163ef in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #24 0x00007ffff7b190be in ffi_call () from /lib/x86_64-linux-gnu/libffi.so.8
-#25 0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#26 0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#25 0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#26 0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #27 0x00000000018084d0 in _TAIL_CALL_CALL_NON_PY_GENERAL ()
 #28 0x0000000001813e4d in _PyFunction_Vectorcall ()
-#29 0x00007ffff416d4e8 in _pygi_closure_handle () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#29 0x00007ffff416d4e8 in _pygi_closure_handle () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #30 0x00007ffff7b19641 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #31 0x00007ffff7b19d38 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #32 0x00007fffefe8d9d5 in ?? () from /lib/x86_64-linux-gnu/libgtk-4.so.1
@@ -578,8 +578,8 @@ SAMPLE 15
 #21 0x00007ffff7b19b16 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #22 0x00007ffff7b163ef in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #23 0x00007ffff7b190be in ffi_call () from /lib/x86_64-linux-gnu/libffi.so.8
-#24 0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#25 0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#24 0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#25 0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #26 0x000000000180f74e in _TAIL_CALL_CALL_EX_NON_PY_GENERAL ()
 #27 0x0000000001813e4d in _PyFunction_Vectorcall ()
 #28 0x000000000192d9c2 in slot_tp_call ()
@@ -593,12 +593,12 @@ SAMPLE 15
 SAMPLE 16
 #0  0x00007ffff34ed460 in ?? () from /lib/x86_64-linux-gnu/libgobject-2.0.so.0
 #1  0x00007ffff34ed7c3 in g_type_is_a () from /lib/x86_64-linux-gnu/libgobject-2.0.so.0
-#2  0x00007ffff4177e7d in pygi_arg_struct_to_py_marshal () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#3  0x00007ffff416fb1d in pygi_invoke_c_callable () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#4  0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#2  0x00007ffff4177e7d in pygi_arg_struct_to_py_marshal () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#3  0x00007ffff416fb1d in pygi_invoke_c_callable () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#4  0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #5  0x00000000018084d0 in _TAIL_CALL_CALL_NON_PY_GENERAL ()
 #6  0x0000000001813e4d in _PyFunction_Vectorcall ()
-#7  0x00007ffff416d4e8 in _pygi_closure_handle () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#7  0x00007ffff416d4e8 in _pygi_closure_handle () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #8  0x00007ffff7b19641 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #9  0x00007ffff7b19d38 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #10 0x00007fffefea1b54 in ?? () from /lib/x86_64-linux-gnu/libgtk-4.so.1
@@ -653,8 +653,8 @@ SAMPLE 17
 #22 0x00007ffff7b19b16 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #23 0x00007ffff7b163ef in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #24 0x00007ffff7b190be in ffi_call () from /lib/x86_64-linux-gnu/libffi.so.8
-#25 0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#26 0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#25 0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#26 0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #27 0x000000000180f74e in _TAIL_CALL_CALL_EX_NON_PY_GENERAL ()
 #28 0x0000000001813e4d in _PyFunction_Vectorcall ()
 #29 0x000000000192d9c2 in slot_tp_call ()
@@ -665,15 +665,15 @@ SAMPLE 17
 #34 0x000000000180f7c4 in _TAIL_CALL_CALL_EX_NON_PY_GENERAL ()
 
 SAMPLE 18
-#0  0x00007ffff7b37077 in ?? () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/sysroot/usr/lib/x86_64-linux-gnu/libgirepository-2.0.so.0
-#1  0x00007ffff7b30c34 in gi_repository_find_by_name () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/sysroot/usr/lib/x86_64-linux-gnu/libgirepository-2.0.so.0
-#2  0x00007ffff7b30e4e in ?? () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/sysroot/usr/lib/x86_64-linux-gnu/libgirepository-2.0.so.0
-#3  0x00007ffff41749c9 in _pygi_marshal_from_py_interface_enum () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#4  0x00007ffff416fa38 in pygi_invoke_c_callable () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#5  0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#0  0x00007ffff7b37077 in ?? () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/sysroot/usr/lib/x86_64-linux-gnu/libgirepository-2.0.so.0
+#1  0x00007ffff7b30c34 in gi_repository_find_by_name () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/sysroot/usr/lib/x86_64-linux-gnu/libgirepository-2.0.so.0
+#2  0x00007ffff7b30e4e in ?? () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/sysroot/usr/lib/x86_64-linux-gnu/libgirepository-2.0.so.0
+#3  0x00007ffff41749c9 in _pygi_marshal_from_py_interface_enum () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#4  0x00007ffff416fa38 in pygi_invoke_c_callable () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#5  0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #6  0x00000000018084d0 in _TAIL_CALL_CALL_NON_PY_GENERAL ()
 #7  0x0000000001813e4d in _PyFunction_Vectorcall ()
-#8  0x00007ffff416d4e8 in _pygi_closure_handle () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#8  0x00007ffff416d4e8 in _pygi_closure_handle () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #9  0x00007ffff7b19641 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #10 0x00007ffff7b19d38 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #11 0x00007fffefea1b54 in ?? () from /lib/x86_64-linux-gnu/libgtk-4.so.1
@@ -707,12 +707,12 @@ SAMPLE 19
 #2  0x00007ffff7b19b16 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #3  0x00007ffff7b163ef in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #4  0x00007ffff7b190be in ffi_call () from /lib/x86_64-linux-gnu/libffi.so.8
-#5  0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#6  0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#5  0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#6  0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #7  0x00000000018084d0 in _TAIL_CALL_CALL_NON_PY_GENERAL ()
 #8  0x0000000001813e4d in _PyFunction_Vectorcall ()
 #9  0x000000000181389a in method_vectorcall ()
-#10 0x00007ffff416ed62 in pygi_signal_closure_marshal () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#10 0x00007ffff416ed62 in pygi_signal_closure_marshal () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #11 0x00007ffff34c72fa in g_closure_invoke () from /lib/x86_64-linux-gnu/libgobject-2.0.so.0
 #12 0x00007ffff34f690c in ?? () from /lib/x86_64-linux-gnu/libgobject-2.0.so.0
 #13 0x00007ffff34e7591 in ?? () from /lib/x86_64-linux-gnu/libgobject-2.0.so.0
@@ -740,12 +740,12 @@ SAMPLE 19
 
 SAMPLE 20
 #0  0x0000000001906101 in PyEval_RestoreThread ()
-#1  0x00007ffff416faa7 in pygi_invoke_c_callable () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#2  0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#1  0x00007ffff416faa7 in pygi_invoke_c_callable () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#2  0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #3  0x00000000018084d0 in _TAIL_CALL_CALL_NON_PY_GENERAL ()
 #4  0x0000000001813e4d in _PyFunction_Vectorcall ()
 #5  0x000000000181389a in method_vectorcall ()
-#6  0x00007ffff416ed62 in pygi_signal_closure_marshal () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#6  0x00007ffff416ed62 in pygi_signal_closure_marshal () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #7  0x00007ffff34c72fa in g_closure_invoke () from /lib/x86_64-linux-gnu/libgobject-2.0.so.0
 #8  0x00007ffff34f690c in ?? () from /lib/x86_64-linux-gnu/libgobject-2.0.so.0
 #9  0x00007ffff34e7591 in ?? () from /lib/x86_64-linux-gnu/libgobject-2.0.so.0
@@ -767,11 +767,11 @@ SAMPLE 20
 #25 0x00007ffff7b19b16 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #26 0x00007ffff7b163ef in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #27 0x00007ffff7b190be in ffi_call () from /lib/x86_64-linux-gnu/libffi.so.8
-#28 0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#29 0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#28 0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#29 0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #30 0x00000000018084d0 in _TAIL_CALL_CALL_NON_PY_GENERAL ()
 #31 0x0000000001813e4d in _PyFunction_Vectorcall ()
-#32 0x00007ffff416d4e8 in _pygi_closure_handle () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#32 0x00007ffff416d4e8 in _pygi_closure_handle () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #33 0x00007ffff7b19641 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #34 0x00007ffff7b19d38 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 
@@ -796,11 +796,11 @@ SAMPLE 21
 #17 0x00007ffff7b19b16 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #18 0x00007ffff7b163ef in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #19 0x00007ffff7b190be in ffi_call () from /lib/x86_64-linux-gnu/libffi.so.8
-#20 0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#21 0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#20 0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#21 0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #22 0x00000000018084d0 in _TAIL_CALL_CALL_NON_PY_GENERAL ()
 #23 0x0000000001813e4d in _PyFunction_Vectorcall ()
-#24 0x00007ffff416d4e8 in _pygi_closure_handle () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#24 0x00007ffff416d4e8 in _pygi_closure_handle () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #25 0x00007ffff7b19641 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #26 0x00007ffff7b19d38 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #27 0x00007fffefe8d9d5 in ?? () from /lib/x86_64-linux-gnu/libgtk-4.so.1
@@ -820,8 +820,8 @@ SAMPLE 22
 #4  0x00007ffff7b19b16 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #5  0x00007ffff7b163ef in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #6  0x00007ffff7b190be in ffi_call () from /lib/x86_64-linux-gnu/libffi.so.8
-#7  0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#8  0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#7  0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#8  0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #9  0x000000000180f74e in _TAIL_CALL_CALL_EX_NON_PY_GENERAL ()
 #10 0x0000000001813e4d in _PyFunction_Vectorcall ()
 #11 0x000000000192d9c2 in slot_tp_call ()
@@ -857,12 +857,12 @@ SAMPLE 23
 #4  0x000000000181562b in PyObject_CallFunction ()
 #5  0x0000000001816b10 in PyImport_Import ()
 #6  0x0000000001a6b521 in PyImport_ImportModule ()
-#7  0x00007ffff416b05d in pygi_type_import_by_gi_info () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#8  0x00007ffff4175a78 in pygi_arg_interface_new_from_info () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#9  0x00007ffff4177374 in pygi_arg_gobject_new_from_info () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#10 0x00007ffff4171264 in pygi_arg_cache_new () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#11 0x00007ffff4166ff4 in pygi_argument_to_py () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#12 0x00007ffff416ef57 in pygi_signal_closure_marshal () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#7  0x00007ffff416b05d in pygi_type_import_by_gi_info () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#8  0x00007ffff4175a78 in pygi_arg_interface_new_from_info () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#9  0x00007ffff4177374 in pygi_arg_gobject_new_from_info () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#10 0x00007ffff4171264 in pygi_arg_cache_new () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#11 0x00007ffff4166ff4 in pygi_argument_to_py () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#12 0x00007ffff416ef57 in pygi_signal_closure_marshal () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #13 0x00007ffff34c72fa in g_closure_invoke () from /lib/x86_64-linux-gnu/libgobject-2.0.so.0
 #14 0x00007ffff34f690c in ?? () from /lib/x86_64-linux-gnu/libgobject-2.0.so.0
 #15 0x00007ffff34e7591 in ?? () from /lib/x86_64-linux-gnu/libgobject-2.0.so.0
@@ -883,8 +883,8 @@ SAMPLE 23
 #30 0x00007ffff7b19b16 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #31 0x00007ffff7b163ef in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #32 0x00007ffff7b190be in ffi_call () from /lib/x86_64-linux-gnu/libffi.so.8
-#33 0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#34 0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#33 0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#34 0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 
 SAMPLE 24
 #0  0x00007fffefe1a3d0 in ?? () from /lib/x86_64-linux-gnu/libgtk-4.so.1
@@ -915,8 +915,8 @@ SAMPLE 24
 #25 0x00007ffff7b19b16 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #26 0x00007ffff7b163ef in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #27 0x00007ffff7b190be in ffi_call () from /lib/x86_64-linux-gnu/libffi.so.8
-#28 0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#29 0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#28 0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#29 0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #30 0x000000000180f74e in _TAIL_CALL_CALL_EX_NON_PY_GENERAL ()
 #31 0x0000000001813e4d in _PyFunction_Vectorcall ()
 #32 0x000000000192d9c2 in slot_tp_call ()
@@ -994,8 +994,8 @@ SAMPLE 26
 #30 0x00007ffff7b19b16 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #31 0x00007ffff7b163ef in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #32 0x00007ffff7b190be in ffi_call () from /lib/x86_64-linux-gnu/libffi.so.8
-#33 0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#34 0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#33 0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#34 0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 
 SAMPLE 27
 #0  0x00007ffff7d1b79d in poll () from /lib/x86_64-linux-gnu/libc.so.6
@@ -1005,8 +1005,8 @@ SAMPLE 27
 #4  0x00007ffff7b19b16 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #5  0x00007ffff7b163ef in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #6  0x00007ffff7b190be in ffi_call () from /lib/x86_64-linux-gnu/libffi.so.8
-#7  0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#8  0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#7  0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#8  0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #9  0x000000000180f74e in _TAIL_CALL_CALL_EX_NON_PY_GENERAL ()
 #10 0x0000000001813e4d in _PyFunction_Vectorcall ()
 #11 0x000000000192d9c2 in slot_tp_call ()
@@ -1038,7 +1038,7 @@ SAMPLE 28
 #0  0x0000000001804903 in _TAIL_CALL_CALL_PY_EXACT_ARGS ()
 #1  0x0000000001813e4d in _PyFunction_Vectorcall ()
 #2  0x000000000181389a in method_vectorcall ()
-#3  0x00007ffff416ed62 in pygi_signal_closure_marshal () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#3  0x00007ffff416ed62 in pygi_signal_closure_marshal () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #4  0x00007ffff34c72fa in g_closure_invoke () from /lib/x86_64-linux-gnu/libgobject-2.0.so.0
 #5  0x00007ffff34f690c in ?? () from /lib/x86_64-linux-gnu/libgobject-2.0.so.0
 #6  0x00007ffff34e7591 in ?? () from /lib/x86_64-linux-gnu/libgobject-2.0.so.0
@@ -1059,11 +1059,11 @@ SAMPLE 28
 #21 0x00007ffff7b19b16 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #22 0x00007ffff7b163ef in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #23 0x00007ffff7b190be in ffi_call () from /lib/x86_64-linux-gnu/libffi.so.8
-#24 0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#25 0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#24 0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#25 0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #26 0x00000000018084d0 in _TAIL_CALL_CALL_NON_PY_GENERAL ()
 #27 0x0000000001813e4d in _PyFunction_Vectorcall ()
-#28 0x00007ffff416d4e8 in _pygi_closure_handle () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#28 0x00007ffff416d4e8 in _pygi_closure_handle () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #29 0x00007ffff7b19641 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #30 0x00007ffff7b19d38 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #31 0x00007fffefe8d9d5 in ?? () from /lib/x86_64-linux-gnu/libgtk-4.so.1
@@ -1079,8 +1079,8 @@ SAMPLE 29
 #4  0x00007ffff7b19b16 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #5  0x00007ffff7b163ef in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #6  0x00007ffff7b190be in ffi_call () from /lib/x86_64-linux-gnu/libffi.so.8
-#7  0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#8  0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#7  0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#8  0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #9  0x000000000180f74e in _TAIL_CALL_CALL_EX_NON_PY_GENERAL ()
 #10 0x0000000001813e4d in _PyFunction_Vectorcall ()
 #11 0x000000000192d9c2 in slot_tp_call ()
@@ -1116,8 +1116,8 @@ SAMPLE 30
 #4  0x00007ffff7b19b16 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #5  0x00007ffff7b163ef in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #6  0x00007ffff7b190be in ffi_call () from /lib/x86_64-linux-gnu/libffi.so.8
-#7  0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#8  0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#7  0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#8  0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #9  0x000000000180f74e in _TAIL_CALL_CALL_EX_NON_PY_GENERAL ()
 #10 0x0000000001813e4d in _PyFunction_Vectorcall ()
 #11 0x000000000192d9c2 in slot_tp_call ()
@@ -1173,8 +1173,8 @@ SAMPLE 31
 #24 0x00007ffff7b19b16 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #25 0x00007ffff7b163ef in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #26 0x00007ffff7b190be in ffi_call () from /lib/x86_64-linux-gnu/libffi.so.8
-#27 0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#28 0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#27 0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#28 0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #29 0x000000000180f74e in _TAIL_CALL_CALL_EX_NON_PY_GENERAL ()
 #30 0x0000000001813e4d in _PyFunction_Vectorcall ()
 #31 0x000000000192d9c2 in slot_tp_call ()
@@ -1186,11 +1186,11 @@ SAMPLE 32
 #0  0x0000000001422140 in pthread_mutex_unlock@plt ()
 #1  0x0000000001905e07 in _PyThreadState_Detach ()
 #2  0x0000000001320b47 in PyEval_SaveThread ()
-#3  0x00007ffff416fa7f in pygi_invoke_c_callable () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#4  0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#3  0x00007ffff416fa7f in pygi_invoke_c_callable () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#4  0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #5  0x00000000018084d0 in _TAIL_CALL_CALL_NON_PY_GENERAL ()
 #6  0x0000000001813e4d in _PyFunction_Vectorcall ()
-#7  0x00007ffff416d4e8 in _pygi_closure_handle () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#7  0x00007ffff416d4e8 in _pygi_closure_handle () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #8  0x00007ffff7b19641 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #9  0x00007ffff7b19d38 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #10 0x00007fffefea1b54 in ?? () from /lib/x86_64-linux-gnu/libgtk-4.so.1
@@ -1222,7 +1222,7 @@ SAMPLE 32
 SAMPLE 33
 #0  0x00007ffff7d88d80 in ?? () from /lib/x86_64-linux-gnu/libc.so.6
 #1  0x0000000001813856 in method_vectorcall ()
-#2  0x00007ffff416ed62 in pygi_signal_closure_marshal () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#2  0x00007ffff416ed62 in pygi_signal_closure_marshal () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #3  0x00007ffff34c72fa in g_closure_invoke () from /lib/x86_64-linux-gnu/libgobject-2.0.so.0
 #4  0x00007ffff34f690c in ?? () from /lib/x86_64-linux-gnu/libgobject-2.0.so.0
 #5  0x00007ffff34e7591 in ?? () from /lib/x86_64-linux-gnu/libgobject-2.0.so.0
@@ -1244,11 +1244,11 @@ SAMPLE 33
 #21 0x00007ffff7b19b16 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #22 0x00007ffff7b163ef in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #23 0x00007ffff7b190be in ffi_call () from /lib/x86_64-linux-gnu/libffi.so.8
-#24 0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#25 0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#24 0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#25 0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #26 0x00000000018084d0 in _TAIL_CALL_CALL_NON_PY_GENERAL ()
 #27 0x0000000001813e4d in _PyFunction_Vectorcall ()
-#28 0x00007ffff416d4e8 in _pygi_closure_handle () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#28 0x00007ffff416d4e8 in _pygi_closure_handle () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #29 0x00007ffff7b19641 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #30 0x00007ffff7b19d38 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #31 0x00007fffefe8d9d5 in ?? () from /lib/x86_64-linux-gnu/libgtk-4.so.1
@@ -1338,8 +1338,8 @@ SAMPLE 36
 #4  0x00007ffff7b19b16 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #5  0x00007ffff7b163ef in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #6  0x00007ffff7b190be in ffi_call () from /lib/x86_64-linux-gnu/libffi.so.8
-#7  0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#8  0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#7  0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#8  0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #9  0x000000000180f74e in _TAIL_CALL_CALL_EX_NON_PY_GENERAL ()
 #10 0x0000000001813e4d in _PyFunction_Vectorcall ()
 #11 0x000000000192d9c2 in slot_tp_call ()
@@ -1375,8 +1375,8 @@ SAMPLE 37
 #4  0x00007ffff7b19b16 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #5  0x00007ffff7b163ef in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #6  0x00007ffff7b190be in ffi_call () from /lib/x86_64-linux-gnu/libffi.so.8
-#7  0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#8  0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#7  0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#8  0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #9  0x000000000180f74e in _TAIL_CALL_CALL_EX_NON_PY_GENERAL ()
 #10 0x0000000001813e4d in _PyFunction_Vectorcall ()
 #11 0x000000000192d9c2 in slot_tp_call ()
@@ -1410,7 +1410,7 @@ SAMPLE 38
 #2  0x0000000001847630 in _TAIL_CALL_STORE_ATTR ()
 #3  0x0000000001813e4d in _PyFunction_Vectorcall ()
 #4  0x000000000181389a in method_vectorcall ()
-#5  0x00007ffff416ed62 in pygi_signal_closure_marshal () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#5  0x00007ffff416ed62 in pygi_signal_closure_marshal () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #6  0x00007ffff34c72fa in g_closure_invoke () from /lib/x86_64-linux-gnu/libgobject-2.0.so.0
 #7  0x00007ffff34f690c in ?? () from /lib/x86_64-linux-gnu/libgobject-2.0.so.0
 #8  0x00007ffff34e7591 in ?? () from /lib/x86_64-linux-gnu/libgobject-2.0.so.0
@@ -1431,11 +1431,11 @@ SAMPLE 38
 #23 0x00007ffff7b19b16 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #24 0x00007ffff7b163ef in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #25 0x00007ffff7b190be in ffi_call () from /lib/x86_64-linux-gnu/libffi.so.8
-#26 0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#27 0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#26 0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#27 0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #28 0x00000000018084d0 in _TAIL_CALL_CALL_NON_PY_GENERAL ()
 #29 0x0000000001813e4d in _PyFunction_Vectorcall ()
-#30 0x00007ffff416d4e8 in _pygi_closure_handle () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#30 0x00007ffff416d4e8 in _pygi_closure_handle () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #31 0x00007ffff7b19641 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #32 0x00007ffff7b19d38 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #33 0x00007fffefe8d9d5 in ?? () from /lib/x86_64-linux-gnu/libgtk-4.so.1
@@ -1481,14 +1481,14 @@ SAMPLE 39
 SAMPLE 40
 #0  0x00000000018023d4 in _PyObject_Malloc ()
 #1  0x0000000001846faa in _PyObject_GC_New ()
-#2  0x00007ffff41596cd in pygobject_new_full.part () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#3  0x00007ffff4176edc in _pygi_marshal_to_py_called_from_py_interface_object_cache_adapter () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#4  0x00007ffff416fb1d in pygi_invoke_c_callable () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#5  0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#2  0x00007ffff41596cd in pygobject_new_full.part () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#3  0x00007ffff4176edc in _pygi_marshal_to_py_called_from_py_interface_object_cache_adapter () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#4  0x00007ffff416fb1d in pygi_invoke_c_callable () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#5  0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #6  0x00000000018084d0 in _TAIL_CALL_CALL_NON_PY_GENERAL ()
 #7  0x0000000001813e4d in _PyFunction_Vectorcall ()
 #8  0x000000000181389a in method_vectorcall ()
-#9  0x00007ffff416ed62 in pygi_signal_closure_marshal () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#9  0x00007ffff416ed62 in pygi_signal_closure_marshal () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #10 0x00007ffff34c72fa in g_closure_invoke () from /lib/x86_64-linux-gnu/libgobject-2.0.so.0
 #11 0x00007ffff34f690c in ?? () from /lib/x86_64-linux-gnu/libgobject-2.0.so.0
 #12 0x00007ffff34e7591 in ?? () from /lib/x86_64-linux-gnu/libgobject-2.0.so.0
@@ -1509,11 +1509,11 @@ SAMPLE 40
 #27 0x00007ffff7b19b16 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #28 0x00007ffff7b163ef in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #29 0x00007ffff7b190be in ffi_call () from /lib/x86_64-linux-gnu/libffi.so.8
-#30 0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#31 0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#30 0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#31 0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #32 0x00000000018084d0 in _TAIL_CALL_CALL_NON_PY_GENERAL ()
 #33 0x0000000001813e4d in _PyFunction_Vectorcall ()
-#34 0x00007ffff416d4e8 in _pygi_closure_handle () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#34 0x00007ffff416d4e8 in _pygi_closure_handle () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 
 SAMPLE 41
 #0  0x00007ffff7d1b79d in poll () from /lib/x86_64-linux-gnu/libc.so.6
@@ -1539,8 +1539,8 @@ SAMPLE 41
 #20 0x00007ffff7b19b16 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #21 0x00007ffff7b163ef in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #22 0x00007ffff7b190be in ffi_call () from /lib/x86_64-linux-gnu/libffi.so.8
-#23 0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#24 0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#23 0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#24 0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #25 0x000000000180f74e in _TAIL_CALL_CALL_EX_NON_PY_GENERAL ()
 #26 0x0000000001813e4d in _PyFunction_Vectorcall ()
 #27 0x000000000192d9c2 in slot_tp_call ()
@@ -1554,7 +1554,7 @@ SAMPLE 41
 
 SAMPLE 42
 #0  0x0000000001813dc8 in _PyFunction_Vectorcall ()
-#1  0x00007ffff416d4e8 in _pygi_closure_handle () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#1  0x00007ffff416d4e8 in _pygi_closure_handle () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #2  0x00007ffff7b19641 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #3  0x00007ffff7b19d38 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #4  0x00007fffefea1b54 in ?? () from /lib/x86_64-linux-gnu/libgtk-4.so.1
@@ -1597,7 +1597,7 @@ SAMPLE 43
 #4  0x000000000180c824 in _TAIL_CALL_CALL_METHOD_DESCRIPTOR_FAST_WITH_KEYWORDS ()
 #5  0x0000000001813e4d in _PyFunction_Vectorcall ()
 #6  0x000000000181389a in method_vectorcall ()
-#7  0x00007ffff416ed62 in pygi_signal_closure_marshal () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#7  0x00007ffff416ed62 in pygi_signal_closure_marshal () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #8  0x00007ffff34c72fa in g_closure_invoke () from /lib/x86_64-linux-gnu/libgobject-2.0.so.0
 #9  0x00007ffff34f690c in ?? () from /lib/x86_64-linux-gnu/libgobject-2.0.so.0
 #10 0x00007ffff34e7591 in ?? () from /lib/x86_64-linux-gnu/libgobject-2.0.so.0
@@ -1618,11 +1618,11 @@ SAMPLE 43
 #25 0x00007ffff7b19b16 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #26 0x00007ffff7b163ef in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #27 0x00007ffff7b190be in ffi_call () from /lib/x86_64-linux-gnu/libffi.so.8
-#28 0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#29 0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#28 0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#29 0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #30 0x00000000018084d0 in _TAIL_CALL_CALL_NON_PY_GENERAL ()
 #31 0x0000000001813e4d in _PyFunction_Vectorcall ()
-#32 0x00007ffff416d4e8 in _pygi_closure_handle () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#32 0x00007ffff416d4e8 in _pygi_closure_handle () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #33 0x00007ffff7b19641 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #34 0x00007ffff7b19d38 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 
@@ -1634,8 +1634,8 @@ SAMPLE 44
 #4  0x00007ffff7b19b16 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #5  0x00007ffff7b163ef in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #6  0x00007ffff7b190be in ffi_call () from /lib/x86_64-linux-gnu/libffi.so.8
-#7  0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#8  0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#7  0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#8  0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #9  0x000000000180f74e in _TAIL_CALL_CALL_EX_NON_PY_GENERAL ()
 #10 0x0000000001813e4d in _PyFunction_Vectorcall ()
 #11 0x000000000192d9c2 in slot_tp_call ()
@@ -1689,8 +1689,8 @@ SAMPLE 45
 #22 0x00007ffff7b19b16 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #23 0x00007ffff7b163ef in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #24 0x00007ffff7b190be in ffi_call () from /lib/x86_64-linux-gnu/libffi.so.8
-#25 0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#26 0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#25 0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#26 0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #27 0x000000000180f74e in _TAIL_CALL_CALL_EX_NON_PY_GENERAL ()
 #28 0x0000000001813e4d in _PyFunction_Vectorcall ()
 #29 0x000000000192d9c2 in slot_tp_call ()
@@ -1726,8 +1726,8 @@ SAMPLE 46
 #22 0x00007ffff7b19b16 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #23 0x00007ffff7b163ef in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #24 0x00007ffff7b190be in ffi_call () from /lib/x86_64-linux-gnu/libffi.so.8
-#25 0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#26 0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#25 0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#26 0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #27 0x000000000180f74e in _TAIL_CALL_CALL_EX_NON_PY_GENERAL ()
 #28 0x0000000001813e4d in _PyFunction_Vectorcall ()
 #29 0x000000000192d9c2 in slot_tp_call ()
@@ -1782,8 +1782,8 @@ SAMPLE 48
 #4  0x00007ffff7b19b16 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #5  0x00007ffff7b163ef in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #6  0x00007ffff7b190be in ffi_call () from /lib/x86_64-linux-gnu/libffi.so.8
-#7  0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#8  0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#7  0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#8  0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #9  0x000000000180f74e in _TAIL_CALL_CALL_EX_NON_PY_GENERAL ()
 #10 0x0000000001813e4d in _PyFunction_Vectorcall ()
 #11 0x000000000192d9c2 in slot_tp_call ()
@@ -1829,11 +1829,11 @@ SAMPLE 49
 #14 0x00007ffff7b19b16 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #15 0x00007ffff7b163ef in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #16 0x00007ffff7b190be in ffi_call () from /lib/x86_64-linux-gnu/libffi.so.8
-#17 0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#18 0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#17 0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#18 0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #19 0x00000000018084d0 in _TAIL_CALL_CALL_NON_PY_GENERAL ()
 #20 0x0000000001813e4d in _PyFunction_Vectorcall ()
-#21 0x00007ffff416d4e8 in _pygi_closure_handle () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#21 0x00007ffff416d4e8 in _pygi_closure_handle () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #22 0x00007ffff7b19641 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #23 0x00007ffff7b19d38 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #24 0x00007fffefe8d9d5 in ?? () from /lib/x86_64-linux-gnu/libgtk-4.so.1
@@ -1882,8 +1882,8 @@ SAMPLE 50
 #30 0x00007ffff7b19b16 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #31 0x00007ffff7b163ef in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #32 0x00007ffff7b190be in ffi_call () from /lib/x86_64-linux-gnu/libffi.so.8
-#33 0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#34 0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#33 0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#34 0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 
 SAMPLE 51
 #0  0x00007fffefe1a2a7 in ?? () from /lib/x86_64-linux-gnu/libgtk-4.so.1
@@ -1930,8 +1930,8 @@ SAMPLE 52
 #4  0x00007ffff7b19b16 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #5  0x00007ffff7b163ef in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #6  0x00007ffff7b190be in ffi_call () from /lib/x86_64-linux-gnu/libffi.so.8
-#7  0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#8  0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#7  0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#8  0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #9  0x000000000180f74e in _TAIL_CALL_CALL_EX_NON_PY_GENERAL ()
 #10 0x0000000001813e4d in _PyFunction_Vectorcall ()
 #11 0x000000000192d9c2 in slot_tp_call ()
@@ -1967,8 +1967,8 @@ SAMPLE 53
 #4  0x00007ffff7b19b16 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #5  0x00007ffff7b163ef in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #6  0x00007ffff7b190be in ffi_call () from /lib/x86_64-linux-gnu/libffi.so.8
-#7  0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#8  0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#7  0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#8  0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #9  0x000000000180f74e in _TAIL_CALL_CALL_EX_NON_PY_GENERAL ()
 #10 0x0000000001813e4d in _PyFunction_Vectorcall ()
 #11 0x000000000192d9c2 in slot_tp_call ()
@@ -2001,7 +2001,7 @@ SAMPLE 54
 #1  0x0000000001847630 in _TAIL_CALL_STORE_ATTR ()
 #2  0x0000000001813e4d in _PyFunction_Vectorcall ()
 #3  0x000000000181389a in method_vectorcall ()
-#4  0x00007ffff416ed62 in pygi_signal_closure_marshal () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#4  0x00007ffff416ed62 in pygi_signal_closure_marshal () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #5  0x00007ffff34c72fa in g_closure_invoke () from /lib/x86_64-linux-gnu/libgobject-2.0.so.0
 #6  0x00007ffff34f690c in ?? () from /lib/x86_64-linux-gnu/libgobject-2.0.so.0
 #7  0x00007ffff34e7591 in ?? () from /lib/x86_64-linux-gnu/libgobject-2.0.so.0
@@ -2023,11 +2023,11 @@ SAMPLE 54
 #23 0x00007ffff7b19b16 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #24 0x00007ffff7b163ef in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #25 0x00007ffff7b190be in ffi_call () from /lib/x86_64-linux-gnu/libffi.so.8
-#26 0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#27 0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#26 0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#27 0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #28 0x00000000018084d0 in _TAIL_CALL_CALL_NON_PY_GENERAL ()
 #29 0x0000000001813e4d in _PyFunction_Vectorcall ()
-#30 0x00007ffff416d4e8 in _pygi_closure_handle () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#30 0x00007ffff416d4e8 in _pygi_closure_handle () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #31 0x00007ffff7b19641 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #32 0x00007ffff7b19d38 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #33 0x00007fffefe8d9d5 in ?? () from /lib/x86_64-linux-gnu/libgtk-4.so.1
@@ -2041,8 +2041,8 @@ SAMPLE 55
 #4  0x00007ffff7b19b16 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #5  0x00007ffff7b163ef in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #6  0x00007ffff7b190be in ffi_call () from /lib/x86_64-linux-gnu/libffi.so.8
-#7  0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#8  0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#7  0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#8  0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #9  0x000000000180f74e in _TAIL_CALL_CALL_EX_NON_PY_GENERAL ()
 #10 0x0000000001813e4d in _PyFunction_Vectorcall ()
 #11 0x000000000192d9c2 in slot_tp_call ()
@@ -2078,8 +2078,8 @@ SAMPLE 56
 #4  0x00007ffff7b19b16 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #5  0x00007ffff7b163ef in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #6  0x00007ffff7b190be in ffi_call () from /lib/x86_64-linux-gnu/libffi.so.8
-#7  0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#8  0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#7  0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#8  0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #9  0x000000000180f74e in _TAIL_CALL_CALL_EX_NON_PY_GENERAL ()
 #10 0x0000000001813e4d in _PyFunction_Vectorcall ()
 #11 0x000000000192d9c2 in slot_tp_call ()
@@ -2137,8 +2137,8 @@ SAMPLE 57
 #26 0x00007ffff7b19b16 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #27 0x00007ffff7b163ef in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #28 0x00007ffff7b190be in ffi_call () from /lib/x86_64-linux-gnu/libffi.so.8
-#29 0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#30 0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#29 0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#30 0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #31 0x000000000180f74e in _TAIL_CALL_CALL_EX_NON_PY_GENERAL ()
 #32 0x0000000001813e4d in _PyFunction_Vectorcall ()
 #33 0x000000000192d9c2 in slot_tp_call ()
@@ -2146,14 +2146,14 @@ SAMPLE 57
 
 SAMPLE 58
 #0  0x0000000001883096 in PyObject_GetAttrString ()
-#1  0x00007ffff416b89e in pyg_type_from_object () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#2  0x00007ffff416c928 in pygi_boxed_new () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#3  0x00007ffff4177e39 in pygi_arg_struct_to_py_marshal () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#4  0x00007ffff416fb1d in pygi_invoke_c_callable () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#5  0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#1  0x00007ffff416b89e in pyg_type_from_object () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#2  0x00007ffff416c928 in pygi_boxed_new () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#3  0x00007ffff4177e39 in pygi_arg_struct_to_py_marshal () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#4  0x00007ffff416fb1d in pygi_invoke_c_callable () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#5  0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #6  0x00000000018084d0 in _TAIL_CALL_CALL_NON_PY_GENERAL ()
 #7  0x0000000001813e4d in _PyFunction_Vectorcall ()
-#8  0x00007ffff416d4e8 in _pygi_closure_handle () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#8  0x00007ffff416d4e8 in _pygi_closure_handle () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #9  0x00007ffff7b19641 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #10 0x00007ffff7b19d38 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #11 0x00007fffefea1b54 in ?? () from /lib/x86_64-linux-gnu/libgtk-4.so.1
@@ -2205,8 +2205,8 @@ SAMPLE 59
 #20 0x00007ffff7b19b16 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #21 0x00007ffff7b163ef in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #22 0x00007ffff7b190be in ffi_call () from /lib/x86_64-linux-gnu/libffi.so.8
-#23 0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#24 0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#23 0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#24 0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #25 0x000000000180f74e in _TAIL_CALL_CALL_EX_NON_PY_GENERAL ()
 #26 0x0000000001813e4d in _PyFunction_Vectorcall ()
 #27 0x000000000192d9c2 in slot_tp_call ()
@@ -2226,8 +2226,8 @@ SAMPLE 60
 #4  0x00007ffff7b19b16 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #5  0x00007ffff7b163ef in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #6  0x00007ffff7b190be in ffi_call () from /lib/x86_64-linux-gnu/libffi.so.8
-#7  0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#8  0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#7  0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#8  0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #9  0x000000000180f74e in _TAIL_CALL_CALL_EX_NON_PY_GENERAL ()
 #10 0x0000000001813e4d in _PyFunction_Vectorcall ()
 #11 0x000000000192d9c2 in slot_tp_call ()
@@ -2257,13 +2257,13 @@ SAMPLE 60
 
 SAMPLE 61
 #0  0x0000000001320b30 in PyEval_SaveThread ()
-#1  0x00007ffff4158286 in pygobject_clear () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#2  0x00007ffff41583f4 in pygobject_dealloc () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#1  0x00007ffff4158286 in pygobject_clear () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#2  0x00007ffff41583f4 in pygobject_dealloc () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #3  0x0000000001811127 in subtype_dealloc ()
 #4  0x0000000001803240 in _TAIL_CALL_RETURN_VALUE ()
 #5  0x0000000001813e4d in _PyFunction_Vectorcall ()
 #6  0x000000000181389a in method_vectorcall ()
-#7  0x00007ffff416ed62 in pygi_signal_closure_marshal () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#7  0x00007ffff416ed62 in pygi_signal_closure_marshal () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #8  0x00007ffff34c72fa in g_closure_invoke () from /lib/x86_64-linux-gnu/libgobject-2.0.so.0
 #9  0x00007ffff34f690c in ?? () from /lib/x86_64-linux-gnu/libgobject-2.0.so.0
 #10 0x00007ffff34e7591 in ?? () from /lib/x86_64-linux-gnu/libgobject-2.0.so.0
@@ -2284,11 +2284,11 @@ SAMPLE 61
 #25 0x00007ffff7b19b16 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #26 0x00007ffff7b163ef in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #27 0x00007ffff7b190be in ffi_call () from /lib/x86_64-linux-gnu/libffi.so.8
-#28 0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#29 0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#28 0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#29 0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #30 0x00000000018084d0 in _TAIL_CALL_CALL_NON_PY_GENERAL ()
 #31 0x0000000001813e4d in _PyFunction_Vectorcall ()
-#32 0x00007ffff416d4e8 in _pygi_closure_handle () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#32 0x00007ffff416d4e8 in _pygi_closure_handle () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #33 0x00007ffff7b19641 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #34 0x00007ffff7b19d38 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 
@@ -2337,8 +2337,8 @@ SAMPLE 63
 #4  0x00007ffff7b19b16 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #5  0x00007ffff7b163ef in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #6  0x00007ffff7b190be in ffi_call () from /lib/x86_64-linux-gnu/libffi.so.8
-#7  0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#8  0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#7  0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#8  0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #9  0x000000000180f74e in _TAIL_CALL_CALL_EX_NON_PY_GENERAL ()
 #10 0x0000000001813e4d in _PyFunction_Vectorcall ()
 #11 0x000000000192d9c2 in slot_tp_call ()
@@ -2398,8 +2398,8 @@ SAMPLE 64
 #28 0x00007ffff7b19b16 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #29 0x00007ffff7b163ef in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #30 0x00007ffff7b190be in ffi_call () from /lib/x86_64-linux-gnu/libffi.so.8
-#31 0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#32 0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#31 0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#32 0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #33 0x000000000180f74e in _TAIL_CALL_CALL_EX_NON_PY_GENERAL ()
 #34 0x0000000001813e4d in _PyFunction_Vectorcall ()
 
@@ -2437,8 +2437,8 @@ SAMPLE 65
 #30 0x00007ffff7b19b16 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #31 0x00007ffff7b163ef in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #32 0x00007ffff7b190be in ffi_call () from /lib/x86_64-linux-gnu/libffi.so.8
-#33 0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#34 0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#33 0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#34 0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 
 SAMPLE 66
 #0  0x00007ffff7d1b79d in poll () from /lib/x86_64-linux-gnu/libc.so.6
@@ -2464,8 +2464,8 @@ SAMPLE 66
 #20 0x00007ffff7b19b16 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #21 0x00007ffff7b163ef in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #22 0x00007ffff7b190be in ffi_call () from /lib/x86_64-linux-gnu/libffi.so.8
-#23 0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#24 0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#23 0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#24 0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #25 0x000000000180f74e in _TAIL_CALL_CALL_EX_NON_PY_GENERAL ()
 #26 0x0000000001813e4d in _PyFunction_Vectorcall ()
 #27 0x000000000192d9c2 in slot_tp_call ()
@@ -2496,11 +2496,11 @@ SAMPLE 67
 #15 0x00007ffff7b19b16 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #16 0x00007ffff7b163ef in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #17 0x00007ffff7b190be in ffi_call () from /lib/x86_64-linux-gnu/libffi.so.8
-#18 0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#19 0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#18 0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#19 0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #20 0x00000000018084d0 in _TAIL_CALL_CALL_NON_PY_GENERAL ()
 #21 0x0000000001813e4d in _PyFunction_Vectorcall ()
-#22 0x00007ffff416d4e8 in _pygi_closure_handle () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#22 0x00007ffff416d4e8 in _pygi_closure_handle () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #23 0x00007ffff7b19641 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #24 0x00007ffff7b19d38 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #25 0x00007fffefe8d9d5 in ?? () from /lib/x86_64-linux-gnu/libgtk-4.so.1
@@ -2529,7 +2529,7 @@ SAMPLE 68
 #11 0x000000000183da8f in _TAIL_CALL_CALL ()
 #12 0x0000000001813e4d in _PyFunction_Vectorcall ()
 #13 0x000000000181389a in method_vectorcall ()
-#14 0x00007ffff416ed62 in pygi_signal_closure_marshal () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#14 0x00007ffff416ed62 in pygi_signal_closure_marshal () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #15 0x00007ffff34c72fa in g_closure_invoke () from /lib/x86_64-linux-gnu/libgobject-2.0.so.0
 #16 0x00007ffff34f690c in ?? () from /lib/x86_64-linux-gnu/libgobject-2.0.so.0
 #17 0x00007ffff34e7591 in ?? () from /lib/x86_64-linux-gnu/libgobject-2.0.so.0
@@ -2559,8 +2559,8 @@ SAMPLE 69
 #4  0x00007ffff7b19b16 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #5  0x00007ffff7b163ef in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #6  0x00007ffff7b190be in ffi_call () from /lib/x86_64-linux-gnu/libffi.so.8
-#7  0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#8  0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#7  0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#8  0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #9  0x000000000180f74e in _TAIL_CALL_CALL_EX_NON_PY_GENERAL ()
 #10 0x0000000001813e4d in _PyFunction_Vectorcall ()
 #11 0x000000000192d9c2 in slot_tp_call ()
@@ -2596,8 +2596,8 @@ SAMPLE 70
 #4  0x00007ffff7b19b16 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #5  0x00007ffff7b163ef in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #6  0x00007ffff7b190be in ffi_call () from /lib/x86_64-linux-gnu/libffi.so.8
-#7  0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#8  0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#7  0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#8  0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #9  0x000000000180f74e in _TAIL_CALL_CALL_EX_NON_PY_GENERAL ()
 #10 0x0000000001813e4d in _PyFunction_Vectorcall ()
 #11 0x000000000192d9c2 in slot_tp_call ()
@@ -2627,12 +2627,12 @@ SAMPLE 70
 
 SAMPLE 71
 #0  0x00007ffff7d8b33f in ?? () from /lib/x86_64-linux-gnu/libc.so.6
-#1  0x00007ffff7b343c2 in gi_registered_type_info_get_g_type () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/sysroot/usr/lib/x86_64-linux-gnu/libgirepository-2.0.so.0
-#2  0x00007ffff4175a6c in pygi_arg_interface_new_from_info () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#3  0x00007ffff4177374 in pygi_arg_gobject_new_from_info () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#4  0x00007ffff4171264 in pygi_arg_cache_new () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#5  0x00007ffff4166ff4 in pygi_argument_to_py () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#6  0x00007ffff416ef57 in pygi_signal_closure_marshal () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#1  0x00007ffff7b343c2 in gi_registered_type_info_get_g_type () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/sysroot/usr/lib/x86_64-linux-gnu/libgirepository-2.0.so.0
+#2  0x00007ffff4175a6c in pygi_arg_interface_new_from_info () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#3  0x00007ffff4177374 in pygi_arg_gobject_new_from_info () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#4  0x00007ffff4171264 in pygi_arg_cache_new () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#5  0x00007ffff4166ff4 in pygi_argument_to_py () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#6  0x00007ffff416ef57 in pygi_signal_closure_marshal () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #7  0x00007ffff34c72fa in g_closure_invoke () from /lib/x86_64-linux-gnu/libgobject-2.0.so.0
 #8  0x00007ffff34f690c in ?? () from /lib/x86_64-linux-gnu/libgobject-2.0.so.0
 #9  0x00007ffff34e7591 in ?? () from /lib/x86_64-linux-gnu/libgobject-2.0.so.0
@@ -2654,11 +2654,11 @@ SAMPLE 71
 #25 0x00007ffff7b19b16 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #26 0x00007ffff7b163ef in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #27 0x00007ffff7b190be in ffi_call () from /lib/x86_64-linux-gnu/libffi.so.8
-#28 0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#29 0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#28 0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#29 0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #30 0x00000000018084d0 in _TAIL_CALL_CALL_NON_PY_GENERAL ()
 #31 0x0000000001813e4d in _PyFunction_Vectorcall ()
-#32 0x00007ffff416d4e8 in _pygi_closure_handle () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#32 0x00007ffff416d4e8 in _pygi_closure_handle () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #33 0x00007ffff7b19641 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #34 0x00007ffff7b19d38 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 
@@ -2667,11 +2667,11 @@ SAMPLE 72
 #1  0x00007ffff7b14b3d in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #2  0x00007ffff7b1632c in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #3  0x00007ffff7b190be in ffi_call () from /lib/x86_64-linux-gnu/libffi.so.8
-#4  0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#5  0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#4  0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#5  0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #6  0x00000000018084d0 in _TAIL_CALL_CALL_NON_PY_GENERAL ()
 #7  0x0000000001813e4d in _PyFunction_Vectorcall ()
-#8  0x00007ffff416d4e8 in _pygi_closure_handle () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#8  0x00007ffff416d4e8 in _pygi_closure_handle () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #9  0x00007ffff7b19641 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #10 0x00007ffff7b19d38 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #11 0x00007fffefea1b54 in ?? () from /lib/x86_64-linux-gnu/libgtk-4.so.1
@@ -2734,7 +2734,7 @@ SAMPLE 73
 #31 0x00007ffff7b19b16 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #32 0x00007ffff7b163ef in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #33 0x00007ffff7b190be in ffi_call () from /lib/x86_64-linux-gnu/libffi.so.8
-#34 0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#34 0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 
 SAMPLE 74
 #0  0x00007ffff7d1b79d in poll () from /lib/x86_64-linux-gnu/libc.so.6
@@ -2744,8 +2744,8 @@ SAMPLE 74
 #4  0x00007ffff7b19b16 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #5  0x00007ffff7b163ef in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #6  0x00007ffff7b190be in ffi_call () from /lib/x86_64-linux-gnu/libffi.so.8
-#7  0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#8  0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#7  0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#8  0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #9  0x000000000180f74e in _TAIL_CALL_CALL_EX_NON_PY_GENERAL ()
 #10 0x0000000001813e4d in _PyFunction_Vectorcall ()
 #11 0x000000000192d9c2 in slot_tp_call ()
@@ -2781,8 +2781,8 @@ SAMPLE 75
 #4  0x00007ffff7b19b16 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #5  0x00007ffff7b163ef in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #6  0x00007ffff7b190be in ffi_call () from /lib/x86_64-linux-gnu/libffi.so.8
-#7  0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#8  0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#7  0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#8  0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #9  0x000000000180f74e in _TAIL_CALL_CALL_EX_NON_PY_GENERAL ()
 #10 0x0000000001813e4d in _PyFunction_Vectorcall ()
 #11 0x000000000192d9c2 in slot_tp_call ()
@@ -2844,8 +2844,8 @@ SAMPLE 76
 #30 0x00007ffff7b19b16 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #31 0x00007ffff7b163ef in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #32 0x00007ffff7b190be in ffi_call () from /lib/x86_64-linux-gnu/libffi.so.8
-#33 0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#34 0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#33 0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#34 0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 
 SAMPLE 77
 #0  0x00007fffe6583190 in ?? () from /lib/x86_64-linux-gnu/libgallium-25.2.8-0ubuntu0.24.04.4.so
@@ -2915,8 +2915,8 @@ SAMPLE 78
 #27 0x00007ffff7b19b16 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #28 0x00007ffff7b163ef in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #29 0x00007ffff7b190be in ffi_call () from /lib/x86_64-linux-gnu/libffi.so.8
-#30 0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#31 0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#30 0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#31 0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #32 0x000000000180f74e in _TAIL_CALL_CALL_EX_NON_PY_GENERAL ()
 #33 0x0000000001813e4d in _PyFunction_Vectorcall ()
 #34 0x000000000192d9c2 in slot_tp_call ()
@@ -2929,8 +2929,8 @@ SAMPLE 79
 #4  0x00007ffff7b19b16 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #5  0x00007ffff7b163ef in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #6  0x00007ffff7b190be in ffi_call () from /lib/x86_64-linux-gnu/libffi.so.8
-#7  0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#8  0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#7  0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#8  0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #9  0x000000000180f74e in _TAIL_CALL_CALL_EX_NON_PY_GENERAL ()
 #10 0x0000000001813e4d in _PyFunction_Vectorcall ()
 #11 0x000000000192d9c2 in slot_tp_call ()
@@ -2960,14 +2960,14 @@ SAMPLE 79
 
 SAMPLE 80
 #0  0x00007ffff14f2dcf in g_datalist_id_dup_data () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
-#1  0x00007ffff4159c84 in pygobject_new_full () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#2  0x00007ffff4176edc in _pygi_marshal_to_py_called_from_py_interface_object_cache_adapter () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#3  0x00007ffff416fb1d in pygi_invoke_c_callable () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#4  0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#1  0x00007ffff4159c84 in pygobject_new_full () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#2  0x00007ffff4176edc in _pygi_marshal_to_py_called_from_py_interface_object_cache_adapter () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#3  0x00007ffff416fb1d in pygi_invoke_c_callable () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#4  0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #5  0x00000000018084d0 in _TAIL_CALL_CALL_NON_PY_GENERAL ()
 #6  0x0000000001813e4d in _PyFunction_Vectorcall ()
 #7  0x000000000181389a in method_vectorcall ()
-#8  0x00007ffff416ed62 in pygi_signal_closure_marshal () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#8  0x00007ffff416ed62 in pygi_signal_closure_marshal () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #9  0x00007ffff34c72fa in g_closure_invoke () from /lib/x86_64-linux-gnu/libgobject-2.0.so.0
 #10 0x00007ffff34f690c in ?? () from /lib/x86_64-linux-gnu/libgobject-2.0.so.0
 #11 0x00007ffff34e7591 in ?? () from /lib/x86_64-linux-gnu/libgobject-2.0.so.0
@@ -2989,11 +2989,11 @@ SAMPLE 80
 #27 0x00007ffff7b19b16 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #28 0x00007ffff7b163ef in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #29 0x00007ffff7b190be in ffi_call () from /lib/x86_64-linux-gnu/libffi.so.8
-#30 0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#31 0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#30 0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#31 0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #32 0x00000000018084d0 in _TAIL_CALL_CALL_NON_PY_GENERAL ()
 #33 0x0000000001813e4d in _PyFunction_Vectorcall ()
-#34 0x00007ffff416d4e8 in _pygi_closure_handle () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#34 0x00007ffff416d4e8 in _pygi_closure_handle () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 
 SAMPLE 81
 #0  0x00007ffff7d1b79d in poll () from /lib/x86_64-linux-gnu/libc.so.6
@@ -3003,8 +3003,8 @@ SAMPLE 81
 #4  0x00007ffff7b19b16 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #5  0x00007ffff7b163ef in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #6  0x00007ffff7b190be in ffi_call () from /lib/x86_64-linux-gnu/libffi.so.8
-#7  0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#8  0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#7  0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#8  0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #9  0x000000000180f74e in _TAIL_CALL_CALL_EX_NON_PY_GENERAL ()
 #10 0x0000000001813e4d in _PyFunction_Vectorcall ()
 #11 0x000000000192d9c2 in slot_tp_call ()
@@ -3040,8 +3040,8 @@ SAMPLE 82
 #4  0x00007ffff7b19b16 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #5  0x00007ffff7b163ef in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #6  0x00007ffff7b190be in ffi_call () from /lib/x86_64-linux-gnu/libffi.so.8
-#7  0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#8  0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#7  0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#8  0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #9  0x000000000180f74e in _TAIL_CALL_CALL_EX_NON_PY_GENERAL ()
 #10 0x0000000001813e4d in _PyFunction_Vectorcall ()
 #11 0x000000000192d9c2 in slot_tp_call ()
@@ -3101,19 +3101,19 @@ SAMPLE 83
 #28 0x00007ffff7b19b16 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #29 0x00007ffff7b163ef in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #30 0x00007ffff7b190be in ffi_call () from /lib/x86_64-linux-gnu/libffi.so.8
-#31 0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#32 0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#31 0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#32 0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #33 0x000000000180f74e in _TAIL_CALL_CALL_EX_NON_PY_GENERAL ()
 #34 0x0000000001813e4d in _PyFunction_Vectorcall ()
 
 SAMPLE 84
 #0  0x00007ffff14f3633 in g_datalist_id_set_data_full () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
-#1  0x00007ffff4158281 in pygobject_clear () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#2  0x00007ffff41583f4 in pygobject_dealloc () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#1  0x00007ffff4158281 in pygobject_clear () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#2  0x00007ffff41583f4 in pygobject_dealloc () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #3  0x0000000001811127 in subtype_dealloc ()
 #4  0x0000000001807631 in tuple_dealloc ()
 #5  0x0000000001802011 in _Py_Dealloc ()
-#6  0x00007ffff416d4b5 in _pygi_closure_handle () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#6  0x00007ffff416d4b5 in _pygi_closure_handle () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #7  0x00007ffff7b19641 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #8  0x00007ffff7b19d38 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #9  0x00007fffefea1b54 in ?? () from /lib/x86_64-linux-gnu/libgtk-4.so.1
@@ -3155,7 +3155,7 @@ SAMPLE 85
 #8  0x000000000181389a in method_vectorcall ()
 #9  0x000000000181585a in _PyObject_CallFunctionVa ()
 #10 0x0000000001883021 in PyObject_CallMethod ()
-#11 0x00007ffff41668cd in source_dispatch () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#11 0x00007ffff41668cd in source_dispatch () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #12 0x00007ffff1514635 in ?? () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
 #13 0x00007ffff1573bf7 in ?? () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
 #14 0x00007ffff1513ad3 in g_main_context_iteration () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
@@ -3163,8 +3163,8 @@ SAMPLE 85
 #16 0x00007ffff7b19b16 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #17 0x00007ffff7b163ef in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #18 0x00007ffff7b190be in ffi_call () from /lib/x86_64-linux-gnu/libffi.so.8
-#19 0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#20 0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#19 0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#20 0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #21 0x000000000180f74e in _TAIL_CALL_CALL_EX_NON_PY_GENERAL ()
 #22 0x0000000001813e4d in _PyFunction_Vectorcall ()
 #23 0x000000000192d9c2 in slot_tp_call ()
@@ -3188,8 +3188,8 @@ SAMPLE 86
 #4  0x00007ffff7b19b16 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #5  0x00007ffff7b163ef in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #6  0x00007ffff7b190be in ffi_call () from /lib/x86_64-linux-gnu/libffi.so.8
-#7  0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#8  0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#7  0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#8  0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #9  0x000000000180f74e in _TAIL_CALL_CALL_EX_NON_PY_GENERAL ()
 #10 0x0000000001813e4d in _PyFunction_Vectorcall ()
 #11 0x000000000192d9c2 in slot_tp_call ()
@@ -3220,15 +3220,15 @@ SAMPLE 86
 SAMPLE 87
 #0  0x00007ffff14d9222 in g_pointer_bit_lock_and_get () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
 #1  0x00007ffff14f3361 in ?? () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
-#2  0x00007ffff4159293 in pygobject_register_wrapper () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#3  0x00007ffff4159705 in pygobject_new_full.part () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#4  0x00007ffff4176edc in _pygi_marshal_to_py_called_from_py_interface_object_cache_adapter () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#5  0x00007ffff416fb1d in pygi_invoke_c_callable () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#6  0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#2  0x00007ffff4159293 in pygobject_register_wrapper () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#3  0x00007ffff4159705 in pygobject_new_full.part () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#4  0x00007ffff4176edc in _pygi_marshal_to_py_called_from_py_interface_object_cache_adapter () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#5  0x00007ffff416fb1d in pygi_invoke_c_callable () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#6  0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #7  0x00000000018084d0 in _TAIL_CALL_CALL_NON_PY_GENERAL ()
 #8  0x0000000001813e4d in _PyFunction_Vectorcall ()
 #9  0x000000000181389a in method_vectorcall ()
-#10 0x00007ffff416ed62 in pygi_signal_closure_marshal () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#10 0x00007ffff416ed62 in pygi_signal_closure_marshal () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #11 0x00007ffff34c72fa in g_closure_invoke () from /lib/x86_64-linux-gnu/libgobject-2.0.so.0
 #12 0x00007ffff34f690c in ?? () from /lib/x86_64-linux-gnu/libgobject-2.0.so.0
 #13 0x00007ffff34e7591 in ?? () from /lib/x86_64-linux-gnu/libgobject-2.0.so.0
@@ -3249,8 +3249,8 @@ SAMPLE 87
 #28 0x00007ffff7b19b16 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #29 0x00007ffff7b163ef in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #30 0x00007ffff7b190be in ffi_call () from /lib/x86_64-linux-gnu/libffi.so.8
-#31 0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#32 0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#31 0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#32 0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #33 0x00000000018084d0 in _TAIL_CALL_CALL_NON_PY_GENERAL ()
 #34 0x0000000001813e4d in _PyFunction_Vectorcall ()
 
@@ -3262,8 +3262,8 @@ SAMPLE 88
 #4  0x00007ffff7b19b16 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #5  0x00007ffff7b163ef in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #6  0x00007ffff7b190be in ffi_call () from /lib/x86_64-linux-gnu/libffi.so.8
-#7  0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#8  0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#7  0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#8  0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #9  0x000000000180f74e in _TAIL_CALL_CALL_EX_NON_PY_GENERAL ()
 #10 0x0000000001813e4d in _PyFunction_Vectorcall ()
 #11 0x000000000192d9c2 in slot_tp_call ()
@@ -3299,8 +3299,8 @@ SAMPLE 89
 #4  0x00007ffff7b19b16 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #5  0x00007ffff7b163ef in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #6  0x00007ffff7b190be in ffi_call () from /lib/x86_64-linux-gnu/libffi.so.8
-#7  0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#8  0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#7  0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#8  0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #9  0x000000000180f74e in _TAIL_CALL_CALL_EX_NON_PY_GENERAL ()
 #10 0x0000000001813e4d in _PyFunction_Vectorcall ()
 #11 0x000000000192d9c2 in slot_tp_call ()
@@ -3334,7 +3334,7 @@ SAMPLE 90
 #2  0x0000000001818756 in _TAIL_CALL_LOAD_ATTR ()
 #3  0x0000000001813e4d in _PyFunction_Vectorcall ()
 #4  0x000000000181389a in method_vectorcall ()
-#5  0x00007ffff416ed62 in pygi_signal_closure_marshal () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#5  0x00007ffff416ed62 in pygi_signal_closure_marshal () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #6  0x00007ffff34c72fa in g_closure_invoke () from /lib/x86_64-linux-gnu/libgobject-2.0.so.0
 #7  0x00007ffff34f690c in ?? () from /lib/x86_64-linux-gnu/libgobject-2.0.so.0
 #8  0x00007ffff34e7591 in ?? () from /lib/x86_64-linux-gnu/libgobject-2.0.so.0
@@ -3355,11 +3355,11 @@ SAMPLE 90
 #23 0x00007ffff7b19b16 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #24 0x00007ffff7b163ef in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #25 0x00007ffff7b190be in ffi_call () from /lib/x86_64-linux-gnu/libffi.so.8
-#26 0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#27 0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#26 0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#27 0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #28 0x00000000018084d0 in _TAIL_CALL_CALL_NON_PY_GENERAL ()
 #29 0x0000000001813e4d in _PyFunction_Vectorcall ()
-#30 0x00007ffff416d4e8 in _pygi_closure_handle () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#30 0x00007ffff416d4e8 in _pygi_closure_handle () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #31 0x00007ffff7b19641 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #32 0x00007ffff7b19d38 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #33 0x00007fffefe8d9d5 in ?? () from /lib/x86_64-linux-gnu/libgtk-4.so.1
@@ -3447,8 +3447,8 @@ SAMPLE 93
 #4  0x00007ffff7b19b16 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #5  0x00007ffff7b163ef in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #6  0x00007ffff7b190be in ffi_call () from /lib/x86_64-linux-gnu/libffi.so.8
-#7  0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#8  0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#7  0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#8  0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #9  0x000000000180f74e in _TAIL_CALL_CALL_EX_NON_PY_GENERAL ()
 #10 0x0000000001813e4d in _PyFunction_Vectorcall ()
 #11 0x000000000192d9c2 in slot_tp_call ()
@@ -3494,11 +3494,11 @@ SAMPLE 94
 #14 0x00007ffff7b19b16 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #15 0x00007ffff7b163ef in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #16 0x00007ffff7b190be in ffi_call () from /lib/x86_64-linux-gnu/libffi.so.8
-#17 0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#18 0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#17 0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#18 0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #19 0x00000000018084d0 in _TAIL_CALL_CALL_NON_PY_GENERAL ()
 #20 0x0000000001813e4d in _PyFunction_Vectorcall ()
-#21 0x00007ffff416d4e8 in _pygi_closure_handle () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#21 0x00007ffff416d4e8 in _pygi_closure_handle () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #22 0x00007ffff7b19641 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #23 0x00007ffff7b19d38 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #24 0x00007fffefe8d9d5 in ?? () from /lib/x86_64-linux-gnu/libgtk-4.so.1
@@ -3543,8 +3543,8 @@ SAMPLE 95
 #26 0x00007ffff7b19b16 in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #27 0x00007ffff7b163ef in ?? () from /lib/x86_64-linux-gnu/libffi.so.8
 #28 0x00007ffff7b190be in ffi_call () from /lib/x86_64-linux-gnu/libffi.so.8
-#29 0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
-#30 0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#29 0x00007ffff416fa9f in pygi_invoke_c_callable () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
+#30 0x00007ffff4171fa5 in pygi_function_cache_invoke () from /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/_gi.cpython-315-x86_64-linux-gnu.so
 #31 0x000000000180f74e in _TAIL_CALL_CALL_EX_NON_PY_GENERAL ()
 #32 0x0000000001813e4d in _PyFunction_Vectorcall ()
 #33 0x000000000192d9c2 in slot_tp_call ()

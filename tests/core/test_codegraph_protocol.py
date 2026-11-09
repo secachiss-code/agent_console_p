@@ -18,7 +18,7 @@ from aconsole.core.infrastructure.codegraph.protocol import (
 )
 from aconsole.core.infrastructure.codegraph.runner import ExtractorRun, ExtractorRunner
 
-_HOSTRUN = "/home/sas/.containers/host-bins/hostrun"
+_HOSTRUN = "/home/example/.containers/host-bins/hostrun"
 _ARGV = "ACONSOLE_EXTRACTOR_ARGV"
 _MODE = "ACONSOLE_EXTRACTOR_MODE"
 _STDOUT = "ACONSOLE_EXTRACTOR_STDOUT"

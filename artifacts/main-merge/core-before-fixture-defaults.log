@@ -130,7 +130,7 @@ parameters = [('p', 'p', '/tmp/pytest-of-sas/pytest-161/test_legacy_checkpoints_
                         cursor, str_statement, effective_parameters, context
                     )
 
-/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/base.py:1958:
+/home/example/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/base.py:1958:
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 self = <sqlalchemy.dialects.sqlite.pysqlite.SQLiteDialect_pysqlite object at 0x4bc4fe47090>
@@ -143,7 +143,7 @@ context = <sqlalchemy.dialects.sqlite.base.SQLiteExecutionContext object at 0x4b
 >       cursor.execute(statement, parameters)
 E       sqlite3.IntegrityError: NOT NULL constraint failed: projects.default_branch
 
-/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/default.py:1192: IntegrityError
+/home/example/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/default.py:1192: IntegrityError
 
 The above exception was the direct cause of the following exception:
 
@@ -253,23 +253,23 @@ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
            ^^^^^^^^^^^^^^^
 tests/core/test_work_session_recovery.py:128: in scenario
     db.execute(legacy_projects.insert().values(
-/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/orm/session.py:2473: in execute
+/home/example/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/orm/session.py:2473: in execute
     return self._execute_internal(
-/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/orm/session.py:2373: in _execute_internal
+/home/example/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/orm/session.py:2373: in _execute_internal
     result = conn.execute(
-/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/base.py:1463: in execute
+/home/example/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/base.py:1463: in execute
     return meth(
-/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/sql/elements.py:533: in _execute_on_connection
+/home/example/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/sql/elements.py:533: in _execute_on_connection
     return connection._execute_clauseelement(
-/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/base.py:1683: in _execute_clauseelement
+/home/example/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/base.py:1683: in _execute_clauseelement
     ret = self._execute_context(
-/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/base.py:1837: in _execute_context
+/home/example/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/base.py:1837: in _execute_context
     return self._exec_single_context(
-/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/base.py:1977: in _exec_single_context
+/home/example/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/base.py:1977: in _exec_single_context
     self._handle_dbapi_exception(
-/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/base.py:2347: in _handle_dbapi_exception
+/home/example/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/base.py:2347: in _handle_dbapi_exception
     raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
-/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/base.py:1958: in _exec_single_context
+/home/example/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/base.py:1958: in _exec_single_context
     self.dialect.do_execute(
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
@@ -286,7 +286,7 @@ E       [SQL: INSERT INTO projects (id, name, root_path, languages, created_at) 
 E       [parameters: ('p', 'p', '/tmp/pytest-of-sas/pytest-161/test_legacy_checkpoints_are_ad0/repo', '[]', datetime.datetime(2026, 11, 6, 0, 0, tzinfo=datetime.timezone.utc))]
 E       (Background on this error at: https://sqlalche.me/e/21/gkpj)
 
-/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/default.py:1192: IntegrityError
+/home/example/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/default.py:1192: IntegrityError
 ________ test_migration_keeps_closed_workspaces_and_groups_path_aliases ________
 
 self = <sqlalchemy.engine.base.Connection object at 0x4bc4fa4da10>
@@ -416,7 +416,7 @@ parameters = [('p', 'p', '/tmp/pytest-of-sas/pytest-161/test_migration_keeps_clo
                         cursor, str_statement, effective_parameters, context
                     )
 
-/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/base.py:1958:
+/home/example/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/base.py:1958:
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 self = <sqlalchemy.dialects.sqlite.pysqlite.SQLiteDialect_pysqlite object at 0x4bc4fe4d850>
@@ -429,7 +429,7 @@ context = <sqlalchemy.dialects.sqlite.base.SQLiteExecutionContext object at 0x4b
 >       cursor.execute(statement, parameters)
 E       sqlite3.IntegrityError: NOT NULL constraint failed: projects.default_branch
 
-/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/default.py:1192: IntegrityError
+/home/example/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/default.py:1192: IntegrityError
 
 The above exception was the direct cause of the following exception:
 
@@ -452,23 +452,23 @@ tmp_path = PosixPath('/tmp/pytest-of-sas/pytest-161/test_migration_keeps_closed_
 
 tests/core/test_work_sessions.py:233:
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
-/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/orm/session.py:2473: in execute
+/home/example/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/orm/session.py:2473: in execute
     return self._execute_internal(
-/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/orm/session.py:2373: in _execute_internal
+/home/example/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/orm/session.py:2373: in _execute_internal
     result = conn.execute(
-/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/base.py:1463: in execute
+/home/example/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/base.py:1463: in execute
     return meth(
-/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/sql/elements.py:533: in _execute_on_connection
+/home/example/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/sql/elements.py:533: in _execute_on_connection
     return connection._execute_clauseelement(
-/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/base.py:1683: in _execute_clauseelement
+/home/example/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/base.py:1683: in _execute_clauseelement
     ret = self._execute_context(
-/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/base.py:1837: in _execute_context
+/home/example/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/base.py:1837: in _execute_context
     return self._exec_single_context(
-/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/base.py:1977: in _exec_single_context
+/home/example/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/base.py:1977: in _exec_single_context
     self._handle_dbapi_exception(
-/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/base.py:2347: in _handle_dbapi_exception
+/home/example/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/base.py:2347: in _handle_dbapi_exception
     raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
-/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/base.py:1958: in _exec_single_context
+/home/example/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/base.py:1958: in _exec_single_context
     self.dialect.do_execute(
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
@@ -485,11 +485,11 @@ E       [SQL: INSERT INTO projects (id, name, root_path, languages, created_at) 
 E       [parameters: ('p', 'p', '/tmp/pytest-of-sas/pytest-161/test_migration_keeps_closed_wo0/workspace', '[]', datetime.datetime(2026, 11, 6, 0, 0, tzinfo=datetime.timezone.utc))]
 E       (Background on this error at: https://sqlalche.me/e/21/gkpj)
 
-/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/default.py:1192: IntegrityError
+/home/example/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/default.py:1192: IntegrityError
 =============================== warnings summary ===============================
 tests/core/test_work_session_recovery.py::test_legacy_checkpoints_are_adopted_without_rewriting_refs
 tests/core/test_work_sessions.py::test_migration_keeps_closed_workspaces_and_groups_path_aliases
-  /home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/default.py:1192: DeprecationWarning: The default datetime adapter is deprecated as of Python 3.12; see the sqlite3 documentation for suggested replacement recipes
+  /home/example/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/default.py:1192: DeprecationWarning: The default datetime adapter is deprecated as of Python 3.12; see the sqlite3 documentation for suggested replacement recipes
     cursor.execute(statement, parameters)
 
 -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html

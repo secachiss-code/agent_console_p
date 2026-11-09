@@ -11,13 +11,13 @@ tmp_path = PosixPath('/tmp/ac-qa4-long-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
 tests/core/test_ipc_b.py:147: 
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-/home/sas/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py:205: in run
+/home/example/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py:205: in run
     return runner.run(main)
            ^^^^^^^^^^^^^^^^
-/home/sas/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py:128: in run
+/home/example/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py:128: in run
     return self._loop.run_until_complete(task)
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-/home/sas/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/base_events.py:724: in run_until_complete
+/home/example/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/base_events.py:724: in run_until_complete
     return future.result()
            ^^^^^^^^^^^^^^^
 tests/core/test_ipc_b.py:226: in _modes
@@ -44,6 +44,6 @@ future: <Task finished name='Task-2' coro=<Daemon.serve() done, defined at /tmp/
 Traceback (most recent call last):
   File "/tmp/qa4-baseline-76kam9ye/checkout/src/aconsole/core/bootstrap.py", line 711, in serve
   File "/tmp/qa4-baseline-76kam9ye/checkout/src/aconsole/core/bootstrap.py", line 1586, in _listen
-  File "/home/sas/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/streams.py", line 113, in start_unix_server
-  File "/home/sas/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/unix_events.py", line 311, in create_unix_server
+  File "/home/example/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/streams.py", line 113, in start_unix_server
+  File "/home/example/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/unix_events.py", line 311, in create_unix_server
 OSError: AF_UNIX path too long

@@ -12,7 +12,7 @@ from aconsole.core.infrastructure.persistence.repositories.plans import load_pla
 from aconsole.core.infrastructure.mcp.tools import PlanBoard
 
 folder=Path(__file__).resolve().parent
-engine=create_engine('sqlite:///file:/home/sas/.local/share/aconsole/aconsole.db?mode=ro&uri=true')
+engine=create_engine('sqlite:///file:/home/example/.local/share/aconsole/aconsole.db?mode=ro&uri=true')
 with Session(engine) as session:
     session.execute(text('PRAGMA query_only=ON'))
     saved=next(p for p in load_plans(session) if p.id=='plan-1')

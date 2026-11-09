@@ -42,7 +42,7 @@ ___________________ test_fake_methods_return_the_result_type ___________________
 E       assert False
 E        +  where False = covers_methods()
 
-/run/host/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_fake_core.py:127: AssertionError
+/run/host/home/example/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_fake_core.py:127: AssertionError
 __ test_a_merge_moves_its_plan_node_only_as_far_as_review_allows[False-done] ___
 
 tmp_path = PosixPath('/tmp/pytest-of-sas/pytest-158/test_a_merge_moves_its_plan_no0')
@@ -80,7 +80,7 @@ review = False, expected = 'done'
 
 >       asyncio.run(scenario())
 
-/run/host/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_git_cleanup.py:91:
+/run/host/home/example/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_git_cleanup.py:91:
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 ../../../../uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py:205: in run
     return runner.run(main)
@@ -91,13 +91,13 @@ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 ../../../../uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/base_events.py:724: in run_until_complete
     return future.result()
            ^^^^^^^^^^^^^^^
-/run/host/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_git_cleanup.py:70: in scenario
+/run/host/home/example/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_git_cleanup.py:70: in scenario
     daemon, task, client, project = await _start(tmp_path, repo)
                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-/run/host/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_git_cleanup.py:34: in _start
+/run/host/home/example/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_git_cleanup.py:34: in _start
     client = await _connect(daemon.socket)
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-/run/host/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_wire.py:109: in _connect
+/run/host/home/example/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_wire.py:109: in _connect
     await wait_for_socket(socket)
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
@@ -157,7 +157,7 @@ mode = 'squash', first = 'pre-commit'
 
 >       asyncio.run(scenario())
 
-/run/host/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_git_durability.py:206:
+/run/host/home/example/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_git_durability.py:206:
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 ../../../../uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py:205: in run
     return runner.run(main)
@@ -168,13 +168,13 @@ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 ../../../../uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/base_events.py:724: in run_until_complete
     return future.result()
            ^^^^^^^^^^^^^^^
-/run/host/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_git_durability.py:181: in scenario
+/run/host/home/example/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_git_durability.py:181: in scenario
     daemon, task, client, project = await _start(tmp_path, repo)
                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-/run/host/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_git_durability.py:36: in _start
+/run/host/home/example/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_git_durability.py:36: in _start
     client = await _connect(daemon.socket)
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-/run/host/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_wire.py:109: in _connect
+/run/host/home/example/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_wire.py:109: in _connect
     await wait_for_socket(socket)
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
@@ -212,7 +212,7 @@ tmp_path = PosixPath('/tmp/pytest-of-sas/pytest-158/test_external_change_reaches
 
 >       asyncio.run(scenario())
 
-/run/host/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_git_wire.py:122:
+/run/host/home/example/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_git_wire.py:122:
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 ../../../../uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py:205: in run
     return runner.run(main)
@@ -223,10 +223,10 @@ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 ../../../../uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/base_events.py:724: in run_until_complete
     return future.result()
            ^^^^^^^^^^^^^^^
-/run/host/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_git_wire.py:113: in scenario
+/run/host/home/example/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_git_wire.py:113: in scenario
     client = await _connect(daemon.socket)
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-/run/host/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_wire.py:109: in _connect
+/run/host/home/example/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_wire.py:109: in _connect
     await wait_for_socket(socket)
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
@@ -372,7 +372,7 @@ parameters = [('p', 'p', '/tmp/pytest-of-sas/pytest-158/test_legacy_checkpoints_
                         cursor, str_statement, effective_parameters, context
                     )
 
-/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/base.py:1958:
+/home/example/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/base.py:1958:
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 self = <sqlalchemy.dialects.sqlite.pysqlite.SQLiteDialect_pysqlite object at 0x526962c7a90>
@@ -385,7 +385,7 @@ context = <sqlalchemy.dialects.sqlite.base.SQLiteExecutionContext object at 0x52
 >       cursor.execute(statement, parameters)
 E       sqlite3.OperationalError: table projects has no column named approval_policy
 
-/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/default.py:1192: OperationalError
+/home/example/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/default.py:1192: OperationalError
 
 The above exception was the direct cause of the following exception:
 
@@ -479,7 +479,7 @@ tmp_path = PosixPath('/tmp/pytest-of-sas/pytest-158/test_legacy_checkpoints_are_
 
 >       asyncio.run(scenario())
 
-/run/host/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_work_session_recovery.py:201:
+/run/host/home/example/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_work_session_recovery.py:201:
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 ../../../../uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py:205: in run
     return runner.run(main)
@@ -490,44 +490,44 @@ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 ../../../../uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/base_events.py:724: in run_until_complete
     return future.result()
            ^^^^^^^^^^^^^^^
-/run/host/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_work_session_recovery.py:128: in scenario
+/run/host/home/example/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_work_session_recovery.py:128: in scenario
     db.flush()
-/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/orm/session.py:4543: in flush
+/home/example/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/orm/session.py:4543: in flush
     self._flush(objects)
 <sqlalchemy generated warned() wrapper for sqlalchemy.orm.session.Session._flush>:2: in _flush
     return target(fn, self, objects=objects)
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/util/deprecations.py:281: in warned
+/home/example/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/util/deprecations.py:281: in warned
     return fn(*args, **kwargs)  # type: ignore[no-any-return]
            ^^^^^^^^^^^^^^^^^^^
-/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/orm/session.py:4686: in _flush
+/home/example/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/orm/session.py:4686: in _flush
     with util.safe_reraise():
          ^^^^^^^^^^^^^^^^^^^
-/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/util/langhelpers.py:166: in __exit__
+/home/example/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/util/langhelpers.py:166: in __exit__
     raise exc_value.with_traceback(exc_tb)
-/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/orm/session.py:4647: in _flush
+/home/example/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/orm/session.py:4647: in _flush
     flush_context.execute()
-/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/orm/unitofwork.py:467: in execute
+/home/example/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/orm/unitofwork.py:467: in execute
     rec.execute(self)
-/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/orm/unitofwork.py:643: in execute
+/home/example/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/orm/unitofwork.py:643: in execute
     util.preloaded.orm_persistence._save_obj(
-/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/orm/persistence.py:92: in _save_obj
+/home/example/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/orm/persistence.py:92: in _save_obj
     _emit_insert_statements(
-/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/orm/persistence.py:1052: in _emit_insert_statements
+/home/example/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/orm/persistence.py:1052: in _emit_insert_statements
     result = connection.execute(
-/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/base.py:1463: in execute
+/home/example/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/base.py:1463: in execute
     return meth(
-/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/sql/elements.py:533: in _execute_on_connection
+/home/example/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/sql/elements.py:533: in _execute_on_connection
     return connection._execute_clauseelement(
-/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/base.py:1683: in _execute_clauseelement
+/home/example/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/base.py:1683: in _execute_clauseelement
     ret = self._execute_context(
-/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/base.py:1837: in _execute_context
+/home/example/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/base.py:1837: in _execute_context
     return self._exec_single_context(
-/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/base.py:1977: in _exec_single_context
+/home/example/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/base.py:1977: in _exec_single_context
     self._handle_dbapi_exception(
-/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/base.py:2347: in _handle_dbapi_exception
+/home/example/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/base.py:2347: in _handle_dbapi_exception
     raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
-/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/base.py:1958: in _exec_single_context
+/home/example/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/base.py:1958: in _exec_single_context
     self.dialect.do_execute(
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
@@ -544,7 +544,7 @@ E       [SQL: INSERT INTO projects (id, name, root_path, default_branch, vault_f
 E       [parameters: ('p', 'p', '/tmp/pytest-of-sas/pytest-158/test_legacy_checkpoints_are_ad0/repo', 'main', None, '[]', '2026-11-06T00:00:00+00:00', None, None)]
 E       (Background on this error at: https://sqlalche.me/e/21/e3q8)
 
-/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/default.py:1192: OperationalError
+/home/example/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/default.py:1192: OperationalError
 ________ test_migration_keeps_closed_workspaces_and_groups_path_aliases ________
 
 self = <sqlalchemy.engine.base.Connection object at 0x52692fd9b10>
@@ -674,7 +674,7 @@ parameters = [('p', 'p', '/tmp/pytest-of-sas/pytest-158/test_migration_keeps_clo
                         cursor, str_statement, effective_parameters, context
                     )
 
-/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/base.py:1958:
+/home/example/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/base.py:1958:
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 self = <sqlalchemy.dialects.sqlite.pysqlite.SQLiteDialect_pysqlite object at 0x52696338490>
@@ -687,7 +687,7 @@ context = <sqlalchemy.dialects.sqlite.base.SQLiteExecutionContext object at 0x52
 >       cursor.execute(statement, parameters)
 E       sqlite3.OperationalError: table projects has no column named approval_policy
 
-/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/default.py:1192: OperationalError
+/home/example/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/default.py:1192: OperationalError
 
 The above exception was the direct cause of the following exception:
 
@@ -706,44 +706,44 @@ tmp_path = PosixPath('/tmp/pytest-of-sas/pytest-158/test_migration_keeps_closed_
             database.add(Project(id="p", name="p", root_path=str(root), languages=[], created_at=now))
 >           database.flush()
 
-/run/host/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_work_sessions.py:233:
+/run/host/home/example/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_work_sessions.py:233:
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
-/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/orm/session.py:4543: in flush
+/home/example/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/orm/session.py:4543: in flush
     self._flush(objects)
 <sqlalchemy generated warned() wrapper for sqlalchemy.orm.session.Session._flush>:2: in _flush
     return target(fn, self, objects=objects)
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/util/deprecations.py:281: in warned
+/home/example/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/util/deprecations.py:281: in warned
     return fn(*args, **kwargs)  # type: ignore[no-any-return]
            ^^^^^^^^^^^^^^^^^^^
-/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/orm/session.py:4686: in _flush
+/home/example/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/orm/session.py:4686: in _flush
     with util.safe_reraise():
          ^^^^^^^^^^^^^^^^^^^
-/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/util/langhelpers.py:166: in __exit__
+/home/example/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/util/langhelpers.py:166: in __exit__
     raise exc_value.with_traceback(exc_tb)
-/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/orm/session.py:4647: in _flush
+/home/example/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/orm/session.py:4647: in _flush
     flush_context.execute()
-/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/orm/unitofwork.py:467: in execute
+/home/example/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/orm/unitofwork.py:467: in execute
     rec.execute(self)
-/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/orm/unitofwork.py:643: in execute
+/home/example/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/orm/unitofwork.py:643: in execute
     util.preloaded.orm_persistence._save_obj(
-/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/orm/persistence.py:92: in _save_obj
+/home/example/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/orm/persistence.py:92: in _save_obj
     _emit_insert_statements(
-/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/orm/persistence.py:1052: in _emit_insert_statements
+/home/example/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/orm/persistence.py:1052: in _emit_insert_statements
     result = connection.execute(
-/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/base.py:1463: in execute
+/home/example/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/base.py:1463: in execute
     return meth(
-/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/sql/elements.py:533: in _execute_on_connection
+/home/example/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/sql/elements.py:533: in _execute_on_connection
     return connection._execute_clauseelement(
-/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/base.py:1683: in _execute_clauseelement
+/home/example/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/base.py:1683: in _execute_clauseelement
     ret = self._execute_context(
-/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/base.py:1837: in _execute_context
+/home/example/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/base.py:1837: in _execute_context
     return self._exec_single_context(
-/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/base.py:1977: in _exec_single_context
+/home/example/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/base.py:1977: in _exec_single_context
     self._handle_dbapi_exception(
-/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/base.py:2347: in _handle_dbapi_exception
+/home/example/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/base.py:2347: in _handle_dbapi_exception
     raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
-/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/base.py:1958: in _exec_single_context
+/home/example/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/base.py:1958: in _exec_single_context
     self.dialect.do_execute(
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
@@ -760,7 +760,7 @@ E       [SQL: INSERT INTO projects (id, name, root_path, default_branch, vault_f
 E       [parameters: ('p', 'p', '/tmp/pytest-of-sas/pytest-158/test_migration_keeps_closed_wo0/workspace', 'main', None, '[]', '2026-11-06T00:00:00+00:00', None, None)]
 E       (Background on this error at: https://sqlalche.me/e/21/e3q8)
 
-/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/default.py:1192: OperationalError
+/home/example/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/engine/default.py:1192: OperationalError
 ______________ test_a_graph_snapshot_and_a_look_at_every_worktree ______________
 
 large_repo = PosixPath('/tmp/pytest-of-sas/pytest-158/scale0/repo')
@@ -791,7 +791,7 @@ tests/unit/test_git_scale.py:117: AssertionError
 tests/core/test_round6_k24.py: 4 warnings
 tests/core/test_sidecar.py: 6 warnings
 tests/core/test_sidecar_resilience.py: 2 warnings
-  /home/sas/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/pty.py:66: DeprecationWarning: This process (pid=293014) is multi-threaded, use of forkpty() may lead to deadlocks in the child.
+  /home/example/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/pty.py:66: DeprecationWarning: This process (pid=293014) is multi-threaded, use of forkpty() may lead to deadlocks in the child.
     pid, fd = os.forkpty()
 
 -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html

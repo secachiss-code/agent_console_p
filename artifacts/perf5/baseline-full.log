@@ -190,7 +190,7 @@ tests/gui/front/test_git_scale_ui.py:145: AssertionError
                     WARNING  cannot read HOME of container           tabs.py:257
                              agent-codex
                              ╭─ Traceback (most recent call last) ─╮
-                             │ /home/sas/.local/share/aconsole/wor │
+                             │ /home/example/.local/share/aconsole/wor │
                              │ ktrees/sp_aconsole_prototype/ff3f69 │
                              │ f4401638ca/src/aconsole/core/infras │
                              │ tructure/tabs.py:254 in agent_home  │
@@ -204,7 +204,7 @@ tests/gui/front/test_git_scale_ui.py:145: AssertionError
                              │   256 │   │   except (ContainerErro │
                              │   257 │   │   │   _LOG.warning("can │
                              │                                     │
-                             │ /home/sas/.local/share/aconsole/wor │
+                             │ /home/example/.local/share/aconsole/wor │
                              │ ktrees/sp_aconsole_prototype/ff3f69 │
                              │ f4401638ca/src/aconsole/core/infras │
                              │ tructure/containers/podman.py:111   │
@@ -218,7 +218,7 @@ tests/gui/front/test_git_scale_ui.py:145: AssertionError
                              │   113 │   │   │   rows = msgspec.js │
                              │   114 │   │   except msgspec.Decode │
                              │                                     │
-                             │ /home/sas/.local/share/aconsole/wor │
+                             │ /home/example/.local/share/aconsole/wor │
                              │ ktrees/sp_aconsole_prototype/ff3f69 │
                              │ f4401638ca/src/aconsole/core/infras │
                              │ tructure/containers/podman.py:216   │
@@ -236,7 +236,7 @@ tests/gui/front/test_git_scale_ui.py:145: AssertionError
 [11/08/26 15:00:35] WARNING  cannot read HOME of container           tabs.py:257
                              agent-codex
                              ╭─ Traceback (most recent call last) ─╮
-                             │ /home/sas/.local/share/aconsole/wor │
+                             │ /home/example/.local/share/aconsole/wor │
                              │ ktrees/sp_aconsole_prototype/ff3f69 │
                              │ f4401638ca/src/aconsole/core/infras │
                              │ tructure/tabs.py:254 in agent_home  │
@@ -250,7 +250,7 @@ tests/gui/front/test_git_scale_ui.py:145: AssertionError
                              │   256 │   │   except (ContainerErro │
                              │   257 │   │   │   _LOG.warning("can │
                              │                                     │
-                             │ /home/sas/.local/share/aconsole/wor │
+                             │ /home/example/.local/share/aconsole/wor │
                              │ ktrees/sp_aconsole_prototype/ff3f69 │
                              │ f4401638ca/src/aconsole/core/infras │
                              │ tructure/containers/podman.py:111   │
@@ -264,7 +264,7 @@ tests/gui/front/test_git_scale_ui.py:145: AssertionError
                              │   113 │   │   │   rows = msgspec.js │
                              │   114 │   │   except msgspec.Decode │
                              │                                     │
-                             │ /home/sas/.local/share/aconsole/wor │
+                             │ /home/example/.local/share/aconsole/wor │
                              │ ktrees/sp_aconsole_prototype/ff3f69 │
                              │ f4401638ca/src/aconsole/core/infras │
                              │ tructure/containers/podman.py:216   │
@@ -282,7 +282,7 @@ tests/gui/front/test_git_scale_ui.py:145: AssertionError
 [11/08/26 15:00:36] WARNING  cannot read HOME of container           tabs.py:257
                              agent-codex
                              ╭─ Traceback (most recent call last) ─╮
-                             │ /home/sas/.local/share/aconsole/wor │
+                             │ /home/example/.local/share/aconsole/wor │
                              │ ktrees/sp_aconsole_prototype/ff3f69 │
                              │ f4401638ca/src/aconsole/core/infras │
                              │ tructure/tabs.py:254 in agent_home  │
@@ -296,7 +296,7 @@ tests/gui/front/test_git_scale_ui.py:145: AssertionError
                              │   256 │   │   except (ContainerErro │
                              │   257 │   │   │   _LOG.warning("can │
                              │                                     │
-                             │ /home/sas/.local/share/aconsole/wor │
+                             │ /home/example/.local/share/aconsole/wor │
                              │ ktrees/sp_aconsole_prototype/ff3f69 │
                              │ f4401638ca/src/aconsole/core/infras │
                              │ tructure/containers/podman.py:111   │
@@ -310,7 +310,7 @@ tests/gui/front/test_git_scale_ui.py:145: AssertionError
                              │   113 │   │   │   rows = msgspec.js │
                              │   114 │   │   except msgspec.Decode │
                              │                                     │
-                             │ /home/sas/.local/share/aconsole/wor │
+                             │ /home/example/.local/share/aconsole/wor │
                              │ ktrees/sp_aconsole_prototype/ff3f69 │
                              │ f4401638ca/src/aconsole/core/infras │
                              │ tructure/containers/podman.py:216   │
@@ -328,7 +328,7 @@ tests/gui/front/test_git_scale_ui.py:145: AssertionError
 [11/08/26 15:00:37] WARNING  cannot read HOME of container           tabs.py:257
                              agent-codex
                              ╭─ Traceback (most recent call last) ─╮
-                             │ /home/sas/.local/share/aconsole/wor │
+                             │ /home/example/.local/share/aconsole/wor │
                              │ ktrees/sp_aconsole_prototype/ff3f69 │
                              │ f4401638ca/src/aconsole/core/infras │
                              │ tructure/tabs.py:254 in agent_home  │
@@ -342,7 +342,7 @@ tests/gui/front/test_git_scale_ui.py:145: AssertionError
                              │   256 │   │   except (ContainerErro │
                              │   257 │   │   │   _LOG.warning("can │
                              │                                     │
-                             │ /home/sas/.local/share/aconsole/wor │
+                             │ /home/example/.local/share/aconsole/wor │
                              │ ktrees/sp_aconsole_prototype/ff3f69 │
                              │ f4401638ca/src/aconsole/core/infras │
                              │ tructure/containers/podman.py:111   │
@@ -356,7 +356,7 @@ tests/gui/front/test_git_scale_ui.py:145: AssertionError
                              │   113 │   │   │   rows = msgspec.js │
                              │   114 │   │   except msgspec.Decode │
                              │                                     │
-                             │ /home/sas/.local/share/aconsole/wor │
+                             │ /home/example/.local/share/aconsole/wor │
                              │ ktrees/sp_aconsole_prototype/ff3f69 │
                              │ f4401638ca/src/aconsole/core/infras │
                              │ tructure/containers/podman.py:216   │
@@ -374,7 +374,7 @@ tests/gui/front/test_git_scale_ui.py:145: AssertionError
 [11/08/26 15:00:38] WARNING  cannot read HOME of container           tabs.py:257
                              agent-codex
                              ╭─ Traceback (most recent call last) ─╮
-                             │ /home/sas/.local/share/aconsole/wor │
+                             │ /home/example/.local/share/aconsole/wor │
                              │ ktrees/sp_aconsole_prototype/ff3f69 │
                              │ f4401638ca/src/aconsole/core/infras │
                              │ tructure/tabs.py:254 in agent_home  │
@@ -388,7 +388,7 @@ tests/gui/front/test_git_scale_ui.py:145: AssertionError
                              │   256 │   │   except (ContainerErro │
                              │   257 │   │   │   _LOG.warning("can │
                              │                                     │
-                             │ /home/sas/.local/share/aconsole/wor │
+                             │ /home/example/.local/share/aconsole/wor │
                              │ ktrees/sp_aconsole_prototype/ff3f69 │
                              │ f4401638ca/src/aconsole/core/infras │
                              │ tructure/containers/podman.py:111   │
@@ -402,7 +402,7 @@ tests/gui/front/test_git_scale_ui.py:145: AssertionError
                              │   113 │   │   │   rows = msgspec.js │
                              │   114 │   │   except msgspec.Decode │
                              │                                     │
-                             │ /home/sas/.local/share/aconsole/wor │
+                             │ /home/example/.local/share/aconsole/wor │
                              │ ktrees/sp_aconsole_prototype/ff3f69 │
                              │ f4401638ca/src/aconsole/core/infras │
                              │ tructure/containers/podman.py:216   │
@@ -420,7 +420,7 @@ tests/gui/front/test_git_scale_ui.py:145: AssertionError
 [11/08/26 15:00:39] WARNING  cannot read HOME of container           tabs.py:257
                              agent-codex
                              ╭─ Traceback (most recent call last) ─╮
-                             │ /home/sas/.local/share/aconsole/wor │
+                             │ /home/example/.local/share/aconsole/wor │
                              │ ktrees/sp_aconsole_prototype/ff3f69 │
                              │ f4401638ca/src/aconsole/core/infras │
                              │ tructure/tabs.py:254 in agent_home  │
@@ -434,7 +434,7 @@ tests/gui/front/test_git_scale_ui.py:145: AssertionError
                              │   256 │   │   except (ContainerErro │
                              │   257 │   │   │   _LOG.warning("can │
                              │                                     │
-                             │ /home/sas/.local/share/aconsole/wor │
+                             │ /home/example/.local/share/aconsole/wor │
                              │ ktrees/sp_aconsole_prototype/ff3f69 │
                              │ f4401638ca/src/aconsole/core/infras │
                              │ tructure/containers/podman.py:111   │
@@ -448,7 +448,7 @@ tests/gui/front/test_git_scale_ui.py:145: AssertionError
                              │   113 │   │   │   rows = msgspec.js │
                              │   114 │   │   except msgspec.Decode │
                              │                                     │
-                             │ /home/sas/.local/share/aconsole/wor │
+                             │ /home/example/.local/share/aconsole/wor │
                              │ ktrees/sp_aconsole_prototype/ff3f69 │
                              │ f4401638ca/src/aconsole/core/infras │
                              │ tructure/containers/podman.py:216   │
@@ -466,7 +466,7 @@ tests/gui/front/test_git_scale_ui.py:145: AssertionError
 [11/08/26 15:00:40] WARNING  cannot read HOME of container           tabs.py:257
                              agent-codex
                              ╭─ Traceback (most recent call last) ─╮
-                             │ /home/sas/.local/share/aconsole/wor │
+                             │ /home/example/.local/share/aconsole/wor │
                              │ ktrees/sp_aconsole_prototype/ff3f69 │
                              │ f4401638ca/src/aconsole/core/infras │
                              │ tructure/tabs.py:254 in agent_home  │
@@ -480,7 +480,7 @@ tests/gui/front/test_git_scale_ui.py:145: AssertionError
                              │   256 │   │   except (ContainerErro │
                              │   257 │   │   │   _LOG.warning("can │
                              │                                     │
-                             │ /home/sas/.local/share/aconsole/wor │
+                             │ /home/example/.local/share/aconsole/wor │
                              │ ktrees/sp_aconsole_prototype/ff3f69 │
                              │ f4401638ca/src/aconsole/core/infras │
                              │ tructure/containers/podman.py:111   │
@@ -494,7 +494,7 @@ tests/gui/front/test_git_scale_ui.py:145: AssertionError
                              │   113 │   │   │   rows = msgspec.js │
                              │   114 │   │   except msgspec.Decode │
                              │                                     │
-                             │ /home/sas/.local/share/aconsole/wor │
+                             │ /home/example/.local/share/aconsole/wor │
                              │ ktrees/sp_aconsole_prototype/ff3f69 │
                              │ f4401638ca/src/aconsole/core/infras │
                              │ tructure/containers/podman.py:216   │
@@ -512,7 +512,7 @@ tests/gui/front/test_git_scale_ui.py:145: AssertionError
 [11/08/26 15:00:41] WARNING  cannot read HOME of container           tabs.py:257
                              agent-codex
                              ╭─ Traceback (most recent call last) ─╮
-                             │ /home/sas/.local/share/aconsole/wor │
+                             │ /home/example/.local/share/aconsole/wor │
                              │ ktrees/sp_aconsole_prototype/ff3f69 │
                              │ f4401638ca/src/aconsole/core/infras │
                              │ tructure/tabs.py:254 in agent_home  │
@@ -526,7 +526,7 @@ tests/gui/front/test_git_scale_ui.py:145: AssertionError
                              │   256 │   │   except (ContainerErro │
                              │   257 │   │   │   _LOG.warning("can │
                              │                                     │
-                             │ /home/sas/.local/share/aconsole/wor │
+                             │ /home/example/.local/share/aconsole/wor │
                              │ ktrees/sp_aconsole_prototype/ff3f69 │
                              │ f4401638ca/src/aconsole/core/infras │
                              │ tructure/containers/podman.py:111   │
@@ -540,7 +540,7 @@ tests/gui/front/test_git_scale_ui.py:145: AssertionError
                              │   113 │   │   │   rows = msgspec.js │
                              │   114 │   │   except msgspec.Decode │
                              │                                     │
-                             │ /home/sas/.local/share/aconsole/wor │
+                             │ /home/example/.local/share/aconsole/wor │
                              │ ktrees/sp_aconsole_prototype/ff3f69 │
                              │ f4401638ca/src/aconsole/core/infras │
                              │ tructure/containers/podman.py:216   │
@@ -560,36 +560,36 @@ tests/gui/front/test_git_scale_ui.py:145: AssertionError
                              shutting down
 =============================== warnings summary ===============================
 ../../../../../../Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/events.py:803
-  /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/events.py:803: DeprecationWarning: 'asyncio.AbstractEventLoopPolicy' is deprecated and slated for removal in Python 3.16
+  /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/events.py:803: DeprecationWarning: 'asyncio.AbstractEventLoopPolicy' is deprecated and slated for removal in Python 3.16
     AbstractEventLoopPolicy = getattr(asyncio, "AbstractEventLoopPolicy", object)
 
 tests/gui/front/test_clipboard_routing.py::test_real_clipboard_shortcuts[text]
-  /home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/gui/front/test_clipboard_routing.py:146: DeprecationWarning: Vte.Pty.close is deprecated
+  /home/example/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/gui/front/test_clipboard_routing.py:146: DeprecationWarning: Vte.Pty.close is deprecated
     pty.close()
 
 tests/gui/front/test_contrast_table.py: 400 warnings
 tests/gui/front/test_ux1_shortcuts.py: 6 warnings
-  /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/events.py:890: DeprecationWarning: 'asyncio.get_event_loop_policy' is deprecated and slated for removal in Python 3.16
+  /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/events.py:890: DeprecationWarning: 'asyncio.get_event_loop_policy' is deprecated and slated for removal in Python 3.16
     if not isinstance(_get_event_loop_policy(), GLibEventLoopPolicy):
 
 tests/gui/front/test_contrast_table.py::test_the_table_is_the_floor_theme_and_the_dim_label_is_readable
-  /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/overrides/GLib.py:631: RuntimeWarning: coroutine 'HealthDialog.refresh' was never awaited
+  /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/overrides/GLib.py:631: RuntimeWarning: coroutine 'HealthDialog.refresh' was never awaited
     return super().iteration(may_block)
   Enable tracemalloc to get traceback where the object was allocated.
   See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
 
 tests/gui/front/test_des2_accessibility.py::test_every_plan_state_is_visible_and_updates_on_heartbeat
-  /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/_pytest/runner.py:180: RuntimeWarning: coroutine 'MainWindow._renew_git_watch' was never awaited
+  /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/_pytest/runner.py:180: RuntimeWarning: coroutine 'MainWindow._renew_git_watch' was never awaited
     del sys.last_exc  # type:ignore[attr-defined]
   Enable tracemalloc to get traceback where the object was allocated.
   See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
 
 tests/gui/front/test_git_actions.py::test_stage_commit_and_file_buttons_in_the_inspector
-  /home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/src/aconsole/ui/views/review/graph_cell.py:110: DeprecationWarning: Gtk.Widget.get_style_context is deprecated
+  /home/example/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/src/aconsole/ui/views/review/graph_cell.py:110: DeprecationWarning: Gtk.Widget.get_style_context is deprecated
     _found, background = self.get_style_context().lookup_color("view_bg_color")
 
 tests/gui/front/test_git_actions.py::test_stage_commit_and_file_buttons_in_the_inspector
-  /home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/src/aconsole/ui/views/review/graph_cell.py:110: DeprecationWarning: Gtk.StyleContext.lookup_color is deprecated
+  /home/example/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/src/aconsole/ui/views/review/graph_cell.py:110: DeprecationWarning: Gtk.StyleContext.lookup_color is deprecated
     _found, background = self.get_style_context().lookup_color("view_bg_color")
 
 -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html

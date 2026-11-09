@@ -2,11 +2,11 @@ Collected 0 items to run in parallel
 .........                                                                [100%]
 =============================== warnings summary ===============================
 src/aconsole/ui/views/approvals/panel.py:20
-  /home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/src/aconsole/ui/views/approvals/panel.py:20: PyGIWarning: Gdk was imported without specifying a version first. Use gi.require_version('Gdk', '4.0') before import to ensure that the right version gets loaded.
+  /home/example/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/src/aconsole/ui/views/approvals/panel.py:20: PyGIWarning: Gdk was imported without specifying a version first. Use gi.require_version('Gdk', '4.0') before import to ensure that the right version gets loaded.
     from gi.repository import Gdk, GLib, GObject, Gtk, Pango  # noqa: E402
 
 ../../../../../../Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/events.py:803
-  /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/events.py:803: DeprecationWarning: 'asyncio.AbstractEventLoopPolicy' is deprecated and slated for removal in Python 3.16
+  /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/events.py:803: DeprecationWarning: 'asyncio.AbstractEventLoopPolicy' is deprecated and slated for removal in Python 3.16
     AbstractEventLoopPolicy = getattr(asyncio, "AbstractEventLoopPolicy", object)
 
 -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html

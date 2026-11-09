@@ -338,7 +338,7 @@ def _seed(path: Path, now: datetime) -> None:
                 Project(
                     id=_PROJECT,
                     name="demo",
-                    root_path="/home/sas/Projects/demo",
+                    root_path="/home/example/Projects/demo",
                     languages=["python"],
                     created_at=now,
                 )

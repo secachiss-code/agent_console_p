@@ -30,7 +30,7 @@ python 3.15.1 gil=False
 =============================== warnings summary ===============================
 tests/core/test_round6_k24.py: 4 warnings
 tests/core/test_sidecar.py: 6 warnings
-  /home/sas/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/pty.py:66: DeprecationWarning: This process (pid=81223) is multi-threaded, use of forkpty() may lead to deadlocks in the child.
+  /home/example/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/pty.py:66: DeprecationWarning: This process (pid=81223) is multi-threaded, use of forkpty() may lead to deadlocks in the child.
     pid, fd = os.forkpty()
 
 -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html

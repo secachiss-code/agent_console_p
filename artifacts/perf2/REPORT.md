@@ -1,7 +1,7 @@
 # PERF-2: повторная проверка writer tick
 
 Дата: 2026-11-06. База: main, cf52b8a.
-Checkout: /home/sas/Projects/sp_aconsole_prototype.
+Checkout: /home/example/Projects/sp_aconsole_prototype.
 
 ## Результаты
 

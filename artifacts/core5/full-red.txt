@@ -35,7 +35,7 @@ ___________________ test_fake_methods_return_the_result_type ___________________
 E       assert False
 E        +  where False = covers_methods()
 
-/run/host/home/sas/Projects/sp_aconsole_prototype/tests/core/test_fake_core.py:127: AssertionError
+/run/host/home/example/Projects/sp_aconsole_prototype/tests/core/test_fake_core.py:127: AssertionError
 ______________ test_other_namespace_cannot_initialize_as_the_host ______________
 
 tmp_path = PosixPath('/tmp/pytest-of-root/pytest-26/test_other_namespace_cannot_in0')
@@ -68,7 +68,7 @@ WARNING  aconsole.core.infrastructure.ipc.session:session.py:436 refused ui init
 =============================== warnings summary ===============================
 tests/core/test_round6_k24.py: 4 warnings
 tests/core/test_sidecar.py: 6 warnings
-  /home/sas/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/pty.py:66: DeprecationWarning: This process (pid=195512) is multi-threaded, use of forkpty() may lead to deadlocks in the child.
+  /home/example/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/pty.py:66: DeprecationWarning: This process (pid=195512) is multi-threaded, use of forkpty() may lead to deadlocks in the child.
     pid, fd = os.forkpty()
 
 -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html

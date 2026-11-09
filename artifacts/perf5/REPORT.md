@@ -92,10 +92,10 @@ localization, theme contrast and list virtualization.
 On the native host with the UI virtualenv and GTK dependencies, from this tree:
 
 ```sh
-/home/sas/Projects/sp_aconsole_prototype/.venv-ui/bin/python artifacts/perf5/runner.txt --mode isolated --label repeat
-/home/sas/Projects/sp_aconsole_prototype/.venv-ui/bin/python artifacts/perf5/runner.txt --mode isolated --label cairo-repeat --renderer cairo
-/home/sas/Projects/sp_aconsole_prototype/.venv-ui/bin/python artifacts/perf5/runner.txt --mode isolated --label profile-repeat --profile
-/home/sas/Projects/sp_aconsole_prototype/.venv-ui/bin/python artifacts/perf5/runner.txt --mode full --label full-repeat
+/home/example/Projects/sp_aconsole_prototype/.venv-ui/bin/python artifacts/perf5/runner.txt --mode isolated --label repeat
+/home/example/Projects/sp_aconsole_prototype/.venv-ui/bin/python artifacts/perf5/runner.txt --mode isolated --label cairo-repeat --renderer cairo
+/home/example/Projects/sp_aconsole_prototype/.venv-ui/bin/python artifacts/perf5/runner.txt --mode isolated --label profile-repeat --profile
+/home/example/Projects/sp_aconsole_prototype/.venv-ui/bin/python artifacts/perf5/runner.txt --mode full --label full-repeat
 python3 artifacts/perf5/summarize.txt
 ```
 

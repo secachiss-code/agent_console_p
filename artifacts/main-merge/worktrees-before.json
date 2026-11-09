@@ -1,48 +1,48 @@
 [
   {
-    "path": "/home/sas/Projects/sp_aconsole_prototype",
+    "path": "/home/example/Projects/sp_aconsole_prototype",
     "branch": "refs/heads/main",
     "status": [],
     "exit": 0
   },
   {
-    "path": "/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/038657e1539f15ad",
+    "path": "/home/example/.local/share/aconsole/worktrees/sp_aconsole_prototype/038657e1539f15ad",
     "branch": "refs/heads/ac/codex-038657e1539f15ad",
     "status": [],
     "exit": 0
   },
   {
-    "path": "/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/310a36d4e392ef6c",
+    "path": "/home/example/.local/share/aconsole/worktrees/sp_aconsole_prototype/310a36d4e392ef6c",
     "branch": "refs/heads/ac/s-cursor-310a36d4e392ef6c",
     "status": [],
     "exit": 0
   },
   {
-    "path": "/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/66e3f682137cd448",
+    "path": "/home/example/.local/share/aconsole/worktrees/sp_aconsole_prototype/66e3f682137cd448",
     "branch": "refs/heads/docs/0.1.1-project-docs",
     "status": [],
     "exit": 0
   },
   {
-    "path": "/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/7363bef03e00720f",
+    "path": "/home/example/.local/share/aconsole/worktrees/sp_aconsole_prototype/7363bef03e00720f",
     "branch": "refs/heads/ac/cursor-7363bef03e00720f",
     "status": [],
     "exit": 0
   },
   {
-    "path": "/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/94e0f4fd8c76a7fd",
+    "path": "/home/example/.local/share/aconsole/worktrees/sp_aconsole_prototype/94e0f4fd8c76a7fd",
     "branch": "refs/heads/ac/s-codex-94e0f4fd8c76a7fd",
     "status": [],
     "exit": 0
   },
   {
-    "path": "/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/a17486fc9cb49e8c",
+    "path": "/home/example/.local/share/aconsole/worktrees/sp_aconsole_prototype/a17486fc9cb49e8c",
     "branch": "refs/heads/ac/claude-a17486fc9cb49e8c",
     "status": [],
     "exit": 0
   },
   {
-    "path": "/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca",
+    "path": "/home/example/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca",
     "branch": "refs/heads/ac/codex-ff3f69f4401638ca",
     "status": [
       "A  ISSUES.md",

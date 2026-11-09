@@ -86,7 +86,7 @@ failed display initialization. Opened native-final-ui/git-light.png,git-dark.png
 and git-narrow.png. Rows, badges, graph strokes and selection remain visible;
 no new clipping or light patches were found; the narrow inspector stacks below
 the graph. The generic §§2–3 and 8 of the shared checkout's
-/home/sas/Projects/sp_aconsole_prototype/docs/design/DESIGN.md were consulted.
+/home/example/Projects/sp_aconsole_prototype/docs/design/DESIGN.md were consulted.
 They are not a specific mockup for the later Git graph; no exact Git-mockup
 conformance or new contrast measurement is claimed. Drawing code and style
 values are unchanged by the retained fixes.

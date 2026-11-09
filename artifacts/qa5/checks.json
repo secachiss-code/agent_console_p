@@ -1,0 +1,17 @@
+{
+  "tests": {
+    "main": 221,
+    "fixtures": 62,
+    "fixture_consumers": 19,
+    "total": 302,
+    "failures": 0
+  },
+  "ruff": "PASS",
+  "tracked_files_scanned": 2024,
+  "personal_home_prefix_matches": 0,
+  "pstats_entries_preserved": {
+    "artifacts/perf5/baseline-profile.prof": 329,
+    "artifacts/perf7/after-merge-profile.prof": 332,
+    "artifacts/perf7/deferred-map-profile.prof": 336
+  }
+}

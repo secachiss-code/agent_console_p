@@ -38,8 +38,8 @@ def test_taken_branch_gets_a_numeric_suffix() -> None:
 
 
 def test_worktree_path_stays_under_the_root() -> None:
-    assert worktree_path("/home/sas/.local/share/aconsole/worktrees", "repo", "tab 1") == (
-        "/home/sas/.local/share/aconsole/worktrees/repo/tab-1"
+    assert worktree_path("/home/example/.local/share/aconsole/worktrees", "repo", "tab 1") == (
+        "/home/example/.local/share/aconsole/worktrees/repo/tab-1"
     )
     assert ".." not in worktree_path("/var/worktrees", "../repo", "..")
 

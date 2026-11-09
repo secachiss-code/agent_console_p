@@ -75,7 +75,7 @@ def _seed(session: Session) -> None:
         Project(
             id="01JB2Z00000000000000000001",
             name="demo",
-            root_path="/home/sas/Projects/demo",
+            root_path="/home/example/Projects/demo",
             languages=["python"],
             created_at=_NOW,
         )

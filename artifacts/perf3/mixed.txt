@@ -2,25 +2,25 @@ Collected 0 items to run in parallel
 F..                                                                      [100%]
 python 3.15.1 gil=False
 Task exception was never retrieved
-future: <Task finished name='Task-3' coro=<Daemon.serve() done, defined at /home/sas/Projects/sp_aconsole_prototype/src/aconsole/core/bootstrap.py:663> exception=TimeoutError('writer did not start the job before its deadline')>
+future: <Task finished name='Task-3' coro=<Daemon.serve() done, defined at /home/example/Projects/sp_aconsole_prototype/src/aconsole/core/bootstrap.py:663> exception=TimeoutError('writer did not start the job before its deadline')>
 Traceback (most recent call last):
-  File "/home/sas/Projects/sp_aconsole_prototype/src/aconsole/core/bootstrap.py", line 681, in serve
+  File "/home/example/Projects/sp_aconsole_prototype/src/aconsole/core/bootstrap.py", line 681, in serve
     await self._restore_tabs()
-  File "/home/sas/Projects/sp_aconsole_prototype/src/aconsole/core/bootstrap.py", line 1315, in _restore_tabs
+  File "/home/example/Projects/sp_aconsole_prototype/src/aconsole/core/bootstrap.py", line 1315, in _restore_tabs
     await asyncio.to_thread(self._plans.use_store, PlanDatabase(writer))
-  File "/home/sas/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/threads.py", line 26, in to_thread
+  File "/home/example/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/threads.py", line 26, in to_thread
     return await loop.run_in_executor(None, func_call)
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/sas/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/concurrent/futures/thread.py", line 86, in run
+  File "/home/example/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/concurrent/futures/thread.py", line 86, in run
     result = ctx.run(self.task)
-  File "/home/sas/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/concurrent/futures/thread.py", line 73, in run
+  File "/home/example/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/concurrent/futures/thread.py", line 73, in run
     return fn(*args, **kwargs)
-  File "/home/sas/Projects/sp_aconsole_prototype/src/aconsole/core/infrastructure/mcp/tools.py", line 376, in use_store
+  File "/home/example/Projects/sp_aconsole_prototype/src/aconsole/core/infrastructure/mcp/tools.py", line 376, in use_store
     for saved in store.load():
                  ~~~~~~~~~~^^
-  File "/home/sas/Projects/sp_aconsole_prototype/src/aconsole/core/infrastructure/persistence/repositories/plans.py", line 56, in load
+  File "/home/example/Projects/sp_aconsole_prototype/src/aconsole/core/infrastructure/persistence/repositories/plans.py", line 56, in load
     _ = self._writer.call(collect)
-  File "/home/sas/Projects/sp_aconsole_prototype/src/aconsole/core/infrastructure/persistence/writer.py", line 114, in call
+  File "/home/example/Projects/sp_aconsole_prototype/src/aconsole/core/infrastructure/persistence/writer.py", line 114, in call
     raise TimeoutError(message) from None
 TimeoutError: writer did not start the job before its deadline
 

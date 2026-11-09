@@ -30,7 +30,7 @@ Baseline: a286858. Date: 2026-11-06. MCP plan-1, node-50.
 
 ## Validation
 
-All commands use HOSTRUN_CWD=/home/sas/Projects/sp_aconsole_prototype.
+All commands use HOSTRUN_CWD=/home/example/Projects/sp_aconsole_prototype.
 
 - Initial resource regressions: four failures reproduced full-file rereads and
   missing ref/WAL/logging maintenance. An additional regression reproduced immediate

@@ -54,7 +54,7 @@ There are no UI view/layout changes, user-app restarts or new dependencies.
 ## Validation
 
 All commands run through hostrun with
-HOSTRUN_CWD=/home/sas/Projects/sp_aconsole_prototype.
+HOSTRUN_CWD=/home/example/Projects/sp_aconsole_prototype.
 
 - Targeted launcher/container/session/MCP/ingest suite: exit 0, 213 cases.
 - Four public tab/launchSpec agent cases verify both credentials stay out of argv.

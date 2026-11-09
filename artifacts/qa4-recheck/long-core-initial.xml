@@ -3,8 +3,8 @@ monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x5deed1f3f80&gt;
 
 &gt;   ???
 
-/run/host/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_approval_tab_isolation.py:148: 
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/run/host/home/example/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_approval_tab_isolation.py:148:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 ../../../../uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py:205: in run
     return runner.run(main)
            ^^^^^^^^^^^^^^^^
@@ -14,11 +14,11 @@ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 ../../../../uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/base_events.py:724: in run_until_complete
     return future.result()
            ^^^^^^^^^^^^^^^
-/run/host/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_approval_tab_isolation.py:97: in scenario
+/run/host/home/example/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_approval_tab_isolation.py:97: in scenario
     ???
-/run/host/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_wire.py:109: in _connect
+/run/host/home/example/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_wire.py:109: in _connect
     ???
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 path = PosixPath('/tmp/aconsole-test-home-yz40a0d0/s/4c0a155167ea1f73b14230ab/ac-wire-_tab_close_releases0.sock')
 
@@ -37,8 +37,8 @@ monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x5deede48820&gt;
 
 &gt;   ???
 
-/run/host/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_checked_completion.py:218: 
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/run/host/home/example/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_checked_completion.py:218:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 ../../../../uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py:205: in run
     return runner.run(main)
            ^^^^^^^^^^^^^^^^
@@ -48,11 +48,11 @@ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 ../../../../uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/base_events.py:724: in run_until_complete
     return future.result()
            ^^^^^^^^^^^^^^^
-/run/host/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_checked_completion.py:177: in scenario
+/run/host/home/example/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_checked_completion.py:177: in scenario
     ???
-/run/host/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_wire.py:109: in _connect
+/run/host/home/example/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_wire.py:109: in _connect
     ???
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 path = PosixPath('/tmp/aconsole-test-home-yz40a0d0/s/02de7e3a1257ae9b0e76c128/ac-wire-_checked_completion0.sock')
 
@@ -71,8 +71,8 @@ monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x5deede492a0&gt;
 
 &gt;   ???
 
-/run/host/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_claude_mcp.py:144: 
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/run/host/home/example/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_claude_mcp.py:144:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 ../../../../uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py:205: in run
     return runner.run(main)
            ^^^^^^^^^^^^^^^^
@@ -82,11 +82,11 @@ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 ../../../../uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/base_events.py:724: in run_until_complete
     return future.result()
            ^^^^^^^^^^^^^^^
-/run/host/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_claude_mcp.py:111: in scenario
+/run/host/home/example/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_claude_mcp.py:111: in scenario
     ???
-/run/host/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_wire.py:109: in _connect
+/run/host/home/example/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_wire.py:109: in _connect
     ???
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 path = PosixPath('/tmp/aconsole-test-home-yz40a0d0/s/3d443c4937a37643deb349a2/ac-wire-_launch_config_list0.sock')
 
@@ -105,8 +105,8 @@ monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x5deede41c10&gt;
 
 &gt;   ???
 
-/run/host/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_client_turns.py:112: 
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/run/host/home/example/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_client_turns.py:112:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 ../../../../uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py:205: in run
     return runner.run(main)
            ^^^^^^^^^^^^^^^^
@@ -116,11 +116,11 @@ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 ../../../../uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/base_events.py:724: in run_until_complete
     return future.result()
            ^^^^^^^^^^^^^^^
-/run/host/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_client_turns.py:101: in run
+/run/host/home/example/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_client_turns.py:101: in run
     ???
-/run/host/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_wire.py:109: in _connect
+/run/host/home/example/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_wire.py:109: in _connect
     ???
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 path = PosixPath('/tmp/aconsole-test-home-yz40a0d0/s/4ad076b4c9967e4976fb226e/ac-wire-mpacts_than_the_dae0.sock')
 
@@ -139,8 +139,8 @@ monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x5deede41350&gt;
 
 &gt;   ???
 
-/run/host/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_client_turns.py:129: 
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/run/host/home/example/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_client_turns.py:129:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 ../../../../uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py:205: in run
     return runner.run(main)
            ^^^^^^^^^^^^^^^^
@@ -150,11 +150,11 @@ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 ../../../../uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/base_events.py:724: in run_until_complete
     return future.result()
            ^^^^^^^^^^^^^^^
-/run/host/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_client_turns.py:119: in run
+/run/host/home/example/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_client_turns.py:119: in run
     ???
-/run/host/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_wire.py:109: in _connect
+/run/host/home/example/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_wire.py:109: in _connect
     ???
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 path = PosixPath('/tmp/aconsole-test-home-yz40a0d0/s/2784e28444be1862af7e4588/ac-wire-quests_past_the_slo0.sock')
 
@@ -172,8 +172,8 @@ tests/core/conftest.py:153: RuntimeError</failure></testcase><testcase classname
 
 &gt;   ???
 
-/run/host/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_code_impact.py:151: 
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/run/host/home/example/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_code_impact.py:151:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 ../../../../uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py:205: in run
     return runner.run(main)
            ^^^^^^^^^^^^^^^^
@@ -183,11 +183,11 @@ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 ../../../../uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/base_events.py:724: in run_until_complete
     return future.result()
            ^^^^^^^^^^^^^^^
-/run/host/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_code_impact.py:126: in scenario
+/run/host/home/example/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_code_impact.py:126: in scenario
     ???
-/run/host/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_wire.py:109: in _connect
+/run/host/home/example/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_wire.py:109: in _connect
     ???
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 path = PosixPath('/tmp/aconsole-test-home-yz40a0d0/s/35d75d96f8cd8ea6584e8f39/ac-wire-_over_the_wire_and_0.sock')
 
@@ -232,10 +232,10 @@ successful = False
             podman.write_text(script, encoding="utf-8")
             podman.chmod(0o700)
         repo = _git_repo(tmp_path / "repo")
-    
+
         async def scenario() -&gt; None:
             import msgspec
-    
+
             daemon = _daemon(tmp_path)
             serving = asyncio.create_task(daemon.serve())
             await wait_for_socket(daemon.socket)
@@ -265,11 +265,11 @@ successful = False
                 await client.close()
                 daemon.request_stop()
                 assert await serving == 0
-    
+
 &gt;       asyncio.run(scenario())
 
-tests/core/test_codex_hook_runtime.py:178: 
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/core/test_codex_hook_runtime.py:178:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 ../../../../uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py:205: in run
     return runner.run(main)
            ^^^^^^^^^^^^^^^^
@@ -281,7 +281,7 @@ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
            ^^^^^^^^^^^^^^^
 tests/core/test_codex_hook_runtime.py:150: in scenario
     await wait_for_socket(daemon.socket)
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 path = PosixPath('/tmp/aconsole-test-home-yz40a0d0/s/6a7dfa74701c02a4ff19daee/ac-wire-aemon_launch_report1.sock')
 
@@ -300,8 +300,8 @@ monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x5deed05a420&gt;
 
 &gt;   ???
 
-/run/host/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_codex_watch_recovery.py:108: 
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/run/host/home/example/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_codex_watch_recovery.py:108:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 ../../../../uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py:205: in run
     return runner.run(main)
            ^^^^^^^^^^^^^^^^
@@ -311,11 +311,11 @@ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 ../../../../uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/base_events.py:724: in run_until_complete
     return future.result()
            ^^^^^^^^^^^^^^^
-/run/host/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_codex_watch_recovery.py:92: in run
+/run/host/home/example/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_codex_watch_recovery.py:92: in run
     ???
-/run/host/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_wire.py:109: in _connect
+/run/host/home/example/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_wire.py:109: in _connect
     ???
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 path = PosixPath('/tmp/aconsole-test-home-yz40a0d0/s/b5b03fc68b9257aca446bff5/ac-wire-r_disconnect_uses_t0.sock')
 
@@ -344,7 +344,7 @@ monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x5deed05ace0&gt;
                     (folder / f"{index}.txt").write_text("data\n" * 800)
                 entered, release = threading.Event(), threading.Event()
                 capture = GitCheckpoints.capture
-    
+
                 def delayed(self: GitCheckpoints, repo: Path, ref: str, label: str) -&gt; TreeCapture:
                     if not entered.is_set():
                         entered.set()
@@ -354,7 +354,7 @@ monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x5deed05ace0&gt;
                     assert len(result.files) &gt;= 1500
                     _measure("git_capture", time.perf_counter() - before)
                     return result
-    
+
                 monkeypatch.setattr(GitCheckpoints, "capture", delayed)
                 hook = None
                 try:
@@ -378,11 +378,11 @@ monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x5deed05ace0&gt;
                     release.set()
                     if hook is not None:
                         await asyncio.gather(hook, return_exceptions=True)
-    
+
 &gt;       asyncio.run(scenario())
 
-tests/core/test_core_latency.py:196: 
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/core/test_core_latency.py:196:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 ../../../../uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py:205: in run
     return runner.run(main)
            ^^^^^^^^^^^^^^^^
@@ -401,9 +401,9 @@ tests/core/test_core_latency.py:154: in scenario
 tests/core/test_core_latency.py:80: in _running
     client = await _connect(daemon.socket)
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-/run/host/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_wire.py:109: in _connect
+/run/host/home/example/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_wire.py:109: in _connect
     ???
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 path = PosixPath('/tmp/aconsole-test-home-yz40a0d0/s/5a8f66a49bde8eb859e9fbe8/ac-wire-sion_request_and_de0.sock')
 
@@ -428,12 +428,12 @@ monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x5deed05bd80&gt;
                 await asyncio.to_thread(mcp.start)
                 entered, release = threading.Event(), threading.Event()
                 verified = tools._verified
-    
+
                 def delayed(worktree: Path | None) -&gt; str | None:
                     entered.set()
                     _ = release.wait(_STALL_S)
                     return verified(worktree)
-    
+
                 monkeypatch.setattr(tools, "_verified", delayed)
                 before = time.perf_counter()
                 request = asyncio.create_task(
@@ -458,11 +458,11 @@ monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x5deed05bd80&gt;
                     result = await request
                     assert not result.get("isError", False)
                     assert _content(result)["kb_id"]
-    
+
 &gt;       asyncio.run(scenario())
 
-tests/core/test_core_latency.py:238: 
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/core/test_core_latency.py:238:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 ../../../../uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py:205: in run
     return runner.run(main)
            ^^^^^^^^^^^^^^^^
@@ -481,9 +481,9 @@ tests/core/test_core_latency.py:201: in scenario
 tests/core/test_core_latency.py:80: in _running
     client = await _connect(daemon.socket)
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-/run/host/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_wire.py:109: in _connect
+/run/host/home/example/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_wire.py:109: in _connect
     ???
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 path = PosixPath('/tmp/aconsole-test-home-yz40a0d0/s/43938fd21fdbe562891a8d5d/ac-wire-cp_git_does_not_blo0.sock')
 
@@ -527,11 +527,11 @@ monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x5deed056750&gt;
                 hook = await _permission(core)
                 await _decide(core, 3)
                 assert (await asyncio.wait_for(hook, 2))[0] == 200
-    
+
 &gt;       asyncio.run(scenario())
 
-tests/core/test_core_latency.py:269: 
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/core/test_core_latency.py:269:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 ../../../../uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py:205: in run
     return runner.run(main)
            ^^^^^^^^^^^^^^^^
@@ -550,9 +550,9 @@ tests/core/test_core_latency.py:243: in scenario
 tests/core/test_core_latency.py:80: in _running
     client = await _connect(daemon.socket)
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-/run/host/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_wire.py:109: in _connect
+/run/host/home/example/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_wire.py:109: in _connect
     ???
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 path = PosixPath('/tmp/aconsole-test-home-yz40a0d0/s/4f43e7563cae4d89fbbe1d62/ac-wire-sion_policy_tracks_0.sock')
 
@@ -573,12 +573,12 @@ monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x5deed054760&gt;
         async def scenario() -&gt; None:
             async with _running(tmp_path, monkeypatch) as core:
                 entered, release = threading.Event(), threading.Event()
-    
+
                 def delayed_checks(_self: SetupService) -&gt; ChecksResult:
                     entered.set()
                     _ = release.wait(_STALL_S)
                     return ChecksResult(checks=())
-    
+
                 monkeypatch.setattr(SetupService, "checks", delayed_checks)
                 checking = asyncio.create_task(core.client.call("setup/checks", EmptyParams(), ChecksResult))
                 hook = None
@@ -596,11 +596,11 @@ monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x5deed054760&gt;
                     await checking
                     if hook is not None:
                         await asyncio.gather(hook, return_exceptions=True)
-    
+
 &gt;       asyncio.run(scenario())
 
-tests/core/test_core_latency.py:300: 
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/core/test_core_latency.py:300:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 ../../../../uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py:205: in run
     return runner.run(main)
            ^^^^^^^^^^^^^^^^
@@ -619,9 +619,9 @@ tests/core/test_core_latency.py:274: in scenario
 tests/core/test_core_latency.py:80: in _running
     client = await _connect(daemon.socket)
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-/run/host/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_wire.py:109: in _connect
+/run/host/home/example/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_wire.py:109: in _connect
     ???
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 path = PosixPath('/tmp/aconsole-test-home-yz40a0d0/s/9902927acc3b0e987ac2cbab/ac-wire-sion_does_not_wait_0.sock')
 
@@ -640,8 +640,8 @@ monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x5deed05a340&gt;
 
 &gt;   ???
 
-/run/host/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_core_recovery.py:165: 
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/run/host/home/example/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_core_recovery.py:165:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 ../../../../uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py:205: in run
     return runner.run(main)
            ^^^^^^^^^^^^^^^^
@@ -651,11 +651,11 @@ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 ../../../../uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/base_events.py:724: in run_until_complete
     return future.result()
            ^^^^^^^^^^^^^^^
-/run/host/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_core_recovery.py:129: in scenario
+/run/host/home/example/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_core_recovery.py:129: in scenario
     ???
-/run/host/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_wire.py:109: in _connect
+/run/host/home/example/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_wire.py:109: in _connect
     ???
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 path = PosixPath('/tmp/aconsole-test-home-yz40a0d0/s/608d30369cb1346b5ffd12b0/ac-wire-t_keeps_the_endpoin0.sock')
 
@@ -674,8 +674,8 @@ review = True, expected = 'verifying'
 
 &gt;   ???
 
-/run/host/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_git_cleanup.py:91: 
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/run/host/home/example/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_git_cleanup.py:91:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 ../../../../uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py:205: in run
     return runner.run(main)
            ^^^^^^^^^^^^^^^^
@@ -685,13 +685,13 @@ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 ../../../../uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/base_events.py:724: in run_until_complete
     return future.result()
            ^^^^^^^^^^^^^^^
-/run/host/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_git_cleanup.py:70: in scenario
+/run/host/home/example/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_git_cleanup.py:70: in scenario
     ???
-/run/host/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_git_cleanup.py:34: in _start
+/run/host/home/example/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_git_cleanup.py:34: in _start
     ???
-/run/host/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_wire.py:109: in _connect
+/run/host/home/example/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_wire.py:109: in _connect
     ???
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 path = PosixPath('/tmp/aconsole-test-home-yz40a0d0/s/fa8740d8d4edc556fcf27e5a/ac-wire-e_moves_its_plan_no1.sock')
 
@@ -709,8 +709,8 @@ tests/core/conftest.py:153: RuntimeError</failure></testcase><testcase classname
 
 &gt;   ???
 
-/run/host/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_git_cleanup.py:153: 
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/run/host/home/example/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_git_cleanup.py:153:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 ../../../../uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py:205: in run
     return runner.run(main)
            ^^^^^^^^^^^^^^^^
@@ -720,13 +720,13 @@ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 ../../../../uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/base_events.py:724: in run_until_complete
     return future.result()
            ^^^^^^^^^^^^^^^
-/run/host/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_git_cleanup.py:130: in scenario
+/run/host/home/example/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_git_cleanup.py:130: in scenario
     ???
-/run/host/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_git_cleanup.py:34: in _start
+/run/host/home/example/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_git_cleanup.py:34: in _start
     ???
-/run/host/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_wire.py:109: in _connect
+/run/host/home/example/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_wire.py:109: in _connect
     ???
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 path = PosixPath('/tmp/aconsole-test-home-yz40a0d0/s/69736b48ef6477434222a785/ac-wire-shed_worktree_keeps0.sock')
 
@@ -745,8 +745,8 @@ mode = 'merge', first = 'pre-merge-commit'
 
 &gt;   ???
 
-/run/host/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_git_durability.py:206: 
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/run/host/home/example/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_git_durability.py:206:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 ../../../../uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py:205: in run
     return runner.run(main)
            ^^^^^^^^^^^^^^^^
@@ -756,13 +756,13 @@ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 ../../../../uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/base_events.py:724: in run_until_complete
     return future.result()
            ^^^^^^^^^^^^^^^
-/run/host/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_git_durability.py:181: in scenario
+/run/host/home/example/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_git_durability.py:181: in scenario
     ???
-/run/host/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_git_durability.py:36: in _start
+/run/host/home/example/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_git_durability.py:36: in _start
     ???
-/run/host/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_wire.py:109: in _connect
+/run/host/home/example/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/tests/core/test_wire.py:109: in _connect
     ???
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 path = PosixPath('/tmp/aconsole-test-home-yz40a0d0/s/eb53bb2cb2130feb83799d0d/ac-wire-e_with_no_worktree_0.sock')
 

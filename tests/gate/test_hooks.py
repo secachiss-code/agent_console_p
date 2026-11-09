@@ -198,7 +198,7 @@ def test_shell_guard_denies_direct_gate(command: str) -> None:
     [
         "cat ~/.config/aconsole-hostrun/policy.toml",
         "ls $HOME/.grok/settings.json",
-        "cat /home/sas/.cursor/hooks.json",
+        "cat /home/example/.cursor/hooks.json",
     ],
 )
 def test_shell_guard_denies_home_configuration(command: str) -> None:

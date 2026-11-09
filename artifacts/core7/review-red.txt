@@ -3,79 +3,79 @@ F                                                                        [100%]
 =================================== FAILURES ===================================
 ____ test_mcp_retry_verifying_lease_still_belongs_to_its_tab_after_deadline ____
   + Exception Group Traceback (most recent call last):
-  |   File "/home/sas/Projects/sp_aconsole_prototype/tests/core/test_mcp_retry.py", line 155, in test_mcp_retry_verifying_lease_still_belongs_to_its_tab_after_deadline
+  |   File "/home/example/Projects/sp_aconsole_prototype/tests/core/test_mcp_retry.py", line 155, in test_mcp_retry_verifying_lease_still_belongs_to_its_tab_after_deadline
   |     asyncio.run(scenario())
   |     ~~~~~~~~~~~^^^^^^^^^^^^
-  |   File "/home/sas/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py", line 205, in run
+  |   File "/home/example/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py", line 205, in run
   |     return runner.run(main)
   |            ~~~~~~~~~~^^^^^^
-  |   File "/home/sas/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py", line 128, in run
+  |   File "/home/example/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py", line 128, in run
   |     return self._loop.run_until_complete(task)
   |            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
-  |   File "/home/sas/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/base_events.py", line 724, in run_until_complete
+  |   File "/home/example/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/base_events.py", line 724, in run_until_complete
   |     return future.result()
   |            ~~~~~~~~~~~~~^^
-  |   File "/home/sas/Projects/sp_aconsole_prototype/tests/core/test_mcp_retry.py", line 137, in scenario
+  |   File "/home/example/Projects/sp_aconsole_prototype/tests/core/test_mcp_retry.py", line 137, in scenario
   |     async with Client(owner_server) as owner, Client(foreign_server) as foreign:
   |                ~~~~~~^^^^^^^^^^^^^^
-  |   File "/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/mcp/client/client.py", line 480, in __aexit__
+  |   File "/home/example/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/mcp/client/client.py", line 480, in __aexit__
   |     await self._exit_stack.__aexit__(exc_type, exc_val, exc_tb)
-  |   File "/home/sas/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/contextlib.py", line 813, in __aexit__
+  |   File "/home/example/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/contextlib.py", line 813, in __aexit__
   |     raise exc
-  |   File "/home/sas/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/contextlib.py", line 796, in __aexit__
+  |   File "/home/example/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/contextlib.py", line 796, in __aexit__
   |     cb_suppress = await cb(*exc_details)
   |                   ^^^^^^^^^^^^^^^^^^^^^^
-  |   File "/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/anyio/_backends/_asyncio.py", line 847, in __aexit__
+  |   File "/home/example/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/anyio/_backends/_asyncio.py", line 847, in __aexit__
   |     raise BaseExceptionGroup(
   |         "unhandled errors in a TaskGroup", self._exceptions
   |     ) from None
   | ExceptionGroup: unhandled errors in a TaskGroup (1 sub-exception)
   +-+---------------- 1 ----------------
     | Exception Group Traceback (most recent call last):
-    |   File "/home/sas/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/contextlib.py", line 796, in __aexit__
+    |   File "/home/example/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/contextlib.py", line 796, in __aexit__
     |     cb_suppress = await cb(*exc_details)
     |                   ^^^^^^^^^^^^^^^^^^^^^^
-    |   File "/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/mcp/client/session.py", line 514, in __aexit__
+    |   File "/home/example/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/mcp/client/session.py", line 514, in __aexit__
     |     result = await self._task_group.__aexit__(exc_type, exc_val, exc_tb)
     |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    |   File "/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/anyio/_backends/_asyncio.py", line 847, in __aexit__
+    |   File "/home/example/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/anyio/_backends/_asyncio.py", line 847, in __aexit__
     |     raise BaseExceptionGroup(
     |         "unhandled errors in a TaskGroup", self._exceptions
     |     ) from None
     | ExceptionGroup: unhandled errors in a TaskGroup (1 sub-exception)
     +-+---------------- 1 ----------------
       | Exception Group Traceback (most recent call last):
-      |   File "/home/sas/Projects/sp_aconsole_prototype/tests/core/test_mcp_retry.py", line 137, in scenario
+      |   File "/home/example/Projects/sp_aconsole_prototype/tests/core/test_mcp_retry.py", line 137, in scenario
       |     async with Client(owner_server) as owner, Client(foreign_server) as foreign:
       |                                               ~~~~~~^^^^^^^^^^^^^^^^
-      |   File "/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/mcp/client/client.py", line 480, in __aexit__
+      |   File "/home/example/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/mcp/client/client.py", line 480, in __aexit__
       |     await self._exit_stack.__aexit__(exc_type, exc_val, exc_tb)
-      |   File "/home/sas/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/contextlib.py", line 813, in __aexit__
+      |   File "/home/example/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/contextlib.py", line 813, in __aexit__
       |     raise exc
-      |   File "/home/sas/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/contextlib.py", line 796, in __aexit__
+      |   File "/home/example/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/contextlib.py", line 796, in __aexit__
       |     cb_suppress = await cb(*exc_details)
       |                   ^^^^^^^^^^^^^^^^^^^^^^
-      |   File "/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/anyio/_backends/_asyncio.py", line 847, in __aexit__
+      |   File "/home/example/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/anyio/_backends/_asyncio.py", line 847, in __aexit__
       |     raise BaseExceptionGroup(
       |         "unhandled errors in a TaskGroup", self._exceptions
       |     ) from None
       | ExceptionGroup: unhandled errors in a TaskGroup (1 sub-exception)
       +-+---------------- 1 ----------------
         | Exception Group Traceback (most recent call last):
-        |   File "/home/sas/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/contextlib.py", line 796, in __aexit__
+        |   File "/home/example/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/contextlib.py", line 796, in __aexit__
         |     cb_suppress = await cb(*exc_details)
         |                   ^^^^^^^^^^^^^^^^^^^^^^
-        |   File "/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/mcp/client/session.py", line 514, in __aexit__
+        |   File "/home/example/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/mcp/client/session.py", line 514, in __aexit__
         |     result = await self._task_group.__aexit__(exc_type, exc_val, exc_tb)
         |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-        |   File "/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/anyio/_backends/_asyncio.py", line 847, in __aexit__
+        |   File "/home/example/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/anyio/_backends/_asyncio.py", line 847, in __aexit__
         |     raise BaseExceptionGroup(
         |         "unhandled errors in a TaskGroup", self._exceptions
         |     ) from None
         | ExceptionGroup: unhandled errors in a TaskGroup (1 sub-exception)
         +-+---------------- 1 ----------------
           | Traceback (most recent call last):
-          |   File "/home/sas/Projects/sp_aconsole_prototype/tests/core/test_mcp_retry.py", line 150, in scenario
+          |   File "/home/example/Projects/sp_aconsole_prototype/tests/core/test_mcp_retry.py", line 150, in scenario
           |     assert result.is_error is True
           | AssertionError: assert False is True
           |  +  where False = CallToolResult(meta={'io.modelcontextprotocol/serverInfo': {'name': 'aconsole', 'version': ''}}, content=[TextContent(...='{"status":"failed"}', annotations=None, meta=None)], structured_content=None, is_error=False, result_type='complete').is_error

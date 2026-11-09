@@ -50,7 +50,7 @@ the diagnostic proxy; normal candidate runs do not. The additional observer tick
 and GC callbacks do not change test data or GC policy. The full command is:
 
 ```
-distrobox-host-exec /home/sas/Projects/sp_aconsole_prototype/.venv-ui/bin/python artifacts/perf7/runner.txt --mode full --label candidate-full
+distrobox-host-exec /home/example/Projects/sp_aconsole_prototype/.venv-ui/bin/python artifacts/perf7/runner.txt --mode full --label candidate-full
 ```
 
 ## Surprises & Discoveries

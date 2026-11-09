@@ -18,7 +18,7 @@ _MARKER = "tok" + "-secret"
 _PORT = 8765
 _TAB = "tab-1"
 _PRE_TOOL = "/<session-flags>/config.toml:pre_tool_use:0:0"
-_PROBE_COMMAND = "/home/sas/.containers/containers/agent-codex/.aconsole/bin/aconsole-hook codex"
+_PROBE_COMMAND = "/home/example/.containers/containers/agent-codex/.aconsole/bin/aconsole-hook codex"
 _CWD = "/tmp/aconsole-a41"  # noqa: S108 -- cwd recorded in the live probe, not a directory this test creates
 _THREAD_ID = re.compile(r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}")
 _STATE_PAIR = re.compile(r'"([^"]+)" = \{ trusted_hash = "(sha256:[0-9a-f]{64})" \}')

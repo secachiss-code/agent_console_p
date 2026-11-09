@@ -75,8 +75,8 @@ latency distribution.
 Run on the native host, from the intended checkout, with GTK/VTE dependencies:
 
 ```sh
-/home/sas/Projects/sp_aconsole_prototype/.venv-ui/bin/python artifacts/perf6/runner.txt --mode isolated --label new-isolated
-/home/sas/Projects/sp_aconsole_prototype/.venv-ui/bin/python artifacts/perf6/runner.txt --mode full --label new-full
+/home/example/Projects/sp_aconsole_prototype/.venv-ui/bin/python artifacts/perf6/runner.txt --mode isolated --label new-isolated
+/home/example/Projects/sp_aconsole_prototype/.venv-ui/bin/python artifacts/perf6/runner.txt --mode full --label new-full
 ```
 
 The runner downloads/extracts Xvfb into a temporary directory and cleans up its
@@ -85,7 +85,7 @@ measurements were made before editing production code, on the baseline commit.
 The differential script can be run with the UI Python against the current tree:
 
 ```sh
-/home/sas/Projects/sp_aconsole_prototype/.venv-ui/bin/python artifacts/perf6/compare.txt
+/home/example/Projects/sp_aconsole_prototype/.venv-ui/bin/python artifacts/perf6/compare.txt
 ```
 
 These measurements validate the existing 2,000-item workload on this host; they

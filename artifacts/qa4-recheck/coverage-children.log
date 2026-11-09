@@ -1,5 +1,5 @@
 Combined 2 files
-Wrote JSON report to /home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/artifacts/qa4-recheck/coverage-children.json
+Wrote JSON report to /home/example/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/artifacts/qa4-recheck/coverage-children.json
 Name                                                                                                                                         Stmts   Miss Branch BrPart   Cover   Missing
 -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 /tmp/pytest-of-sas/pytest-209/test_deb_source_copy_can_trans0/site/aconsole/__init__.py                                                          3      1      0      0  66.67%   8

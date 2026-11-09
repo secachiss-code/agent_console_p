@@ -50,8 +50,8 @@
       "--hidden",
       "--no-ignore",
       "FE[-_. #–‑]*0?(10|16|17)\\b",
-      "/home/sas/Projects/sp_aconsole_prototype/docs",
-      "/home/sas/Projects/sp_aconsole_prototype/.grok",
+      "/home/example/Projects/sp_aconsole_prototype/docs",
+      "/home/example/Projects/sp_aconsole_prototype/.grok",
       "-g",
       "!**/.git/**"
     ],

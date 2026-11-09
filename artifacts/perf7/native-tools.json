@@ -4,7 +4,7 @@
   "valgrind": null,
   "gdb": null,
   "lldb": null,
-  "gcc": "/home/sas/.local/bin/gcc",
+  "gcc": "/home/example/.local/bin/gcc",
   "display_env": {
     "DISPLAY": ":0",
     "WAYLAND_DISPLAY": null,

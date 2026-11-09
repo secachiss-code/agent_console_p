@@ -82,14 +82,14 @@ monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x79b4d0a68c20>
 
 tests/gui/front/test_git_scale_ui.py:148:
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
-/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/artifacts/perf7/measure.py:94: in on_pane
+/home/example/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/artifacts/perf7/measure.py:94: in on_pane
     return original(tmp_path,monkeypatch,repo,observed)
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 tests/gui/front/test_git_pane.py:127: in _on_pane
     raise failures[0]
 tests/gui/front/test_git_pane.py:108: in _run
     await check(pane, toasts, window)
-/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/artifacts/perf7/measure.py:82: in observed
+/home/example/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/artifacts/perf7/measure.py:82: in observed
     await check(pane,toasts,window)
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
@@ -624,10 +624,10 @@ kwargs = {'cwd': PosixPath('/tmp/perf7-xvfb-58akc_kd/checkout'), 'text': True, '
                                          output=stdout, stderr=stderr)
 E               subprocess.CalledProcessError: Command ('git', 'ls-files', 'src/aconsole', 'migrations') returned non-zero exit status 128.
 
-/home/sas/.local/share/uv/python/cpython-3.15.1-linux-x86_64-gnu/lib/python3.15/subprocess.py:692: CalledProcessError
+/home/example/.local/share/uv/python/cpython-3.15.1-linux-x86_64-gnu/lib/python3.15/subprocess.py:692: CalledProcessError
 =============================== warnings summary ===============================
-../../../home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/events.py:803
-  /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/events.py:803: DeprecationWarning: 'asyncio.AbstractEventLoopPolicy' is deprecated and slated for removal in Python 3.16
+../../../home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/events.py:803
+  /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/events.py:803: DeprecationWarning: 'asyncio.AbstractEventLoopPolicy' is deprecated and slated for removal in Python 3.16
     AbstractEventLoopPolicy = getattr(asyncio, "AbstractEventLoopPolicy", object)
 
 tests/gui/front/test_b1_keys.py::test_b1_keys_terminal_passthrough
@@ -636,17 +636,17 @@ tests/gui/front/test_b1_keys.py::test_b1_keys_terminal_passthrough
 
 tests/gui/front/test_contrast_table.py: 400 warnings
 tests/gui/front/test_ux1_shortcuts.py: 6 warnings
-  /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/events.py:890: DeprecationWarning: 'asyncio.get_event_loop_policy' is deprecated and slated for removal in Python 3.16
+  /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/events.py:890: DeprecationWarning: 'asyncio.get_event_loop_policy' is deprecated and slated for removal in Python 3.16
     if not isinstance(_get_event_loop_policy(), GLibEventLoopPolicy):
 
 tests/gui/front/test_contrast_table.py::test_the_table_is_the_floor_theme_and_the_dim_label_is_readable
-  /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/overrides/GLib.py:631: RuntimeWarning: coroutine 'HealthDialog.refresh' was never awaited
+  /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/overrides/GLib.py:631: RuntimeWarning: coroutine 'HealthDialog.refresh' was never awaited
     return super().iteration(may_block)
   Enable tracemalloc to get traceback where the object was allocated.
   See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
 
 tests/gui/front/test_des2_accessibility.py::test_every_plan_state_is_visible_and_updates_on_heartbeat
-  /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/_pytest/runner.py:180: RuntimeWarning: coroutine 'MainWindow._renew_git_watch' was never awaited
+  /home/example/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/_pytest/runner.py:180: RuntimeWarning: coroutine 'MainWindow._renew_git_watch' was never awaited
     del sys.last_exc  # type:ignore[attr-defined]
   Enable tracemalloc to get traceback where the object was allocated.
   See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.

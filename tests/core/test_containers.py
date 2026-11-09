@@ -48,14 +48,14 @@ def test_containers_fake_podman_inspect_start_exec_and_orphans(tmp_path: Path, m
             name="agent-claude",
             command=("claude", "--session-id", "s1"),
             env={"PATH": path, "ACONSOLE_TAB": "tab-1"},
-            workdir="/home/sas/Projects",
+            workdir="/home/example/Projects",
             user="sas",
         )
     )
     assert spec[0] == str(_PODMAN)
     assert "--detach-keys=" in spec
     assert spec[spec.index("--user") + 1] == "sas"
-    assert spec[spec.index("--workdir") + 1] == "/home/sas/Projects"
+    assert spec[spec.index("--workdir") + 1] == "/home/example/Projects"
     assert "ACONSOLE_TAB=tab-1" in spec
     assert "PATH=/opt/bin:/usr/bin" in spec
     assert spec[-4:] == ("agent-claude", "claude", "--session-id", "s1")

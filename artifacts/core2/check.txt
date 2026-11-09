@@ -38,8 +38,8 @@ check_contracts: 10 checks passed
 api_floor_check
 api_floor_check: clean
 api_floor_fixture
-/home/sas/Projects/sp_aconsole_prototype/tests/fixtures/ui_banned/spinner.py:9: Adw.Spinner
-/home/sas/Projects/sp_aconsole_prototype/tests/fixtures/ui_banned/spinner.py:10: Adw.Spinner
+/home/example/Projects/sp_aconsole_prototype/tests/fixtures/ui_banned/spinner.py:9: Adw.Spinner
+/home/example/Projects/sp_aconsole_prototype/tests/fixtures/ui_banned/spinner.py:10: Adw.Spinner
 ownership
 warning: Not a git repository. Use --no-index to compare two paths outside a working tree
 usage: git diff --no-index [<options>] <path> <path> [<pathspec>...]

@@ -12,11 +12,11 @@ from pathlib import Path
 from sidecar import BSU, ESU, Scanner, get_winsize, pump, spawn
 
 ROOT = Path(__file__).resolve().parents[2]
-CLAUDE = "/home/sas/.containers/containers/agent-claude/.npm-global/bin/claude"
-CODEX = "/home/sas/.containers/containers/agent-codex/.npm-global/bin/codex"
+CLAUDE = str(Path.home() / ".containers/containers/agent-claude/.npm-global/bin/claude")
+CODEX = str(Path.home() / ".containers/containers/agent-codex/.npm-global/bin/codex")
 PATH_ENV = (
-    "/home/sas/.containers/host-bins:"
-    "/home/sas/.containers/containers/agent-claude/.npm-global/bin:"
+    f"{Path.home()}/.containers/host-bins:"
+    f"{Path.home()}/.containers/containers/agent-claude/.npm-global/bin:"
     "/usr/bin:/bin"
 )
 CODEX_PATH = PATH_ENV.replace("agent-claude", "agent-codex")
@@ -117,7 +117,7 @@ def _podman(container: str, binary: str, extra_env: dict[str, str], path: str) -
         "podman",
         "exec",
         "--user",
-        "sas",
+        str(os.getuid()),
         "--env",
         f"PATH={path}",
         *(item for key, value in extra_env.items() for item in ("--env", f"{key}={value}")),
@@ -145,7 +145,7 @@ def main() -> int:
     _check_scanner()
     pty = _pty_cases()
     path = _distrobox_path()
-    true_s, true_code, _ = _run(["podman", "exec", "--user", "sas", "agent-claude", "true"])
+    true_s, true_code, _ = _run(["podman", "exec", "--user", str(os.getuid()), "agent-claude", "true"])
     rows = [f"podman exec true | {true_s:.4f}s | exit {true_code}"]
     for sync in ("0", "1"):
         for flicker in ("0", "1"):

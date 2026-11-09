@@ -53,7 +53,7 @@ def test_persistence_a_round_trip_and_pragmas(tmp_path: Path) -> None:
             Project(
                 id="01JB2Z00000000000000000001",
                 name="demo",
-                root_path="/home/sas/Projects/demo",
+                root_path="/home/example/Projects/demo",
                 languages=["python"],
                 created_at=moment,
             )

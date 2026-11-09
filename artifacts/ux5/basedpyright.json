@@ -1,19 +1,19 @@
 {
   "typeCheckingMode": "all",
   "pythonVersion": "3.15",
-  "venvPath": "/home/sas/Projects/sp_aconsole_prototype",
+  "venvPath": "/home/example/Projects/sp_aconsole_prototype",
   "venv": ".venv-ui",
   "extraPaths": [
-    "/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/src"
+    "/home/example/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/src"
   ],
-  "stubPath": "/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/stubs",
+  "stubPath": "/home/example/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/stubs",
   "reportMissingModuleSource": "none",
   "enableTypeIgnoreComments": false,
   "include": [
-    "/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/src/aconsole/ui/viewmodels/tabs_vm.py",
-    "/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/src/aconsole/ui/viewmodels/approvals_vm.py",
-    "/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/src/aconsole/ui/views/tabs/new_tab.py",
-    "/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/src/aconsole/ui/views/tabs/project_bar.py",
-    "/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/src/aconsole/ui/views/approvals/panel.py"
+    "/home/example/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/src/aconsole/ui/viewmodels/tabs_vm.py",
+    "/home/example/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/src/aconsole/ui/viewmodels/approvals_vm.py",
+    "/home/example/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/src/aconsole/ui/views/tabs/new_tab.py",
+    "/home/example/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/src/aconsole/ui/views/tabs/project_bar.py",
+    "/home/example/.local/share/aconsole/worktrees/sp_aconsole_prototype/ff3f69f4401638ca/src/aconsole/ui/views/approvals/panel.py"
   ]
 }

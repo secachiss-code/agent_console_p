@@ -55,7 +55,7 @@ distribution or proof that all frame-time changes come from this optimization.
 
 ## Reproduction
 
-Native UI Python: /home/sas/Projects/sp_aconsole_prototype/.venv-ui/bin/python.
+Native UI Python: /home/example/Projects/sp_aconsole_prototype/.venv-ui/bin/python.
 Use artifacts/perf7/runner.txt with --mode full|isolated, --label <unique>,
 --profile for separate diagnostic runs, --checkout-ref <commit> for a temporary
 fixed-commit archive, and --scale-only to select the unchanged scale file.

@@ -167,6 +167,7 @@ def _write(path: Path, text: str, *, executable: bool = False) -> None:
 
 def _share(tree: Path) -> None:
     share = tree / "usr" / "share"
+    _write(share / "doc" / "aconsole" / "copyright", (ROOT / "LICENSE").read_text("utf-8"))
     icons = share / "icons" / "hicolor"
     entry = (ROOT / "packaging" / f"{APP_ID}.desktop").read_text("utf-8")
     _write(share / "applications" / f"{APP_ID}.desktop", re.sub(r"(?m)^Exec=.*$", "Exec=/usr/bin/aconsole", entry))
