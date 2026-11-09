@@ -1,26 +1,27 @@
-# AConsole — полное описание проекта (версия 0.1.1)
+# AConsole — полное описание проекта
 
-Документ описывает проект в состоянии **выпущенной версии 0.1.1 «Работа с Git»**
-(тег `v0.1.1`, коммит `45152a1`, дата релиза 2026-11-06). Всё, что появилось в `main`
-после этого тега, здесь не описано: документация намеренно соответствует установленной
-версии, а не текущему дереву разработки.
+Документ описывает **текущую реализацию в `main`** (состояние на 2026-11-09). Опубликована
+версия **0.1.1 «Работа с Git»** (тег `v0.1.1`, коммит `45152a1`, релиз 2026-11-06).
+Всё, что `main` добавил после тега, помечено словами «в `main`» или описано в §13 и
+[CHANGELOG.md](CHANGELOG.md). Версия в `pyproject.toml` остаётся `0.1.1`, пока 0.1.2 не выпущена.
 
 | Источник | Значение |
 |---|---|
-| Тег | `v0.1.1` |
-| Коммит тега | `45152a1` (`45152a13f58f2937a43a307f08ab488aca628602`) |
+| Опубликованный тег | `v0.1.1`, коммит `45152a1` (`45152a13f58f2937a43a307f08ab488aca628602`) |
+| Проверенный код | `main`, HEAD `68268a43`: 95 коммитов после тега; 10 из них не отправлены в `origin/main` (`cc28325a`) |
+| Последний CI на `origin/main` | прогон 42519260720 (`cc28325a`): шаг «Enforce combined coverage» красный, 88.84 % при `fail_under = 90` |
 | Версия пакета, исходников и ответа ядра | `0.1.1` |
 | Версия API контрактов | `1.4.0` (`aconsole.contracts.API_VERSION`) |
 | Версия протокола IPC | `1.0` (`major=1`, `minor=0`) |
-| Capability-маркер сессий | `work_sessions.v1` |
-| Вершина миграций | `0006_session_history` |
+| Capability-маркеры сессий и снимков | `work_sessions.v1`; `snapshot.chunks.v1` (в `main`) |
+| Вершина миграций | `0009_merge_approval_fork` (в 0.1.1 — `0006_session_history`) |
 | Опубликованный пакет | `aconsole_0.1.1_amd64.deb`, 67 586 408 байт, SHA-256 `23b001936f03cc2f15c9ffdcc6fbc0b68235d212b817eea8e8bf44a2ded2de16` |
 | Лицензия | MIT, см. [LICENSE](LICENSE) |
 
 Смежные документы: [README.md](README.md) — краткая выжимка, [ISSUES.md](ISSUES.md) —
-журнал проблем версии, [CHANGELOG.md](CHANGELOG.md) — история версий,
-[plans/0.1.1-git.md](plans/0.1.1-git.md) — план реализации,
-[artifacts/git-0.1.1/VERIFICATION.md](artifacts/git-0.1.1/VERIFICATION.md) — приёмка.
+журнал проблем текущего состояния, [CHANGELOG.md](CHANGELOG.md) — история версий и
+невыпущенные изменения, [plans/0.1.1-git.md](plans/0.1.1-git.md) — план реализации 0.1.1,
+[artifacts/git-0.1.1/VERIFICATION.md](artifacts/git-0.1.1/VERIFICATION.md) — приёмка 0.1.1.
 
 ---
 
@@ -56,29 +57,33 @@ AConsole **не делает**: не создаёт контейнеры, не �
 параллельных процессов (для этого нужны отдельные worktree), не выполняет multiuser-
 развёртывание.
 
-### 1.3. Масштаб кодовой базы (тег `v0.1.1`)
+### 1.3. Масштаб кодовой базы (`main`, 2026-11-09)
 
-| Метрика | Значение |
+| Метрика | Значение (в 0.1.1 → в `main`) |
 |---|---|
-| Python-файлы в `src/` | 263 |
-| Строк в `src/` | 45 745 |
-| — `core` | 150 файлов |
-| — `ui` | 86 файлов |
-| — `contracts` | 15 файлов |
-| — `sidecar` | 6 файлов |
-| Тестовые файлы | 217 |
-| Тестовые функции | 1 215 |
-| RPC-методы | 81 |
-| События UI | 22 |
-| Коды ошибок | 77 |
-| Таблицы SQLite | 27 |
-| Миграции Alembic | 6 (`0001`…`0006`) |
-| MCP-инструменты | 12 |
-| Горячие клавиши по умолчанию | 35 действий |
+| Python-файлы в `src/` | 263 → 279 (включая `devcli`, 4 файла) |
+| Строк в `src/` | 45 745 → 48 309 |
+| — `core` | 150 → 160 файлов |
+| — `ui` | 86 → 90 файлов |
+| — `contracts` | 15 → 17 файлов |
+| — `sidecar` | 6 → 6 файлов |
+| Тестовые файлы (`tests/**/*.py`) | 217 → 273 |
+| Тестовые функции | 1 215 → 1 482 |
+| Файлы JSON Schema и OpenAPI (`contracts/schema`) | 251 → 254 |
+| RPC-методы | 81 → 83 |
+| События UI | 22 → 22 |
+| Коды ошибок | 77 → 77 |
+| Таблицы SQLite | 27 → 28 |
+| Миграции Alembic | 6 → 10 файлов (head `0009_merge_approval_fork`) |
+| MCP-инструменты | 12 → 12 |
+| Горячие клавиши по умолчанию | 35 → 35 действий |
 
 ---
 
-## 2. Возможности версии 0.1.1
+## 2. Возможности текущей реализации
+
+Возможности 0.1.1 описаны как опубликованные. Всё, что появилось после тега, отмечено
+«(в `main`)» или перечислено в §12 и §13.
 
 ### 2.1. Проекты, рабочие сессии задач и worktree
 
@@ -107,8 +112,9 @@ AConsole **не делает**: не создаёт контейнеры, не �
   сессии на ref `refs/aconsole/sessions/<sid>/workers/<tab>/start`. Результат
   (`workSession/result`) сохраняется как снимок `result`; `workSession/integrate` вливает
   его в ветку сессии через merge, проверяя, что `source_oid`/`target_oid` из запроса
-  совпадают с текущими ref (иначе `MERGE_PREVIEW_STALE`). В 0.1.1 сам preview ещё
-  строится от изменяемого ref, а не от зафиксированного OID (см. §12.5).
+  совпадают с текущими ref (иначе `MERGE_PREVIEW_STALE`). Preview и восстановление
+  результата привязаны к записанному OID (GIT-1, GIT-2, в `main`). В 0.1.1 они ещё шли от
+  изменяемого ref (см. §12.5).
 - **Закрытие вкладки** сохраняет рабочие копии и историю. **Архивирование сессии**
   (`workSession/close`) останавливает агентов сессии; сессию с сохранённой копией можно
   возобновить (`workSession/resume`). Удаление управляемой основной копии — отдельное
@@ -132,7 +138,7 @@ AConsole **не делает**: не создаёт контейнеры, не �
 - Команда выполняется как `podman exec` с `--user <host user>`, login shell и окружением
   вкладки (`ACONSOLE_TAB`, `ACONSOLE_TAB_TOKEN`, `ACONSOLE_PORT`, PATH из Distrobox).
 - В `AgentKind` есть значение `grok`, но адаптера, контейнера и набора возможностей у него
-  в 0.1.1 нет: в список агентов (`_AGENTS`) он не входит.
+  нет ни в 0.1.1, ни в `main` (ISSUES, §20): в список агентов (`_AGENTS`) он не входит.
 - Логин определяется по наличию файла в домашнем каталоге контейнера:
   `.claude/.credentials.json`, `.codex/auth.json`, `.config/cursor/auth.json`;
   для OpenCode проверяется его база (см. `opencode.limits`). Для Claude дополнительно
@@ -148,7 +154,7 @@ AConsole **не делает**: не создаёт контейнеры, не �
 | `hooks` | да | после проверки CLI | — | — |
 | `statusline` | да | — | — | — |
 | `limits` | да | да | да | да |
-| `resume` | да | да | да | да (в UI недоступно, см. §12.5) |
+| `resume` | да | да | да | нет (`resume=False`; запуск с сессией отклоняется `AGENT_UNAVAILABLE`) |
 | `fork` | да | да | — | — |
 | `skills` | да | — | да | да |
 | `approvals` | да | после проверки CLI | — | — |
@@ -160,9 +166,13 @@ AConsole **не делает**: не создаёт контейнеры, не �
 | Агент | Новая сессия | Resume | Fork |
 |---|---|---|---|
 | Claude | `claude` | `claude --resume <id>` | `claude --resume <id> --fork-session` |
-| Codex | `codex` | `codex resume <id>` | `codex fork <id>` |
+| Codex | `codex` | `codex resume -- <id>` | `codex fork -- <id>` |
 | OpenCode | `opencode` | `opencode -s <id>` | — |
-| Cursor | `agent` | `agent --resume <id>` | — |
+| Cursor | `agent` | не строится: запуск с сессией отклоняется | — |
+
+Аргумент `--` перед идентификатором сессии в Codex не даёт интерпретировать id как флаг.
+Cursor в `main` не продолжает беседу: `_launch_command` отклоняет запуск с сессией, поэтому
+`agent --resume <id>` не выполняется.
 
 Идентификатор нативной сессии узнаётся из hooks (Claude), события `codex_session`
 (Codex) и потока OpenCode; `reported_session` принимает его только от Claude и OpenCode.
@@ -173,7 +183,8 @@ AConsole **не делает**: не создаёт контейнеры, не �
   масштабирование, копирование и вставка.
 - Между VTE и агентом стоит **sidecar** на стандартной библиотеке Python: держит PTY,
   передаёт `SIGWINCH`/`SIGTERM`/`SIGHUP`, шлёт в ядро `started`/`stats`/`exited` и
-  сигналы экрана, а для Cursor определяет «экран затих» (`ACONSOLE_SCREEN_WATCH=1`).
+  сигналы экрана, а для Cursor и OpenCode определяет «экран затих» (`ACONSOLE_SCREEN_WATCH=1`,
+  HAR-4).
 - Буфер обмена терминала: `Ctrl+Shift+C`/`Ctrl+Shift+V`, контекстное меню по правому клику,
   `Menu`/`Shift+F10` (копировать, вставить, вставить изображение, выделить всё);
   `Ctrl+C` копирует выделение и остаётся прерыванием без него.
@@ -184,9 +195,10 @@ AConsole **не делает**: не создаёт контейнеры, не �
   `terminal/prepareImagePaste` — 8 МиБ.
 - Командная палитра (`Ctrl+Shift+P`) ищет команды, навыки агента, узлы планов, заметки
   vault, вкладки, сессии, действия и согласования; имеет отдельный шаг аргумента и
-  ранжирование с запоминанием (frecency). В 0.1.1 палитра работает только на fake core:
-  в настоящем ядре методы `palette/*` не обслуживаются (см. §12.5).
-- Горячие клавиши переопределяются в настройках. Действия по умолчанию:
+  ранжирование с запоминанием (frecency). Методы `palette/*` обслуживает настоящее ядро
+  (`services/palette.py`, UX-3, в `main`). Поведение на живом окне не проверено (AUD-2).
+- Горячие клавиши переопределяются через `Settings.keymap_overrides`; редактора сочетаний
+  в окне настроек пока нет. Действия по умолчанию:
 
 | Действие | Клавиши |
 |---|---|
@@ -212,6 +224,9 @@ AConsole **не делает**: не создаёт контейнеры, не �
 | `quit` | `Ctrl+Q` |
 | `send-next-key` | `Ctrl+Shift+Alt+K` |
 
+Перестановка вкладок `Alt+↑` / `Alt+↓` задана в `ui/views/tabs/sidebar.py` при фокусе в списке
+вкладок. В таблицу `keymap` не входит и через `keymap_overrides` не переопределяется.
+
 ### 2.4. Согласования
 
 - Источник — hooks Claude (`PermissionRequest`) и Codex. Для Codex ядро дважды
@@ -225,8 +240,9 @@ AConsole **не делает**: не создаёт контейнеры, не �
 - Карточка запроса показывается поверх терминала активной вкладки: инструмент, команда,
   рабочий каталог, риск, срок действия. Кнопки всегда видимы, прокручиваются только детали.
   Карточка не перехватывает клавиатуру: переход — `next-attention`.
-- Если окно неактивно, приходит системное уведомление (`Gio.Notification`, HIGH);
-  одно на эпизод, отзывается при решении или возврате в окно.
+- Если окно или вкладка неактивны, приходит системное уведомление (`Gio.Notification`, HIGH);
+  одно на эпизод, отзывается при решении или возврате в окно. Поведение задаёт `notify_when`:
+  `unfocused` (по умолчанию), `always` или `never` (APR-3, в `main`).
 - Решение: разовое (`once`) или на сессию вкладки (`tab_session`); отказ может нести
   сообщение агенту; запрос можно вернуть в нативный prompt (`approval/releaseToNative`).
 - У запроса есть `nonce`, `expires_at` и дедупликация по входным данным: повторная
@@ -240,9 +256,24 @@ AConsole **не делает**: не создаёт контейнеры, не �
   shell и только пока пути остаются внутри worktree. `pytest` в allowlist не входит,
   потому что импортирует код из репозитория. Для `git log -p/--stat`, `git diff`,
   `git show` обязательны `--no-ext-diff` и `--no-textconv`.
-- Детали запроса: `CommandDetail` (команда, preview аргументов), `EditDetail` (файлы,
-  preview diff), `GenericDetail` (JSON-preview). Полнота этих preview ограничена (§12.5).
+- Детали запроса: `CommandDetail` (команда, аргументы), `EditDetail` (путь и фрагменты правки
+  для `Write`, `Edit`, `MultiEdit`), `GenericDetail` (JSON-preview; для MCP — имя инструмента
+  и аргументы). Полный текст раскрывается по кнопке (APR-2, в `main`).
 - OpenCode и Cursor hooks не имеют: их запросы остаются нативными запросами терминала.
+
+#### Режимы «Кто решает» (APR-4, APR-9, в `main`)
+
+- Хранятся два поля: `approval_policy` (`ask`, `allow`, `deny`, `scenario`) и
+  `approval_dangerous` (`ask`, `allow`). Глобальные значения лежат в `Settings`. Проектное
+  переопределение — `project/setApprovalPolicy` (только роль `ui`, иначе `ROLE_FORBIDDEN`);
+  `null` означает «наследовать». Проектное значение заменяет и режим, и подрежим
+  (`effective` в `domain/approval_policy.py`).
+- Вердикт `verdict()`: `deny` → DENY; `allow` → ALLOW, кроме опасных вызовов с риск-тегами при
+  `approval_dangerous=ask`; `ask` и `scenario` → ASK.
+- **Статус:** вердикт не применяется. `ApprovalPolicyBook.decide` не вызывается из пути
+  согласований, поэтому Claude, Codex, OpenCode и Cursor продолжают спрашивать. Окно настроек
+  говорит об этом прямо. Применение — APR-5…APR-8, узлы `pending` (см. ISSUES §9).
+- Режим «Сценарий» виден, но в UI не выбирается.
 
 Согласования — дополнительный барьер, а не замена изоляции контейнера.
 
@@ -338,21 +369,23 @@ lease с fence (`LEASE_HELD`, `LEASE_STALE_FENCE`, `LEASE_EXPIRED`), поэто�
 агента автором всей задачи. Коммиты внешнего CLI допустимы без trailers, точное авторство
 строк из Git не выводится.
 
-Слияние проверяет, что `source`/`target` не изменились с момента preview; устаревший
-preview отвергается (`MERGE_PREVIEW_STALE`). Merge пишется в журнал `git_operations` со
+Слияние сверяет записанные OID `source` и `target` с preview; устаревший preview отвергается
+(`MERGE_PREVIEW_STALE`). Merge пишется в журнал `git_operations` со
 статусами `started`, `conflicted`, `merged`, `finished`, `failed`, `aborted`.
 
-Все обращения к Git идут через один runner (`infrastructure/git/runner.py`):
+Обращения к Git идут через runner (`infrastructure/git/runner.py`), но не все: вызовы
+драйверов `filter` и `gpg.program`, а также часть вызовов вне runner открыты (SEC-11, §12.6).
+Правила runner:
 
 - argv-списки, `LC_ALL=C`, таймаут 30 с, не более 4 процессов, ответ ≤16 МБ;
 - чтения выставляют `GIT_OPTIONAL_LOCKS=0`, чтобы фоновая проверка не спорила с агентом
   за index lock;
 - каждая команда перекрывает конфигурацию репозитория: `core.fsmonitor=false`,
   `core.sshCommand=true`, пустые `diff.external`, `core.askPass`, `credential.helper`,
-  `core.gitProxy`, `core.editor`, `sequence.editor`, `protocol.ext.allow=never`,
-  отключённые gpg-подписи и `log.showSignature=false`;
-- найденные в конфиге драйверы (`filter.*`, `diff.*.command`, `merge.*.driver`,
-  `core.fsmonitor` и т. п.) перекрываются для конкретного процесса;
+  `core.gitProxy`, `core.editor`, `sequence.editor`, `protocol.ext.allow=never`
+  и `log.showSignature=false`;
+- драйверы `diff.*.command`, `merge.*.driver`, `core.fsmonitor` и подобные из конфигурации
+  перекрываются для конкретного процесса; `filter.*` и `gpg.program` пока нет (SEC-11);
 - для status/diff/снимков `core.hooksPath=/dev/null`; hooks явных `commit`/`merge`
   разрешаются осознанно и берутся из каталога `hooks` репозитория;
 - diff всегда с `--no-ext-diff` и `--no-textconv`.
@@ -379,13 +412,15 @@ preview отвергается (`MERGE_PREVIEW_STALE`). Merge пишется в 
 публичные API, формат может измениться. Токены по моделям Claude и Codex читаются из
 локальных session-логов; хранятся только числа и имена моделей.
 
-Уровни (`QuotaLevel`): `ok`, `warn` (≥80 %), `critical` (≥95 %), `unknown` (нет свежего
-наблюдения или истёк `resets_at`). UI дополнительно умеет показывать «использовано» или
-«осталось» (`quota_display`).
+Уровни (`QuotaLevel`): `ok`, `warn`, `critical`, `unknown` (нет свежего наблюдения или истёк
+`resets_at`). Пороги берутся из настроек `quota_warn_pct` (по умолчанию 80) и
+`quota_critical_pct` (по умолчанию 95): ядро применяет их при сохранении настроек
+(`_use_quota_thresholds`), а окно — к уровням карточки и окна лимитов (в `main`). UI показывает «использовано»
+или «осталось» (`quota_display`).
 
 ### 2.9. Настройки и проверка окружения
 
-Контракт `Settings` (18 полей):
+Контракт `Settings` (20 полей, в `main`):
 
 | Поле | Тип / диапазон | По умолчанию |
 |---|---|---|
@@ -394,6 +429,8 @@ preview отвергается (`MERGE_PREVIEW_STALE`). Merge пишется в 
 | `worktrees_dir` | str | `""` → `$XDG_DATA_HOME/aconsole/worktrees` |
 | `approvals_mode` | `inline` / `native` | `inline` |
 | `approval_hold_seconds` | 30…540 | 540 |
+| `approval_policy` | `ask` / `allow` / `deny` / `scenario` | `ask` (в `main`) |
+| `approval_dangerous` | `ask` / `allow` | `ask` (в `main`) |
 | `notify_when` | `unfocused` / `always` / `never` | `unfocused` |
 | `terminal_font` | str \| none | none (системный) |
 | `terminal_font_size` | 8…32 | 11 |
@@ -409,12 +446,14 @@ preview отвергается (`MERGE_PREVIEW_STALE`). Merge пишется в 
 | `quota_display` | `used` / `remaining` | `used` |
 
 Запись идёт через `settings/update` с проверкой `rev` (`CONTENT_MODIFIED` при расхождении);
-одинаковый патч не увеличивает `rev`. Диалог настроек в UI в 0.1.1 редактирует семь полей:
-шрифт и его размер, scrollback, тему, отображение квот, режим согласований и время
-удержания. Остальные поля хранятся и читаются ядром/UI там, где это реализовано
-(см. §12.4 о фактическом применении).
+одинаковый патч не увеличивает `rev`. Диалог настроек (в `main`) редактирует: место вопроса
+и время удержания, режим «Кто решает» и режим опасных вызовов, режим для активного проекта
+(через `project/setApprovalPolicy`), шрифт и размер, scrollback, тему, пороги квот и отображение
+квот. Поля `vault_path`, `worktrees_dir`, `notify_when`, `checkpoints_enabled`,
+`checkpoints_keep`, `keymap_overrides`, `codegraph_languages`, `setup_completed` редактора не
+имеют; их можно записать через `settings/update`. Фактическое применение — в §12.4.
 
-Мастер первого запуска (`setup/checks`) проверяет восемь пунктов:
+Мастер первого запуска (`setup/checks`) проверяет девять пунктов:
 
 1. `podman` и `distrobox` в PATH;
 2. контейнеры `agent-*` (`podman ps -a`);
@@ -423,7 +462,10 @@ preview отвергается (`MERGE_PREVIEW_STALE`). Merge пишется в 
 5. каталог vault;
 6. монтирование worktree и vault в контейнеры;
 7. инструменты `devtools` (Python, Cargo, .NET, Node);
-8. `notify-send` и сессионный D-Bus.
+8. `notify-send` и сессионный D-Bus;
+9. изоляция контейнеров (`container_isolation`): монтирования `agent-*` и devtools проверяются
+   через `podman inspect`, опасные пути (в том числе домашний каталог хоста) дают предупреждение.
+   Контейнеры не пересоздаются, ошибка inspect считается неизвестной изоляцией.
 
 Исправления (`setup/previewFix`, `setup/applyFix`) требуют preview, confirm-токена и
 повторной проверки. В 0.1.1 автоматических исправлений два: `create_storage_directory`
@@ -494,10 +536,11 @@ raw `sqlalchemy.text()` разрешён только в `persistence/engine.py`
 | `src/aconsole/core/application` | сервисы и порты: вкладки, проекты, сессии, Git, review, квоты, setup |
 | `src/aconsole/core/infrastructure` | Podman, Distrobox, Git, SQLite, HTTP ingest, MCP, vault, codegraph, агенты, fake core |
 | `src/aconsole/ui` | GTK: views, viewmodels, logic, client |
+| `src/aconsole/ui/locales` | каталоги gettext `en` и `ru` (`LC_MESSAGES/aconsole.po` и `.mo`, в `main`) |
 | `src/aconsole/sidecar` | PTY-помощник (stdlib) |
 | `src/aconsole/devcli` | CLI-клиент (`snapshot`, `events`) и проверка соответствия MCP |
-| `migrations` | Alembic (`0001`…`0006` в 0.1.1) |
-| `contracts/schema` | сгенерированные JSON Schema и OpenAPI для ingest (251 файл) |
+| `migrations` | Alembic (`0001`…`0009`, head `0009_merge_approval_fork`) |
+| `contracts/schema` | сгенерированные JSON Schema и OpenAPI для ingest (254 файла) |
 | `packaging` | `.desktop`, иконки, `build_deb.py` |
 | `tools` | `check.sh`, gate, hostrun, codegraph, бенчмарки |
 | `tests` | core, contracts, gui, ui, smoke, gate, hostrun, unit |
@@ -544,18 +587,21 @@ Handshake `initialize`: клиент присылает диапазон вер�
 | `checkpoints.v1` | `diff.v1` |
 | `git.v1` | `checkpoints.v1` |
 | `work_sessions.v1` | `work_sessions.v1` |
+| `snapshot.chunks.v1` (в `main`) | `snapshot.chunks.v1` (в `main`) |
 | `terminal.inject` | — |
 
 События согласований доставляются только при `approvals.inline`.
 
-### 4.2. Методы (81)
+### 4.2. Методы (83; в 0.1.1 было 81)
 
 Столбец «capability» — требование к возможностям клиента, объявленное в контракте
 (`Method.capability`). В 0.1.1 ядро не проверяет его при диспетчеризации: поле попадает
 в сгенерированную документацию и в клиент, а фактически проверяется только
 `approvals.inline` (доставка событий согласований и их наличие в snapshot) и
 `work_sessions.v1` в handshake UI. «long» — метод отнесён к длительным: клиент берёт для
-него таймаут 60 с вместо 10 с. Все методы обслуживаются ядром, кроме отмеченных в §12.5.
+него таймаут 60 с вместо 10 с. Все методы обслуживает ядро. Методы `palette/*` и `session/list`
+в 0.1.1 были доступны только в fake core; в `main` их обслуживает настоящее ядро (§12.5).
+Новые в `main`: `app/snapshotChunk` (capability `snapshot.chunks.v1`) и `project/setApprovalPolicy`.
 
 #### Жизненный цикл и приложение
 
@@ -564,6 +610,7 @@ Handshake `initialize`: клиент присылает диапазон вер�
 | `initialize` | `InitializeParams` → `InitializeResult` | ui, cli, sidecar |
 | `shutdown` | `EmptyParams` → `EmptyResult` | ui, cli, sidecar |
 | `app/snapshot` | `EmptyParams` → `SnapshotResult` | ui, cli |
+| `app/snapshotChunk` | `SnapshotChunkParams` → `SnapshotChunkResult` | ui, cli; capability `snapshot.chunks.v1`; `RESYNC_REQUIRED`, `MESSAGE_TOO_LARGE` (в `main`) |
 | `app/health` | `EmptyParams` → `HealthResult` | ui, cli |
 | `app/quitCheck` | `EmptyParams` → `QuitCheckResult` | ui, cli |
 | `app/stopAgents` | `EmptyParams` → `EmptyResult` | ui, cli, long |
@@ -580,6 +627,7 @@ Handshake `initialize`: клиент присылает диапазон вер�
 | `project/add` | `ProjectAddParams` → `ProjectView` | `PROJECT_NOT_A_GIT_REPO`, `PATH_NOT_ALLOWED` |
 | `project/remove` | `ProjectIdParams` → `EmptyResult` | `TAB_STATE_CONFLICT` |
 | `project/setActive` | `ProjectIdParams` → `EmptyResult` | `PROJECT_NOT_FOUND` |
+| `project/setApprovalPolicy` | `ProjectApprovalPolicyParams` → `ProjectView` | `PROJECT_NOT_FOUND`, `ROLE_FORBIDDEN`; только роль `ui` (в `main`) |
 
 #### Вкладки и терминал
 
@@ -681,14 +729,14 @@ Handshake `initialize`: клиент присылает диапазон вер�
 
 #### Палитра и нативные сессии
 
-| Метод | Сигнатура | Статус в 0.1.1 |
+| Метод | Сигнатура | Статус |
 |---|---|---|
-| `palette/items` | `PaletteQuery` → `PaletteItemsResult` | только fake core |
-| `palette/execute` | `PaletteExecuteParams` → `CommandResult` | только fake core |
-| `palette/resetRanking` | `ResetRankingParams` → `EmptyResult` | только fake core |
-| `session/list` | `SessionListParams` → `SessionListResult` | только fake core |
+| `palette/items` | `PaletteQuery` → `PaletteItemsResult` | настоящее ядро (`services/palette.py`, в `main`) |
+| `palette/execute` | `PaletteExecuteParams` → `CommandResult` | настоящее ядро (в `main`) |
+| `palette/resetRanking` | `ResetRankingParams` → `EmptyResult` | настоящее ядро (в `main`) |
+| `session/list` | `SessionListParams` → `SessionListResult` | настоящее ядро (`_route_sessions`, в `main`) |
 
-Итого 24 метода помечены `long`, 42 — требуют capability.
+Итого 24 метода помечены `long`, 43 — требуют capability.
 
 ### 4.3. События UI (22)
 
@@ -846,7 +894,7 @@ Vault и codegraph:
 SQLite, SQLAlchemy 2.1, Alembic. Запись идёт через отдельную очередь writer, чтение —
 через пул; `PRAGMA journal_mode=WAL`, `PRAGMA busy_timeout=5000`, `timeout=5.0`.
 
-### 5.1. Таблицы (27)
+### 5.1. Таблицы (28)
 
 | Группа | Таблицы |
 |---|---|
@@ -855,11 +903,11 @@ SQLite, SQLAlchemy 2.1, Alembic. Запись идёт через отдельн
 | Планы | `plans`, `plan_nodes`, `plan_edges`, `leases`, `node_artifacts`, `canvas_positions` |
 | Знания и vault | `kb_nodes`, `kb_edges`, `vault_files`, `handovers`, `iterations` |
 | Согласования | `approvals`, `approval_rules` |
-| Git | `checkpoints`, `git_operations` |
+| Git | `checkpoints`, `git_operations`, `git_ref_deletions` (очередь удаления просроченных refs, в `main`) |
 | Лимиты | `agent_accounts`, `quota_current`, `quota_history` |
 | Прочее | `events`, `frecency`, `settings` |
 
-### 5.2. Миграции 0.1.1
+### 5.2. Миграции (0001–0006 опубликованы в 0.1.1; 0007–0009 — в `main`)
 
 | Ревизия | Что добавляет |
 |---|---|
@@ -869,6 +917,10 @@ SQLite, SQLAlchemy 2.1, Alembic. Запись идёт через отдельн
 | `0004_git_operations` | журнал merge/rebase/cherry-pick |
 | `0005_work_sessions` | рабочие сессии; существующие workspace/вкладки переносятся без Git-операций |
 | `0006_session_history` | снимки сессии с акторами |
+| `0007_git_ref_deletions` | durable-очередь удаления просроченных legacy-refs чекпоинтов (в `main`) |
+| `0008_approval_policy` | проектное переопределение режима согласований; `null` — наследовать глобальный (в `main`) |
+| `0008_pending_session_fork` | ожидающий fork нативной сессии отделён от resume и переживает рестарт ядра (в `main`) |
+| `0009_merge_approval_fork` | слияние веток миграций `0008_*` без переписывания ни одной (head, в `main`) |
 
 Миграции применяются при старте ядра до открытия сокета: UI ждёт готовности до 20 секунд.
 
@@ -882,6 +934,8 @@ SQLite, SQLAlchemy 2.1, Alembic. Запись идёт через отдельн
   - `approvals` — 90 дней;
   - закрытые вкладки — 30 дней;
   - legacy-чекпоинты — по `checkpoints_keep` (5…500, по умолчанию 100).
+- Просроченные legacy-refs чекпоинтов записываются в `git_ref_deletions` и удаляются оттуда;
+  запись переживает перезапуск ядра и исчезновение вкладки (в `main`).
 - История сессий автоматически не удаляется.
 
 ---
@@ -896,6 +950,7 @@ SQLite, SQLAlchemy 2.1, Alembic. Запись идёт через отдельн
 |---|---|
 | `agent.py` | `AgentKind`, матрица `AgentCapabilities` |
 | `approvals.py` | жизненный цикл запроса: nonce, hash входа, дедупликация, срок, точные правила |
+| `approval_policy.py` | режимы «Кто решает» (`ask`, `allow`, `deny`, `scenario`), подрежим опасных вызовов, `verdict()`, `effective()` (проект заменяет глобальное), `require_ui` (в `main`) |
 | `prefix_allowlist.py` | allowlist пар «программа + подкоманда», `ALLOWLIST_VERSION = 2`, `GIT_ENV` |
 | `risk.py` | классификация shell-команд в шесть риск-тегов |
 | `plan.py` | DAG плана, переходы статусов, lease/fence, `after_merge` |
@@ -920,6 +975,8 @@ SQLite, SQLAlchemy 2.1, Alembic. Запись идёт через отдельн
 | `work_session_history.py` | снимки: `prepare` → `complete`, восстановление, акторы |
 | `work_session_git.py` | `result` → `integratePreview` → `integrate` → `cleanupWorker` |
 | `approval_broker.py` | удержание запроса до решения или таймаута, таймеры, release to native |
+| `approval_policy.py` | `ApprovalPolicyBook`: глобальные и проектные режимы, `project/setApprovalPolicy` (в `main`; вердикт пока не вызывается из пути согласований) |
+| `palette.py` | `palette/items`, `palette/execute`, `palette/resetRanking` на живом состоянии приложения (в `main`) |
 | `checkpoints.py` | `on_user_prompt`, list/get/preview/restore, retention |
 | `diff.py` | сводка и файл diff, комментарий агенту |
 | `review.py` | dispatch `checkpoint/*` и `diff/*`, автоснимки перед промптом |
@@ -930,8 +987,8 @@ SQLite, SQLAlchemy 2.1, Alembic. Запись идёт через отдельн
 | `setup.py` | проверки и исправления окружения |
 | `event_router.py`, `coalescer.py` | маршрутизация и склейка событий |
 
-Порты (`application/ports`): `checkpoint_store`, `clock`, `diff_reader`, `events`,
-`git_repo`, `knowledge_store`, `plan_store`, `setup`, `tab_store`, `work_session_store`.
+Порты (`application/ports`): `approval_policy`, `checkpoint_store`, `clock`, `diff_reader`,
+`events`, `git_repo`, `knowledge_store`, `plan_store`, `setup`, `tab_store`, `work_session_store`.
 
 ### 6.3. Infrastructure
 
@@ -949,7 +1006,7 @@ SQLite, SQLAlchemy 2.1, Alembic. Запись идёт через отдельн
 | `fake/` | fake core: 8 сценариев, ответы на RPC |
 | `tabs.py` | host-адаптеры вкладок: Podman, worktree, login-файлы, лимиты |
 | `clipboard.py` | приём PNG (8 МиБ, 32 Мп) и приватный файл в рабочей копии |
-| `setup_checks.py` | восемь проверок окружения и два исправления |
+| `setup_checks.py` | девять проверок окружения (включая `container_isolation`) и два исправления |
 | `knowledge.py` | `PLAN_METHODS` + `knowledge/noteUri`, `knowledge/impact` |
 
 ### 6.4. HTTP ingest
@@ -1025,8 +1082,9 @@ handshake, capability, backoff 0.05→0.8 с, догон событий), `daemo
 
 ### 7.3. Локализация
 
-Тексты собраны в словарях `messages.py` рядом с представлениями и выбираются по локали
-(`ru`, иначе английский). Отдельного каталога `.po`/gettext в 0.1.1 нет.
+Строки интерфейса переводятся через gettext (модуль `aconsole.ui.i18n`, в `main`). Каталоги
+лежат в `ui/locales/{en,ru}/LC_MESSAGES/aconsole.po`, готовые `.mo` собирает
+`tools/compile_translations.py`. В 0.1.1 каталога gettext не было.
 
 ### 7.4. Снимки
 
@@ -1047,7 +1105,7 @@ PNG (`window`, `tabs`, `plan-graph`, `review`, `git`, `quota-dialog`, `quota-acc
 | `ACONSOLE_TAB` | идентификатор вкладки (маркер orphan scan) |
 | `ACONSOLE_SIDECAR_TOKEN` | одноразовый токен sidecar |
 | `ACONSOLE_PORT` | порт ingest (для hooks) |
-| `ACONSOLE_SCREEN_WATCH` | включает наблюдение за экраном (Cursor) |
+| `ACONSOLE_SCREEN_WATCH` | включает наблюдение за экраном (Cursor и OpenCode) |
 
 Что делает sidecar:
 
@@ -1060,7 +1118,7 @@ PNG (`window`, `tabs`, `plan-graph`, `review`, `git`, `quota-dialog`, `quota-acc
   лимиту 4 МиБ или EOF; вынимает из потока OSC 0/2/9/777 и `BEL` в виде сигналов
   (`bell`, `osc_title`, `osc9_notify`, `osc777_notify`, `osc9_4_progress`), остальные OSC
   пропускает; незавершённый OSC отдаётся сырым через 250 мс или 4 КиБ;
-- для Cursor `ScreenWatch` сообщает `input_submitted`, `screen_quiet` (тишина 1 c),
+- для Cursor и OpenCode `ScreenWatch` сообщает `input_submitted`, `screen_quiet` (тишина 1 c),
   `screen_active` и последние 12 строк (≤2 000 символов) — ядро решает, что это значит;
 - не импортирует контракты, `gi`, `mcp`, `msgspec`, SQLAlchemy, uvicorn и watchdog.
 
@@ -1075,9 +1133,10 @@ PNG (`window`, `tabs`, `plan-graph`, `review`, `git`, `quota-dialog`, `quota-acc
   `ROLE_FORBIDDEN`).
 - **Ingest.** Bearer-токен на вкладку, проверка `Origin`, тело ≤ 1 МиБ, ограниченная
   очередь, `problem+json` без утечки внутренних деталей.
-- **Git.** Единый runner с перекрытием конфигурации репозитория, `--no-ext-diff`,
-  `--no-textconv`, `hooksPath=/dev/null` для фоновых операций, `protocol.ext.allow=never`,
-  отключённые подписи и внешние программы; таймауты и лимиты вывода.
+- **Git.** Runner с перекрытием конфигурации репозитория, `--no-ext-diff`, `--no-textconv`,
+  `hooksPath=/dev/null` для фоновых операций, `protocol.ext.allow=never`; таймауты и лимиты
+  вывода. Открыто (SEC-11): драйверы `filter.*` и `gpg.program` выполняют код репозитория на
+  хосте, часть вызовов Git идёт в обход runner (§12.6).
 - **Согласования.** Nonce, срок жизни, дедупликация, отдельная обработка повторной доставки,
   allowlist с точной формой команды, риск-теги для неразобранных команд.
 - **Чекпоинты.** Приватный индекс, запрет `stash`/`reset --hard`, защитный снимок перед
@@ -1093,9 +1152,15 @@ PNG (`window`, `tabs`, `plan-graph`, `review`, `git`, `quota-dialog`, `quota-acc
 - **UI.** Контраст проверяется отдельным gate (`tools/contrast_check.py`, WCAG AA);
   API floor не даёт использовать GTK/libadwaita/VTE новее целевых версий.
 
-Чего в 0.1.1 нет: проверки монтирования в контейнеры агентов, подтверждения закрытия окна
-при работающем агенте, режимов согласований «разрешать/запрещать», полной матрицы
-возможностей harness'ов, подписи пакета GPG.
+Что добавлено в `main` после 0.1.1: предупреждение о монтированиях в контейнерах агентов
+(`container_isolation`), подтверждение закрытия окна и вкладки с агентом (UX-2), изоляция
+approval по вкладкам (SEC-5), отказ `ROLE_FORBIDDEN` для `project/setApprovalPolicy` вне UI,
+Git hostrun, изолированный от исполняемой конфигурации репозитория (SEC-12).
+
+Открыто на `main`: SEC-11 (драйверы Git на хосте); SEC-7 (`blocked`: подтверждённая изоляция
+не получена, контейнеры пересоздаёт пользователь); GATE-1 (доверенный PASS намеренно
+отключён, gate возвращает `UNVERIFIED`); режимы «разрешать» и «запрещать» не применяются
+к агентам (APR-5…APR-8). Подписи пакета GPG нет.
 
 ---
 
@@ -1114,6 +1179,7 @@ PNG (`window`, `tabs`, `plan-graph`, `review`, `git`, `quota-dialog`, `quota-acc
   и запускают нужный интерпретатор с `PYTHONNOUSERSITE=1`.
 - `postinst` компилирует байткод и обновляет кэши desktop/icon; `prerm` удаляет
   `__pycache__`. Пользовательские данные не затрагиваются.
+- В `/usr/share/doc/aconsole/copyright` копируется `LICENSE` (в `main`, QA-5).
 - Пакет собран для `amd64`, не подписан GPG; SHA-256 публикуется в релизе.
 
 ### 10.2. Из исходников
@@ -1154,28 +1220,33 @@ PNG (`window`, `tabs`, `plan-graph`, `review`, `git`, `quota-dialog`, `quota-acc
 
 | Набор | Тестовых функций |
 |---|---|
-| `tests/core` | 679 |
-| `tests/gui` | 217 |
-| `tests/gate` | 129 |
-| `tests/hostrun` | 86 |
-| `tests/ui` | 79 |
-| `tests/contracts` | 8 |
-| корневые `tests/test_*.py` | 14 |
+| `tests/core` | 867 |
+| `tests/gui` | 262 |
+| `tests/gate` | 119 |
+| `tests/hostrun` | 100 |
+| `tests/ui` | 96 |
+| `tests/contracts` | 9 |
+| корневые `tests/test_*.py` | 26 |
 | `tests/smoke` | 1 |
 | `tests/unit` | 2 |
-| **Всего** | **1 215** |
+| **Всего** | **1 482** |
 
-Всего в каталоге `tests` — 217 Python-файлов (с вложенными каталогами и `conftest.py`).
+Всего в каталоге `tests` — 273 Python-файла (с вложенными каталогами и `conftest.py`).
+Счёт — по строкам `def test_` и `async def test_`.
 
 Команды из README и CI:
 
 ```sh
 tools/check.sh
 
-.venv-core/bin/python -m pytest tests/core tests/contracts tests/gate \
-  tests/hostrun tests/smoke tests/test_package.py tests/test_packaging.py tests/test_contrast.py
+.venv-core/bin/python -m pytest tests/core tests/contracts tests/gate tests/hostrun \
+  tests/smoke tests/test_package.py tests/test_packaging.py tests/test_contrast.py \
+  tests/test_build_guards.py tests/test_socket_paths.py -m "not performance"
 
-xvfb-run -a .venv-ui/bin/python -m pytest tests/gui tests/ui tests/smoke
+.venv-core/bin/python -m pytest tests/core -m performance
+
+xvfb-run -a .venv-ui/bin/python -m pytest tests/gui tests/ui tests/smoke \
+  --deselect tests/gui/front/test_git_scale_ui.py::test_scrolling_a_long_history
 ```
 
 Покрытие проверяется объединённо (`fail_under = 90`). В CI `tests/unit` не запускается
@@ -1203,9 +1274,13 @@ xvfb-run -a .venv-ui/bin/python -m pytest tests/gui tests/ui tests/smoke
 
 `.github/workflows/check.yml` на `ubuntu-24.04`: ставит GTK 4, libadwaita, VTE,
 `xvfb`, `git`, `podman`, `desktop-file-utils`; создаёт `.venv-core` (3.15t) и `.venv-ui`
-(3.15+gil); запускает `tools/check.sh`, core-тесты с покрытием, UI-тесты под `xvfb`,
-объединяет покрытие, собирает `.deb`, устанавливает его и проверяет запуск `aconsole`,
-`aconsoled --help`, а также что core без GIL, а UI с GIL.
+(3.15+gil). Шаги по порядку: `tools/check.sh` (база для проверки контрактов берётся из PR или
+предыдущего коммита через `ACONSOLE_CONTRACT_BASE`); бюджет производительности ядра
+(`-m performance`); core-тесты с покрытием (`-m "not performance"`); UI-тесты под `xvfb` с
+`--deselect` для прокрутки Git-истории; объединение покрытия с порогом `fail_under = 90`.
+Шаг сборки `.deb` выполняется даже при падении других шагов (`if: !cancelled()`): он
+устанавливает пакет и проверяет запуск `aconsole`, `aconsoled --help`, а также что core без GIL,
+а UI с GIL. На `origin/main` (`cc28325a`) падает шаг объединения покрытия: 88.84 % (QA-4).
 
 ### 11.5. Приёмка 0.1.1
 
@@ -1238,86 +1313,99 @@ xvfb-run -a .venv-ui/bin/python -m pytest tests/gui tests/ui tests/smoke
 - Однопользовательский режим, нет серверного развёртывания.
 - Scope файлов не блокирует параллельную запись: для параллельной работы нужны отдельные
   worktree; внешние редакторы и процессы пользователя остаются внешними писателями.
-- Выборочная отмена вклада агента и автоматический запуск цепочек по DAG не входят в 0.1.1.
+- Выборочная отмена вклада агента и автоматический запуск цепочек по DAG не входят ни в 0.1.1,
+  ни в заявленный объём 0.1.2.
 - Пакет только `amd64`, без GPG-подписи.
 
-### 12.2. Незакрытые узлы плана на момент 0.1.1
+### 12.2. Узлы плана, не закрытые на 2026-11-09
 
-В `plan-1` на 2026-11-07 оставались `PLAN-2` (полный GTK/UI-прогон) и `PERF-2`
-(задержка writer tick) красными, а `AUD-2`, `QA-3`, `QA-4`, `QA-5` заблокированы
-внешними условиями (живое окно/CLI, CI, лицензия). Проверки на настоящем окне и всех
-четырёх CLI — отдельная ручная приёмка. Подробности: [CHANGELOG.md](CHANGELOG.md) и
-`artifacts/plan-refresh-2026-11-06/REPORT.md`.
+В `plan-1` (ревизия `e331f8.12`) 91 узел: 76 `done`, 9 `pending`, 2 `blocked`, 4 `failed`.
+Не `done`: `CMT-1`, `PERF-7`, `QA-4`, `SEC-11` (`failed`); `AUD-2`, `SEC-7` (`blocked`);
+`APR-5`…`APR-8`, `CMT-2`, `DES-3`, `GATE-1`, `MCP-1`, `QA-6` (`pending`). Проверки на
+настоящем окне и всех четырёх CLI (AUD-2) — отдельная ручная приёмка. Подробности:
+[CHANGELOG.md](CHANGELOG.md), [ISSUES.md](ISSUES.md). Снимок `PLAN-2` от 2026-11-06 лежит в
+`artifacts/plan-refresh-2026-11-06/REPORT.md` и сохранён как история.
 
 ### 12.3. Ограничения по агентам
 
 - OpenCode и Cursor не имеют hooks: inline-согласований и автоматических чекпоинтов у них
-  нет, статус определяется по экрану; надёжность этих статусов не подтверждена на всех CLI.
+  нет. Статус частично определяется по экрану; на живых CLI он не проверен (AUD-2).
 - Cursor и OpenCode отдают лимиты через непубличные endpoint'ы, формат может измениться.
 - Поддержка нативных вложений (PNG) подтверждена только в Codex; в Cursor путь остаётся
   текстом; сквозная проверка Claude и OpenCode не проводилась.
 - `grok` присутствует в перечислении `AgentKind`, но адаптера и контейнера у него нет.
 
-### 12.4. Что хранится в настройках, но не применяется в 0.1.1
+### 12.4. Как применяются поля настроек (`main`)
 
-| Поле | Фактическое поведение в 0.1.1 |
+| Поле | Фактическое поведение в `main` |
 |---|---|
-| `notify_when` | сохраняется; уведомления о согласованиях приходят при неактивном окне независимо от значения |
-| `quota_warn_pct`, `quota_critical_pct` | сохраняются; уровни считаются по фиксированным 80 % и 95 % |
-| `codegraph_languages` | сохраняется; индексатор использует фиксированный набор языков |
-| `checkpoints_keep` | сохраняется; периодическая уборка применяет его к legacy-чекпоинтам, а список в памяти ядра остаётся с умолчанием 100 |
+| `notify_when` | применяется: `approval_alerts` учитывает `never`, `always` и `unfocused` (APR-3); редактора в окне нет |
+| `quota_warn_pct`, `quota_critical_pct` | применяются к уровням квот в окне и карточке; редактируются в настройках |
+| `codegraph_languages` | применяется: индексатор получает набор из текущих настроек; редактора в окне нет |
+| `keymap_overrides` | применяется при сборке окна; редактора сочетаний нет |
+| `checkpoints_keep` | применяется периодической уборкой legacy-чекпоинтов; список чекпоинтов в памяти ядра создаётся со значением 100 и не перечитывает настройку |
 
-Редактор настроек меняет только семь полей (шрифт, размер, scrollback, тема, отображение
-квот, режим согласований, время удержания); остальные значения можно записать через
-`settings/update`.
+Редактор настроек меняет поля из §2.9. Остальные значения можно записать через
+`settings/update` с актуальным `rev`.
 
-### 12.5. Известные расхождения и дефекты 0.1.1
+### 12.5. Расхождения, закрытые после 0.1.1, и остаточные ограничения
 
-- **Палитра.** Маршруты `palette/items|execute|resetRanking` обслуживает только fake core;
-  в настоящем ядре они возвращают `METHOD_NOT_FOUND`.
-- **`session/list`.** Реализован только в fake core, поэтому выбор существующего нативного
-  диалога CLI в UI недоступен, а `agent --resume` для Cursor практически недостижим:
-  идентификатор сессии получить неоткуда.
-- **Форк.** `tab/fork` в ядре есть и ограничен capability `fork` (Claude, Codex), но в UI
-  0.1.1 кнопки для него нет — метод доступен только через типизированный клиент. Отдельно
-  в известных дефектах числится поведение форк-копии (её исправление отнесено к 0.1.2).
-- **Детали согласований.** Для `Write`/`Edit`/MCP показываются не все поля: путь, diff и
-  аргументы инструмента выводятся частично; длинные команды могут обрезаться.
-- **Режимы согласований.** Настраиваются только место вопроса (`inline`/`native`) и
-  разовые/сессионные решения; режимов «спрашивать/разрешать/запрещать» и уровней
-  «глобально/проект» нет.
-- **Закрытие окна.** `app/quitCheck` в контракте есть, но UI его не вызывает: окно
-  закрывается сразу, ядро останавливается после скрытия окна. Подтверждения при занятых
-  вкладках или ожидающих согласованиях нет.
-- **Preview и восстановление результата исполнителя.** `WorkSession-history` хранит
-  `oid` снимка, но в 0.1.1 и `workSession/integratePreview`, и `workSession/restore`
-  работают от изменяемого ref (`snapshot.ref`, `target.ref`), а не от записанного OID:
-  если ref сдвинуть после `workSession/result`, примется или восстановится другое дерево.
-  Валидация `source_oid`/`target_oid` в `workSession/integrate` при этом есть. Привязка
-  preview и restore к записанному OID исправлена после релиза (GIT-1, GIT-2).
-- **README и код.** Часть формулировок в README 0.1.1 расходилась с поведением
-  (в частности, resume у Cursor и статус палитры): актуальные формулировки — в этом
-  документе (§12.5) и в сокращённом README.
-- **Заявленные, но не задействованные UI возможности.** `terminal/screenTextReply` в ядре
-  отвечает, но запрос текста экрана ядро делает только в нереализованном `/switch`.
+- **Палитра и `session/list`.** В 0.1.1 работали только на fake core. В `main` их обслуживает
+  настоящее ядро (UX-3, HAR-3). Каталог OpenCode требует работающего сервера, созданного текущим
+  ядром. Cursor resume не поддерживается: запуск с сессией отклоняется.
+- **Форк.** Пункт меню вкладки вызывает `tab/fork` (Claude и Codex, HAR-3, в `main`). Ожидающий
+  fork сохраняется при рестарте ядра (`0008_pending_session_fork`); сведения, потерянные до
+  миграции, не восстанавливаются. Fork недоступен, пока ID исходной сессии неизвестен.
+- **Детали согласований.** В 0.1.1 детали `Write`, `Edit` и MCP были неполными. В `main` карточка
+  показывает путь, фрагменты правки и аргументы, полный текст раскрывается (APR-2).
+- **Режимы согласований.** Хранятся и видны в окне настроек, но к агентам не применяются:
+  `ApprovalPolicyBook.decide` не вызывается из пути согласований, узлы APR-5…APR-8 `pending`.
+  Режим «Сценарий» не выбирается.
+- **Закрытие окна.** `app/quitCheck` вызывается окном и приложением (UX-2, в `main`): при
+  работающих агентах и ожидающих согласованиях нужно подтверждение. В 0.1.1 его не было.
+- **Preview и восстановление результата исполнителя.** В 0.1.1 `workSession/integratePreview` и
+  `workSession/restore` работали от изменяемого ref (`snapshot.ref`, `target.ref`), а не от
+  записанного OID: если ref сдвинуть после `workSession/result`, мог примениться другой результат.
+  Валидация `source_oid`/`target_oid` в `workSession/integrate` была и в 0.1.1. В `main` привязка
+  к OID исправлена (GIT-1, GIT-2).
+- **Документация.** Описание 0.1.1 в README расходилось с поведением (resume у Cursor, статус
+  палитры). В `main` формулировки сверены (UX-6).
+- **Запрос текста экрана.** `terminal/screenTextReply` ядро принимает, но запрашивать текст экрана
+  у sidecar умеет только `/switch` в `ipc/session.py`, которого пока нет в вызовах.
+
+### 12.6. Открытые проблемы `main`
+
+Полный список с симптомами и следующими шагами — в [ISSUES.md](ISSUES.md). Кратко, по приоритету:
+
+- **P1:** покрытие CI 88.84 % при пороге 90 % (QA-4); драйверы Git `filter` и `gpg.program`
+  и вызовы Git вне runner (SEC-11); домашний каталог хоста может быть смонтирован в контейнер
+  агента (SEC-7, частично: есть предупреждение, но подтверждённой изоляции нет).
+- **P2:** режимы «разрешать» и «запрещать» не применяются (APR-5…APR-8); у OpenCode и Cursor нет
+  inline-согласований (APR-6, APR-8); прокрутка длинной Git-истории не укладывается в бюджет кадра
+  (PERF-7); handover несуществующего проекта возвращает успех (MCP-1); доверенный PASS gate
+  отключён (GATE-1); проверка на живом окне и CLI не проведена (AUD-2).
+- **P3:** `grok` без адаптера; `tools/check.sh` требует базу `main` для ownership; проверки
+  внешних документов контрактов пропускаются; `hostrun` не принимает идентификаторы вида `CORE-7`;
+  `except A, B:` в `sidecar/main.py`; коммиты узлов не соответствуют правилу (CMT-1, CMT-2);
+  единый визуальный язык (DES-3).
 
 ---
 
-## 13. Что дальше (0.1.2)
+## 13. Что осталось до 0.1.2
 
-0.1.2 планировалась после закрытия `plan-1`; версия в `pyproject.toml` до этого остаётся
-`0.1.1`. Направления (подробно — в [CHANGELOG.md](CHANGELOG.md)):
+0.1.2 не выпущена; версия в `pyproject.toml` остаётся `0.1.1`. Выпуск — после закрытия
+`plan-1` и зелёного CI. Открыто 15 узлов из 91 (подробно — в [CHANGELOG.md](CHANGELOG.md) и
+[ISSUES.md](ISSUES.md)):
 
-- безопасность hostrun, review gate и self-approval, доступ агента к базе AConsole и
-  домашнему каталогу хоста, оставшаяся гонка динамических Git-драйверов;
-- режимы согласований и честная матрица применимости по harness'ам, детали Write/Edit/MCP,
-  длинные команды;
-- форк и выбор нативной сессии, надёжные статусы OpenCode/Cursor, устойчивость sidecar;
-- подтверждение закрытия окна и вкладки, палитра на настоящем ядре, режимы новой вкладки,
-  локализация и различимость состояний;
-- разгрузка блокировок из общего потока и event loop, lease MCP между планами,
-  устойчивость IPC и очереди ingest;
-- финальные QA-проверки, CI/сборка/контракты, лицензия (в 0.1.1 её не было).
+- CI: объединённое покрытие 88.84 % → не ниже 90 % (QA-4);
+- безопасность: SEC-11 (драйверы Git и вызовы вне runner), SEC-7 (пересоздание контейнеров
+  пользователем, `blocked`);
+- согласования: применить `allow`/`deny` в адаптерах Claude, OpenCode, Codex и Cursor
+  (APR-5…APR-8), итоговая проверка (QA-6);
+- производительность: прокрутка Git-истории (PERF-7);
+- доверие и приёмка: доверенный PASS gate (GATE-1), handover без проекта (MCP-1), проверка на
+  живом окне и CLI (AUD-2);
+- оформление и процесс: единый визуальный язык (DES-3), коммиты узлов (CMT-1, CMT-2).
 
 ---
 
