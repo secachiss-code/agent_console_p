@@ -1,0 +1,16 @@
+{
+  "evidence_integrity": "PASS",
+  "files": 279,
+  "calls": 119,
+  "counts": {
+    "direct_hook_discovery_or_execution": 4,
+    "library_process_candidate": 1,
+    "process_creation": 13,
+    "reviewed_wrapper_call": 38,
+    "runner_candidate": 49,
+    "runner_construction": 8,
+    "runner_internal": 6
+  },
+  "old_candidate_path_target_multiplicity_preserved": true,
+  "security_acceptance": "NOT RUN"
+}
