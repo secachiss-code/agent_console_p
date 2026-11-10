@@ -1,0 +1,63 @@
+============================= test session starts ==============================
+platform linux -- Python 3.15.1, pytest-9.1.1, pluggy-1.7.0 -- /home/sas/Projects/sp_aconsole_prototype/.venv-core/bin/python
+cachedir: .pytest_cache
+hypothesis profile 'default'
+rootdir: /home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/038657e1539f15ad
+configfile: pyproject.toml
+plugins: cov-7.1.0, run-parallel-0.10.0, anyio-4.15.1, hypothesis-6.170.9, schemathesis-4.32.7
+collecting ... collected 13 items / 8 deselected / 5 selected
+Collected 0 items to run in parallel
+
+tests/core/test_git_merge.py::test_no_checkout_squash_refuses_a_hook_changed_index[add-pre-commit] Timeout (0:00:20)!
+Thread 0x000071e42ebfd6c0 [asyncio_1] (most recent call first):
+  File "/home/sas/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/concurrent/futures/thread.py", line 116 in _worker
+  File "/home/sas/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/threading.py", line 1160 in run
+  File "/home/sas/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/threading.py", line 1218 in _bootstrap_inner
+  File "/home/sas/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/threading.py", line 1180 in _bootstrap
+
+Thread 0x000071e42f3fe6c0 [asyncio_0] (most recent call first):
+  File "/home/sas/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/concurrent/futures/thread.py", line 116 in _worker
+  File "/home/sas/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/threading.py", line 1160 in run
+  File "/home/sas/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/threading.py", line 1218 in _bootstrap_inner
+  File "/home/sas/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/threading.py", line 1180 in _bootstrap
+
+Thread 0x000071e4325fe780 [python] (most recent call first):
+  File "/home/sas/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/selectors.py", line 452 in select
+  File "/home/sas/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/base_events.py", line 2032 in _run_once
+  File "/home/sas/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/base_events.py", line 682 in run_forever
+  File "/home/sas/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/base_events.py", line 711 in run_until_complete
+  File "/home/sas/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py", line 128 in run
+  File "/home/sas/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py", line 205 in run
+  File "/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/038657e1539f15ad/tests/core/test_git_merge.py", line 274 in test_no_checkout_squash_refuses_a_hook_changed_index
+  File "/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/_pytest/python.py", line 167 in pytest_pyfunc_call
+  File "/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/pluggy/_execution.py", line 147 in _multicall
+  File "/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/pluggy/_manager.py", line 183 in _hookexec
+  File "/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/pluggy/_caller.py", line 197 in __call__
+  File "/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/_pytest/python.py", line 1707 in runtest
+  File "/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/_pytest/runner.py", line 184 in pytest_runtest_call
+  File "/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/pluggy/_execution.py", line 147 in _multicall
+  File "/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/pluggy/_manager.py", line 183 in _hookexec
+  File "/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/pluggy/_caller.py", line 197 in __call__
+  File "/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/_pytest/runner.py", line 250 in <lambda>
+  File "/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/_pytest/runner.py", line 361 in from_call
+  File "/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/_pytest/runner.py", line 249 in call_and_report
+  File "/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/_pytest/runner.py", line 139 in runtestprotocol
+  File "/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/_pytest/runner.py", line 118 in pytest_runtest_protocol
+  File "/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/pluggy/_execution.py", line 147 in _multicall
+  File "/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/pluggy/_manager.py", line 183 in _hookexec
+  File "/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/pluggy/_caller.py", line 197 in __call__
+  File "/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/_pytest/main.py", line 408 in pytest_runtestloop
+  File "/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/pluggy/_execution.py", line 147 in _multicall
+  File "/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/pluggy/_manager.py", line 183 in _hookexec
+  File "/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/pluggy/_caller.py", line 197 in __call__
+  File "/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/_pytest/main.py", line 384 in _main
+  File "/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/_pytest/main.py", line 330 in wrap_session
+  File "/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/_pytest/main.py", line 377 in pytest_cmdline_main
+  File "/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/pluggy/_execution.py", line 147 in _multicall
+  File "/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/pluggy/_manager.py", line 183 in _hookexec
+  File "/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/pluggy/_caller.py", line 197 in __call__
+  File "/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/_pytest/config/__init__.py", line 229 in _main
+  File "/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/_pytest/config/__init__.py", line 253 in _console_main
+  File "/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/pytest/__main__.py", line 9 in <module>
+  File "<frozen runpy>", line 87 in _run_code
+  File "<frozen runpy>", line 201 in _run_module_as_main

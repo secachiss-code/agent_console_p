@@ -167,7 +167,27 @@ class GitMutations:
                 done = self._run_hook((str(after), str(text_file)), root, environment)
                 if not done.ok:
                     return done
+            if squash:
+                # The ref-only squash publishes the previewed tree. A hook must
+                # not change its temporary index and then have that work silently
+                # discarded, nor can it add unreviewed content to that tree.
+                checked = self._check_hook_index(root, index, tree)
+                if not checked.ok:
+                    return checked
             return GitDone(ok=True, said="", text=text_file.read_text(encoding="utf-8"))
+
+    def _check_hook_index(self, root: Path, index: Path, tree: str) -> GitDone:
+        checked = self._git.invoke(
+            root,
+            ("write-tree",),
+            GitCall(env={"GIT_INDEX_FILE": str(index)}, drop=("GIT_DIR", "GIT_WORK_TREE"), write=True),
+        )
+        if checked.code == 0 and checked.text.strip() != tree:
+            return GitDone(
+                ok=False,
+                said="squash hook changed the candidate index; review the changes before retrying",
+            )
+        return _done(checked)
 
     def _hook(self, root: Path, name: str) -> Path | None:
         """The repository's own hook, not the path `core.hooksPath` names."""
