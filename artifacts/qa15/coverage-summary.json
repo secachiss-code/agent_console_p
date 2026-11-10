@@ -1,0 +1,48 @@
+{
+  "source_base": "d5902e6e",
+  "gui_source_base": "4559120751b55be5808af7d68cfbb2e18c16f3a9",
+  "gui_files_purged": [
+    "/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/038657e1539f15ad/src/aconsole/core/infrastructure/persistence/repositories/knowledge.py",
+    "/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/038657e1539f15ad/src/aconsole/core/application/services/git_merge.py",
+    "/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/038657e1539f15ad/src/aconsole/core/application/services/tabs.py"
+  ],
+  "totals": {
+    "baseline": {
+      "covered_lines": 26668,
+      "num_statements": 28988,
+      "percent_covered": 89.80219414893617,
+      "percent_covered_display": "90",
+      "missing_lines": 2320,
+      "excluded_lines": 381,
+      "percent_statements_covered": 91.9966882848075,
+      "percent_statements_covered_display": "92",
+      "num_branches": 7108,
+      "num_partial_branches": 1029,
+      "covered_branches": 5747,
+      "missing_branches": 1361,
+      "percent_branches_covered": 80.85256049521665,
+      "percent_branches_covered_display": "81",
+      "gate_exit": 2
+    },
+    "combined": {
+      "covered_lines": 26682,
+      "num_statements": 28988,
+      "percent_covered": 89.86314273049645,
+      "percent_covered_display": "90",
+      "missing_lines": 2306,
+      "excluded_lines": 381,
+      "percent_statements_covered": 92.0449841313647,
+      "percent_statements_covered_display": "92",
+      "num_branches": 7108,
+      "num_partial_branches": 1021,
+      "covered_branches": 5755,
+      "missing_branches": 1353,
+      "percent_branches_covered": 80.96510973550929,
+      "percent_branches_covered_display": "81",
+      "gate_exit": 2
+    }
+  },
+  "new_lines": 14,
+  "new_branches": 8,
+  "limitation": "Fresh complete non-performance core suite in two test groups, saved GUI on unchanged modules only. Not fresh GUI or CI. Baseline uses current WS-1 product; direct GIT-5 comparison invalid because tabs.py changed."
+}

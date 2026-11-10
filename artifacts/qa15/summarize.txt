@@ -1,0 +1,72 @@
+"""Compare coverage on WS-1 source, before and after QA-15 scenarios."""
+import json
+from pathlib import Path
+import shutil
+import subprocess
+import sys
+
+import coverage
+
+root = Path(__file__).resolve().parents[2]
+out = root / 'artifacts/qa15'
+source_base = 'd5902e6e'
+gui_base = '4559120751b55be5808af7d68cfbb2e18c16f3a9'
+changed = subprocess.check_output(
+    ['git', 'diff', '--name-only', source_base, '--', 'src', 'pyproject.toml'], cwd=root, text=True,
+).splitlines()
+assert changed == [], changed
+gui_changed = subprocess.check_output(
+    ['git', 'diff', '--name-only', gui_base, '--', 'src', 'pyproject.toml'], cwd=root, text=True,
+).splitlines()
+expected = [
+    'src/aconsole/core/application/services/git_merge.py',
+    'src/aconsole/core/application/services/tabs.py',
+    'src/aconsole/core/infrastructure/persistence/repositories/knowledge.py',
+]
+assert sorted(gui_changed) == sorted(expected), gui_changed
+
+filtered_gui = out / '.coverage.gui-unchanged'
+shutil.copyfile(root / 'artifacts/qa9/.coverage.final-full', filtered_gui)
+gui = coverage.CoverageData(basename=str(filtered_gui))
+gui.read()
+purged = [name for name in gui.measured_files() if any(name.endswith(path) for path in gui_changed)]
+gui.purge_files(purged)
+gui.write()
+
+summaries = {}
+for label, inputs in [
+    ('baseline', [out / '.coverage.core-baseline', filtered_gui]),
+    ('combined', [out / '.coverage.core-baseline', filtered_gui, out / '.coverage.focused']),
+]:
+    data = out / ('.coverage.' + label)
+    cov = coverage.Coverage(data_file=str(data))
+    cov.combine([str(path) for path in inputs], keep=True)
+    cov.save()
+    report_path = out / ('coverage-' + label + '.json')
+    cov.json_report(outfile=str(report_path))
+    report = json.loads(report_path.read_text())
+    report_path.unlink()
+    summaries[label] = report['totals']
+    gate = subprocess.run([
+        sys.executable, '-m', 'coverage', 'report', '--data-file=' + str(data),
+        '--precision=6', '--format=total',
+    ], cwd=root, capture_output=True, text=True)
+    (out / ('coverage-gate-' + label + '.txt')).write_text(
+        gate.stdout + gate.stderr + '\nexit_code=' + str(gate.returncode) + '\n'
+    )
+    print(label, report['totals']['percent_covered'], 'gate exit', gate.returncode)
+    summaries[label]['gate_exit'] = gate.returncode
+
+before, after = summaries['baseline'], summaries['combined']
+assert before['num_statements'] == after['num_statements']
+assert before['num_branches'] == after['num_branches']
+summary = {
+    'source_base': source_base,
+    'gui_source_base': gui_base,
+    'gui_files_purged': purged,
+    'totals': summaries,
+    'new_lines': after['covered_lines'] - before['covered_lines'],
+    'new_branches': after['covered_branches'] - before['covered_branches'],
+    'limitation': 'Fresh complete non-performance core suite in two test groups, saved GUI on unchanged modules only. Not fresh GUI or CI. Baseline uses current WS-1 product; direct GIT-5 comparison invalid because tabs.py changed.',
+}
+(out / 'coverage-summary.json').write_text(json.dumps(summary, indent=2) + '\n')
