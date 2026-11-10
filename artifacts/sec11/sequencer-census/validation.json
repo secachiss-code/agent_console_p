@@ -1,0 +1,321 @@
+{
+  "evidence_integrity": "PASS",
+  "cases": 72,
+  "pairs": 36,
+  "steps": 144,
+  "source_hashes": 282,
+  "equal_step_pairs": {
+    "outcome_equal": 65,
+    "phases_equal": 0
+  },
+  "final_equal_pairs": {
+    "head": 32,
+    "target": 31,
+    "symbolic_head": 33,
+    "refs": 31,
+    "head_tree": 32,
+    "target_tree": 31,
+    "head_message": 33,
+    "index": 35,
+    "unmerged": 36,
+    "status": 33,
+    "state": 29,
+    "files": 35
+  },
+  "refusals": [
+    {
+      "operation": "rebase",
+      "flow": "success",
+      "mode": "pre_rebase_refuse",
+      "step": "start",
+      "phase": "pre-rebase",
+      "args": [
+        "7ee12a4b57d22f1f3453da32bc2b87100b04d409"
+      ],
+      "target_rows": []
+    },
+    {
+      "operation": "rebase",
+      "flow": "success",
+      "mode": "post_rewrite_fail",
+      "step": "start",
+      "phase": "post-rewrite",
+      "args": [
+        "rebase"
+      ],
+      "target_rows": []
+    },
+    {
+      "operation": "rebase",
+      "flow": "success",
+      "mode": "post_commit_fail",
+      "step": "start",
+      "phase": "post-commit",
+      "args": [],
+      "target_rows": []
+    },
+    {
+      "operation": "rebase",
+      "flow": "success",
+      "mode": "target_prepared_refuse",
+      "step": "start",
+      "phase": "reference-transaction",
+      "args": [
+        "prepared"
+      ],
+      "target_rows": [
+        [
+          "89a3fee9f48c4b996105488ea6e29352beccae95",
+          "ee6977a0146e94558b510993d2b54aadc1b513d9",
+          "refs/heads/target"
+        ]
+      ]
+    },
+    {
+      "operation": "rebase",
+      "flow": "success",
+      "mode": "target_committed_fail",
+      "step": "start",
+      "phase": "reference-transaction",
+      "args": [
+        "committed"
+      ],
+      "target_rows": [
+        [
+          "89a3fee9f48c4b996105488ea6e29352beccae95",
+          "ee6977a0146e94558b510993d2b54aadc1b513d9",
+          "refs/heads/target"
+        ]
+      ]
+    },
+    {
+      "operation": "rebase",
+      "flow": "continue",
+      "mode": "post_rewrite_fail",
+      "step": "continue",
+      "phase": "post-rewrite",
+      "args": [
+        "rebase"
+      ],
+      "target_rows": []
+    },
+    {
+      "operation": "rebase",
+      "flow": "continue",
+      "mode": "post_commit_fail",
+      "step": "continue",
+      "phase": "post-commit",
+      "args": [],
+      "target_rows": []
+    },
+    {
+      "operation": "rebase",
+      "flow": "continue",
+      "mode": "target_prepared_refuse",
+      "step": "continue",
+      "phase": "reference-transaction",
+      "args": [
+        "prepared"
+      ],
+      "target_rows": [
+        [
+          "b14d54741035aeeed98e05e02010fc455000042d",
+          "67c218cc3071767a3813301b53c8d2d79994ecb7",
+          "refs/heads/target"
+        ]
+      ]
+    },
+    {
+      "operation": "rebase",
+      "flow": "continue",
+      "mode": "target_committed_fail",
+      "step": "continue",
+      "phase": "reference-transaction",
+      "args": [
+        "committed"
+      ],
+      "target_rows": [
+        [
+          "b14d54741035aeeed98e05e02010fc455000042d",
+          "67c218cc3071767a3813301b53c8d2d79994ecb7",
+          "refs/heads/target"
+        ]
+      ]
+    },
+    {
+      "operation": "rebase",
+      "flow": "abort",
+      "mode": "target_prepared_refuse",
+      "step": "abort",
+      "phase": "reference-transaction",
+      "args": [
+        "prepared"
+      ],
+      "target_rows": [
+        [
+          "0000000000000000000000000000000000000000",
+          "b14d54741035aeeed98e05e02010fc455000042d",
+          "refs/heads/target"
+        ]
+      ]
+    },
+    {
+      "operation": "rebase",
+      "flow": "abort",
+      "mode": "target_committed_fail",
+      "step": "abort",
+      "phase": "reference-transaction",
+      "args": [
+        "committed"
+      ],
+      "target_rows": [
+        [
+          "0000000000000000000000000000000000000000",
+          "b14d54741035aeeed98e05e02010fc455000042d",
+          "refs/heads/target"
+        ]
+      ]
+    },
+    {
+      "operation": "cherry-pick",
+      "flow": "success",
+      "mode": "post_commit_fail",
+      "step": "start",
+      "phase": "post-commit",
+      "args": [],
+      "target_rows": []
+    },
+    {
+      "operation": "cherry-pick",
+      "flow": "success",
+      "mode": "target_prepared_refuse",
+      "step": "start",
+      "phase": "reference-transaction",
+      "args": [
+        "prepared"
+      ],
+      "target_rows": [
+        [
+          "0000000000000000000000000000000000000000",
+          "e984a448c09639036bb623635852fcbc057f977f",
+          "HEAD"
+        ],
+        [
+          "89a3fee9f48c4b996105488ea6e29352beccae95",
+          "e984a448c09639036bb623635852fcbc057f977f",
+          "refs/heads/target"
+        ]
+      ]
+    },
+    {
+      "operation": "cherry-pick",
+      "flow": "success",
+      "mode": "target_committed_fail",
+      "step": "start",
+      "phase": "reference-transaction",
+      "args": [
+        "committed"
+      ],
+      "target_rows": [
+        [
+          "0000000000000000000000000000000000000000",
+          "e984a448c09639036bb623635852fcbc057f977f",
+          "HEAD"
+        ],
+        [
+          "89a3fee9f48c4b996105488ea6e29352beccae95",
+          "e984a448c09639036bb623635852fcbc057f977f",
+          "refs/heads/target"
+        ]
+      ]
+    },
+    {
+      "operation": "cherry-pick",
+      "flow": "continue",
+      "mode": "post_commit_fail",
+      "step": "continue",
+      "phase": "post-commit",
+      "args": [],
+      "target_rows": []
+    },
+    {
+      "operation": "cherry-pick",
+      "flow": "continue",
+      "mode": "target_prepared_refuse",
+      "step": "continue",
+      "phase": "reference-transaction",
+      "args": [
+        "prepared"
+      ],
+      "target_rows": [
+        [
+          "0000000000000000000000000000000000000000",
+          "9ce457b3e667c450251bf188df2104017cc6a44a",
+          "HEAD"
+        ],
+        [
+          "b14d54741035aeeed98e05e02010fc455000042d",
+          "9ce457b3e667c450251bf188df2104017cc6a44a",
+          "refs/heads/target"
+        ]
+      ]
+    },
+    {
+      "operation": "cherry-pick",
+      "flow": "continue",
+      "mode": "target_committed_fail",
+      "step": "continue",
+      "phase": "reference-transaction",
+      "args": [
+        "committed"
+      ],
+      "target_rows": [
+        [
+          "0000000000000000000000000000000000000000",
+          "9ce457b3e667c450251bf188df2104017cc6a44a",
+          "HEAD"
+        ],
+        [
+          "b14d54741035aeeed98e05e02010fc455000042d",
+          "9ce457b3e667c450251bf188df2104017cc6a44a",
+          "refs/heads/target"
+        ]
+      ]
+    },
+    {
+      "operation": "cherry-pick",
+      "flow": "abort",
+      "mode": "target_prepared_refuse",
+      "step": "abort",
+      "phase": "reference-transaction",
+      "args": [
+        "prepared"
+      ],
+      "target_rows": [
+        [
+          "0000000000000000000000000000000000000000",
+          "b14d54741035aeeed98e05e02010fc455000042d",
+          "HEAD"
+        ]
+      ]
+    },
+    {
+      "operation": "cherry-pick",
+      "flow": "abort",
+      "mode": "target_committed_fail",
+      "step": "abort",
+      "phase": "reference-transaction",
+      "args": [
+        "committed"
+      ],
+      "target_rows": [
+        [
+          "0000000000000000000000000000000000000000",
+          "b14d54741035aeeed98e05e02010fc455000042d",
+          "HEAD"
+        ]
+      ]
+    }
+  ],
+  "security_acceptance": "NOT RUN"
+}
