@@ -1,0 +1,338 @@
+[
+  {
+    "operation": "root",
+    "mode": "observe",
+    "outcome_equal": true,
+    "tree_equal": true,
+    "message_equal": true,
+    "phases_equal": true
+  },
+  {
+    "operation": "root",
+    "mode": "pre_refuse",
+    "outcome_equal": true,
+    "tree_equal": true,
+    "message_equal": true,
+    "phases_equal": true
+  },
+  {
+    "operation": "root",
+    "mode": "prepare_refuse",
+    "outcome_equal": true,
+    "tree_equal": true,
+    "message_equal": true,
+    "phases_equal": true
+  },
+  {
+    "operation": "root",
+    "mode": "post_fail",
+    "outcome_equal": true,
+    "tree_equal": true,
+    "message_equal": true,
+    "phases_equal": true
+  },
+  {
+    "operation": "root",
+    "mode": "ref_prepared",
+    "outcome_equal": true,
+    "tree_equal": true,
+    "message_equal": true,
+    "phases_equal": true
+  },
+  {
+    "operation": "root",
+    "mode": "ref_committed",
+    "outcome_equal": true,
+    "tree_equal": true,
+    "message_equal": true,
+    "phases_equal": true
+  },
+  {
+    "operation": "amend",
+    "mode": "observe",
+    "outcome_equal": true,
+    "tree_equal": true,
+    "message_equal": true,
+    "phases_equal": true
+  },
+  {
+    "operation": "amend",
+    "mode": "pre_refuse",
+    "outcome_equal": true,
+    "tree_equal": true,
+    "message_equal": true,
+    "phases_equal": true
+  },
+  {
+    "operation": "amend",
+    "mode": "prepare_refuse",
+    "outcome_equal": true,
+    "tree_equal": true,
+    "message_equal": true,
+    "phases_equal": true
+  },
+  {
+    "operation": "amend",
+    "mode": "post_fail",
+    "outcome_equal": true,
+    "tree_equal": true,
+    "message_equal": true,
+    "phases_equal": true
+  },
+  {
+    "operation": "amend",
+    "mode": "ref_prepared",
+    "outcome_equal": true,
+    "tree_equal": true,
+    "message_equal": true,
+    "phases_equal": true
+  },
+  {
+    "operation": "amend",
+    "mode": "ref_committed",
+    "outcome_equal": true,
+    "tree_equal": true,
+    "message_equal": true,
+    "phases_equal": true
+  },
+  {
+    "operation": "merge",
+    "mode": "observe",
+    "outcome_equal": true,
+    "tree_equal": true,
+    "message_equal": true,
+    "phases_equal": true
+  },
+  {
+    "operation": "merge",
+    "mode": "pre_refuse",
+    "outcome_equal": true,
+    "tree_equal": true,
+    "message_equal": true,
+    "phases_equal": true
+  },
+  {
+    "operation": "merge",
+    "mode": "prepare_refuse",
+    "outcome_equal": true,
+    "tree_equal": true,
+    "message_equal": true,
+    "phases_equal": true
+  },
+  {
+    "operation": "merge",
+    "mode": "post_fail",
+    "outcome_equal": true,
+    "tree_equal": true,
+    "message_equal": true,
+    "phases_equal": true
+  },
+  {
+    "operation": "merge",
+    "mode": "ref_prepared",
+    "outcome_equal": true,
+    "tree_equal": true,
+    "message_equal": true,
+    "phases_equal": true
+  },
+  {
+    "operation": "merge",
+    "mode": "ref_committed",
+    "outcome_equal": true,
+    "tree_equal": true,
+    "message_equal": true,
+    "phases_equal": true
+  },
+  {
+    "operation": "ref_merge",
+    "mode": "observe",
+    "outcome_equal": false,
+    "tree_equal": false,
+    "message_equal": false,
+    "phases_equal": false
+  },
+  {
+    "operation": "ref_merge",
+    "mode": "pre_refuse",
+    "outcome_equal": true,
+    "tree_equal": true,
+    "message_equal": true,
+    "phases_equal": false
+  },
+  {
+    "operation": "ref_merge",
+    "mode": "prepare_refuse",
+    "outcome_equal": true,
+    "tree_equal": true,
+    "message_equal": true,
+    "phases_equal": false
+  },
+  {
+    "operation": "ref_merge",
+    "mode": "post_fail",
+    "outcome_equal": false,
+    "tree_equal": false,
+    "message_equal": false,
+    "phases_equal": false
+  },
+  {
+    "operation": "ref_merge",
+    "mode": "ref_prepared",
+    "outcome_equal": true,
+    "tree_equal": true,
+    "message_equal": true,
+    "phases_equal": false
+  },
+  {
+    "operation": "ref_merge",
+    "mode": "ref_committed",
+    "outcome_equal": false,
+    "tree_equal": false,
+    "message_equal": false,
+    "phases_equal": false
+  },
+  {
+    "operation": "squash",
+    "mode": "observe",
+    "outcome_equal": true,
+    "tree_equal": true,
+    "message_equal": true,
+    "phases_equal": true
+  },
+  {
+    "operation": "squash",
+    "mode": "pre_refuse",
+    "outcome_equal": true,
+    "tree_equal": true,
+    "message_equal": true,
+    "phases_equal": true
+  },
+  {
+    "operation": "squash",
+    "mode": "prepare_refuse",
+    "outcome_equal": true,
+    "tree_equal": true,
+    "message_equal": true,
+    "phases_equal": true
+  },
+  {
+    "operation": "squash",
+    "mode": "post_fail",
+    "outcome_equal": true,
+    "tree_equal": true,
+    "message_equal": true,
+    "phases_equal": true
+  },
+  {
+    "operation": "squash",
+    "mode": "ref_prepared",
+    "outcome_equal": true,
+    "tree_equal": true,
+    "message_equal": true,
+    "phases_equal": true
+  },
+  {
+    "operation": "squash",
+    "mode": "ref_committed",
+    "outcome_equal": true,
+    "tree_equal": true,
+    "message_equal": true,
+    "phases_equal": true
+  },
+  {
+    "operation": "ref_squash",
+    "mode": "observe",
+    "outcome_equal": true,
+    "tree_equal": true,
+    "message_equal": true,
+    "phases_equal": false
+  },
+  {
+    "operation": "ref_squash",
+    "mode": "pre_refuse",
+    "outcome_equal": true,
+    "tree_equal": true,
+    "message_equal": true,
+    "phases_equal": false
+  },
+  {
+    "operation": "ref_squash",
+    "mode": "prepare_refuse",
+    "outcome_equal": false,
+    "tree_equal": false,
+    "message_equal": false,
+    "phases_equal": false
+  },
+  {
+    "operation": "ref_squash",
+    "mode": "post_fail",
+    "outcome_equal": true,
+    "tree_equal": true,
+    "message_equal": true,
+    "phases_equal": false
+  },
+  {
+    "operation": "ref_squash",
+    "mode": "ref_prepared",
+    "outcome_equal": false,
+    "tree_equal": false,
+    "message_equal": false,
+    "phases_equal": false
+  },
+  {
+    "operation": "ref_squash",
+    "mode": "ref_committed",
+    "outcome_equal": true,
+    "tree_equal": true,
+    "message_equal": true,
+    "phases_equal": false
+  },
+  {
+    "operation": "fast_forward",
+    "mode": "observe",
+    "outcome_equal": true,
+    "tree_equal": true,
+    "message_equal": true,
+    "phases_equal": true
+  },
+  {
+    "operation": "fast_forward",
+    "mode": "pre_refuse",
+    "outcome_equal": true,
+    "tree_equal": true,
+    "message_equal": true,
+    "phases_equal": true
+  },
+  {
+    "operation": "fast_forward",
+    "mode": "prepare_refuse",
+    "outcome_equal": true,
+    "tree_equal": true,
+    "message_equal": true,
+    "phases_equal": true
+  },
+  {
+    "operation": "fast_forward",
+    "mode": "post_fail",
+    "outcome_equal": true,
+    "tree_equal": true,
+    "message_equal": true,
+    "phases_equal": true
+  },
+  {
+    "operation": "fast_forward",
+    "mode": "ref_prepared",
+    "outcome_equal": true,
+    "tree_equal": true,
+    "message_equal": true,
+    "phases_equal": true
+  },
+  {
+    "operation": "fast_forward",
+    "mode": "ref_committed",
+    "outcome_equal": true,
+    "tree_equal": true,
+    "message_equal": true,
+    "phases_equal": true
+  }
+]
