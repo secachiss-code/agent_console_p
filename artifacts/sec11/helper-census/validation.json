@@ -1,0 +1,9 @@
+{
+  "evidence_integrity": "PASS",
+  "cases": 32,
+  "pairs": 16,
+  "source_hashes": 287,
+  "equal_outcomes": 8,
+  "security_acceptance": "NOT RUN",
+  "stage_A": "INCOMPLETE"
+}
