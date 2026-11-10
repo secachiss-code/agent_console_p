@@ -1,0 +1,12 @@
+"""Run remaining independent QA-17 phases serially, preserving failures."""
+from pathlib import Path
+import subprocess
+import sys
+
+runner = Path(__file__).with_name('run.txt')
+failed = False
+for mode in ('combine', 'performance', 'ui-performance', 'check', 'build'):
+    result = subprocess.run([sys.executable, str(runner), mode], timeout=1300, check=False)
+    print('PHASE', mode, 'EXIT', result.returncode, flush=True)
+    failed |= result.returncode != 0
+raise SystemExit(int(failed))

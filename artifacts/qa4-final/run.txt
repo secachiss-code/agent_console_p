@@ -1,0 +1,129 @@
+"""Run fresh QA-4 checks on the host with the project's locked environments.
+
+Run core, ui, performance, check and build serially. Combine uses only these
+fresh core/UI inputs and preserves the configured 90% coverage gate.
+"""
+import argparse
+import hashlib
+import json
+import os
+from pathlib import Path
+import secrets
+import shutil
+import struct
+import subprocess
+import sys
+import tempfile
+import time
+
+root = Path(__file__).resolve().parents[2]
+out = Path(__file__).resolve().parent
+parser = argparse.ArgumentParser()
+parser.add_argument('mode', choices=['core', 'ui', 'ui-performance', 'performance', 'check', 'build', 'combine'])
+options = parser.parse_args()
+mode = options.mode
+base = Path('/home/sas/Projects/sp_aconsole_prototype')
+python = base / ('.venv-ui' if mode in {'ui', 'ui-performance', 'build'} else '.venv-core') / 'bin/python'
+env = dict(os.environ, PYTHONUNBUFFERED='1', PYTHONPATH=str(root / 'src'))
+env['COVERAGE_FILE'] = str(out / ('.coverage.' + mode))
+source = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=root, text=True).strip()
+hashes = {str(path.relative_to(root)): hashlib.sha256(path.read_bytes()).hexdigest()
+    for path in sorted((root / 'src').rglob('*.py'))}
+hashes['pyproject.toml'] = hashlib.sha256((root / 'pyproject.toml').read_bytes()).hexdigest()
+(out / (mode + '-source.json')).write_text(json.dumps({
+    'commit': source,
+    'diff': subprocess.check_output(['git', 'diff', '--', 'src', 'pyproject.toml'], cwd=root, text=True),
+    'load': os.getloadavg(),
+    'python': str(python),
+    'hashes': hashes,
+}, indent=2) + '\n')
+
+if mode == 'combine':
+    import coverage
+    for label in ('core', 'ui'):
+        captured = json.loads((out / (label + '-source.json')).read_text())
+        assert captured['hashes'] == hashes, 'Coverage source differs: ' + label
+    cov = coverage.Coverage(data_file=str(out / '.coverage.combined'))
+    cov.combine([str(out / '.coverage.core'), str(out / '.coverage.ui')], keep=True)
+    cov.save()
+    cov.json_report(outfile=str(out / '.coverage.report.json'))
+    report = json.loads((out / '.coverage.report.json').read_text())
+    (out / 'coverage-summary.json').write_text(json.dumps(report['totals'], indent=2) + '\n')
+    result = subprocess.run([str(python), '-m', 'coverage', 'report',
+        '--data-file=' + str(out / '.coverage.combined'), '--precision=6', '--format=total'],
+        cwd=root, capture_output=True, text=True)
+    (out / 'coverage-gate.txt').write_text(result.stdout + result.stderr + '\nexit_code=' + str(result.returncode) + '\n')
+    print(result.stdout, result.stderr, 'exit', result.returncode)
+    raise SystemExit(result.returncode)
+
+tests = ['tests/core', 'tests/contracts', 'tests/gate', 'tests/hostrun', 'tests/smoke',
+    'tests/test_package.py', 'tests/test_packaging.py', 'tests/test_contrast.py',
+    'tests/test_build_guards.py', 'tests/test_socket_paths.py', '-m', 'not performance']
+if mode == 'ui':
+    tests = ['tests/gui', 'tests/ui', 'tests/smoke', '--deselect',
+        'tests/gui/front/test_git_scale_ui.py::test_scrolling_a_long_history']
+if mode == 'performance':
+    tests = ['tests/core', '-m', 'performance']
+if mode == 'ui-performance':
+    tests = ['tests/gui/front/test_git_scale_ui.py::test_scrolling_a_long_history']
+    env['ACONSOLE_SCALE_REPORT'] = str(out / 'ui-performance-scale.txt')
+args = [*tests, '-o', 'addopts=', '-p', 'no:cacheprovider',
+    '--basetemp=/tmp/ac-qa4-final-' + mode, '--junitxml=' + str(out / (mode + '.xml'))]
+if mode in {'core', 'ui'}:
+    args += ['--cov', '--cov-branch', '--cov-report=', '--cov-fail-under=0']
+command = [str(python), '-m', 'pytest', *args]
+if mode == 'check':
+    command = ['sh', 'tools/check.sh']
+if mode == 'build':
+    command = [str(python), 'packaging/build_deb.py']
+
+with tempfile.TemporaryDirectory(prefix='qa4-final-') as directory:
+    temp = Path(directory)
+    server = None
+    try:
+        if mode in {'ui', 'ui-performance'}:
+            # Same native Xvfb setup as QA-9; no system package installation.
+            binary = shutil.which('Xvfb')
+            if binary is None:
+                subprocess.run(['/usr/bin/apt-get', 'download', 'xvfb'], cwd=temp, timeout=90, check=True)
+                packages = list(temp.glob('xvfb_*.deb'))
+                assert len(packages) == 1
+                subprocess.run(['/usr/bin/dpkg-deb', '-x', str(packages[0]), str(temp / 'package')], timeout=20, check=True)
+                binary = str(temp / 'package/usr/bin/Xvfb')
+            number = next(n for n in range(101, 120) if not Path(f'/tmp/.X11-unix/X{n}').exists())
+            display = str(number).encode()
+            auth = temp / 'Xauthority'
+            auth.write_bytes(struct.pack('>HH', 65535, 0) + struct.pack('>H', len(display)) + display
+                + struct.pack('>H', 18) + b'MIT-MAGIC-COOKIE-1' + struct.pack('>H', 16) + secrets.token_bytes(16))
+            auth.chmod(0o600)
+            server = subprocess.Popen([binary, f':{number}', '-screen', '0', '1280x800x24', '-nolisten', 'tcp', '-auth', str(auth)])
+            for _ in range(100):
+                if Path(f'/tmp/.X11-unix/X{number}').exists():
+                    break
+                if server.poll() is not None:
+                    raise RuntimeError('Xvfb failed')
+                time.sleep(.05)
+            env.update(DISPLAY=f':{number}', XAUTHORITY=str(auth), GDK_BACKEND='x11', GTK_A11Y='test',
+                XDG_STATE_HOME=str(temp / 'state'), XDG_CONFIG_HOME=str(temp / 'config'), XDG_CACHE_HOME=str(temp / 'cache'))
+            env.pop('WAYLAND_DISPLAY', None)
+            env.pop('BROADWAY_DISPLAY', None)
+            if mode == 'ui-performance':
+                try:
+                    probe = subprocess.run(['glxinfo', '-B'], env=env, capture_output=True, text=True, timeout=15, check=False)
+                    (out / 'ui-performance-gl.txt').write_text(probe.stdout + probe.stderr)
+                except FileNotFoundError:
+                    (out / 'ui-performance-gl.txt').write_text('glxinfo unavailable\n')
+            command = [str(python), '-c', "import locale,pytest; locale.getlocale=lambda:('en_US','UTF-8'); raise SystemExit(pytest.main(" + repr(args) + '))']
+        with (out / (mode + '.log')).open('w') as stream:
+            started = time.monotonic()
+            result = subprocess.run(command, cwd=root, env=env, stdout=stream, stderr=subprocess.STDOUT, timeout=1200)
+        (out / (mode + '-result.json')).write_text(json.dumps({
+            'command': command, 'exit_code': result.returncode, 'seconds': time.monotonic() - started,
+        }, indent=2) + '\n')
+        print(mode, 'exit', result.returncode, flush=True)
+        print((out / (mode + '.log')).read_text()[-2500:])
+        raise SystemExit(result.returncode)
+    finally:
+        if server is not None:
+            server.terminate()
+            server.wait(timeout=5)

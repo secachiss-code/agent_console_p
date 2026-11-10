@@ -1,0 +1,40 @@
+"""Exercise the actual built Debian payload without installing it on the host."""
+import hashlib
+import json
+import os
+from pathlib import Path
+import subprocess
+import tempfile
+
+root = Path(__file__).resolve().parents[2]
+out = Path(__file__).resolve().parent
+package = root / 'dist/aconsole_0.1.1_amd64.deb'
+results = []
+with tempfile.TemporaryDirectory(prefix='ac-qa17-deb-') as directory:
+    tree = Path(directory)
+    subprocess.run(['dpkg-deb', '-x', str(package), str(tree)], check=True, timeout=60)
+    metadata = subprocess.check_output(['dpkg-deb', '-f', str(package)], text=True, timeout=15)
+    env = dict(os.environ, HOME=str(tree / 'home'), XDG_STATE_HOME=str(tree / 'state'),
+        XDG_CONFIG_HOME=str(tree / 'config'), XDG_CACHE_HOME=str(tree / 'cache'), PYTHONNOUSERSITE='1')
+    (tree / 'home').mkdir()
+    env.pop('PYTHONPATH', None)
+    env.pop('PYTHONHOME', None)
+    probes = [
+        ('core-import', 'core', ['-c', 'import sys; assert not sys._is_gil_enabled(); import aconsole.core; print(aconsole.core.__file__)'], 0),
+        ('ui-import', 'ui', ['-c', 'import sys; assert sys._is_gil_enabled(); import gi, aconsole.ui; print(aconsole.ui.__file__)'], 0),
+        ('ui-help', 'ui', ['-m', 'aconsole', '--help'], 0),
+        ('core-help', 'core', ['-m', 'aconsole.core', '--help'], 2),
+    ]
+    for label, environment, arguments, expected in probes:
+        command = [str(tree / 'opt/aconsole' / environment / 'bin/python'), *arguments]
+        result = subprocess.run(command, cwd='/tmp', env=env, capture_output=True, text=True, timeout=30)
+        results.append({'probe': label, 'exit_code': result.returncode, 'expected_exit': expected,
+            'stdout': result.stdout.replace(str(tree), '<extracted-package>'),
+            'stderr': result.stderr.replace(str(tree), '<extracted-package>')})
+        print(label, result.returncode, 'expected', expected, flush=True)
+summary = {'package': str(package.relative_to(root)), 'bytes': package.stat().st_size,
+    'sha256': hashlib.file_digest(package.open('rb'), 'sha256').hexdigest(),
+    'metadata': metadata, 'probes': results,
+    'limitation': 'Extracted payload only. No dpkg/apt install, maintainer scripts or desktop integration acceptance.'}
+(out / 'package-smoke.json').write_text(json.dumps(summary, indent=2) + '\n')
+raise SystemExit(int(any(item['exit_code'] != item['expected_exit'] for item in results)))

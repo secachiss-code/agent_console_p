@@ -1,0 +1,9 @@
+{
+  "command": [
+    "/home/sas/Projects/sp_aconsole_prototype/.venv-ui/bin/python",
+    "-c",
+    "import locale,pytest; locale.getlocale=lambda:('en_US','UTF-8'); raise SystemExit(pytest.main(['tests/gui/front/test_git_scale_ui.py::test_scrolling_a_long_history', '-o', 'addopts=', '-p', 'no:cacheprovider', '--basetemp=/tmp/ac-qa4-final-ui-performance', '--junitxml=/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/038657e1539f15ad/artifacts/qa4-final/ui-performance.xml']))"
+  ],
+  "exit_code": 1,
+  "seconds": 14.743937161000758
+}

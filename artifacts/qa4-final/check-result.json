@@ -1,0 +1,8 @@
+{
+  "command": [
+    "sh",
+    "tools/check.sh"
+  ],
+  "exit_code": 0,
+  "seconds": 48.94356330699975
+}
