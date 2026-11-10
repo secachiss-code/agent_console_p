@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="2.273" timestamp="2026-11-09T22:04:14.895158+03:00" hostname="somovasnbook14"><testcase classname="tests.core.test_mcp_handover_missing_project" name="test_missing_project_handover_is_rejected_and_can_be_retried_after_project_restore" time="0.874"><failure message="AssertionError('assert False is True\n +  where False = CallToolResult(meta={\'io.modelcontextprotocol/serverInfo\': {\'name\': \'aconsole\', \'version\': \'\'}}, content=[TextContent(...&quot;,&quot;goal&quot;:&quot;Keep this&quot;}\', annotations=None, meta=None)], structured_content=None, is_error=False, result_type=\'complete\').is_error') [single exception in ExceptionGroup]">+ Exception Group Traceback (most recent call last):
+  |   File "/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/038657e1539f15ad/tests/core/test_mcp_handover_missing_project.py", line 42, in test_missing_project_handover_is_rejected_and_can_be_retried_after_project_restore
+  |     handover_id = asyncio.run(scenario())
+  |   File "/home/sas/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py", line 205, in run
+  |     return runner.run(main)
+  |            ~~~~~~~~~~^^^^^^
+  |   File "/home/sas/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py", line 128, in run
+  |     return self._loop.run_until_complete(task)
+  |            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  |   File "/home/sas/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/base_events.py", line 724, in run_until_complete
+  |     return future.result()
+  |            ~~~~~~~~~~~~~^^
+  |   File "/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/038657e1539f15ad/tests/core/test_mcp_handover_missing_project.py", line 29, in scenario
+  |     async with Client(build_server(board, context)) as client:
+  |                ~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |   File "/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/mcp/client/client.py", line 480, in __aexit__
+  |     await self._exit_stack.__aexit__(exc_type, exc_val, exc_tb)
+  |   File "/home/sas/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/contextlib.py", line 813, in __aexit__
+  |     raise exc
+  |   File "/home/sas/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/contextlib.py", line 796, in __aexit__
+  |     cb_suppress = await cb(*exc_details)
+  |                   ^^^^^^^^^^^^^^^^^^^^^^
+  |   File "/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/anyio/_backends/_asyncio.py", line 847, in __aexit__
+  |     raise BaseExceptionGroup(
+  |         "unhandled errors in a TaskGroup", self._exceptions
+  |     ) from None
+  | ExceptionGroup: unhandled errors in a TaskGroup (1 sub-exception)
+  +-+---------------- 1 ----------------
+    | Exception Group Traceback (most recent call last):
+    |   File "/home/sas/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/contextlib.py", line 796, in __aexit__
+    |     cb_suppress = await cb(*exc_details)
+    |                   ^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/mcp/client/session.py", line 514, in __aexit__
+    |     result = await self._task_group.__aexit__(exc_type, exc_val, exc_tb)
+    |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/anyio/_backends/_asyncio.py", line 847, in __aexit__
+    |     raise BaseExceptionGroup(
+    |         "unhandled errors in a TaskGroup", self._exceptions
+    |     ) from None
+    | ExceptionGroup: unhandled errors in a TaskGroup (1 sub-exception)
+    +-+---------------- 1 ----------------
+      | Traceback (most recent call last):
+      |   File "/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/038657e1539f15ad/tests/core/test_mcp_handover_missing_project.py", line 31, in scenario
+      |     assert result.is_error is True
+      | AssertionError: assert False is True
+      |  +  where False = CallToolResult(meta={'io.modelcontextprotocol/serverInfo': {'name': 'aconsole', 'version': ''}}, content=[TextContent(...","goal":"Keep this"}', annotations=None, meta=None)], structured_content=None, is_error=False, result_type='complete').is_error
+      +------------------------------------</failure></testcase></testsuite></testsuites>

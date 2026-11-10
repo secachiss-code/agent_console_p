@@ -1,0 +1,29 @@
+{
+  "source_base": "e1c3807acc07189dfaf793f86d4522f4a040a8e7",
+  "gui_source_base": "4559120751b55be5808af7d68cfbb2e18c16f3a9",
+  "changed_source": [
+    "src/aconsole/core/infrastructure/persistence/repositories/knowledge.py"
+  ],
+  "fresh_core": "artifacts/mcp1/.coverage.core",
+  "saved_gui": "artifacts/qa9/.coverage.final-full",
+  "gui_files_purged": [
+    "/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/038657e1539f15ad/src/aconsole/core/infrastructure/persistence/repositories/knowledge.py"
+  ],
+  "totals": {
+    "covered_lines": 26659,
+    "num_statements": 28986,
+    "percent_covered": 89.76227418818574,
+    "percent_covered_display": "90",
+    "missing_lines": 2327,
+    "excluded_lines": 381,
+    "percent_statements_covered": 91.9719864762299,
+    "percent_statements_covered_display": "92",
+    "num_branches": 7106,
+    "num_partial_branches": 1036,
+    "covered_branches": 5738,
+    "missing_branches": 1368,
+    "percent_branches_covered": 80.74866310160428,
+    "percent_branches_covered_display": "81"
+  },
+  "limitation": "Current full core plus previous GUI on unchanged modules; not a fresh CI or full GUI run."
+}
