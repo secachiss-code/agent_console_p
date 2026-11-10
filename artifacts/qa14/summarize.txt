@@ -1,0 +1,58 @@
+"""Compare MCP-1 coverage with the same inputs plus QA-14."""
+import json
+from pathlib import Path
+import subprocess
+import sys
+import tempfile
+
+import coverage
+
+root = Path(__file__).resolve().parents[2]
+out = root / 'artifacts/qa14'
+baseline_path = root / 'artifacts/mcp1/.coverage.combined'
+focused_path = out / '.coverage.recovery'
+
+
+def combine(label, inputs):
+    cov = coverage.Coverage(data_file=str(out / ('.coverage.' + label)))
+    cov.combine([str(path) for path in inputs], keep=True)
+    cov.save()
+    with tempfile.TemporaryDirectory(prefix='qa14-summary-') as directory:
+        path = Path(directory) / 'coverage.json'
+        cov.json_report(outfile=str(path))
+        return json.loads(path.read_text())
+
+
+# Refuse to compare results against coverage measured on a different product.
+source_commit = '9a9c0bc15963cad042adc7f59e306e60da33411b'
+subprocess.run(['git', 'diff', '--exit-code', source_commit, '--', 'src', 'pyproject.toml'], cwd=root, check=True)
+baseline = combine('baseline', [baseline_path])
+candidate = combine('candidate', [baseline_path, focused_path])
+summary = {
+    'source_commit': source_commit,
+    'source_unchanged': True,
+    'baseline_inputs': ['artifacts/mcp1/.coverage.combined'],
+    'candidate_extra_input': 'artifacts/qa14/.coverage.recovery',
+    'before': baseline['totals'], 'after': candidate['totals'], 'files': {},
+}
+for name, value in candidate['files'].items():
+    previous = baseline['files'][name]
+    assert value['summary']['num_statements'] == previous['summary']['num_statements']
+    assert value['summary']['num_branches'] == previous['summary']['num_branches']
+    lines = sorted(set(value['executed_lines']) - set(previous['executed_lines']))
+    branches = sorted(set(map(tuple, value['executed_branches']))
+                      - set(map(tuple, previous['executed_branches'])))
+    if lines or branches:
+        summary['files'][name] = {'before': previous['summary'], 'after': value['summary'],
+                                  'added_lines': lines, 'added_branch_exits': branches}
+summary['added_lines'] = candidate['totals']['covered_lines'] - baseline['totals']['covered_lines']
+summary['added_branch_exits'] = candidate['totals']['covered_branches'] - baseline['totals']['covered_branches']
+(out / 'coverage-delta.json').write_text(json.dumps(summary, indent=2) + '\n')
+print('Same-source delta:', summary['added_lines'], 'lines,', summary['added_branch_exits'], 'branch exits')
+print('Coverage:', baseline['totals']['percent_covered'], '->', candidate['totals']['percent_covered'])
+result = subprocess.run([
+    sys.executable, '-m', 'coverage', 'report', '--data-file=' + str(out / '.coverage.candidate'),
+    '--precision=2', '--format=total',
+], cwd=root, capture_output=True, text=True, check=False)
+(out / 'coverage-gate.txt').write_text(result.stdout + result.stderr + '\nexit_code=' + str(result.returncode) + '\n')
+print('90% coverage gate exit:', result.returncode)
