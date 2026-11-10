@@ -1,0 +1,42 @@
+{
+  "source_base": "9c9103808e3056bea2ad6b3325a96dc32ba9b20a",
+  "totals": {
+    "baseline": {
+      "covered_lines": 26682,
+      "num_statements": 28988,
+      "percent_covered": 89.86314273049645,
+      "percent_covered_display": "90",
+      "missing_lines": 2306,
+      "excluded_lines": 381,
+      "percent_statements_covered": 92.0449841313647,
+      "percent_statements_covered_display": "92",
+      "num_branches": 7108,
+      "num_partial_branches": 1021,
+      "covered_branches": 5755,
+      "missing_branches": 1353,
+      "percent_branches_covered": 80.96510973550929,
+      "percent_branches_covered_display": "81",
+      "gate_exit": 2
+    },
+    "combined": {
+      "covered_lines": 26715,
+      "num_statements": 28988,
+      "percent_covered": 90.0072030141844,
+      "percent_covered_display": "90",
+      "missing_lines": 2273,
+      "excluded_lines": 381,
+      "percent_statements_covered": 92.15882434110667,
+      "percent_statements_covered_display": "92",
+      "num_branches": 7108,
+      "num_partial_branches": 1004,
+      "covered_branches": 5774,
+      "missing_branches": 1334,
+      "percent_branches_covered": 81.23241418120428,
+      "percent_branches_covered_display": "81",
+      "gate_exit": 0
+    }
+  },
+  "new_lines": 33,
+  "new_branches": 19,
+  "limitation": "QA-15 full core baseline and focused evidence, QA-9 GUI unchanged modules only, plus QA-16 focused. Not fresh full GUI or CI. See QA-15 report for exact source filtering."
+}
