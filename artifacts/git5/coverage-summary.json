@@ -1,0 +1,30 @@
+{
+  "source_base": "e6bcd572cd5964a90dbb395064a256daef8f606f",
+  "gui_source_base": "4559120751b55be5808af7d68cfbb2e18c16f3a9",
+  "changed_source": [
+    "src/aconsole/core/application/services/git_merge.py"
+  ],
+  "fresh_core": "artifacts/git5/.coverage.core",
+  "saved_gui": "artifacts/qa9/.coverage.final-full",
+  "gui_files_purged": [
+    "/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/038657e1539f15ad/src/aconsole/core/infrastructure/persistence/repositories/knowledge.py",
+    "/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/038657e1539f15ad/src/aconsole/core/application/services/git_merge.py"
+  ],
+  "totals": {
+    "covered_lines": 26677,
+    "num_statements": 28988,
+    "percent_covered": 89.83266843971631,
+    "percent_covered_display": "90",
+    "missing_lines": 2311,
+    "excluded_lines": 381,
+    "percent_statements_covered": 92.02773561473714,
+    "percent_statements_covered_display": "92",
+    "num_branches": 7108,
+    "num_partial_branches": 1029,
+    "covered_branches": 5749,
+    "missing_branches": 1359,
+    "percent_branches_covered": 80.88069780528981,
+    "percent_branches_covered_display": "81"
+  },
+  "limitation": "Current full core plus previous GUI on unchanged modules; not a fresh CI or full GUI run."
+}
