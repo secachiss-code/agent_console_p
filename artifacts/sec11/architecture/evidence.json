@@ -1,0 +1,1781 @@
+{
+  "base_commit": "a5bb65bd1b834c21f50116700aebabde3b630799",
+  "scope": "design and evidence index only; no product implementation or fresh execution",
+  "product_status": {
+    "SEC-11": "failed",
+    "SEC-13": "failed"
+  },
+  "sources": [
+    {
+      "path": "src/aconsole/core/infrastructure/git/runner.py",
+      "sha256": "fb8ff7b7f1ff0c50397aaade4840fea728f365e3bb3db224044a6ee2a5ed80d7",
+      "matches_base": true,
+      "symbols": [
+        {
+          "name": "GitCall",
+          "line": 85,
+          "end_line": 93
+        },
+        {
+          "name": "GitOutput",
+          "line": 97,
+          "end_line": 109
+        },
+        {
+          "name": "GitRunner",
+          "line": 113,
+          "end_line": 222
+        },
+        {
+          "name": "_without_drivers",
+          "line": 225,
+          "end_line": 236
+        },
+        {
+          "name": "_neutral",
+          "line": 239,
+          "end_line": 246
+        },
+        {
+          "name": "_config",
+          "line": 249,
+          "end_line": 251
+        },
+        {
+          "name": "_guard_diff",
+          "line": 254,
+          "end_line": 263
+        },
+        {
+          "name": "_environment",
+          "line": 266,
+          "end_line": 281
+        },
+        {
+          "name": "text",
+          "line": 103,
+          "end_line": 104
+        },
+        {
+          "name": "said",
+          "line": 107,
+          "end_line": 109
+        },
+        {
+          "name": "__init__",
+          "line": 114,
+          "end_line": 127
+        },
+        {
+          "name": "read",
+          "line": 129,
+          "end_line": 140
+        },
+        {
+          "name": "write",
+          "line": 142,
+          "end_line": 154
+        },
+        {
+          "name": "invoke",
+          "line": 156,
+          "end_line": 165
+        },
+        {
+          "name": "_checked",
+          "line": 167,
+          "end_line": 170
+        },
+        {
+          "name": "_spawn",
+          "line": 172,
+          "end_line": 195
+        },
+        {
+          "name": "_execute",
+          "line": 197,
+          "end_line": 222
+        }
+      ]
+    },
+    {
+      "path": "src/aconsole/core/infrastructure/git/operations.py",
+      "sha256": "3d7de4c9669df50c30d14f15962528abc33982f117445023ac0c728523f27fa6",
+      "matches_base": true,
+      "symbols": [
+        {
+          "name": "_done",
+          "line": 33,
+          "end_line": 34
+        },
+        {
+          "name": "GitMutations",
+          "line": 38,
+          "end_line": 248
+        },
+        {
+          "name": "__init__",
+          "line": 41,
+          "end_line": 43
+        },
+        {
+          "name": "stage",
+          "line": 45,
+          "end_line": 46
+        },
+        {
+          "name": "unstage",
+          "line": 48,
+          "end_line": 51
+        },
+        {
+          "name": "commit",
+          "line": 53,
+          "end_line": 64
+        },
+        {
+          "name": "head",
+          "line": 66,
+          "end_line": 68
+        },
+        {
+          "name": "in_source",
+          "line": 70,
+          "end_line": 72
+        },
+        {
+          "name": "file_counts",
+          "line": 74,
+          "end_line": 91
+        },
+        {
+          "name": "restore_file",
+          "line": 93,
+          "end_line": 101
+        },
+        {
+          "name": "merge",
+          "line": 103,
+          "end_line": 135
+        },
+        {
+          "name": "with_trailers",
+          "line": 137,
+          "end_line": 143
+        },
+        {
+          "name": "merge_hooks",
+          "line": 145,
+          "end_line": 170
+        },
+        {
+          "name": "_hook",
+          "line": 172,
+          "end_line": 176
+        },
+        {
+          "name": "_load_tree",
+          "line": 178,
+          "end_line": 187
+        },
+        {
+          "name": "_run_hook",
+          "line": 189,
+          "end_line": 196
+        },
+        {
+          "name": "tree_of",
+          "line": 198,
+          "end_line": 200
+        },
+        {
+          "name": "commit_tree",
+          "line": 202,
+          "end_line": 205
+        },
+        {
+          "name": "move_ref",
+          "line": 207,
+          "end_line": 208
+        },
+        {
+          "name": "rebase",
+          "line": 210,
+          "end_line": 211
+        },
+        {
+          "name": "cherry_pick",
+          "line": 213,
+          "end_line": 214
+        },
+        {
+          "name": "step",
+          "line": 216,
+          "end_line": 217
+        },
+        {
+          "name": "has_ignored",
+          "line": 219,
+          "end_line": 222
+        },
+        {
+          "name": "remove_worktree",
+          "line": 224,
+          "end_line": 239
+        },
+        {
+          "name": "delete_branch",
+          "line": 241,
+          "end_line": 242
+        },
+        {
+          "name": "keep_ref",
+          "line": 244,
+          "end_line": 245
+        },
+        {
+          "name": "safety_ref",
+          "line": 247,
+          "end_line": 248
+        }
+      ]
+    },
+    {
+      "path": "src/aconsole/core/application/services/git_ops.py",
+      "sha256": "9d8f7752f0435825e3eca270aa4d72449e5f669d609b223675c4707476c628af",
+      "matches_base": true,
+      "symbols": [
+        {
+          "name": "require_paths",
+          "line": 36,
+          "end_line": 46
+        },
+        {
+          "name": "bad_token",
+          "line": 49,
+          "end_line": 50
+        },
+        {
+          "name": "Tokens",
+          "line": 53,
+          "end_line": 71
+        },
+        {
+          "name": "GitOperationService",
+          "line": 75,
+          "end_line": 191
+        },
+        {
+          "name": "__init__",
+          "line": 56,
+          "end_line": 59
+        },
+        {
+          "name": "issue",
+          "line": 61,
+          "end_line": 65
+        },
+        {
+          "name": "spend",
+          "line": 67,
+          "end_line": 71
+        },
+        {
+          "name": "__init__",
+          "line": 76,
+          "end_line": 93
+        },
+        {
+          "name": "lock_of",
+          "line": 95,
+          "end_line": 97
+        },
+        {
+          "name": "stage",
+          "line": 99,
+          "end_line": 104
+        },
+        {
+          "name": "unstage",
+          "line": 106,
+          "end_line": 111
+        },
+        {
+          "name": "commit",
+          "line": 113,
+          "end_line": 119
+        },
+        {
+          "name": "restore_preview",
+          "line": 121,
+          "end_line": 134
+        },
+        {
+          "name": "restore_file",
+          "line": 136,
+          "end_line": 153
+        },
+        {
+          "name": "tab_of",
+          "line": 155,
+          "end_line": 156
+        },
+        {
+          "name": "require_quiet",
+          "line": 158,
+          "end_line": 163
+        },
+        {
+          "name": "require_no_agent",
+          "line": 165,
+          "end_line": 168
+        },
+        {
+          "name": "_change",
+          "line": 170,
+          "end_line": 187
+        },
+        {
+          "name": "_answer",
+          "line": 189,
+          "end_line": 191
+        },
+        {
+          "name": "commit",
+          "line": 116,
+          "end_line": 117
+        }
+      ]
+    },
+    {
+      "path": "src/aconsole/core/application/services/git_merge.py",
+      "sha256": "9bc437a8f5272d3c53d09f5dd127f64dfb3cf8b5a7bf5a987b86c9e15505eb0e",
+      "matches_base": true,
+      "symbols": [
+        {
+          "name": "view_of",
+          "line": 74,
+          "end_line": 92
+        },
+        {
+          "name": "_oid_of",
+          "line": 95,
+          "end_line": 100
+        },
+        {
+          "name": "_row_on",
+          "line": 103,
+          "end_line": 104
+        },
+        {
+          "name": "_refusal",
+          "line": 107,
+          "end_line": 118
+        },
+        {
+          "name": "GitMergeService",
+          "line": 122,
+          "end_line": 479
+        },
+        {
+          "name": "_default_message",
+          "line": 482,
+          "end_line": 485
+        },
+        {
+          "name": "__init__",
+          "line": 123,
+          "end_line": 144
+        },
+        {
+          "name": "use_journal",
+          "line": 146,
+          "end_line": 157
+        },
+        {
+          "name": "of_project",
+          "line": 159,
+          "end_line": 162
+        },
+        {
+          "name": "operation",
+          "line": 164,
+          "end_line": 171
+        },
+        {
+          "name": "preview",
+          "line": 173,
+          "end_line": 215
+        },
+        {
+          "name": "merge",
+          "line": 217,
+          "end_line": 262
+        },
+        {
+          "name": "_require_recorded_source",
+          "line": 264,
+          "end_line": 272
+        },
+        {
+          "name": "landed_from",
+          "line": 274,
+          "end_line": 280
+        },
+        {
+          "name": "open_at",
+          "line": 282,
+          "end_line": 288
+        },
+        {
+          "name": "waiting",
+          "line": 290,
+          "end_line": 293
+        },
+        {
+          "name": "retry",
+          "line": 295,
+          "end_line": 309
+        },
+        {
+          "name": "_blockers",
+          "line": 311,
+          "end_line": 342
+        },
+        {
+          "name": "_busy",
+          "line": 344,
+          "end_line": 347
+        },
+        {
+          "name": "_begin",
+          "line": 349,
+          "end_line": 386
+        },
+        {
+          "name": "_message",
+          "line": 388,
+          "end_line": 395
+        },
+        {
+          "name": "begin",
+          "line": 397,
+          "end_line": 402
+        },
+        {
+          "name": "_run",
+          "line": 404,
+          "end_line": 425
+        },
+        {
+          "name": "_ended",
+          "line": 427,
+          "end_line": 436
+        },
+        {
+          "name": "_follow",
+          "line": 438,
+          "end_line": 448
+        },
+        {
+          "name": "_settle",
+          "line": 450,
+          "end_line": 467
+        },
+        {
+          "name": "store",
+          "line": 469,
+          "end_line": 479
+        }
+      ]
+    },
+    {
+      "path": "src/aconsole/core/infrastructure/tabs.py",
+      "sha256": "7ac3b6b2bd75edf0200876feeafcf5f76ec87b9ef438e840e76a8c8b80b48d61",
+      "matches_base": true,
+      "symbols": [
+        {
+          "name": "HostBins",
+          "line": 66,
+          "end_line": 71
+        },
+        {
+          "name": "HostBox",
+          "line": 75,
+          "end_line": 79
+        },
+        {
+          "name": "HostTabs",
+          "line": 83,
+          "end_line": 322
+        },
+        {
+          "name": "HostRepos",
+          "line": 326,
+          "end_line": 347
+        },
+        {
+          "name": "HostAgents",
+          "line": 351,
+          "end_line": 395
+        },
+        {
+          "name": "default_worktrees",
+          "line": 398,
+          "end_line": 402
+        },
+        {
+          "name": "default_tabs",
+          "line": 405,
+          "end_line": 411
+        },
+        {
+          "name": "_create_failed",
+          "line": 414,
+          "end_line": 419
+        },
+        {
+          "name": "__init__",
+          "line": 86,
+          "end_line": 110
+        },
+        {
+          "name": "new_id",
+          "line": 112,
+          "end_line": 113
+        },
+        {
+          "name": "new_secret",
+          "line": 115,
+          "end_line": 116
+        },
+        {
+          "name": "pause",
+          "line": 118,
+          "end_line": 119
+        },
+        {
+          "name": "stop_process",
+          "line": 121,
+          "end_line": 125
+        },
+        {
+          "name": "prepare_image",
+          "line": 127,
+          "end_line": 137
+        },
+        {
+          "name": "stop_in_container",
+          "line": 139,
+          "end_line": 144
+        },
+        {
+          "name": "create_worktree",
+          "line": 146,
+          "end_line": 155
+        },
+        {
+          "name": "worktree_state",
+          "line": 157,
+          "end_line": 161
+        },
+        {
+          "name": "create_isolated_worktree",
+          "line": 163,
+          "end_line": 174
+        },
+        {
+          "name": "release_worktree",
+          "line": 176,
+          "end_line": 177
+        },
+        {
+          "name": "remove_worktree",
+          "line": 179,
+          "end_line": 185
+        },
+        {
+          "name": "agent_output",
+          "line": 187,
+          "end_line": 195
+        },
+        {
+          "name": "claude_usage",
+          "line": 197,
+          "end_line": 206
+        },
+        {
+          "name": "codex_hooks",
+          "line": 208,
+          "end_line": 217
+        },
+        {
+          "name": "codex_rate_limits",
+          "line": 219,
+          "end_line": 227
+        },
+        {
+          "name": "cursor_usage",
+          "line": 229,
+          "end_line": 235
+        },
+        {
+          "name": "opencode_usage",
+          "line": 237,
+          "end_line": 243
+        },
+        {
+          "name": "inspect_container",
+          "line": 245,
+          "end_line": 246
+        },
+        {
+          "name": "agent_home",
+          "line": 248,
+          "end_line": 263
+        },
+        {
+          "name": "signed_in",
+          "line": 265,
+          "end_line": 272
+        },
+        {
+          "name": "ensure_container",
+          "line": 274,
+          "end_line": 280
+        },
+        {
+          "name": "exec_argv",
+          "line": 282,
+          "end_line": 288
+        },
+        {
+          "name": "orphans",
+          "line": 290,
+          "end_line": 294
+        },
+        {
+          "name": "container_path",
+          "line": 296,
+          "end_line": 302
+        },
+        {
+          "name": "base_env",
+          "line": 304,
+          "end_line": 305
+        },
+        {
+          "name": "python_bin",
+          "line": 307,
+          "end_line": 308
+        },
+        {
+          "name": "socket_path",
+          "line": 310,
+          "end_line": 311
+        },
+        {
+          "name": "ingest_port",
+          "line": 313,
+          "end_line": 314
+        },
+        {
+          "name": "set_ingest_port",
+          "line": 316,
+          "end_line": 318
+        },
+        {
+          "name": "set_worktrees_dir",
+          "line": 320,
+          "end_line": 322
+        },
+        {
+          "name": "__init__",
+          "line": 329,
+          "end_line": 331
+        },
+        {
+          "name": "toplevel",
+          "line": 333,
+          "end_line": 338
+        },
+        {
+          "name": "_ask",
+          "line": 340,
+          "end_line": 347
+        },
+        {
+          "name": "__init__",
+          "line": 354,
+          "end_line": 368
+        },
+        {
+          "name": "agents",
+          "line": 370,
+          "end_line": 380
+        },
+        {
+          "name": "_probe",
+          "line": 382,
+          "end_line": 395
+        }
+      ]
+    },
+    {
+      "path": "src/aconsole/core/infrastructure/mcp/tools.py",
+      "sha256": "35bf7aa0778bd7a2e0ed4aeac8e437f76c831224087b32ed9bf49539686d2ac3",
+      "matches_base": true,
+      "symbols": [
+        {
+          "name": "_Frozen",
+          "line": 65,
+          "end_line": 66
+        },
+        {
+          "name": "NodeIn",
+          "line": 69,
+          "end_line": 84
+        },
+        {
+          "name": "NodeRef",
+          "line": 87,
+          "end_line": 89
+        },
+        {
+          "name": "PlanCreated",
+          "line": 92,
+          "end_line": 95
+        },
+        {
+          "name": "Added",
+          "line": 98,
+          "end_line": 100
+        },
+        {
+          "name": "NodeBrief",
+          "line": 103,
+          "end_line": 116
+        },
+        {
+          "name": "PlanGot",
+          "line": 119,
+          "end_line": 125
+        },
+        {
+          "name": "ReadyNode",
+          "line": 128,
+          "end_line": 134
+        },
+        {
+          "name": "PlanReady",
+          "line": 137,
+          "end_line": 138
+        },
+        {
+          "name": "Brief",
+          "line": 141,
+          "end_line": 146
+        },
+        {
+          "name": "CtxItem",
+          "line": 149,
+          "end_line": 156
+        },
+        {
+          "name": "CtxResult",
+          "line": 159,
+          "end_line": 162
+        },
+        {
+          "name": "Claimed",
+          "line": 165,
+          "end_line": 170
+        },
+        {
+          "name": "Updated",
+          "line": 173,
+          "end_line": 175
+        },
+        {
+          "name": "Attached",
+          "line": 178,
+          "end_line": 179
+        },
+        {
+          "name": "KbAdded",
+          "line": 182,
+          "end_line": 184
+        },
+        {
+          "name": "Impact",
+          "line": 187,
+          "end_line": 190
+        },
+        {
+          "name": "HandoverResult",
+          "line": 193,
+          "end_line": 203
+        },
+        {
+          "name": "PlanRow",
+          "line": 206,
+          "end_line": 211
+        },
+        {
+          "name": "PlanList",
+          "line": 214,
+          "end_line": 215
+        },
+        {
+          "name": "_ToolError",
+          "line": 218,
+          "end_line": 223
+        },
+        {
+          "name": "_result_text",
+          "line": 226,
+          "end_line": 230
+        },
+        {
+          "name": "bind_tab",
+          "line": 236,
+          "end_line": 243
+        },
+        {
+          "name": "active",
+          "line": 246,
+          "end_line": 249
+        },
+        {
+          "name": "publish",
+          "line": 252,
+          "end_line": 276
+        },
+        {
+          "name": "compact",
+          "line": 279,
+          "end_line": 289
+        },
+        {
+          "name": "TabContext",
+          "line": 293,
+          "end_line": 299
+        },
+        {
+          "name": "_Meta",
+          "line": 303,
+          "end_line": 315
+        },
+        {
+          "name": "_Stored",
+          "line": 319,
+          "end_line": 328
+        },
+        {
+          "name": "_Fact",
+          "line": 332,
+          "end_line": 342
+        },
+        {
+          "name": "_Handover",
+          "line": 346,
+          "end_line": 354
+        },
+        {
+          "name": "CodeGraph",
+          "line": 357,
+          "end_line": 360
+        },
+        {
+          "name": "PlanBoard",
+          "line": 363,
+          "end_line": 1208
+        },
+        {
+          "name": "_clock",
+          "line": 1211,
+          "end_line": 1212
+        },
+        {
+          "name": "_number",
+          "line": 1215,
+          "end_line": 1218
+        },
+        {
+          "name": "_plan_status",
+          "line": 1221,
+          "end_line": 1224
+        },
+        {
+          "name": "_stored_node",
+          "line": 1227,
+          "end_line": 1257
+        },
+        {
+          "name": "_node_note",
+          "line": 1260,
+          "end_line": 1276
+        },
+        {
+          "name": "_after_restart",
+          "line": 1279,
+          "end_line": 1284
+        },
+        {
+          "name": "_restored",
+          "line": 1287,
+          "end_line": 1335
+        },
+        {
+          "name": "_require_tab",
+          "line": 1338,
+          "end_line": 1340
+        },
+        {
+          "name": "_domain",
+          "line": 1343,
+          "end_line": 1345
+        },
+        {
+          "name": "_stop",
+          "line": 1348,
+          "end_line": 1356
+        },
+        {
+          "name": "_require_present",
+          "line": 1359,
+          "end_line": 1365
+        },
+        {
+          "name": "_known",
+          "line": 1368,
+          "end_line": 1371
+        },
+        {
+          "name": "_spec",
+          "line": 1374,
+          "end_line": 1380
+        },
+        {
+          "name": "_meta",
+          "line": 1383,
+          "end_line": 1396
+        },
+        {
+          "name": "_refs",
+          "line": 1399,
+          "end_line": 1400
+        },
+        {
+          "name": "_canvas",
+          "line": 1403,
+          "end_line": 1404
+        },
+        {
+          "name": "_counts",
+          "line": 1407,
+          "end_line": 1412
+        },
+        {
+          "name": "_brief",
+          "line": 1415,
+          "end_line": 1437
+        },
+        {
+          "name": "_row",
+          "line": 1440,
+          "end_line": 1448
+        },
+        {
+          "name": "_active",
+          "line": 1451,
+          "end_line": 1455
+        },
+        {
+          "name": "_hit",
+          "line": 1458,
+          "end_line": 1463
+        },
+        {
+          "name": "_item",
+          "line": 1466,
+          "end_line": 1476
+        },
+        {
+          "name": "_check_source",
+          "line": 1479,
+          "end_line": 1490
+        },
+        {
+          "name": "impact_layers",
+          "line": 1493,
+          "end_line": 1517
+        },
+        {
+          "name": "_stamp",
+          "line": 1520,
+          "end_line": 1523
+        },
+        {
+          "name": "_optional_stamp",
+          "line": 1526,
+          "end_line": 1529
+        },
+        {
+          "name": "_diff",
+          "line": 1532,
+          "end_line": 1533
+        },
+        {
+          "name": "_verified",
+          "line": 1536,
+          "end_line": 1538
+        },
+        {
+          "name": "_git",
+          "line": 1541,
+          "end_line": 1547
+        },
+        {
+          "name": "__init__",
+          "line": 221,
+          "end_line": 223
+        },
+        {
+          "name": "reset",
+          "line": 240,
+          "end_line": 241
+        },
+        {
+          "name": "wrapped",
+          "line": 261,
+          "end_line": 270
+        },
+        {
+          "name": "resolve",
+          "line": 358,
+          "end_line": 358
+        },
+        {
+          "name": "dependents",
+          "line": 360,
+          "end_line": 360
+        },
+        {
+          "name": "__init__",
+          "line": 366,
+          "end_line": 382
+        },
+        {
+          "name": "use_store",
+          "line": 384,
+          "end_line": 391
+        },
+        {
+          "name": "use_knowledge",
+          "line": 393,
+          "end_line": 425
+        },
+        {
+          "name": "views",
+          "line": 427,
+          "end_line": 435
+        },
+        {
+          "name": "view",
+          "line": 437,
+          "end_line": 440
+        },
+        {
+          "name": "set_node_status",
+          "line": 442,
+          "end_line": 462
+        },
+        {
+          "name": "record_merge",
+          "line": 464,
+          "end_line": 500
+        },
+        {
+          "name": "node_held_by",
+          "line": 502,
+          "end_line": 505
+        },
+        {
+          "name": "facts_to_check",
+          "line": 507,
+          "end_line": 527
+        },
+        {
+          "name": "_merged_node",
+          "line": 529,
+          "end_line": 538
+        },
+        {
+          "name": "plan_ids",
+          "line": 540,
+          "end_line": 542
+        },
+        {
+          "name": "node_notes",
+          "line": 544,
+          "end_line": 556
+        },
+        {
+          "name": "apply_note",
+          "line": 558,
+          "end_line": 578
+        },
+        {
+          "name": "_move_by_hand",
+          "line": 580,
+          "end_line": 594
+        },
+        {
+          "name": "_find_node",
+          "line": 596,
+          "end_line": 601
+        },
+        {
+          "name": "_commit",
+          "line": 603,
+          "end_line": 615
+        },
+        {
+          "name": "_forget_unsaved",
+          "line": 617,
+          "end_line": 623
+        },
+        {
+          "name": "_state",
+          "line": 625,
+          "end_line": 638
+        },
+        {
+          "name": "_view",
+          "line": 640,
+          "end_line": 656
+        },
+        {
+          "name": "_node_view",
+          "line": 658,
+          "end_line": 676
+        },
+        {
+          "name": "create",
+          "line": 678,
+          "end_line": 694
+        },
+        {
+          "name": "add_nodes",
+          "line": 696,
+          "end_line": 706
+        },
+        {
+          "name": "get",
+          "line": 708,
+          "end_line": 733
+        },
+        {
+          "name": "_revision",
+          "line": 735,
+          "end_line": 746
+        },
+        {
+          "name": "ready",
+          "line": 748,
+          "end_line": 769
+        },
+        {
+          "name": "claim",
+          "line": 771,
+          "end_line": 792
+        },
+        {
+          "name": "update",
+          "line": 794,
+          "end_line": 833
+        },
+        {
+          "name": "attach",
+          "line": 835,
+          "end_line": 855
+        },
+        {
+          "name": "ctx",
+          "line": 857,
+          "end_line": 860
+        },
+        {
+          "name": "kb_add",
+          "line": 862,
+          "end_line": 898
+        },
+        {
+          "name": "_keep_fact",
+          "line": 900,
+          "end_line": 919
+        },
+        {
+          "name": "impact",
+          "line": 921,
+          "end_line": 934
+        },
+        {
+          "name": "_code",
+          "line": 936,
+          "end_line": 953
+        },
+        {
+          "name": "handover",
+          "line": 955,
+          "end_line": 970
+        },
+        {
+          "name": "list_plans",
+          "line": 972,
+          "end_line": 981
+        },
+        {
+          "name": "_insert",
+          "line": 983,
+          "end_line": 1007
+        },
+        {
+          "name": "_preview",
+          "line": 1009,
+          "end_line": 1033
+        },
+        {
+          "name": "_ctx",
+          "line": 1035,
+          "end_line": 1050
+        },
+        {
+          "name": "_write_handover",
+          "line": 1052,
+          "end_line": 1099
+        },
+        {
+          "name": "_read_handover",
+          "line": 1101,
+          "end_line": 1124
+        },
+        {
+          "name": "_expire_checked",
+          "line": 1126,
+          "end_line": 1130
+        },
+        {
+          "name": "_owned",
+          "line": 1132,
+          "end_line": 1136
+        },
+        {
+          "name": "_ready_plan",
+          "line": 1138,
+          "end_line": 1151
+        },
+        {
+          "name": "_node",
+          "line": 1153,
+          "end_line": 1160
+        },
+        {
+          "name": "_by_title",
+          "line": 1162,
+          "end_line": 1166
+        },
+        {
+          "name": "_new_plan",
+          "line": 1168,
+          "end_line": 1182
+        },
+        {
+          "name": "_id",
+          "line": 1184,
+          "end_line": 1186
+        },
+        {
+          "name": "_target",
+          "line": 1188,
+          "end_line": 1194
+        },
+        {
+          "name": "_edges",
+          "line": 1196,
+          "end_line": 1208
+        }
+      ]
+    },
+    {
+      "path": "tests/core/test_git_host_exec.py",
+      "sha256": "a8606ed8c7641d4117f0c433fa07235b89b1e66eb88ba634fa1ac71d520621cd",
+      "matches_base": true,
+      "symbols": [
+        {
+          "name": "test_only_the_runner_spawns_git",
+          "line": 24,
+          "end_line": 32
+        },
+        {
+          "name": "test_status_diff_and_snapshot_do_not_run_fsmonitor_or_hooks_path",
+          "line": 35,
+          "end_line": 49
+        },
+        {
+          "name": "test_commit_runs_the_repository_hooks_and_not_hooks_path",
+          "line": 52,
+          "end_line": 68
+        },
+        {
+          "name": "test_external_diff_and_textconv_do_not_run",
+          "line": 71,
+          "end_line": 83
+        },
+        {
+          "name": "test_ssh_command_from_the_repository_does_not_run",
+          "line": 86,
+          "end_line": 94
+        },
+        {
+          "name": "test_a_filter_from_the_repository_does_not_run_on_status_or_diff",
+          "line": 98,
+          "end_line": 106
+        },
+        {
+          "name": "test_a_filter_name_holding_an_equals_sign_is_still_overridden",
+          "line": 109,
+          "end_line": 113
+        },
+        {
+          "name": "test_a_smudge_filter_does_not_run_when_a_file_is_restored",
+          "line": 116,
+          "end_line": 121
+        },
+        {
+          "name": "test_textconv_does_not_run_outside_git_diff",
+          "line": 125,
+          "end_line": 129
+        },
+        {
+          "name": "test_a_merge_driver_does_not_run_and_the_conflict_stays_visible",
+          "line": 132,
+          "end_line": 147
+        },
+        {
+          "name": "test_signing_and_its_program_from_the_repository_do_not_run",
+          "line": 150,
+          "end_line": 155
+        },
+        {
+          "name": "test_a_diff_driver_command_does_not_run",
+          "line": 159,
+          "end_line": 165
+        },
+        {
+          "name": "test_showing_a_signature_does_not_run_a_verifier_from_the_repository",
+          "line": 168,
+          "end_line": 185
+        },
+        {
+          "name": "test_a_trailer_command_from_the_repository_does_not_run",
+          "line": 189,
+          "end_line": 195
+        },
+        {
+          "name": "test_a_folder_that_is_not_there_is_an_exit_code_not_an_exception",
+          "line": 198,
+          "end_line": 199
+        },
+        {
+          "name": "_dirty_repo",
+          "line": 202,
+          "end_line": 211
+        },
+        {
+          "name": "_script",
+          "line": 214,
+          "end_line": 217
+        },
+        {
+          "name": "_is_subprocess",
+          "line": 220,
+          "end_line": 221
+        },
+        {
+          "name": "_mentions_git",
+          "line": 224,
+          "end_line": 232
+        },
+        {
+          "name": "test_hooks_permission_is_limited_to_explicit_commit_or_merge_writes",
+          "line": 241,
+          "end_line": 247
+        },
+        {
+          "name": "test_background_reads_override_indirect_repository_config",
+          "line": 251,
+          "end_line": 269
+        },
+        {
+          "name": "test_process_environment_does_not_enable_external_diff_or_ssh",
+          "line": 272,
+          "end_line": 281
+        },
+        {
+          "name": "test_patch_reads_do_not_need_even_a_neutral_textconv_program",
+          "line": 285,
+          "end_line": 295
+        }
+      ]
+    },
+    {
+      "path": "tests/core/test_git_security_environment.py",
+      "sha256": "e3794316ba7421aac48d2e5743d98df77a1c2482025e3d44e3102823dac8018c",
+      "matches_base": true,
+      "symbols": [
+        {
+          "name": "_repo",
+          "line": 18,
+          "end_line": 25
+        },
+        {
+          "name": "test_repository_askpass_and_editors_do_not_run",
+          "line": 29,
+          "end_line": 33
+        },
+        {
+          "name": "test_environment_cannot_restore_askpass_or_an_editor",
+          "line": 38,
+          "end_line": 52
+        },
+        {
+          "name": "test_safety_programs_are_not_resolved_in_an_untrusted_path",
+          "line": 55,
+          "end_line": 64
+        },
+        {
+          "name": "_exercise",
+          "line": 67,
+          "end_line": 74
+        },
+        {
+          "name": "test_core_has_no_direct_git_spawn_including_async_and_other_runner_modules",
+          "line": 77,
+          "end_line": 102
+        }
+      ]
+    },
+    {
+      "path": "tests/core/test_git_merge.py",
+      "sha256": "a98d7fed3ac4392fa34f5159b43d07656b9d364ac664aa4516239463d898515c",
+      "matches_base": true,
+      "symbols": [
+        {
+          "name": "_diverged",
+          "line": 27,
+          "end_line": 33
+        },
+        {
+          "name": "_preview",
+          "line": 36,
+          "end_line": 38
+        },
+        {
+          "name": "_go",
+          "line": 41,
+          "end_line": 50
+        },
+        {
+          "name": "_start",
+          "line": 53,
+          "end_line": 58
+        },
+        {
+          "name": "test_each_mode_through_the_target_worktree",
+          "line": 61,
+          "end_line": 87
+        },
+        {
+          "name": "test_fast_forward_and_squash",
+          "line": 90,
+          "end_line": 117
+        },
+        {
+          "name": "test_a_target_with_no_worktree_moves_by_its_ref",
+          "line": 120,
+          "end_line": 145
+        },
+        {
+          "name": "test_a_branch_that_moved_after_the_preview_is_refused",
+          "line": 148,
+          "end_line": 166
+        },
+        {
+          "name": "test_conflict_and_dirty_target_block_while_a_dirty_source_does_not",
+          "line": 169,
+          "end_line": 197
+        },
+        {
+          "name": "test_a_refusing_hook_leaves_the_target_as_it_was",
+          "line": 200,
+          "end_line": 221
+        },
+        {
+          "name": "test_a_restart_settles_a_merge_from_the_branch_itself",
+          "line": 224,
+          "end_line": 277
+        },
+        {
+          "name": "_reopen",
+          "line": 280,
+          "end_line": 281
+        },
+        {
+          "name": "test_domain_rules",
+          "line": 284,
+          "end_line": 311
+        },
+        {
+          "name": "scenario",
+          "line": 62,
+          "end_line": 85
+        },
+        {
+          "name": "scenario",
+          "line": 91,
+          "end_line": 115
+        },
+        {
+          "name": "scenario",
+          "line": 121,
+          "end_line": 143
+        },
+        {
+          "name": "scenario",
+          "line": 149,
+          "end_line": 164
+        },
+        {
+          "name": "scenario",
+          "line": 170,
+          "end_line": 195
+        },
+        {
+          "name": "scenario",
+          "line": 201,
+          "end_line": 219
+        },
+        {
+          "name": "scenario",
+          "line": 225,
+          "end_line": 275
+        }
+      ]
+    },
+    {
+      "path": "tests/core/test_git_operations.py",
+      "sha256": "52f9d3fd7380f18a801c0d8b6b0da015c0fbb867bdaeeed527dbca13551c9f14",
+      "matches_base": true,
+      "symbols": [
+        {
+          "name": "_row",
+          "line": 34,
+          "end_line": 36
+        },
+        {
+          "name": "_project",
+          "line": 39,
+          "end_line": 44
+        },
+        {
+          "name": "test_stage_unstage_commit_keep_staged_and_unstaged_apart",
+          "line": 47,
+          "end_line": 102
+        },
+        {
+          "name": "test_a_race_with_an_outside_change_is_refused",
+          "line": 105,
+          "end_line": 168
+        },
+        {
+          "name": "test_a_refusing_hook_is_an_answer_with_its_words",
+          "line": 171,
+          "end_line": 201
+        },
+        {
+          "name": "test_restoring_one_file_keeps_the_rest_and_a_way_back",
+          "line": 204,
+          "end_line": 277
+        },
+        {
+          "name": "test_a_tab_worktree_is_left_alone_while_its_agent_works",
+          "line": 280,
+          "end_line": 326
+        },
+        {
+          "name": "test_domain_rules",
+          "line": 329,
+          "end_line": 334
+        },
+        {
+          "name": "test_trailers_go_below_a_one_line_message",
+          "line": 338,
+          "end_line": 341
+        },
+        {
+          "name": "scenario",
+          "line": 48,
+          "end_line": 100
+        },
+        {
+          "name": "scenario",
+          "line": 106,
+          "end_line": 166
+        },
+        {
+          "name": "scenario",
+          "line": 172,
+          "end_line": 199
+        },
+        {
+          "name": "scenario",
+          "line": 205,
+          "end_line": 275
+        },
+        {
+          "name": "scenario",
+          "line": 281,
+          "end_line": 324
+        },
+        {
+          "name": "paths",
+          "line": 57,
+          "end_line": 64
+        }
+      ]
+    },
+    {
+      "path": "artifacts/sec11/race_probe.py",
+      "sha256": "32649fdaf78a2e4fbd8ef70c091bb7df79e6edb1c861a570c387b2e41910609a",
+      "matches_base": true,
+      "symbols": [
+        {
+          "name": "test_no_driver_can_be_added_between_enumeration_and_status",
+          "line": 24,
+          "end_line": 56
+        },
+        {
+          "name": "race",
+          "line": 39,
+          "end_line": 45
+        }
+      ]
+    },
+    {
+      "path": "artifacts/sec11/config-namespace/test_snapshot_races.py",
+      "sha256": "b1470c3deba7856b5f19fbc036caff5125df009b5b4f129182e3ef5d65b400c7",
+      "matches_base": true,
+      "symbols": [
+        {
+          "name": "test_original_config_changes_after_mount",
+          "line": 17,
+          "end_line": 77
+        }
+      ]
+    },
+    {
+      "path": "artifacts/sec11/config-namespace/launcher.py",
+      "sha256": "69181d0a60174cad6622005b5ec61b88883163b7520bea5a4081b79de3b2a8fa",
+      "matches_base": true,
+      "symbols": [
+        {
+          "name": "run",
+          "line": 16,
+          "end_line": 20
+        },
+        {
+          "name": "main",
+          "line": 23,
+          "end_line": 96
+        }
+      ]
+    },
+    {
+      "path": "artifacts/sec11/config-namespace/results.json",
+      "sha256": "843696ee0ace01d00867d9b7c2f54d3116df6f6bce0f97d71ab639536c4f757e",
+      "matches_base": true
+    },
+    {
+      "path": "artifacts/sec11/exec-boundary/results.json",
+      "sha256": "2d928575fd8c6dd05c12ac55ac0cb13b4562657b1e27803b3756c6d18ed9feb5",
+      "matches_base": true
+    }
+  ],
+  "inherited_executions": [
+    {
+      "path": "artifacts/sec11/exec-boundary/guarded-after.xml",
+      "sha256": "44b8b4032001cb05a6558bdb9cd28a2510946fcdb9c17d21e7f06bdc7013e9e0",
+      "provenance": "inherited execution; not rerun in SEC-14",
+      "summary": {
+        "tests": 30,
+        "failures": 1,
+        "errors": 0,
+        "skipped": 0
+      },
+      "failing_cases": [
+        "test_commit_runs_the_repository_hooks_and_not_hooks_path"
+      ]
+    },
+    {
+      "path": "artifacts/sec11/config-namespace/baseline-final.xml",
+      "sha256": "f2d210c325edb37215c566d6d88340abca9343e1fb4098df1f399f8933279b75",
+      "provenance": "inherited execution; not rerun in SEC-14",
+      "summary": {
+        "tests": 1,
+        "failures": 1,
+        "errors": 0,
+        "skipped": 0
+      },
+      "failing_cases": [
+        "test_no_driver_can_be_added_between_enumeration_and_status"
+      ]
+    },
+    {
+      "path": "artifacts/sec11/config-namespace/focused-final.xml",
+      "sha256": "511b396161480151846375a975da5f5e04b4bd2b772452f137119d2f5f6955ff",
+      "provenance": "inherited execution; not rerun in SEC-14",
+      "summary": {
+        "tests": 43,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "failing_cases": []
+    },
+    {
+      "path": "artifacts/sec11/config-namespace/adversarial-final.xml",
+      "sha256": "fe40809e17f92f5adf4affca87fb19adf65fc3b0303062c1fea7c250fac567ec",
+      "provenance": "inherited execution; not rerun in SEC-14",
+      "summary": {
+        "tests": 8,
+        "failures": 4,
+        "errors": 0,
+        "skipped": 0
+      },
+      "failing_cases": [
+        "test_original_config_changes_after_mount[replace-False]",
+        "test_original_config_changes_after_mount[replace-True]",
+        "test_original_config_changes_after_mount[include-False]",
+        "test_original_config_changes_after_mount[include-True]"
+      ]
+    }
+  ],
+  "next_implementation_stage": "A: command and hook compatibility census",
+  "external_references": [
+    "https://git-scm.com/docs/githooks",
+    "https://www.kernel.org/doc/html/latest/userspace-api/seccomp_filter.html",
+    "https://www.kernel.org/doc/html/latest/userspace-api/landlock.html"
+  ]
+}
