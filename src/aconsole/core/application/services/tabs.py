@@ -1659,7 +1659,10 @@ class TabService:
         return f"{agent.value}-{tab_id}"[:_TITLE]
 
     def _adopt(self, saved: StoredTab) -> None:
-        if saved.work_session_id is not None and self.work_sessions.at(saved.project_id, saved.worktree) is None:
+        if saved.work_session_id is not None and not any(
+            record.id == saved.work_session_id
+            for record in self.work_sessions.all(saved.project_id, include_archived=True)
+        ):
             _ = self.work_sessions.add(WorkSession(
                 id=saved.work_session_id, project_id=saved.project_id, title=saved.title,
                 worktree=saved.worktree, branch=saved.branch, base_branch=saved.base_branch,

@@ -1,0 +1,521 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="4" skipped="0" tests="4" time="8.541" timestamp="2026-11-10T20:30:37.789373+03:00" hostname="somovasnbook14"><testcase classname="tests.core.test_isolated_session_restart" name="test_isolated_tabs_do_not_replace_the_primary_session_after_restart[False-False]" time="2.067"><failure message="AssertionError: assert WorkSessionView(id='1ed1e7b9a41e2e28', project_id='b93712e67522f2a0', title='claude-abd284487fd151d5', worktree='/tmp/... updated_at=datetime.datetime(2026, 11, 10, 17, 30, 40, 630321, tzinfo=datetime.timezone.utc), workspace_removed=False) == WorkSessionView(id='1ed1e7b9a41e2e28', project_id='b93712e67522f2a0', title='Primary task', worktree='/tmp/ac-ws1-regr... updated_at=datetime.datetime(2026, 11, 10, 17, 30, 40, 534974, tzinfo=datetime.timezone.utc), workspace_removed=False)">tmp_path = PosixPath('/tmp/ac-ws1-regression/test_isolated_tabs_do_not_repl0')
+archived = False, coordinator = False
+
+    @pytest.mark.parametrize("archived", [False, True])
+    @pytest.mark.parametrize("coordinator", [False, True])
+    def test_isolated_tabs_do_not_replace_the_primary_session_after_restart(  # noqa: PLR0915 -- complete restart scenario
+        tmp_path: Path, *, archived: bool, coordinator: bool,
+    ) -&gt; None:
+        async def scenario() -&gt; None:  # noqa: PLR0915 -- complete restart scenario
+            repo = new_repo(tmp_path / "repo")
+            _ = commit(repo, "seed", "seed\n", "seed")
+            daemon = _daemon(tmp_path, serve_ingest=False)
+            task = asyncio.create_task(daemon.serve())
+            client = await _connect(daemon.socket)
+            try:
+                project = await client.call("project/add", ProjectAddParams(root=str(repo)), ProjectView)
+                session = await client.call("workSession/create", WorkSessionCreateParams(
+                    project_id=project.id, title="Primary task",
+                ), WorkSessionView)
+                worker = await client.call("tab/open", msgspec.structs.replace(
+                    _open(project.id), work_session_id=session.id, isolated=True,
+                ), TabView)
+                path = Path(worker.worktree_path)
+                _ = commit(path, "result", "worker result\n", "result")
+                history = await client.call("workSession/result", WorkSessionResultParams(
+                    project_id=project.id, work_session_id=session.id, tab_id=worker.id,
+                ), WorkSessionHistoryResult)
+                point = history.snapshots[-1]
+                preview = await client.call("workSession/integratePreview", WorkSessionIntegratePreviewParams(
+                    project_id=project.id, work_session_id=session.id, sequence=point.sequence,
+                ), MergePreviewResult)
+                result = await client.call("workSession/integrate", WorkSessionIntegrateParams(
+                    project_id=project.id, work_session_id=session.id, sequence=point.sequence,
+                    source_oid=preview.source_oid, target_oid=preview.target_oid, confirm_token=preview.confirm_token,
+                ), GitOperationResult)
+                assert result.operation.status == "finished"
+                if coordinator:
+                    _ = await client.call("tab/open", msgspec.structs.replace(
+                        _open(project.id), work_session_id=session.id,
+                    ), TabView)
+                query = WorkSessionParams(project_id=project.id, work_session_id=session.id)
+                if archived:
+                    session = await client.call("workSession/close", query, WorkSessionView)
+                before = git(repo, "show-ref")
+            finally:
+                await _stop(daemon, task, client)
+            daemon = _daemon(tmp_path, serve_ingest=False)
+            task = asyncio.create_task(daemon.serve())
+            client = await _connect(daemon.socket)
+            try:
+                restored = await client.call("workSession/get", query, WorkSessionView)
+                assert restored == session
+                assert git(repo, "show-ref") == before
+                snapshot = await client.snapshot()
+                restored_worker = next(tab for tab in snapshot.tabs if tab.id == worker.id)
+                assert restored_worker.isolated
+                assert restored_worker.work_session_id == session.id
+                assert restored_worker.worktree_path == str(path)
+                assert path != Path(restored.worktree)
+                assert (Path(restored.worktree) / "result").read_text(encoding="utf-8") == "worker result\n"
+                _ = await client.call("workSession/cleanupWorker", WorkSessionCleanupWorkerParams(
+                    project_id=project.id, work_session_id=session.id, sequence=point.sequence,
+                ), EmptyResult)
+                assert not await asyncio.to_thread(path.exists)
+                assert git(repo, "rev-parse", point.ref) == point.oid
+                assert await client.call("workSession/get", query, WorkSessionView) == session
+            finally:
+                await _stop(daemon, task, client)
+    
+&gt;       asyncio.run(scenario())
+
+tests/core/test_isolated_session_restart.py:93: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+../../../../uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py:205: in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+../../../../uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py:128: in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../../uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/base_events.py:724: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    async def scenario() -&gt; None:  # noqa: PLR0915 -- complete restart scenario
+        repo = new_repo(tmp_path / "repo")
+        _ = commit(repo, "seed", "seed\n", "seed")
+        daemon = _daemon(tmp_path, serve_ingest=False)
+        task = asyncio.create_task(daemon.serve())
+        client = await _connect(daemon.socket)
+        try:
+            project = await client.call("project/add", ProjectAddParams(root=str(repo)), ProjectView)
+            session = await client.call("workSession/create", WorkSessionCreateParams(
+                project_id=project.id, title="Primary task",
+            ), WorkSessionView)
+            worker = await client.call("tab/open", msgspec.structs.replace(
+                _open(project.id), work_session_id=session.id, isolated=True,
+            ), TabView)
+            path = Path(worker.worktree_path)
+            _ = commit(path, "result", "worker result\n", "result")
+            history = await client.call("workSession/result", WorkSessionResultParams(
+                project_id=project.id, work_session_id=session.id, tab_id=worker.id,
+            ), WorkSessionHistoryResult)
+            point = history.snapshots[-1]
+            preview = await client.call("workSession/integratePreview", WorkSessionIntegratePreviewParams(
+                project_id=project.id, work_session_id=session.id, sequence=point.sequence,
+            ), MergePreviewResult)
+            result = await client.call("workSession/integrate", WorkSessionIntegrateParams(
+                project_id=project.id, work_session_id=session.id, sequence=point.sequence,
+                source_oid=preview.source_oid, target_oid=preview.target_oid, confirm_token=preview.confirm_token,
+            ), GitOperationResult)
+            assert result.operation.status == "finished"
+            if coordinator:
+                _ = await client.call("tab/open", msgspec.structs.replace(
+                    _open(project.id), work_session_id=session.id,
+                ), TabView)
+            query = WorkSessionParams(project_id=project.id, work_session_id=session.id)
+            if archived:
+                session = await client.call("workSession/close", query, WorkSessionView)
+            before = git(repo, "show-ref")
+        finally:
+            await _stop(daemon, task, client)
+        daemon = _daemon(tmp_path, serve_ingest=False)
+        task = asyncio.create_task(daemon.serve())
+        client = await _connect(daemon.socket)
+        try:
+            restored = await client.call("workSession/get", query, WorkSessionView)
+&gt;           assert restored == session
+E           AssertionError: assert WorkSessionView(id='1ed1e7b9a41e2e28', project_id='b93712e67522f2a0', title='claude-abd284487fd151d5', worktree='/tmp/... updated_at=datetime.datetime(2026, 11, 10, 17, 30, 40, 630321, tzinfo=datetime.timezone.utc), workspace_removed=False) == WorkSessionView(id='1ed1e7b9a41e2e28', project_id='b93712e67522f2a0', title='Primary task', worktree='/tmp/ac-ws1-regr... updated_at=datetime.datetime(2026, 11, 10, 17, 30, 40, 534974, tzinfo=datetime.timezone.utc), workspace_removed=False)
+
+tests/core/test_isolated_session_restart.py:75: AssertionError</failure></testcase><testcase classname="tests.core.test_isolated_session_restart" name="test_isolated_tabs_do_not_replace_the_primary_session_after_restart[False-True]" time="1.538"><failure message="AssertionError: assert WorkSessionView(id='a24758ae8a674c27', project_id='9c10b92a340e4223', title='claude-555c18cb38b9ce39', worktree='/tmp/... updated_at=datetime.datetime(2026, 11, 10, 17, 30, 42, 732091, tzinfo=datetime.timezone.utc), workspace_removed=False) == WorkSessionView(id='a24758ae8a674c27', project_id='9c10b92a340e4223', title='Primary task', worktree='/tmp/ac-ws1-regr... updated_at=datetime.datetime(2026, 11, 10, 17, 30, 42, 740484, tzinfo=datetime.timezone.utc), workspace_removed=False)">tmp_path = PosixPath('/tmp/ac-ws1-regression/test_isolated_tabs_do_not_repl1')
+archived = True, coordinator = False
+
+    @pytest.mark.parametrize("archived", [False, True])
+    @pytest.mark.parametrize("coordinator", [False, True])
+    def test_isolated_tabs_do_not_replace_the_primary_session_after_restart(  # noqa: PLR0915 -- complete restart scenario
+        tmp_path: Path, *, archived: bool, coordinator: bool,
+    ) -&gt; None:
+        async def scenario() -&gt; None:  # noqa: PLR0915 -- complete restart scenario
+            repo = new_repo(tmp_path / "repo")
+            _ = commit(repo, "seed", "seed\n", "seed")
+            daemon = _daemon(tmp_path, serve_ingest=False)
+            task = asyncio.create_task(daemon.serve())
+            client = await _connect(daemon.socket)
+            try:
+                project = await client.call("project/add", ProjectAddParams(root=str(repo)), ProjectView)
+                session = await client.call("workSession/create", WorkSessionCreateParams(
+                    project_id=project.id, title="Primary task",
+                ), WorkSessionView)
+                worker = await client.call("tab/open", msgspec.structs.replace(
+                    _open(project.id), work_session_id=session.id, isolated=True,
+                ), TabView)
+                path = Path(worker.worktree_path)
+                _ = commit(path, "result", "worker result\n", "result")
+                history = await client.call("workSession/result", WorkSessionResultParams(
+                    project_id=project.id, work_session_id=session.id, tab_id=worker.id,
+                ), WorkSessionHistoryResult)
+                point = history.snapshots[-1]
+                preview = await client.call("workSession/integratePreview", WorkSessionIntegratePreviewParams(
+                    project_id=project.id, work_session_id=session.id, sequence=point.sequence,
+                ), MergePreviewResult)
+                result = await client.call("workSession/integrate", WorkSessionIntegrateParams(
+                    project_id=project.id, work_session_id=session.id, sequence=point.sequence,
+                    source_oid=preview.source_oid, target_oid=preview.target_oid, confirm_token=preview.confirm_token,
+                ), GitOperationResult)
+                assert result.operation.status == "finished"
+                if coordinator:
+                    _ = await client.call("tab/open", msgspec.structs.replace(
+                        _open(project.id), work_session_id=session.id,
+                    ), TabView)
+                query = WorkSessionParams(project_id=project.id, work_session_id=session.id)
+                if archived:
+                    session = await client.call("workSession/close", query, WorkSessionView)
+                before = git(repo, "show-ref")
+            finally:
+                await _stop(daemon, task, client)
+            daemon = _daemon(tmp_path, serve_ingest=False)
+            task = asyncio.create_task(daemon.serve())
+            client = await _connect(daemon.socket)
+            try:
+                restored = await client.call("workSession/get", query, WorkSessionView)
+                assert restored == session
+                assert git(repo, "show-ref") == before
+                snapshot = await client.snapshot()
+                restored_worker = next(tab for tab in snapshot.tabs if tab.id == worker.id)
+                assert restored_worker.isolated
+                assert restored_worker.work_session_id == session.id
+                assert restored_worker.worktree_path == str(path)
+                assert path != Path(restored.worktree)
+                assert (Path(restored.worktree) / "result").read_text(encoding="utf-8") == "worker result\n"
+                _ = await client.call("workSession/cleanupWorker", WorkSessionCleanupWorkerParams(
+                    project_id=project.id, work_session_id=session.id, sequence=point.sequence,
+                ), EmptyResult)
+                assert not await asyncio.to_thread(path.exists)
+                assert git(repo, "rev-parse", point.ref) == point.oid
+                assert await client.call("workSession/get", query, WorkSessionView) == session
+            finally:
+                await _stop(daemon, task, client)
+    
+&gt;       asyncio.run(scenario())
+
+tests/core/test_isolated_session_restart.py:93: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+../../../../uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py:205: in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+../../../../uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py:128: in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../../uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/base_events.py:724: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    async def scenario() -&gt; None:  # noqa: PLR0915 -- complete restart scenario
+        repo = new_repo(tmp_path / "repo")
+        _ = commit(repo, "seed", "seed\n", "seed")
+        daemon = _daemon(tmp_path, serve_ingest=False)
+        task = asyncio.create_task(daemon.serve())
+        client = await _connect(daemon.socket)
+        try:
+            project = await client.call("project/add", ProjectAddParams(root=str(repo)), ProjectView)
+            session = await client.call("workSession/create", WorkSessionCreateParams(
+                project_id=project.id, title="Primary task",
+            ), WorkSessionView)
+            worker = await client.call("tab/open", msgspec.structs.replace(
+                _open(project.id), work_session_id=session.id, isolated=True,
+            ), TabView)
+            path = Path(worker.worktree_path)
+            _ = commit(path, "result", "worker result\n", "result")
+            history = await client.call("workSession/result", WorkSessionResultParams(
+                project_id=project.id, work_session_id=session.id, tab_id=worker.id,
+            ), WorkSessionHistoryResult)
+            point = history.snapshots[-1]
+            preview = await client.call("workSession/integratePreview", WorkSessionIntegratePreviewParams(
+                project_id=project.id, work_session_id=session.id, sequence=point.sequence,
+            ), MergePreviewResult)
+            result = await client.call("workSession/integrate", WorkSessionIntegrateParams(
+                project_id=project.id, work_session_id=session.id, sequence=point.sequence,
+                source_oid=preview.source_oid, target_oid=preview.target_oid, confirm_token=preview.confirm_token,
+            ), GitOperationResult)
+            assert result.operation.status == "finished"
+            if coordinator:
+                _ = await client.call("tab/open", msgspec.structs.replace(
+                    _open(project.id), work_session_id=session.id,
+                ), TabView)
+            query = WorkSessionParams(project_id=project.id, work_session_id=session.id)
+            if archived:
+                session = await client.call("workSession/close", query, WorkSessionView)
+            before = git(repo, "show-ref")
+        finally:
+            await _stop(daemon, task, client)
+        daemon = _daemon(tmp_path, serve_ingest=False)
+        task = asyncio.create_task(daemon.serve())
+        client = await _connect(daemon.socket)
+        try:
+            restored = await client.call("workSession/get", query, WorkSessionView)
+&gt;           assert restored == session
+E           AssertionError: assert WorkSessionView(id='a24758ae8a674c27', project_id='9c10b92a340e4223', title='claude-555c18cb38b9ce39', worktree='/tmp/... updated_at=datetime.datetime(2026, 11, 10, 17, 30, 42, 732091, tzinfo=datetime.timezone.utc), workspace_removed=False) == WorkSessionView(id='a24758ae8a674c27', project_id='9c10b92a340e4223', title='Primary task', worktree='/tmp/ac-ws1-regr... updated_at=datetime.datetime(2026, 11, 10, 17, 30, 42, 740484, tzinfo=datetime.timezone.utc), workspace_removed=False)
+
+tests/core/test_isolated_session_restart.py:75: AssertionError</failure></testcase><testcase classname="tests.core.test_isolated_session_restart" name="test_isolated_tabs_do_not_replace_the_primary_session_after_restart[True-False]" time="1.538"><failure message="AssertionError: assert WorkSessionView(id='0579ba4fa5559670', project_id='079e0c49bfa98859', title='claude-acfde701f213ce66', worktree='/tmp/... updated_at=datetime.datetime(2026, 11, 10, 17, 30, 44, 299171, tzinfo=datetime.timezone.utc), workspace_removed=False) == WorkSessionView(id='0579ba4fa5559670', project_id='079e0c49bfa98859', title='Primary task', worktree='/tmp/ac-ws1-regr... updated_at=datetime.datetime(2026, 11, 10, 17, 30, 43, 842375, tzinfo=datetime.timezone.utc), workspace_removed=False)">tmp_path = PosixPath('/tmp/ac-ws1-regression/test_isolated_tabs_do_not_repl2')
+archived = False, coordinator = True
+
+    @pytest.mark.parametrize("archived", [False, True])
+    @pytest.mark.parametrize("coordinator", [False, True])
+    def test_isolated_tabs_do_not_replace_the_primary_session_after_restart(  # noqa: PLR0915 -- complete restart scenario
+        tmp_path: Path, *, archived: bool, coordinator: bool,
+    ) -&gt; None:
+        async def scenario() -&gt; None:  # noqa: PLR0915 -- complete restart scenario
+            repo = new_repo(tmp_path / "repo")
+            _ = commit(repo, "seed", "seed\n", "seed")
+            daemon = _daemon(tmp_path, serve_ingest=False)
+            task = asyncio.create_task(daemon.serve())
+            client = await _connect(daemon.socket)
+            try:
+                project = await client.call("project/add", ProjectAddParams(root=str(repo)), ProjectView)
+                session = await client.call("workSession/create", WorkSessionCreateParams(
+                    project_id=project.id, title="Primary task",
+                ), WorkSessionView)
+                worker = await client.call("tab/open", msgspec.structs.replace(
+                    _open(project.id), work_session_id=session.id, isolated=True,
+                ), TabView)
+                path = Path(worker.worktree_path)
+                _ = commit(path, "result", "worker result\n", "result")
+                history = await client.call("workSession/result", WorkSessionResultParams(
+                    project_id=project.id, work_session_id=session.id, tab_id=worker.id,
+                ), WorkSessionHistoryResult)
+                point = history.snapshots[-1]
+                preview = await client.call("workSession/integratePreview", WorkSessionIntegratePreviewParams(
+                    project_id=project.id, work_session_id=session.id, sequence=point.sequence,
+                ), MergePreviewResult)
+                result = await client.call("workSession/integrate", WorkSessionIntegrateParams(
+                    project_id=project.id, work_session_id=session.id, sequence=point.sequence,
+                    source_oid=preview.source_oid, target_oid=preview.target_oid, confirm_token=preview.confirm_token,
+                ), GitOperationResult)
+                assert result.operation.status == "finished"
+                if coordinator:
+                    _ = await client.call("tab/open", msgspec.structs.replace(
+                        _open(project.id), work_session_id=session.id,
+                    ), TabView)
+                query = WorkSessionParams(project_id=project.id, work_session_id=session.id)
+                if archived:
+                    session = await client.call("workSession/close", query, WorkSessionView)
+                before = git(repo, "show-ref")
+            finally:
+                await _stop(daemon, task, client)
+            daemon = _daemon(tmp_path, serve_ingest=False)
+            task = asyncio.create_task(daemon.serve())
+            client = await _connect(daemon.socket)
+            try:
+                restored = await client.call("workSession/get", query, WorkSessionView)
+                assert restored == session
+                assert git(repo, "show-ref") == before
+                snapshot = await client.snapshot()
+                restored_worker = next(tab for tab in snapshot.tabs if tab.id == worker.id)
+                assert restored_worker.isolated
+                assert restored_worker.work_session_id == session.id
+                assert restored_worker.worktree_path == str(path)
+                assert path != Path(restored.worktree)
+                assert (Path(restored.worktree) / "result").read_text(encoding="utf-8") == "worker result\n"
+                _ = await client.call("workSession/cleanupWorker", WorkSessionCleanupWorkerParams(
+                    project_id=project.id, work_session_id=session.id, sequence=point.sequence,
+                ), EmptyResult)
+                assert not await asyncio.to_thread(path.exists)
+                assert git(repo, "rev-parse", point.ref) == point.oid
+                assert await client.call("workSession/get", query, WorkSessionView) == session
+            finally:
+                await _stop(daemon, task, client)
+    
+&gt;       asyncio.run(scenario())
+
+tests/core/test_isolated_session_restart.py:93: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+../../../../uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py:205: in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+../../../../uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py:128: in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../../uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/base_events.py:724: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    async def scenario() -&gt; None:  # noqa: PLR0915 -- complete restart scenario
+        repo = new_repo(tmp_path / "repo")
+        _ = commit(repo, "seed", "seed\n", "seed")
+        daemon = _daemon(tmp_path, serve_ingest=False)
+        task = asyncio.create_task(daemon.serve())
+        client = await _connect(daemon.socket)
+        try:
+            project = await client.call("project/add", ProjectAddParams(root=str(repo)), ProjectView)
+            session = await client.call("workSession/create", WorkSessionCreateParams(
+                project_id=project.id, title="Primary task",
+            ), WorkSessionView)
+            worker = await client.call("tab/open", msgspec.structs.replace(
+                _open(project.id), work_session_id=session.id, isolated=True,
+            ), TabView)
+            path = Path(worker.worktree_path)
+            _ = commit(path, "result", "worker result\n", "result")
+            history = await client.call("workSession/result", WorkSessionResultParams(
+                project_id=project.id, work_session_id=session.id, tab_id=worker.id,
+            ), WorkSessionHistoryResult)
+            point = history.snapshots[-1]
+            preview = await client.call("workSession/integratePreview", WorkSessionIntegratePreviewParams(
+                project_id=project.id, work_session_id=session.id, sequence=point.sequence,
+            ), MergePreviewResult)
+            result = await client.call("workSession/integrate", WorkSessionIntegrateParams(
+                project_id=project.id, work_session_id=session.id, sequence=point.sequence,
+                source_oid=preview.source_oid, target_oid=preview.target_oid, confirm_token=preview.confirm_token,
+            ), GitOperationResult)
+            assert result.operation.status == "finished"
+            if coordinator:
+                _ = await client.call("tab/open", msgspec.structs.replace(
+                    _open(project.id), work_session_id=session.id,
+                ), TabView)
+            query = WorkSessionParams(project_id=project.id, work_session_id=session.id)
+            if archived:
+                session = await client.call("workSession/close", query, WorkSessionView)
+            before = git(repo, "show-ref")
+        finally:
+            await _stop(daemon, task, client)
+        daemon = _daemon(tmp_path, serve_ingest=False)
+        task = asyncio.create_task(daemon.serve())
+        client = await _connect(daemon.socket)
+        try:
+            restored = await client.call("workSession/get", query, WorkSessionView)
+&gt;           assert restored == session
+E           AssertionError: assert WorkSessionView(id='0579ba4fa5559670', project_id='079e0c49bfa98859', title='claude-acfde701f213ce66', worktree='/tmp/... updated_at=datetime.datetime(2026, 11, 10, 17, 30, 44, 299171, tzinfo=datetime.timezone.utc), workspace_removed=False) == WorkSessionView(id='0579ba4fa5559670', project_id='079e0c49bfa98859', title='Primary task', worktree='/tmp/ac-ws1-regr... updated_at=datetime.datetime(2026, 11, 10, 17, 30, 43, 842375, tzinfo=datetime.timezone.utc), workspace_removed=False)
+
+tests/core/test_isolated_session_restart.py:75: AssertionError</failure></testcase><testcase classname="tests.core.test_isolated_session_restart" name="test_isolated_tabs_do_not_replace_the_primary_session_after_restart[True-True]" time="1.727"><failure message="AssertionError: assert WorkSessionView(id='0a3e8feef84fa170', project_id='89031149a9633b32', title='claude-b0badba3dd47f52c', worktree='/tmp/..., updated_at=datetime.datetime(2026, 11, 10, 17, 30, 46, 48940, tzinfo=datetime.timezone.utc), workspace_removed=False) == WorkSessionView(id='0a3e8feef84fa170', project_id='89031149a9633b32', title='Primary task', worktree='/tmp/ac-ws1-regr..., updated_at=datetime.datetime(2026, 11, 10, 17, 30, 46, 53197, tzinfo=datetime.timezone.utc), workspace_removed=False)">tmp_path = PosixPath('/tmp/ac-ws1-regression/test_isolated_tabs_do_not_repl3')
+archived = True, coordinator = True
+
+    @pytest.mark.parametrize("archived", [False, True])
+    @pytest.mark.parametrize("coordinator", [False, True])
+    def test_isolated_tabs_do_not_replace_the_primary_session_after_restart(  # noqa: PLR0915 -- complete restart scenario
+        tmp_path: Path, *, archived: bool, coordinator: bool,
+    ) -&gt; None:
+        async def scenario() -&gt; None:  # noqa: PLR0915 -- complete restart scenario
+            repo = new_repo(tmp_path / "repo")
+            _ = commit(repo, "seed", "seed\n", "seed")
+            daemon = _daemon(tmp_path, serve_ingest=False)
+            task = asyncio.create_task(daemon.serve())
+            client = await _connect(daemon.socket)
+            try:
+                project = await client.call("project/add", ProjectAddParams(root=str(repo)), ProjectView)
+                session = await client.call("workSession/create", WorkSessionCreateParams(
+                    project_id=project.id, title="Primary task",
+                ), WorkSessionView)
+                worker = await client.call("tab/open", msgspec.structs.replace(
+                    _open(project.id), work_session_id=session.id, isolated=True,
+                ), TabView)
+                path = Path(worker.worktree_path)
+                _ = commit(path, "result", "worker result\n", "result")
+                history = await client.call("workSession/result", WorkSessionResultParams(
+                    project_id=project.id, work_session_id=session.id, tab_id=worker.id,
+                ), WorkSessionHistoryResult)
+                point = history.snapshots[-1]
+                preview = await client.call("workSession/integratePreview", WorkSessionIntegratePreviewParams(
+                    project_id=project.id, work_session_id=session.id, sequence=point.sequence,
+                ), MergePreviewResult)
+                result = await client.call("workSession/integrate", WorkSessionIntegrateParams(
+                    project_id=project.id, work_session_id=session.id, sequence=point.sequence,
+                    source_oid=preview.source_oid, target_oid=preview.target_oid, confirm_token=preview.confirm_token,
+                ), GitOperationResult)
+                assert result.operation.status == "finished"
+                if coordinator:
+                    _ = await client.call("tab/open", msgspec.structs.replace(
+                        _open(project.id), work_session_id=session.id,
+                    ), TabView)
+                query = WorkSessionParams(project_id=project.id, work_session_id=session.id)
+                if archived:
+                    session = await client.call("workSession/close", query, WorkSessionView)
+                before = git(repo, "show-ref")
+            finally:
+                await _stop(daemon, task, client)
+            daemon = _daemon(tmp_path, serve_ingest=False)
+            task = asyncio.create_task(daemon.serve())
+            client = await _connect(daemon.socket)
+            try:
+                restored = await client.call("workSession/get", query, WorkSessionView)
+                assert restored == session
+                assert git(repo, "show-ref") == before
+                snapshot = await client.snapshot()
+                restored_worker = next(tab for tab in snapshot.tabs if tab.id == worker.id)
+                assert restored_worker.isolated
+                assert restored_worker.work_session_id == session.id
+                assert restored_worker.worktree_path == str(path)
+                assert path != Path(restored.worktree)
+                assert (Path(restored.worktree) / "result").read_text(encoding="utf-8") == "worker result\n"
+                _ = await client.call("workSession/cleanupWorker", WorkSessionCleanupWorkerParams(
+                    project_id=project.id, work_session_id=session.id, sequence=point.sequence,
+                ), EmptyResult)
+                assert not await asyncio.to_thread(path.exists)
+                assert git(repo, "rev-parse", point.ref) == point.oid
+                assert await client.call("workSession/get", query, WorkSessionView) == session
+            finally:
+                await _stop(daemon, task, client)
+    
+&gt;       asyncio.run(scenario())
+
+tests/core/test_isolated_session_restart.py:93: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+../../../../uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py:205: in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+../../../../uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py:128: in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../../uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/base_events.py:724: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    async def scenario() -&gt; None:  # noqa: PLR0915 -- complete restart scenario
+        repo = new_repo(tmp_path / "repo")
+        _ = commit(repo, "seed", "seed\n", "seed")
+        daemon = _daemon(tmp_path, serve_ingest=False)
+        task = asyncio.create_task(daemon.serve())
+        client = await _connect(daemon.socket)
+        try:
+            project = await client.call("project/add", ProjectAddParams(root=str(repo)), ProjectView)
+            session = await client.call("workSession/create", WorkSessionCreateParams(
+                project_id=project.id, title="Primary task",
+            ), WorkSessionView)
+            worker = await client.call("tab/open", msgspec.structs.replace(
+                _open(project.id), work_session_id=session.id, isolated=True,
+            ), TabView)
+            path = Path(worker.worktree_path)
+            _ = commit(path, "result", "worker result\n", "result")
+            history = await client.call("workSession/result", WorkSessionResultParams(
+                project_id=project.id, work_session_id=session.id, tab_id=worker.id,
+            ), WorkSessionHistoryResult)
+            point = history.snapshots[-1]
+            preview = await client.call("workSession/integratePreview", WorkSessionIntegratePreviewParams(
+                project_id=project.id, work_session_id=session.id, sequence=point.sequence,
+            ), MergePreviewResult)
+            result = await client.call("workSession/integrate", WorkSessionIntegrateParams(
+                project_id=project.id, work_session_id=session.id, sequence=point.sequence,
+                source_oid=preview.source_oid, target_oid=preview.target_oid, confirm_token=preview.confirm_token,
+            ), GitOperationResult)
+            assert result.operation.status == "finished"
+            if coordinator:
+                _ = await client.call("tab/open", msgspec.structs.replace(
+                    _open(project.id), work_session_id=session.id,
+                ), TabView)
+            query = WorkSessionParams(project_id=project.id, work_session_id=session.id)
+            if archived:
+                session = await client.call("workSession/close", query, WorkSessionView)
+            before = git(repo, "show-ref")
+        finally:
+            await _stop(daemon, task, client)
+        daemon = _daemon(tmp_path, serve_ingest=False)
+        task = asyncio.create_task(daemon.serve())
+        client = await _connect(daemon.socket)
+        try:
+            restored = await client.call("workSession/get", query, WorkSessionView)
+&gt;           assert restored == session
+E           AssertionError: assert WorkSessionView(id='0a3e8feef84fa170', project_id='89031149a9633b32', title='claude-b0badba3dd47f52c', worktree='/tmp/..., updated_at=datetime.datetime(2026, 11, 10, 17, 30, 46, 48940, tzinfo=datetime.timezone.utc), workspace_removed=False) == WorkSessionView(id='0a3e8feef84fa170', project_id='89031149a9633b32', title='Primary task', worktree='/tmp/ac-ws1-regr..., updated_at=datetime.datetime(2026, 11, 10, 17, 30, 46, 53197, tzinfo=datetime.timezone.utc), workspace_removed=False)
+
+tests/core/test_isolated_session_restart.py:75: AssertionError</failure></testcase></testsuite></testsuites>
