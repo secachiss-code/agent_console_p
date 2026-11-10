@@ -1,0 +1,205 @@
+{
+  "evidence_integrity": "PASS",
+  "cases": 80,
+  "pairs": 40,
+  "source_hashes": 286,
+  "equal_outcomes": 26,
+  "equal_phases": 0,
+  "equal_states": {
+    "head": 40,
+    "symbolic_head": 40,
+    "refs": 32,
+    "checkpoint_tree": 36,
+    "index": 40,
+    "index_sha256": 0,
+    "files": 38,
+    "dest_exists": 36,
+    "dest_files": 36,
+    "worktrees": 36,
+    "dest_lock": 24,
+    "source_lock_sha256": 40,
+    "metadata": 24
+  },
+  "native_refusals": [
+    {
+      "operation": "worktree",
+      "mode": "prepared_refuse",
+      "format": "sha1",
+      "phases": [
+        "reference-transaction"
+      ]
+    },
+    {
+      "operation": "worktree",
+      "mode": "committed_fail",
+      "format": "sha1",
+      "phases": [
+        "reference-transaction",
+        "reference-transaction"
+      ]
+    },
+    {
+      "operation": "worktree",
+      "mode": "post_checkout_fail",
+      "format": "sha1",
+      "phases": [
+        "post-checkout"
+      ]
+    },
+    {
+      "operation": "detached",
+      "mode": "prepared_refuse",
+      "format": "sha1",
+      "phases": [
+        "reference-transaction"
+      ]
+    },
+    {
+      "operation": "detached",
+      "mode": "committed_fail",
+      "format": "sha1",
+      "phases": [
+        "reference-transaction"
+      ]
+    },
+    {
+      "operation": "detached",
+      "mode": "post_checkout_fail",
+      "format": "sha1",
+      "phases": [
+        "post-checkout"
+      ]
+    },
+    {
+      "operation": "capture",
+      "mode": "prepared_refuse",
+      "format": "sha1",
+      "phases": [
+        "reference-transaction"
+      ]
+    },
+    {
+      "operation": "capture",
+      "mode": "committed_fail",
+      "format": "sha1",
+      "phases": [
+        "reference-transaction"
+      ]
+    },
+    {
+      "operation": "materialize",
+      "mode": "post_checkout_fail",
+      "format": "sha1",
+      "phases": [
+        "post-checkout"
+      ]
+    },
+    {
+      "operation": "delete",
+      "mode": "prepared_refuse",
+      "format": "sha1",
+      "phases": [
+        "reference-transaction"
+      ]
+    },
+    {
+      "operation": "delete",
+      "mode": "committed_fail",
+      "format": "sha1",
+      "phases": [
+        "reference-transaction"
+      ]
+    },
+    {
+      "operation": "worktree",
+      "mode": "prepared_refuse",
+      "format": "sha256",
+      "phases": [
+        "reference-transaction"
+      ]
+    },
+    {
+      "operation": "worktree",
+      "mode": "committed_fail",
+      "format": "sha256",
+      "phases": [
+        "reference-transaction",
+        "reference-transaction"
+      ]
+    },
+    {
+      "operation": "worktree",
+      "mode": "post_checkout_fail",
+      "format": "sha256",
+      "phases": [
+        "post-checkout"
+      ]
+    },
+    {
+      "operation": "detached",
+      "mode": "prepared_refuse",
+      "format": "sha256",
+      "phases": [
+        "reference-transaction"
+      ]
+    },
+    {
+      "operation": "detached",
+      "mode": "committed_fail",
+      "format": "sha256",
+      "phases": [
+        "reference-transaction"
+      ]
+    },
+    {
+      "operation": "detached",
+      "mode": "post_checkout_fail",
+      "format": "sha256",
+      "phases": [
+        "post-checkout"
+      ]
+    },
+    {
+      "operation": "capture",
+      "mode": "prepared_refuse",
+      "format": "sha256",
+      "phases": [
+        "reference-transaction"
+      ]
+    },
+    {
+      "operation": "capture",
+      "mode": "committed_fail",
+      "format": "sha256",
+      "phases": [
+        "reference-transaction"
+      ]
+    },
+    {
+      "operation": "materialize",
+      "mode": "post_checkout_fail",
+      "format": "sha256",
+      "phases": [
+        "post-checkout"
+      ]
+    },
+    {
+      "operation": "delete",
+      "mode": "prepared_refuse",
+      "format": "sha256",
+      "phases": [
+        "reference-transaction"
+      ]
+    },
+    {
+      "operation": "delete",
+      "mode": "committed_fail",
+      "format": "sha256",
+      "phases": [
+        "reference-transaction"
+      ]
+    }
+  ],
+  "security_acceptance": "NOT RUN",
+  "stage_A": "INCOMPLETE"
+}
