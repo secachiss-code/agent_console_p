@@ -1,0 +1,848 @@
+[
+  {
+    "format": "sha1",
+    "origin": "linked",
+    "mode": "observe",
+    "steps": [
+      {
+        "operation": "stage",
+        "outcome_equal": true,
+        "state_equal": {
+          "head": true,
+          "symbolic": true,
+          "refs": true,
+          "tree": true,
+          "message": true,
+          "index": true,
+          "index_content": true,
+          "head_content": true,
+          "index_sha256": false,
+          "files": true,
+          "common": true,
+          "metadata": true,
+          "bare": true
+        },
+        "phases_equal": false
+      },
+      {
+        "operation": "commit",
+        "outcome_equal": true,
+        "state_equal": {
+          "head": true,
+          "symbolic": true,
+          "refs": true,
+          "tree": true,
+          "message": true,
+          "index": true,
+          "index_content": true,
+          "head_content": true,
+          "index_sha256": false,
+          "files": true,
+          "common": true,
+          "metadata": true,
+          "bare": true
+        },
+        "phases_equal": true
+      }
+    ]
+  },
+  {
+    "format": "sha1",
+    "origin": "linked",
+    "mode": "pre-refuse",
+    "steps": [
+      {
+        "operation": "stage",
+        "outcome_equal": true,
+        "state_equal": {
+          "head": true,
+          "symbolic": true,
+          "refs": true,
+          "tree": true,
+          "message": true,
+          "index": true,
+          "index_content": true,
+          "head_content": true,
+          "index_sha256": false,
+          "files": true,
+          "common": true,
+          "metadata": true,
+          "bare": true
+        },
+        "phases_equal": false
+      },
+      {
+        "operation": "commit",
+        "outcome_equal": true,
+        "state_equal": {
+          "head": true,
+          "symbolic": true,
+          "refs": true,
+          "tree": true,
+          "message": true,
+          "index": true,
+          "index_content": true,
+          "head_content": true,
+          "index_sha256": false,
+          "files": true,
+          "common": true,
+          "metadata": true,
+          "bare": true
+        },
+        "phases_equal": true
+      }
+    ]
+  },
+  {
+    "format": "sha1",
+    "origin": "linked",
+    "mode": "ref-refuse",
+    "steps": [
+      {
+        "operation": "stage",
+        "outcome_equal": true,
+        "state_equal": {
+          "head": true,
+          "symbolic": true,
+          "refs": true,
+          "tree": true,
+          "message": true,
+          "index": true,
+          "index_content": true,
+          "head_content": true,
+          "index_sha256": false,
+          "files": true,
+          "common": true,
+          "metadata": true,
+          "bare": true
+        },
+        "phases_equal": false
+      },
+      {
+        "operation": "commit",
+        "outcome_equal": true,
+        "state_equal": {
+          "head": true,
+          "symbolic": true,
+          "refs": true,
+          "tree": true,
+          "message": true,
+          "index": true,
+          "index_content": true,
+          "head_content": true,
+          "index_sha256": false,
+          "files": true,
+          "common": true,
+          "metadata": true,
+          "bare": true
+        },
+        "phases_equal": true
+      }
+    ]
+  },
+  {
+    "format": "sha1",
+    "origin": "unborn",
+    "mode": "observe",
+    "steps": [
+      {
+        "operation": "stage",
+        "outcome_equal": true,
+        "state_equal": {
+          "head": true,
+          "symbolic": true,
+          "refs": true,
+          "tree": true,
+          "message": true,
+          "index": true,
+          "index_content": true,
+          "head_content": true,
+          "index_sha256": false,
+          "files": true,
+          "common": true,
+          "metadata": true,
+          "bare": true
+        },
+        "phases_equal": false
+      },
+      {
+        "operation": "commit",
+        "outcome_equal": true,
+        "state_equal": {
+          "head": true,
+          "symbolic": true,
+          "refs": true,
+          "tree": true,
+          "message": true,
+          "index": true,
+          "index_content": true,
+          "head_content": true,
+          "index_sha256": false,
+          "files": true,
+          "common": true,
+          "metadata": true,
+          "bare": true
+        },
+        "phases_equal": true
+      }
+    ]
+  },
+  {
+    "format": "sha1",
+    "origin": "unborn",
+    "mode": "pre-refuse",
+    "steps": [
+      {
+        "operation": "stage",
+        "outcome_equal": true,
+        "state_equal": {
+          "head": true,
+          "symbolic": true,
+          "refs": true,
+          "tree": true,
+          "message": true,
+          "index": true,
+          "index_content": true,
+          "head_content": true,
+          "index_sha256": false,
+          "files": true,
+          "common": true,
+          "metadata": true,
+          "bare": true
+        },
+        "phases_equal": false
+      },
+      {
+        "operation": "commit",
+        "outcome_equal": true,
+        "state_equal": {
+          "head": true,
+          "symbolic": true,
+          "refs": true,
+          "tree": true,
+          "message": true,
+          "index": true,
+          "index_content": true,
+          "head_content": true,
+          "index_sha256": false,
+          "files": true,
+          "common": true,
+          "metadata": true,
+          "bare": true
+        },
+        "phases_equal": true
+      }
+    ]
+  },
+  {
+    "format": "sha1",
+    "origin": "unborn",
+    "mode": "ref-refuse",
+    "steps": [
+      {
+        "operation": "stage",
+        "outcome_equal": true,
+        "state_equal": {
+          "head": true,
+          "symbolic": true,
+          "refs": true,
+          "tree": true,
+          "message": true,
+          "index": true,
+          "index_content": true,
+          "head_content": true,
+          "index_sha256": false,
+          "files": true,
+          "common": true,
+          "metadata": true,
+          "bare": true
+        },
+        "phases_equal": false
+      },
+      {
+        "operation": "commit",
+        "outcome_equal": true,
+        "state_equal": {
+          "head": true,
+          "symbolic": true,
+          "refs": true,
+          "tree": true,
+          "message": true,
+          "index": true,
+          "index_content": true,
+          "head_content": true,
+          "index_sha256": false,
+          "files": true,
+          "common": true,
+          "metadata": true,
+          "bare": true
+        },
+        "phases_equal": true
+      }
+    ]
+  },
+  {
+    "format": "sha1",
+    "origin": "bare",
+    "mode": "observe",
+    "steps": [
+      {
+        "operation": "commit-tree",
+        "outcome_equal": true,
+        "state_equal": {
+          "head": true,
+          "symbolic": true,
+          "refs": true,
+          "tree": true,
+          "message": true,
+          "index": true,
+          "index_content": true,
+          "head_content": true,
+          "index_sha256": true,
+          "files": true,
+          "common": true,
+          "metadata": true,
+          "bare": true
+        },
+        "phases_equal": true
+      },
+      {
+        "operation": "update-ref",
+        "outcome_equal": true,
+        "state_equal": {
+          "head": true,
+          "symbolic": true,
+          "refs": true,
+          "tree": true,
+          "message": true,
+          "index": true,
+          "index_content": true,
+          "head_content": true,
+          "index_sha256": true,
+          "files": true,
+          "common": true,
+          "metadata": true,
+          "bare": true
+        },
+        "phases_equal": false
+      }
+    ]
+  },
+  {
+    "format": "sha1",
+    "origin": "bare",
+    "mode": "pre-refuse",
+    "steps": [
+      {
+        "operation": "commit-tree",
+        "outcome_equal": true,
+        "state_equal": {
+          "head": true,
+          "symbolic": true,
+          "refs": true,
+          "tree": true,
+          "message": true,
+          "index": true,
+          "index_content": true,
+          "head_content": true,
+          "index_sha256": true,
+          "files": true,
+          "common": true,
+          "metadata": true,
+          "bare": true
+        },
+        "phases_equal": true
+      },
+      {
+        "operation": "update-ref",
+        "outcome_equal": true,
+        "state_equal": {
+          "head": true,
+          "symbolic": true,
+          "refs": true,
+          "tree": true,
+          "message": true,
+          "index": true,
+          "index_content": true,
+          "head_content": true,
+          "index_sha256": true,
+          "files": true,
+          "common": true,
+          "metadata": true,
+          "bare": true
+        },
+        "phases_equal": false
+      }
+    ]
+  },
+  {
+    "format": "sha1",
+    "origin": "bare",
+    "mode": "ref-refuse",
+    "steps": [
+      {
+        "operation": "commit-tree",
+        "outcome_equal": true,
+        "state_equal": {
+          "head": true,
+          "symbolic": true,
+          "refs": true,
+          "tree": true,
+          "message": true,
+          "index": true,
+          "index_content": true,
+          "head_content": true,
+          "index_sha256": true,
+          "files": true,
+          "common": true,
+          "metadata": true,
+          "bare": true
+        },
+        "phases_equal": true
+      },
+      {
+        "operation": "update-ref",
+        "outcome_equal": false,
+        "state_equal": {
+          "head": false,
+          "symbolic": true,
+          "refs": false,
+          "tree": true,
+          "message": false,
+          "index": true,
+          "index_content": true,
+          "head_content": true,
+          "index_sha256": true,
+          "files": true,
+          "common": true,
+          "metadata": true,
+          "bare": true
+        },
+        "phases_equal": false
+      }
+    ]
+  },
+  {
+    "format": "sha256",
+    "origin": "linked",
+    "mode": "observe",
+    "steps": [
+      {
+        "operation": "stage",
+        "outcome_equal": true,
+        "state_equal": {
+          "head": true,
+          "symbolic": true,
+          "refs": true,
+          "tree": true,
+          "message": true,
+          "index": true,
+          "index_content": true,
+          "head_content": true,
+          "index_sha256": false,
+          "files": true,
+          "common": true,
+          "metadata": true,
+          "bare": true
+        },
+        "phases_equal": false
+      },
+      {
+        "operation": "commit",
+        "outcome_equal": true,
+        "state_equal": {
+          "head": true,
+          "symbolic": true,
+          "refs": true,
+          "tree": true,
+          "message": true,
+          "index": true,
+          "index_content": true,
+          "head_content": true,
+          "index_sha256": false,
+          "files": true,
+          "common": true,
+          "metadata": true,
+          "bare": true
+        },
+        "phases_equal": true
+      }
+    ]
+  },
+  {
+    "format": "sha256",
+    "origin": "linked",
+    "mode": "pre-refuse",
+    "steps": [
+      {
+        "operation": "stage",
+        "outcome_equal": true,
+        "state_equal": {
+          "head": true,
+          "symbolic": true,
+          "refs": true,
+          "tree": true,
+          "message": true,
+          "index": true,
+          "index_content": true,
+          "head_content": true,
+          "index_sha256": false,
+          "files": true,
+          "common": true,
+          "metadata": true,
+          "bare": true
+        },
+        "phases_equal": false
+      },
+      {
+        "operation": "commit",
+        "outcome_equal": true,
+        "state_equal": {
+          "head": true,
+          "symbolic": true,
+          "refs": true,
+          "tree": true,
+          "message": true,
+          "index": true,
+          "index_content": true,
+          "head_content": true,
+          "index_sha256": false,
+          "files": true,
+          "common": true,
+          "metadata": true,
+          "bare": true
+        },
+        "phases_equal": true
+      }
+    ]
+  },
+  {
+    "format": "sha256",
+    "origin": "linked",
+    "mode": "ref-refuse",
+    "steps": [
+      {
+        "operation": "stage",
+        "outcome_equal": true,
+        "state_equal": {
+          "head": true,
+          "symbolic": true,
+          "refs": true,
+          "tree": true,
+          "message": true,
+          "index": true,
+          "index_content": true,
+          "head_content": true,
+          "index_sha256": false,
+          "files": true,
+          "common": true,
+          "metadata": true,
+          "bare": true
+        },
+        "phases_equal": false
+      },
+      {
+        "operation": "commit",
+        "outcome_equal": true,
+        "state_equal": {
+          "head": true,
+          "symbolic": true,
+          "refs": true,
+          "tree": true,
+          "message": true,
+          "index": true,
+          "index_content": true,
+          "head_content": true,
+          "index_sha256": false,
+          "files": true,
+          "common": true,
+          "metadata": true,
+          "bare": true
+        },
+        "phases_equal": true
+      }
+    ]
+  },
+  {
+    "format": "sha256",
+    "origin": "unborn",
+    "mode": "observe",
+    "steps": [
+      {
+        "operation": "stage",
+        "outcome_equal": true,
+        "state_equal": {
+          "head": true,
+          "symbolic": true,
+          "refs": true,
+          "tree": true,
+          "message": true,
+          "index": true,
+          "index_content": true,
+          "head_content": true,
+          "index_sha256": false,
+          "files": true,
+          "common": true,
+          "metadata": true,
+          "bare": true
+        },
+        "phases_equal": false
+      },
+      {
+        "operation": "commit",
+        "outcome_equal": true,
+        "state_equal": {
+          "head": true,
+          "symbolic": true,
+          "refs": true,
+          "tree": true,
+          "message": true,
+          "index": true,
+          "index_content": true,
+          "head_content": true,
+          "index_sha256": false,
+          "files": true,
+          "common": true,
+          "metadata": true,
+          "bare": true
+        },
+        "phases_equal": true
+      }
+    ]
+  },
+  {
+    "format": "sha256",
+    "origin": "unborn",
+    "mode": "pre-refuse",
+    "steps": [
+      {
+        "operation": "stage",
+        "outcome_equal": true,
+        "state_equal": {
+          "head": true,
+          "symbolic": true,
+          "refs": true,
+          "tree": true,
+          "message": true,
+          "index": true,
+          "index_content": true,
+          "head_content": true,
+          "index_sha256": false,
+          "files": true,
+          "common": true,
+          "metadata": true,
+          "bare": true
+        },
+        "phases_equal": false
+      },
+      {
+        "operation": "commit",
+        "outcome_equal": true,
+        "state_equal": {
+          "head": true,
+          "symbolic": true,
+          "refs": true,
+          "tree": true,
+          "message": true,
+          "index": true,
+          "index_content": true,
+          "head_content": true,
+          "index_sha256": false,
+          "files": true,
+          "common": true,
+          "metadata": true,
+          "bare": true
+        },
+        "phases_equal": true
+      }
+    ]
+  },
+  {
+    "format": "sha256",
+    "origin": "unborn",
+    "mode": "ref-refuse",
+    "steps": [
+      {
+        "operation": "stage",
+        "outcome_equal": true,
+        "state_equal": {
+          "head": true,
+          "symbolic": true,
+          "refs": true,
+          "tree": true,
+          "message": true,
+          "index": true,
+          "index_content": true,
+          "head_content": true,
+          "index_sha256": false,
+          "files": true,
+          "common": true,
+          "metadata": true,
+          "bare": true
+        },
+        "phases_equal": false
+      },
+      {
+        "operation": "commit",
+        "outcome_equal": true,
+        "state_equal": {
+          "head": true,
+          "symbolic": true,
+          "refs": true,
+          "tree": true,
+          "message": true,
+          "index": true,
+          "index_content": true,
+          "head_content": true,
+          "index_sha256": false,
+          "files": true,
+          "common": true,
+          "metadata": true,
+          "bare": true
+        },
+        "phases_equal": true
+      }
+    ]
+  },
+  {
+    "format": "sha256",
+    "origin": "bare",
+    "mode": "observe",
+    "steps": [
+      {
+        "operation": "commit-tree",
+        "outcome_equal": true,
+        "state_equal": {
+          "head": true,
+          "symbolic": true,
+          "refs": true,
+          "tree": true,
+          "message": true,
+          "index": true,
+          "index_content": true,
+          "head_content": true,
+          "index_sha256": true,
+          "files": true,
+          "common": true,
+          "metadata": true,
+          "bare": true
+        },
+        "phases_equal": true
+      },
+      {
+        "operation": "update-ref",
+        "outcome_equal": true,
+        "state_equal": {
+          "head": true,
+          "symbolic": true,
+          "refs": true,
+          "tree": true,
+          "message": true,
+          "index": true,
+          "index_content": true,
+          "head_content": true,
+          "index_sha256": true,
+          "files": true,
+          "common": true,
+          "metadata": true,
+          "bare": true
+        },
+        "phases_equal": false
+      }
+    ]
+  },
+  {
+    "format": "sha256",
+    "origin": "bare",
+    "mode": "pre-refuse",
+    "steps": [
+      {
+        "operation": "commit-tree",
+        "outcome_equal": true,
+        "state_equal": {
+          "head": true,
+          "symbolic": true,
+          "refs": true,
+          "tree": true,
+          "message": true,
+          "index": true,
+          "index_content": true,
+          "head_content": true,
+          "index_sha256": true,
+          "files": true,
+          "common": true,
+          "metadata": true,
+          "bare": true
+        },
+        "phases_equal": true
+      },
+      {
+        "operation": "update-ref",
+        "outcome_equal": true,
+        "state_equal": {
+          "head": true,
+          "symbolic": true,
+          "refs": true,
+          "tree": true,
+          "message": true,
+          "index": true,
+          "index_content": true,
+          "head_content": true,
+          "index_sha256": true,
+          "files": true,
+          "common": true,
+          "metadata": true,
+          "bare": true
+        },
+        "phases_equal": false
+      }
+    ]
+  },
+  {
+    "format": "sha256",
+    "origin": "bare",
+    "mode": "ref-refuse",
+    "steps": [
+      {
+        "operation": "commit-tree",
+        "outcome_equal": true,
+        "state_equal": {
+          "head": true,
+          "symbolic": true,
+          "refs": true,
+          "tree": true,
+          "message": true,
+          "index": true,
+          "index_content": true,
+          "head_content": true,
+          "index_sha256": true,
+          "files": true,
+          "common": true,
+          "metadata": true,
+          "bare": true
+        },
+        "phases_equal": true
+      },
+      {
+        "operation": "update-ref",
+        "outcome_equal": false,
+        "state_equal": {
+          "head": false,
+          "symbolic": true,
+          "refs": false,
+          "tree": true,
+          "message": false,
+          "index": true,
+          "index_content": true,
+          "head_content": true,
+          "index_sha256": true,
+          "files": true,
+          "common": true,
+          "metadata": true,
+          "bare": true
+        },
+        "phases_equal": false
+      }
+    ]
+  }
+]

@@ -1,0 +1,10 @@
+{
+  "evidence_integrity": "PASS",
+  "cases": 36,
+  "steps": 72,
+  "step_pairs": 36,
+  "equal_outcomes": 34,
+  "source_hashes": 287,
+  "security_acceptance": "NOT RUN",
+  "stage_A": "INCOMPLETE"
+}
