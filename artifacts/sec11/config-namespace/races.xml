@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="0.244" timestamp="2026-11-10T22:04:43.578461+03:00" hostname="somovasnbook14"><testcase classname="artifacts.sec11.config-namespace.test_snapshot_races" name="test_original_config_changes_after_mount[replace-False]" time="0.155"><failure message="Failed: launcher failed before snapshot: b'' b'Traceback (most recent call last):\n  File &quot;/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/038657e1539f15ad/artifacts/sec11/config-namespace/launcher.py&quot;, line 100, in &lt;module&gt;\n    raise SystemExit(main())\n                     ~~~~^^\n  File &quot;/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/038657e1539f15ad/artifacts/sec11/config-namespace/launcher.py&quot;, line 79, in main\n    run([&quot;/usr/bin/mount&quot;, &quot;--bind&quot;, f&quot;/proc/self/fd/{fd}&quot;, str(target)], pass_fds=(fd,))\n    ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File &quot;/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/038657e1539f15ad/artifacts/sec11/config-namespace/launcher.py&quot;, line 17, in run\n    return subprocess.run(argv, check=True, capture_output=True, **kwargs).stdout\n           ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File &quot;/home/sas/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/subprocess.py&quot;, line 692, in run\n    raise CalledProcessError(retcode, process.args,\n                             output=stdout, stderr=stderr)\nsubprocess.CalledProcessError: Command [\'/usr/bin/mount\', \'--bind\', \'/proc/self/fd/3\', \'/tmp/pytest-of-sas/pytest-4/test_original_config_changes_a0/repo/.git/config\'] returned non-zero exit status 32.\n'">tmp_path = PosixPath('/tmp/pytest-of-sas/pytest-4/test_original_config_changes_a0')
+linked = False, mutation = 'replace'
+
+    @pytest.mark.parametrize("linked", [False, True])
+    @pytest.mark.parametrize("mutation", ["replace", "include", "worktree"])
+    def test_original_config_changes_after_mount(tmp_path, linked, mutation):
+        repo = new_repo(tmp_path / "repo")
+        commit(repo, "f.txt", "one\n", "seed")
+        work = add_worktree(repo, tmp_path / "linked", "worker") if linked else repo
+        (work / "f.txt").write_text("two\n")
+        (work / ".gitattributes").write_text("* filter=late\n")
+        marker = tmp_path / "executed"
+        script = tmp_path / "late.sh"
+        _script(script, marker)
+        if mutation == "worktree":
+            git(repo, "config", "extensions.worktreeConfig", "true")
+        ready, release = tmp_path / "ready", tmp_path / "release"
+        env = dict(os.environ, ACONSOLE_EXPERIMENT_PARENT_MNT=os.readlink("/proc/self/ns/mnt"),
+                   ACONSOLE_EXPERIMENT_READY=str(ready), ACONSOLE_EXPERIMENT_RELEASE=str(release))
+        original_mount = os.readlink("/proc/self/ns/mnt")
+        command = ["/usr/bin/unshare", "--user", "--map-root-user", "--mount", sys.executable,
+                   str(Path(__file__).with_name("launcher.py")), "/usr/bin/git", "-C", str(work),
+                   "status", "--porcelain"]
+        child = subprocess.Popen(command, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        try:
+            deadline = time.monotonic() + 10
+            while not ready.exists():
+                if child.poll() is not None:
+                    stdout, stderr = child.communicate()
+&gt;                   pytest.fail(f"launcher failed before snapshot: {stdout!r} {stderr!r}")
+E                   Failed: launcher failed before snapshot: b'' b'Traceback (most recent call last):\n  File "/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/038657e1539f15ad/artifacts/sec11/config-namespace/launcher.py", line 100, in &lt;module&gt;\n    raise SystemExit(main())\n                     ~~~~^^\n  File "/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/038657e1539f15ad/artifacts/sec11/config-namespace/launcher.py", line 79, in main\n    run(["/usr/bin/mount", "--bind", f"/proc/self/fd/{fd}", str(target)], pass_fds=(fd,))\n    ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File "/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/038657e1539f15ad/artifacts/sec11/config-namespace/launcher.py", line 17, in run\n    return subprocess.run(argv, check=True, capture_output=True, **kwargs).stdout\n           ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File "/home/sas/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/subprocess.py", line 692, in run\n    raise CalledProcessError(retcode, process.args,\n                             output=stdout, stderr=stderr)\nsubprocess.CalledProcessError: Command [\'/usr/bin/mount\', \'--bind\', \'/proc/self/fd/3\', \'/tmp/pytest-of-sas/pytest-4/test_original_config_changes_a0/repo/.git/config\'] returned non-zero exit status 32.\n'
+
+artifacts/sec11/config-namespace/test_snapshot_races.py:41: Failed</failure></testcase></testsuite></testsuites>
