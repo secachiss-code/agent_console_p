@@ -23,11 +23,14 @@ parser.add_argument('--checkout-ref',default='')
 parser.add_argument('--scale-only',action='store_true')
 parser.add_argument('--labels',action='store_true')
 parser.add_argument('--phases',action='store_true')
+parser.add_argument('--row-probe',choices=['static-title','static-date','no-graph'],default='')
 parser.add_argument('--a11y-default',action='store_true')
 parser.add_argument('--desktop',action='store_true')
 parser.add_argument('--native-stack',action='store_true')
 parser.add_argument('--prepare-gdb',action='store_true')
 options=parser.parse_args()
+if options.row_probe and (not options.scale_only or options.mode != 'isolated'):
+    parser.error('--row-probe requires --scale-only and --mode isolated; diagnostics are not acceptance')
 label=options.label or options.mode
 output=root/'artifacts/perf7'
 if options.mode=='tools':
@@ -89,6 +92,7 @@ with tempfile.TemporaryDirectory(prefix='perf7-xvfb-') as directory:
         if not options.desktop: env.update(DISPLAY=f':{number}',XAUTHORITY=str(auth))
         if options.desktop and not env.get('DISPLAY'): raise RuntimeError('no desktop DISPLAY')
         env.pop('WAYLAND_DISPLAY',None);env.pop('BROADWAY_DISPLAY',None)
+        env.pop('ACONSOLE_PERF7_ROW_PROBE',None)
         try:
             gl=subprocess.run(['/usr/bin/glxinfo','-B'],env=env,timeout=15,capture_output=True,text=True)
             (output/(label+'-gl.txt')).write_text(gl.stdout+gl.stderr)
@@ -101,6 +105,7 @@ with tempfile.TemporaryDirectory(prefix='perf7-xvfb-') as directory:
         if options.profile: env['ACONSOLE_PERF7_PROFILE']=str(output/(label+'.prof'))
         if options.labels: env['ACONSOLE_PERF7_LABELS']='1'
         if options.phases: env['ACONSOLE_PERF7_PHASES']='1'
+        if options.row_probe: env['ACONSOLE_PERF7_ROW_PROBE']=options.row_probe
         tests=['tests/gui/front/test_git_scale_ui.py','tests/gui/front/test_git_row_tooltips.py','tests/gui/front/test_git_graph_redraw.py'] if options.mode=='isolated' else ['tests/gui/front','tests/ui']
         if options.mode=='screenshots':
             command=[sys.executable,str(root/'tools/git_snapshot.py'),'--out',str(output/(label+'-ui'))]

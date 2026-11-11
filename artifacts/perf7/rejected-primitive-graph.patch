@@ -1,0 +1,58 @@
+diff --git a/src/aconsole/ui/views/review/graph_cell.py b/src/aconsole/ui/views/review/graph_cell.py
+index 76af3a00..25c5c975 100644
+--- a/src/aconsole/ui/views/review/graph_cell.py
++++ b/src/aconsole/ui/views/review/graph_cell.py
+@@ -50,9 +50,17 @@ def lane_x(lane: int) -> float:
+ 
+ 
+ def _edge(snapshot: Gtk.Snapshot, edge: LaneEdge, top: float, bottom: float) -> None:
+-    builder = Gsk.PathBuilder.new()
+     start = lane_x(edge.start)
+     end = lane_x(edge.end)
++    if edge.start == edge.end and not edge.dashed:
++        # A solid vertical stroke has rectangular bounds. Avoid a GPU path mask
++        # for the common straight lane while retaining the same butt endpoints.
++        snapshot.append_color(
++            _COLORS[edge.color % len(_COLORS)],
++            Graphene.Rect().init(start - _LINE / 2, top, _LINE, bottom - top),
++        )
++        return
++    builder = Gsk.PathBuilder.new()
+     builder.move_to(start, top)
+     if edge.start == edge.end:
+         builder.line_to(end, bottom)
+@@ -65,6 +73,13 @@ def _edge(snapshot: Gtk.Snapshot, edge: LaneEdge, top: float, bottom: float) ->
+     snapshot.append_stroke(builder.to_path(), stroke, _COLORS[edge.color % len(_COLORS)])
+ 
+ 
++def _disc(snapshot: Gtk.Snapshot, x: float, y: float, radius: float, color: Gdk.RGBA) -> None:
++    bounds = Graphene.Rect().init(x - radius, y - radius, radius * 2, radius * 2)
++    snapshot.push_rounded_clip(Gsk.RoundedRect().init_from_rect(bounds, radius))
++    snapshot.append_color(color, bounds)
++    snapshot.pop()
++
++
+ class GraphCell(Gtk.Widget):
+     """Rows are recycled, so `set_row` is all that changes. The list can be any length."""
+ 
+@@ -100,6 +115,12 @@ class GraphCell(Gtk.Widget):
+     def _node(self, snapshot: Gtk.Snapshot, row: RowLayout, middle: float) -> None:
+         color = _COLORS[row.color % len(_COLORS)]
+         x = lane_x(row.lane)
++        _found, background = self.get_style_context().lookup_color("view_bg_color")
++        if not self.snapshot_node and not self.uncommitted:
++            if _found:
++                _disc(snapshot, x, middle, _DOT + _HALO, background)
++            _disc(snapshot, x, middle, _DOT, color)
++            return
+         builder = Gsk.PathBuilder.new()
+         if self.snapshot_node:
+             builder.move_to(x, middle - _DIAMOND)
+@@ -110,7 +131,6 @@ class GraphCell(Gtk.Widget):
+         else:
+             builder.add_circle(Graphene.Point().init(x, middle), _DOT)
+         path = builder.to_path()
+-        _found, background = self.get_style_context().lookup_color("view_bg_color")
+         if _found:
+             snapshot.append_stroke(path, Gsk.Stroke.new(_HALO * 2), background)
+         if self.uncommitted:

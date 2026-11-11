@@ -1,0 +1,249 @@
+{
+  "base_commit": "89b4b3f24de8879265f09f2daa1ca083ba3cb742",
+  "status": "failed",
+  "product_gui_and_tools_equal_base": true,
+  "retained_changes": [
+    "observer cleanup",
+    "explicit diagnostic probes",
+    "stdlib cleanup regression",
+    "evidence"
+  ],
+  "cleanup_regression": {
+    "old_failures": 2,
+    "fixed_subcases_passed": 4
+  },
+  "normal_control_acceptance": "FAIL",
+  "probe_no_graph_is_acceptance": false,
+  "full_suite_run": false,
+  "runs": [
+    {
+      "label": "layout-control-initial",
+      "diagnostic_only": false,
+      "row_probe": null,
+      "renderer": "GskNglRenderer",
+      "gtk_version": [
+        4,
+        14,
+        5
+      ],
+      "load_before": [
+        3.2470703125,
+        3.16162109375,
+        2.5517578125
+      ],
+      "load_after": [
+        3.06689453125,
+        3.12548828125,
+        2.54296875
+      ],
+      "rows": 10000,
+      "scale_report": "git scale: 10000 rows, 112 frames in 4 s, median 33.5 ms, p95 57.8 ms, worst 67.3 ms, RSS 269 MB (start 250, first page 250, all rows 268 after 3.3 s)"
+    },
+    {
+      "label": "probe-static-title",
+      "diagnostic_only": true,
+      "row_probe": "static-title",
+      "renderer": "GskNglRenderer",
+      "gtk_version": [
+        4,
+        14,
+        5
+      ],
+      "load_before": [
+        2.93212890625,
+        2.97998046875,
+        2.55029296875
+      ],
+      "load_after": [
+        2.857421875,
+        2.96337890625,
+        2.546875
+      ],
+      "rows": 10000,
+      "scale_report": "git scale: 10000 rows, 124 frames in 4 s, median 33.2 ms, p95 36.0 ms, worst 55.9 ms, RSS 269 MB (start 250, first page 250, all rows 269 after 3.1 s)"
+    },
+    {
+      "label": "probe-static-date",
+      "diagnostic_only": true,
+      "row_probe": "static-date",
+      "renderer": "GskNglRenderer",
+      "gtk_version": [
+        4,
+        14,
+        5
+      ],
+      "load_before": [
+        3.25537109375,
+        2.90869140625,
+        2.56201171875
+      ],
+      "load_after": [
+        3.29638671875,
+        2.92919921875,
+        2.572265625
+      ],
+      "rows": 10000,
+      "scale_report": "git scale: 10000 rows, 120 frames in 4 s, median 33.5 ms, p95 35.4 ms, worst 52.3 ms, RSS 269 MB (start 250, first page 250, all rows 268 after 3.1 s)"
+    },
+    {
+      "label": "probe-no-graph",
+      "diagnostic_only": true,
+      "row_probe": "no-graph",
+      "renderer": "GskNglRenderer",
+      "gtk_version": [
+        4,
+        14,
+        5
+      ],
+      "load_before": [
+        3.32958984375,
+        2.91357421875,
+        2.58984375
+      ],
+      "load_after": [
+        3.78369140625,
+        3.0146484375,
+        2.62451171875
+      ],
+      "rows": 10000,
+      "scale_report": "git scale: 10000 rows, 187 frames in 4 s, median 16.9 ms, p95 34.5 ms, worst 37.7 ms, RSS 262 MB (start 250, first page 250, all rows 261 after 3.0 s)"
+    },
+    {
+      "label": "layout-control",
+      "diagnostic_only": false,
+      "row_probe": null,
+      "renderer": "GskNglRenderer",
+      "gtk_version": [
+        4,
+        14,
+        5
+      ],
+      "load_before": [
+        4.3232421875,
+        3.2060546875,
+        2.69921875
+      ],
+      "load_after": [
+        4.216796875,
+        3.2021484375,
+        2.701171875
+      ],
+      "rows": 10000,
+      "scale_report": "git scale: 10000 rows, 119 frames in 4 s, median 33.4 ms, p95 35.3 ms, worst 51.1 ms, RSS 269 MB (start 250, first page 251, all rows 269 after 3.1 s)"
+    },
+    {
+      "label": "straight-lanes",
+      "diagnostic_only": false,
+      "row_probe": null,
+      "renderer": "GskNglRenderer",
+      "gtk_version": [
+        4,
+        14,
+        5
+      ],
+      "load_before": [
+        2.92529296875,
+        3.03662109375,
+        2.677734375
+      ],
+      "load_after": [
+        2.78271484375,
+        3.001953125,
+        2.669921875
+      ],
+      "rows": 10000,
+      "scale_report": "git scale: 10000 rows, 116 frames in 4 s, median 33.5 ms, p95 50.2 ms, worst 116.4 ms, RSS 271 MB (start 250, first page 251, all rows 262 after 3.0 s)"
+    },
+    {
+      "label": "primitive-graph",
+      "diagnostic_only": false,
+      "row_probe": null,
+      "renderer": "GskNglRenderer",
+      "gtk_version": [
+        4,
+        14,
+        5
+      ],
+      "load_before": [
+        2.98095703125,
+        3.01904296875,
+        2.6923828125
+      ],
+      "load_after": [
+        2.90234375,
+        3.001953125,
+        2.6884765625
+      ],
+      "rows": 10000,
+      "scale_report": "git scale: 10000 rows, 148 frames in 4 s, median 32.1 ms, p95 35.2 ms, worst 36.5 ms, RSS 262 MB (start 250, first page 250, all rows 261 after 3.0 s)"
+    },
+    {
+      "label": "raster-graph",
+      "diagnostic_only": false,
+      "row_probe": null,
+      "renderer": "GskNglRenderer",
+      "gtk_version": [
+        4,
+        14,
+        5
+      ],
+      "load_before": [
+        2.48681640625,
+        2.6494140625,
+        2.58984375
+      ],
+      "load_after": [
+        2.787109375,
+        2.71044921875,
+        2.61083984375
+      ],
+      "rows": 10000,
+      "scale_report": "git scale: 10000 rows, 114 frames in 4 s, median 33.6 ms, p95 51.8 ms, worst 113.4 ms, RSS 271 MB (start 250, first page 251, all rows 262 after 3.4 s)"
+    }
+  ],
+  "sha256": {
+    "artifacts/perf7/layout-control-initial.jsonl": "31d9caf585b476e475c3a916effeff63a1b85bb07411c8904d4c417131e0c2c5",
+    "artifacts/perf7/layout-control-initial.xml": "06de35b4fa1e6d89d9506664dd98f489e45631d514a7170196dbf7146c8ebef4",
+    "artifacts/perf7/layout-control-initial-scale.txt": "019916ced8ca248e3c7769161e58bcdf387ff4d2ce9d1dbd632856b1328df3d9",
+    "artifacts/perf7/layout-control-initial-gl.txt": "aa7b6fc7c98a56f659f60d2c4be1f725fba88578fef1bc4fcc2e793c2998863d",
+    "artifacts/perf7/probe-static-title.jsonl": "99e7c08ec870580c0415179479ea44f4040295eea433f7e8b86cf3fedf6c7069",
+    "artifacts/perf7/probe-static-title.xml": "40bfa554d1ce28ffbd62e93c1b59f5830868fdd0278883daf1d180a0d3c32338",
+    "artifacts/perf7/probe-static-title-scale.txt": "5dca806e0a01e10b0483ca3e38b2766e2ef4f373d0a5075cd3af4a88eb1140a7",
+    "artifacts/perf7/probe-static-title-gl.txt": "aa7b6fc7c98a56f659f60d2c4be1f725fba88578fef1bc4fcc2e793c2998863d",
+    "artifacts/perf7/probe-static-date.jsonl": "b024ca2d17cac6617433b45113c1597450c67cf4f9ee192a9c35d21af9d848ee",
+    "artifacts/perf7/probe-static-date.xml": "5e5311223230e112668c6fb17d82559b3b118757008059386374b493bd1f90af",
+    "artifacts/perf7/probe-static-date-scale.txt": "0ac7fd95d235234902c3b2d147735f9e897308e4479f4699835b0a9adc8881fc",
+    "artifacts/perf7/probe-static-date-gl.txt": "aa7b6fc7c98a56f659f60d2c4be1f725fba88578fef1bc4fcc2e793c2998863d",
+    "artifacts/perf7/probe-no-graph.jsonl": "ca835175c2d890522dd66c9845b4f912e538e9fec8e3cb6a36faf9144736deaf",
+    "artifacts/perf7/probe-no-graph.xml": "27b683ba556f9e24eb0c9955b27e174ae7bcd14723a52f8e6fa8c203ecf1749a",
+    "artifacts/perf7/probe-no-graph-scale.txt": "e9f8af597bca05655e1b6a972ffcaa526a964ebe9ae7bd5b11e809351202d032",
+    "artifacts/perf7/probe-no-graph-gl.txt": "aa7b6fc7c98a56f659f60d2c4be1f725fba88578fef1bc4fcc2e793c2998863d",
+    "artifacts/perf7/layout-control.jsonl": "dcaac4204eb4bae71e4d046cd0cf90c5053a2cfbf2569c90c4659e20d26a0237",
+    "artifacts/perf7/layout-control.xml": "039fa18ac0dc239ad375bccaa515137f662de4ac42234a55a1888d4c9cbc1a0e",
+    "artifacts/perf7/layout-control-scale.txt": "46d874f46d92623bdf6c24ec69b6327e8a59476d99220d382564e0831ee16395",
+    "artifacts/perf7/layout-control-gl.txt": "aa7b6fc7c98a56f659f60d2c4be1f725fba88578fef1bc4fcc2e793c2998863d",
+    "artifacts/perf7/straight-lanes.jsonl": "30ba541db943c24f76e5cbc69039fe7d4af576b036a9bacf19514c3503aa56c3",
+    "artifacts/perf7/straight-lanes.xml": "d3b775d74950b7c077c7511c71b6c3bcc3398106eca939638e6cb7e14aea0d65",
+    "artifacts/perf7/straight-lanes-scale.txt": "2571208f26b5dc8e01f485df25a38bfa49642e38ebd22ef4425bf1dc6796ce4f",
+    "artifacts/perf7/straight-lanes-gl.txt": "aa7b6fc7c98a56f659f60d2c4be1f725fba88578fef1bc4fcc2e793c2998863d",
+    "artifacts/perf7/primitive-graph.jsonl": "43e0387bf7b637d11f730116108900db394362b8053f3e817e6a50b6341c6eb8",
+    "artifacts/perf7/primitive-graph.xml": "7835a97477ee38e860d1542f1eea4a30aa3d6098f7316b50ec8e96fb27fa1ae5",
+    "artifacts/perf7/primitive-graph-scale.txt": "6a5bfee9146f74ef5f16ea98b3972b496444586ca032fc0c0c504d4b8533b64c",
+    "artifacts/perf7/primitive-graph-gl.txt": "aa7b6fc7c98a56f659f60d2c4be1f725fba88578fef1bc4fcc2e793c2998863d",
+    "artifacts/perf7/raster-graph.jsonl": "8b8f24aa51c42e1f326ff8c2695a903d74d40bd3fbe8ce2f43d855a277f3f315",
+    "artifacts/perf7/raster-graph.xml": "ab32c49e2d86374f7d945f14bc070a9b2971f82ab4b8b4e0b75d08591cb7ab63",
+    "artifacts/perf7/raster-graph-scale.txt": "bf99b1b43c945734b4f1c8a00a4e1223c974c6da0864bb616eed093ff3cd034b",
+    "artifacts/perf7/raster-graph-gl.txt": "aa7b6fc7c98a56f659f60d2c4be1f725fba88578fef1bc4fcc2e793c2998863d",
+    "artifacts/perf7/ROW_PIPELINE.md": "72406a1330e514c589029c9ece68835429977c0f6cc5ca8f084082fcac4945c4",
+    "artifacts/perf7/measure.py": "c06e46aebd4041a9531a48e827f5818db221ba92f5e32bf6df3c12762a854d7b",
+    "artifacts/perf7/runner.txt": "3b0eb0e1930b0d2037f365134fec0efe8851c3dba20209efeac9c6e03f8713af",
+    "artifacts/perf7/observer-cleanup-red.txt": "1096764681605bec54150bd3035039124f51fcaf217705ecf6675d413a43693c",
+    "artifacts/perf7/observer-cleanup-green.txt": "67760967bbc5158cf556fe76b4f62cd3d5f280f5c82a241eefe26ded66b8bbb6",
+    "artifacts/perf7/rejected-straight-lanes.patch": "2871ade511c74229f5d9701454f7d190fcdd38a6ce1759d75fe82c0a58b55591",
+    "artifacts/perf7/rejected-primitive-graph.patch": "667bb1cf9616e60762fba807f5bbfc516286e831e672af36475ce3aaac88b98b",
+    "artifacts/perf7/rejected-raster-graph.patch": "c3a863d8ed2f4b002d01992728953fabd9eda2a3085dee4543c9bea0fcd9a9ed",
+    "tests/unit/test_perf7_observer.py": "35b6a03ef06b3e49db31076a32c5f0d9203f88c071f7ffa73ae844a4ab918606",
+    "src/aconsole/ui/views/review/graph_cell.py": "56038137006acf77a99907152a35fbf6cf183e6724f4c41e221656b657cb65dc",
+    "tests/gui/front/test_git_scale_ui.py": "c9455d75de02cde25f09cbc4f9e423d3e66a0a583c51f50ebac7eb9789634c4c"
+  }
+}
