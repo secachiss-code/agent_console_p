@@ -1,0 +1,1565 @@
+{
+  "evidence_integrity": "PASS",
+  "cases": 144,
+  "steps": 288,
+  "step_pairs": 144,
+  "equal_outcomes": 130,
+  "equal_phases": 0,
+  "final_equal_pairs": {
+    "head": 64,
+    "target": 62,
+    "symbolic_head": 66,
+    "head_tree": 64,
+    "target_tree": 62,
+    "head_message": 66,
+    "index": 70,
+    "unmerged": 72,
+    "status": 66,
+    "state": 58,
+    "files": 70
+  },
+  "source_hashes": 293,
+  "positive_controls": [
+    {
+      "format": "sha1",
+      "operation": "rebase",
+      "flow": "success",
+      "mode": "observe",
+      "refusal_events": 0,
+      "ok": true
+    },
+    {
+      "format": "sha1",
+      "operation": "rebase",
+      "flow": "success",
+      "mode": "pre_rebase_refuse",
+      "refusal_events": 1,
+      "ok": false
+    },
+    {
+      "format": "sha1",
+      "operation": "rebase",
+      "flow": "success",
+      "mode": "post_rewrite_fail",
+      "refusal_events": 1,
+      "ok": true
+    },
+    {
+      "format": "sha1",
+      "operation": "rebase",
+      "flow": "success",
+      "mode": "post_commit_fail",
+      "refusal_events": 1,
+      "ok": true
+    },
+    {
+      "format": "sha1",
+      "operation": "rebase",
+      "flow": "success",
+      "mode": "target_prepared_refuse",
+      "refusal_events": 1,
+      "ok": false
+    },
+    {
+      "format": "sha1",
+      "operation": "rebase",
+      "flow": "success",
+      "mode": "target_committed_fail",
+      "refusal_events": 1,
+      "ok": true
+    },
+    {
+      "format": "sha1",
+      "operation": "rebase",
+      "flow": "continue",
+      "mode": "observe",
+      "refusal_events": 0,
+      "ok": true
+    },
+    {
+      "format": "sha1",
+      "operation": "rebase",
+      "flow": "continue",
+      "mode": "pre_rebase_refuse",
+      "refusal_events": 0,
+      "ok": true
+    },
+    {
+      "format": "sha1",
+      "operation": "rebase",
+      "flow": "continue",
+      "mode": "post_rewrite_fail",
+      "refusal_events": 1,
+      "ok": true
+    },
+    {
+      "format": "sha1",
+      "operation": "rebase",
+      "flow": "continue",
+      "mode": "post_commit_fail",
+      "refusal_events": 1,
+      "ok": true
+    },
+    {
+      "format": "sha1",
+      "operation": "rebase",
+      "flow": "continue",
+      "mode": "target_prepared_refuse",
+      "refusal_events": 1,
+      "ok": false
+    },
+    {
+      "format": "sha1",
+      "operation": "rebase",
+      "flow": "continue",
+      "mode": "target_committed_fail",
+      "refusal_events": 1,
+      "ok": true
+    },
+    {
+      "format": "sha1",
+      "operation": "rebase",
+      "flow": "abort",
+      "mode": "observe",
+      "refusal_events": 0,
+      "ok": true
+    },
+    {
+      "format": "sha1",
+      "operation": "rebase",
+      "flow": "abort",
+      "mode": "pre_rebase_refuse",
+      "refusal_events": 0,
+      "ok": true
+    },
+    {
+      "format": "sha1",
+      "operation": "rebase",
+      "flow": "abort",
+      "mode": "post_rewrite_fail",
+      "refusal_events": 0,
+      "ok": true
+    },
+    {
+      "format": "sha1",
+      "operation": "rebase",
+      "flow": "abort",
+      "mode": "post_commit_fail",
+      "refusal_events": 0,
+      "ok": true
+    },
+    {
+      "format": "sha1",
+      "operation": "rebase",
+      "flow": "abort",
+      "mode": "target_prepared_refuse",
+      "refusal_events": 1,
+      "ok": false
+    },
+    {
+      "format": "sha1",
+      "operation": "rebase",
+      "flow": "abort",
+      "mode": "target_committed_fail",
+      "refusal_events": 1,
+      "ok": true
+    },
+    {
+      "format": "sha1",
+      "operation": "cherry-pick",
+      "flow": "success",
+      "mode": "observe",
+      "refusal_events": 0,
+      "ok": true
+    },
+    {
+      "format": "sha1",
+      "operation": "cherry-pick",
+      "flow": "success",
+      "mode": "pre_rebase_refuse",
+      "refusal_events": 0,
+      "ok": true
+    },
+    {
+      "format": "sha1",
+      "operation": "cherry-pick",
+      "flow": "success",
+      "mode": "post_rewrite_fail",
+      "refusal_events": 0,
+      "ok": true
+    },
+    {
+      "format": "sha1",
+      "operation": "cherry-pick",
+      "flow": "success",
+      "mode": "post_commit_fail",
+      "refusal_events": 1,
+      "ok": true
+    },
+    {
+      "format": "sha1",
+      "operation": "cherry-pick",
+      "flow": "success",
+      "mode": "target_prepared_refuse",
+      "refusal_events": 1,
+      "ok": false
+    },
+    {
+      "format": "sha1",
+      "operation": "cherry-pick",
+      "flow": "success",
+      "mode": "target_committed_fail",
+      "refusal_events": 1,
+      "ok": true
+    },
+    {
+      "format": "sha1",
+      "operation": "cherry-pick",
+      "flow": "continue",
+      "mode": "observe",
+      "refusal_events": 0,
+      "ok": true
+    },
+    {
+      "format": "sha1",
+      "operation": "cherry-pick",
+      "flow": "continue",
+      "mode": "pre_rebase_refuse",
+      "refusal_events": 0,
+      "ok": true
+    },
+    {
+      "format": "sha1",
+      "operation": "cherry-pick",
+      "flow": "continue",
+      "mode": "post_rewrite_fail",
+      "refusal_events": 0,
+      "ok": true
+    },
+    {
+      "format": "sha1",
+      "operation": "cherry-pick",
+      "flow": "continue",
+      "mode": "post_commit_fail",
+      "refusal_events": 1,
+      "ok": true
+    },
+    {
+      "format": "sha1",
+      "operation": "cherry-pick",
+      "flow": "continue",
+      "mode": "target_prepared_refuse",
+      "refusal_events": 1,
+      "ok": false
+    },
+    {
+      "format": "sha1",
+      "operation": "cherry-pick",
+      "flow": "continue",
+      "mode": "target_committed_fail",
+      "refusal_events": 1,
+      "ok": true
+    },
+    {
+      "format": "sha1",
+      "operation": "cherry-pick",
+      "flow": "abort",
+      "mode": "observe",
+      "refusal_events": 0,
+      "ok": true
+    },
+    {
+      "format": "sha1",
+      "operation": "cherry-pick",
+      "flow": "abort",
+      "mode": "pre_rebase_refuse",
+      "refusal_events": 0,
+      "ok": true
+    },
+    {
+      "format": "sha1",
+      "operation": "cherry-pick",
+      "flow": "abort",
+      "mode": "post_rewrite_fail",
+      "refusal_events": 0,
+      "ok": true
+    },
+    {
+      "format": "sha1",
+      "operation": "cherry-pick",
+      "flow": "abort",
+      "mode": "post_commit_fail",
+      "refusal_events": 0,
+      "ok": true
+    },
+    {
+      "format": "sha1",
+      "operation": "cherry-pick",
+      "flow": "abort",
+      "mode": "target_prepared_refuse",
+      "refusal_events": 1,
+      "ok": false
+    },
+    {
+      "format": "sha1",
+      "operation": "cherry-pick",
+      "flow": "abort",
+      "mode": "target_committed_fail",
+      "refusal_events": 1,
+      "ok": true
+    },
+    {
+      "format": "sha256",
+      "operation": "rebase",
+      "flow": "success",
+      "mode": "observe",
+      "refusal_events": 0,
+      "ok": true
+    },
+    {
+      "format": "sha256",
+      "operation": "rebase",
+      "flow": "success",
+      "mode": "pre_rebase_refuse",
+      "refusal_events": 1,
+      "ok": false
+    },
+    {
+      "format": "sha256",
+      "operation": "rebase",
+      "flow": "success",
+      "mode": "post_rewrite_fail",
+      "refusal_events": 1,
+      "ok": true
+    },
+    {
+      "format": "sha256",
+      "operation": "rebase",
+      "flow": "success",
+      "mode": "post_commit_fail",
+      "refusal_events": 1,
+      "ok": true
+    },
+    {
+      "format": "sha256",
+      "operation": "rebase",
+      "flow": "success",
+      "mode": "target_prepared_refuse",
+      "refusal_events": 1,
+      "ok": false
+    },
+    {
+      "format": "sha256",
+      "operation": "rebase",
+      "flow": "success",
+      "mode": "target_committed_fail",
+      "refusal_events": 1,
+      "ok": true
+    },
+    {
+      "format": "sha256",
+      "operation": "rebase",
+      "flow": "continue",
+      "mode": "observe",
+      "refusal_events": 0,
+      "ok": true
+    },
+    {
+      "format": "sha256",
+      "operation": "rebase",
+      "flow": "continue",
+      "mode": "pre_rebase_refuse",
+      "refusal_events": 0,
+      "ok": true
+    },
+    {
+      "format": "sha256",
+      "operation": "rebase",
+      "flow": "continue",
+      "mode": "post_rewrite_fail",
+      "refusal_events": 1,
+      "ok": true
+    },
+    {
+      "format": "sha256",
+      "operation": "rebase",
+      "flow": "continue",
+      "mode": "post_commit_fail",
+      "refusal_events": 1,
+      "ok": true
+    },
+    {
+      "format": "sha256",
+      "operation": "rebase",
+      "flow": "continue",
+      "mode": "target_prepared_refuse",
+      "refusal_events": 1,
+      "ok": false
+    },
+    {
+      "format": "sha256",
+      "operation": "rebase",
+      "flow": "continue",
+      "mode": "target_committed_fail",
+      "refusal_events": 1,
+      "ok": true
+    },
+    {
+      "format": "sha256",
+      "operation": "rebase",
+      "flow": "abort",
+      "mode": "observe",
+      "refusal_events": 0,
+      "ok": true
+    },
+    {
+      "format": "sha256",
+      "operation": "rebase",
+      "flow": "abort",
+      "mode": "pre_rebase_refuse",
+      "refusal_events": 0,
+      "ok": true
+    },
+    {
+      "format": "sha256",
+      "operation": "rebase",
+      "flow": "abort",
+      "mode": "post_rewrite_fail",
+      "refusal_events": 0,
+      "ok": true
+    },
+    {
+      "format": "sha256",
+      "operation": "rebase",
+      "flow": "abort",
+      "mode": "post_commit_fail",
+      "refusal_events": 0,
+      "ok": true
+    },
+    {
+      "format": "sha256",
+      "operation": "rebase",
+      "flow": "abort",
+      "mode": "target_prepared_refuse",
+      "refusal_events": 1,
+      "ok": false
+    },
+    {
+      "format": "sha256",
+      "operation": "rebase",
+      "flow": "abort",
+      "mode": "target_committed_fail",
+      "refusal_events": 1,
+      "ok": true
+    },
+    {
+      "format": "sha256",
+      "operation": "cherry-pick",
+      "flow": "success",
+      "mode": "observe",
+      "refusal_events": 0,
+      "ok": true
+    },
+    {
+      "format": "sha256",
+      "operation": "cherry-pick",
+      "flow": "success",
+      "mode": "pre_rebase_refuse",
+      "refusal_events": 0,
+      "ok": true
+    },
+    {
+      "format": "sha256",
+      "operation": "cherry-pick",
+      "flow": "success",
+      "mode": "post_rewrite_fail",
+      "refusal_events": 0,
+      "ok": true
+    },
+    {
+      "format": "sha256",
+      "operation": "cherry-pick",
+      "flow": "success",
+      "mode": "post_commit_fail",
+      "refusal_events": 1,
+      "ok": true
+    },
+    {
+      "format": "sha256",
+      "operation": "cherry-pick",
+      "flow": "success",
+      "mode": "target_prepared_refuse",
+      "refusal_events": 1,
+      "ok": false
+    },
+    {
+      "format": "sha256",
+      "operation": "cherry-pick",
+      "flow": "success",
+      "mode": "target_committed_fail",
+      "refusal_events": 1,
+      "ok": true
+    },
+    {
+      "format": "sha256",
+      "operation": "cherry-pick",
+      "flow": "continue",
+      "mode": "observe",
+      "refusal_events": 0,
+      "ok": true
+    },
+    {
+      "format": "sha256",
+      "operation": "cherry-pick",
+      "flow": "continue",
+      "mode": "pre_rebase_refuse",
+      "refusal_events": 0,
+      "ok": true
+    },
+    {
+      "format": "sha256",
+      "operation": "cherry-pick",
+      "flow": "continue",
+      "mode": "post_rewrite_fail",
+      "refusal_events": 0,
+      "ok": true
+    },
+    {
+      "format": "sha256",
+      "operation": "cherry-pick",
+      "flow": "continue",
+      "mode": "post_commit_fail",
+      "refusal_events": 1,
+      "ok": true
+    },
+    {
+      "format": "sha256",
+      "operation": "cherry-pick",
+      "flow": "continue",
+      "mode": "target_prepared_refuse",
+      "refusal_events": 1,
+      "ok": false
+    },
+    {
+      "format": "sha256",
+      "operation": "cherry-pick",
+      "flow": "continue",
+      "mode": "target_committed_fail",
+      "refusal_events": 1,
+      "ok": true
+    },
+    {
+      "format": "sha256",
+      "operation": "cherry-pick",
+      "flow": "abort",
+      "mode": "observe",
+      "refusal_events": 0,
+      "ok": true
+    },
+    {
+      "format": "sha256",
+      "operation": "cherry-pick",
+      "flow": "abort",
+      "mode": "pre_rebase_refuse",
+      "refusal_events": 0,
+      "ok": true
+    },
+    {
+      "format": "sha256",
+      "operation": "cherry-pick",
+      "flow": "abort",
+      "mode": "post_rewrite_fail",
+      "refusal_events": 0,
+      "ok": true
+    },
+    {
+      "format": "sha256",
+      "operation": "cherry-pick",
+      "flow": "abort",
+      "mode": "post_commit_fail",
+      "refusal_events": 0,
+      "ok": true
+    },
+    {
+      "format": "sha256",
+      "operation": "cherry-pick",
+      "flow": "abort",
+      "mode": "target_prepared_refuse",
+      "refusal_events": 1,
+      "ok": false
+    },
+    {
+      "format": "sha256",
+      "operation": "cherry-pick",
+      "flow": "abort",
+      "mode": "target_committed_fail",
+      "refusal_events": 1,
+      "ok": true
+    }
+  ],
+  "graceful_restarts": 120,
+  "restart_states": [
+    {
+      "format": "sha1",
+      "operation": "rebase",
+      "flow": "success",
+      "mode": "observe",
+      "label": "terminal",
+      "status": "finished"
+    },
+    {
+      "format": "sha1",
+      "operation": "rebase",
+      "flow": "success",
+      "mode": "pre_rebase_refuse",
+      "label": "terminal",
+      "status": "finished"
+    },
+    {
+      "format": "sha1",
+      "operation": "rebase",
+      "flow": "success",
+      "mode": "post_rewrite_fail",
+      "label": "terminal",
+      "status": "finished"
+    },
+    {
+      "format": "sha1",
+      "operation": "rebase",
+      "flow": "success",
+      "mode": "post_commit_fail",
+      "label": "terminal",
+      "status": "finished"
+    },
+    {
+      "format": "sha1",
+      "operation": "rebase",
+      "flow": "success",
+      "mode": "target_prepared_refuse",
+      "label": "terminal",
+      "status": "finished"
+    },
+    {
+      "format": "sha1",
+      "operation": "rebase",
+      "flow": "success",
+      "mode": "target_committed_fail",
+      "label": "terminal",
+      "status": "finished"
+    },
+    {
+      "format": "sha1",
+      "operation": "rebase",
+      "flow": "continue",
+      "mode": "observe",
+      "label": "conflict",
+      "status": "conflicted"
+    },
+    {
+      "format": "sha1",
+      "operation": "rebase",
+      "flow": "continue",
+      "mode": "observe",
+      "label": "terminal",
+      "status": "finished"
+    },
+    {
+      "format": "sha1",
+      "operation": "rebase",
+      "flow": "continue",
+      "mode": "pre_rebase_refuse",
+      "label": "conflict",
+      "status": "conflicted"
+    },
+    {
+      "format": "sha1",
+      "operation": "rebase",
+      "flow": "continue",
+      "mode": "pre_rebase_refuse",
+      "label": "terminal",
+      "status": "finished"
+    },
+    {
+      "format": "sha1",
+      "operation": "rebase",
+      "flow": "continue",
+      "mode": "post_rewrite_fail",
+      "label": "conflict",
+      "status": "conflicted"
+    },
+    {
+      "format": "sha1",
+      "operation": "rebase",
+      "flow": "continue",
+      "mode": "post_rewrite_fail",
+      "label": "terminal",
+      "status": "finished"
+    },
+    {
+      "format": "sha1",
+      "operation": "rebase",
+      "flow": "continue",
+      "mode": "post_commit_fail",
+      "label": "conflict",
+      "status": "conflicted"
+    },
+    {
+      "format": "sha1",
+      "operation": "rebase",
+      "flow": "continue",
+      "mode": "post_commit_fail",
+      "label": "terminal",
+      "status": "finished"
+    },
+    {
+      "format": "sha1",
+      "operation": "rebase",
+      "flow": "continue",
+      "mode": "target_prepared_refuse",
+      "label": "conflict",
+      "status": "conflicted"
+    },
+    {
+      "format": "sha1",
+      "operation": "rebase",
+      "flow": "continue",
+      "mode": "target_prepared_refuse",
+      "label": "terminal",
+      "status": "finished"
+    },
+    {
+      "format": "sha1",
+      "operation": "rebase",
+      "flow": "continue",
+      "mode": "target_committed_fail",
+      "label": "conflict",
+      "status": "conflicted"
+    },
+    {
+      "format": "sha1",
+      "operation": "rebase",
+      "flow": "continue",
+      "mode": "target_committed_fail",
+      "label": "terminal",
+      "status": "finished"
+    },
+    {
+      "format": "sha1",
+      "operation": "rebase",
+      "flow": "abort",
+      "mode": "observe",
+      "label": "conflict",
+      "status": "conflicted"
+    },
+    {
+      "format": "sha1",
+      "operation": "rebase",
+      "flow": "abort",
+      "mode": "observe",
+      "label": "terminal",
+      "status": "aborted"
+    },
+    {
+      "format": "sha1",
+      "operation": "rebase",
+      "flow": "abort",
+      "mode": "pre_rebase_refuse",
+      "label": "conflict",
+      "status": "conflicted"
+    },
+    {
+      "format": "sha1",
+      "operation": "rebase",
+      "flow": "abort",
+      "mode": "pre_rebase_refuse",
+      "label": "terminal",
+      "status": "aborted"
+    },
+    {
+      "format": "sha1",
+      "operation": "rebase",
+      "flow": "abort",
+      "mode": "post_rewrite_fail",
+      "label": "conflict",
+      "status": "conflicted"
+    },
+    {
+      "format": "sha1",
+      "operation": "rebase",
+      "flow": "abort",
+      "mode": "post_rewrite_fail",
+      "label": "terminal",
+      "status": "aborted"
+    },
+    {
+      "format": "sha1",
+      "operation": "rebase",
+      "flow": "abort",
+      "mode": "post_commit_fail",
+      "label": "conflict",
+      "status": "conflicted"
+    },
+    {
+      "format": "sha1",
+      "operation": "rebase",
+      "flow": "abort",
+      "mode": "post_commit_fail",
+      "label": "terminal",
+      "status": "aborted"
+    },
+    {
+      "format": "sha1",
+      "operation": "rebase",
+      "flow": "abort",
+      "mode": "target_prepared_refuse",
+      "label": "conflict",
+      "status": "conflicted"
+    },
+    {
+      "format": "sha1",
+      "operation": "rebase",
+      "flow": "abort",
+      "mode": "target_prepared_refuse",
+      "label": "terminal",
+      "status": "aborted"
+    },
+    {
+      "format": "sha1",
+      "operation": "rebase",
+      "flow": "abort",
+      "mode": "target_committed_fail",
+      "label": "conflict",
+      "status": "conflicted"
+    },
+    {
+      "format": "sha1",
+      "operation": "rebase",
+      "flow": "abort",
+      "mode": "target_committed_fail",
+      "label": "terminal",
+      "status": "aborted"
+    },
+    {
+      "format": "sha1",
+      "operation": "cherry-pick",
+      "flow": "success",
+      "mode": "observe",
+      "label": "terminal",
+      "status": "finished"
+    },
+    {
+      "format": "sha1",
+      "operation": "cherry-pick",
+      "flow": "success",
+      "mode": "pre_rebase_refuse",
+      "label": "terminal",
+      "status": "finished"
+    },
+    {
+      "format": "sha1",
+      "operation": "cherry-pick",
+      "flow": "success",
+      "mode": "post_rewrite_fail",
+      "label": "terminal",
+      "status": "finished"
+    },
+    {
+      "format": "sha1",
+      "operation": "cherry-pick",
+      "flow": "success",
+      "mode": "post_commit_fail",
+      "label": "terminal",
+      "status": "finished"
+    },
+    {
+      "format": "sha1",
+      "operation": "cherry-pick",
+      "flow": "success",
+      "mode": "target_prepared_refuse",
+      "label": "terminal",
+      "status": "finished"
+    },
+    {
+      "format": "sha1",
+      "operation": "cherry-pick",
+      "flow": "success",
+      "mode": "target_committed_fail",
+      "label": "terminal",
+      "status": "finished"
+    },
+    {
+      "format": "sha1",
+      "operation": "cherry-pick",
+      "flow": "continue",
+      "mode": "observe",
+      "label": "conflict",
+      "status": "conflicted"
+    },
+    {
+      "format": "sha1",
+      "operation": "cherry-pick",
+      "flow": "continue",
+      "mode": "observe",
+      "label": "terminal",
+      "status": "finished"
+    },
+    {
+      "format": "sha1",
+      "operation": "cherry-pick",
+      "flow": "continue",
+      "mode": "pre_rebase_refuse",
+      "label": "conflict",
+      "status": "conflicted"
+    },
+    {
+      "format": "sha1",
+      "operation": "cherry-pick",
+      "flow": "continue",
+      "mode": "pre_rebase_refuse",
+      "label": "terminal",
+      "status": "finished"
+    },
+    {
+      "format": "sha1",
+      "operation": "cherry-pick",
+      "flow": "continue",
+      "mode": "post_rewrite_fail",
+      "label": "conflict",
+      "status": "conflicted"
+    },
+    {
+      "format": "sha1",
+      "operation": "cherry-pick",
+      "flow": "continue",
+      "mode": "post_rewrite_fail",
+      "label": "terminal",
+      "status": "finished"
+    },
+    {
+      "format": "sha1",
+      "operation": "cherry-pick",
+      "flow": "continue",
+      "mode": "post_commit_fail",
+      "label": "conflict",
+      "status": "conflicted"
+    },
+    {
+      "format": "sha1",
+      "operation": "cherry-pick",
+      "flow": "continue",
+      "mode": "post_commit_fail",
+      "label": "terminal",
+      "status": "finished"
+    },
+    {
+      "format": "sha1",
+      "operation": "cherry-pick",
+      "flow": "continue",
+      "mode": "target_prepared_refuse",
+      "label": "conflict",
+      "status": "conflicted"
+    },
+    {
+      "format": "sha1",
+      "operation": "cherry-pick",
+      "flow": "continue",
+      "mode": "target_prepared_refuse",
+      "label": "terminal",
+      "status": "finished"
+    },
+    {
+      "format": "sha1",
+      "operation": "cherry-pick",
+      "flow": "continue",
+      "mode": "target_committed_fail",
+      "label": "conflict",
+      "status": "conflicted"
+    },
+    {
+      "format": "sha1",
+      "operation": "cherry-pick",
+      "flow": "continue",
+      "mode": "target_committed_fail",
+      "label": "terminal",
+      "status": "finished"
+    },
+    {
+      "format": "sha1",
+      "operation": "cherry-pick",
+      "flow": "abort",
+      "mode": "observe",
+      "label": "conflict",
+      "status": "conflicted"
+    },
+    {
+      "format": "sha1",
+      "operation": "cherry-pick",
+      "flow": "abort",
+      "mode": "observe",
+      "label": "terminal",
+      "status": "aborted"
+    },
+    {
+      "format": "sha1",
+      "operation": "cherry-pick",
+      "flow": "abort",
+      "mode": "pre_rebase_refuse",
+      "label": "conflict",
+      "status": "conflicted"
+    },
+    {
+      "format": "sha1",
+      "operation": "cherry-pick",
+      "flow": "abort",
+      "mode": "pre_rebase_refuse",
+      "label": "terminal",
+      "status": "aborted"
+    },
+    {
+      "format": "sha1",
+      "operation": "cherry-pick",
+      "flow": "abort",
+      "mode": "post_rewrite_fail",
+      "label": "conflict",
+      "status": "conflicted"
+    },
+    {
+      "format": "sha1",
+      "operation": "cherry-pick",
+      "flow": "abort",
+      "mode": "post_rewrite_fail",
+      "label": "terminal",
+      "status": "aborted"
+    },
+    {
+      "format": "sha1",
+      "operation": "cherry-pick",
+      "flow": "abort",
+      "mode": "post_commit_fail",
+      "label": "conflict",
+      "status": "conflicted"
+    },
+    {
+      "format": "sha1",
+      "operation": "cherry-pick",
+      "flow": "abort",
+      "mode": "post_commit_fail",
+      "label": "terminal",
+      "status": "aborted"
+    },
+    {
+      "format": "sha1",
+      "operation": "cherry-pick",
+      "flow": "abort",
+      "mode": "target_prepared_refuse",
+      "label": "conflict",
+      "status": "conflicted"
+    },
+    {
+      "format": "sha1",
+      "operation": "cherry-pick",
+      "flow": "abort",
+      "mode": "target_prepared_refuse",
+      "label": "terminal",
+      "status": "aborted"
+    },
+    {
+      "format": "sha1",
+      "operation": "cherry-pick",
+      "flow": "abort",
+      "mode": "target_committed_fail",
+      "label": "conflict",
+      "status": "conflicted"
+    },
+    {
+      "format": "sha1",
+      "operation": "cherry-pick",
+      "flow": "abort",
+      "mode": "target_committed_fail",
+      "label": "terminal",
+      "status": "aborted"
+    },
+    {
+      "format": "sha256",
+      "operation": "rebase",
+      "flow": "success",
+      "mode": "observe",
+      "label": "terminal",
+      "status": "finished"
+    },
+    {
+      "format": "sha256",
+      "operation": "rebase",
+      "flow": "success",
+      "mode": "pre_rebase_refuse",
+      "label": "terminal",
+      "status": "finished"
+    },
+    {
+      "format": "sha256",
+      "operation": "rebase",
+      "flow": "success",
+      "mode": "post_rewrite_fail",
+      "label": "terminal",
+      "status": "finished"
+    },
+    {
+      "format": "sha256",
+      "operation": "rebase",
+      "flow": "success",
+      "mode": "post_commit_fail",
+      "label": "terminal",
+      "status": "finished"
+    },
+    {
+      "format": "sha256",
+      "operation": "rebase",
+      "flow": "success",
+      "mode": "target_prepared_refuse",
+      "label": "terminal",
+      "status": "finished"
+    },
+    {
+      "format": "sha256",
+      "operation": "rebase",
+      "flow": "success",
+      "mode": "target_committed_fail",
+      "label": "terminal",
+      "status": "finished"
+    },
+    {
+      "format": "sha256",
+      "operation": "rebase",
+      "flow": "continue",
+      "mode": "observe",
+      "label": "conflict",
+      "status": "conflicted"
+    },
+    {
+      "format": "sha256",
+      "operation": "rebase",
+      "flow": "continue",
+      "mode": "observe",
+      "label": "terminal",
+      "status": "finished"
+    },
+    {
+      "format": "sha256",
+      "operation": "rebase",
+      "flow": "continue",
+      "mode": "pre_rebase_refuse",
+      "label": "conflict",
+      "status": "conflicted"
+    },
+    {
+      "format": "sha256",
+      "operation": "rebase",
+      "flow": "continue",
+      "mode": "pre_rebase_refuse",
+      "label": "terminal",
+      "status": "finished"
+    },
+    {
+      "format": "sha256",
+      "operation": "rebase",
+      "flow": "continue",
+      "mode": "post_rewrite_fail",
+      "label": "conflict",
+      "status": "conflicted"
+    },
+    {
+      "format": "sha256",
+      "operation": "rebase",
+      "flow": "continue",
+      "mode": "post_rewrite_fail",
+      "label": "terminal",
+      "status": "finished"
+    },
+    {
+      "format": "sha256",
+      "operation": "rebase",
+      "flow": "continue",
+      "mode": "post_commit_fail",
+      "label": "conflict",
+      "status": "conflicted"
+    },
+    {
+      "format": "sha256",
+      "operation": "rebase",
+      "flow": "continue",
+      "mode": "post_commit_fail",
+      "label": "terminal",
+      "status": "finished"
+    },
+    {
+      "format": "sha256",
+      "operation": "rebase",
+      "flow": "continue",
+      "mode": "target_prepared_refuse",
+      "label": "conflict",
+      "status": "conflicted"
+    },
+    {
+      "format": "sha256",
+      "operation": "rebase",
+      "flow": "continue",
+      "mode": "target_prepared_refuse",
+      "label": "terminal",
+      "status": "finished"
+    },
+    {
+      "format": "sha256",
+      "operation": "rebase",
+      "flow": "continue",
+      "mode": "target_committed_fail",
+      "label": "conflict",
+      "status": "conflicted"
+    },
+    {
+      "format": "sha256",
+      "operation": "rebase",
+      "flow": "continue",
+      "mode": "target_committed_fail",
+      "label": "terminal",
+      "status": "finished"
+    },
+    {
+      "format": "sha256",
+      "operation": "rebase",
+      "flow": "abort",
+      "mode": "observe",
+      "label": "conflict",
+      "status": "conflicted"
+    },
+    {
+      "format": "sha256",
+      "operation": "rebase",
+      "flow": "abort",
+      "mode": "observe",
+      "label": "terminal",
+      "status": "aborted"
+    },
+    {
+      "format": "sha256",
+      "operation": "rebase",
+      "flow": "abort",
+      "mode": "pre_rebase_refuse",
+      "label": "conflict",
+      "status": "conflicted"
+    },
+    {
+      "format": "sha256",
+      "operation": "rebase",
+      "flow": "abort",
+      "mode": "pre_rebase_refuse",
+      "label": "terminal",
+      "status": "aborted"
+    },
+    {
+      "format": "sha256",
+      "operation": "rebase",
+      "flow": "abort",
+      "mode": "post_rewrite_fail",
+      "label": "conflict",
+      "status": "conflicted"
+    },
+    {
+      "format": "sha256",
+      "operation": "rebase",
+      "flow": "abort",
+      "mode": "post_rewrite_fail",
+      "label": "terminal",
+      "status": "aborted"
+    },
+    {
+      "format": "sha256",
+      "operation": "rebase",
+      "flow": "abort",
+      "mode": "post_commit_fail",
+      "label": "conflict",
+      "status": "conflicted"
+    },
+    {
+      "format": "sha256",
+      "operation": "rebase",
+      "flow": "abort",
+      "mode": "post_commit_fail",
+      "label": "terminal",
+      "status": "aborted"
+    },
+    {
+      "format": "sha256",
+      "operation": "rebase",
+      "flow": "abort",
+      "mode": "target_prepared_refuse",
+      "label": "conflict",
+      "status": "conflicted"
+    },
+    {
+      "format": "sha256",
+      "operation": "rebase",
+      "flow": "abort",
+      "mode": "target_prepared_refuse",
+      "label": "terminal",
+      "status": "aborted"
+    },
+    {
+      "format": "sha256",
+      "operation": "rebase",
+      "flow": "abort",
+      "mode": "target_committed_fail",
+      "label": "conflict",
+      "status": "conflicted"
+    },
+    {
+      "format": "sha256",
+      "operation": "rebase",
+      "flow": "abort",
+      "mode": "target_committed_fail",
+      "label": "terminal",
+      "status": "aborted"
+    },
+    {
+      "format": "sha256",
+      "operation": "cherry-pick",
+      "flow": "success",
+      "mode": "observe",
+      "label": "terminal",
+      "status": "finished"
+    },
+    {
+      "format": "sha256",
+      "operation": "cherry-pick",
+      "flow": "success",
+      "mode": "pre_rebase_refuse",
+      "label": "terminal",
+      "status": "finished"
+    },
+    {
+      "format": "sha256",
+      "operation": "cherry-pick",
+      "flow": "success",
+      "mode": "post_rewrite_fail",
+      "label": "terminal",
+      "status": "finished"
+    },
+    {
+      "format": "sha256",
+      "operation": "cherry-pick",
+      "flow": "success",
+      "mode": "post_commit_fail",
+      "label": "terminal",
+      "status": "finished"
+    },
+    {
+      "format": "sha256",
+      "operation": "cherry-pick",
+      "flow": "success",
+      "mode": "target_prepared_refuse",
+      "label": "terminal",
+      "status": "finished"
+    },
+    {
+      "format": "sha256",
+      "operation": "cherry-pick",
+      "flow": "success",
+      "mode": "target_committed_fail",
+      "label": "terminal",
+      "status": "finished"
+    },
+    {
+      "format": "sha256",
+      "operation": "cherry-pick",
+      "flow": "continue",
+      "mode": "observe",
+      "label": "conflict",
+      "status": "conflicted"
+    },
+    {
+      "format": "sha256",
+      "operation": "cherry-pick",
+      "flow": "continue",
+      "mode": "observe",
+      "label": "terminal",
+      "status": "finished"
+    },
+    {
+      "format": "sha256",
+      "operation": "cherry-pick",
+      "flow": "continue",
+      "mode": "pre_rebase_refuse",
+      "label": "conflict",
+      "status": "conflicted"
+    },
+    {
+      "format": "sha256",
+      "operation": "cherry-pick",
+      "flow": "continue",
+      "mode": "pre_rebase_refuse",
+      "label": "terminal",
+      "status": "finished"
+    },
+    {
+      "format": "sha256",
+      "operation": "cherry-pick",
+      "flow": "continue",
+      "mode": "post_rewrite_fail",
+      "label": "conflict",
+      "status": "conflicted"
+    },
+    {
+      "format": "sha256",
+      "operation": "cherry-pick",
+      "flow": "continue",
+      "mode": "post_rewrite_fail",
+      "label": "terminal",
+      "status": "finished"
+    },
+    {
+      "format": "sha256",
+      "operation": "cherry-pick",
+      "flow": "continue",
+      "mode": "post_commit_fail",
+      "label": "conflict",
+      "status": "conflicted"
+    },
+    {
+      "format": "sha256",
+      "operation": "cherry-pick",
+      "flow": "continue",
+      "mode": "post_commit_fail",
+      "label": "terminal",
+      "status": "finished"
+    },
+    {
+      "format": "sha256",
+      "operation": "cherry-pick",
+      "flow": "continue",
+      "mode": "target_prepared_refuse",
+      "label": "conflict",
+      "status": "conflicted"
+    },
+    {
+      "format": "sha256",
+      "operation": "cherry-pick",
+      "flow": "continue",
+      "mode": "target_prepared_refuse",
+      "label": "terminal",
+      "status": "finished"
+    },
+    {
+      "format": "sha256",
+      "operation": "cherry-pick",
+      "flow": "continue",
+      "mode": "target_committed_fail",
+      "label": "conflict",
+      "status": "conflicted"
+    },
+    {
+      "format": "sha256",
+      "operation": "cherry-pick",
+      "flow": "continue",
+      "mode": "target_committed_fail",
+      "label": "terminal",
+      "status": "finished"
+    },
+    {
+      "format": "sha256",
+      "operation": "cherry-pick",
+      "flow": "abort",
+      "mode": "observe",
+      "label": "conflict",
+      "status": "conflicted"
+    },
+    {
+      "format": "sha256",
+      "operation": "cherry-pick",
+      "flow": "abort",
+      "mode": "observe",
+      "label": "terminal",
+      "status": "aborted"
+    },
+    {
+      "format": "sha256",
+      "operation": "cherry-pick",
+      "flow": "abort",
+      "mode": "pre_rebase_refuse",
+      "label": "conflict",
+      "status": "conflicted"
+    },
+    {
+      "format": "sha256",
+      "operation": "cherry-pick",
+      "flow": "abort",
+      "mode": "pre_rebase_refuse",
+      "label": "terminal",
+      "status": "aborted"
+    },
+    {
+      "format": "sha256",
+      "operation": "cherry-pick",
+      "flow": "abort",
+      "mode": "post_rewrite_fail",
+      "label": "conflict",
+      "status": "conflicted"
+    },
+    {
+      "format": "sha256",
+      "operation": "cherry-pick",
+      "flow": "abort",
+      "mode": "post_rewrite_fail",
+      "label": "terminal",
+      "status": "aborted"
+    },
+    {
+      "format": "sha256",
+      "operation": "cherry-pick",
+      "flow": "abort",
+      "mode": "post_commit_fail",
+      "label": "conflict",
+      "status": "conflicted"
+    },
+    {
+      "format": "sha256",
+      "operation": "cherry-pick",
+      "flow": "abort",
+      "mode": "post_commit_fail",
+      "label": "terminal",
+      "status": "aborted"
+    },
+    {
+      "format": "sha256",
+      "operation": "cherry-pick",
+      "flow": "abort",
+      "mode": "target_prepared_refuse",
+      "label": "conflict",
+      "status": "conflicted"
+    },
+    {
+      "format": "sha256",
+      "operation": "cherry-pick",
+      "flow": "abort",
+      "mode": "target_prepared_refuse",
+      "label": "terminal",
+      "status": "aborted"
+    },
+    {
+      "format": "sha256",
+      "operation": "cherry-pick",
+      "flow": "abort",
+      "mode": "target_committed_fail",
+      "label": "conflict",
+      "status": "conflicted"
+    },
+    {
+      "format": "sha256",
+      "operation": "cherry-pick",
+      "flow": "abort",
+      "mode": "target_committed_fail",
+      "label": "terminal",
+      "status": "aborted"
+    }
+  ],
+  "security_acceptance": "NOT RUN",
+  "stage_A": "INCOMPLETE"
+}
