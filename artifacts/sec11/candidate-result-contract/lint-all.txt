@@ -1,0 +1,2006 @@
+INP001 File `artifacts/sec11/candidate-result-contract/model.py` is part of an implicit namespace package. Add an `__init__.py`.
+--> artifacts/sec11/candidate-result-contract/model.py:1:1
+
+E402 Module level import not at top of file
+  --> artifacts/sec11/candidate-result-contract/model.py:11:1
+   |
+ 9 | IMPORT = Path(__file__).resolve().parents[1] / "candidate-snapshot-import"
+10 | sys.path.append(str(IMPORT))
+11 | from importer import SnapshotImporter as SnapshotImporter
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+12 | from importer import digest, git, identity, manifest
+13 | from adapter import STATUS
+   |
+help: Move module level imports to top of file
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> artifacts/sec11/candidate-result-contract/model.py:11:1
+   |
+ 9 |   IMPORT = Path(__file__).resolve().parents[1] / "candidate-snapshot-import"
+10 |   sys.path.append(str(IMPORT))
+11 | / from importer import SnapshotImporter as SnapshotImporter
+12 | | from importer import digest, git, identity, manifest
+13 | | from adapter import STATUS
+   | |__________________________^
+14 |
+15 |   MAX_OUTPUT = 1024 * 1024  # Stricter finite response subset; NOT streaming enforcement.
+   |
+help: Organize imports
+   |
+10 | sys.path.append(str(IMPORT))
+11 + from adapter import STATUS
+12 | from importer import SnapshotImporter as SnapshotImporter
+13 | from importer import digest, git, identity, manifest
+   - from adapter import STATUS
+14 |
+   |
+
+PLC0414 Import alias does not rename original package
+  --> artifacts/sec11/candidate-result-contract/model.py:11:22
+   |
+ 9 | IMPORT = Path(__file__).resolve().parents[1] / "candidate-snapshot-import"
+10 | sys.path.append(str(IMPORT))
+11 | from importer import SnapshotImporter as SnapshotImporter
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+12 | from importer import digest, git, identity, manifest
+13 | from adapter import STATUS
+   |
+help: Remove import alias
+   |
+10 | sys.path.append(str(IMPORT))
+   - from importer import SnapshotImporter as SnapshotImporter
+11 + from importer import SnapshotImporter
+12 | from importer import digest, git, identity, manifest
+   |
+note: This is an unsafe fix and may change runtime behavior
+
+E402 Module level import not at top of file
+  --> artifacts/sec11/candidate-result-contract/model.py:12:1
+   |
+10 | sys.path.append(str(IMPORT))
+11 | from importer import SnapshotImporter as SnapshotImporter
+12 | from importer import digest, git, identity, manifest
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+13 | from adapter import STATUS
+   |
+help: Move module level imports to top of file
+
+E402 Module level import not at top of file
+  --> artifacts/sec11/candidate-result-contract/model.py:13:1
+   |
+11 | from importer import SnapshotImporter as SnapshotImporter
+12 | from importer import digest, git, identity, manifest
+13 | from adapter import STATUS
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^
+14 |
+15 | MAX_OUTPUT = 1024 * 1024  # Stricter finite response subset; NOT streaming enforcement.
+   |
+help: Move module level imports to top of file
+
+ANN204 Missing return type annotation for special method `__init__`
+  --> artifacts/sec11/candidate-result-contract/model.py:22:9
+   |
+21 | class ResponseError(ValueError):
+22 |     def __init__(self, code):
+   |         ^^^^^^^^
+23 |         super().__init__(code)
+24 |         self.code = code
+   |
+help: Add return type annotation: `None`
+   |
+21 | class ResponseError(ValueError):
+   -     def __init__(self, code):
+22 +     def __init__(self, code) -> None:
+23 |         super().__init__(code)
+   |
+note: This is an unsafe fix and may change runtime behavior
+
+ANN001 Missing type annotation for function argument `code`
+  --> artifacts/sec11/candidate-result-contract/model.py:22:24
+   |
+21 | class ResponseError(ValueError):
+22 |     def __init__(self, code):
+   |                        ^^^^
+23 |         super().__init__(code)
+24 |         self.code = code
+   |
+
+ANN201 Missing return type annotation for public function `require`
+  --> artifacts/sec11/candidate-result-contract/model.py:27:5
+   |
+27 | def require(value, code="MALFORMED_RESPONSE"):
+   |     ^^^^^^^
+28 |     if not value:
+29 |         raise ResponseError(code)
+   |
+help: Add return type annotation: `None`
+   |
+26 |
+   - def require(value, code="MALFORMED_RESPONSE"):
+27 + def require(value, code="MALFORMED_RESPONSE") -> None:
+28 |     if not value:
+   |
+note: This is an unsafe fix and may change runtime behavior
+
+ANN001 Missing type annotation for function argument `value`
+  --> artifacts/sec11/candidate-result-contract/model.py:27:13
+   |
+27 | def require(value, code="MALFORMED_RESPONSE"):
+   |             ^^^^^
+28 |     if not value:
+29 |         raise ResponseError(code)
+   |
+
+ANN001 Missing type annotation for function argument `code`
+  --> artifacts/sec11/candidate-result-contract/model.py:27:20
+   |
+27 | def require(value, code="MALFORMED_RESPONSE"):
+   |                    ^^^^
+28 |     if not value:
+29 |         raise ResponseError(code)
+   |
+
+ANN201 Missing return type annotation for public function `path_hex`
+  --> artifacts/sec11/candidate-result-contract/model.py:32:5
+   |
+32 | def path_hex(raw):
+   |     ^^^^^^^^
+33 |     require(0 < len(raw) <= MAX_PATH, "PATH_LIMIT" if len(raw) > MAX_PATH else "MALFORMED_RESPONSE")
+34 |     require(b"\0" not in raw and not raw.startswith(b"/"))
+   |
+help: Add return type annotation
+
+ANN001 Missing type annotation for function argument `raw`
+  --> artifacts/sec11/candidate-result-contract/model.py:32:14
+   |
+32 | def path_hex(raw):
+   |              ^^^
+33 |     require(0 < len(raw) <= MAX_PATH, "PATH_LIMIT" if len(raw) > MAX_PATH else "MALFORMED_RESPONSE")
+34 |     require(b"\0" not in raw and not raw.startswith(b"/"))
+   |
+
+ANN201 Missing return type annotation for public function `oid`
+  --> artifacts/sec11/candidate-result-contract/model.py:39:5
+   |
+39 | def oid(raw, width):
+   |     ^^^
+40 |     require(re.fullmatch(b"[0-9a-f]{" + str(width).encode() + b"}", raw) is not None)
+41 |     return raw.decode("ascii")
+   |
+help: Add return type annotation
+
+ANN001 Missing type annotation for function argument `raw`
+  --> artifacts/sec11/candidate-result-contract/model.py:39:9
+   |
+39 | def oid(raw, width):
+   |         ^^^
+40 |     require(re.fullmatch(b"[0-9a-f]{" + str(width).encode() + b"}", raw) is not None)
+41 |     return raw.decode("ascii")
+   |
+
+ANN001 Missing type annotation for function argument `width`
+  --> artifacts/sec11/candidate-result-contract/model.py:39:14
+   |
+39 | def oid(raw, width):
+   |              ^^^^^
+40 |     require(re.fullmatch(b"[0-9a-f]{" + str(width).encode() + b"}", raw) is not None)
+41 |     return raw.decode("ascii")
+   |
+
+ANN201 Missing return type annotation for public function `parse_status`
+  --> artifacts/sec11/candidate-result-contract/model.py:44:5
+   |
+44 | def parse_status(raw, width):
+   |     ^^^^^^^^^^^^
+45 |     require(type(raw) is bytes and width in (40, 64))
+46 |     require(len(raw) <= MAX_OUTPUT, "OUTPUT_LIMIT")
+   |
+help: Add return type annotation
+
+ANN001 Missing type annotation for function argument `raw`
+  --> artifacts/sec11/candidate-result-contract/model.py:44:18
+   |
+44 | def parse_status(raw, width):
+   |                  ^^^
+45 |     require(type(raw) is bytes and width in (40, 64))
+46 |     require(len(raw) <= MAX_OUTPUT, "OUTPUT_LIMIT")
+   |
+
+ANN001 Missing type annotation for function argument `width`
+  --> artifacts/sec11/candidate-result-contract/model.py:44:23
+   |
+44 | def parse_status(raw, width):
+   |                       ^^^^^
+45 |     require(type(raw) is bytes and width in (40, 64))
+46 |     require(len(raw) <= MAX_OUTPUT, "OUTPUT_LIMIT")
+   |
+
+C408 Unnecessary `dict()` call (rewrite as a literal)
+  --> artifacts/sec11/candidate-result-contract/model.py:65:28
+   |
+63 |             if key == b"branch.ab":
+64 |                 require(re.fullmatch(rb"\+[0-9]+ -[0-9]+", value) is not None)
+65 |             records.append(dict(kind="header", name=key.decode(), value_hex=value.hex()))
+   |                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+66 |             continue
+67 |         kind = token[:1]
+   |
+help: Rewrite as a literal
+   |
+64 |                 require(re.fullmatch(rb"\+[0-9]+ -[0-9]+", value) is not None)
+   -             records.append(dict(kind="header", name=key.decode(), value_hex=value.hex()))
+65 +             records.append({"kind": "header", "name": key.decode(), "value_hex": value.hex()})
+66 |             continue
+   |
+note: This is an unsafe fix and may change runtime behavior
+
+C408 Unnecessary `dict()` call (rewrite as a literal)
+  --> artifacts/sec11/candidate-result-contract/model.py:70:28
+   |
+68 |         if kind in (b"?", b"!"):
+69 |             require(token[1:2] == b" ")
+70 |             records.append(dict(kind="untracked" if kind == b"?" else "ignored", path_hex=path_hex(token[2:])))
+   |                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+71 |             continue
+72 |         require(kind in (b"1", b"2", b"u"))
+   |
+help: Rewrite as a literal
+   |
+69 |             require(token[1:2] == b" ")
+   -             records.append(dict(kind="untracked" if kind == b"?" else "ignored", path_hex=path_hex(token[2:])))
+70 +             records.append({"kind": "untracked" if kind == b"?" else "ignored", "path_hex": path_hex(token[2:])})
+71 |             continue
+   |
+note: This is an unsafe fix and may change runtime behavior
+
+C408 Unnecessary `dict()` call (rewrite as a literal)
+  --> artifacts/sec11/candidate-result-contract/model.py:83:15
+   |
+81 |           hashes = fields[7:10] if kind == b"u" else fields[6:8]
+82 |           hashes = [oid(h, width) for h in hashes]
+83 |           row = dict(
+   |  _______________^
+84 | |             kind={b"1": "ordinary", b"2": "rename", b"u": "unmerged"}[kind],
+85 | |             xy=xy.decode(),
+86 | |             submodule=sub.decode(),
+87 | |             modes=[m.decode() for m in modes],
+88 | |             oids=hashes,
+89 | |             path_hex=path_hex(fields[-1]),
+90 | |         )
+   | |_________^
+91 |           if kind == b"2":
+92 |               score = fields[8]
+   |
+help: Rewrite as a literal
+   |
+82 |         hashes = [oid(h, width) for h in hashes]
+   -         row = dict(
+   -             kind={b"1": "ordinary", b"2": "rename", b"u": "unmerged"}[kind],
+   -             xy=xy.decode(),
+   -             submodule=sub.decode(),
+   -             modes=[m.decode() for m in modes],
+   -             oids=hashes,
+   -             path_hex=path_hex(fields[-1]),
+   -         )
+83 +         row = {
+84 +             "kind": {b"1": "ordinary", b"2": "rename", b"u": "unmerged"}[kind],
+85 +             "xy": xy.decode(),
+86 +             "submodule": sub.decode(),
+87 +             "modes": [m.decode() for m in modes],
+88 +             "oids": hashes,
+89 +             "path_hex": path_hex(fields[-1]),
+90 +         }
+91 |         if kind == b"2":
+   |
+note: This is an unsafe fix and may change runtime behavior
+
+PLR2004 Magic value used in comparison, consider replacing `100` with a constant variable
+  --> artifacts/sec11/candidate-result-contract/model.py:93:95
+   |
+91 |         if kind == b"2":
+92 |             score = fields[8]
+93 |             require(re.fullmatch(rb"[RC][0-9]{1,3}", score) is not None and int(score[1:]) <= 100)
+   |                                                                                               ^^^
+94 |             require(i < len(tokens))
+95 |             row.update(score=score.decode(), original_path_hex=path_hex(tokens[i]))
+   |
+
+ANN201 Missing return type annotation for public function `encode_status`
+   --> artifacts/sec11/candidate-result-contract/model.py:102:5
+    |
+102 | def encode_status(records):
+    |     ^^^^^^^^^^^^^
+103 |     """Exact reconstruction is checked against native bytes, including rename source."""
+104 |     tokens = []
+    |
+help: Add return type annotation
+
+ANN001 Missing type annotation for function argument `records`
+   --> artifacts/sec11/candidate-result-contract/model.py:102:19
+    |
+102 | def encode_status(records):
+    |                   ^^^^^^^
+103 |     """Exact reconstruction is checked against native bytes, including rename source."""
+104 |     tokens = []
+    |
+
+ANN201 Missing return type annotation for public function `changed_paths`
+   --> artifacts/sec11/candidate-result-contract/model.py:122:5
+    |
+122 | def changed_paths(records):
+    |     ^^^^^^^^^^^^^
+123 |     """All paths staged relative to HEAD; rename includes old and new literal bytes."""
+124 |     paths = set()
+    |
+help: Add return type annotation
+
+ANN001 Missing type annotation for function argument `records`
+   --> artifacts/sec11/candidate-result-contract/model.py:122:19
+    |
+122 | def changed_paths(records):
+    |                   ^^^^^^^
+123 |     """All paths staged relative to HEAD; rename includes old and new literal bytes."""
+124 |     paths = set()
+    |
+
+ANN201 Missing return type annotation for public function `index_map`
+   --> artifacts/sec11/candidate-result-contract/model.py:133:5
+    |
+133 | def index_map(raw, width):
+    |     ^^^^^^^^^
+134 |     require(len(raw) <= MAX_OUTPUT, "OUTPUT_LIMIT")
+135 |     require(not raw or raw.endswith(b"\0"))
+    |
+help: Add return type annotation
+
+ANN001 Missing type annotation for function argument `raw`
+   --> artifacts/sec11/candidate-result-contract/model.py:133:15
+    |
+133 | def index_map(raw, width):
+    |               ^^^
+134 |     require(len(raw) <= MAX_OUTPUT, "OUTPUT_LIMIT")
+135 |     require(not raw or raw.endswith(b"\0"))
+    |
+
+ANN001 Missing type annotation for function argument `width`
+   --> artifacts/sec11/candidate-result-contract/model.py:133:20
+    |
+133 | def index_map(raw, width):
+    |                    ^^^^^
+134 |     require(len(raw) <= MAX_OUTPUT, "OUTPUT_LIMIT")
+135 |     require(not raw or raw.endswith(b"\0"))
+    |
+
+PLR2004 Magic value used in comparison, consider replacing `3` with a constant variable
+   --> artifacts/sec11/candidate-result-contract/model.py:142:32
+    |
+140 |         require(sep)
+141 |         fields = metadata.split(b" ")
+142 |         require(len(fields) == 3 and fields[0] in (b"100644", b"100755") and fields[2] == b"0", "UNSUPPORTED_RESPONSE")
+    |                                ^
+143 |         key = path_hex(path)
+144 |         require(key not in rows)
+    |
+
+ANN204 Missing return type annotation for special method `__init__`
+   --> artifacts/sec11/candidate-result-contract/model.py:156:9
+    |
+154 |     """
+155 |
+156 |     def __init__(self, importer, width, after_add=None):
+    |         ^^^^^^^^
+157 |         self.importer = importer
+158 |         self.width = width
+    |
+help: Add return type annotation: `None`
+    |
+155 |
+    -     def __init__(self, importer, width, after_add=None):
+156 +     def __init__(self, importer, width, after_add=None) -> None:
+157 |         self.importer = importer
+    |
+note: This is an unsafe fix and may change runtime behavior
+
+ANN001 Missing type annotation for function argument `importer`
+   --> artifacts/sec11/candidate-result-contract/model.py:156:24
+    |
+154 |     """
+155 |
+156 |     def __init__(self, importer, width, after_add=None):
+    |                        ^^^^^^^^
+157 |         self.importer = importer
+158 |         self.width = width
+    |
+
+ANN001 Missing type annotation for function argument `width`
+   --> artifacts/sec11/candidate-result-contract/model.py:156:34
+    |
+154 |     """
+155 |
+156 |     def __init__(self, importer, width, after_add=None):
+    |                                  ^^^^^
+157 |         self.importer = importer
+158 |         self.width = width
+    |
+
+ANN001 Missing type annotation for function argument `after_add`
+   --> artifacts/sec11/candidate-result-contract/model.py:156:41
+    |
+154 |     """
+155 |
+156 |     def __init__(self, importer, width, after_add=None):
+    |                                         ^^^^^^^^^
+157 |         self.importer = importer
+158 |         self.width = width
+    |
+
+ANN201 Missing return type annotation for public function `execute`
+   --> artifacts/sec11/candidate-result-contract/model.py:163:9
+    |
+161 |         self.commands = []
+162 |
+163 |     def execute(self, request):
+    |         ^^^^^^^
+164 |         # Finite wire envelope check, after capture/allocation; not a memory limit.
+165 |         try:
+    |
+help: Add return type annotation
+
+ANN001 Missing type annotation for function argument `request`
+   --> artifacts/sec11/candidate-result-contract/model.py:163:23
+    |
+161 |         self.commands = []
+162 |
+163 |     def execute(self, request):
+    |                       ^^^^^^^
+164 |         # Finite wire envelope check, after capture/allocation; not a memory limit.
+165 |         try:
+    |
+
+C408 Unnecessary `dict()` call (rewrite as a literal)
+   --> artifacts/sec11/candidate-result-contract/model.py:168:20
+    |
+166 |             request_bytes = json.dumps(request, ensure_ascii=True).encode()
+167 |         except TypeError, ValueError, RecursionError:
+168 |             return dict(ok=False, diagnostic="UNSUPPORTED_OPERATION", phase="preflight", retry_automatically=False)
+    |                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+169 |         if len(request_bytes) > MAX_OUTPUT:
+170 |             return dict(ok=False, diagnostic="UNSUPPORTED_OPERATION", phase="preflight", retry_automatically=False)
+    |
+help: Rewrite as a literal
+    |
+167 |         except TypeError, ValueError, RecursionError:
+    -             return dict(ok=False, diagnostic="UNSUPPORTED_OPERATION", phase="preflight", retry_automatically=False)
+168 +             return {"ok": False, "diagnostic": "UNSUPPORTED_OPERATION", "phase": "preflight", "retry_automatically": False}
+169 |         if len(request_bytes) > MAX_OUTPUT:
+    |
+note: This is an unsafe fix and may change runtime behavior
+
+C408 Unnecessary `dict()` call (rewrite as a literal)
+   --> artifacts/sec11/candidate-result-contract/model.py:170:20
+    |
+168 |             return dict(ok=False, diagnostic="UNSUPPORTED_OPERATION", phase="preflight", retry_automatically=False)
+169 |         if len(request_bytes) > MAX_OUTPUT:
+170 |             return dict(ok=False, diagnostic="UNSUPPORTED_OPERATION", phase="preflight", retry_automatically=False)
+    |                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+171 |         result = self._execute(request)
+172 |         if len(json.dumps(result, ensure_ascii=True).encode()) <= MAX_WIRE:
+    |
+help: Rewrite as a literal
+    |
+169 |         if len(request_bytes) > MAX_OUTPUT:
+    -             return dict(ok=False, diagnostic="UNSUPPORTED_OPERATION", phase="preflight", retry_automatically=False)
+170 +             return {"ok": False, "diagnostic": "UNSUPPORTED_OPERATION", "phase": "preflight", "retry_automatically": False}
+171 |         result = self._execute(request)
+    |
+note: This is an unsafe fix and may change runtime behavior
+
+C408 Unnecessary `dict()` call (rewrite as a literal)
+   --> artifacts/sec11/candidate-result-contract/model.py:176:16
+    |
+174 |           cid = request["candidate_id"]
+175 |           self.quarantined.add(cid)
+176 |           return dict(
+    |  ________________^
+177 | |             ok=False,
+178 | |             diagnostic="OUTPUT_LIMIT",
+179 | |             phase="response",
+180 | |             retry_automatically=False,
+181 | |             execution_started=request["operation"] == "StageCandidatePaths",
+182 | |             candidate_digest=result.get("candidate_digest"),
+183 | |             index_digest=result.get("index_digest"),
+184 | |             disposition="quarantine",
+185 | |             observations_omitted=True,
+186 | |             recovery_required=True,
+187 | |         )
+    | |_________^
+188 |
+189 |       def _execute(self, request):
+    |
+help: Rewrite as a literal
+    |
+175 |         self.quarantined.add(cid)
+    -         return dict(
+    -             ok=False,
+    -             diagnostic="OUTPUT_LIMIT",
+    -             phase="response",
+    -             retry_automatically=False,
+    -             execution_started=request["operation"] == "StageCandidatePaths",
+    -             candidate_digest=result.get("candidate_digest"),
+    -             index_digest=result.get("index_digest"),
+    -             disposition="quarantine",
+    -             observations_omitted=True,
+    -             recovery_required=True,
+    -         )
+176 +         return {
+177 +             "ok": False,
+178 +             "diagnostic": "OUTPUT_LIMIT",
+179 +             "phase": "response",
+180 +             "retry_automatically": False,
+181 +             "execution_started": request["operation"] == "StageCandidatePaths",
+182 +             "candidate_digest": result.get("candidate_digest"),
+183 +             "index_digest": result.get("index_digest"),
+184 +             "disposition": "quarantine",
+185 +             "observations_omitted": True,
+186 +             "recovery_required": True,
+187 +         }
+188 |
+    |
+note: This is an unsafe fix and may change runtime behavior
+
+C901 `_execute` is too complex (16 > 10)
+   --> artifacts/sec11/candidate-result-contract/model.py:189:9
+    |
+187 |         )
+188 |
+189 |     def _execute(self, request):
+    |         ^^^^^^^^
+190 |         def deny(code, phase="preflight", **extra):
+191 |             return dict(ok=False, diagnostic=code, phase=phase, retry_automatically=False, **extra)
+    |
+
+PLR0911 Too many return statements (10 > 6)
+   --> artifacts/sec11/candidate-result-contract/model.py:189:9
+    |
+187 |         )
+188 |
+189 |     def _execute(self, request):
+    |         ^^^^^^^^
+190 |         def deny(code, phase="preflight", **extra):
+191 |             return dict(ok=False, diagnostic=code, phase=phase, retry_automatically=False, **extra)
+    |
+
+ANN202 Missing return type annotation for private function `_execute`
+   --> artifacts/sec11/candidate-result-contract/model.py:189:9
+    |
+187 |         )
+188 |
+189 |     def _execute(self, request):
+    |         ^^^^^^^^
+190 |         def deny(code, phase="preflight", **extra):
+191 |             return dict(ok=False, diagnostic=code, phase=phase, retry_automatically=False, **extra)
+    |
+help: Add return type annotation
+
+ANN001 Missing type annotation for function argument `request`
+   --> artifacts/sec11/candidate-result-contract/model.py:189:24
+    |
+187 |         )
+188 |
+189 |     def _execute(self, request):
+    |                        ^^^^^^^
+190 |         def deny(code, phase="preflight", **extra):
+191 |             return dict(ok=False, diagnostic=code, phase=phase, retry_automatically=False, **extra)
+    |
+
+ANN202 Missing return type annotation for private function `deny`
+   --> artifacts/sec11/candidate-result-contract/model.py:190:13
+    |
+189 |     def _execute(self, request):
+190 |         def deny(code, phase="preflight", **extra):
+    |             ^^^^
+191 |             return dict(ok=False, diagnostic=code, phase=phase, retry_automatically=False, **extra)
+    |
+help: Add return type annotation
+
+ANN001 Missing type annotation for function argument `code`
+   --> artifacts/sec11/candidate-result-contract/model.py:190:18
+    |
+189 |     def _execute(self, request):
+190 |         def deny(code, phase="preflight", **extra):
+    |                  ^^^^
+191 |             return dict(ok=False, diagnostic=code, phase=phase, retry_automatically=False, **extra)
+    |
+
+ANN001 Missing type annotation for function argument `phase`
+   --> artifacts/sec11/candidate-result-contract/model.py:190:24
+    |
+189 |     def _execute(self, request):
+190 |         def deny(code, phase="preflight", **extra):
+    |                        ^^^^^
+191 |             return dict(ok=False, diagnostic=code, phase=phase, retry_automatically=False, **extra)
+    |
+
+ANN003 Missing type annotation for `**extra`
+   --> artifacts/sec11/candidate-result-contract/model.py:190:43
+    |
+189 |     def _execute(self, request):
+190 |         def deny(code, phase="preflight", **extra):
+    |                                           ^^^^^^^
+191 |             return dict(ok=False, diagnostic=code, phase=phase, retry_automatically=False, **extra)
+    |
+
+ANN202 Missing return type annotation for private function `command`
+   --> artifacts/sec11/candidate-result-contract/model.py:231:13
+    |
+229 |         started = False
+230 |
+231 |         def command(args):
+    |             ^^^^^^^
+232 |             self.commands.append(args)
+233 |             result = git(root, args, self.importer.home, safe=True)
+    |
+help: Add return type annotation
+
+ANN001 Missing type annotation for function argument `args`
+   --> artifacts/sec11/candidate-result-contract/model.py:231:21
+    |
+229 |         started = False
+230 |
+231 |         def command(args):
+    |                     ^^^^
+232 |             self.commands.append(args)
+233 |             result = git(root, args, self.importer.home, safe=True)
+    |
+
+C408 Unnecessary `dict()` call (rewrite as a literal)
+   --> artifacts/sec11/candidate-result-contract/model.py:242:24
+    |
+240 |               records = parse_status(bytes.fromhex(inspected["output_hex"]), self.width)
+241 |               if op == "InspectCandidate":
+242 |                   return dict(
+    |  ________________________^
+243 | |                     ok=True,
+244 | |                     operation=op,
+245 | |                     status=records,
+246 | |                     candidate_digest=identity(root),
+247 | |                     index_digest=inspected["index_digest"],
+248 | |                 )
+    | |_________________^
+249 |               before_index = index_map(command(["ls-files", "--stage", "-z"]), self.width)
+250 |               started = True
+    |
+help: Rewrite as a literal
+    |
+241 |             if op == "InspectCandidate":
+    -                 return dict(
+    -                     ok=True,
+    -                     operation=op,
+    -                     status=records,
+    -                     candidate_digest=identity(root),
+    -                     index_digest=inspected["index_digest"],
+    -                 )
+242 +                 return {
+243 +                     "ok": True,
+244 +                     "operation": op,
+245 +                     "status": records,
+246 +                     "candidate_digest": identity(root),
+247 +                     "index_digest": inspected["index_digest"],
+248 +                 }
+249 |             before_index = index_map(command(["ls-files", "--stage", "-z"]), self.width)
+    |
+note: This is an unsafe fix and may change runtime behavior
+
+C408 Unnecessary `dict()` call (rewrite as a literal)
+   --> artifacts/sec11/candidate-result-contract/model.py:259:20
+    |
+257 |               records = parse_status(command(STATUS), self.width)
+258 |               after_index = index_map(command(["ls-files", "--stage", "-z"]), self.width)
+259 |               return dict(
+    |  ____________________^
+260 | |                 ok=True,
+261 | |                 operation=op,
+262 | |                 status=records,
+263 | |                 changed_paths_hex=changed_paths(records),
+264 | |                 index_changed_paths_hex=sorted(
+265 | |                     p for p in before_index.keys() | after_index.keys() if before_index.get(p) != after_index.get(p)
+266 | |                 ),
+267 | |                 tree_oid=tree,
+268 | |                 index_digest=digest((root / ".git/index").read_bytes()),
+269 | |                 candidate_digest=identity(root),
+270 | |             )
+    | |_____________^
+271 |           except (ResponseError, GitFailure, subprocess.TimeoutExpired) as error:
+272 |               self.quarantined.add(cid)
+    |
+help: Rewrite as a literal
+    |
+258 |             after_index = index_map(command(["ls-files", "--stage", "-z"]), self.width)
+    -             return dict(
+    -                 ok=True,
+    -                 operation=op,
+    -                 status=records,
+    -                 changed_paths_hex=changed_paths(records),
+    -                 index_changed_paths_hex=sorted(
+259 +             return {
+260 +                 "ok": True,
+261 +                 "operation": op,
+262 +                 "status": records,
+263 +                 "changed_paths_hex": changed_paths(records),
+264 +                 "index_changed_paths_hex": sorted(
+265 |                     p for p in before_index.keys() | after_index.keys() if before_index.get(p) != after_index.get(p)
+266 |                 ),
+    -                 tree_oid=tree,
+    -                 index_digest=digest((root / ".git/index").read_bytes()),
+    -                 candidate_digest=identity(root),
+    -             )
+267 +                 "tree_oid": tree,
+268 +                 "index_digest": digest((root / ".git/index").read_bytes()),
+269 +                 "candidate_digest": identity(root),
+270 +             }
+271 |         except (ResponseError, GitFailure, subprocess.TimeoutExpired) as error:
+    |
+note: This is an unsafe fix and may change runtime behavior
+
+PLR2004 Magic value used in comparison, consider replacing `4096` with a constant variable
+   --> artifacts/sec11/candidate-result-contract/model.py:283:48
+    |
+281 |                 exit=error.result.returncode if isinstance(error, GitFailure) else None,
+282 |                 stderr_hex=stderr[:4096].hex(),
+283 |                 stderr_truncated=len(stderr) > 4096,
+    |                                                ^^^^
+284 |                 candidate_digest=identity(root),
+285 |                 index_digest=digest((root / ".git/index").read_bytes()) if (root / ".git/index").exists() else None,
+    |
+
+N818 Exception name `GitFailure` should be named with an Error suffix
+   --> artifacts/sec11/candidate-result-contract/model.py:292:7
+    |
+292 | class GitFailure(Exception):
+    |       ^^^^^^^^^^
+293 |     def __init__(self, result):
+294 |         super().__init__(result.returncode)
+    |
+
+ANN204 Missing return type annotation for special method `__init__`
+   --> artifacts/sec11/candidate-result-contract/model.py:293:9
+    |
+292 | class GitFailure(Exception):
+293 |     def __init__(self, result):
+    |         ^^^^^^^^
+294 |         super().__init__(result.returncode)
+295 |         self.result = result
+    |
+help: Add return type annotation: `None`
+    |
+292 | class GitFailure(Exception):
+    -     def __init__(self, result):
+293 +     def __init__(self, result) -> None:
+294 |         super().__init__(result.returncode)
+    |
+note: This is an unsafe fix and may change runtime behavior
+
+ANN001 Missing type annotation for function argument `result`
+   --> artifacts/sec11/candidate-result-contract/model.py:293:24
+    |
+292 | class GitFailure(Exception):
+293 |     def __init__(self, result):
+    |                        ^^^^^^
+294 |         super().__init__(result.returncode)
+295 |         self.result = result
+    |
+
+INP001 File `artifacts/sec11/candidate-result-contract/run.py` is part of an implicit namespace package. Add an `__init__.py`.
+--> artifacts/sec11/candidate-result-contract/run.py:1:1
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> artifacts/sec11/candidate-result-contract/run.py:3:1
+   |
+ 1 |   """SEC33 finite native controls on imported disposable byte bundles."""
+ 2 |
+ 3 | / import importlib.util
+ 4 | | import json
+ 5 | | import platform
+ 6 | | import tempfile
+ 7 | |
+ 8 | | import model
+ 9 | | from pathlib import Path
+10 | |
+11 | | from model import IMPORT, MAX_OUTPUT, MAX_PATH, MAX_RECORDS, ResponseError, SnapshotImporter, TypedLab
+12 | | from model import STATUS, digest, encode_status, git, identity, index_map, parse_status
+   | |_______________________________________________________________________________________^
+13 |
+14 |   spec = importlib.util.spec_from_file_location("sec32_run", IMPORT / "run.py")
+   |
+help: Organize imports
+   |
+6  | import tempfile
+7  + from pathlib import Path
+8  |
+9  | import model
+   - from pathlib import Path
+   -
+   - from model import IMPORT, MAX_OUTPUT, MAX_PATH, MAX_RECORDS, ResponseError, SnapshotImporter, TypedLab
+   - from model import STATUS, digest, encode_status, git, identity, index_map, parse_status
+10 + from model import (
+11 +     IMPORT,
+12 +     MAX_OUTPUT,
+13 +     MAX_PATH,
+14 +     MAX_RECORDS,
+15 +     STATUS,
+16 +     ResponseError,
+17 +     SnapshotImporter,
+18 +     TypedLab,
+19 +     digest,
+20 +     encode_status,
+21 +     git,
+22 +     identity,
+23 +     index_map,
+24 +     parse_status,
+25 + )
+26 |
+   |
+
+ANN201 Missing return type annotation for public function `request`
+  --> artifacts/sec11/candidate-result-contract/run.py:25:5
+   |
+25 | def request(cid, root, operation="StageCandidatePaths", paths=None):
+   |     ^^^^^^^
+26 |     result = dict(operation=operation, candidate_id=cid, expected_digest=identity(root))
+27 |     if operation == "StageCandidatePaths":
+   |
+help: Add return type annotation
+
+ANN001 Missing type annotation for function argument `cid`
+  --> artifacts/sec11/candidate-result-contract/run.py:25:13
+   |
+25 | def request(cid, root, operation="StageCandidatePaths", paths=None):
+   |             ^^^
+26 |     result = dict(operation=operation, candidate_id=cid, expected_digest=identity(root))
+27 |     if operation == "StageCandidatePaths":
+   |
+
+ANN001 Missing type annotation for function argument `root`
+  --> artifacts/sec11/candidate-result-contract/run.py:25:18
+   |
+25 | def request(cid, root, operation="StageCandidatePaths", paths=None):
+   |                  ^^^^
+26 |     result = dict(operation=operation, candidate_id=cid, expected_digest=identity(root))
+27 |     if operation == "StageCandidatePaths":
+   |
+
+ANN001 Missing type annotation for function argument `operation`
+  --> artifacts/sec11/candidate-result-contract/run.py:25:24
+   |
+25 | def request(cid, root, operation="StageCandidatePaths", paths=None):
+   |                        ^^^^^^^^^
+26 |     result = dict(operation=operation, candidate_id=cid, expected_digest=identity(root))
+27 |     if operation == "StageCandidatePaths":
+   |
+
+ANN001 Missing type annotation for function argument `paths`
+  --> artifacts/sec11/candidate-result-contract/run.py:25:57
+   |
+25 | def request(cid, root, operation="StageCandidatePaths", paths=None):
+   |                                                         ^^^^^
+26 |     result = dict(operation=operation, candidate_id=cid, expected_digest=identity(root))
+27 |     if operation == "StageCandidatePaths":
+   |
+
+C408 Unnecessary `dict()` call (rewrite as a literal)
+  --> artifacts/sec11/candidate-result-contract/run.py:26:14
+   |
+25 | def request(cid, root, operation="StageCandidatePaths", paths=None):
+26 |     result = dict(operation=operation, candidate_id=cid, expected_digest=identity(root))
+   |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+27 |     if operation == "StageCandidatePaths":
+28 |         result["paths"] = paths
+   |
+help: Rewrite as a literal
+   |
+25 | def request(cid, root, operation="StageCandidatePaths", paths=None):
+   -     result = dict(operation=operation, candidate_id=cid, expected_digest=identity(root))
+26 +     result = {"operation": operation, "candidate_id": cid, "expected_digest": identity(root)}
+27 |     if operation == "StageCandidatePaths":
+   |
+note: This is an unsafe fix and may change runtime behavior
+
+ANN201 Missing return type annotation for public function `parser_cases`
+  --> artifacts/sec11/candidate-result-contract/run.py:32:5
+   |
+32 | def parser_cases(width):
+   |     ^^^^^^^^^^^^
+33 |     header = b"# branch.oid (initial)\0# branch.head main\0"
+34 |     h = b"0" * width
+   |
+help: Add return type annotation
+
+ANN001 Missing type annotation for function argument `width`
+  --> artifacts/sec11/candidate-result-contract/run.py:32:18
+   |
+32 | def parser_cases(width):
+   |                  ^^^^^
+33 |     header = b"# branch.oid (initial)\0# branch.head main\0"
+34 |     h = b"0" * width
+   |
+
+C408 Unnecessary `dict()` call (rewrite as a literal)
+  --> artifacts/sec11/candidate-result-contract/run.py:75:13
+   |
+73 |           check(encode_status(records) == raw, name)
+74 |           rows.append(
+75 | /             dict(
+76 | |                 group="parser-positive",
+77 | |                 name=name,
+78 | |                 width=width,
+79 | |                 raw_sha256=digest(raw),
+80 | |                 count=len(records),
+81 | |                 roundtrip=True,
+82 | |             )
+   | |_____________^
+83 |           )
+84 |       for name, raw in negatives.items():
+   |
+help: Rewrite as a literal
+   |
+74 |         rows.append(
+   -             dict(
+   -                 group="parser-positive",
+   -                 name=name,
+   -                 width=width,
+   -                 raw_sha256=digest(raw),
+   -                 count=len(records),
+   -                 roundtrip=True,
+   -             )
+75 +             {
+76 +                 "group": "parser-positive",
+77 +                 "name": name,
+78 +                 "width": width,
+79 +                 "raw_sha256": digest(raw),
+80 +                 "count": len(records),
+81 +                 "roundtrip": True,
+82 +             }
+83 |         )
+   |
+note: This is an unsafe fix and may change runtime behavior
+
+C408 Unnecessary `dict()` call (rewrite as a literal)
+  --> artifacts/sec11/candidate-result-contract/run.py:89:17
+   |
+87 |         except ResponseError as error:
+88 |             rows.append(
+89 |                 dict(group="parser-reject", name=name, width=width, diagnostic=error.code, raw_sha256=digest(raw))
+   |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+90 |             )
+91 |         else:
+   |
+help: Rewrite as a literal
+   |
+88 |             rows.append(
+   -                 dict(group="parser-reject", name=name, width=width, diagnostic=error.code, raw_sha256=digest(raw))
+89 +                 {"group": "parser-reject", "name": name, "width": width, "diagnostic": error.code, "raw_sha256": digest(raw)}
+90 |             )
+   |
+note: This is an unsafe fix and may change runtime behavior
+
+C408 Unnecessary `dict()` call (rewrite as a literal)
+   --> artifacts/sec11/candidate-result-contract/run.py:103:17
+    |
+101 |         except ResponseError as error:
+102 |             rows.append(
+103 |                 dict(group="parser-reject", name=name, width=width, diagnostic=error.code, raw_sha256=digest(raw))
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+104 |             )
+105 |         else:
+    |
+help: Rewrite as a literal
+    |
+102 |             rows.append(
+    -                 dict(group="parser-reject", name=name, width=width, diagnostic=error.code, raw_sha256=digest(raw))
+103 +                 {"group": "parser-reject", "name": name, "width": width, "diagnostic": error.code, "raw_sha256": digest(raw)}
+104 |             )
+    |
+note: This is an unsafe fix and may change runtime behavior
+
+C901 `run` is too complex (12 > 10)
+   --> artifacts/sec11/candidate-result-contract/run.py:110:5
+    |
+110 | def run():
+    |     ^^^
+111 |     cases = []
+112 |     with tempfile.TemporaryDirectory(prefix="sec33-lab-") as scratch:
+    |
+
+PLR0915 Too many statements (129 > 50)
+   --> artifacts/sec11/candidate-result-contract/run.py:110:5
+    |
+110 | def run():
+    |     ^^^
+111 |     cases = []
+112 |     with tempfile.TemporaryDirectory(prefix="sec33-lab-") as scratch:
+    |
+
+ANN201 Missing return type annotation for public function `run`
+   --> artifacts/sec11/candidate-result-contract/run.py:110:5
+    |
+110 | def run():
+    |     ^^^
+111 |     cases = []
+112 |     with tempfile.TemporaryDirectory(prefix="sec33-lab-") as scratch:
+    |
+help: Add return type annotation
+
+ANN202 Missing return type annotation for private function `imported`
+   --> artifacts/sec11/candidate-result-contract/run.py:142:21
+    |
+140 |                 source_before = identity(source)
+141 |
+142 |                 def imported(suffix, payload=raw):
+    |                     ^^^^^^^^
+143 |                     cid = stem + "-" + suffix
+144 |                     result = importer.import_bytes(cid, payload, digest(payload))
+    |
+help: Add return type annotation
+
+ANN001 Missing type annotation for function argument `suffix`
+   --> artifacts/sec11/candidate-result-contract/run.py:142:30
+    |
+140 |                 source_before = identity(source)
+141 |
+142 |                 def imported(suffix, payload=raw):
+    |                              ^^^^^^
+143 |                     cid = stem + "-" + suffix
+144 |                     result = importer.import_bytes(cid, payload, digest(payload))
+    |
+
+ANN001 Missing type annotation for function argument `payload`
+   --> artifacts/sec11/candidate-result-contract/run.py:142:38
+    |
+140 |                 source_before = identity(source)
+141 |
+142 |                 def imported(suffix, payload=raw):
+    |                                      ^^^^^^^
+143 |                     cid = stem + "-" + suffix
+144 |                     result = importer.import_bytes(cid, payload, digest(payload))
+    |
+
+B023 Function definition does not bind loop variable `stem`
+   --> artifacts/sec11/candidate-result-contract/run.py:143:27
+    |
+142 |                 def imported(suffix, payload=raw):
+143 |                     cid = stem + "-" + suffix
+    |                           ^^^^
+144 |                     result = importer.import_bytes(cid, payload, digest(payload))
+145 |                     return cid, importer.candidates[cid], result
+    |
+
+C408 Unnecessary `dict()` call (rewrite as a literal)
+   --> artifacts/sec11/candidate-result-contract/run.py:200:21
+    |
+198 |                   )
+199 |                   cases.append(
+200 | /                     dict(
+201 | |                         group="native-parity",
+202 | |                         name=stem,
+203 | |                         format=fmt,
+204 | |                         origin=origin,
+205 | |                         imported=registration,
+206 | |                         before=before,
+207 | |                         after=after,
+208 | |                         native_after=native_after,
+209 | |                         inspect=inspected,
+210 | |                         stage=result,
+211 | |                         native_status_hex=native_status.hex(),
+212 | |                         native_after_status_hex=native_after_status.hex(),
+213 | |                         native_changed_paths_hex=native_changed,
+214 | |                         native_index_changed_paths_hex=index_changed,
+215 | |                         native_tree=tree,
+216 | |                         stale=stale,
+217 | |                         stale_after=identity(candidate),
+218 | |                     )
+    | |_____________________^
+219 |                   )
+    |
+help: Rewrite as a literal
+    |
+199 |                 cases.append(
+    -                     dict(
+    -                         group="native-parity",
+    -                         name=stem,
+    -                         format=fmt,
+    -                         origin=origin,
+    -                         imported=registration,
+    -                         before=before,
+    -                         after=after,
+    -                         native_after=native_after,
+    -                         inspect=inspected,
+    -                         stage=result,
+    -                         native_status_hex=native_status.hex(),
+    -                         native_after_status_hex=native_after_status.hex(),
+    -                         native_changed_paths_hex=native_changed,
+    -                         native_index_changed_paths_hex=index_changed,
+    -                         native_tree=tree,
+    -                         stale=stale,
+    -                         stale_after=identity(candidate),
+    -                     )
+200 +                     {
+201 +                         "group": "native-parity",
+202 +                         "name": stem,
+203 +                         "format": fmt,
+204 +                         "origin": origin,
+205 +                         "imported": registration,
+206 +                         "before": before,
+207 +                         "after": after,
+208 +                         "native_after": native_after,
+209 +                         "inspect": inspected,
+210 +                         "stage": result,
+211 +                         "native_status_hex": native_status.hex(),
+212 +                         "native_after_status_hex": native_after_status.hex(),
+213 +                         "native_changed_paths_hex": native_changed,
+214 +                         "native_index_changed_paths_hex": index_changed,
+215 +                         "native_tree": tree,
+216 +                         "stale": stale,
+217 +                         "stale_after": identity(candidate),
+218 +                     }
+219 |                 )
+    |
+note: This is an unsafe fix and may change runtime behavior
+
+C408 Unnecessary `dict()` call (rewrite as a literal)
+   --> artifacts/sec11/candidate-result-contract/run.py:229:21
+    |
+227 |                   )
+228 |                   cases.append(
+229 | /                     dict(
+230 | |                         group="restage",
+231 | |                         name=stem,
+232 | |                         result=restaged,
+233 | |                         expected_staged=native_changed,
+234 | |                         before=after["digest"],
+235 | |                         after=identity(candidate),
+236 | |                     )
+    | |_____________________^
+237 |                   )
+    |
+help: Rewrite as a literal
+    |
+228 |                 cases.append(
+    -                     dict(
+    -                         group="restage",
+    -                         name=stem,
+    -                         result=restaged,
+    -                         expected_staged=native_changed,
+    -                         before=after["digest"],
+    -                         after=identity(candidate),
+    -                     )
+229 +                     {
+230 +                         "group": "restage",
+231 +                         "name": stem,
+232 +                         "result": restaged,
+233 +                         "expected_staged": native_changed,
+234 +                         "before": after["digest"],
+235 +                         "after": identity(candidate),
+236 +                     }
+237 |                 )
+    |
+note: This is an unsafe fix and may change runtime behavior
+
+PLR2004 Magic value used in comparison, consider replacing `40` with a constant variable
+   --> artifacts/sec11/candidate-result-contract/run.py:242:61
+    |
+240 |                 bad_id, bad_root, _ = imported("bad-width")
+241 |                 bad_before = identity(bad_root)
+242 |                 bad_lab = TypedLab(importer, 64 if width == 40 else 40)
+    |                                                             ^^
+243 |                 bad_result = bad_lab.execute(request(bad_id, bad_root, paths=paths))
+244 |                 # Unborn reaches post-add tree validation; its initial status has no object OIDs.
+    |
+
+TRY003 Avoid specifying long messages outside the exception class
+   --> artifacts/sec11/candidate-result-contract/run.py:246:27
+    |
+244 |                 # Unborn reaches post-add tree validation; its initial status has no object OIDs.
+245 |                 if bad_result.get("ok"):
+246 |                     raise AssertionError("wrong trusted width accepted")
+    |                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+247 |                 cases.append(
+248 |                     dict(
+    |
+
+EM101 Exception must not use a string literal, assign to variable first
+   --> artifacts/sec11/candidate-result-contract/run.py:246:42
+    |
+244 |                 # Unborn reaches post-add tree validation; its initial status has no object OIDs.
+245 |                 if bad_result.get("ok"):
+246 |                     raise AssertionError("wrong trusted width accepted")
+    |                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+247 |                 cases.append(
+248 |                     dict(
+    |
+help: Assign to variable; remove string literal
+    |
+245 |                 if bad_result.get("ok"):
+    -                     raise AssertionError("wrong trusted width accepted")
+246 +                     msg = "wrong trusted width accepted"
+247 +                     raise AssertionError(msg)
+248 |                 cases.append(
+    |
+note: This is an unsafe fix and may change runtime behavior
+
+C408 Unnecessary `dict()` call (rewrite as a literal)
+   --> artifacts/sec11/candidate-result-contract/run.py:248:21
+    |
+246 |                       raise AssertionError("wrong trusted width accepted")
+247 |                   cases.append(
+248 | /                     dict(
+249 | |                         group="response-failure",
+250 | |                         name=stem + "-width",
+251 | |                         before=bad_before,
+252 | |                         after=identity(bad_root),
+253 | |                         result=bad_result,
+254 | |                     )
+    | |_____________________^
+255 |                   )
+    |
+help: Rewrite as a literal
+    |
+247 |                 cases.append(
+    -                     dict(
+    -                         group="response-failure",
+    -                         name=stem + "-width",
+    -                         before=bad_before,
+    -                         after=identity(bad_root),
+    -                         result=bad_result,
+    -                     )
+248 +                     {
+249 +                         "group": "response-failure",
+250 +                         "name": stem + "-width",
+251 +                         "before": bad_before,
+252 +                         "after": identity(bad_root),
+253 +                         "result": bad_result,
+254 +                     }
+255 |                 )
+    |
+note: This is an unsafe fix and may change runtime behavior
+
+ANN202 Missing return type annotation for private function `lower_limit`
+   --> artifacts/sec11/candidate-result-contract/run.py:261:21
+    |
+259 |                 limit_before = identity(limit_root)
+260 |
+261 |                 def lower_limit(root):
+    |                     ^^^^^^^^^^^
+262 |                     model.MAX_OUTPUT = 128
+    |
+help: Add return type annotation: `None`
+    |
+260 |
+    -                 def lower_limit(root):
+261 +                 def lower_limit(root) -> None:
+262 |                     model.MAX_OUTPUT = 128
+    |
+note: This is an unsafe fix and may change runtime behavior
+
+ANN001 Missing type annotation for function argument `root`
+   --> artifacts/sec11/candidate-result-contract/run.py:261:33
+    |
+259 |                 limit_before = identity(limit_root)
+260 |
+261 |                 def lower_limit(root):
+    |                                 ^^^^
+262 |                     model.MAX_OUTPUT = 128
+    |
+
+ARG001 Unused function argument: `root`
+   --> artifacts/sec11/candidate-result-contract/run.py:261:33
+    |
+259 |                 limit_before = identity(limit_root)
+260 |
+261 |                 def lower_limit(root):
+    |                                 ^^^^
+262 |                     model.MAX_OUTPUT = 128
+    |
+
+C408 Unnecessary `dict()` call (rewrite as a literal)
+   --> artifacts/sec11/candidate-result-contract/run.py:276:21
+    |
+274 |                   )
+275 |                   cases.append(
+276 | /                     dict(
+277 | |                         group="response-failure",
+278 | |                         name=stem + "-limit",
+279 | |                         before=limit_before,
+280 | |                         after=identity(limit_root),
+281 | |                         result=limited,
+282 | |                     )
+    | |_____________________^
+283 |                   )
+    |
+help: Rewrite as a literal
+    |
+275 |                 cases.append(
+    -                     dict(
+    -                         group="response-failure",
+    -                         name=stem + "-limit",
+    -                         before=limit_before,
+    -                         after=identity(limit_root),
+    -                         result=limited,
+    -                     )
+276 +                     {
+277 +                         "group": "response-failure",
+278 +                         "name": stem + "-limit",
+279 +                         "before": limit_before,
+280 +                         "after": identity(limit_root),
+281 +                         "result": limited,
+282 +                     }
+283 |                 )
+    |
+note: This is an unsafe fix and may change runtime behavior
+
+ANN202 Missing return type annotation for private function `lower_wire`
+   --> artifacts/sec11/candidate-result-contract/run.py:288:21
+    |
+286 |                 wire_before = identity(wire_root)
+287 |
+288 |                 def lower_wire(root):
+    |                     ^^^^^^^^^^
+289 |                     model.MAX_WIRE = 256
+    |
+help: Add return type annotation: `None`
+    |
+287 |
+    -                 def lower_wire(root):
+288 +                 def lower_wire(root) -> None:
+289 |                     model.MAX_WIRE = 256
+    |
+note: This is an unsafe fix and may change runtime behavior
+
+ANN001 Missing type annotation for function argument `root`
+   --> artifacts/sec11/candidate-result-contract/run.py:288:32
+    |
+286 |                 wire_before = identity(wire_root)
+287 |
+288 |                 def lower_wire(root):
+    |                                ^^^^
+289 |                     model.MAX_WIRE = 256
+    |
+
+ARG001 Unused function argument: `root`
+   --> artifacts/sec11/candidate-result-contract/run.py:288:32
+    |
+286 |                 wire_before = identity(wire_root)
+287 |
+288 |                 def lower_wire(root):
+    |                                ^^^^
+289 |                     model.MAX_WIRE = 256
+    |
+
+C408 Unnecessary `dict()` call (rewrite as a literal)
+   --> artifacts/sec11/candidate-result-contract/run.py:304:21
+    |
+302 |                   check(wire_result["candidate_digest"] == identity(wire_root) != wire_before, "wire overflow state")
+303 |                   cases.append(
+304 | /                     dict(
+305 | |                         group="response-failure",
+306 | |                         name=stem + "-wire",
+307 | |                         before=wire_before,
+308 | |                         after=identity(wire_root),
+309 | |                         result=wire_result,
+310 | |                     )
+    | |_____________________^
+311 |                   )
+    |
+help: Rewrite as a literal
+    |
+303 |                 cases.append(
+    -                     dict(
+    -                         group="response-failure",
+    -                         name=stem + "-wire",
+    -                         before=wire_before,
+    -                         after=identity(wire_root),
+    -                         result=wire_result,
+    -                     )
+304 +                     {
+305 +                         "group": "response-failure",
+306 +                         "name": stem + "-wire",
+307 +                         "before": wire_before,
+308 +                         "after": identity(wire_root),
+309 +                         "result": wire_result,
+310 +                     }
+311 |                 )
+    |
+note: This is an unsafe fix and may change runtime behavior
+
+C408 Unnecessary `dict()` call (rewrite as a literal)
+   --> artifacts/sec11/candidate-result-contract/run.py:340:21
+    |
+338 |                   check(quarantined["diagnostic"] == "CANDIDATE_QUARANTINED", "quarantine bypass")
+339 |                   cases.append(
+340 | /                     dict(
+341 | |                         group="execution-failure",
+342 | |                         name=stem,
+343 | |                         before=fail_before,
+344 | |                         after=fail_after,
+345 | |                         result=failure,
+346 | |                         retry=quarantined,
+347 | |                         commands=failure_lab.commands,
+348 | |                     )
+    | |_____________________^
+349 |                   )
+350 |                   # Actual Git add failure before index write remains an execution failure, not preflight denial.
+    |
+help: Rewrite as a literal
+    |
+339 |                 cases.append(
+    -                     dict(
+    -                         group="execution-failure",
+    -                         name=stem,
+    -                         before=fail_before,
+    -                         after=fail_after,
+    -                         result=failure,
+    -                         retry=quarantined,
+    -                         commands=failure_lab.commands,
+    -                     )
+340 +                     {
+341 +                         "group": "execution-failure",
+342 +                         "name": stem,
+343 +                         "before": fail_before,
+344 +                         "after": fail_after,
+345 +                         "result": failure,
+346 +                         "retry": quarantined,
+347 +                         "commands": failure_lab.commands,
+348 +                     }
+349 |                 )
+    |
+note: This is an unsafe fix and may change runtime behavior
+
+C408 Unnecessary `dict()` call (rewrite as a literal)
+   --> artifacts/sec11/candidate-result-contract/run.py:360:21
+    |
+358 |                   )
+359 |                   cases.append(
+360 | /                     dict(
+361 | |                         group="add-failure",
+362 | |                         name=stem,
+363 | |                         before=missing_before,
+364 | |                         after=identity(missing),
+365 | |                         result=missing_result,
+366 | |                     )
+    | |_____________________^
+367 |                   )
+    |
+help: Rewrite as a literal
+    |
+359 |                 cases.append(
+    -                     dict(
+    -                         group="add-failure",
+    -                         name=stem,
+    -                         before=missing_before,
+    -                         after=identity(missing),
+    -                         result=missing_result,
+    -                     )
+360 +                     {
+361 +                         "group": "add-failure",
+362 +                         "name": stem,
+363 +                         "before": missing_before,
+364 +                         "after": identity(missing),
+365 +                         "result": missing_result,
+366 +                     }
+367 |                 )
+    |
+note: This is an unsafe fix and may change runtime behavior
+
+PLR2004 Magic value used in comparison, consider replacing `4096` with a constant variable
+   --> artifacts/sec11/candidate-result-contract/run.py:378:74
+    |
+376 |                     diag_result.get("diagnostic") == "EXECUTION_FAILED"
+377 |                     and diag_result["stderr_truncated"]
+378 |                     and len(bytes.fromhex(diag_result["stderr_hex"])) == 4096,
+    |                                                                          ^^^^
+379 |                     "diagnostic not bounded",
+380 |                 )
+    |
+
+C408 Unnecessary `dict()` call (rewrite as a literal)
+   --> artifacts/sec11/candidate-result-contract/run.py:381:30
+    |
+379 |                     "diagnostic not bounded",
+380 |                 )
+381 |                 cases.append(dict(group="diagnostic-bound", name=stem, result=diag_result, actual=identity(diag_root)))
+    |                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+382 |
+383 |                 # Whole-candidate helper/hook refusals still happen before stage or observations.
+    |
+help: Rewrite as a literal
+    |
+380 |                 )
+    -                 cases.append(dict(group="diagnostic-bound", name=stem, result=diag_result, actual=identity(diag_root)))
+381 +                 cases.append({"group": "diagnostic-bound", "name": stem, "result": diag_result, "actual": identity(diag_root)})
+382 |
+    |
+note: This is an unsafe fix and may change runtime behavior
+
+C408 Unnecessary `dict()` call (rewrite as a literal)
+   --> artifacts/sec11/candidate-result-contract/run.py:411:29
+    |
+409 |                           )
+410 |                           cases.append(
+411 | /                             dict(
+412 | |                                 group="preflight-deny",
+413 | |                                 name=stem + "-" + name + "-" + op,
+414 | |                                 before=original,
+415 | |                                 after=identity(denied),
+416 | |                                 result=outcome,
+417 | |                                 commands=denied_lab.commands,
+418 | |                             )
+    | |_____________________________^
+419 |                           )
+420 |                   cases.append(
+    |
+help: Rewrite as a literal
+    |
+410 |                         cases.append(
+    -                             dict(
+    -                                 group="preflight-deny",
+    -                                 name=stem + "-" + name + "-" + op,
+    -                                 before=original,
+    -                                 after=identity(denied),
+    -                                 result=outcome,
+    -                                 commands=denied_lab.commands,
+    -                             )
+411 +                             {
+412 +                                 "group": "preflight-deny",
+413 +                                 "name": stem + "-" + name + "-" + op,
+414 +                                 "before": original,
+415 +                                 "after": identity(denied),
+416 +                                 "result": outcome,
+417 +                                 "commands": denied_lab.commands,
+418 +                             }
+419 |                         )
+    |
+note: This is an unsafe fix and may change runtime behavior
+
+C408 Unnecessary `dict()` call (rewrite as a literal)
+   --> artifacts/sec11/candidate-result-contract/run.py:421:21
+    |
+419 |                           )
+420 |                   cases.append(
+421 | /                     dict(
+422 | |                         group="preservation",
+423 | |                         name=stem,
+424 | |                         bundle_before=digest(raw),
+425 | |                         bundle_after=digest(raw),
+426 | |                         source_before=source_before,
+427 | |                         source_after=identity(source),
+428 | |                         protected_before=protected_before,
+429 | |                         protected_after=identity(protected),
+430 | |                     )
+    | |_____________________^
+431 |                   )
+432 |                   check(
+    |
+help: Rewrite as a literal
+    |
+420 |                 cases.append(
+    -                     dict(
+    -                         group="preservation",
+    -                         name=stem,
+    -                         bundle_before=digest(raw),
+    -                         bundle_after=digest(raw),
+    -                         source_before=source_before,
+    -                         source_after=identity(source),
+    -                         protected_before=protected_before,
+    -                         protected_after=identity(protected),
+    -                     )
+421 +                     {
+422 +                         "group": "preservation",
+423 +                         "name": stem,
+424 +                         "bundle_before": digest(raw),
+425 +                         "bundle_after": digest(raw),
+426 +                         "source_before": source_before,
+427 +                         "source_after": identity(source),
+428 +                         "protected_before": protected_before,
+429 +                         "protected_after": identity(protected),
+430 +                     }
+431 |                 )
+    |
+note: This is an unsafe fix and may change runtime behavior
+
+C408 Unnecessary `dict()` call (rewrite as a literal)
+   --> artifacts/sec11/candidate-result-contract/run.py:436:12
+    |
+434 |                       "source/other candidate mutation",
+435 |                   )
+436 |       return dict(
+    |  ____________^
+437 | |         schema=1,
+438 | |         base_commit=BASE,
+439 | |         stage_A="INCOMPLETE",
+440 | |         SEC11="failed",
+441 | |         SEC13="failed",
+442 | |         containment=False,
+443 | |         security_acceptance="NOT RUN",
+444 | |         production_routing=False,
+445 | |         live_capture=False,
+446 | |         git=git(HERE, ["--version"], Path("/tmp")).stdout.decode().strip(),
+447 | |         python=platform.python_version(),
+448 | |         contract_sha256=digest(previous.CONTRACT.read_bytes()),
+449 | |         upstream_hashes={
+450 | |             str(p.relative_to(ROOT)): digest(p.read_bytes())
+451 | |             for folder, names in (
+452 | |                 (IMPORT, ("importer.py", "run.py", "verify.py", "results.json")),
+453 | |                 (previous.HERE, ("adapter.py", "run.py", "verify.py", "results.json")),
+454 | |             )
+455 | |             for name in names
+456 | |             for p in [folder / name]
+457 | |         },
+458 | |         source_hashes={str(p.relative_to(ROOT)): digest(p.read_bytes()) for p in sorted((ROOT / "src").rglob("*.py"))},
+459 | |         artifact_hashes={name: digest((HERE / name).read_bytes()) for name in FILES},
+460 | |         cases=cases,
+461 | |     )
+    | |_____^
+help: Rewrite as a literal
+    |
+435 |                 )
+    -     return dict(
+    -         schema=1,
+    -         base_commit=BASE,
+    -         stage_A="INCOMPLETE",
+    -         SEC11="failed",
+    -         SEC13="failed",
+    -         containment=False,
+    -         security_acceptance="NOT RUN",
+    -         production_routing=False,
+    -         live_capture=False,
+    -         git=git(HERE, ["--version"], Path("/tmp")).stdout.decode().strip(),
+    -         python=platform.python_version(),
+    -         contract_sha256=digest(previous.CONTRACT.read_bytes()),
+    -         upstream_hashes={
+436 +     return {
+437 +         "schema": 1,
+438 +         "base_commit": BASE,
+439 +         "stage_A": "INCOMPLETE",
+440 +         "SEC11": "failed",
+441 +         "SEC13": "failed",
+442 +         "containment": False,
+443 +         "security_acceptance": "NOT RUN",
+444 +         "production_routing": False,
+445 +         "live_capture": False,
+446 +         "git": git(HERE, ["--version"], Path("/tmp")).stdout.decode().strip(),
+447 +         "python": platform.python_version(),
+448 +         "contract_sha256": digest(previous.CONTRACT.read_bytes()),
+449 +         "upstream_hashes": {
+450 |             str(p.relative_to(ROOT)): digest(p.read_bytes())
+--------------------------------------------------------------------------------
+457 |         },
+    -         source_hashes={str(p.relative_to(ROOT)): digest(p.read_bytes()) for p in sorted((ROOT / "src").rglob("*.py"))},
+    -         artifact_hashes={name: digest((HERE / name).read_bytes()) for name in FILES},
+    -         cases=cases,
+    -     )
+458 +         "source_hashes": {str(p.relative_to(ROOT)): digest(p.read_bytes()) for p in sorted((ROOT / "src").rglob("*.py"))},
+459 +         "artifact_hashes": {name: digest((HERE / name).read_bytes()) for name in FILES},
+460 +         "cases": cases,
+461 +     }
+462 |
+    |
+note: This is an unsafe fix and may change runtime behavior
+
+S108 Probable insecure usage of temporary file or directory: "/tmp"
+   --> artifacts/sec11/candidate-result-contract/run.py:446:43
+    |
+444 |         production_routing=False,
+445 |         live_capture=False,
+446 |         git=git(HERE, ["--version"], Path("/tmp")).stdout.decode().strip(),
+    |                                           ^^^^^^
+447 |         python=platform.python_version(),
+448 |         contract_sha256=digest(previous.CONTRACT.read_bytes()),
+    |
+
+T201 `print` found
+   --> artifacts/sec11/candidate-result-contract/run.py:465:5
+    |
+464 | if __name__ == "__main__":
+465 |     print(json.dumps(run(), indent=2, sort_keys=True))
+    |     ^^^^^
+help: Remove `print`
+    |
+464 | if __name__ == "__main__":
+    -     print(json.dumps(run(), indent=2, sort_keys=True))
+465 +     pass
+    |
+note: This is an unsafe fix and may change runtime behavior
+
+INP001 File `artifacts/sec11/candidate-result-contract/verify.py` is part of an implicit namespace package. Add an `__init__.py`.
+--> artifacts/sec11/candidate-result-contract/verify.py:1:1
+
+ANN201 Missing return type annotation for public function `require`
+  --> artifacts/sec11/candidate-result-contract/verify.py:13:5
+   |
+13 | def require(value, message):
+   |     ^^^^^^^
+14 |     if not value:
+15 |         raise ValueError(message)
+   |
+help: Add return type annotation: `None`
+   |
+12 |
+   - def require(value, message):
+13 + def require(value, message) -> None:
+14 |     if not value:
+   |
+note: This is an unsafe fix and may change runtime behavior
+
+ANN001 Missing type annotation for function argument `value`
+  --> artifacts/sec11/candidate-result-contract/verify.py:13:13
+   |
+13 | def require(value, message):
+   |             ^^^^^
+14 |     if not value:
+15 |         raise ValueError(message)
+   |
+
+ANN001 Missing type annotation for function argument `message`
+  --> artifacts/sec11/candidate-result-contract/verify.py:13:20
+   |
+13 | def require(value, message):
+   |                    ^^^^^^^
+14 |     if not value:
+15 |         raise ValueError(message)
+   |
+
+C901 `semantics` is too complex (15 > 10)
+  --> artifacts/sec11/candidate-result-contract/verify.py:18:5
+   |
+18 | def semantics(data):
+   |     ^^^^^^^^^
+19 |     for key, value in dict(
+20 |         schema=1,
+   |
+
+PLR0912 Too many branches (16 > 12)
+  --> artifacts/sec11/candidate-result-contract/verify.py:18:5
+   |
+18 | def semantics(data):
+   |     ^^^^^^^^^
+19 |     for key, value in dict(
+20 |         schema=1,
+   |
+
+PLR0915 Too many statements (60 > 50)
+  --> artifacts/sec11/candidate-result-contract/verify.py:18:5
+   |
+18 | def semantics(data):
+   |     ^^^^^^^^^
+19 |     for key, value in dict(
+20 |         schema=1,
+   |
+
+ANN201 Missing return type annotation for public function `semantics`
+  --> artifacts/sec11/candidate-result-contract/verify.py:18:5
+   |
+18 | def semantics(data):
+   |     ^^^^^^^^^
+19 |     for key, value in dict(
+20 |         schema=1,
+   |
+help: Add return type annotation: `None`
+   |
+17 |
+   - def semantics(data):
+18 + def semantics(data) -> None:
+19 |     for key, value in dict(
+   |
+note: This is an unsafe fix and may change runtime behavior
+
+ANN001 Missing type annotation for function argument `data`
+  --> artifacts/sec11/candidate-result-contract/verify.py:18:15
+   |
+18 | def semantics(data):
+   |               ^^^^
+19 |     for key, value in dict(
+20 |         schema=1,
+   |
+
+C408 Unnecessary `dict()` call (rewrite as a literal)
+  --> artifacts/sec11/candidate-result-contract/verify.py:19:23
+   |
+18 |   def semantics(data):
+19 |       for key, value in dict(
+   |  _______________________^
+20 | |         schema=1,
+21 | |         base_commit=BASE,
+22 | |         stage_A="INCOMPLETE",
+23 | |         SEC11="failed",
+24 | |         SEC13="failed",
+25 | |         containment=False,
+26 | |         security_acceptance="NOT RUN",
+27 | |         production_routing=False,
+28 | |         live_capture=False,
+29 | |     ).items():
+   | |_____^
+30 |           require(data[key] == value, "scope drift " + key)
+31 |       cases = data["cases"]
+   |
+help: Rewrite as a literal
+   |
+18 | def semantics(data):
+   -     for key, value in dict(
+   -         schema=1,
+   -         base_commit=BASE,
+   -         stage_A="INCOMPLETE",
+   -         SEC11="failed",
+   -         SEC13="failed",
+   -         containment=False,
+   -         security_acceptance="NOT RUN",
+   -         production_routing=False,
+   -         live_capture=False,
+   -     ).items():
+19 +     for key, value in {
+20 +         "schema": 1,
+21 +         "base_commit": BASE,
+22 +         "stage_A": "INCOMPLETE",
+23 +         "SEC11": "failed",
+24 +         "SEC13": "failed",
+25 +         "containment": False,
+26 +         "security_acceptance": "NOT RUN",
+27 +         "production_routing": False,
+28 +         "live_capture": False,
+29 +     }.items():
+30 |         require(data[key] == value, "scope drift " + key)
+   |
+note: This is an unsafe fix and may change runtime behavior
+
+PLC0415 `import` should be at the top-level of a file
+  --> artifacts/sec11/candidate-result-contract/verify.py:50:9
+   |
+48 |     )
+49 |     for width in (40, 64):
+50 |         from run import parser_cases
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+51 |
+52 |         expected = parser_cases(width)
+   |
+
+PLR2004 Magic value used in comparison, consider replacing `4096` with a constant variable
+   --> artifacts/sec11/candidate-result-contract/verify.py:100:61
+    |
+ 98 |         require(result["diagnostic"] == "EXECUTION_FAILED" and result["exit"] != 0, "missing native failure")
+ 99 |         require(result["disposition"] == "quarantine" and not result["retry_automatically"], "unsafe retry")
+100 |         require(len(bytes.fromhex(result["stderr_hex"])) <= 4096, "unbounded stderr")
+    |                                                             ^^^^
+101 |         before, after = result["before_manifest"], result["after_manifest"]
+102 |         require(
+    |
+
+PLR2004 Magic value used in comparison, consider replacing `4096` with a constant variable
+   --> artifacts/sec11/candidate-result-contract/verify.py:161:61
+    |
+159 |             result["diagnostic"] == "EXECUTION_FAILED"
+160 |             and result["stderr_truncated"]
+161 |             and len(bytes.fromhex(result["stderr_hex"])) == 4096,
+    |                                                             ^^^^
+162 |             "diagnostic limit",
+163 |         )
+    |
+
+ANN201 Missing return type annotation for public function `verify`
+   --> artifacts/sec11/candidate-result-contract/verify.py:183:5
+    |
+183 | def verify(path):
+    |     ^^^^^^
+184 |     data = json.loads(path.read_text())
+185 |     semantics(data)
+    |
+help: Add return type annotation
+
+ANN001 Missing type annotation for function argument `path`
+   --> artifacts/sec11/candidate-result-contract/verify.py:183:12
+    |
+183 | def verify(path):
+    |            ^^^^
+184 |     data = json.loads(path.read_text())
+185 |     semantics(data)
+    |
+
+S603 `subprocess` call: check for execution of untrusted input
+   --> artifacts/sec11/candidate-result-contract/verify.py:195:24
+    |
+193 |     )
+194 |     for p, h in source.items():
+195 |         require(digest(subprocess.check_output(["git", "show", f"{BASE}:{p}"], cwd=ROOT)) == h, "base source drift")
+    |                        ^^^^^^^^^^^^^^^^^^^^^^^
+196 |     mutations = {
+197 |         "security-promotion": lambda d: d.update(stage_A="PASS"),
+    |
+
+S607 Starting a process with a partial executable path
+   --> artifacts/sec11/candidate-result-contract/verify.py:195:48
+    |
+193 |     )
+194 |     for p, h in source.items():
+195 |         require(digest(subprocess.check_output(["git", "show", f"{BASE}:{p}"], cwd=ROOT)) == h, "base source drift")
+    |                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+196 |     mutations = {
+197 |         "security-promotion": lambda d: d.update(stage_A="PASS"),
+    |
+
+C408 Unnecessary `dict()` call (rewrite as a literal)
+   --> artifacts/sec11/candidate-result-contract/verify.py:230:12
+    |
+228 |           else:
+229 |               raise ValueError("accepted negative " + name)
+230 |       return dict(
+    |  ____________^
+231 | |         local_integrity="PASS",
+232 | |         finite_lab="PASS",
+233 | |         stage_A="INCOMPLETE",
+234 | |         SEC11="failed",
+235 | |         SEC13="failed",
+236 | |         security_acceptance="NOT RUN",
+237 | |         containment=False,
+238 | |         product_files=len(source),
+239 | |         cases=len(data["cases"]),
+240 | |         groups={g: sum(r["group"] == g for r in data["cases"]) for g in sorted({r["group"] for r in data["cases"]})},
+241 | |         negative_controls_rejected=rejected,
+242 | |         results_sha256=digest(path.read_bytes()),
+243 | |         artifact_hashes=data["artifact_hashes"],
+244 | |     )
+    | |_____^
+help: Rewrite as a literal
+    |
+229 |             raise ValueError("accepted negative " + name)
+    -     return dict(
+    -         local_integrity="PASS",
+    -         finite_lab="PASS",
+    -         stage_A="INCOMPLETE",
+    -         SEC11="failed",
+    -         SEC13="failed",
+    -         security_acceptance="NOT RUN",
+    -         containment=False,
+    -         product_files=len(source),
+    -         cases=len(data["cases"]),
+    -         groups={g: sum(r["group"] == g for r in data["cases"]) for g in sorted({r["group"] for r in data["cases"]})},
+    -         negative_controls_rejected=rejected,
+    -         results_sha256=digest(path.read_bytes()),
+    -         artifact_hashes=data["artifact_hashes"],
+    -     )
+230 +     return {
+231 +         "local_integrity": "PASS",
+232 +         "finite_lab": "PASS",
+233 +         "stage_A": "INCOMPLETE",
+234 +         "SEC11": "failed",
+235 +         "SEC13": "failed",
+236 +         "security_acceptance": "NOT RUN",
+237 +         "containment": False,
+238 +         "product_files": len(source),
+239 +         "cases": len(data["cases"]),
+240 +         "groups": {g: sum(r["group"] == g for r in data["cases"]) for g in sorted({r["group"] for r in data["cases"]})},
+241 +         "negative_controls_rejected": rejected,
+242 +         "results_sha256": digest(path.read_bytes()),
+243 +         "artifact_hashes": data["artifact_hashes"],
+244 +     }
+245 |
+    |
+note: This is an unsafe fix and may change runtime behavior
+
+T201 `print` found
+   --> artifacts/sec11/candidate-result-contract/verify.py:248:5
+    |
+247 | if __name__ == "__main__":
+248 |     print(
+    |     ^^^^^
+249 |         json.dumps(verify(Path(sys.argv[1]) if len(sys.argv) > 1 else HERE / "results.json"), indent=2, sort_keys=True)
+250 |     )
+    |
+help: Remove `print`
+    |
+247 | if __name__ == "__main__":
+    -     print(
+    -         json.dumps(verify(Path(sys.argv[1]) if len(sys.argv) > 1 else HERE / "results.json"), indent=2, sort_keys=True)
+    -     )
+248 +     pass
+    |
+note: This is an unsafe fix and may change runtime behavior
+
+Found 118 errors.
+[*] 2 fixable with `--fix` (37 unsafe fixes available with `--fix --unsafe-fixes`).
