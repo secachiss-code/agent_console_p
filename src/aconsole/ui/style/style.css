@@ -136,7 +136,7 @@ button.ac-quota-group-open { background-color: alpha(@accent_bg_color, 0.18); }
 .ac-git-commit { padding: $space_sm $space_lg; }
 .ac-git-message { padding: $space_sm; border-radius: $radius_control; background-color: alpha(currentColor, 0.06); }
 .ac-git-row { padding: 0 $space_md 0 0; min-height: 36px; }
-.ac-git-list > row { padding: 0; min-height: 36px; }
+.ac-git-list > child { padding: 0; min-height: 36px; }
 .ac-git-when { font-size: $font_caption; }
 .ac-git-pill { padding: $space_xxs $space_md; border-radius: $radius_pill; font-size: $font_caption; font-weight: 600; background-color: alpha(currentColor, 0.12); }
 .ac-git-ref-base { font-weight: 700; }

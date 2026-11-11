@@ -15,7 +15,7 @@ import time
 
 root=Path(__file__).resolve().parents[2]
 parser=argparse.ArgumentParser()
-parser.add_argument('--mode',choices=['isolated','full','screenshots','tools'],default='isolated')
+parser.add_argument('--mode',choices=['isolated','history','full','screenshots','tools'],default='isolated')
 parser.add_argument('--label',default='')
 parser.add_argument('--renderer',default='')
 parser.add_argument('--profile',action='store_true')
@@ -107,6 +107,8 @@ with tempfile.TemporaryDirectory(prefix='perf7-xvfb-') as directory:
         if options.phases: env['ACONSOLE_PERF7_PHASES']='1'
         if options.row_probe: env['ACONSOLE_PERF7_ROW_PROBE']=options.row_probe
         tests=['tests/gui/front/test_git_scale_ui.py','tests/gui/front/test_git_row_tooltips.py','tests/gui/front/test_git_graph_redraw.py'] if options.mode=='isolated' else ['tests/gui/front','tests/ui']
+        if options.mode=='history':
+            tests=[str(path.relative_to(checkout)) for path in sorted((checkout/'tests/gui/front').glob('test_git*.py'))]
         if options.mode=='screenshots':
             command=[sys.executable,str(root/'tools/git_snapshot.py'),'--out',str(output/(label+'-ui'))]
             subprocess.run(command,env=env,cwd=root,timeout=120,check=True)
