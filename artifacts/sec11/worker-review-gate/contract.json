@@ -1,0 +1,475 @@
+{
+  "schema": 1,
+  "base_commit": "fea8c49c3604bde3e5fdb8fd2e2fa263970aec03",
+  "disposition": {
+    "packet": "PREPARED_FOR_REVIEW",
+    "actual_review": "NOT PERFORMED",
+    "stage_B_authorized": false,
+    "stage_A": "INCOMPLETE",
+    "SEC11": "failed",
+    "SEC13": "failed",
+    "installed_acceptance": "NOT RUN",
+    "production_routing": false,
+    "host_permissions_changed": false,
+    "runtime_implemented": false
+  },
+  "scope": {
+    "operations": [
+      "InspectCandidate",
+      "StageCandidatePaths"
+    ],
+    "raw_argv": false,
+    "caller_env": false,
+    "caller_executable": false,
+    "hook_phases": [],
+    "fallback": false,
+    "live_publication": false,
+    "formats": [
+      "sha1",
+      "sha256"
+    ],
+    "origins": [
+      "standalone-detached",
+      "standalone-unborn"
+    ],
+    "import_subset": "SEC32 UTF-8 regular files/directories, finite standalone loose-object format; no symlink/hardlink/special files, external gitdir/alternates, linked/bare, submodules or sparse/split index. No expansion from synthetic SEC33 parser records.",
+    "excluded_families": [
+      "unstage_restore",
+      "commit_root_amend",
+      "merge_squash_ff",
+      "sequencer_continue_abort",
+      "checkpoint_prompt_restore_delete",
+      "worktree_create_remove_prune",
+      "history_diff_preview",
+      "auxiliary_git",
+      "external_helpers",
+      "installed_hooks",
+      "origin_variants"
+    ],
+    "dependencies": "SEC31 whole-candidate helper/hook refusal retained; unknown dependencies/capture reject. Native hooks disabled additionally. Discovery is not confinement."
+  },
+  "operation_abi": {
+    "encoding": "Version 1 length-prefixed strict UTF-8 JSON; reject duplicate keys, unknown fields, invalid scalar types, depth >16 and trailing bytes before execution. One request per fresh process, serialized per candidate by trusted broker. Candidate registration is never a caller-supplied path.",
+    "common_fields": [
+      "operation",
+      "candidate_id",
+      "expected_digest"
+    ],
+    "stage_extra_fields": [
+      "paths"
+    ],
+    "path_policy": "Nonempty unique list of UTF-8 relative literal paths; reject NUL, absolute, empty/dot/dotdot components, metadata paths and unsupported importer paths. Leading dash/pathspec-looking/tab/newline names remain literal. <=4096 paths, <=4096 bytes each, <=1MiB total; exact manifest identity required.",
+    "stage_mutations": [
+      [
+        "--literal-pathspecs",
+        "add",
+        "-A",
+        "--",
+        "{paths...}"
+      ],
+      [
+        "write-tree"
+      ]
+    ],
+    "inspect_observations": [
+      [
+        "status",
+        "--porcelain=v2",
+        "-z",
+        "--branch",
+        "--untracked-files=all",
+        "--ignore-submodules=none"
+      ]
+    ],
+    "stage_observations_before": [
+      [
+        "status",
+        "--porcelain=v2",
+        "-z",
+        "--branch",
+        "--untracked-files=all",
+        "--ignore-submodules=none"
+      ],
+      [
+        "ls-files",
+        "--stage",
+        "-z"
+      ]
+    ],
+    "stage_observations_after": [
+      [
+        "status",
+        "--porcelain=v2",
+        "-z",
+        "--branch",
+        "--untracked-files=all",
+        "--ignore-submodules=none"
+      ],
+      [
+        "ls-files",
+        "--stage",
+        "-z"
+      ]
+    ],
+    "observation_decision": "PROPOSED_EXPLICIT_V1_EXTENSION_REQUIRES_REVIEW",
+    "observation_authority": "Only fixed status and ls-files --stage -z inside registered candidate; no generic read endpoint. Pre-add status supports existing preflight; index entries support per-call delta. Hash candidate manifest/index in trusted supervisor with bounded traversal, no diagnostic Git extensions. Native diff --cached --name-only -z --no-renames --no-ext-diff --no-textconv stays independent oracle only.",
+    "lab_difference": "SEC30 permits status/add/write-tree only. SEC33 adds status and ls-files observations in lab. This packet proposes enumerated observation authority, does not retroactively authorize it. SEC31 config discovery is internal trusted validation over captured bytes in future implementation, not arbitrary Git config RPC."
+  },
+  "response_abi": {
+    "status_model": "SEC33 lossless typed porcelain-v2 records, paths/header bytes hex; reconstruct native bytes exactly; validated 40/64 OID width from trusted registration; unknown/malformed records reject. Synthetic opaque/copy/unmerged parsing does not establish importer/native conflict acceptance.",
+    "success_fields": [
+      "ok",
+      "operation",
+      "status",
+      "candidate_digest",
+      "index_digest"
+    ],
+    "stage_success_fields": [
+      "tree_oid",
+      "changed_paths_hex",
+      "index_changed_paths_hex"
+    ],
+    "changed_paths": "All staged changes versus HEAD, both rename sides, not limited to requested paths.",
+    "index_changed_paths": "Entry differences versus immediately before this call; restage can yield empty delta while all staged paths stay nonempty.",
+    "identity": "SHA256 raw index bytes (null if absent), SHA256 canonical SEC32/33 manifest identity including modes and exact bytes; trusted format selects tree OID width. No raw-index cross-run reproducibility claim. Successful stage returns actual new identity and invalidates old digest when bytes changed.",
+    "limits": {
+      "request_bytes": 1048576,
+      "json_depth": 16,
+      "paths": 4096,
+      "path_bytes": 4096,
+      "parsed_output_bytes": 1048576,
+      "records": 4096,
+      "diagnostic_bytes": 4096,
+      "response_bytes": 8388608,
+      "combined_stream_bytes": 8388608
+    },
+    "enforcement": "Count request before JSON allocation; incremental bounded stdout/stderr reads, count all discarded/truncated bytes, terminate on combined stream limit. Incremental parser caps records/path/output before allocation. Encoder reserves bounded failure envelope before serializing. Include request, supervisor manifests and serializer allocations inside memory budget; SEC33 captures before checking and proves none of this.",
+    "failure_fields": [
+      "ok",
+      "diagnostic",
+      "phase",
+      "execution_started",
+      "retry_automatically",
+      "disposition",
+      "recovery_required",
+      "candidate_digest",
+      "index_digest",
+      "identity_state",
+      "observations_omitted",
+      "stderr_hex",
+      "stderr_truncated",
+      "exit",
+      "signal"
+    ],
+    "failure_policy": "No automatic retry or rollback claim. Before execution reject without candidate change. Once mutation may have begun, durably quarantine candidate before reply; retain actual index/manifest changes when provable. If observations cannot be obtained, identity_state=unknown with null current digests, persist last known digest separately, recovery_required=true. Never label old digest current. Missing response, crash, malformed output or exhausted budget cannot return success. No further Git for diagnostics after failure.",
+    "overflow": "Return bounded OUTPUT_LIMIT envelope with actual identities only if safely available; otherwise unknown identity + recovery_required. observations_omitted=true. Never include arbitrary full manifests in wire response; retain bounded supervisor evidence under candidate record. Local SEC33 manifest overflow behavior is not installed recovery.",
+    "diagnostics": {
+      "UNSUPPORTED_OPERATION": {
+        "success": false,
+        "retry_automatically": false,
+        "quarantine_after_execution": true
+      },
+      "UNSUPPORTED_ORIGIN": {
+        "success": false,
+        "retry_automatically": false,
+        "quarantine_after_execution": true
+      },
+      "INPUT_UNSTABLE": {
+        "success": false,
+        "retry_automatically": false,
+        "quarantine_after_execution": true
+      },
+      "UNSUPPORTED_HELPER": {
+        "success": false,
+        "retry_automatically": false,
+        "quarantine_after_execution": true
+      },
+      "UNSUPPORTED_HOOK": {
+        "success": false,
+        "retry_automatically": false,
+        "quarantine_after_execution": true
+      },
+      "CANDIDATE_QUARANTINED": {
+        "success": false,
+        "retry_automatically": false,
+        "quarantine_after_execution": true
+      },
+      "RUNTIME_UNAVAILABLE": {
+        "success": false,
+        "retry_automatically": false,
+        "quarantine_after_execution": true
+      },
+      "EXECUTION_FAILED": {
+        "success": false,
+        "retry_automatically": false,
+        "quarantine_after_execution": true
+      },
+      "MALFORMED_RESPONSE": {
+        "success": false,
+        "retry_automatically": false,
+        "quarantine_after_execution": true
+      },
+      "OUTPUT_LIMIT": {
+        "success": false,
+        "retry_automatically": false,
+        "quarantine_after_execution": true
+      },
+      "RESOURCE_LIMIT": {
+        "success": false,
+        "retry_automatically": false,
+        "quarantine_after_execution": true
+      },
+      "CANCELLED": {
+        "success": false,
+        "retry_automatically": false,
+        "quarantine_after_execution": true
+      },
+      "RECOVERY_REQUIRED": {
+        "success": false,
+        "retry_automatically": false,
+        "quarantine_after_execution": true
+      }
+    },
+    "phase_values": [
+      "startup",
+      "preflight",
+      "execution",
+      "response",
+      "cancel",
+      "recovery"
+    ],
+    "scalar_types": "ok/execution_started/retry_automatically/recovery_required/observations_omitted/stderr_truncated are booleans; operation/candidate ID and phase/diagnostic/disposition are validated enumerated strings or registered ID. Digests are lowercase 64-hex or null only when explicitly absent/unknown; tree_oid is 40/64 hex from trusted format. exit/signal are bounded integer or null, stderr_hex even valid hex <=4096 decoded bytes. identity_state is known/absent/unknown; absent index is distinct from unknown. started=true conservatively if mutation cannot be ruled out. All response fields/schema and exact request correlation are checked by trusted supervisor before forwarding; startup with no registered candidate has null identities."
+  },
+  "runtime_abi": {
+    "status": "PROPOSED_NOT_INSTALLED",
+    "installation": "Separately installed supervisor/launcher/policy and minimal Git root filesystem in administrator-owned immutable location outside checkout, candidate and agent write reach. Reviewed manifest binds executable, loader, libraries, Git build, policy, ABI, root image digest and version. No use of PATH, checkout Python, editable plugins or host /usr fallback. Missing manifest hashes/platform enforcement reject RUNTIME_UNAVAILABLE before candidate input.",
+    "identity": "Open verified runtime objects from protected directory identities, pin them through launch; validate ownership/modes and complete image digest. Reject rename/symlink/replacement/writable backing inode. Runtime updates require new manifest/review; an open FD number alone does not establish identity.",
+    "launch_exec": "A separately reviewed native launcher must demonstrate atomic transition from privileged setup to initial pinned Git execution and subsequent exec denial. Policy must distinguish initial launch from every execve/execveat (including AT_EMPTY_PATH), across threads/forks/ABIs, without reusable-FD exemption. No shell/interpreter/Git-child exception. Exact implementation and syscall policy are unresolved; fail closed until installed proof exists.",
+    "fds": {
+      "allowed": [
+        "0: bounded request pipe to trusted adapter; Git stdin is EOF",
+        "1: bounded response pipe; Git stdout is private supervisor pipe",
+        "2: bounded diagnostic pipe",
+        "setup-only: verified runtime and sealed bundle FDs consumed/closed before Git"
+      ],
+      "unexpected": "Close all other inherited FDs; reject if enumeration/closure cannot be proved. No core/hostrun/UI/DB, host directory, device or socket FD; test SCM_RIGHTS and exec inheritance. CLOEXEC is defense in depth, not a proof of absence."
+    },
+    "input": "Trusted supervisor accepts only registered content-addressed SEC32 bundle via read-only fully sealed regular input FD (write/grow/shrink/seal protections checked); validates bounded manifest and digest before extraction using descriptor-relative no-symlink traversal in broker-owned fresh root. No caller pathname resolution; no live import. FD seals do not solve hostile parent directories, trusted capture or durable importer recovery.",
+    "mounts": {
+      "read_only": [
+        "immutable runtime root",
+        "sealed input bytes",
+        "InspectCandidate entire candidate"
+      ],
+      "writable": [
+        "StageCandidatePaths private candidate index/objects and lock paths only",
+        "bounded private scratch"
+      ],
+      "absent": [
+        "live project and original gitdir/common-dir",
+        "host home and /run/user",
+        "core/hostrun/DB/UI sockets and credentials",
+        "network",
+        "host proc/process namespace",
+        "host devices"
+      ],
+      "policy": "Private non-propagating namespace, no writable host backing inodes, no parent directory exposure. Stage worktree/config/attributes/ignore/hooks/HEAD/refs remain read-only; exact per-directory write policy must allow ordinary index/object lock/rename semantics without config/ref/file writes. If kernel policy cannot separate these paths safely, reject; no broad .git writable fallback."
+    },
+    "environment": "Construct from empty map: fixed locale and private empty HOME/XDG, no global/system config, no prompts/pagers/editors, fixed pinned Git, optional locks off for inspect; no caller GIT_*, LD_*, PATH, SSH, credential/agent/shell/socket inheritance. No credentials in response.",
+    "descendants": "Fresh operation cgroup and PID namespace, no capability to escape/join another group, no new privileges, no inherited ambient capabilities; deny network/mount/ptrace/namespace escape. Deny exec for all descendants and threads across native/compat ABIs. Unsupported architecture/syscall/runtime rejects, rather than silently omitting policy.",
+    "limits": {
+      "wall_seconds": 30,
+      "memory_MiB": 256,
+      "processes": 16,
+      "scratch_bytes": 67108864,
+      "candidate_bytes": 67108864,
+      "candidate_entries": 16384,
+      "cancel_grace_seconds": 1,
+      "combined_stream_bytes": 8388608
+    },
+    "resources": "Proposed small finite subset: reject oversized bundle/candidate before launch, enforce aggregate memory and pids in operation cgroup, storage quota for candidate+scratch including objects/locks, stream count in supervisor. Include setup, traversal and response time in deadline. Missing hard enforcement rejects. These new 64MiB/16384 limits narrow compatibility and need review/native positive controls.",
+    "cancel": "On authenticated cancellation, deadline, EOF or supervisor failure: stop admission, durably mark in-flight candidate recovery_required, revoke capabilities, bounded 1s grace then kill whole operation cgroup, reap and prove group empty before terminal success/cancel. Descendant inability to terminate => RECOVERY_REQUIRED, keep candidate quarantined; never cleanup/reuse while writers survive. Crash restart reconciles in-flight records before requests.",
+    "startup": "Verify installed manifest/ABI/kernel capabilities, namespace/mount/FD policy, hard cgroup/storage/stream limits, durable operation/quarantine store and candidate digest before readiness. Any failure rejects RUNTIME_UNAVAILABLE without Git launch or current-runner fallback; no product routing during B.",
+    "durability": "B requires isolated worker operation/quarantine records with fsync/atomic transitions and crash reconciliation, distinct from C hook grant store. SEC33 in-memory quarantine and SEC32 cleanup are insufficient. No implementation or restart proof exists."
+  },
+  "probe_policy": {
+    "sources": [
+      "artifacts/sec11/race_probe.py",
+      "artifacts/sec11/config-namespace/test_snapshot_races.py"
+    ],
+    "unchanged": true,
+    "skip_xfail_allowed": false,
+    "positive_controls_required": true,
+    "integration": "Run exact unchanged probes against their original paths and retain red baseline. New installed harness must preserve original schedules and marker-absence assertions; cannot pretend immutable copied candidate makes swapped=True. SEC13 original directly executes experimental launcher, so an additional reviewed adapter/harness is needed for installed path; pin separate adapter and exact unchanged source hashes. If a schedule/path cannot be exercised unchanged, record NOT RUN/BLOCKED, not PASS. Unsupported linked origins reject before execution but require separate boundary attack coverage using linked-origin hostile inputs plus native controls; rejection is not linked-operation parity.",
+    "native_controls": "For every late clean-driver/config mutation use separate unguarded disposable ordinary/linked repositories, assert actual marker execution >=1 and expected status. Keep SEC13 ready/release after boundary setup, all replace/include/worktree/inplace mutations x ordinary/linked. SEC11 needs deterministic enumeration schedule and native marker control, not just successful status. Preserve same-source external canaries and original parent namespace identity."
+  },
+  "acceptance": [
+    {
+      "id": "B01",
+      "area": "runtime-identity",
+      "status": "NOT RUN",
+      "stimulus": "Replace executable/loader/library/policy/root image through rename/symlink/writable inode; wrong digest/build/ABI; writable checkout copy",
+      "expected": "RUNTIME_UNAVAILABLE, no Git/input consumption; protected original unchanged",
+      "positive_control": "Untampered installed image executes both requests"
+    },
+    {
+      "id": "B02",
+      "area": "startup",
+      "status": "NOT RUN",
+      "stimulus": "Remove each required namespace/seccomp/LSM/cgroup/storage feature; deny FD closure; read-only durable store; wrong architecture",
+      "expected": "RUNTIME_UNAVAILABLE before Git, no host fallback",
+      "positive_control": "Supported complete platform starts only after readiness evidence"
+    },
+    {
+      "id": "B03",
+      "area": "input-fd",
+      "status": "NOT RUN",
+      "stimulus": "Unsealed/writeable FD, FD substitution/reuse, changed digest, symlink/hardlink/traversal/special/duplicate/partial bundle, hostile parent rename",
+      "expected": "Reject without source/other-candidate changes; no installed input pathname escape",
+      "positive_control": "SEC32 valid SHA1/SHA256 detached/unborn sealed bundles preserve exact bytes/modes"
+    },
+    {
+      "id": "B04",
+      "area": "fd-leak",
+      "status": "NOT RUN",
+      "stimulus": "Inherited directory/secret/socket/runtime executable FD, SCM_RIGHTS, close/reopen same FD number, execveat AT_EMPTY_PATH",
+      "expected": "No secret/canary access or executable escape; all unknown FDs closed/denied",
+      "positive_control": "Only declared private pipes usable; verify identities not FD numbers"
+    },
+    {
+      "id": "B05",
+      "area": "mounts",
+      "status": "NOT RUN",
+      "stimulus": "Replace config/attributes/hooks/HEAD/ref or write live/original/common metadata from worker; remount/namespace escape",
+      "expected": "All forbidden writes denied; external canaries unchanged; mount propagation absent",
+      "positive_control": "Stage private index/objects/lock rename works; Inspect all candidate bytes unchanged"
+    },
+    {
+      "id": "B06",
+      "area": "exec-abi",
+      "status": "NOT RUN",
+      "stimulus": "execve/execveat pathname/FD, fork/thread/vfork descendants, compat syscall entry; repository-selected unknown helper/interpreter/nested Git",
+      "expected": "Every post-initial exec denied, marker absent, no shell allowance; unsupported ABI rejects",
+      "positive_control": "Initial pinned Git status/add/write-tree succeeds; native attack executes marker outside boundary"
+    },
+    {
+      "id": "B07",
+      "area": "sec11-original",
+      "status": "NOT RUN",
+      "stimulus": "Unchanged race_probe.py deterministic late filter schedule plus separately pinned installed adapter",
+      "expected": "Original marker-absence and swapped checks preserved; failed/unreachable schedule cannot PASS",
+      "positive_control": "Separate native unguarded late-filter status produces actual marker"
+    },
+    {
+      "id": "B08",
+      "area": "sec13-original",
+      "status": "NOT RUN",
+      "stimulus": "Unchanged test_snapshot_races.py source; original baseline plus installed adapter preserving post-ready replace/include/worktree/inplace x ordinary/linked",
+      "expected": "Original no-marker and parent namespace checks retained; unsupported origins diagnostic, never claim parity from no execution",
+      "positive_control": "Each unguarded ordinary/linked mutation executes marker >=1 and status lists f.txt"
+    },
+    {
+      "id": "B09",
+      "area": "canaries",
+      "status": "NOT RUN",
+      "stimulus": "Read/write host home/runtime secret and canary via path/proc/FD; connect host core/hostrun/UI/DBus/agent sockets; network/ptrace host process",
+      "expected": "Reads/writes/connections/process access fail, external monitor confirms no effects",
+      "positive_control": "Declared sealed input and private candidate accessible; same canaries accessible in uncontained control"
+    },
+    {
+      "id": "B10",
+      "area": "requests",
+      "status": "NOT RUN",
+      "stimulus": "Unknown/duplicate JSON keys, nested depth, trailing data, wrong types, raw argv/env/executable, forged registration, stale digest, literal path edges",
+      "expected": "Specific preflight refusal, no Git or candidate mutation, no generic runner fallback",
+      "positive_control": "Literal leading dash/pathspec-looking/whitespace/Unicode names stage with native tree parity"
+    },
+    {
+      "id": "B11",
+      "area": "parity",
+      "status": "NOT RUN",
+      "stimulus": "Import valid SHA1/SHA256 detached/unborn; add/modify/delete/rename/restage with ignored/untracked files",
+      "expected": "Lossless typed status, all staged vs per-call paths, actual tree/index/new digest, source/other candidates unchanged",
+      "positive_control": "Independent fixed native status/diff/index oracles on same bytes, 4 format/origin cells"
+    },
+    {
+      "id": "B12",
+      "area": "helper-hook",
+      "status": "NOT RUN",
+      "stimulus": "Reuse finite SEC31/32 required filter/custom merge native success/refusal and executable hook/unknown/sample/nonexec controls",
+      "expected": "UNSUPPORTED_HELPER/HOOK before mutation, no raw-byte staging success; no additional census",
+      "positive_control": "Native clean/smudge/merge changes bytes or fails as expected; nonexec hook data allows ordinary stage"
+    },
+    {
+      "id": "B13",
+      "area": "stream",
+      "status": "NOT RUN",
+      "stimulus": "stdout/stderr each and combined just below/at/above limits; endless output, one giant record, >4096 records/path bytes, 8MiB envelope",
+      "expected": "Bound allocation before capture; OUTPUT_LIMIT, actual/unknown identities explicit, quarantine and no partial success",
+      "positive_control": "Below/at allowed bounds parse losslessly, stderr retained <=4096 while all bytes counted"
+    },
+    {
+      "id": "B14",
+      "area": "resources",
+      "status": "NOT RUN",
+      "stimulus": "Memory/pid/object/scratch/candidate exhaustion; setup hang; deadline; descendant fork/setsid/double fork; missing enforcement",
+      "expected": "Hard aggregate limits incl supervisor; bounded response; no surviving writers; RESOURCE_LIMIT/recovery on ambiguity",
+      "positive_control": "Small valid fixtures run within 30s/256MiB/16 tasks/64MiB bounds"
+    },
+    {
+      "id": "B15",
+      "area": "partial-failure",
+      "status": "NOT RUN",
+      "stimulus": "Real add failure and successful add then write-tree lock failure; malformed/wrong-width output after mutation",
+      "expected": "Actual remaining index/objects recorded, quarantined durably, no rollback/retry claim",
+      "positive_control": "SEC33 native partial-index controls, external source remains identical"
+    },
+    {
+      "id": "B16",
+      "area": "cancel-crash",
+      "status": "NOT RUN",
+      "stimulus": "Cancel/EOF/SIGKILL supervisor during setup/add/tree/response; restart with retained cgroup and in-flight records",
+      "expected": "Reconcile/kill/reap descendants and durable quarantine before admission; unknown outcome recovery_required; no implicit retry",
+      "positive_control": "Normal completion releases handles; idle restart never repeats operation"
+    },
+    {
+      "id": "B17",
+      "area": "forged-response",
+      "status": "NOT RUN",
+      "stimulus": "Wrong request/operation/candidate identity, digest/OID width, invalid hex/status, truncated envelope, unsolicited FD",
+      "expected": "Trusted supervisor rejects; no host write target from reply, quarantine ambiguous mutation",
+      "positive_control": "Exact valid schema/status reconstructs independently"
+    },
+    {
+      "id": "B18",
+      "area": "deny-scope",
+      "status": "NOT RUN",
+      "stimulus": "Every SEC30 excluded family + linked/bare/alternates/external gitdir/submodules/sparse/split; checkpoint capture/delete and cleanup callbacks remain unrouted",
+      "expected": "Explicit unsupported diagnostic; no legacy fallback, host request or publication",
+      "positive_control": "Only two candidate request shapes and fixed observations appear in trace"
+    },
+    {
+      "id": "B19",
+      "area": "evidence-authority",
+      "status": "NOT RUN",
+      "stimulus": "Agent modifies packet/report/validation or installs checkout worker, self-approval/forged independent verdict",
+      "expected": "No runtime/review authority from local PASS; external reviewer binds immutable installation and exact evidence digests",
+      "positive_control": "Independent verifier retains per-case installed identity, attack/native evidence, negative results and reviewer identity"
+    }
+  ],
+  "remaining_gates": {
+    "A": "INCOMPLETE: broader excluded operations/helpers/hook/lifecycle compatibility unresolved; explicitly review bounded v1 exception without promoting full Stage A.",
+    "B": "Actual independent recorded review of this exact packet/observation authority/implementation design first; separate implementation node, protected installation and installed acceptance afterward. No authority inferred from prepared packet.",
+    "C": "Trustworthy consistent source acquisition and immutable dependency bundles, authenticated project/tab/actor/state binding, durable atomic one-shot grants; replay, concurrent consume and restart denial; no automatic retry of consumed hook.",
+    "D": "Retained changed tree/index/message review, new grant for new execution, durable crash/cancel recovery and target old-OID CAS; checked-out publication must preserve concurrent edits, ignored/untracked files. Completed mutation vs post-hook failure separate.",
+    "E": "Route GitRunner and direct merge hooks together only after prior gates; independent installed GATE-1 plus related core/UI/CI/install contracts. SEC11/13 stay failed until real acceptance."
+  },
+  "sequence": [
+    "Record actual review disposition against packet/source/runtime design digests; unresolved decisions block B",
+    "Separate B implementation node and commit: launcher/adapter/supervisor, durable isolated quarantine, fail-closed policy; no routing",
+    "Separate protected installation and installed independent acceptance; preserve failed cases and native controls",
+    "C trusted acquisition + hook bundle broker + durable one-shot grants, separately reviewed/measured",
+    "D changed candidate review + recovery + publication CAS, separately reviewed/measured",
+    "E coordinated routing + independent installed acceptance; only then reconsider SEC11/13 status"
+  ]
+}
