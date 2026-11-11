@@ -1,0 +1,50 @@
+Wed Nov 11 23:32:04 2026    artifacts/perf7/resume-baseline.prof
+
+         728900 function calls (728700 primitive calls) in 2.047 seconds
+
+   Ordered by: cumulative time
+   List reduced from 328 to 40 due to restriction <40>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+      114    0.428    0.004    0.846    0.007 test_git_scale_ui.py:122(tick)
+      459    0.002    0.000    0.491    0.001 events.py:416(dispatch)
+      459    0.001    0.000    0.488    0.001 events.py:287(_glib_dispatch)
+      459    0.006    0.000    0.487    0.001 base_events.py:1990(_run_once)
+      582    0.001    0.000    0.475    0.001 events.py:92(_run)
+      582    0.002    0.000    0.473    0.001 {method 'run' of '_contextvars.Context' objects}
+     4076    0.029    0.000    0.396    0.000 git_pane.py:137(_render_pending)
+     3838    0.098    0.000    0.368    0.000 git_pane.py:166(_show_node)
+     9970    0.080    0.000    0.361    0.000 git_pane.py:363(_bind_row)
+      171    0.000    0.000    0.358    0.002 test_git_pane.py:100(_run)
+      172    0.004    0.000    0.358    0.002 test_git_scale_ui.py:104(check)
+      171    0.000    0.000    0.358    0.002 measure.py:91(observed)
+       98    0.027    0.000    0.345    0.004 git_pane.py:461(load_more)
+     9970    0.037    0.000    0.278    0.000 measure.py:47(record_row)
+     2546    0.004    0.000    0.247    0.000 git_pane.py:134(_mapped_row)
+    10000    0.014    0.000    0.237    0.000 git_vm.py:130(commit)
+     9970    0.042    0.000    0.237    0.000 git_pane.py:118(show_row)
+    10000    0.037    0.000    0.216    0.000 git_lanes.py:66(add)
+     2359    0.021    0.000    0.203    0.000 graph_cell.py:87(do_snapshot)
+     1929    0.095    0.000    0.187    0.000 events.py:593(check)
+     3838    0.009    0.000    0.173    0.000 i18n.py:53(format_date)
+        8    0.000    0.000    0.096    0.012 git_pane.py:374(refresh)
+     3838    0.085    0.000    0.094    0.000 git_pane.py:108(_set_tooltip)
+    10000    0.048    0.000    0.092    0.000 git_lanes.py:131(_below)
+     2359    0.091    0.000    0.092    0.000 graph_cell.py:100(_node)
+        1    0.020    0.020    0.092    0.092 git_pane.py:430(_replace_rows)
+     4717    0.088    0.000    0.091    0.000 graph_cell.py:52(_edge)
+     3843    0.007    0.000    0.086    0.000 i18n.py:17(language)
+     1479    0.057    0.000    0.079    0.000 measure.py:118(record)
+     3843    0.004    0.000    0.077    0.000 locale.py:591(getlocale)
+     3843    0.007    0.000    0.066    0.000 locale.py:471(_parse_localename)
+     9764    0.047    0.000    0.061    0.000 git_pane.py:369(_unbind_row)
+    10000    0.059    0.000    0.059    0.000 git_pane.py:63(__init__)
+     3843    0.019    0.000    0.058    0.000 locale.py:388(normalize)
+     3838    0.048    0.000    0.048    0.000 {method 'strftime' of 'datetime.date' objects}
+     3858    0.013    0.000    0.047    0.000 events.py:242(_get_timeout_ms)
+      206    0.001    0.000    0.046    0.000 git_pane.py:360(_setup_row)
+      206    0.036    0.000    0.045    0.000 git_pane.py:69(__init__)
+     9970    0.024    0.000    0.042    0.000 graph_cell.py:77(set_row)
+     4152    0.033    0.000    0.041    0.000 events.py:239(time)
+
+

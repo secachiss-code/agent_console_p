@@ -1,0 +1,158 @@
+{
+  "base": "2e82c5609db3a1939a48af0e162b098ab5307379",
+  "verdict": "FAIL",
+  "retained_product_changes": false,
+  "trial": "Rejected max_width_chars=18 title requisition hint; exact patch retained.",
+  "source_sha256": {
+    "src/aconsole/ui/views/review/git_pane.py": "293c353fe89209d8b0d0b3e5c4eb658fdfb8d8cb4239c5d58d7c58d7c98e523d",
+    "src/aconsole/ui/views/review/graph_cell.py": "56038137006acf77a99907152a35fbf6cf183e6724f4c41e221656b657cb65dc",
+    "tests/gui/front/test_git_scale_ui.py": "c9455d75de02cde25f09cbc4f9e423d3e66a0a583c51f50ebac7eb9789634c4c",
+    "artifacts/perf7/runner.txt": "2fb99b18b86602da5a6de29fad7a71d29ff80292e1c8c3f889eca87ed7b17ace",
+    "artifacts/perf7/measure.py": "0af14afa7096808a6832fae127d2937905dc1a34750744426e8a544f2468016a"
+  },
+  "runs": [
+    {
+      "label": "resume-baseline",
+      "command": [
+        "distrobox-host-exec",
+        "/home/sas/Projects/sp_aconsole_prototype/.venv-ui/bin/python",
+        "artifacts/perf7/runner.txt",
+        "--desktop",
+        "--scale-only",
+        "--label",
+        "resume-baseline",
+        "--profile",
+        "--phases"
+      ],
+      "exit_code": 1,
+      "tests": 2,
+      "failures": [
+        "test_scrolling_a_long_history"
+      ],
+      "renderer": "GskNglRenderer",
+      "gtk_version": [
+        4,
+        14,
+        5
+      ],
+      "load_before": [
+        2.89794921875,
+        2.0263671875,
+        1.56787109375
+      ],
+      "scale": "git scale: 10000 rows, 114 frames in 4 s, median 33.4 ms, p95 49.8 ms, worst 66.5 ms, RSS 269 MB (start 250, first page 250, all rows 269 after 3.7 s)",
+      "instrumentation": {
+        "profile": true,
+        "phases": true,
+        "observer_tick_and_gc": true
+      }
+    },
+    {
+      "label": "bounded-title-trial",
+      "command": [
+        "distrobox-host-exec",
+        "/home/sas/Projects/sp_aconsole_prototype/.venv-ui/bin/python",
+        "artifacts/perf7/runner.txt",
+        "--desktop",
+        "--label",
+        "bounded-title-trial",
+        "--mode",
+        "isolated",
+        "--phases"
+      ],
+      "exit_code": 1,
+      "tests": 5,
+      "failures": [
+        "test_scrolling_a_long_history"
+      ],
+      "renderer": "GskNglRenderer",
+      "gtk_version": [
+        4,
+        14,
+        5
+      ],
+      "load_before": [
+        3.59228515625,
+        2.404296875,
+        1.744140625
+      ],
+      "scale": "git scale: 10000 rows, 118 frames in 4 s, median 33.5 ms, p95 48.7 ms, worst 52.3 ms, RSS 269 MB (start 250, first page 251, all rows 269 after 3.6 s)",
+      "instrumentation": {
+        "profile": false,
+        "phases": true,
+        "observer_tick_and_gc": true
+      }
+    },
+    {
+      "label": "resume-final",
+      "command": [
+        "distrobox-host-exec",
+        "/home/sas/Projects/sp_aconsole_prototype/.venv-ui/bin/python",
+        "artifacts/perf7/runner.txt",
+        "--desktop",
+        "--scale-only",
+        "--checkout-ref",
+        "2e82c5609db3a1939a48af0e162b098ab5307379",
+        "--label",
+        "resume-final"
+      ],
+      "exit_code": 1,
+      "tests": 2,
+      "failures": [
+        "test_scrolling_a_long_history"
+      ],
+      "renderer": "GskNglRenderer",
+      "gtk_version": [
+        4,
+        14,
+        5
+      ],
+      "load_before": [
+        3.23876953125,
+        2.78857421875,
+        2.06103515625
+      ],
+      "scale": "git scale: 10000 rows, 117 frames in 4 s, median 33.4 ms, p95 49.4 ms, worst 50.5 ms, RSS 269 MB (start 250, first page 251, all rows 269 after 3.5 s)",
+      "instrumentation": {
+        "profile": false,
+        "phases": false,
+        "observer_tick_and_gc": true
+      }
+    }
+  ],
+  "static_checks_trial": {
+    "ruff": "PASS",
+    "strict_basedpyright": "PASS"
+  },
+  "final_integrity_checks": {
+    "source_test_tool_diff_vs_base": "empty",
+    "trial_patch_applies_to_base": true
+  },
+  "evidence_sha256": {
+    "artifacts/perf7/bounded-title-trial-gl.txt": "aa7b6fc7c98a56f659f60d2c4be1f725fba88578fef1bc4fcc2e793c2998863d",
+    "artifacts/perf7/bounded-title-trial-scale.txt": "0f2dae17047116e69df682fd474cb02e62d1aa6c6a7715535bc54080b69fe1aa",
+    "artifacts/perf7/bounded-title-trial.jsonl": "b0d6146184b0052decd1c8ca317756df5dc0429acb66bbd8f3a34f0625ffaab8",
+    "artifacts/perf7/bounded-title-trial.log": "b3ac0b0e22a2e743277b377b7da4dec821bf35a76084a9253c3e81b96aae956f",
+    "artifacts/perf7/bounded-title-trial.patch": "61287598fa461646bd8555d43655dc77383b05876d48d4588593b9e585c27d98",
+    "artifacts/perf7/bounded-title-trial.xml": "20367a9bd0d1edda5ad780fe7c3c94075683d8906ac4eddfbc538afac0b16eb9",
+    "artifacts/perf7/resume-baseline-gl.txt": "aa7b6fc7c98a56f659f60d2c4be1f725fba88578fef1bc4fcc2e793c2998863d",
+    "artifacts/perf7/resume-baseline-profile-summary.txt": "4c5a2766465b395e087d22279c5fde78a0d816e10fb5e20c33d4c438ddb3eced",
+    "artifacts/perf7/resume-baseline-scale.txt": "eeb5c052782af6cea33c88d5b2b3f678ea1a73649d35a069700a58ee849bebad",
+    "artifacts/perf7/resume-baseline.jsonl": "64ff96a8240e36b8407fc2c77cd4156d57f147131924c1ecb65f8f37670f6fce",
+    "artifacts/perf7/resume-baseline.log": "18a9b568588f12cf32c98f4274eaad66252af8ed868ff7f63742efd17e8bb862",
+    "artifacts/perf7/resume-baseline.prof": "943ec44f915968e3b228221cc0342e3ebf04bbead675d802c198c70269312a62",
+    "artifacts/perf7/resume-baseline.xml": "0704fdb390785b04ac929976be981f91300409aade2694db8e48c365237022b9",
+    "artifacts/perf7/resume-final-checkout.txt": "3b37af3e211018ab12e2e8ddd5425a17aeed75693240df2b5b6a37ede5dde85b",
+    "artifacts/perf7/resume-final-gl.txt": "aa7b6fc7c98a56f659f60d2c4be1f725fba88578fef1bc4fcc2e793c2998863d",
+    "artifacts/perf7/resume-final-scale.txt": "f857b673f941848b49397200704697befd76c893bbd1fbe769dafbe7f37e0ad7",
+    "artifacts/perf7/resume-final.jsonl": "64276b56762317b817a608646b18841b01dc72c31a175eb1683cfe9b48062ac5",
+    "artifacts/perf7/resume-final.log": "d383a4542dbb02f64072da5c439548d33cc052a911a9808654f87568020117f5",
+    "artifacts/perf7/resume-final.xml": "63174cd420ecdf902328435770c63722ad678cfc0a775b79bd8c81947cfb286e"
+  },
+  "limits": [
+    "Single native host, serial runs; uncontrolled ambient load.",
+    "Diagnostic instrumentation differs between baseline and trial; no causal speedup claim.",
+    "Final run has no optional profile/phase instrumentation but retains the established observer.",
+    "No full suite, screenshot validation, CI/install or security acceptance."
+  ]
+}
