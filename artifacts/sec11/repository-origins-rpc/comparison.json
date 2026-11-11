@@ -1,0 +1,698 @@
+[
+  {
+    "format": "sha1",
+    "origin": "linked",
+    "mode": "observe",
+    "available": true,
+    "steps": [
+      {
+        "operation": "stage",
+        "outcome_equal": true,
+        "state_equal": {
+          "head": true,
+          "symbolic": true,
+          "refs": true,
+          "tree": true,
+          "message": true,
+          "index": true,
+          "index_content": true,
+          "head_content": true,
+          "index_sha256": false,
+          "files": true,
+          "common": true,
+          "metadata": true,
+          "bare": true
+        },
+        "phases_equal": false
+      },
+      {
+        "operation": "commit",
+        "outcome_equal": true,
+        "state_equal": {
+          "head": true,
+          "symbolic": true,
+          "refs": true,
+          "tree": true,
+          "message": true,
+          "index": true,
+          "index_content": true,
+          "head_content": true,
+          "index_sha256": false,
+          "files": true,
+          "common": true,
+          "metadata": true,
+          "bare": true
+        },
+        "phases_equal": true
+      }
+    ]
+  },
+  {
+    "format": "sha1",
+    "origin": "linked",
+    "mode": "pre-refuse",
+    "available": true,
+    "steps": [
+      {
+        "operation": "stage",
+        "outcome_equal": true,
+        "state_equal": {
+          "head": true,
+          "symbolic": true,
+          "refs": true,
+          "tree": true,
+          "message": true,
+          "index": true,
+          "index_content": true,
+          "head_content": true,
+          "index_sha256": false,
+          "files": true,
+          "common": true,
+          "metadata": true,
+          "bare": true
+        },
+        "phases_equal": false
+      },
+      {
+        "operation": "commit",
+        "outcome_equal": true,
+        "state_equal": {
+          "head": true,
+          "symbolic": true,
+          "refs": true,
+          "tree": true,
+          "message": true,
+          "index": true,
+          "index_content": true,
+          "head_content": true,
+          "index_sha256": false,
+          "files": true,
+          "common": true,
+          "metadata": true,
+          "bare": true
+        },
+        "phases_equal": true
+      }
+    ]
+  },
+  {
+    "format": "sha1",
+    "origin": "linked",
+    "mode": "ref-refuse",
+    "available": true,
+    "steps": [
+      {
+        "operation": "stage",
+        "outcome_equal": true,
+        "state_equal": {
+          "head": true,
+          "symbolic": true,
+          "refs": true,
+          "tree": true,
+          "message": true,
+          "index": true,
+          "index_content": true,
+          "head_content": true,
+          "index_sha256": false,
+          "files": true,
+          "common": true,
+          "metadata": true,
+          "bare": true
+        },
+        "phases_equal": false
+      },
+      {
+        "operation": "commit",
+        "outcome_equal": true,
+        "state_equal": {
+          "head": true,
+          "symbolic": true,
+          "refs": true,
+          "tree": true,
+          "message": true,
+          "index": true,
+          "index_content": true,
+          "head_content": true,
+          "index_sha256": false,
+          "files": true,
+          "common": true,
+          "metadata": true,
+          "bare": true
+        },
+        "phases_equal": true
+      }
+    ]
+  },
+  {
+    "format": "sha1",
+    "origin": "unborn",
+    "mode": "observe",
+    "available": true,
+    "steps": [
+      {
+        "operation": "stage",
+        "outcome_equal": true,
+        "state_equal": {
+          "head": true,
+          "symbolic": true,
+          "refs": true,
+          "tree": true,
+          "message": true,
+          "index": true,
+          "index_content": true,
+          "head_content": true,
+          "index_sha256": false,
+          "files": true,
+          "common": true,
+          "metadata": true,
+          "bare": true
+        },
+        "phases_equal": false
+      },
+      {
+        "operation": "commit",
+        "outcome_equal": true,
+        "state_equal": {
+          "head": true,
+          "symbolic": true,
+          "refs": true,
+          "tree": true,
+          "message": true,
+          "index": true,
+          "index_content": true,
+          "head_content": true,
+          "index_sha256": false,
+          "files": true,
+          "common": true,
+          "metadata": true,
+          "bare": true
+        },
+        "phases_equal": true
+      }
+    ]
+  },
+  {
+    "format": "sha1",
+    "origin": "unborn",
+    "mode": "pre-refuse",
+    "available": true,
+    "steps": [
+      {
+        "operation": "stage",
+        "outcome_equal": true,
+        "state_equal": {
+          "head": true,
+          "symbolic": true,
+          "refs": true,
+          "tree": true,
+          "message": true,
+          "index": true,
+          "index_content": true,
+          "head_content": true,
+          "index_sha256": false,
+          "files": true,
+          "common": true,
+          "metadata": true,
+          "bare": true
+        },
+        "phases_equal": false
+      },
+      {
+        "operation": "commit",
+        "outcome_equal": true,
+        "state_equal": {
+          "head": true,
+          "symbolic": true,
+          "refs": true,
+          "tree": true,
+          "message": true,
+          "index": true,
+          "index_content": true,
+          "head_content": true,
+          "index_sha256": false,
+          "files": true,
+          "common": true,
+          "metadata": true,
+          "bare": true
+        },
+        "phases_equal": true
+      }
+    ]
+  },
+  {
+    "format": "sha1",
+    "origin": "unborn",
+    "mode": "ref-refuse",
+    "available": true,
+    "steps": [
+      {
+        "operation": "stage",
+        "outcome_equal": true,
+        "state_equal": {
+          "head": true,
+          "symbolic": true,
+          "refs": true,
+          "tree": true,
+          "message": true,
+          "index": true,
+          "index_content": true,
+          "head_content": true,
+          "index_sha256": false,
+          "files": true,
+          "common": true,
+          "metadata": true,
+          "bare": true
+        },
+        "phases_equal": false
+      },
+      {
+        "operation": "commit",
+        "outcome_equal": true,
+        "state_equal": {
+          "head": true,
+          "symbolic": true,
+          "refs": true,
+          "tree": true,
+          "message": true,
+          "index": true,
+          "index_content": true,
+          "head_content": true,
+          "index_sha256": false,
+          "files": true,
+          "common": true,
+          "metadata": true,
+          "bare": true
+        },
+        "phases_equal": true
+      }
+    ]
+  },
+  {
+    "format": "sha1",
+    "origin": "bare",
+    "mode": "observe",
+    "available": false,
+    "steps": [],
+    "project_error": {
+      "code": 2002,
+      "message": "PROJECT_NOT_A_GIT_REPO",
+      "data": {
+        "reason": "PROJECT_NOT_A_GIT_REPO",
+        "domain": "aconsole.ipc",
+        "retryable": false,
+        "user_message_key": "error.project_not_a_git_repo",
+        "user_message_args": {},
+        "hint": null,
+        "details": null
+      }
+    }
+  },
+  {
+    "format": "sha1",
+    "origin": "bare",
+    "mode": "pre-refuse",
+    "available": false,
+    "steps": [],
+    "project_error": {
+      "code": 2002,
+      "message": "PROJECT_NOT_A_GIT_REPO",
+      "data": {
+        "reason": "PROJECT_NOT_A_GIT_REPO",
+        "domain": "aconsole.ipc",
+        "retryable": false,
+        "user_message_key": "error.project_not_a_git_repo",
+        "user_message_args": {},
+        "hint": null,
+        "details": null
+      }
+    }
+  },
+  {
+    "format": "sha1",
+    "origin": "bare",
+    "mode": "ref-refuse",
+    "available": false,
+    "steps": [],
+    "project_error": {
+      "code": 2002,
+      "message": "PROJECT_NOT_A_GIT_REPO",
+      "data": {
+        "reason": "PROJECT_NOT_A_GIT_REPO",
+        "domain": "aconsole.ipc",
+        "retryable": false,
+        "user_message_key": "error.project_not_a_git_repo",
+        "user_message_args": {},
+        "hint": null,
+        "details": null
+      }
+    }
+  },
+  {
+    "format": "sha256",
+    "origin": "linked",
+    "mode": "observe",
+    "available": true,
+    "steps": [
+      {
+        "operation": "stage",
+        "outcome_equal": true,
+        "state_equal": {
+          "head": true,
+          "symbolic": true,
+          "refs": true,
+          "tree": true,
+          "message": true,
+          "index": true,
+          "index_content": true,
+          "head_content": true,
+          "index_sha256": false,
+          "files": true,
+          "common": true,
+          "metadata": true,
+          "bare": true
+        },
+        "phases_equal": false
+      },
+      {
+        "operation": "commit",
+        "outcome_equal": true,
+        "state_equal": {
+          "head": true,
+          "symbolic": true,
+          "refs": true,
+          "tree": true,
+          "message": true,
+          "index": true,
+          "index_content": true,
+          "head_content": true,
+          "index_sha256": false,
+          "files": true,
+          "common": true,
+          "metadata": true,
+          "bare": true
+        },
+        "phases_equal": true
+      }
+    ]
+  },
+  {
+    "format": "sha256",
+    "origin": "linked",
+    "mode": "pre-refuse",
+    "available": true,
+    "steps": [
+      {
+        "operation": "stage",
+        "outcome_equal": true,
+        "state_equal": {
+          "head": true,
+          "symbolic": true,
+          "refs": true,
+          "tree": true,
+          "message": true,
+          "index": true,
+          "index_content": true,
+          "head_content": true,
+          "index_sha256": false,
+          "files": true,
+          "common": true,
+          "metadata": true,
+          "bare": true
+        },
+        "phases_equal": false
+      },
+      {
+        "operation": "commit",
+        "outcome_equal": true,
+        "state_equal": {
+          "head": true,
+          "symbolic": true,
+          "refs": true,
+          "tree": true,
+          "message": true,
+          "index": true,
+          "index_content": true,
+          "head_content": true,
+          "index_sha256": false,
+          "files": true,
+          "common": true,
+          "metadata": true,
+          "bare": true
+        },
+        "phases_equal": true
+      }
+    ]
+  },
+  {
+    "format": "sha256",
+    "origin": "linked",
+    "mode": "ref-refuse",
+    "available": true,
+    "steps": [
+      {
+        "operation": "stage",
+        "outcome_equal": true,
+        "state_equal": {
+          "head": true,
+          "symbolic": true,
+          "refs": true,
+          "tree": true,
+          "message": true,
+          "index": true,
+          "index_content": true,
+          "head_content": true,
+          "index_sha256": false,
+          "files": true,
+          "common": true,
+          "metadata": true,
+          "bare": true
+        },
+        "phases_equal": false
+      },
+      {
+        "operation": "commit",
+        "outcome_equal": true,
+        "state_equal": {
+          "head": true,
+          "symbolic": true,
+          "refs": true,
+          "tree": true,
+          "message": true,
+          "index": true,
+          "index_content": true,
+          "head_content": true,
+          "index_sha256": false,
+          "files": true,
+          "common": true,
+          "metadata": true,
+          "bare": true
+        },
+        "phases_equal": true
+      }
+    ]
+  },
+  {
+    "format": "sha256",
+    "origin": "unborn",
+    "mode": "observe",
+    "available": true,
+    "steps": [
+      {
+        "operation": "stage",
+        "outcome_equal": true,
+        "state_equal": {
+          "head": true,
+          "symbolic": true,
+          "refs": true,
+          "tree": true,
+          "message": true,
+          "index": true,
+          "index_content": true,
+          "head_content": true,
+          "index_sha256": false,
+          "files": true,
+          "common": true,
+          "metadata": true,
+          "bare": true
+        },
+        "phases_equal": false
+      },
+      {
+        "operation": "commit",
+        "outcome_equal": true,
+        "state_equal": {
+          "head": true,
+          "symbolic": true,
+          "refs": true,
+          "tree": true,
+          "message": true,
+          "index": true,
+          "index_content": true,
+          "head_content": true,
+          "index_sha256": false,
+          "files": true,
+          "common": true,
+          "metadata": true,
+          "bare": true
+        },
+        "phases_equal": true
+      }
+    ]
+  },
+  {
+    "format": "sha256",
+    "origin": "unborn",
+    "mode": "pre-refuse",
+    "available": true,
+    "steps": [
+      {
+        "operation": "stage",
+        "outcome_equal": true,
+        "state_equal": {
+          "head": true,
+          "symbolic": true,
+          "refs": true,
+          "tree": true,
+          "message": true,
+          "index": true,
+          "index_content": true,
+          "head_content": true,
+          "index_sha256": false,
+          "files": true,
+          "common": true,
+          "metadata": true,
+          "bare": true
+        },
+        "phases_equal": false
+      },
+      {
+        "operation": "commit",
+        "outcome_equal": true,
+        "state_equal": {
+          "head": true,
+          "symbolic": true,
+          "refs": true,
+          "tree": true,
+          "message": true,
+          "index": true,
+          "index_content": true,
+          "head_content": true,
+          "index_sha256": false,
+          "files": true,
+          "common": true,
+          "metadata": true,
+          "bare": true
+        },
+        "phases_equal": true
+      }
+    ]
+  },
+  {
+    "format": "sha256",
+    "origin": "unborn",
+    "mode": "ref-refuse",
+    "available": true,
+    "steps": [
+      {
+        "operation": "stage",
+        "outcome_equal": true,
+        "state_equal": {
+          "head": true,
+          "symbolic": true,
+          "refs": true,
+          "tree": true,
+          "message": true,
+          "index": true,
+          "index_content": true,
+          "head_content": true,
+          "index_sha256": false,
+          "files": true,
+          "common": true,
+          "metadata": true,
+          "bare": true
+        },
+        "phases_equal": false
+      },
+      {
+        "operation": "commit",
+        "outcome_equal": true,
+        "state_equal": {
+          "head": true,
+          "symbolic": true,
+          "refs": true,
+          "tree": true,
+          "message": true,
+          "index": true,
+          "index_content": true,
+          "head_content": true,
+          "index_sha256": false,
+          "files": true,
+          "common": true,
+          "metadata": true,
+          "bare": true
+        },
+        "phases_equal": true
+      }
+    ]
+  },
+  {
+    "format": "sha256",
+    "origin": "bare",
+    "mode": "observe",
+    "available": false,
+    "steps": [],
+    "project_error": {
+      "code": 2002,
+      "message": "PROJECT_NOT_A_GIT_REPO",
+      "data": {
+        "reason": "PROJECT_NOT_A_GIT_REPO",
+        "domain": "aconsole.ipc",
+        "retryable": false,
+        "user_message_key": "error.project_not_a_git_repo",
+        "user_message_args": {},
+        "hint": null,
+        "details": null
+      }
+    }
+  },
+  {
+    "format": "sha256",
+    "origin": "bare",
+    "mode": "pre-refuse",
+    "available": false,
+    "steps": [],
+    "project_error": {
+      "code": 2002,
+      "message": "PROJECT_NOT_A_GIT_REPO",
+      "data": {
+        "reason": "PROJECT_NOT_A_GIT_REPO",
+        "domain": "aconsole.ipc",
+        "retryable": false,
+        "user_message_key": "error.project_not_a_git_repo",
+        "user_message_args": {},
+        "hint": null,
+        "details": null
+      }
+    }
+  },
+  {
+    "format": "sha256",
+    "origin": "bare",
+    "mode": "ref-refuse",
+    "available": false,
+    "steps": [],
+    "project_error": {
+      "code": 2002,
+      "message": "PROJECT_NOT_A_GIT_REPO",
+      "data": {
+        "reason": "PROJECT_NOT_A_GIT_REPO",
+        "domain": "aconsole.ipc",
+        "retryable": false,
+        "user_message_key": "error.project_not_a_git_repo",
+        "user_message_args": {},
+        "hint": null,
+        "details": null
+      }
+    }
+  }
+]
