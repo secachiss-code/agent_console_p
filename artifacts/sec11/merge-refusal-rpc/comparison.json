@@ -1,0 +1,506 @@
+[
+  {
+    "format": "sha1",
+    "scenario": "merge_sample",
+    "mode": "observe",
+    "outcome_equal": false,
+    "phases_equal": false,
+    "target_equal": {
+      "target": false,
+      "target_tree": false,
+      "target_message": false,
+      "target_parents": false,
+      "target_entries": false
+    }
+  },
+  {
+    "format": "sha1",
+    "scenario": "merge_sample",
+    "mode": "pre_refuse",
+    "outcome_equal": true,
+    "phases_equal": false,
+    "target_equal": {
+      "target": true,
+      "target_tree": true,
+      "target_message": true,
+      "target_parents": true,
+      "target_entries": true
+    }
+  },
+  {
+    "format": "sha1",
+    "scenario": "merge_sample",
+    "mode": "prepare_refuse",
+    "outcome_equal": true,
+    "phases_equal": false,
+    "target_equal": {
+      "target": true,
+      "target_tree": true,
+      "target_message": true,
+      "target_parents": true,
+      "target_entries": true
+    }
+  },
+  {
+    "format": "sha1",
+    "scenario": "merge_sample",
+    "mode": "post_fail",
+    "outcome_equal": false,
+    "phases_equal": false,
+    "target_equal": {
+      "target": false,
+      "target_tree": false,
+      "target_message": false,
+      "target_parents": false,
+      "target_entries": false
+    }
+  },
+  {
+    "format": "sha1",
+    "scenario": "merge_sample",
+    "mode": "ref_prepared",
+    "outcome_equal": true,
+    "phases_equal": false,
+    "target_equal": {
+      "target": true,
+      "target_tree": true,
+      "target_message": true,
+      "target_parents": true,
+      "target_entries": true
+    }
+  },
+  {
+    "format": "sha1",
+    "scenario": "merge_sample",
+    "mode": "ref_committed",
+    "outcome_equal": false,
+    "phases_equal": false,
+    "target_equal": {
+      "target": false,
+      "target_tree": false,
+      "target_message": false,
+      "target_parents": false,
+      "target_entries": false
+    }
+  },
+  {
+    "format": "sha1",
+    "scenario": "merge_direct",
+    "mode": "observe",
+    "outcome_equal": true,
+    "phases_equal": false,
+    "target_equal": {
+      "target": true,
+      "target_tree": true,
+      "target_message": true,
+      "target_parents": true,
+      "target_entries": true
+    }
+  },
+  {
+    "format": "sha1",
+    "scenario": "merge_direct",
+    "mode": "pre_refuse",
+    "outcome_equal": true,
+    "phases_equal": false,
+    "target_equal": {
+      "target": true,
+      "target_tree": true,
+      "target_message": true,
+      "target_parents": true,
+      "target_entries": true
+    }
+  },
+  {
+    "format": "sha1",
+    "scenario": "merge_direct",
+    "mode": "prepare_refuse",
+    "outcome_equal": false,
+    "phases_equal": false,
+    "target_equal": {
+      "target": false,
+      "target_tree": false,
+      "target_message": false,
+      "target_parents": false,
+      "target_entries": false
+    }
+  },
+  {
+    "format": "sha1",
+    "scenario": "merge_direct",
+    "mode": "post_fail",
+    "outcome_equal": true,
+    "phases_equal": false,
+    "target_equal": {
+      "target": true,
+      "target_tree": true,
+      "target_message": true,
+      "target_parents": true,
+      "target_entries": true
+    }
+  },
+  {
+    "format": "sha1",
+    "scenario": "merge_direct",
+    "mode": "ref_prepared",
+    "outcome_equal": false,
+    "phases_equal": false,
+    "target_equal": {
+      "target": false,
+      "target_tree": false,
+      "target_message": false,
+      "target_parents": false,
+      "target_entries": false
+    }
+  },
+  {
+    "format": "sha1",
+    "scenario": "merge_direct",
+    "mode": "ref_committed",
+    "outcome_equal": true,
+    "phases_equal": false,
+    "target_equal": {
+      "target": true,
+      "target_tree": true,
+      "target_message": true,
+      "target_parents": true,
+      "target_entries": true
+    }
+  },
+  {
+    "format": "sha1",
+    "scenario": "squash",
+    "mode": "observe",
+    "outcome_equal": true,
+    "phases_equal": false,
+    "target_equal": {
+      "target": true,
+      "target_tree": true,
+      "target_message": true,
+      "target_parents": true,
+      "target_entries": true
+    }
+  },
+  {
+    "format": "sha1",
+    "scenario": "squash",
+    "mode": "pre_refuse",
+    "outcome_equal": true,
+    "phases_equal": false,
+    "target_equal": {
+      "target": true,
+      "target_tree": true,
+      "target_message": true,
+      "target_parents": true,
+      "target_entries": true
+    }
+  },
+  {
+    "format": "sha1",
+    "scenario": "squash",
+    "mode": "prepare_refuse",
+    "outcome_equal": false,
+    "phases_equal": false,
+    "target_equal": {
+      "target": false,
+      "target_tree": false,
+      "target_message": false,
+      "target_parents": false,
+      "target_entries": false
+    }
+  },
+  {
+    "format": "sha1",
+    "scenario": "squash",
+    "mode": "post_fail",
+    "outcome_equal": true,
+    "phases_equal": false,
+    "target_equal": {
+      "target": true,
+      "target_tree": true,
+      "target_message": true,
+      "target_parents": true,
+      "target_entries": true
+    }
+  },
+  {
+    "format": "sha1",
+    "scenario": "squash",
+    "mode": "ref_prepared",
+    "outcome_equal": false,
+    "phases_equal": false,
+    "target_equal": {
+      "target": false,
+      "target_tree": false,
+      "target_message": false,
+      "target_parents": false,
+      "target_entries": false
+    }
+  },
+  {
+    "format": "sha1",
+    "scenario": "squash",
+    "mode": "ref_committed",
+    "outcome_equal": true,
+    "phases_equal": false,
+    "target_equal": {
+      "target": true,
+      "target_tree": true,
+      "target_message": true,
+      "target_parents": true,
+      "target_entries": true
+    }
+  },
+  {
+    "format": "sha256",
+    "scenario": "merge_sample",
+    "mode": "observe",
+    "outcome_equal": false,
+    "phases_equal": false,
+    "target_equal": {
+      "target": false,
+      "target_tree": false,
+      "target_message": false,
+      "target_parents": false,
+      "target_entries": false
+    }
+  },
+  {
+    "format": "sha256",
+    "scenario": "merge_sample",
+    "mode": "pre_refuse",
+    "outcome_equal": true,
+    "phases_equal": false,
+    "target_equal": {
+      "target": true,
+      "target_tree": true,
+      "target_message": true,
+      "target_parents": true,
+      "target_entries": true
+    }
+  },
+  {
+    "format": "sha256",
+    "scenario": "merge_sample",
+    "mode": "prepare_refuse",
+    "outcome_equal": true,
+    "phases_equal": false,
+    "target_equal": {
+      "target": true,
+      "target_tree": true,
+      "target_message": true,
+      "target_parents": true,
+      "target_entries": true
+    }
+  },
+  {
+    "format": "sha256",
+    "scenario": "merge_sample",
+    "mode": "post_fail",
+    "outcome_equal": false,
+    "phases_equal": false,
+    "target_equal": {
+      "target": false,
+      "target_tree": false,
+      "target_message": false,
+      "target_parents": false,
+      "target_entries": false
+    }
+  },
+  {
+    "format": "sha256",
+    "scenario": "merge_sample",
+    "mode": "ref_prepared",
+    "outcome_equal": true,
+    "phases_equal": false,
+    "target_equal": {
+      "target": true,
+      "target_tree": true,
+      "target_message": true,
+      "target_parents": true,
+      "target_entries": true
+    }
+  },
+  {
+    "format": "sha256",
+    "scenario": "merge_sample",
+    "mode": "ref_committed",
+    "outcome_equal": false,
+    "phases_equal": false,
+    "target_equal": {
+      "target": false,
+      "target_tree": false,
+      "target_message": false,
+      "target_parents": false,
+      "target_entries": false
+    }
+  },
+  {
+    "format": "sha256",
+    "scenario": "merge_direct",
+    "mode": "observe",
+    "outcome_equal": true,
+    "phases_equal": false,
+    "target_equal": {
+      "target": true,
+      "target_tree": true,
+      "target_message": true,
+      "target_parents": true,
+      "target_entries": true
+    }
+  },
+  {
+    "format": "sha256",
+    "scenario": "merge_direct",
+    "mode": "pre_refuse",
+    "outcome_equal": true,
+    "phases_equal": false,
+    "target_equal": {
+      "target": true,
+      "target_tree": true,
+      "target_message": true,
+      "target_parents": true,
+      "target_entries": true
+    }
+  },
+  {
+    "format": "sha256",
+    "scenario": "merge_direct",
+    "mode": "prepare_refuse",
+    "outcome_equal": false,
+    "phases_equal": false,
+    "target_equal": {
+      "target": false,
+      "target_tree": false,
+      "target_message": false,
+      "target_parents": false,
+      "target_entries": false
+    }
+  },
+  {
+    "format": "sha256",
+    "scenario": "merge_direct",
+    "mode": "post_fail",
+    "outcome_equal": true,
+    "phases_equal": false,
+    "target_equal": {
+      "target": true,
+      "target_tree": true,
+      "target_message": true,
+      "target_parents": true,
+      "target_entries": true
+    }
+  },
+  {
+    "format": "sha256",
+    "scenario": "merge_direct",
+    "mode": "ref_prepared",
+    "outcome_equal": false,
+    "phases_equal": false,
+    "target_equal": {
+      "target": false,
+      "target_tree": false,
+      "target_message": false,
+      "target_parents": false,
+      "target_entries": false
+    }
+  },
+  {
+    "format": "sha256",
+    "scenario": "merge_direct",
+    "mode": "ref_committed",
+    "outcome_equal": true,
+    "phases_equal": false,
+    "target_equal": {
+      "target": true,
+      "target_tree": true,
+      "target_message": true,
+      "target_parents": true,
+      "target_entries": true
+    }
+  },
+  {
+    "format": "sha256",
+    "scenario": "squash",
+    "mode": "observe",
+    "outcome_equal": true,
+    "phases_equal": false,
+    "target_equal": {
+      "target": true,
+      "target_tree": true,
+      "target_message": true,
+      "target_parents": true,
+      "target_entries": true
+    }
+  },
+  {
+    "format": "sha256",
+    "scenario": "squash",
+    "mode": "pre_refuse",
+    "outcome_equal": true,
+    "phases_equal": false,
+    "target_equal": {
+      "target": true,
+      "target_tree": true,
+      "target_message": true,
+      "target_parents": true,
+      "target_entries": true
+    }
+  },
+  {
+    "format": "sha256",
+    "scenario": "squash",
+    "mode": "prepare_refuse",
+    "outcome_equal": false,
+    "phases_equal": false,
+    "target_equal": {
+      "target": false,
+      "target_tree": false,
+      "target_message": false,
+      "target_parents": false,
+      "target_entries": false
+    }
+  },
+  {
+    "format": "sha256",
+    "scenario": "squash",
+    "mode": "post_fail",
+    "outcome_equal": true,
+    "phases_equal": false,
+    "target_equal": {
+      "target": true,
+      "target_tree": true,
+      "target_message": true,
+      "target_parents": true,
+      "target_entries": true
+    }
+  },
+  {
+    "format": "sha256",
+    "scenario": "squash",
+    "mode": "ref_prepared",
+    "outcome_equal": false,
+    "phases_equal": false,
+    "target_equal": {
+      "target": false,
+      "target_tree": false,
+      "target_message": false,
+      "target_parents": false,
+      "target_entries": false
+    }
+  },
+  {
+    "format": "sha256",
+    "scenario": "squash",
+    "mode": "ref_committed",
+    "outcome_equal": true,
+    "phases_equal": false,
+    "target_equal": {
+      "target": true,
+      "target_tree": true,
+      "target_message": true,
+      "target_parents": true,
+      "target_entries": true
+    }
+  }
+]
