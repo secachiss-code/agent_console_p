@@ -1,0 +1,28 @@
+{
+  "anchors": 56,
+  "artifact_hashes": {
+    "REPORT.md": "65bf32f853a8573be59e7d2f4e17e4563043a1dfd52b50c6145439038c1fc4c8",
+    "collect.py": "f4c9d84ad5645f44e253b9c9521ee8eb6b2e284a4ca2ae3c198528e8755aee40",
+    "contract.json": "ee4ff13f6310c21f1f81d4927d0a1c01884cadc86bc1a117e16fbb1f3ae96313",
+    "source-index.json": "78a6d7c9cab1d7d50fc43b1833d768ad988a0ef7b5b3e5474d92fe0e85f59352",
+    "verify.py": "8a7bc8435160e5900dc932f8af7f2c23b66300205fc67af34466e358b64a2320"
+  },
+  "base_commit": "f2a964334ea4b16fce3729fe2b1ddf5ee87e5077",
+  "excluded_families": 11,
+  "lifecycle_paths": 8,
+  "local_integrity": "PASS",
+  "negative_controls_rejected": [
+    "stage_promotion",
+    "routing",
+    "lost_phase",
+    "raw_argv",
+    "helper_success",
+    "lost_caller",
+    "scope_expansion"
+  ],
+  "planned_requests": 2,
+  "runtime_tests": "NOT RUN",
+  "security_acceptance": "NOT RUN",
+  "source_files": 279,
+  "stage_A": "INCOMPLETE"
+}
