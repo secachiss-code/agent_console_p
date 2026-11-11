@@ -1,0 +1,36 @@
+{
+  "SEC11": "failed",
+  "SEC13": "failed",
+  "artifact_hashes": {
+    "REPORT.md": "80aa8a5ea6e0849290e35410fe10b719ad4f3030ed6adc618a8f05126025d561",
+    "importer.py": "373a45dc70fd8425793803720ee2180fd853978ff48160a216ce38dd1c2ba2f1",
+    "run.py": "b349d37264b09699e9ba0212ae915eb609852644f71646f35eef0bb2cddaeeb9",
+    "verify.py": "d1b98156d4458675fd630b9e31fa0ec18faa5c53ff505684961aea88f50c7468"
+  },
+  "cases": 312,
+  "containment": false,
+  "finite_lab": "PASS",
+  "groups": {
+    "adapter-deny": 40,
+    "collision": 8,
+    "native-helper": 12,
+    "reject": 244,
+    "retry": 4,
+    "roundtrip": 4
+  },
+  "local_integrity": "PASS",
+  "negative_controls_rejected": [
+    "security-promotion",
+    "live-capture-promotion",
+    "lost-case",
+    "tree-change",
+    "manifest-change",
+    "rejection-mutation",
+    "false-helper-success",
+    "native-helper-no-transform"
+  ],
+  "product_files": 279,
+  "results_sha256": "01bae0e21c6eb6bc2e354fbca00bfe119dedbfc682d851e9429fdf85a52c1a17",
+  "security_acceptance": "NOT RUN",
+  "stage_A": "INCOMPLETE"
+}
