@@ -1,0 +1,131 @@
+{
+  "base_commit": "589db72b376a99ce8d5b8560f91f7171a6071cdc",
+  "status": "failed",
+  "retained_product_changes": false,
+  "benchmark_assertions_changed": false,
+  "full_suite_run": false,
+  "prototype_screenshot_acceptance": false,
+  "graph_source_sha256": {
+    "control_and_restored": "56038137006acf77a99907152a35fbf6cf183e6724f4c41e221656b657cb65dc",
+    "texture_trial": "21b92a9b9be465f1692591a029ce43d5f47bf2e055eb6764bf0e9f1beeaabf55",
+    "picture_trial": "0790a4168ad64445fd3a8fac0e87c1660b96892636fefd5ff5169973d79cf0fa"
+  },
+  "runs": [
+    {
+      "label": "texture-control",
+      "renderer": "GskNglRenderer",
+      "gtk_version": [
+        4,
+        14,
+        5
+      ],
+      "load_before": [
+        1.8623046875,
+        2.115234375,
+        2.3935546875
+      ],
+      "load_after": [
+        1.80322265625,
+        2.0947265625,
+        2.38330078125
+      ],
+      "rows": 10000,
+      "report": "git scale: 10000 rows, 115 frames in 4 s, median 33.5 ms, p95 50.8 ms, worst 60.8 ms, RSS 269 MB (start 250, first page 250, all rows 268 after 3.1 s)",
+      "tests": 2,
+      "failures": [
+        "test_scrolling_a_long_history"
+      ],
+      "median_phase_ms": {
+        "before-paint to update": 11.475,
+        "update to layout": 3.915,
+        "layout to paint": 5.643,
+        "paint to after-paint": 0.078
+      },
+      "median_thread_ms": 22.329
+    },
+    {
+      "label": "texture-trial",
+      "renderer": "GskNglRenderer",
+      "gtk_version": [
+        4,
+        14,
+        5
+      ],
+      "load_before": [
+        2.87841796875,
+        2.37548828125,
+        2.45849609375
+      ],
+      "load_after": [
+        3.1376953125,
+        2.4462890625,
+        2.48046875
+      ],
+      "rows": 10000,
+      "report": "git scale: 10000 rows, 132 frames in 4 s, median 32.8 ms, p95 49.7 ms, worst 114.6 ms, RSS 270 MB (start 250, first page 250, all rows 261 after 3.1 s)",
+      "tests": 5,
+      "failures": [
+        "test_scrolling_a_long_history"
+      ],
+      "median_phase_ms": {
+        "before-paint to update": 12.448,
+        "update to layout": 3.74,
+        "layout to paint": 2.069,
+        "paint to after-paint": 0.047
+      },
+      "median_thread_ms": 20.585
+    },
+    {
+      "label": "picture-trial",
+      "renderer": "GskNglRenderer",
+      "gtk_version": [
+        4,
+        14,
+        5
+      ],
+      "load_before": [
+        2.224609375,
+        2.3046875,
+        2.42626953125
+      ],
+      "load_after": [
+        2.3671875,
+        2.3330078125,
+        2.43505859375
+      ],
+      "rows": 10000,
+      "report": "git scale: 10000 rows, 128 frames in 4 s, median 33.1 ms, p95 42.1 ms, worst 117.1 ms, RSS 271 MB (start 250, first page 251, all rows 262 after 3.0 s)",
+      "tests": 5,
+      "failures": [
+        "test_scrolling_a_long_history",
+        "test_rebinding_only_redraws_visual_changes"
+      ],
+      "median_phase_ms": {
+        "before-paint to update": 11.78,
+        "update to layout": 5.353,
+        "layout to paint": 1.077,
+        "paint to after-paint": 0.043
+      },
+      "median_thread_ms": 19.815
+    }
+  ],
+  "sha256": {
+    "artifacts/perf7/texture-control.jsonl": "6f6a1dd6c5f893cb60ac67f453424d8e20b5e372ec1a5e89cd669765353b2de4",
+    "artifacts/perf7/texture-control.xml": "152071aaadcd6939f84e794661911a7c1f9ef6e85363caa716abe3bd0265502b",
+    "artifacts/perf7/texture-control-scale.txt": "6c558a2d8268ae1e313e401eb45c6d06274f0088cdd2a443cd3e64781ea5f9ad",
+    "artifacts/perf7/texture-control-gl.txt": "aa7b6fc7c98a56f659f60d2c4be1f725fba88578fef1bc4fcc2e793c2998863d",
+    "artifacts/perf7/texture-trial.jsonl": "b5e8c11fbbff623315058205f037ac75d4c65f3ecfb28670146bbde2fa6c857c",
+    "artifacts/perf7/texture-trial.xml": "6beca7cd9f5aa87f9e0a5b6a24aa2c196937c835fd7de6ffd6b7c7986503ce17",
+    "artifacts/perf7/texture-trial-scale.txt": "fc4719ace3665dc300ee8650010474bde37c4c8066292200ded64d31395a4680",
+    "artifacts/perf7/texture-trial-gl.txt": "aa7b6fc7c98a56f659f60d2c4be1f725fba88578fef1bc4fcc2e793c2998863d",
+    "artifacts/perf7/picture-trial.jsonl": "d9eee4ec7a59111a6f15392c91743f16f7143d0d8b53a136507883fe994056b5",
+    "artifacts/perf7/picture-trial.xml": "1abb5cb01165d711628f40b869aaa364b535d648c3d66bb4cfe0e16671d1d6a2",
+    "artifacts/perf7/picture-trial-scale.txt": "ab8d73491b5882cea48903dd50a3aeedd64eed23c8d76cadf0d141f0ea7fb0dd",
+    "artifacts/perf7/picture-trial-gl.txt": "aa7b6fc7c98a56f659f60d2c4be1f725fba88578fef1bc4fcc2e793c2998863d",
+    "artifacts/perf7/rejected-texture-cache.patch": "25287f9947a8648560266224c6ab4f0bd06107ea986cb54d72ed7cb5d9777416",
+    "artifacts/perf7/rejected-picture-cache.patch": "6f9550df2b7c2f3d8cc22b933893e53f62984735481c7b9e6902b0d168aaadd9",
+    "src/aconsole/ui/views/review/graph_cell.py": "56038137006acf77a99907152a35fbf6cf183e6724f4c41e221656b657cb65dc",
+    "tests/gui/front/test_git_scale_ui.py": "c9455d75de02cde25f09cbc4f9e423d3e66a0a583c51f50ebac7eb9789634c4c",
+    "artifacts/perf7/TEXTURE_LIFECYCLE.md": "632003b918aa6ab02abce10e597cceb9fb30282880ecd4fef13f53a2db97f159"
+  }
+}
