@@ -27,8 +27,14 @@ _TASKS: set[asyncio.Task[None]] = set()
 
 
 def spawn_task(work: Coroutine[object, object, None]) -> asyncio.Task[None]:
-    """Schedule ``work`` and keep the task alive until it finishes."""
-    task = asyncio.get_running_loop().create_task(work)
+    """Take ownership of ``work`` and keep its task alive until it finishes."""
+    try:
+        task = asyncio.get_running_loop().create_task(work)
+    except BaseException:
+        # No task owns the coroutine when loop lookup or task creation fails.
+        # Release its frame even when scheduling is interrupted during shutdown.
+        work.close()
+        raise
     _TASKS.add(task)
     task.add_done_callback(_TASKS.discard)
     return task
