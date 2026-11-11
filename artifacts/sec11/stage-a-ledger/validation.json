@@ -1,0 +1,20 @@
+{
+  "evidence_integrity": "PASS",
+  "base_commit": "2609cbe09935112a23ba540f0a913b53c1b9f48e",
+  "product_sources": 279,
+  "pinned_artifacts": 90,
+  "evidence_tasks": 15,
+  "historical_source_drift": {
+    "SEC-15": [
+      "src/aconsole/core/infrastructure/git/operations.py"
+    ]
+  },
+  "criteria": 10,
+  "phases": 11,
+  "decisions": 6,
+  "fresh_evidence_verifiers": 13,
+  "stage_A": "INCOMPLETE",
+  "stage_B_authorized": false,
+  "security_acceptance": "NOT RUN",
+  "fresh_product_tests": "NOT RUN"
+}
