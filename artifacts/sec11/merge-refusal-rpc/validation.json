@@ -1,0 +1,334 @@
+{
+  "evidence_integrity": "PASS",
+  "cases": 72,
+  "pairs": 36,
+  "source_hashes": 295,
+  "equal_outcomes": 22,
+  "equal_phases": 0,
+  "target_equal": {
+    "target": 22,
+    "target_tree": 22,
+    "target_message": 22,
+    "target_parents": 22,
+    "target_entries": 22
+  },
+  "daemon_finished": 20,
+  "native_positive_controls": [
+    {
+      "format": "sha1",
+      "scenario": "merge_sample",
+      "mode": "observe",
+      "refused_phases": [],
+      "ok": true
+    },
+    {
+      "format": "sha1",
+      "scenario": "merge_sample",
+      "mode": "pre_refuse",
+      "refused_phases": [
+        "pre-commit"
+      ],
+      "ok": false
+    },
+    {
+      "format": "sha1",
+      "scenario": "merge_sample",
+      "mode": "prepare_refuse",
+      "refused_phases": [
+        "prepare-commit-msg"
+      ],
+      "ok": false
+    },
+    {
+      "format": "sha1",
+      "scenario": "merge_sample",
+      "mode": "post_fail",
+      "refused_phases": [
+        "post-merge"
+      ],
+      "ok": true
+    },
+    {
+      "format": "sha1",
+      "scenario": "merge_sample",
+      "mode": "ref_prepared",
+      "refused_phases": [
+        "reference-transaction"
+      ],
+      "ok": false
+    },
+    {
+      "format": "sha1",
+      "scenario": "merge_sample",
+      "mode": "ref_committed",
+      "refused_phases": [
+        "reference-transaction"
+      ],
+      "ok": true
+    },
+    {
+      "format": "sha1",
+      "scenario": "merge_direct",
+      "mode": "observe",
+      "refused_phases": [],
+      "ok": true
+    },
+    {
+      "format": "sha1",
+      "scenario": "merge_direct",
+      "mode": "pre_refuse",
+      "refused_phases": [
+        "pre-merge-commit"
+      ],
+      "ok": false
+    },
+    {
+      "format": "sha1",
+      "scenario": "merge_direct",
+      "mode": "prepare_refuse",
+      "refused_phases": [
+        "prepare-commit-msg"
+      ],
+      "ok": false
+    },
+    {
+      "format": "sha1",
+      "scenario": "merge_direct",
+      "mode": "post_fail",
+      "refused_phases": [
+        "post-merge"
+      ],
+      "ok": true
+    },
+    {
+      "format": "sha1",
+      "scenario": "merge_direct",
+      "mode": "ref_prepared",
+      "refused_phases": [
+        "reference-transaction"
+      ],
+      "ok": false
+    },
+    {
+      "format": "sha1",
+      "scenario": "merge_direct",
+      "mode": "ref_committed",
+      "refused_phases": [
+        "reference-transaction"
+      ],
+      "ok": true
+    },
+    {
+      "format": "sha1",
+      "scenario": "squash",
+      "mode": "observe",
+      "refused_phases": [],
+      "ok": true
+    },
+    {
+      "format": "sha1",
+      "scenario": "squash",
+      "mode": "pre_refuse",
+      "refused_phases": [
+        "pre-commit"
+      ],
+      "ok": false
+    },
+    {
+      "format": "sha1",
+      "scenario": "squash",
+      "mode": "prepare_refuse",
+      "refused_phases": [
+        "prepare-commit-msg"
+      ],
+      "ok": false
+    },
+    {
+      "format": "sha1",
+      "scenario": "squash",
+      "mode": "post_fail",
+      "refused_phases": [
+        "post-merge",
+        "post-commit"
+      ],
+      "ok": true
+    },
+    {
+      "format": "sha1",
+      "scenario": "squash",
+      "mode": "ref_prepared",
+      "refused_phases": [
+        "reference-transaction"
+      ],
+      "ok": false
+    },
+    {
+      "format": "sha1",
+      "scenario": "squash",
+      "mode": "ref_committed",
+      "refused_phases": [
+        "reference-transaction"
+      ],
+      "ok": true
+    },
+    {
+      "format": "sha256",
+      "scenario": "merge_sample",
+      "mode": "observe",
+      "refused_phases": [],
+      "ok": true
+    },
+    {
+      "format": "sha256",
+      "scenario": "merge_sample",
+      "mode": "pre_refuse",
+      "refused_phases": [
+        "pre-commit"
+      ],
+      "ok": false
+    },
+    {
+      "format": "sha256",
+      "scenario": "merge_sample",
+      "mode": "prepare_refuse",
+      "refused_phases": [
+        "prepare-commit-msg"
+      ],
+      "ok": false
+    },
+    {
+      "format": "sha256",
+      "scenario": "merge_sample",
+      "mode": "post_fail",
+      "refused_phases": [
+        "post-merge"
+      ],
+      "ok": true
+    },
+    {
+      "format": "sha256",
+      "scenario": "merge_sample",
+      "mode": "ref_prepared",
+      "refused_phases": [
+        "reference-transaction"
+      ],
+      "ok": false
+    },
+    {
+      "format": "sha256",
+      "scenario": "merge_sample",
+      "mode": "ref_committed",
+      "refused_phases": [
+        "reference-transaction"
+      ],
+      "ok": true
+    },
+    {
+      "format": "sha256",
+      "scenario": "merge_direct",
+      "mode": "observe",
+      "refused_phases": [],
+      "ok": true
+    },
+    {
+      "format": "sha256",
+      "scenario": "merge_direct",
+      "mode": "pre_refuse",
+      "refused_phases": [
+        "pre-merge-commit"
+      ],
+      "ok": false
+    },
+    {
+      "format": "sha256",
+      "scenario": "merge_direct",
+      "mode": "prepare_refuse",
+      "refused_phases": [
+        "prepare-commit-msg"
+      ],
+      "ok": false
+    },
+    {
+      "format": "sha256",
+      "scenario": "merge_direct",
+      "mode": "post_fail",
+      "refused_phases": [
+        "post-merge"
+      ],
+      "ok": true
+    },
+    {
+      "format": "sha256",
+      "scenario": "merge_direct",
+      "mode": "ref_prepared",
+      "refused_phases": [
+        "reference-transaction"
+      ],
+      "ok": false
+    },
+    {
+      "format": "sha256",
+      "scenario": "merge_direct",
+      "mode": "ref_committed",
+      "refused_phases": [
+        "reference-transaction"
+      ],
+      "ok": true
+    },
+    {
+      "format": "sha256",
+      "scenario": "squash",
+      "mode": "observe",
+      "refused_phases": [],
+      "ok": true
+    },
+    {
+      "format": "sha256",
+      "scenario": "squash",
+      "mode": "pre_refuse",
+      "refused_phases": [
+        "pre-commit"
+      ],
+      "ok": false
+    },
+    {
+      "format": "sha256",
+      "scenario": "squash",
+      "mode": "prepare_refuse",
+      "refused_phases": [
+        "prepare-commit-msg"
+      ],
+      "ok": false
+    },
+    {
+      "format": "sha256",
+      "scenario": "squash",
+      "mode": "post_fail",
+      "refused_phases": [
+        "post-merge",
+        "post-commit"
+      ],
+      "ok": true
+    },
+    {
+      "format": "sha256",
+      "scenario": "squash",
+      "mode": "ref_prepared",
+      "refused_phases": [
+        "reference-transaction"
+      ],
+      "ok": false
+    },
+    {
+      "format": "sha256",
+      "scenario": "squash",
+      "mode": "ref_committed",
+      "refused_phases": [
+        "reference-transaction"
+      ],
+      "ok": true
+    }
+  ],
+  "stage_A": "INCOMPLETE",
+  "security_acceptance": "NOT RUN"
+}

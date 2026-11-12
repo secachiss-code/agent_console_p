@@ -1,0 +1,12 @@
+{
+  "evidence_integrity": "PASS",
+  "cases": 84,
+  "source_hashes": 283,
+  "equal_pairs": {
+    "outcome_equal": 37,
+    "tree_equal": 37,
+    "message_equal": 37,
+    "phases_equal": 30
+  },
+  "security_acceptance": "NOT RUN"
+}

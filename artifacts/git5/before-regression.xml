@@ -1,0 +1,421 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="4" skipped="0" tests="4" time="6.875" timestamp="2026-11-10T20:14:48.424568+03:00" hostname="somovasnbook14"><testcase classname="tests.core.test_git_missing_commit_oid" name="test_missing_commit_oid_refuses_merge_without_follow_up_and_retry_is_durable[-merge]" time="1.687"><failure message="AssertionError: assert 'finished' == 'failed'&#10;  &#10;  - failed&#10;  + finished">tmp_path = PosixPath('/tmp/ac-git5-regression/test_missing_commit_oid_refuse0')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x2f7585ccbd0&gt;
+mode = 'merge', said = ''
+
+    @pytest.mark.parametrize("mode", ["merge", "squash"])
+    @pytest.mark.parametrize("said", ["", "incomplete commit result"])
+    def test_missing_commit_oid_refuses_merge_without_follow_up_and_retry_is_durable(
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+        mode: MergeMode,
+        said: str,
+    ) -&gt; None:
+        async def scenario() -&gt; None:
+            repo, _ = _diverged(tmp_path)
+            git(repo, "branch", "release")
+            before = git(repo, "rev-parse", "release")
+            head = git(repo, "rev-parse", "HEAD")
+            daemon, task, client, project = await _start(tmp_path, repo)
+            try:
+                merges = daemon.git.merges
+                assert merges is not None
+                followed: list[str] = []
+    
+                def incomplete(*_args: object, **_kwargs: object) -&gt; GitDone:
+                    return GitDone(ok=True, said=said, oid=None)
+    
+                def follow(record: GitOperationRecord) -&gt; None:
+                    followed.append(record.id)
+    
+                preview = await _preview(client, project, "work", "release")
+                with monkeypatch.context() as patch:
+                    patch.setattr(merges._writer, "commit_tree", incomplete)
+                    patch.setattr(merges, "follow_up", follow)
+                    result = await client.call("git/mergeWorktree", _go(project, preview, mode), GitOperationResult)
+                assert result.operation.status == "failed"
+                assert result.operation.result_oid is None
+                assert result.operation.follow_up_pending is False
+                assert result.operation.message == (said or "git commit-tree returned no commit id")
+                assert followed == []
+                assert git(repo, "rev-parse", "release") == before
+                assert git(repo, "rev-parse", "HEAD") == head
+                assert git(repo, "status", "--porcelain") == ""
+                failed_id = result.operation.id
+                preview = await _preview(client, project, "work", "release")
+                retry = await client.call("git/mergeWorktree", _go(project, preview, mode), GitOperationResult)
+                assert retry.operation.status == "finished"
+                assert retry.operation.result_oid == git(repo, "rev-parse", "release")
+                success_id = retry.operation.id
+                tip = retry.operation.result_oid
+            finally:
+                await _stop(daemon, task, client)
+            daemon, task, client, _ = await _start(tmp_path, repo)
+            try:
+                assert (await _operation(client, failed_id)).status == "failed"
+                successful = await _operation(client, success_id)
+                assert successful.status == "finished"
+                assert successful.result_oid == tip
+                assert git(repo, "rev-parse", "HEAD") == head
+                assert git(repo, "rev-parse", "release") == tip
+            finally:
+                await _stop(daemon, task, client)
+    
+&gt;       asyncio.run(scenario())
+
+tests/core/test_git_missing_commit_oid.py:82: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+../../../../uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py:205: in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+../../../../uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py:128: in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../../uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/base_events.py:724: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    async def scenario() -&gt; None:
+        repo, _ = _diverged(tmp_path)
+        git(repo, "branch", "release")
+        before = git(repo, "rev-parse", "release")
+        head = git(repo, "rev-parse", "HEAD")
+        daemon, task, client, project = await _start(tmp_path, repo)
+        try:
+            merges = daemon.git.merges
+            assert merges is not None
+            followed: list[str] = []
+    
+            def incomplete(*_args: object, **_kwargs: object) -&gt; GitDone:
+                return GitDone(ok=True, said=said, oid=None)
+    
+            def follow(record: GitOperationRecord) -&gt; None:
+                followed.append(record.id)
+    
+            preview = await _preview(client, project, "work", "release")
+            with monkeypatch.context() as patch:
+                patch.setattr(merges._writer, "commit_tree", incomplete)
+                patch.setattr(merges, "follow_up", follow)
+                result = await client.call("git/mergeWorktree", _go(project, preview, mode), GitOperationResult)
+&gt;           assert result.operation.status == "failed"
+E           AssertionError: assert 'finished' == 'failed'
+E             
+E             - failed
+E             + finished
+
+tests/core/test_git_missing_commit_oid.py:54: AssertionError</failure></testcase><testcase classname="tests.core.test_git_missing_commit_oid" name="test_missing_commit_oid_refuses_merge_without_follow_up_and_retry_is_durable[-squash]" time="1.179"><failure message="AssertionError: assert 'finished' == 'failed'&#10;  &#10;  - failed&#10;  + finished">tmp_path = PosixPath('/tmp/ac-git5-regression/test_missing_commit_oid_refuse1')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x2f758d12d10&gt;
+mode = 'squash', said = ''
+
+    @pytest.mark.parametrize("mode", ["merge", "squash"])
+    @pytest.mark.parametrize("said", ["", "incomplete commit result"])
+    def test_missing_commit_oid_refuses_merge_without_follow_up_and_retry_is_durable(
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+        mode: MergeMode,
+        said: str,
+    ) -&gt; None:
+        async def scenario() -&gt; None:
+            repo, _ = _diverged(tmp_path)
+            git(repo, "branch", "release")
+            before = git(repo, "rev-parse", "release")
+            head = git(repo, "rev-parse", "HEAD")
+            daemon, task, client, project = await _start(tmp_path, repo)
+            try:
+                merges = daemon.git.merges
+                assert merges is not None
+                followed: list[str] = []
+    
+                def incomplete(*_args: object, **_kwargs: object) -&gt; GitDone:
+                    return GitDone(ok=True, said=said, oid=None)
+    
+                def follow(record: GitOperationRecord) -&gt; None:
+                    followed.append(record.id)
+    
+                preview = await _preview(client, project, "work", "release")
+                with monkeypatch.context() as patch:
+                    patch.setattr(merges._writer, "commit_tree", incomplete)
+                    patch.setattr(merges, "follow_up", follow)
+                    result = await client.call("git/mergeWorktree", _go(project, preview, mode), GitOperationResult)
+                assert result.operation.status == "failed"
+                assert result.operation.result_oid is None
+                assert result.operation.follow_up_pending is False
+                assert result.operation.message == (said or "git commit-tree returned no commit id")
+                assert followed == []
+                assert git(repo, "rev-parse", "release") == before
+                assert git(repo, "rev-parse", "HEAD") == head
+                assert git(repo, "status", "--porcelain") == ""
+                failed_id = result.operation.id
+                preview = await _preview(client, project, "work", "release")
+                retry = await client.call("git/mergeWorktree", _go(project, preview, mode), GitOperationResult)
+                assert retry.operation.status == "finished"
+                assert retry.operation.result_oid == git(repo, "rev-parse", "release")
+                success_id = retry.operation.id
+                tip = retry.operation.result_oid
+            finally:
+                await _stop(daemon, task, client)
+            daemon, task, client, _ = await _start(tmp_path, repo)
+            try:
+                assert (await _operation(client, failed_id)).status == "failed"
+                successful = await _operation(client, success_id)
+                assert successful.status == "finished"
+                assert successful.result_oid == tip
+                assert git(repo, "rev-parse", "HEAD") == head
+                assert git(repo, "rev-parse", "release") == tip
+            finally:
+                await _stop(daemon, task, client)
+    
+&gt;       asyncio.run(scenario())
+
+tests/core/test_git_missing_commit_oid.py:82: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+../../../../uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py:205: in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+../../../../uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py:128: in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../../uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/base_events.py:724: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    async def scenario() -&gt; None:
+        repo, _ = _diverged(tmp_path)
+        git(repo, "branch", "release")
+        before = git(repo, "rev-parse", "release")
+        head = git(repo, "rev-parse", "HEAD")
+        daemon, task, client, project = await _start(tmp_path, repo)
+        try:
+            merges = daemon.git.merges
+            assert merges is not None
+            followed: list[str] = []
+    
+            def incomplete(*_args: object, **_kwargs: object) -&gt; GitDone:
+                return GitDone(ok=True, said=said, oid=None)
+    
+            def follow(record: GitOperationRecord) -&gt; None:
+                followed.append(record.id)
+    
+            preview = await _preview(client, project, "work", "release")
+            with monkeypatch.context() as patch:
+                patch.setattr(merges._writer, "commit_tree", incomplete)
+                patch.setattr(merges, "follow_up", follow)
+                result = await client.call("git/mergeWorktree", _go(project, preview, mode), GitOperationResult)
+&gt;           assert result.operation.status == "failed"
+E           AssertionError: assert 'finished' == 'failed'
+E             
+E             - failed
+E             + finished
+
+tests/core/test_git_missing_commit_oid.py:54: AssertionError</failure></testcase><testcase classname="tests.core.test_git_missing_commit_oid" name="test_missing_commit_oid_refuses_merge_without_follow_up_and_retry_is_durable[incomplete commit result-merge]" time="1.161"><failure message="AssertionError: assert 'finished' == 'failed'&#10;  &#10;  - failed&#10;  + finished">tmp_path = PosixPath('/tmp/ac-git5-regression/test_missing_commit_oid_refuse2')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x2f7552aa810&gt;
+mode = 'merge', said = 'incomplete commit result'
+
+    @pytest.mark.parametrize("mode", ["merge", "squash"])
+    @pytest.mark.parametrize("said", ["", "incomplete commit result"])
+    def test_missing_commit_oid_refuses_merge_without_follow_up_and_retry_is_durable(
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+        mode: MergeMode,
+        said: str,
+    ) -&gt; None:
+        async def scenario() -&gt; None:
+            repo, _ = _diverged(tmp_path)
+            git(repo, "branch", "release")
+            before = git(repo, "rev-parse", "release")
+            head = git(repo, "rev-parse", "HEAD")
+            daemon, task, client, project = await _start(tmp_path, repo)
+            try:
+                merges = daemon.git.merges
+                assert merges is not None
+                followed: list[str] = []
+    
+                def incomplete(*_args: object, **_kwargs: object) -&gt; GitDone:
+                    return GitDone(ok=True, said=said, oid=None)
+    
+                def follow(record: GitOperationRecord) -&gt; None:
+                    followed.append(record.id)
+    
+                preview = await _preview(client, project, "work", "release")
+                with monkeypatch.context() as patch:
+                    patch.setattr(merges._writer, "commit_tree", incomplete)
+                    patch.setattr(merges, "follow_up", follow)
+                    result = await client.call("git/mergeWorktree", _go(project, preview, mode), GitOperationResult)
+                assert result.operation.status == "failed"
+                assert result.operation.result_oid is None
+                assert result.operation.follow_up_pending is False
+                assert result.operation.message == (said or "git commit-tree returned no commit id")
+                assert followed == []
+                assert git(repo, "rev-parse", "release") == before
+                assert git(repo, "rev-parse", "HEAD") == head
+                assert git(repo, "status", "--porcelain") == ""
+                failed_id = result.operation.id
+                preview = await _preview(client, project, "work", "release")
+                retry = await client.call("git/mergeWorktree", _go(project, preview, mode), GitOperationResult)
+                assert retry.operation.status == "finished"
+                assert retry.operation.result_oid == git(repo, "rev-parse", "release")
+                success_id = retry.operation.id
+                tip = retry.operation.result_oid
+            finally:
+                await _stop(daemon, task, client)
+            daemon, task, client, _ = await _start(tmp_path, repo)
+            try:
+                assert (await _operation(client, failed_id)).status == "failed"
+                successful = await _operation(client, success_id)
+                assert successful.status == "finished"
+                assert successful.result_oid == tip
+                assert git(repo, "rev-parse", "HEAD") == head
+                assert git(repo, "rev-parse", "release") == tip
+            finally:
+                await _stop(daemon, task, client)
+    
+&gt;       asyncio.run(scenario())
+
+tests/core/test_git_missing_commit_oid.py:82: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+../../../../uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py:205: in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+../../../../uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py:128: in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../../uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/base_events.py:724: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    async def scenario() -&gt; None:
+        repo, _ = _diverged(tmp_path)
+        git(repo, "branch", "release")
+        before = git(repo, "rev-parse", "release")
+        head = git(repo, "rev-parse", "HEAD")
+        daemon, task, client, project = await _start(tmp_path, repo)
+        try:
+            merges = daemon.git.merges
+            assert merges is not None
+            followed: list[str] = []
+    
+            def incomplete(*_args: object, **_kwargs: object) -&gt; GitDone:
+                return GitDone(ok=True, said=said, oid=None)
+    
+            def follow(record: GitOperationRecord) -&gt; None:
+                followed.append(record.id)
+    
+            preview = await _preview(client, project, "work", "release")
+            with monkeypatch.context() as patch:
+                patch.setattr(merges._writer, "commit_tree", incomplete)
+                patch.setattr(merges, "follow_up", follow)
+                result = await client.call("git/mergeWorktree", _go(project, preview, mode), GitOperationResult)
+&gt;           assert result.operation.status == "failed"
+E           AssertionError: assert 'finished' == 'failed'
+E             
+E             - failed
+E             + finished
+
+tests/core/test_git_missing_commit_oid.py:54: AssertionError</failure></testcase><testcase classname="tests.core.test_git_missing_commit_oid" name="test_missing_commit_oid_refuses_merge_without_follow_up_and_retry_is_durable[incomplete commit result-squash]" time="1.164"><failure message="AssertionError: assert 'finished' == 'failed'&#10;  &#10;  - failed&#10;  + finished">tmp_path = PosixPath('/tmp/ac-git5-regression/test_missing_commit_oid_refuse3')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x2f7552ace10&gt;
+mode = 'squash', said = 'incomplete commit result'
+
+    @pytest.mark.parametrize("mode", ["merge", "squash"])
+    @pytest.mark.parametrize("said", ["", "incomplete commit result"])
+    def test_missing_commit_oid_refuses_merge_without_follow_up_and_retry_is_durable(
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+        mode: MergeMode,
+        said: str,
+    ) -&gt; None:
+        async def scenario() -&gt; None:
+            repo, _ = _diverged(tmp_path)
+            git(repo, "branch", "release")
+            before = git(repo, "rev-parse", "release")
+            head = git(repo, "rev-parse", "HEAD")
+            daemon, task, client, project = await _start(tmp_path, repo)
+            try:
+                merges = daemon.git.merges
+                assert merges is not None
+                followed: list[str] = []
+    
+                def incomplete(*_args: object, **_kwargs: object) -&gt; GitDone:
+                    return GitDone(ok=True, said=said, oid=None)
+    
+                def follow(record: GitOperationRecord) -&gt; None:
+                    followed.append(record.id)
+    
+                preview = await _preview(client, project, "work", "release")
+                with monkeypatch.context() as patch:
+                    patch.setattr(merges._writer, "commit_tree", incomplete)
+                    patch.setattr(merges, "follow_up", follow)
+                    result = await client.call("git/mergeWorktree", _go(project, preview, mode), GitOperationResult)
+                assert result.operation.status == "failed"
+                assert result.operation.result_oid is None
+                assert result.operation.follow_up_pending is False
+                assert result.operation.message == (said or "git commit-tree returned no commit id")
+                assert followed == []
+                assert git(repo, "rev-parse", "release") == before
+                assert git(repo, "rev-parse", "HEAD") == head
+                assert git(repo, "status", "--porcelain") == ""
+                failed_id = result.operation.id
+                preview = await _preview(client, project, "work", "release")
+                retry = await client.call("git/mergeWorktree", _go(project, preview, mode), GitOperationResult)
+                assert retry.operation.status == "finished"
+                assert retry.operation.result_oid == git(repo, "rev-parse", "release")
+                success_id = retry.operation.id
+                tip = retry.operation.result_oid
+            finally:
+                await _stop(daemon, task, client)
+            daemon, task, client, _ = await _start(tmp_path, repo)
+            try:
+                assert (await _operation(client, failed_id)).status == "failed"
+                successful = await _operation(client, success_id)
+                assert successful.status == "finished"
+                assert successful.result_oid == tip
+                assert git(repo, "rev-parse", "HEAD") == head
+                assert git(repo, "rev-parse", "release") == tip
+            finally:
+                await _stop(daemon, task, client)
+    
+&gt;       asyncio.run(scenario())
+
+tests/core/test_git_missing_commit_oid.py:82: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+../../../../uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py:205: in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+../../../../uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py:128: in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../../uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/base_events.py:724: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    async def scenario() -&gt; None:
+        repo, _ = _diverged(tmp_path)
+        git(repo, "branch", "release")
+        before = git(repo, "rev-parse", "release")
+        head = git(repo, "rev-parse", "HEAD")
+        daemon, task, client, project = await _start(tmp_path, repo)
+        try:
+            merges = daemon.git.merges
+            assert merges is not None
+            followed: list[str] = []
+    
+            def incomplete(*_args: object, **_kwargs: object) -&gt; GitDone:
+                return GitDone(ok=True, said=said, oid=None)
+    
+            def follow(record: GitOperationRecord) -&gt; None:
+                followed.append(record.id)
+    
+            preview = await _preview(client, project, "work", "release")
+            with monkeypatch.context() as patch:
+                patch.setattr(merges._writer, "commit_tree", incomplete)
+                patch.setattr(merges, "follow_up", follow)
+                result = await client.call("git/mergeWorktree", _go(project, preview, mode), GitOperationResult)
+&gt;           assert result.operation.status == "failed"
+E           AssertionError: assert 'finished' == 'failed'
+E             
+E             - failed
+E             + finished
+
+tests/core/test_git_missing_commit_oid.py:54: AssertionError</failure></testcase></testsuite></testsuites>

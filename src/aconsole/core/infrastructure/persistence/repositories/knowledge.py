@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import hashlib
-import logging
 from collections.abc import Callable
 from datetime import UTC, datetime
 from typing import final
@@ -18,7 +17,6 @@ from aconsole.core.application.ports.plan_store import StoreWriteError
 from aconsole.core.infrastructure.persistence.models import Handover, KbEdge, KbEdgeKind, KbNode, KbType, Project, Tab
 from aconsole.core.infrastructure.persistence.writer import Writer
 
-_LOG = logging.getLogger(__name__)
 _REF_PREFIX = "ref-"
 _ORIGIN = "agent"
 _TITLE_LIMIT = 300
@@ -133,8 +131,8 @@ def load_facts(session: Session) -> tuple[StoredFact, ...]:
 
 def save_handover(session: Session, packet: StoredHandover) -> None:
     if session.get(Project, packet.project_id) is None:
-        _LOG.warning("handover %s has no project row; it is not saved", packet.id)
-        return
+        message = f"handover {packet.id} has no project row; it was not saved"
+        raise ValueError(message)
     tab_id = packet.tab_id if packet.tab_id is not None and session.get(Tab, packet.tab_id) is not None else None
     session.add(
         Handover(

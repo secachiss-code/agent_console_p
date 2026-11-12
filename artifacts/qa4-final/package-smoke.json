@@ -1,0 +1,37 @@
+{
+  "package": "dist/aconsole_0.1.1_amd64.deb",
+  "bytes": 72820138,
+  "sha256": "e93e88fb79cedb51fc150343705ece60180766c3da1b06b8ecfaf4bfcb614c46",
+  "metadata": "Package: aconsole\nVersion: 0.1.1\nArchitecture: amd64\nMaintainer: AConsole <noreply@aconsole.invalid>\nSection: devel\nPriority: optional\nDepends: git, podman, gir1.2-gtk-4.0 (>= 4.14), gir1.2-adw-1 (>= 1.5), gir1.2-vte-3.91, libgirepository-2.0-0, libcairo2, libcairo-gobject2, libffi8\nDescription: Agents Console: run CLI coding agents side by side\n Carries its own Python 3.15 under /opt.\n",
+  "probes": [
+    {
+      "probe": "core-import",
+      "exit_code": 0,
+      "expected_exit": 0,
+      "stdout": "<extracted-package>/opt/aconsole/core/lib/python3.15t/site-packages/aconsole/core/__init__.py\n",
+      "stderr": ""
+    },
+    {
+      "probe": "ui-import",
+      "exit_code": 0,
+      "expected_exit": 0,
+      "stdout": "<extracted-package>/opt/aconsole/ui/lib/python3.15/site-packages/aconsole/ui/__init__.py\n",
+      "stderr": ""
+    },
+    {
+      "probe": "ui-help",
+      "exit_code": 0,
+      "expected_exit": 0,
+      "stdout": "usage: python -m aconsole [-h]\n                          [--fake {demo,empty,stress,errors,waiting,quota-critical,approval-expired,agents}]\n                          [--socket SOCKET]\n                          [--snapshot-view {window,tabs,plan-graph,review,git,quota-dialog,quota-account,palette,setup,prefs}]\n                          [--theme {light,dark}] [--size SIZE] [--out OUT]\n\noptions:\n  -h, --help            show this help message and exit\n  --fake, --fake-core {demo,empty,stress,errors,waiting,quota-critical,approval-expired,agents}\n  --socket SOCKET\n  --snapshot-view {window,tabs,plan-graph,review,git,quota-dialog,quota-account,palette,setup,prefs}\n  --theme {light,dark}\n  --size SIZE\n  --out OUT\n",
+      "stderr": ""
+    },
+    {
+      "probe": "core-help",
+      "exit_code": 2,
+      "expected_exit": 2,
+      "stdout": "usage: python -m aconsole.core --fake SCENARIO [--socket PATH]\n       python -m aconsole.core --serve [--socket PATH] [--allow-gil]\n",
+      "stderr": ""
+    }
+  ],
+  "limitation": "Extracted payload only. No dpkg/apt install, maintainer scripts or desktop integration acceptance."
+}

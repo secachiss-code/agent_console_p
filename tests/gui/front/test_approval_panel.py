@@ -23,6 +23,7 @@ from aconsole.ui.client.core_client import CoreClient  # noqa: E402
 from aconsole.ui.viewmodels.approvals_vm import ApprovalsViewModel  # noqa: E402
 from aconsole.ui.views.app import AConsoleApp  # noqa: E402
 from aconsole.ui.views.approvals.panel import ApprovalPanel  # noqa: E402
+from tests.gui.watchdog import arm_watchdog  # noqa: E402
 
 if TYPE_CHECKING:
     from collections.abc import Awaitable, Callable, Iterator
@@ -68,7 +69,7 @@ def _on_panel(socket: str, check: Callable[[ApprovalPanel, _Seen, Gtk.Window], A
                 return
             self._held = True
             self.hold()
-            _ = GLib.timeout_add(_TIMEOUT_MS, self._expired)
+            _ = arm_watchdog(self, _TIMEOUT_MS, self._expired)
             _ = spawn_task(self._run())
 
         def _expired(self) -> bool:
@@ -413,7 +414,7 @@ class _WindowApp(AConsoleApp):
         self.failure: BaseException | None = None
 
     async def _open(self) -> None:
-        _ = GLib.timeout_add(_TIMEOUT_MS, self._expired)
+        _ = arm_watchdog(self, _TIMEOUT_MS, self._expired)
         try:
             await super()._open()
             assert self.window is not None

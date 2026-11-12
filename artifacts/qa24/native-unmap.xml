@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="2.588" timestamp="2026-11-12T22:46:06.396772+03:00" hostname="somovasnbook14"><testcase classname="tests.gui.front.test_preferences_drafts" name="test_hiding_parent_cancels_pending_preferences_close" time="2.315"><failure message="AssertionError: AssertionError('GTK wait failed at 99')&#10;assert AssertionError('GTK wait failed at 99') is None&#10; +  where AssertionError('GTK wait failed at 99') = &lt;test_b2_tabs._TabsTestApp object at 0x7dd1247caa00 (tests+gui+front+test_b2_tabs+_TabsTestApp at 0x3cd4580)&gt;.error">def test_hiding_parent_cancels_pending_preferences_close() -&gt; None:
+        async def scenario(app: _TabsTestApp) -&gt; None:
+            client, _tabs = _model(demo_snapshot())
+    
+            async def request(_method: str, _params: msgspec.Struct, _result: type[msgspec.Struct]) -&gt; msgspec.Struct:
+                return Settings(rev=1, vault_path="", worktrees_dir="")
+    
+            client.request = request
+            dialog = PreferencesDialog(PreferencesViewModel(client))
+            assert app.window is not None
+            app.window.present()
+            dialog.open(app.window)
+            dialog.close()
+            assert dialog._close_tick_id != 0
+            app.window.set_visible(False)
+            assert dialog._close_tick_id == 0
+            await _check_reopened_close(dialog, app.window)
+            await client.close()
+    
+&gt;       _run_ui(scenario)
+
+tests/gui/front/test_preferences_drafts.py:183: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+scenario = &lt;function test_hiding_parent_cancels_pending_preferences_close.&lt;locals&gt;.scenario at 0x7dd0fa9f17a0&gt;
+
+    def _run_ui(scenario: Callable[[_TabsTestApp], Awaitable[None]]) -&gt; None:
+        app = _TabsTestApp(scenario)
+        assert run_app(lambda: app, ["aconsole-b2-tabs-test"]) == 0
+&gt;       assert app.error is None, repr(app.error)
+E       AssertionError: AssertionError('GTK wait failed at 99')
+E       assert AssertionError('GTK wait failed at 99') is None
+E        +  where AssertionError('GTK wait failed at 99') = &lt;test_b2_tabs._TabsTestApp object at 0x7dd1247caa00 (tests+gui+front+test_b2_tabs+_TabsTestApp at 0x3cd4580)&gt;.error
+
+tests/gui/front/test_b2_tabs.py:67: AssertionError</failure></testcase></testsuite></testsuites>

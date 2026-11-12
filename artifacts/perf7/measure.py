@@ -39,6 +39,24 @@ def pytest_runtest_call(item: pytest.Function) -> None:  # noqa: C901, PLR0915 -
 
     original = test._on_pane  # noqa: SLF001 -- observe the original private fixture without editing its workload
     label_stats = {}
+    row_probe = os.environ.get("ACONSOLE_PERF7_ROW_PROBE")
+    if row_probe:
+        # Deliberately incomplete rows isolate native shaping/painting costs.
+        # These runs are diagnostics and cannot satisfy product acceptance.
+        from aconsole.ui.views.review.git_pane import _RowWidget  # noqa: PLC0415
+
+        initialize = _RowWidget.__init__
+
+        def probe_row(widget: _RowWidget) -> None:
+            initialize(widget)
+            if row_probe == "no-graph":
+                widget.cell.set_opacity(0)
+            else:
+                label = widget.title if row_probe == "static-title" else widget.when
+                label.set_text("diagnostic")
+                monkeypatch.setattr(label, "set_text", lambda _text: None)
+
+        item.funcargs["monkeypatch"].setattr(_RowWidget, "__init__", probe_row)
     if os.environ.get("ACONSOLE_PERF7_PROFILE"):
         from aconsole.ui.views.review.git_pane import _RowWidget  # noqa: PLC0415 -- load the optional diagnostic only when its target test runs
 
@@ -96,6 +114,7 @@ def pytest_runtest_call(item: pytest.Function) -> None:  # noqa: C901, PLR0915 -
                     test.Gtk.get_micro_version(),
                 ],
                 "a11y": os.environ.get("GTK_A11Y"),
+                "row_probe": row_probe,
                 "display": os.environ.get("DISPLAY"),
                 "renderer": window.get_renderer().__gtype__.name,
                 "python": os.sys.version,
@@ -163,7 +182,7 @@ def pytest_runtest_call(item: pytest.Function) -> None:  # noqa: C901, PLR0915 -
             def collection(phase: str, info: dict[str, int]) -> None:
                 data["gc"].append(dict(phase=phase, at=time.perf_counter() - started, **info))
 
-            handle = pane.list_view.add_tick_callback(tick)
+            tick_handle = pane.list_view.add_tick_callback(tick)
             gc.callbacks.append(collection)
             profile = cProfile.Profile() if os.environ.get("ACONSOLE_PERF7_PROFILE") else None
             try:
@@ -176,10 +195,10 @@ def pytest_runtest_call(item: pytest.Function) -> None:  # noqa: C901, PLR0915 -
                     profile.dump_stats(os.environ["ACONSOLE_PERF7_PROFILE"])
                 if sampling_marker:
                     Path(sampling_marker).unlink(missing_ok=True)  # noqa: ASYNC240 -- diagnostic filesystem work is outside the measured workload
-                for clock, handle in phase_handles:
-                    clock.disconnect(handle)
+                for clock, phase_handle in phase_handles:
+                    clock.disconnect(phase_handle)
                 gc.callbacks.remove(collection)
-                pane.list_view.remove_tick_callback(handle)
+                pane.list_view.remove_tick_callback(tick_handle)
                 data.update(
                     label_stats=label_stats,
                     cpu_stat_after=read("/sys/fs/cgroup/cpu.stat"),

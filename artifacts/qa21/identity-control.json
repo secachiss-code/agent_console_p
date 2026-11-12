@@ -1,0 +1,52 @@
+[
+  {
+    "label": "first-paint",
+    "width": 700,
+    "height": 800,
+    "default": [
+      700,
+      800
+    ],
+    "maximized": false,
+    "fullscreen": false,
+    "active": true,
+    "horizontal": [
+      360,
+      826,
+      -1,
+      -1
+    ],
+    "vertical": [
+      360,
+      721,
+      -1,
+      -1
+    ],
+    "xprop": "WM_NORMAL_HINTS(WM_SIZE_HINTS):\n\t\tprogram specified minimum size: 482 by 482\n_NET_WM_STATE(ATOM) = _NET_WM_STATE_FOCUSED\n_GTK_FRAME_EXTENTS(CARDINAL) = 61, 61, 55, 67\n"
+  },
+  {
+    "label": "settled",
+    "width": 700,
+    "height": 800,
+    "default": [
+      700,
+      800
+    ],
+    "maximized": false,
+    "fullscreen": false,
+    "active": true,
+    "horizontal": [
+      360,
+      826,
+      -1,
+      -1
+    ],
+    "vertical": [
+      360,
+      721,
+      -1,
+      -1
+    ],
+    "xprop": "WM_NORMAL_HINTS(WM_SIZE_HINTS):\n\t\tprogram specified minimum size: 482 by 482\n_NET_WM_STATE(ATOM) = _NET_WM_STATE_FOCUSED\n_GTK_FRAME_EXTENTS(CARDINAL) = 61, 61, 55, 67\n"
+  }
+]

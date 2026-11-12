@@ -296,7 +296,9 @@ class GitPane(Gtk.Box):
         _ = factory.connect("setup", self._setup_row)
         _ = factory.connect("bind", self._bind_row)
         _ = factory.connect("unbind", self._unbind_row)
-        self.list_view: Gtk.ListView = Gtk.ListView(model=self.selection, factory=factory)
+        self.list_view: Gtk.GridView = Gtk.GridView(
+            model=self.selection, factory=factory, min_columns=1, max_columns=1,
+        )
         self.list_view.add_css_class("ac-git-list")
         self.scroller: Gtk.ScrolledWindow = Gtk.ScrolledWindow(child=self.list_view, hexpand=True, vexpand=True)
         _ = self.scroller.get_vadjustment().connect("value-changed", self._scrolled)

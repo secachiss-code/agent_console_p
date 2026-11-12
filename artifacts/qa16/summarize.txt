@@ -1,0 +1,49 @@
+"""Combine saved QA-15 evidence with the new read-boundary scenarios on identical src."""
+import json
+from pathlib import Path
+import subprocess
+import sys
+
+import coverage
+
+root = Path(__file__).resolve().parents[2]
+out = root / 'artifacts/qa16'
+base = '9c9103808e3056bea2ad6b3325a96dc32ba9b20a'
+changed = subprocess.check_output(
+    ['git', 'diff', '--name-only', base, '--', 'src', 'pyproject.toml'], cwd=root, text=True,
+).splitlines()
+assert not changed, changed
+summary = {}
+for label, inputs in [
+    ('baseline', [root / 'artifacts/qa15/.coverage.combined']),
+    ('combined', [root / 'artifacts/qa15/.coverage.combined', out / '.coverage.focused']),
+]:
+    data = out / ('.coverage.' + label)
+    cov = coverage.Coverage(data_file=str(data))
+    cov.combine([str(path) for path in inputs], keep=True)
+    cov.save()
+    report_path = out / ('coverage-' + label + '.json')
+    cov.json_report(outfile=str(report_path))
+    report = json.loads(report_path.read_text())
+    summary[label] = report['totals']
+    gate = subprocess.run([
+        sys.executable, '-m', 'coverage', 'report', '--data-file=' + str(data),
+        '--precision=6', '--format=total',
+    ], cwd=root, capture_output=True, text=True)
+    (out / ('coverage-gate-' + label + '.txt')).write_text(
+        gate.stdout + gate.stderr + '\nexit_code=' + str(gate.returncode) + '\n'
+    )
+    summary[label]['gate_exit'] = gate.returncode
+    print(label, report['totals']['percent_covered'], 'gate exit', gate.returncode)
+    report_path.unlink()
+before, after = summary['baseline'], summary['combined']
+assert before['num_statements'] == after['num_statements']
+assert before['num_branches'] == after['num_branches']
+result = {
+    'source_base': base,
+    'totals': summary,
+    'new_lines': after['covered_lines'] - before['covered_lines'],
+    'new_branches': after['covered_branches'] - before['covered_branches'],
+    'limitation': 'QA-15 full core baseline and focused evidence, QA-9 GUI unchanged modules only, plus QA-16 focused. Not fresh full GUI or CI. See QA-15 report for exact source filtering.',
+}
+(out / 'coverage-summary.json').write_text(json.dumps(result, indent=2) + '\n')

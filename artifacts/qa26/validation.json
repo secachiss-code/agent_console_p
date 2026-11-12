@@ -1,0 +1,97 @@
+{
+  "full-private": {
+    "tests": 534,
+    "passed": 533,
+    "failed": [
+      "tests.gui.front.test_git_scale_ui::test_scrolling_a_long_history"
+    ],
+    "skipped": 0,
+    "returncode": 1
+  },
+  "desktop-scale": {
+    "tests": 1,
+    "passed": 1,
+    "failed": [],
+    "skipped": 0,
+    "returncode": 0
+  },
+  "desktop-full": {
+    "tests": 534,
+    "passed": 523,
+    "failed": [
+      "tests.gui.front.test_b0_window::test_sidebar_lists_demo_tabs[700-True]",
+      "tests.gui.front.test_b0_window::test_collapsed_sidebar_button_opens_and_closes_sidebar",
+      "tests.gui.front.test_b0_window::test_system_title_buttons_keep_clear_header_space[700-True-left]",
+      "tests.gui.front.test_b0_window::test_system_title_buttons_keep_clear_header_space[700-True-right]",
+      "tests.gui.front.test_b0_window::test_system_title_buttons_keep_clear_header_space[700-True-both]",
+      "tests.gui.front.test_b1_keys::test_b1_keys_narrow_window",
+      "tests.gui.front.test_des3_visual::test_native_widgets_match_reviewed_baselines[light-1280-light]",
+      "tests.gui.front.test_des3_visual::test_native_widgets_match_reviewed_baselines[dark-1280-dark]",
+      "tests.gui.front.test_des3_visual::test_native_widgets_match_reviewed_baselines[light-700-narrow]",
+      "tests.gui.front.test_git_actions::test_a_conflicted_rebase_offers_abort_and_a_stale_commit_is_refused",
+      "tests.gui.front.test_git_scale_ui::test_scrolling_a_long_history"
+    ],
+    "skipped": 0,
+    "returncode": 1
+  },
+  "preserved": {
+    "base": "63cec43f8813972940a42e97a6ddeb65eb811d16",
+    "files": 913,
+    "path_content_digest": "1481c774fa770bfa0a82c932353947eed54f03f5512ce979d4bc4761450fccaf"
+  },
+  "renderer": {
+    "renderer": "GskNglRenderer",
+    "gtk": [
+      4,
+      14,
+      5
+    ],
+    "display": ":0",
+    "renderer_override": null,
+    "load": [
+      2.50732421875,
+      2.36865234375,
+      2.271484375
+    ]
+  },
+  "desktop_full_renderer": {
+    "renderer": "GskNglRenderer",
+    "gtk": [
+      4,
+      14,
+      5
+    ],
+    "display": ":0",
+    "renderer_override": null,
+    "load": [
+      4.2392578125,
+      3.06884765625,
+      2.54296875
+    ]
+  },
+  "scale_reports": {
+    "desktop-scale": "git scale: 10000 rows, 186 frames in 4 s, median 16.9 ms, p95 34.8 ms, worst 104.1 ms, RSS 262 MB (start 198, first page 244, all rows 257 after 3.0 s)",
+    "desktop-full": "git scale: 10000 rows, 155 frames in 4 s, median 31.4 ms, p95 35.2 ms, worst 44.8 ms, RSS 616 MB (start 605, first page 605, all rows 616 after 3.2 s)"
+  },
+  "evidence_hashes": {
+    "artifacts/qa26/desktop-full/environment.json": "387abc887f3f3bb0ca82a3c4797a4e295d352cec418b577675ae40fffc88a314",
+    "artifacts/qa26/desktop-full/pytest.log": "60d8c75f784378a2e40bb06e481167db2f8991da78b33bea0198e84c3b4ba035",
+    "artifacts/qa26/desktop-full/pytest.xml": "e3f5b4636f1c658bd8b71c0a32652178a29784ef3e850c1635895208915baf47",
+    "artifacts/qa26/desktop-full/renderer.json": "085e07b738f140553b4651fba3fd243d5a8e104737784f6c4271c81bf280ec78",
+    "artifacts/qa26/desktop-full/run.json": "8da6522e97f4708ab8508c319cec0194063acef97a1e9111d86e4d653900714a",
+    "artifacts/qa26/desktop-full/scale.txt": "afa5de31d51f7366fbd79bbd2b74a4b434fa10be2b522dda8caaac06b91dc81e",
+    "artifacts/qa26/desktop-scale/environment.json": "387abc887f3f3bb0ca82a3c4797a4e295d352cec418b577675ae40fffc88a314",
+    "artifacts/qa26/desktop-scale/pytest.log": "acd1ba5dd450662b2442d0255119a59e49745d2e1328eda779c1a6974f5b611d",
+    "artifacts/qa26/desktop-scale/pytest.xml": "741462fee423e8f5e9304a58d4da3c7899d3aee51b403299b34a7ad17cc0f1ec",
+    "artifacts/qa26/desktop-scale/renderer.json": "d46509bc524b3a4f6ce997267af9b288bd14575ba5e6effd00a9c0a3c23d5074",
+    "artifacts/qa26/desktop-scale/run.json": "59c113747d2373778b663f412c51b0e934ab7d750db624098de632765404679c",
+    "artifacts/qa26/desktop-scale/scale.txt": "dfa32622a8e918a93326eee1897f926e3d2e1413c48d1a65a7542a8733436397",
+    "artifacts/qa26/desktop.py": "22fa60eef6b2fdb831da1e37e68c82e1d4f9e562114ba7ea6cbd6b7f90a77ea4",
+    "artifacts/qa26/full-private/pytest.log": "71686f381e513d0064e3bb2c852dab737b2ad8f3d1a0e2a99a5398b115f65e59",
+    "artifacts/qa26/full-private/pytest.xml": "1c731a743d54c579d1549c13743f9d65a28e6d064f7dd6b2bba7574b6c55eae4",
+    "artifacts/qa26/full-private/run.json": "8f1582e80731f0a29b6f56b89639dc6c0d49d53edbb43abe1480c09733555d24",
+    "artifacts/qa26/full-private/xvfb.log": "b987a262609a3720f450ab6815ed90b2069dd47b7b012959ca19c325aebf5d55",
+    "artifacts/qa26/renderer.py": "dee400905e02a4c5402dec3845bc66bc2551506ef0ac2f3093b8543266f80380",
+    "artifacts/qa26/verify.py": "854f25df16649bd8d1bd4bfaab7e4a1340ccb960485408d3f662b469ecb0b660"
+  }
+}

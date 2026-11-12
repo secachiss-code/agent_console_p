@@ -1,0 +1,43 @@
+ruff
+All checks passed!
+basedpyright
+0 errors, 0 warnings, 0 notes
+import-linter
+
+╔══╗─────────▶╔╗ ╔╗      ╔╗◀───┐
+╚╣╠╝◀─────┐  ╔╝╚╗║║────▶╔╝╚╗   │
+ ║║   ╔══╦══╦╩╗╔╝║║  ╔╦═╩╗╔╝╔═╦══╗
+ ║║╔══╣╔╗║╔╗║╔╣║ ║║ ╔╬╣╔╗║║ ║│║╔═╝
+╔╣╠╣║║║╚╝║╚╝║║║╚╗║╚═╝║║║║║╚╗║═╣║
+╚══╩╩╩╣╔═╩══╩╝╚═╝╚═══╩╩╝╚╩═╩╩═╩╝
+  └──▶║║                    ▲
+      ╚╝────────────────────┘
+
+
+---------
+Contracts
+---------
+
+Analyzed 354 files, 1893 dependencies.
+--------------------------------------
+
+UI does not import the core KEPT
+Core does not import the UI or gi KEPT
+Domain stays free of infrastructure libraries KEPT
+Application does not import infrastructure KEPT
+Contracts do not import the rest of aconsole KEPT
+Sidecar stays on the standard library KEPT
+
+Contracts: 6 kept, 0 broken.
+check_no_js
+check_no_raw_sql
+contrast_check
+contrast_check: 0 below the minimum
+check_contracts
+check_contracts: docs/contracts not linked, skipped 2 checks
+check_contracts: 11 checks passed
+api_floor_check
+api_floor_check: clean
+api_floor_fixture
+/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/038657e1539f15ad/tests/fixtures/ui_banned/spinner.py:9: Adw.Spinner
+/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/038657e1539f15ad/tests/fixtures/ui_banned/spinner.py:10: Adw.Spinner

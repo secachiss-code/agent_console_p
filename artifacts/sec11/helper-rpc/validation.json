@@ -1,0 +1,11 @@
+{
+  "evidence_integrity": "PASS",
+  "cases": 32,
+  "pairs": 16,
+  "source_hashes": 295,
+  "equal_outcomes": 8,
+  "equal_files": 10,
+  "daemon_journal_rows": 0,
+  "security_acceptance": "NOT RUN",
+  "stage_A": "INCOMPLETE"
+}

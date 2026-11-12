@@ -1,0 +1,228 @@
+{
+  "evidence_integrity": "PASS",
+  "cases": 40,
+  "steps": 120,
+  "step_pairs": 60,
+  "equal_outcomes": 60,
+  "final_equal_pairs": {
+    "head": 12,
+    "target": 12,
+    "symbolic_head": 20,
+    "head_tree": 18,
+    "target_tree": 18,
+    "head_message": 14,
+    "index": 14,
+    "unmerged": 20,
+    "status": 16,
+    "state": 20,
+    "files": 14,
+    "tree_entries": 18,
+    "head_hook_content": 18,
+    "index_hook_content": 14
+  },
+  "source_hashes": 294,
+  "positive_controls": [
+    {
+      "format": "sha1",
+      "operation": "rebase",
+      "mode": "observe",
+      "phase": null,
+      "invoked": false,
+      "head_message": "target",
+      "head_hook_content": "",
+      "index_hook_content": ""
+    },
+    {
+      "format": "sha1",
+      "operation": "rebase",
+      "mode": "prepare_message",
+      "phase": "prepare-commit-msg",
+      "invoked": true,
+      "head_message": "SEC22 hook message\n\ntarget",
+      "head_hook_content": "",
+      "index_hook_content": ""
+    },
+    {
+      "format": "sha1",
+      "operation": "rebase",
+      "mode": "commit_message",
+      "phase": "commit-msg",
+      "invoked": false,
+      "head_message": "target",
+      "head_hook_content": "",
+      "index_hook_content": ""
+    },
+    {
+      "format": "sha1",
+      "operation": "rebase",
+      "mode": "pre_index",
+      "phase": "pre-commit",
+      "invoked": false,
+      "head_message": "target",
+      "head_hook_content": "",
+      "index_hook_content": ""
+    },
+    {
+      "format": "sha1",
+      "operation": "rebase",
+      "mode": "prepare_index",
+      "phase": "prepare-commit-msg",
+      "invoked": true,
+      "head_message": "target",
+      "head_hook_content": "",
+      "index_hook_content": "SEC22 hook index"
+    },
+    {
+      "format": "sha1",
+      "operation": "cherry-pick",
+      "mode": "observe",
+      "phase": null,
+      "invoked": false,
+      "head_message": "source",
+      "head_hook_content": "",
+      "index_hook_content": ""
+    },
+    {
+      "format": "sha1",
+      "operation": "cherry-pick",
+      "mode": "prepare_message",
+      "phase": "prepare-commit-msg",
+      "invoked": true,
+      "head_message": "SEC22 hook message\n\nsource",
+      "head_hook_content": "",
+      "index_hook_content": ""
+    },
+    {
+      "format": "sha1",
+      "operation": "cherry-pick",
+      "mode": "commit_message",
+      "phase": "commit-msg",
+      "invoked": true,
+      "head_message": "SEC22 hook message\n\nsource",
+      "head_hook_content": "",
+      "index_hook_content": ""
+    },
+    {
+      "format": "sha1",
+      "operation": "cherry-pick",
+      "mode": "pre_index",
+      "phase": "pre-commit",
+      "invoked": true,
+      "head_message": "source",
+      "head_hook_content": "SEC22 hook index",
+      "index_hook_content": "SEC22 hook index"
+    },
+    {
+      "format": "sha1",
+      "operation": "cherry-pick",
+      "mode": "prepare_index",
+      "phase": "prepare-commit-msg",
+      "invoked": true,
+      "head_message": "source",
+      "head_hook_content": "",
+      "index_hook_content": "SEC22 hook index"
+    },
+    {
+      "format": "sha256",
+      "operation": "rebase",
+      "mode": "observe",
+      "phase": null,
+      "invoked": false,
+      "head_message": "target",
+      "head_hook_content": "",
+      "index_hook_content": ""
+    },
+    {
+      "format": "sha256",
+      "operation": "rebase",
+      "mode": "prepare_message",
+      "phase": "prepare-commit-msg",
+      "invoked": true,
+      "head_message": "SEC22 hook message\n\ntarget",
+      "head_hook_content": "",
+      "index_hook_content": ""
+    },
+    {
+      "format": "sha256",
+      "operation": "rebase",
+      "mode": "commit_message",
+      "phase": "commit-msg",
+      "invoked": false,
+      "head_message": "target",
+      "head_hook_content": "",
+      "index_hook_content": ""
+    },
+    {
+      "format": "sha256",
+      "operation": "rebase",
+      "mode": "pre_index",
+      "phase": "pre-commit",
+      "invoked": false,
+      "head_message": "target",
+      "head_hook_content": "",
+      "index_hook_content": ""
+    },
+    {
+      "format": "sha256",
+      "operation": "rebase",
+      "mode": "prepare_index",
+      "phase": "prepare-commit-msg",
+      "invoked": true,
+      "head_message": "target",
+      "head_hook_content": "",
+      "index_hook_content": "SEC22 hook index"
+    },
+    {
+      "format": "sha256",
+      "operation": "cherry-pick",
+      "mode": "observe",
+      "phase": null,
+      "invoked": false,
+      "head_message": "source",
+      "head_hook_content": "",
+      "index_hook_content": ""
+    },
+    {
+      "format": "sha256",
+      "operation": "cherry-pick",
+      "mode": "prepare_message",
+      "phase": "prepare-commit-msg",
+      "invoked": true,
+      "head_message": "SEC22 hook message\n\nsource",
+      "head_hook_content": "",
+      "index_hook_content": ""
+    },
+    {
+      "format": "sha256",
+      "operation": "cherry-pick",
+      "mode": "commit_message",
+      "phase": "commit-msg",
+      "invoked": true,
+      "head_message": "SEC22 hook message\n\nsource",
+      "head_hook_content": "",
+      "index_hook_content": ""
+    },
+    {
+      "format": "sha256",
+      "operation": "cherry-pick",
+      "mode": "pre_index",
+      "phase": "pre-commit",
+      "invoked": true,
+      "head_message": "source",
+      "head_hook_content": "SEC22 hook index",
+      "index_hook_content": "SEC22 hook index"
+    },
+    {
+      "format": "sha256",
+      "operation": "cherry-pick",
+      "mode": "prepare_index",
+      "phase": "prepare-commit-msg",
+      "invoked": true,
+      "head_message": "source",
+      "head_hook_content": "",
+      "index_hook_content": "SEC22 hook index"
+    }
+  ],
+  "security_acceptance": "NOT RUN",
+  "stage_A": "INCOMPLETE"
+}

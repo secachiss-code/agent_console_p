@@ -4,8 +4,11 @@ from __future__ import annotations
 
 import asyncio
 import dataclasses
+import shlex
 from datetime import UTC, datetime
 lazy from pathlib import Path
+
+import pytest
 
 from aconsole.contracts.app import ProjectAddParams, ProjectView
 from aconsole.contracts.git import (
@@ -217,6 +220,89 @@ def test_a_refusing_hook_leaves_the_target_as_it_was(tmp_path: Path) -> None:
             state = await client.call("git/state", GitStateParams(project_id=project), GitStateResult)
             assert state.operations == ()
         await _stop(daemon, task, client)
+
+    asyncio.run(scenario())
+
+
+@pytest.mark.parametrize("phase", ["pre-commit", "commit-msg"])
+@pytest.mark.parametrize("change", ["add", "remove"])
+def test_no_checkout_squash_refuses_a_hook_changed_index(tmp_path: Path, phase: str, change: str) -> None:
+    async def scenario() -> None:
+        repo, source = _diverged(tmp_path)
+        target = git(repo, "rev-parse", "HEAD")
+        _ = git(repo, "branch", "release", target)
+        (repo / "local.txt").write_text("staged local work\n", encoding="utf-8")
+        _ = git(repo, "add", "--", "local.txt")
+        (repo / "a.txt").write_text("unstaged local work\n", encoding="utf-8")
+        (repo / ".git" / "info" / "exclude").write_text("ignored.txt\n", encoding="utf-8")
+        (repo / "ignored.txt").write_text("ignored local work\n", encoding="utf-8")
+        (repo / "untracked.txt").write_text("untracked local work\n", encoding="utf-8")
+        original_index = (repo / ".git" / "index").read_bytes()
+        source_oid = git(source, "rev-parse", "HEAD")
+        called = tmp_path / "called"
+        mutation = (
+            "printf 'hook work\\n' > hook-added.txt\n/usr/bin/git add -- hook-added.txt\n"
+            if change == "add" else "/usr/bin/git update-index --force-remove -- a.txt\n"
+        )
+        hook = repo / ".git" / "hooks" / phase
+        hook.write_text(f"#!/bin/sh\nset -e\nprintf called >> {shlex.quote(str(called))}\n{mutation}",
+                        encoding="utf-8")
+        hook.chmod(0o755)
+        daemon, task, client, project = await _start(tmp_path, repo)
+        try:
+            preview = await _preview(client, project, "work", "release")
+            assert preview.target_worktree is None
+            done = await client.call("git/mergeWorktree", _go(project, preview, "squash"), GitOperationResult)
+            assert done.operation.status == "failed", done.operation
+            assert "hook changed the candidate index" in (done.operation.message or "")
+            assert done.operation.result_oid is None
+            assert git(repo, "rev-parse", "release") == target
+            assert git(repo, "rev-parse", "HEAD") == target
+            assert git(source, "rev-parse", "HEAD") == source_oid
+            assert (repo / ".git" / "index").read_bytes() == original_index
+            assert (repo / "a.txt").read_text(encoding="utf-8") == "unstaged local work\n"
+            assert (repo / "local.txt").read_text(encoding="utf-8") == "staged local work\n"
+            assert (repo / "ignored.txt").read_text(encoding="utf-8") == "ignored local work\n"
+            assert (repo / "untracked.txt").read_text(encoding="utf-8") == "untracked local work\n"
+            assert called.read_text(encoding="utf-8") == "called"
+            if change == "add":
+                assert (repo / "hook-added.txt").read_text(encoding="utf-8") == "hook work\n"
+            hook.unlink()
+            retry = await _preview(client, project, "work", "release")
+            retried = await client.call("git/mergeWorktree", _go(project, retry, "squash"), GitOperationResult)
+            assert retried.operation.status == "finished", retried.operation
+            assert git(repo, "ls-tree", "--name-only", "release") == "a.txt\nb.txt\nw.txt"
+            assert git(repo, "rev-parse", "HEAD") == target
+            assert (repo / ".git" / "index").read_bytes() == original_index
+            assert called.read_text(encoding="utf-8") == "called"
+            previous = await client.call(
+                "git/operation", GitOperationParams(operation_id=done.operation.id), GitOperationResult,
+            )
+            assert previous.operation.status == "failed"
+        finally:
+            await _stop(daemon, task, client)
+
+    asyncio.run(scenario())
+
+
+def test_no_checkout_squash_keeps_a_hook_edited_message(tmp_path: Path) -> None:
+    async def scenario() -> None:
+        repo, _source = _diverged(tmp_path)
+        _ = git(repo, "branch", "release", "HEAD")
+        hook = repo / ".git" / "hooks" / "commit-msg"
+        hook.write_text('#!/bin/sh\nprintf "\\nHook-approved message\\n" >> "$1"\n', encoding="utf-8")
+        hook.chmod(0o755)
+        daemon, task, client, project = await _start(tmp_path, repo)
+        try:
+            preview = await _preview(client, project, "work", "release")
+            assert preview.target_worktree is None
+            done = await client.call("git/mergeWorktree", _go(project, preview, "squash"), GitOperationResult)
+            assert done.operation.status == "finished", done.operation
+            assert "Hook-approved message" in git(repo, "log", "-1", "--format=%B", "release")
+            assert git(repo, "ls-tree", "--name-only", "release") == "a.txt\nb.txt\nw.txt"
+            assert git(repo, "status", "--porcelain") == ""
+        finally:
+            await _stop(daemon, task, client)
 
     asyncio.run(scenario())
 

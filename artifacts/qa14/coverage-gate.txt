@@ -1,0 +1,4 @@
+89.82
+Coverage failure: total of 89.82 is less than fail-under=90.00
+
+exit_code=2

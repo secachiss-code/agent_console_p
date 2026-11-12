@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="3" skipped="0" tests="3" time="2.755" timestamp="2026-11-12T22:38:53.492368+03:00" hostname="somovasnbook14"><testcase classname="tests.gui.front.test_preferences_drafts" name="test_preferences_close_before_first_frame[clean]" time="2.278"><failure message="AssertionError: AssertionError('GTK wait failed at 128')&#10;assert AssertionError('GTK wait failed at 128') is None&#10; +  where AssertionError('GTK wait failed at 128') = &lt;test_b2_tabs._TabsTestApp object at 0x76d638de7c40 (tests+gui+front+test_b2_tabs+_TabsTestApp at 0x18a8fe80)&gt;.error">decision = 'clean'
+
+    @pytest.mark.parametrize("decision", ["clean", "discard", "save"])
+    def test_preferences_close_before_first_frame(decision: str) -&gt; None:
+        async def scenario(app: _TabsTestApp) -&gt; None:
+            client, _tabs = _model(demo_snapshot())
+            settings = Settings(rev=1, vault_path="", worktrees_dir="")
+            patches: list[SettingsPatch] = []
+    
+            async def request(method: str, params: msgspec.Struct, _result: type[msgspec.Struct]) -&gt; msgspec.Struct:
+                nonlocal settings
+                if method == "settings/update":
+                    patches.append(params.patch)
+                    settings = commit_settings(settings, params.patch)
+                return settings
+    
+            client.request = request
+            dialog = PreferencesDialog(PreferencesViewModel(client))
+            assert app.window is not None
+            app.window.set_default_size(800, 800)
+            app.window.present()
+            dialog.open(app.window)
+            # Deliver a confirmed close before GTK's opening frame callbacks run.
+            assert dialog.get_width() == 0
+            if decision == "clean":
+                dialog.close()
+            else:
+                assert dialog.worker is not None
+                await dialog.worker
+                dialog.font_entry.set_text("Early draft")
+                dialog.close()
+                prompt = dialog._close_prompt
+                assert prompt is not None
+                prompt.response(decision)
+            await _until(lambda: not dialog._active)
+            await _until(lambda: not dialog.get_mapped())
+            assert dialog._unsubscribe is None
+            assert bool(patches) == (decision == "save")
+            assert settings.terminal_font == ("Early draft" if decision == "save" else None)
+            await client.close()
+    
+&gt;       _run_ui(scenario)
+
+tests/gui/front/test_preferences_drafts.py:135: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+scenario = &lt;function test_preferences_close_before_first_frame.&lt;locals&gt;.scenario at 0x76d638901220&gt;
+
+    def _run_ui(scenario: Callable[[_TabsTestApp], Awaitable[None]]) -&gt; None:
+        app = _TabsTestApp(scenario)
+        assert run_app(lambda: app, ["aconsole-b2-tabs-test"]) == 0
+&gt;       assert app.error is None, repr(app.error)
+E       AssertionError: AssertionError('GTK wait failed at 128')
+E       assert AssertionError('GTK wait failed at 128') is None
+E        +  where AssertionError('GTK wait failed at 128') = &lt;test_b2_tabs._TabsTestApp object at 0x76d638de7c40 (tests+gui+front+test_b2_tabs+_TabsTestApp at 0x18a8fe80)&gt;.error
+
+tests/gui/front/test_b2_tabs.py:67: AssertionError</failure></testcase><testcase classname="tests.gui.front.test_preferences_drafts" name="test_preferences_close_before_first_frame[discard]" time="0.094"><failure message="AssertionError: AttributeError(&quot;'AlertDialog' object has no attribute 'response'&quot;)&#10;assert AttributeError(&quot;'AlertDialog' object has no attribute 'response'&quot;) is None&#10; +  where AttributeError(&quot;'AlertDialog' object has no attribute 'response'&quot;) = &lt;test_b2_tabs._TabsTestApp object at 0x76d620103b00 (tests+gui+front+test_b2_tabs+_TabsTestApp at 0x18dba9d0)&gt;.error">decision = 'discard'
+
+    @pytest.mark.parametrize("decision", ["clean", "discard", "save"])
+    def test_preferences_close_before_first_frame(decision: str) -&gt; None:
+        async def scenario(app: _TabsTestApp) -&gt; None:
+            client, _tabs = _model(demo_snapshot())
+            settings = Settings(rev=1, vault_path="", worktrees_dir="")
+            patches: list[SettingsPatch] = []
+    
+            async def request(method: str, params: msgspec.Struct, _result: type[msgspec.Struct]) -&gt; msgspec.Struct:
+                nonlocal settings
+                if method == "settings/update":
+                    patches.append(params.patch)
+                    settings = commit_settings(settings, params.patch)
+                return settings
+    
+            client.request = request
+            dialog = PreferencesDialog(PreferencesViewModel(client))
+            assert app.window is not None
+            app.window.set_default_size(800, 800)
+            app.window.present()
+            dialog.open(app.window)
+            # Deliver a confirmed close before GTK's opening frame callbacks run.
+            assert dialog.get_width() == 0
+            if decision == "clean":
+                dialog.close()
+            else:
+                assert dialog.worker is not None
+                await dialog.worker
+                dialog.font_entry.set_text("Early draft")
+                dialog.close()
+                prompt = dialog._close_prompt
+                assert prompt is not None
+                prompt.response(decision)
+            await _until(lambda: not dialog._active)
+            await _until(lambda: not dialog.get_mapped())
+            assert dialog._unsubscribe is None
+            assert bool(patches) == (decision == "save")
+            assert settings.terminal_font == ("Early draft" if decision == "save" else None)
+            await client.close()
+    
+&gt;       _run_ui(scenario)
+
+tests/gui/front/test_preferences_drafts.py:135: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+scenario = &lt;function test_preferences_close_before_first_frame.&lt;locals&gt;.scenario at 0x76d62019c1a0&gt;
+
+    def _run_ui(scenario: Callable[[_TabsTestApp], Awaitable[None]]) -&gt; None:
+        app = _TabsTestApp(scenario)
+        assert run_app(lambda: app, ["aconsole-b2-tabs-test"]) == 0
+&gt;       assert app.error is None, repr(app.error)
+E       AssertionError: AttributeError("'AlertDialog' object has no attribute 'response'")
+E       assert AttributeError("'AlertDialog' object has no attribute 'response'") is None
+E        +  where AttributeError("'AlertDialog' object has no attribute 'response'") = &lt;test_b2_tabs._TabsTestApp object at 0x76d620103b00 (tests+gui+front+test_b2_tabs+_TabsTestApp at 0x18dba9d0)&gt;.error
+
+tests/gui/front/test_b2_tabs.py:67: AssertionError</failure></testcase><testcase classname="tests.gui.front.test_preferences_drafts" name="test_preferences_close_before_first_frame[save]" time="0.080"><failure message="AssertionError: AttributeError(&quot;'AlertDialog' object has no attribute 'response'&quot;)&#10;assert AttributeError(&quot;'AlertDialog' object has no attribute 'response'&quot;) is None&#10; +  where AttributeError(&quot;'AlertDialog' object has no attribute 'response'&quot;) = &lt;test_b2_tabs._TabsTestApp object at 0x76d638926c40 (tests+gui+front+test_b2_tabs+_TabsTestApp at 0x1aee9a80)&gt;.error">decision = 'save'
+
+    @pytest.mark.parametrize("decision", ["clean", "discard", "save"])
+    def test_preferences_close_before_first_frame(decision: str) -&gt; None:
+        async def scenario(app: _TabsTestApp) -&gt; None:
+            client, _tabs = _model(demo_snapshot())
+            settings = Settings(rev=1, vault_path="", worktrees_dir="")
+            patches: list[SettingsPatch] = []
+    
+            async def request(method: str, params: msgspec.Struct, _result: type[msgspec.Struct]) -&gt; msgspec.Struct:
+                nonlocal settings
+                if method == "settings/update":
+                    patches.append(params.patch)
+                    settings = commit_settings(settings, params.patch)
+                return settings
+    
+            client.request = request
+            dialog = PreferencesDialog(PreferencesViewModel(client))
+            assert app.window is not None
+            app.window.set_default_size(800, 800)
+            app.window.present()
+            dialog.open(app.window)
+            # Deliver a confirmed close before GTK's opening frame callbacks run.
+            assert dialog.get_width() == 0
+            if decision == "clean":
+                dialog.close()
+            else:
+                assert dialog.worker is not None
+                await dialog.worker
+                dialog.font_entry.set_text("Early draft")
+                dialog.close()
+                prompt = dialog._close_prompt
+                assert prompt is not None
+                prompt.response(decision)
+            await _until(lambda: not dialog._active)
+            await _until(lambda: not dialog.get_mapped())
+            assert dialog._unsubscribe is None
+            assert bool(patches) == (decision == "save")
+            assert settings.terminal_font == ("Early draft" if decision == "save" else None)
+            await client.close()
+    
+&gt;       _run_ui(scenario)
+
+tests/gui/front/test_preferences_drafts.py:135: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+scenario = &lt;function test_preferences_close_before_first_frame.&lt;locals&gt;.scenario at 0x76d62019c250&gt;
+
+    def _run_ui(scenario: Callable[[_TabsTestApp], Awaitable[None]]) -&gt; None:
+        app = _TabsTestApp(scenario)
+        assert run_app(lambda: app, ["aconsole-b2-tabs-test"]) == 0
+&gt;       assert app.error is None, repr(app.error)
+E       AssertionError: AttributeError("'AlertDialog' object has no attribute 'response'")
+E       assert AttributeError("'AlertDialog' object has no attribute 'response'") is None
+E        +  where AttributeError("'AlertDialog' object has no attribute 'response'") = &lt;test_b2_tabs._TabsTestApp object at 0x76d638926c40 (tests+gui+front+test_b2_tabs+_TabsTestApp at 0x1aee9a80)&gt;.error
+
+tests/gui/front/test_b2_tabs.py:67: AssertionError</failure></testcase></testsuite></testsuites>

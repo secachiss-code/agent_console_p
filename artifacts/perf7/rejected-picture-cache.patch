@@ -1,0 +1,86 @@
+diff --git a/src/aconsole/ui/views/review/graph_cell.py b/src/aconsole/ui/views/review/graph_cell.py
+index 76af3a00..f0449d41 100644
+--- a/src/aconsole/ui/views/review/graph_cell.py
++++ b/src/aconsole/ui/views/review/graph_cell.py
+@@ -2,7 +2,8 @@
+ 
+ from __future__ import annotations
+ 
+-from typing import Final, override
++from collections import OrderedDict
++from typing import Final
+ 
+ import gi
+ 
+@@ -43,6 +44,7 @@ def _rgba(spec: str) -> Gdk.RGBA:
+ 
+ 
+ _COLORS: Final = tuple(_rgba(spec) for spec in _PALETTE)
++_TEXTURES = OrderedDict()
+ 
+ 
+ def lane_x(lane: int) -> float:
+@@ -65,11 +67,14 @@ def _edge(snapshot: Gtk.Snapshot, edge: LaneEdge, top: float, bottom: float) ->
+     snapshot.append_stroke(builder.to_path(), stroke, _COLORS[edge.color % len(_COLORS)])
+ 
+ 
+-class GraphCell(Gtk.Widget):
++class GraphCell(Gtk.Picture):
+     """Rows are recycled, so `set_row` is all that changes. The list can be any length."""
+ 
+     def __init__(self) -> None:
+         super().__init__()
++        self.set_can_shrink(True)
++        self.set_content_fit(Gtk.ContentFit.FILL)
++        self.connect("map", lambda _widget: self._update_texture())
+         self.row: RowLayout | None = None
+         self.snapshot_node: bool = False
+         self.uncommitted: bool = False
+@@ -82,14 +87,43 @@ class GraphCell(Gtk.Widget):
+         if same:
+             return  # retain GTK's snapshot for an unchanged graph, even when the commit changed
+         self.set_size_request(int(lane_x(min(row.width, _MAX_LANES))) + _MARGIN // 2, ROW_HEIGHT)
+-        self.queue_draw()
++        self._update_texture()
+ 
+-    @override
+-    def do_snapshot(self, snapshot: Gtk.Snapshot) -> None:
++    def _update_texture(self) -> None:
+         row = self.row
+         if row is None:
+             return
+-        height = float(self.get_height())
++        native = self.get_native()
++        renderer = native.get_renderer() if native is not None else None
++        if renderer is None:
++            return
++        found, bg = self.get_style_context().lookup_color("view_bg_color")
++        background = (bg.red, bg.green, bg.blue, bg.alpha) if found else None
++        width, height = int(lane_x(min(row.width, _MAX_LANES))) + _MARGIN // 2, ROW_HEIGHT
++        scale = self.get_scale_factor()
++        key = (renderer, row, self.snapshot_node, self.uncommitted, width, height, scale, background)
++        texture = _TEXTURES.get(key)
++        if texture is None:
++            drawing = Gtk.Snapshot()
++            drawing.scale(scale, scale)
++            self._draw_graph(drawing)
++            node = drawing.to_node()
++            if node is None:
++                return
++            viewport = Graphene.Rect().init(0, 0, width * scale, height * scale)
++            texture = renderer.render_texture(node, viewport)
++            _TEXTURES[key] = texture
++            if len(_TEXTURES) > 128:
++                _TEXTURES.popitem(last=False)
++        else:
++            _TEXTURES.move_to_end(key)
++        self.set_paintable(texture)
++
++    def _draw_graph(self, snapshot: Gtk.Snapshot) -> None:
++        row = self.row
++        if row is None:
++            return
++        height = float(ROW_HEIGHT)
+         middle = height / 2
+         for edge in row.above:
+             _edge(snapshot, edge, 0.0, middle)

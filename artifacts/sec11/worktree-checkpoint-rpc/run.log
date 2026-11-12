@@ -1,0 +1,1321 @@
+sha1 worktree observe native True
+[11/11/26 21:18:34] INFO     Context impl SQLiteImpl.           migration.py:205
+                    INFO     Will assume non-transactional DDL. migration.py:208
+                    INFO     Running upgrade  -> 0001_initial,  migration.py:611
+                             Initial schema from DATA_MODEL §3,
+                             written out table by table.
+                    INFO     Running upgrade 0001_initial ->    migration.py:611
+                             0002_plan_node_details, Keep what
+                             an agent wrote on a plan node: its
+                             boundaries, output format, and
+                             note.
+                    INFO     Running upgrade                    migration.py:611
+                             0002_plan_node_details ->
+                             0003_knowledge_details, Keep what
+                             a fact says and what a handover
+                             packet lists, not only their
+                             titles.
+                    INFO     Running upgrade                    migration.py:611
+                             0003_knowledge_details ->
+                             0004_git_operations, A journal of
+                             merges and rebases, so a restart
+                             can say what happened to a branch.
+                    INFO     Running upgrade                    migration.py:611
+                             0004_git_operations ->
+                             0005_work_sessions, Task sessions
+                             retain existing workspaces without
+                             executing Git or moving refs.
+                    INFO     Running upgrade 0005_work_sessions migration.py:611
+                             -> 0006_session_history, Durable
+                             session snapshots retain actors
+                             even after a tab is pruned.
+                    INFO     Running upgrade                    migration.py:611
+                             0006_session_history ->
+                             0007_git_ref_deletions, Durable
+                             outbox for expired legacy
+                             checkpoint refs.
+                    INFO     Running upgrade                    migration.py:611
+                             0007_git_ref_deletions ->
+                             0008_pending_session_fork, Keep a
+                             native CLI fork distinct from a
+                             resume across core restarts.
+                    INFO     Running upgrade                    migration.py:611
+                             0007_git_ref_deletions ->
+                             0008_approval_policy, Project
+                             approval-policy override. Null
+                             inherits the global choice stored
+                             in settings.
+                    INFO     Running upgrade                    migration.py:611
+                             0008_approval_policy,
+                             0008_pending_session_fork ->
+                             0009_merge_approval_fork, Join
+                             approval-policy and pending-fork
+                             migration histories without
+                             rewriting either.
+sha1 worktree observe daemon True
+sha1 worktree prepared_refuse native False
+[11/11/26 21:18:35] INFO     Context impl SQLiteImpl.           migration.py:205
+                    INFO     Will assume non-transactional DDL. migration.py:208
+                    INFO     Running upgrade  -> 0001_initial,  migration.py:611
+                             Initial schema from DATA_MODEL §3,
+                             written out table by table.
+                    INFO     Running upgrade 0001_initial ->    migration.py:611
+                             0002_plan_node_details, Keep what
+                             an agent wrote on a plan node: its
+                             boundaries, output format, and
+                             note.
+                    INFO     Running upgrade                    migration.py:611
+                             0002_plan_node_details ->
+                             0003_knowledge_details, Keep what
+                             a fact says and what a handover
+                             packet lists, not only their
+                             titles.
+                    INFO     Running upgrade                    migration.py:611
+                             0003_knowledge_details ->
+                             0004_git_operations, A journal of
+                             merges and rebases, so a restart
+                             can say what happened to a branch.
+                    INFO     Running upgrade                    migration.py:611
+                             0004_git_operations ->
+                             0005_work_sessions, Task sessions
+                             retain existing workspaces without
+                             executing Git or moving refs.
+[11/11/26 21:18:36] INFO     Running upgrade 0005_work_sessions migration.py:611
+                             -> 0006_session_history, Durable
+                             session snapshots retain actors
+                             even after a tab is pruned.
+                    INFO     Running upgrade                    migration.py:611
+                             0006_session_history ->
+                             0007_git_ref_deletions, Durable
+                             outbox for expired legacy
+                             checkpoint refs.
+                    INFO     Running upgrade                    migration.py:611
+                             0007_git_ref_deletions ->
+                             0008_pending_session_fork, Keep a
+                             native CLI fork distinct from a
+                             resume across core restarts.
+                    INFO     Running upgrade                    migration.py:611
+                             0007_git_ref_deletions ->
+                             0008_approval_policy, Project
+                             approval-policy override. Null
+                             inherits the global choice stored
+                             in settings.
+                    INFO     Running upgrade                    migration.py:611
+                             0008_approval_policy,
+                             0008_pending_session_fork ->
+                             0009_merge_approval_fork, Join
+                             approval-policy and pending-fork
+                             migration histories without
+                             rewriting either.
+sha1 worktree prepared_refuse daemon True
+sha1 worktree committed_fail native True
+[11/11/26 21:18:37] INFO     Context impl SQLiteImpl.           migration.py:205
+                    INFO     Will assume non-transactional DDL. migration.py:208
+                    INFO     Running upgrade  -> 0001_initial,  migration.py:611
+                             Initial schema from DATA_MODEL §3,
+                             written out table by table.
+                    INFO     Running upgrade 0001_initial ->    migration.py:611
+                             0002_plan_node_details, Keep what
+                             an agent wrote on a plan node: its
+                             boundaries, output format, and
+                             note.
+                    INFO     Running upgrade                    migration.py:611
+                             0002_plan_node_details ->
+                             0003_knowledge_details, Keep what
+                             a fact says and what a handover
+                             packet lists, not only their
+                             titles.
+                    INFO     Running upgrade                    migration.py:611
+                             0003_knowledge_details ->
+                             0004_git_operations, A journal of
+                             merges and rebases, so a restart
+                             can say what happened to a branch.
+                    INFO     Running upgrade                    migration.py:611
+                             0004_git_operations ->
+                             0005_work_sessions, Task sessions
+                             retain existing workspaces without
+                             executing Git or moving refs.
+                    INFO     Running upgrade 0005_work_sessions migration.py:611
+                             -> 0006_session_history, Durable
+                             session snapshots retain actors
+                             even after a tab is pruned.
+                    INFO     Running upgrade                    migration.py:611
+                             0006_session_history ->
+                             0007_git_ref_deletions, Durable
+                             outbox for expired legacy
+                             checkpoint refs.
+                    INFO     Running upgrade                    migration.py:611
+                             0007_git_ref_deletions ->
+                             0008_pending_session_fork, Keep a
+                             native CLI fork distinct from a
+                             resume across core restarts.
+                    INFO     Running upgrade                    migration.py:611
+                             0007_git_ref_deletions ->
+                             0008_approval_policy, Project
+                             approval-policy override. Null
+                             inherits the global choice stored
+                             in settings.
+                    INFO     Running upgrade                    migration.py:611
+                             0008_approval_policy,
+                             0008_pending_session_fork ->
+                             0009_merge_approval_fork, Join
+                             approval-policy and pending-fork
+                             migration histories without
+                             rewriting either.
+sha1 worktree committed_fail daemon True
+sha1 worktree post_checkout_fail native False
+[11/11/26 21:18:38] INFO     Context impl SQLiteImpl.           migration.py:205
+                    INFO     Will assume non-transactional DDL. migration.py:208
+                    INFO     Running upgrade  -> 0001_initial,  migration.py:611
+                             Initial schema from DATA_MODEL §3,
+                             written out table by table.
+[11/11/26 21:18:39] INFO     Running upgrade 0001_initial ->    migration.py:611
+                             0002_plan_node_details, Keep what
+                             an agent wrote on a plan node: its
+                             boundaries, output format, and
+                             note.
+                    INFO     Running upgrade                    migration.py:611
+                             0002_plan_node_details ->
+                             0003_knowledge_details, Keep what
+                             a fact says and what a handover
+                             packet lists, not only their
+                             titles.
+                    INFO     Running upgrade                    migration.py:611
+                             0003_knowledge_details ->
+                             0004_git_operations, A journal of
+                             merges and rebases, so a restart
+                             can say what happened to a branch.
+                    INFO     Running upgrade                    migration.py:611
+                             0004_git_operations ->
+                             0005_work_sessions, Task sessions
+                             retain existing workspaces without
+                             executing Git or moving refs.
+                    INFO     Running upgrade 0005_work_sessions migration.py:611
+                             -> 0006_session_history, Durable
+                             session snapshots retain actors
+                             even after a tab is pruned.
+                    INFO     Running upgrade                    migration.py:611
+                             0006_session_history ->
+                             0007_git_ref_deletions, Durable
+                             outbox for expired legacy
+                             checkpoint refs.
+                    INFO     Running upgrade                    migration.py:611
+                             0007_git_ref_deletions ->
+                             0008_pending_session_fork, Keep a
+                             native CLI fork distinct from a
+                             resume across core restarts.
+                    INFO     Running upgrade                    migration.py:611
+                             0007_git_ref_deletions ->
+                             0008_approval_policy, Project
+                             approval-policy override. Null
+                             inherits the global choice stored
+                             in settings.
+                    INFO     Running upgrade                    migration.py:611
+                             0008_approval_policy,
+                             0008_pending_session_fork ->
+                             0009_merge_approval_fork, Join
+                             approval-policy and pending-fork
+                             migration histories without
+                             rewriting either.
+sha1 worktree post_checkout_fail daemon True
+sha1 detached observe native True
+[11/11/26 21:18:40] INFO     Context impl SQLiteImpl.           migration.py:205
+                    INFO     Will assume non-transactional DDL. migration.py:208
+                    INFO     Running upgrade  -> 0001_initial,  migration.py:611
+                             Initial schema from DATA_MODEL §3,
+                             written out table by table.
+[11/11/26 21:18:41] INFO     Running upgrade 0001_initial ->    migration.py:611
+                             0002_plan_node_details, Keep what
+                             an agent wrote on a plan node: its
+                             boundaries, output format, and
+                             note.
+                    INFO     Running upgrade                    migration.py:611
+                             0002_plan_node_details ->
+                             0003_knowledge_details, Keep what
+                             a fact says and what a handover
+                             packet lists, not only their
+                             titles.
+                    INFO     Running upgrade                    migration.py:611
+                             0003_knowledge_details ->
+                             0004_git_operations, A journal of
+                             merges and rebases, so a restart
+                             can say what happened to a branch.
+                    INFO     Running upgrade                    migration.py:611
+                             0004_git_operations ->
+                             0005_work_sessions, Task sessions
+                             retain existing workspaces without
+                             executing Git or moving refs.
+                    INFO     Running upgrade 0005_work_sessions migration.py:611
+                             -> 0006_session_history, Durable
+                             session snapshots retain actors
+                             even after a tab is pruned.
+                    INFO     Running upgrade                    migration.py:611
+                             0006_session_history ->
+                             0007_git_ref_deletions, Durable
+                             outbox for expired legacy
+                             checkpoint refs.
+                    INFO     Running upgrade                    migration.py:611
+                             0007_git_ref_deletions ->
+                             0008_pending_session_fork, Keep a
+                             native CLI fork distinct from a
+                             resume across core restarts.
+                    INFO     Running upgrade                    migration.py:611
+                             0007_git_ref_deletions ->
+                             0008_approval_policy, Project
+                             approval-policy override. Null
+                             inherits the global choice stored
+                             in settings.
+                    INFO     Running upgrade                    migration.py:611
+                             0008_approval_policy,
+                             0008_pending_session_fork ->
+                             0009_merge_approval_fork, Join
+                             approval-policy and pending-fork
+                             migration histories without
+                             rewriting either.
+sha1 detached observe daemon True
+sha1 detached prepared_refuse native False
+                    INFO     Context impl SQLiteImpl.           migration.py:205
+                    INFO     Will assume non-transactional DDL. migration.py:208
+                    INFO     Running upgrade  -> 0001_initial,  migration.py:611
+                             Initial schema from DATA_MODEL §3,
+                             written out table by table.
+[11/11/26 21:18:42] INFO     Running upgrade 0001_initial ->    migration.py:611
+                             0002_plan_node_details, Keep what
+                             an agent wrote on a plan node: its
+                             boundaries, output format, and
+                             note.
+                    INFO     Running upgrade                    migration.py:611
+                             0002_plan_node_details ->
+                             0003_knowledge_details, Keep what
+                             a fact says and what a handover
+                             packet lists, not only their
+                             titles.
+                    INFO     Running upgrade                    migration.py:611
+                             0003_knowledge_details ->
+                             0004_git_operations, A journal of
+                             merges and rebases, so a restart
+                             can say what happened to a branch.
+                    INFO     Running upgrade                    migration.py:611
+                             0004_git_operations ->
+                             0005_work_sessions, Task sessions
+                             retain existing workspaces without
+                             executing Git or moving refs.
+                    INFO     Running upgrade 0005_work_sessions migration.py:611
+                             -> 0006_session_history, Durable
+                             session snapshots retain actors
+                             even after a tab is pruned.
+                    INFO     Running upgrade                    migration.py:611
+                             0006_session_history ->
+                             0007_git_ref_deletions, Durable
+                             outbox for expired legacy
+                             checkpoint refs.
+                    INFO     Running upgrade                    migration.py:611
+                             0007_git_ref_deletions ->
+                             0008_pending_session_fork, Keep a
+                             native CLI fork distinct from a
+                             resume across core restarts.
+                    INFO     Running upgrade                    migration.py:611
+                             0007_git_ref_deletions ->
+                             0008_approval_policy, Project
+                             approval-policy override. Null
+                             inherits the global choice stored
+                             in settings.
+                    INFO     Running upgrade                    migration.py:611
+                             0008_approval_policy,
+                             0008_pending_session_fork ->
+                             0009_merge_approval_fork, Join
+                             approval-policy and pending-fork
+                             migration histories without
+                             rewriting either.
+sha1 detached prepared_refuse daemon True
+sha1 detached committed_fail native True
+[11/11/26 21:18:43] INFO     Context impl SQLiteImpl.           migration.py:205
+                    INFO     Will assume non-transactional DDL. migration.py:208
+                    INFO     Running upgrade  -> 0001_initial,  migration.py:611
+                             Initial schema from DATA_MODEL §3,
+                             written out table by table.
+[11/11/26 21:18:44] INFO     Running upgrade 0001_initial ->    migration.py:611
+                             0002_plan_node_details, Keep what
+                             an agent wrote on a plan node: its
+                             boundaries, output format, and
+                             note.
+                    INFO     Running upgrade                    migration.py:611
+                             0002_plan_node_details ->
+                             0003_knowledge_details, Keep what
+                             a fact says and what a handover
+                             packet lists, not only their
+                             titles.
+                    INFO     Running upgrade                    migration.py:611
+                             0003_knowledge_details ->
+                             0004_git_operations, A journal of
+                             merges and rebases, so a restart
+                             can say what happened to a branch.
+                    INFO     Running upgrade                    migration.py:611
+                             0004_git_operations ->
+                             0005_work_sessions, Task sessions
+                             retain existing workspaces without
+                             executing Git or moving refs.
+                    INFO     Running upgrade 0005_work_sessions migration.py:611
+                             -> 0006_session_history, Durable
+                             session snapshots retain actors
+                             even after a tab is pruned.
+                    INFO     Running upgrade                    migration.py:611
+                             0006_session_history ->
+                             0007_git_ref_deletions, Durable
+                             outbox for expired legacy
+                             checkpoint refs.
+                    INFO     Running upgrade                    migration.py:611
+                             0007_git_ref_deletions ->
+                             0008_pending_session_fork, Keep a
+                             native CLI fork distinct from a
+                             resume across core restarts.
+                    INFO     Running upgrade                    migration.py:611
+                             0007_git_ref_deletions ->
+                             0008_approval_policy, Project
+                             approval-policy override. Null
+                             inherits the global choice stored
+                             in settings.
+                    INFO     Running upgrade                    migration.py:611
+                             0008_approval_policy,
+                             0008_pending_session_fork ->
+                             0009_merge_approval_fork, Join
+                             approval-policy and pending-fork
+                             migration histories without
+                             rewriting either.
+sha1 detached committed_fail daemon True
+sha1 detached post_checkout_fail native False
+[11/11/26 21:18:45] INFO     Context impl SQLiteImpl.           migration.py:205
+                    INFO     Will assume non-transactional DDL. migration.py:208
+                    INFO     Running upgrade  -> 0001_initial,  migration.py:611
+                             Initial schema from DATA_MODEL §3,
+                             written out table by table.
+                    INFO     Running upgrade 0001_initial ->    migration.py:611
+                             0002_plan_node_details, Keep what
+                             an agent wrote on a plan node: its
+                             boundaries, output format, and
+                             note.
+                    INFO     Running upgrade                    migration.py:611
+                             0002_plan_node_details ->
+                             0003_knowledge_details, Keep what
+                             a fact says and what a handover
+                             packet lists, not only their
+                             titles.
+                    INFO     Running upgrade                    migration.py:611
+                             0003_knowledge_details ->
+                             0004_git_operations, A journal of
+                             merges and rebases, so a restart
+                             can say what happened to a branch.
+                    INFO     Running upgrade                    migration.py:611
+                             0004_git_operations ->
+                             0005_work_sessions, Task sessions
+                             retain existing workspaces without
+                             executing Git or moving refs.
+[11/11/26 21:18:46] INFO     Running upgrade 0005_work_sessions migration.py:611
+                             -> 0006_session_history, Durable
+                             session snapshots retain actors
+                             even after a tab is pruned.
+                    INFO     Running upgrade                    migration.py:611
+                             0006_session_history ->
+                             0007_git_ref_deletions, Durable
+                             outbox for expired legacy
+                             checkpoint refs.
+                    INFO     Running upgrade                    migration.py:611
+                             0007_git_ref_deletions ->
+                             0008_pending_session_fork, Keep a
+                             native CLI fork distinct from a
+                             resume across core restarts.
+                    INFO     Running upgrade                    migration.py:611
+                             0007_git_ref_deletions ->
+                             0008_approval_policy, Project
+                             approval-policy override. Null
+                             inherits the global choice stored
+                             in settings.
+                    INFO     Running upgrade                    migration.py:611
+                             0008_approval_policy,
+                             0008_pending_session_fork ->
+                             0009_merge_approval_fork, Join
+                             approval-policy and pending-fork
+                             migration histories without
+                             rewriting either.
+sha1 detached post_checkout_fail daemon True
+sha1 restore observe native True
+                    INFO     Context impl SQLiteImpl.           migration.py:205
+                    INFO     Will assume non-transactional DDL. migration.py:208
+                    INFO     Running upgrade  -> 0001_initial,  migration.py:611
+                             Initial schema from DATA_MODEL §3,
+                             written out table by table.
+[11/11/26 21:18:47] INFO     Running upgrade 0001_initial ->    migration.py:611
+                             0002_plan_node_details, Keep what
+                             an agent wrote on a plan node: its
+                             boundaries, output format, and
+                             note.
+                    INFO     Running upgrade                    migration.py:611
+                             0002_plan_node_details ->
+                             0003_knowledge_details, Keep what
+                             a fact says and what a handover
+                             packet lists, not only their
+                             titles.
+                    INFO     Running upgrade                    migration.py:611
+                             0003_knowledge_details ->
+                             0004_git_operations, A journal of
+                             merges and rebases, so a restart
+                             can say what happened to a branch.
+                    INFO     Running upgrade                    migration.py:611
+                             0004_git_operations ->
+                             0005_work_sessions, Task sessions
+                             retain existing workspaces without
+                             executing Git or moving refs.
+                    INFO     Running upgrade 0005_work_sessions migration.py:611
+                             -> 0006_session_history, Durable
+                             session snapshots retain actors
+                             even after a tab is pruned.
+                    INFO     Running upgrade                    migration.py:611
+                             0006_session_history ->
+                             0007_git_ref_deletions, Durable
+                             outbox for expired legacy
+                             checkpoint refs.
+                    INFO     Running upgrade                    migration.py:611
+                             0007_git_ref_deletions ->
+                             0008_pending_session_fork, Keep a
+                             native CLI fork distinct from a
+                             resume across core restarts.
+                    INFO     Running upgrade                    migration.py:611
+                             0007_git_ref_deletions ->
+                             0008_approval_policy, Project
+                             approval-policy override. Null
+                             inherits the global choice stored
+                             in settings.
+                    INFO     Running upgrade                    migration.py:611
+                             0008_approval_policy,
+                             0008_pending_session_fork ->
+                             0009_merge_approval_fork, Join
+                             approval-policy and pending-fork
+                             migration histories without
+                             rewriting either.
+sha1 restore observe daemon True
+sha1 restore prepared_refuse native False
+[11/11/26 21:18:48] INFO     Context impl SQLiteImpl.           migration.py:205
+                    INFO     Will assume non-transactional DDL. migration.py:208
+                    INFO     Running upgrade  -> 0001_initial,  migration.py:611
+                             Initial schema from DATA_MODEL §3,
+                             written out table by table.
+                    INFO     Running upgrade 0001_initial ->    migration.py:611
+                             0002_plan_node_details, Keep what
+                             an agent wrote on a plan node: its
+                             boundaries, output format, and
+                             note.
+                    INFO     Running upgrade                    migration.py:611
+                             0002_plan_node_details ->
+                             0003_knowledge_details, Keep what
+                             a fact says and what a handover
+                             packet lists, not only their
+                             titles.
+[11/11/26 21:18:49] INFO     Running upgrade                    migration.py:611
+                             0003_knowledge_details ->
+                             0004_git_operations, A journal of
+                             merges and rebases, so a restart
+                             can say what happened to a branch.
+                    INFO     Running upgrade                    migration.py:611
+                             0004_git_operations ->
+                             0005_work_sessions, Task sessions
+                             retain existing workspaces without
+                             executing Git or moving refs.
+                    INFO     Running upgrade 0005_work_sessions migration.py:611
+                             -> 0006_session_history, Durable
+                             session snapshots retain actors
+                             even after a tab is pruned.
+                    INFO     Running upgrade                    migration.py:611
+                             0006_session_history ->
+                             0007_git_ref_deletions, Durable
+                             outbox for expired legacy
+                             checkpoint refs.
+                    INFO     Running upgrade                    migration.py:611
+                             0007_git_ref_deletions ->
+                             0008_pending_session_fork, Keep a
+                             native CLI fork distinct from a
+                             resume across core restarts.
+                    INFO     Running upgrade                    migration.py:611
+                             0007_git_ref_deletions ->
+                             0008_approval_policy, Project
+                             approval-policy override. Null
+                             inherits the global choice stored
+                             in settings.
+                    INFO     Running upgrade                    migration.py:611
+                             0008_approval_policy,
+                             0008_pending_session_fork ->
+                             0009_merge_approval_fork, Join
+                             approval-policy and pending-fork
+                             migration histories without
+                             rewriting either.
+sha1 restore prepared_refuse daemon True
+sha1 restore committed_fail native True
+[11/11/26 21:18:50] INFO     Context impl SQLiteImpl.           migration.py:205
+                    INFO     Will assume non-transactional DDL. migration.py:208
+                    INFO     Running upgrade  -> 0001_initial,  migration.py:611
+                             Initial schema from DATA_MODEL §3,
+                             written out table by table.
+                    INFO     Running upgrade 0001_initial ->    migration.py:611
+                             0002_plan_node_details, Keep what
+                             an agent wrote on a plan node: its
+                             boundaries, output format, and
+                             note.
+                    INFO     Running upgrade                    migration.py:611
+                             0002_plan_node_details ->
+                             0003_knowledge_details, Keep what
+                             a fact says and what a handover
+                             packet lists, not only their
+                             titles.
+                    INFO     Running upgrade                    migration.py:611
+                             0003_knowledge_details ->
+                             0004_git_operations, A journal of
+                             merges and rebases, so a restart
+                             can say what happened to a branch.
+                    INFO     Running upgrade                    migration.py:611
+                             0004_git_operations ->
+                             0005_work_sessions, Task sessions
+                             retain existing workspaces without
+                             executing Git or moving refs.
+                    INFO     Running upgrade 0005_work_sessions migration.py:611
+                             -> 0006_session_history, Durable
+                             session snapshots retain actors
+                             even after a tab is pruned.
+[11/11/26 21:18:51] INFO     Running upgrade                    migration.py:611
+                             0006_session_history ->
+                             0007_git_ref_deletions, Durable
+                             outbox for expired legacy
+                             checkpoint refs.
+                    INFO     Running upgrade                    migration.py:611
+                             0007_git_ref_deletions ->
+                             0008_pending_session_fork, Keep a
+                             native CLI fork distinct from a
+                             resume across core restarts.
+                    INFO     Running upgrade                    migration.py:611
+                             0007_git_ref_deletions ->
+                             0008_approval_policy, Project
+                             approval-policy override. Null
+                             inherits the global choice stored
+                             in settings.
+                    INFO     Running upgrade                    migration.py:611
+                             0008_approval_policy,
+                             0008_pending_session_fork ->
+                             0009_merge_approval_fork, Join
+                             approval-policy and pending-fork
+                             migration histories without
+                             rewriting either.
+sha1 restore committed_fail daemon True
+sha1 restore post_checkout_fail native False
+                    INFO     Context impl SQLiteImpl.           migration.py:205
+                    INFO     Will assume non-transactional DDL. migration.py:208
+                    INFO     Running upgrade  -> 0001_initial,  migration.py:611
+                             Initial schema from DATA_MODEL §3,
+                             written out table by table.
+[11/11/26 21:18:52] INFO     Running upgrade 0001_initial ->    migration.py:611
+                             0002_plan_node_details, Keep what
+                             an agent wrote on a plan node: its
+                             boundaries, output format, and
+                             note.
+                    INFO     Running upgrade                    migration.py:611
+                             0002_plan_node_details ->
+                             0003_knowledge_details, Keep what
+                             a fact says and what a handover
+                             packet lists, not only their
+                             titles.
+                    INFO     Running upgrade                    migration.py:611
+                             0003_knowledge_details ->
+                             0004_git_operations, A journal of
+                             merges and rebases, so a restart
+                             can say what happened to a branch.
+                    INFO     Running upgrade                    migration.py:611
+                             0004_git_operations ->
+                             0005_work_sessions, Task sessions
+                             retain existing workspaces without
+                             executing Git or moving refs.
+                    INFO     Running upgrade 0005_work_sessions migration.py:611
+                             -> 0006_session_history, Durable
+                             session snapshots retain actors
+                             even after a tab is pruned.
+                    INFO     Running upgrade                    migration.py:611
+                             0006_session_history ->
+                             0007_git_ref_deletions, Durable
+                             outbox for expired legacy
+                             checkpoint refs.
+                    INFO     Running upgrade                    migration.py:611
+                             0007_git_ref_deletions ->
+                             0008_pending_session_fork, Keep a
+                             native CLI fork distinct from a
+                             resume across core restarts.
+                    INFO     Running upgrade                    migration.py:611
+                             0007_git_ref_deletions ->
+                             0008_approval_policy, Project
+                             approval-policy override. Null
+                             inherits the global choice stored
+                             in settings.
+                    INFO     Running upgrade                    migration.py:611
+                             0008_approval_policy,
+                             0008_pending_session_fork ->
+                             0009_merge_approval_fork, Join
+                             approval-policy and pending-fork
+                             migration histories without
+                             rewriting either.
+sha1 restore post_checkout_fail daemon True
+sha256 worktree observe native True
+[11/11/26 21:18:53] INFO     Context impl SQLiteImpl.           migration.py:205
+                    INFO     Will assume non-transactional DDL. migration.py:208
+                    INFO     Running upgrade  -> 0001_initial,  migration.py:611
+                             Initial schema from DATA_MODEL §3,
+                             written out table by table.
+[11/11/26 21:18:54] INFO     Running upgrade 0001_initial ->    migration.py:611
+                             0002_plan_node_details, Keep what
+                             an agent wrote on a plan node: its
+                             boundaries, output format, and
+                             note.
+                    INFO     Running upgrade                    migration.py:611
+                             0002_plan_node_details ->
+                             0003_knowledge_details, Keep what
+                             a fact says and what a handover
+                             packet lists, not only their
+                             titles.
+                    INFO     Running upgrade                    migration.py:611
+                             0003_knowledge_details ->
+                             0004_git_operations, A journal of
+                             merges and rebases, so a restart
+                             can say what happened to a branch.
+                    INFO     Running upgrade                    migration.py:611
+                             0004_git_operations ->
+                             0005_work_sessions, Task sessions
+                             retain existing workspaces without
+                             executing Git or moving refs.
+                    INFO     Running upgrade 0005_work_sessions migration.py:611
+                             -> 0006_session_history, Durable
+                             session snapshots retain actors
+                             even after a tab is pruned.
+                    INFO     Running upgrade                    migration.py:611
+                             0006_session_history ->
+                             0007_git_ref_deletions, Durable
+                             outbox for expired legacy
+                             checkpoint refs.
+                    INFO     Running upgrade                    migration.py:611
+                             0007_git_ref_deletions ->
+                             0008_pending_session_fork, Keep a
+                             native CLI fork distinct from a
+                             resume across core restarts.
+                    INFO     Running upgrade                    migration.py:611
+                             0007_git_ref_deletions ->
+                             0008_approval_policy, Project
+                             approval-policy override. Null
+                             inherits the global choice stored
+                             in settings.
+                    INFO     Running upgrade                    migration.py:611
+                             0008_approval_policy,
+                             0008_pending_session_fork ->
+                             0009_merge_approval_fork, Join
+                             approval-policy and pending-fork
+                             migration histories without
+                             rewriting either.
+sha256 worktree observe daemon True
+sha256 worktree prepared_refuse native False
+                    INFO     Context impl SQLiteImpl.           migration.py:205
+                    INFO     Will assume non-transactional DDL. migration.py:208
+                    INFO     Running upgrade  -> 0001_initial,  migration.py:611
+                             Initial schema from DATA_MODEL §3,
+                             written out table by table.
+[11/11/26 21:18:55] INFO     Running upgrade 0001_initial ->    migration.py:611
+                             0002_plan_node_details, Keep what
+                             an agent wrote on a plan node: its
+                             boundaries, output format, and
+                             note.
+                    INFO     Running upgrade                    migration.py:611
+                             0002_plan_node_details ->
+                             0003_knowledge_details, Keep what
+                             a fact says and what a handover
+                             packet lists, not only their
+                             titles.
+                    INFO     Running upgrade                    migration.py:611
+                             0003_knowledge_details ->
+                             0004_git_operations, A journal of
+                             merges and rebases, so a restart
+                             can say what happened to a branch.
+                    INFO     Running upgrade                    migration.py:611
+                             0004_git_operations ->
+                             0005_work_sessions, Task sessions
+                             retain existing workspaces without
+                             executing Git or moving refs.
+                    INFO     Running upgrade 0005_work_sessions migration.py:611
+                             -> 0006_session_history, Durable
+                             session snapshots retain actors
+                             even after a tab is pruned.
+                    INFO     Running upgrade                    migration.py:611
+                             0006_session_history ->
+                             0007_git_ref_deletions, Durable
+                             outbox for expired legacy
+                             checkpoint refs.
+                    INFO     Running upgrade                    migration.py:611
+                             0007_git_ref_deletions ->
+                             0008_pending_session_fork, Keep a
+                             native CLI fork distinct from a
+                             resume across core restarts.
+                    INFO     Running upgrade                    migration.py:611
+                             0007_git_ref_deletions ->
+                             0008_approval_policy, Project
+                             approval-policy override. Null
+                             inherits the global choice stored
+                             in settings.
+                    INFO     Running upgrade                    migration.py:611
+                             0008_approval_policy,
+                             0008_pending_session_fork ->
+                             0009_merge_approval_fork, Join
+                             approval-policy and pending-fork
+                             migration histories without
+                             rewriting either.
+sha256 worktree prepared_refuse daemon True
+sha256 worktree committed_fail native True
+[11/11/26 21:18:56] INFO     Context impl SQLiteImpl.           migration.py:205
+                    INFO     Will assume non-transactional DDL. migration.py:208
+                    INFO     Running upgrade  -> 0001_initial,  migration.py:611
+                             Initial schema from DATA_MODEL §3,
+                             written out table by table.
+[11/11/26 21:18:57] INFO     Running upgrade 0001_initial ->    migration.py:611
+                             0002_plan_node_details, Keep what
+                             an agent wrote on a plan node: its
+                             boundaries, output format, and
+                             note.
+                    INFO     Running upgrade                    migration.py:611
+                             0002_plan_node_details ->
+                             0003_knowledge_details, Keep what
+                             a fact says and what a handover
+                             packet lists, not only their
+                             titles.
+                    INFO     Running upgrade                    migration.py:611
+                             0003_knowledge_details ->
+                             0004_git_operations, A journal of
+                             merges and rebases, so a restart
+                             can say what happened to a branch.
+                    INFO     Running upgrade                    migration.py:611
+                             0004_git_operations ->
+                             0005_work_sessions, Task sessions
+                             retain existing workspaces without
+                             executing Git or moving refs.
+                    INFO     Running upgrade 0005_work_sessions migration.py:611
+                             -> 0006_session_history, Durable
+                             session snapshots retain actors
+                             even after a tab is pruned.
+                    INFO     Running upgrade                    migration.py:611
+                             0006_session_history ->
+                             0007_git_ref_deletions, Durable
+                             outbox for expired legacy
+                             checkpoint refs.
+                    INFO     Running upgrade                    migration.py:611
+                             0007_git_ref_deletions ->
+                             0008_pending_session_fork, Keep a
+                             native CLI fork distinct from a
+                             resume across core restarts.
+                    INFO     Running upgrade                    migration.py:611
+                             0007_git_ref_deletions ->
+                             0008_approval_policy, Project
+                             approval-policy override. Null
+                             inherits the global choice stored
+                             in settings.
+                    INFO     Running upgrade                    migration.py:611
+                             0008_approval_policy,
+                             0008_pending_session_fork ->
+                             0009_merge_approval_fork, Join
+                             approval-policy and pending-fork
+                             migration histories without
+                             rewriting either.
+sha256 worktree committed_fail daemon True
+sha256 worktree post_checkout_fail native False
+[11/11/26 21:18:58] INFO     Context impl SQLiteImpl.           migration.py:205
+                    INFO     Will assume non-transactional DDL. migration.py:208
+                    INFO     Running upgrade  -> 0001_initial,  migration.py:611
+                             Initial schema from DATA_MODEL §3,
+                             written out table by table.
+                    INFO     Running upgrade 0001_initial ->    migration.py:611
+                             0002_plan_node_details, Keep what
+                             an agent wrote on a plan node: its
+                             boundaries, output format, and
+                             note.
+                    INFO     Running upgrade                    migration.py:611
+                             0002_plan_node_details ->
+                             0003_knowledge_details, Keep what
+                             a fact says and what a handover
+                             packet lists, not only their
+                             titles.
+                    INFO     Running upgrade                    migration.py:611
+                             0003_knowledge_details ->
+                             0004_git_operations, A journal of
+                             merges and rebases, so a restart
+                             can say what happened to a branch.
+                    INFO     Running upgrade                    migration.py:611
+                             0004_git_operations ->
+                             0005_work_sessions, Task sessions
+                             retain existing workspaces without
+                             executing Git or moving refs.
+[11/11/26 21:18:59] INFO     Running upgrade 0005_work_sessions migration.py:611
+                             -> 0006_session_history, Durable
+                             session snapshots retain actors
+                             even after a tab is pruned.
+                    INFO     Running upgrade                    migration.py:611
+                             0006_session_history ->
+                             0007_git_ref_deletions, Durable
+                             outbox for expired legacy
+                             checkpoint refs.
+                    INFO     Running upgrade                    migration.py:611
+                             0007_git_ref_deletions ->
+                             0008_pending_session_fork, Keep a
+                             native CLI fork distinct from a
+                             resume across core restarts.
+                    INFO     Running upgrade                    migration.py:611
+                             0007_git_ref_deletions ->
+                             0008_approval_policy, Project
+                             approval-policy override. Null
+                             inherits the global choice stored
+                             in settings.
+                    INFO     Running upgrade                    migration.py:611
+                             0008_approval_policy,
+                             0008_pending_session_fork ->
+                             0009_merge_approval_fork, Join
+                             approval-policy and pending-fork
+                             migration histories without
+                             rewriting either.
+sha256 worktree post_checkout_fail daemon True
+sha256 detached observe native True
+[11/11/26 21:19:00] INFO     Context impl SQLiteImpl.           migration.py:205
+                    INFO     Will assume non-transactional DDL. migration.py:208
+                    INFO     Running upgrade  -> 0001_initial,  migration.py:611
+                             Initial schema from DATA_MODEL §3,
+                             written out table by table.
+                    INFO     Running upgrade 0001_initial ->    migration.py:611
+                             0002_plan_node_details, Keep what
+                             an agent wrote on a plan node: its
+                             boundaries, output format, and
+                             note.
+                    INFO     Running upgrade                    migration.py:611
+                             0002_plan_node_details ->
+                             0003_knowledge_details, Keep what
+                             a fact says and what a handover
+                             packet lists, not only their
+                             titles.
+                    INFO     Running upgrade                    migration.py:611
+                             0003_knowledge_details ->
+                             0004_git_operations, A journal of
+                             merges and rebases, so a restart
+                             can say what happened to a branch.
+                    INFO     Running upgrade                    migration.py:611
+                             0004_git_operations ->
+                             0005_work_sessions, Task sessions
+                             retain existing workspaces without
+                             executing Git or moving refs.
+                    INFO     Running upgrade 0005_work_sessions migration.py:611
+                             -> 0006_session_history, Durable
+                             session snapshots retain actors
+                             even after a tab is pruned.
+                    INFO     Running upgrade                    migration.py:611
+                             0006_session_history ->
+                             0007_git_ref_deletions, Durable
+                             outbox for expired legacy
+                             checkpoint refs.
+                    INFO     Running upgrade                    migration.py:611
+                             0007_git_ref_deletions ->
+                             0008_pending_session_fork, Keep a
+                             native CLI fork distinct from a
+                             resume across core restarts.
+                    INFO     Running upgrade                    migration.py:611
+                             0007_git_ref_deletions ->
+                             0008_approval_policy, Project
+                             approval-policy override. Null
+                             inherits the global choice stored
+                             in settings.
+                    INFO     Running upgrade                    migration.py:611
+                             0008_approval_policy,
+                             0008_pending_session_fork ->
+                             0009_merge_approval_fork, Join
+                             approval-policy and pending-fork
+                             migration histories without
+                             rewriting either.
+sha256 detached observe daemon True
+sha256 detached prepared_refuse native False
+[11/11/26 21:19:01] INFO     Context impl SQLiteImpl.           migration.py:205
+                    INFO     Will assume non-transactional DDL. migration.py:208
+                    INFO     Running upgrade  -> 0001_initial,  migration.py:611
+                             Initial schema from DATA_MODEL §3,
+                             written out table by table.
+                    INFO     Running upgrade 0001_initial ->    migration.py:611
+                             0002_plan_node_details, Keep what
+                             an agent wrote on a plan node: its
+                             boundaries, output format, and
+                             note.
+                    INFO     Running upgrade                    migration.py:611
+                             0002_plan_node_details ->
+                             0003_knowledge_details, Keep what
+                             a fact says and what a handover
+                             packet lists, not only their
+                             titles.
+                    INFO     Running upgrade                    migration.py:611
+                             0003_knowledge_details ->
+                             0004_git_operations, A journal of
+                             merges and rebases, so a restart
+                             can say what happened to a branch.
+                    INFO     Running upgrade                    migration.py:611
+                             0004_git_operations ->
+                             0005_work_sessions, Task sessions
+                             retain existing workspaces without
+                             executing Git or moving refs.
+[11/11/26 21:19:02] INFO     Running upgrade 0005_work_sessions migration.py:611
+                             -> 0006_session_history, Durable
+                             session snapshots retain actors
+                             even after a tab is pruned.
+                    INFO     Running upgrade                    migration.py:611
+                             0006_session_history ->
+                             0007_git_ref_deletions, Durable
+                             outbox for expired legacy
+                             checkpoint refs.
+                    INFO     Running upgrade                    migration.py:611
+                             0007_git_ref_deletions ->
+                             0008_pending_session_fork, Keep a
+                             native CLI fork distinct from a
+                             resume across core restarts.
+                    INFO     Running upgrade                    migration.py:611
+                             0007_git_ref_deletions ->
+                             0008_approval_policy, Project
+                             approval-policy override. Null
+                             inherits the global choice stored
+                             in settings.
+                    INFO     Running upgrade                    migration.py:611
+                             0008_approval_policy,
+                             0008_pending_session_fork ->
+                             0009_merge_approval_fork, Join
+                             approval-policy and pending-fork
+                             migration histories without
+                             rewriting either.
+sha256 detached prepared_refuse daemon True
+sha256 detached committed_fail native True
+[11/11/26 21:19:03] INFO     Context impl SQLiteImpl.           migration.py:205
+                    INFO     Will assume non-transactional DDL. migration.py:208
+                    INFO     Running upgrade  -> 0001_initial,  migration.py:611
+                             Initial schema from DATA_MODEL §3,
+                             written out table by table.
+                    INFO     Running upgrade 0001_initial ->    migration.py:611
+                             0002_plan_node_details, Keep what
+                             an agent wrote on a plan node: its
+                             boundaries, output format, and
+                             note.
+                    INFO     Running upgrade                    migration.py:611
+                             0002_plan_node_details ->
+                             0003_knowledge_details, Keep what
+                             a fact says and what a handover
+                             packet lists, not only their
+                             titles.
+                    INFO     Running upgrade                    migration.py:611
+                             0003_knowledge_details ->
+                             0004_git_operations, A journal of
+                             merges and rebases, so a restart
+                             can say what happened to a branch.
+                    INFO     Running upgrade                    migration.py:611
+                             0004_git_operations ->
+                             0005_work_sessions, Task sessions
+                             retain existing workspaces without
+                             executing Git or moving refs.
+                    INFO     Running upgrade 0005_work_sessions migration.py:611
+                             -> 0006_session_history, Durable
+                             session snapshots retain actors
+                             even after a tab is pruned.
+                    INFO     Running upgrade                    migration.py:611
+                             0006_session_history ->
+                             0007_git_ref_deletions, Durable
+                             outbox for expired legacy
+                             checkpoint refs.
+                    INFO     Running upgrade                    migration.py:611
+                             0007_git_ref_deletions ->
+                             0008_pending_session_fork, Keep a
+                             native CLI fork distinct from a
+                             resume across core restarts.
+                    INFO     Running upgrade                    migration.py:611
+                             0007_git_ref_deletions ->
+                             0008_approval_policy, Project
+                             approval-policy override. Null
+                             inherits the global choice stored
+                             in settings.
+                    INFO     Running upgrade                    migration.py:611
+                             0008_approval_policy,
+                             0008_pending_session_fork ->
+                             0009_merge_approval_fork, Join
+                             approval-policy and pending-fork
+                             migration histories without
+                             rewriting either.
+sha256 detached committed_fail daemon True
+sha256 detached post_checkout_fail native False
+[11/11/26 21:19:04] INFO     Context impl SQLiteImpl.           migration.py:205
+                    INFO     Will assume non-transactional DDL. migration.py:208
+                    INFO     Running upgrade  -> 0001_initial,  migration.py:611
+                             Initial schema from DATA_MODEL §3,
+                             written out table by table.
+[11/11/26 21:19:05] INFO     Running upgrade 0001_initial ->    migration.py:611
+                             0002_plan_node_details, Keep what
+                             an agent wrote on a plan node: its
+                             boundaries, output format, and
+                             note.
+                    INFO     Running upgrade                    migration.py:611
+                             0002_plan_node_details ->
+                             0003_knowledge_details, Keep what
+                             a fact says and what a handover
+                             packet lists, not only their
+                             titles.
+                    INFO     Running upgrade                    migration.py:611
+                             0003_knowledge_details ->
+                             0004_git_operations, A journal of
+                             merges and rebases, so a restart
+                             can say what happened to a branch.
+                    INFO     Running upgrade                    migration.py:611
+                             0004_git_operations ->
+                             0005_work_sessions, Task sessions
+                             retain existing workspaces without
+                             executing Git or moving refs.
+                    INFO     Running upgrade 0005_work_sessions migration.py:611
+                             -> 0006_session_history, Durable
+                             session snapshots retain actors
+                             even after a tab is pruned.
+                    INFO     Running upgrade                    migration.py:611
+                             0006_session_history ->
+                             0007_git_ref_deletions, Durable
+                             outbox for expired legacy
+                             checkpoint refs.
+                    INFO     Running upgrade                    migration.py:611
+                             0007_git_ref_deletions ->
+                             0008_pending_session_fork, Keep a
+                             native CLI fork distinct from a
+                             resume across core restarts.
+                    INFO     Running upgrade                    migration.py:611
+                             0007_git_ref_deletions ->
+                             0008_approval_policy, Project
+                             approval-policy override. Null
+                             inherits the global choice stored
+                             in settings.
+                    INFO     Running upgrade                    migration.py:611
+                             0008_approval_policy,
+                             0008_pending_session_fork ->
+                             0009_merge_approval_fork, Join
+                             approval-policy and pending-fork
+                             migration histories without
+                             rewriting either.
+sha256 detached post_checkout_fail daemon True
+sha256 restore observe native True
+[11/11/26 21:19:06] INFO     Context impl SQLiteImpl.           migration.py:205
+                    INFO     Will assume non-transactional DDL. migration.py:208
+                    INFO     Running upgrade  -> 0001_initial,  migration.py:611
+                             Initial schema from DATA_MODEL §3,
+                             written out table by table.
+                    INFO     Running upgrade 0001_initial ->    migration.py:611
+                             0002_plan_node_details, Keep what
+                             an agent wrote on a plan node: its
+                             boundaries, output format, and
+                             note.
+                    INFO     Running upgrade                    migration.py:611
+                             0002_plan_node_details ->
+                             0003_knowledge_details, Keep what
+                             a fact says and what a handover
+                             packet lists, not only their
+                             titles.
+                    INFO     Running upgrade                    migration.py:611
+                             0003_knowledge_details ->
+                             0004_git_operations, A journal of
+                             merges and rebases, so a restart
+                             can say what happened to a branch.
+                    INFO     Running upgrade                    migration.py:611
+                             0004_git_operations ->
+                             0005_work_sessions, Task sessions
+                             retain existing workspaces without
+                             executing Git or moving refs.
+[11/11/26 21:19:07] INFO     Running upgrade 0005_work_sessions migration.py:611
+                             -> 0006_session_history, Durable
+                             session snapshots retain actors
+                             even after a tab is pruned.
+                    INFO     Running upgrade                    migration.py:611
+                             0006_session_history ->
+                             0007_git_ref_deletions, Durable
+                             outbox for expired legacy
+                             checkpoint refs.
+                    INFO     Running upgrade                    migration.py:611
+                             0007_git_ref_deletions ->
+                             0008_pending_session_fork, Keep a
+                             native CLI fork distinct from a
+                             resume across core restarts.
+                    INFO     Running upgrade                    migration.py:611
+                             0007_git_ref_deletions ->
+                             0008_approval_policy, Project
+                             approval-policy override. Null
+                             inherits the global choice stored
+                             in settings.
+                    INFO     Running upgrade                    migration.py:611
+                             0008_approval_policy,
+                             0008_pending_session_fork ->
+                             0009_merge_approval_fork, Join
+                             approval-policy and pending-fork
+                             migration histories without
+                             rewriting either.
+sha256 restore observe daemon True
+sha256 restore prepared_refuse native False
+[11/11/26 21:19:08] INFO     Context impl SQLiteImpl.           migration.py:205
+                    INFO     Will assume non-transactional DDL. migration.py:208
+                    INFO     Running upgrade  -> 0001_initial,  migration.py:611
+                             Initial schema from DATA_MODEL §3,
+                             written out table by table.
+                    INFO     Running upgrade 0001_initial ->    migration.py:611
+                             0002_plan_node_details, Keep what
+                             an agent wrote on a plan node: its
+                             boundaries, output format, and
+                             note.
+                    INFO     Running upgrade                    migration.py:611
+                             0002_plan_node_details ->
+                             0003_knowledge_details, Keep what
+                             a fact says and what a handover
+                             packet lists, not only their
+                             titles.
+                    INFO     Running upgrade                    migration.py:611
+                             0003_knowledge_details ->
+                             0004_git_operations, A journal of
+                             merges and rebases, so a restart
+                             can say what happened to a branch.
+                    INFO     Running upgrade                    migration.py:611
+                             0004_git_operations ->
+                             0005_work_sessions, Task sessions
+                             retain existing workspaces without
+                             executing Git or moving refs.
+                    INFO     Running upgrade 0005_work_sessions migration.py:611
+                             -> 0006_session_history, Durable
+                             session snapshots retain actors
+                             even after a tab is pruned.
+                    INFO     Running upgrade                    migration.py:611
+                             0006_session_history ->
+                             0007_git_ref_deletions, Durable
+                             outbox for expired legacy
+                             checkpoint refs.
+                    INFO     Running upgrade                    migration.py:611
+                             0007_git_ref_deletions ->
+                             0008_pending_session_fork, Keep a
+                             native CLI fork distinct from a
+                             resume across core restarts.
+                    INFO     Running upgrade                    migration.py:611
+                             0007_git_ref_deletions ->
+                             0008_approval_policy, Project
+                             approval-policy override. Null
+                             inherits the global choice stored
+                             in settings.
+                    INFO     Running upgrade                    migration.py:611
+                             0008_approval_policy,
+                             0008_pending_session_fork ->
+                             0009_merge_approval_fork, Join
+                             approval-policy and pending-fork
+                             migration histories without
+                             rewriting either.
+sha256 restore prepared_refuse daemon True
+sha256 restore committed_fail native True
+[11/11/26 21:19:09] INFO     Context impl SQLiteImpl.           migration.py:205
+                    INFO     Will assume non-transactional DDL. migration.py:208
+                    INFO     Running upgrade  -> 0001_initial,  migration.py:611
+                             Initial schema from DATA_MODEL §3,
+                             written out table by table.
+[11/11/26 21:19:10] INFO     Running upgrade 0001_initial ->    migration.py:611
+                             0002_plan_node_details, Keep what
+                             an agent wrote on a plan node: its
+                             boundaries, output format, and
+                             note.
+                    INFO     Running upgrade                    migration.py:611
+                             0002_plan_node_details ->
+                             0003_knowledge_details, Keep what
+                             a fact says and what a handover
+                             packet lists, not only their
+                             titles.
+                    INFO     Running upgrade                    migration.py:611
+                             0003_knowledge_details ->
+                             0004_git_operations, A journal of
+                             merges and rebases, so a restart
+                             can say what happened to a branch.
+                    INFO     Running upgrade                    migration.py:611
+                             0004_git_operations ->
+                             0005_work_sessions, Task sessions
+                             retain existing workspaces without
+                             executing Git or moving refs.
+                    INFO     Running upgrade 0005_work_sessions migration.py:611
+                             -> 0006_session_history, Durable
+                             session snapshots retain actors
+                             even after a tab is pruned.
+                    INFO     Running upgrade                    migration.py:611
+                             0006_session_history ->
+                             0007_git_ref_deletions, Durable
+                             outbox for expired legacy
+                             checkpoint refs.
+                    INFO     Running upgrade                    migration.py:611
+                             0007_git_ref_deletions ->
+                             0008_pending_session_fork, Keep a
+                             native CLI fork distinct from a
+                             resume across core restarts.
+                    INFO     Running upgrade                    migration.py:611
+                             0007_git_ref_deletions ->
+                             0008_approval_policy, Project
+                             approval-policy override. Null
+                             inherits the global choice stored
+                             in settings.
+                    INFO     Running upgrade                    migration.py:611
+                             0008_approval_policy,
+                             0008_pending_session_fork ->
+                             0009_merge_approval_fork, Join
+                             approval-policy and pending-fork
+                             migration histories without
+                             rewriting either.
+sha256 restore committed_fail daemon True
+sha256 restore post_checkout_fail native False
+[11/11/26 21:19:11] INFO     Context impl SQLiteImpl.           migration.py:205
+                    INFO     Will assume non-transactional DDL. migration.py:208
+                    INFO     Running upgrade  -> 0001_initial,  migration.py:611
+                             Initial schema from DATA_MODEL §3,
+                             written out table by table.
+                    INFO     Running upgrade 0001_initial ->    migration.py:611
+                             0002_plan_node_details, Keep what
+                             an agent wrote on a plan node: its
+                             boundaries, output format, and
+                             note.
+                    INFO     Running upgrade                    migration.py:611
+                             0002_plan_node_details ->
+                             0003_knowledge_details, Keep what
+                             a fact says and what a handover
+                             packet lists, not only their
+                             titles.
+                    INFO     Running upgrade                    migration.py:611
+                             0003_knowledge_details ->
+                             0004_git_operations, A journal of
+                             merges and rebases, so a restart
+                             can say what happened to a branch.
+                    INFO     Running upgrade                    migration.py:611
+                             0004_git_operations ->
+                             0005_work_sessions, Task sessions
+                             retain existing workspaces without
+                             executing Git or moving refs.
+                    INFO     Running upgrade 0005_work_sessions migration.py:611
+                             -> 0006_session_history, Durable
+                             session snapshots retain actors
+                             even after a tab is pruned.
+                    INFO     Running upgrade                    migration.py:611
+                             0006_session_history ->
+                             0007_git_ref_deletions, Durable
+                             outbox for expired legacy
+                             checkpoint refs.
+                    INFO     Running upgrade                    migration.py:611
+                             0007_git_ref_deletions ->
+                             0008_pending_session_fork, Keep a
+                             native CLI fork distinct from a
+                             resume across core restarts.
+[11/11/26 21:19:12] INFO     Running upgrade                    migration.py:611
+                             0007_git_ref_deletions ->
+                             0008_approval_policy, Project
+                             approval-policy override. Null
+                             inherits the global choice stored
+                             in settings.
+                    INFO     Running upgrade                    migration.py:611
+                             0008_approval_policy,
+                             0008_pending_session_fork ->
+                             0009_merge_approval_fork, Join
+                             approval-policy and pending-fork
+                             migration histories without
+                             rewriting either.
+sha256 restore post_checkout_fail daemon True
+Saved 48 cases

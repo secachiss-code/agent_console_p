@@ -1,0 +1,37 @@
+{
+  "base": "a8cb8def8b354058058513962fe17df2761fc459",
+  "environment": "host via distrobox-host-exec, existing locked core environment",
+  "command": [
+    "/home/sas/Projects/sp_aconsole_prototype/.venv-core/bin/python",
+    "-m",
+    "pytest",
+    "-o",
+    "addopts=",
+    "-o",
+    "faulthandler_timeout=60",
+    "-q",
+    "tests/core/test_git_merge.py",
+    "-k",
+    "no_checkout_squash",
+    "--junitxml=/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/038657e1539f15ad/artifacts/git6/regression.xml"
+  ],
+  "exit": 0,
+  "seconds": 9.235131581999667,
+  "source_hashes": {
+    "src/aconsole/core/infrastructure/git/operations.py": "2c69516749a1873c7f55bde0166addb4a51fdbcb635251e75524738a0d8646ac",
+    "tests/core/test_git_merge.py": "5e0fe42ba5406d4b1a4607cbfab010d474049ba96eab81f13d5a8f4c7f616166",
+    "artifacts/sec11/race_probe.py": "32649fdaf78a2e4fbd8ef70c091bb7df79e6edb1c861a570c387b2e41910609a",
+    "tests/core/test_git_host_exec.py": "a8606ed8c7641d4117f0c433fa07235b89b1e66eb88ba634fa1ac71d520621cd",
+    "tests/core/test_git_security_environment.py": "e3794316ba7421aac48d2e5743d98df77a1c2482025e3d44e3102823dac8018c"
+  },
+  "junit": {
+    "name": "pytest",
+    "errors": "0",
+    "failures": "0",
+    "skipped": "0",
+    "tests": "5",
+    "time": "7.829",
+    "timestamp": "2026-11-10T22:24:07.262641+03:00",
+    "hostname": "somovasnbook14"
+  }
+}

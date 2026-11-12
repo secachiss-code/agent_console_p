@@ -1,0 +1,66 @@
+{
+  "base": "0319563ef7311a5c420ae4c8359bc25593c15271",
+  "baseline": {
+    "failed": 2,
+    "passed": 2,
+    "reason": "Both scheduling failure cases left coroutine state CORO_CREATED."
+  },
+  "checks": [
+    {
+      "name": "focused",
+      "argv": [
+        "/home/sas/Projects/sp_aconsole_prototype/.venv-ui/bin/python",
+        "-m",
+        "pytest",
+        "tests/gui/test_bootstrap.py",
+        "-W",
+        "error::RuntimeWarning",
+        "-p",
+        "no:cacheprovider"
+      ],
+      "chunk_id": "9e4ce4",
+      "wall_time_seconds": 0.858650999,
+      "exit_code": 0,
+      "original_token_count": 173,
+      "output": "Collected 0 items to run in parallel\n....                                                                     [100%]\n=============================== warnings summary ===============================\n../../../../../../Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/events.py:803\n  /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/events.py:803: DeprecationWarning: 'asyncio.AbstractEventLoopPolicy' is deprecated and slated for removal in Python 3.16\n    AbstractEventLoopPolicy = getattr(asyncio, \"AbstractEventLoopPolicy\", object)\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n4 passed, 1 warning in 0.05s\n"
+    },
+    {
+      "name": "ruff",
+      "argv": [
+        "/home/sas/Projects/sp_aconsole_prototype/.venv-core/bin/ruff",
+        "check",
+        "src/aconsole/ui/bootstrap.py",
+        "tests/gui/test_bootstrap.py"
+      ],
+      "chunk_id": "197ebb",
+      "wall_time_seconds": 0.000031502,
+      "exit_code": 0,
+      "original_token_count": 5,
+      "output": "All checks passed!\n"
+    },
+    {
+      "name": "types",
+      "argv": [
+        "/home/sas/Projects/sp_aconsole_prototype/.venv-core/bin/basedpyright",
+        "--venvpath",
+        "/home/sas/Projects/sp_aconsole_prototype",
+        "src/aconsole/ui/bootstrap.py"
+      ],
+      "chunk_id": "8c9a26",
+      "wall_time_seconds": 0.000026063,
+      "exit_code": 0,
+      "original_token_count": 8,
+      "output": "0 errors, 0 warnings, 0 notes\n"
+    }
+  ],
+  "integration": {
+    "status": "PASS_APPROVED_OUTSIDE_SANDBOX",
+    "sandbox_result": "4 passed, 2 failed, 2 errors; FakeCore AF_UNIX bind PermissionError EPERM.",
+    "command": ["/home/sas/Projects/sp_aconsole_prototype/.venv-ui/bin/python", "-m", "pytest", "tests/gui/test_bootstrap.py", "tests/gui/test_client.py", "-W", "error::RuntimeWarning", "-p", "no:cacheprovider"],
+    "exit_code": 0,
+    "passed": 8,
+    "duration_seconds": 0.93,
+    "warnings": ["PyGObject asyncio.AbstractEventLoopPolicy deprecation"]
+  },
+  "scope": "Focused local regression only. No full QA-4 or independent security acceptance."
+}

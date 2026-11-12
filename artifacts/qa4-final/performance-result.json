@@ -1,0 +1,18 @@
+{
+  "command": [
+    "/home/sas/Projects/sp_aconsole_prototype/.venv-core/bin/python",
+    "-m",
+    "pytest",
+    "tests/core",
+    "-m",
+    "performance",
+    "-o",
+    "addopts=",
+    "-p",
+    "no:cacheprovider",
+    "--basetemp=/tmp/ac-qa4-final-performance",
+    "--junitxml=/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/038657e1539f15ad/artifacts/qa4-final/performance.xml"
+  ],
+  "exit_code": 0,
+  "seconds": 6.554366613000639
+}

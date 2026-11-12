@@ -1,0 +1,22 @@
+_color("view_bg_color")
+
+tests/gui/front/test_git_actions.py::test_stage_commit_and_file_buttons_in_the_inspector
+  /home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/038657e1539f15ad/src/aconsole/ui/views/review/graph_cell.py:113: DeprecationWarning: Gtk.StyleContext.lookup_color is deprecated
+    _found, background = self.get_style_context().lookup_color("view_bg_color")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/gui/front/test_approval_alerts.py::test_the_window_rings_withdraws_and_a_click_opens_the_tab[waiting]
+FAILED tests/gui/front/test_b0_window.py::test_sidebar_lists_demo_tabs[700-True]
+FAILED tests/gui/front/test_b0_window.py::test_collapsed_sidebar_button_opens_and_closes_sidebar
+FAILED tests/gui/front/test_b0_window.py::test_system_title_buttons_keep_clear_header_space[700-True-left]
+FAILED tests/gui/front/test_b0_window.py::test_system_title_buttons_keep_clear_header_space[700-True-right]
+FAILED tests/gui/front/test_b0_window.py::test_system_title_buttons_keep_clear_header_space[700-True-both]
+FAILED tests/gui/front/test_b1_keys.py::test_b1_keys_narrow_window - assert F...
+FAILED tests/gui/front/test_des3_visual.py::test_native_widgets_match_reviewed_baselines[light-1280-light]
+FAILED tests/gui/front/test_des3_visual.py::test_native_widgets_match_reviewed_baselines[dark-1280-dark]
+FAILED tests/gui/front/test_des3_visual.py::test_native_widgets_match_reviewed_baselines[light-700-narrow]
+FAILED tests/gui/front/test_git_scale_ui.py::test_scrolling_a_long_history - ...
+FAILED tests/gui/front/test_preferences_drafts.py::test_closing_dirty_preferences_can_cancel_or_discard
+12 failed, 470 passed, 584 warnings in 145.13s (0:02:25)
+

@@ -1,0 +1,46 @@
+test_cleanup_with_and_without_phases_after_success_or_failure (tests.unit.test_perf7_observer.ObserverCleanupTest.test_cleanup_with_and_without_phases_after_success_or_failure) ... 
+  test_cleanup_with_and_without_phases_after_success_or_failure (tests.unit.test_perf7_observer.ObserverCleanupTest.test_cleanup_with_and_without_phases_after_success_or_failure) (phases=True, fails=False) ... FAIL
+  test_cleanup_with_and_without_phases_after_success_or_failure (tests.unit.test_perf7_observer.ObserverCleanupTest.test_cleanup_with_and_without_phases_after_success_or_failure) (phases=True, fails=True) ... FAIL
+
+======================================================================
+FAIL: test_cleanup_with_and_without_phases_after_success_or_failure (tests.unit.test_perf7_observer.ObserverCleanupTest.test_cleanup_with_and_without_phases_after_success_or_failure) (phases=True, fails=False)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/038657e1539f15ad/tests/unit/test_perf7_observer.py", line 25, in test_cleanup_with_and_without_phases_after_success_or_failure
+    self._check_cleanup(phases=phases, fails=fails)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/038657e1539f15ad/tests/unit/test_perf7_observer.py", line 70, in _check_cleanup
+    pane.list_view.remove_tick_callback.assert_called_once_with(17)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^
+  File "/home/sas/.containers/containers/devtools/.local/share/uv/python/cpython-3.15.1-linux-x86_64-gnu/lib/python3.15/unittest/mock.py", line 998, in assert_called_once_with
+    return self.assert_called_with(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/home/sas/.containers/containers/devtools/.local/share/uv/python/cpython-3.15.1-linux-x86_64-gnu/lib/python3.15/unittest/mock.py", line 986, in assert_called_with
+    raise AssertionError(_error_message()) from cause
+AssertionError: expected call not found.
+Expected: remove_tick_callback(17)
+  Actual: remove_tick_callback(105)
+
+======================================================================
+FAIL: test_cleanup_with_and_without_phases_after_success_or_failure (tests.unit.test_perf7_observer.ObserverCleanupTest.test_cleanup_with_and_without_phases_after_success_or_failure) (phases=True, fails=True)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/038657e1539f15ad/tests/unit/test_perf7_observer.py", line 25, in test_cleanup_with_and_without_phases_after_success_or_failure
+    self._check_cleanup(phases=phases, fails=fails)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/038657e1539f15ad/tests/unit/test_perf7_observer.py", line 70, in _check_cleanup
+    pane.list_view.remove_tick_callback.assert_called_once_with(17)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^
+  File "/home/sas/.containers/containers/devtools/.local/share/uv/python/cpython-3.15.1-linux-x86_64-gnu/lib/python3.15/unittest/mock.py", line 998, in assert_called_once_with
+    return self.assert_called_with(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/home/sas/.containers/containers/devtools/.local/share/uv/python/cpython-3.15.1-linux-x86_64-gnu/lib/python3.15/unittest/mock.py", line 986, in assert_called_with
+    raise AssertionError(_error_message()) from cause
+AssertionError: expected call not found.
+Expected: remove_tick_callback(17)
+  Actual: remove_tick_callback(105)
+
+----------------------------------------------------------------------
+Ran 1 test in 0.011s
+
+FAILED (failures=2)

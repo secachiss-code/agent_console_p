@@ -690,6 +690,24 @@ xvfb-run -a .venv-ui/bin/python -m pytest tests/gui tests/ui tests/smoke \
   --deselect tests/gui/front/test_git_scale_ui.py::test_scrolling_a_long_history
 ```
 
+Для воспроизводимой проверки размеров и утверждённых PNG отдельно от сохранённого
+состояния окон desktop:
+
+```sh
+.venv-ui/bin/python tools/native_ui_tests.py --mode geometry --output artifacts/native-geometry-01
+.venv-ui/bin/python tools/native_ui_tests.py --mode desktop --output artifacts/native-desktop-01
+```
+
+Первый режим требует установленный `Xvfb` (или `--xvfb /path/to/Xvfb`), запускает
+исходные B0/B1/DES3 проверки на отдельном X-сервере без window manager. Второй
+использует текущий X11 desktop для approval action routing, настроек и lifecycle
+badge. Это две отдельные проверки: Xvfb без WM не подтверждает desktop focus или
+ускоренный rendering/performance. Production application ID и PNG не меняются.
+Каталог результатов должен быть новым; в нём остаются лог, JUnit и параметры
+запуска. Runner возвращает код pytest, при timeout — 124, и убирает принадлежащие
+ему процессы. Он не скачивает зависимости и не заменяет общий CI/full-suite gate.
+
+
 `tests/unit` и тест прокрутки в `tests/gui/front/test_git_scale_ui.py` содержат лимиты
 времени, измеренные на одной 8-ядерной машине, поэтому CI их не запускает. Тест прокрутки
 длинной Git-истории исключён из CI, пока не принят узел PERF-7.

@@ -1,0 +1,108 @@
+diff --git a/src/aconsole/ui/views/review/graph_cell.py b/src/aconsole/ui/views/review/graph_cell.py
+index 76af3a00..3ff2d42c 100644
+--- a/src/aconsole/ui/views/review/graph_cell.py
++++ b/src/aconsole/ui/views/review/graph_cell.py
+@@ -2,14 +2,17 @@
+ 
+ from __future__ import annotations
+ 
++from math import tau
+ from typing import Final, override
+ 
++import cairo
+ import gi
+ 
++gi.require_foreign("cairo")
+ gi.require_version("Gtk", "4.0")
+ gi.require_version("Gdk", "4.0")
+ gi.require_version("Gsk", "4.0")
+-from gi.repository import Gdk, Graphene, Gsk, Gtk  # noqa: E402
++from gi.repository import Gdk, Graphene, Gtk  # noqa: E402
+ 
+ from aconsole.ui.viewmodels.logic.git_lanes import LaneEdge, RowLayout  # noqa: E402
+ 
+@@ -49,20 +52,23 @@ def lane_x(lane: int) -> float:
+     return _MARGIN + lane * LANE_WIDTH
+ 
+ 
+-def _edge(snapshot: Gtk.Snapshot, edge: LaneEdge, top: float, bottom: float) -> None:
+-    builder = Gsk.PathBuilder.new()
++def _source(context: cairo.Context, color: Gdk.RGBA) -> None:
++    context.set_source_rgba(color.red, color.green, color.blue, color.alpha)
++
++
++def _edge(context: cairo.Context, edge: LaneEdge, top: float, bottom: float) -> None:
+     start = lane_x(edge.start)
+     end = lane_x(edge.end)
+-    builder.move_to(start, top)
++    context.move_to(start, top)
+     if edge.start == edge.end:
+-        builder.line_to(end, bottom)
++        context.line_to(end, bottom)
+     else:
+         middle = (top + bottom) / 2
+-        builder.cubic_to(start, middle, end, middle, end, bottom)
+-    stroke = Gsk.Stroke.new(_LINE)
+-    if edge.dashed:
+-        stroke.set_dash(list(_DASH))
+-    snapshot.append_stroke(builder.to_path(), stroke, _COLORS[edge.color % len(_COLORS)])
++        context.curve_to(start, middle, end, middle, end, bottom)
++    context.set_line_width(_LINE)
++    context.set_dash(_DASH if edge.dashed else ())
++    _source(context, _COLORS[edge.color % len(_COLORS)])
++    context.stroke()
+ 
+ 
+ class GraphCell(Gtk.Widget):
+@@ -91,29 +97,36 @@ class GraphCell(Gtk.Widget):
+             return
+         height = float(self.get_height())
+         middle = height / 2
++        # GTK retains this small raster node. The rest of the page still uses its
++        # normal renderer; the graph needs no per-edge GPU path masks.
++        bounds = Graphene.Rect().init(0, 0, self.get_width(), height)
++        context = snapshot.append_cairo(bounds)
+         for edge in row.above:
+-            _edge(snapshot, edge, 0.0, middle)
++            _edge(context, edge, 0.0, middle)
+         for edge in row.below:
+-            _edge(snapshot, edge, middle, height)
+-        self._node(snapshot, row, middle)
++            _edge(context, edge, middle, height)
++        self._node(context, row, middle)
+ 
+-    def _node(self, snapshot: Gtk.Snapshot, row: RowLayout, middle: float) -> None:
++    def _node(self, context: cairo.Context, row: RowLayout, middle: float) -> None:
+         color = _COLORS[row.color % len(_COLORS)]
+         x = lane_x(row.lane)
+-        builder = Gsk.PathBuilder.new()
++        context.set_dash(())
+         if self.snapshot_node:
+-            builder.move_to(x, middle - _DIAMOND)
+-            builder.line_to(x + _DIAMOND, middle)
+-            builder.line_to(x, middle + _DIAMOND)
+-            builder.line_to(x - _DIAMOND, middle)
+-            builder.close()
++            context.move_to(x, middle - _DIAMOND)
++            context.line_to(x + _DIAMOND, middle)
++            context.line_to(x, middle + _DIAMOND)
++            context.line_to(x - _DIAMOND, middle)
++            context.close_path()
+         else:
+-            builder.add_circle(Graphene.Point().init(x, middle), _DOT)
+-        path = builder.to_path()
++            context.arc(x, middle, _DOT, 0, tau)
+         _found, background = self.get_style_context().lookup_color("view_bg_color")
+         if _found:
+-            snapshot.append_stroke(path, Gsk.Stroke.new(_HALO * 2), background)
++            _source(context, background)
++            context.set_line_width(_HALO * 2)
++            context.stroke_preserve()
++        _source(context, color)
+         if self.uncommitted:
+-            snapshot.append_stroke(path, Gsk.Stroke.new(_LINE), color)
++            context.set_line_width(_LINE)
++            context.stroke()
+         else:
+-            snapshot.append_fill(path, Gsk.FillRule.WINDING, color)
++            context.fill()

@@ -1,0 +1,1086 @@
+{
+  "schema": 1,
+  "base_commit": "f2a964334ea4b16fce3729fe2b1ddf5ee87e5077",
+  "status": "specified_not_implemented",
+  "stage_A": "INCOMPLETE",
+  "SEC11": "failed",
+  "SEC13": "failed",
+  "stage_B_authorized": false,
+  "production_routing": false,
+  "host_permissions_changed": false,
+  "security_acceptance": "NOT RUN",
+  "source_refs": {
+    "stage-service": {
+      "path": "src/aconsole/core/application/services/git_ops.py",
+      "function": "stage",
+      "contains": [
+        "self._writer.stage(repo, paths)"
+      ]
+    },
+    "stage-git": {
+      "path": "src/aconsole/core/infrastructure/git/operations.py",
+      "function": "stage",
+      "contains": [
+        "\"add\", \"-A\", \"--\", *paths"
+      ]
+    },
+    "status": {
+      "path": "src/aconsole/core/infrastructure/git/history.py",
+      "function": "status",
+      "contains": [
+        "\"--porcelain=v2\"",
+        "\"--ignore-submodules=none\""
+      ]
+    },
+    "capture": {
+      "path": "src/aconsole/core/infrastructure/git/checkpoints.py",
+      "function": "capture",
+      "contains": [
+        "\"read-tree\", base",
+        "\"add\", \"-A\"",
+        "\"write-tree\"",
+        "\"commit-tree\"",
+        "\"update-ref\", ref, commit"
+      ]
+    },
+    "delete": {
+      "path": "src/aconsole/core/infrastructure/git/checkpoints.py",
+      "function": "delete",
+      "contains": [
+        "\"update-ref\", \"-d\", ref"
+      ]
+    },
+    "materialize": {
+      "path": "src/aconsole/core/infrastructure/git/checkpoints.py",
+      "function": "materialize",
+      "contains": [
+        "\"restore\", \"--source\"",
+        "remove_worktree_file(repo, path)"
+      ]
+    },
+    "commit-service": {
+      "path": "src/aconsole/core/application/services/git_ops.py",
+      "function": "commit",
+      "contains": [
+        "self._writer.commit(repo"
+      ]
+    },
+    "commit-git": {
+      "path": "src/aconsole/core/infrastructure/git/operations.py",
+      "function": "commit",
+      "contains": [
+        "hooks=True"
+      ]
+    },
+    "merge-service": {
+      "path": "src/aconsole/core/application/services/git_merge.py",
+      "function": "_run",
+      "contains": [
+        "merge_hooks",
+        "commit_tree",
+        "move_ref"
+      ]
+    },
+    "merge-git": {
+      "path": "src/aconsole/core/infrastructure/git/operations.py",
+      "function": "merge",
+      "contains": [
+        "\"--ff-only\"",
+        "\"--squash\""
+      ]
+    },
+    "direct-hooks": {
+      "path": "src/aconsole/core/infrastructure/git/operations.py",
+      "function": "merge_hooks",
+      "contains": [
+        "_run_hook",
+        "_check_hook_index"
+      ]
+    },
+    "candidate-refusal": {
+      "path": "src/aconsole/core/infrastructure/git/operations.py",
+      "function": "_check_hook_index",
+      "contains": [
+        "write-tree",
+        "tree"
+      ]
+    },
+    "rewrite": {
+      "path": "src/aconsole/core/application/services/git_rewrite.py",
+      "function": "_step",
+      "contains": [
+        "self._writer.step"
+      ]
+    },
+    "rebase": {
+      "path": "src/aconsole/core/infrastructure/git/operations.py",
+      "function": "rebase",
+      "contains": [
+        "\"rebase\", \"--no-autostash\""
+      ]
+    },
+    "cherry-pick": {
+      "path": "src/aconsole/core/infrastructure/git/operations.py",
+      "function": "cherry_pick",
+      "contains": [
+        "\"cherry-pick\", oid"
+      ]
+    },
+    "unstage": {
+      "path": "src/aconsole/core/infrastructure/git/operations.py",
+      "function": "unstage",
+      "contains": [
+        "\"restore\", \"--staged\"",
+        "\"rm\", \"-q\", \"--cached\""
+      ]
+    },
+    "restore": {
+      "path": "src/aconsole/core/infrastructure/git/operations.py",
+      "function": "restore_file",
+      "contains": [
+        "remove_worktree_file"
+      ]
+    },
+    "worktree-create": {
+      "path": "src/aconsole/core/infrastructure/git/worktrees.py",
+      "function": "create",
+      "contains": [
+        "\"worktree\", \"add\"",
+        "self._setup"
+      ]
+    },
+    "worktree-detached": {
+      "path": "src/aconsole/core/infrastructure/git/worktrees.py",
+      "function": "create_detached",
+      "contains": [
+        "\"worktree\", \"add\", \"--detach\""
+      ]
+    },
+    "worktree-rollback": {
+      "path": "src/aconsole/core/infrastructure/git/worktrees.py",
+      "function": "_roll_back",
+      "contains": [
+        "\"worktree\", \"remove\", \"--force\""
+      ]
+    },
+    "worktree-close": {
+      "path": "src/aconsole/core/infrastructure/git/worktrees.py",
+      "function": "close",
+      "contains": [
+        "self._remove",
+        "_status_dirty",
+        "_ahead"
+      ]
+    },
+    "worktree-remove": {
+      "path": "src/aconsole/core/infrastructure/git/worktrees.py",
+      "function": "_remove",
+      "contains": [
+        "\"worktree\", \"remove\"",
+        "\"branch\", \"-D\""
+      ]
+    },
+    "prune": {
+      "path": "src/aconsole/core/infrastructure/git/worktrees.py",
+      "function": "prune",
+      "contains": [
+        "\"worktree\", \"prune\"",
+        "meta.unlink()"
+      ]
+    },
+    "tab-close": {
+      "path": "src/aconsole/core/application/services/tabs.py",
+      "function": "close_tab",
+      "contains": [
+        "self._finish_tree",
+        "drop_worktree=False"
+      ]
+    },
+    "tab-finish": {
+      "path": "src/aconsole/core/application/services/tabs.py",
+      "function": "_finish_tree",
+      "contains": [
+        "self._ports.remove_worktree"
+      ]
+    },
+    "host-remove": {
+      "path": "src/aconsole/core/infrastructure/tabs.py",
+      "function": "remove_worktree",
+      "contains": [
+        "self._trees.close"
+      ]
+    },
+    "cleanup-service": {
+      "path": "src/aconsole/core/application/services/git_cleanup.py",
+      "function": "cleanup",
+      "contains": [
+        "self._writer.remove_worktree",
+        "self._writer.delete_branch"
+      ]
+    },
+    "cleanup-git": {
+      "path": "src/aconsole/core/infrastructure/git/operations.py",
+      "function": "remove_worktree",
+      "contains": [
+        "\"worktree\", \"remove\""
+      ]
+    },
+    "ingest": {
+      "path": "src/aconsole/core/infrastructure/http/consumer.py",
+      "function": "consume",
+      "contains": [
+        "submitted_prompt(item)",
+        "await on_prompt(item.tab_id, prompt)"
+      ]
+    },
+    "prompt-wire": {
+      "path": "src/aconsole/core/bootstrap.py",
+      "function": "_prompt_sent",
+      "contains": [
+        "self.review.on_prompt(tab_id, text)"
+      ]
+    },
+    "prompt": {
+      "path": "src/aconsole/core/application/services/review.py",
+      "function": "on_prompt",
+      "contains": [
+        "checkpoints_enabled",
+        "session_checkpoint",
+        "checkpoints.on_user_prompt"
+      ]
+    },
+    "legacy-prompt": {
+      "path": "src/aconsole/core/application/services/checkpoints.py",
+      "function": "on_user_prompt",
+      "contains": [
+        "self._store.capture",
+        "self._drop(repo, tab_id, dropped)"
+      ]
+    },
+    "keep-trim": {
+      "path": "src/aconsole/core/application/services/checkpoints.py",
+      "function": "_drop",
+      "contains": [
+        "self._store.delete",
+        "self._journal.delete"
+      ]
+    },
+    "session-prompt": {
+      "path": "src/aconsole/core/application/services/tabs.py",
+      "function": "session_checkpoint",
+      "contains": [
+        "self.history.capture"
+      ]
+    },
+    "session-capture": {
+      "path": "src/aconsole/core/application/services/work_session_history.py",
+      "function": "capture",
+      "contains": [
+        "self.complete(self.prepare("
+      ]
+    },
+    "session-complete": {
+      "path": "src/aconsole/core/application/services/work_session_history.py",
+      "function": "complete",
+      "contains": [
+        "self._snapshots.capture"
+      ]
+    },
+    "sweep-loop": {
+      "path": "src/aconsole/core/bootstrap.py",
+      "function": "_sweep_loop",
+      "contains": [
+        "writer.submit(self._sweep_once)",
+        "await self._drop_swept_refs()"
+      ]
+    },
+    "sweep-once": {
+      "path": "src/aconsole/core/bootstrap.py",
+      "function": "_sweep_once",
+      "contains": [
+        "sweep(session"
+      ]
+    },
+    "sweep": {
+      "path": "src/aconsole/core/infrastructure/persistence/cleanup.py",
+      "function": "sweep",
+      "contains": [
+        "_queue_ref(session, ref)",
+        "_trim_checkpoints",
+        "_trim_closed_tabs"
+      ]
+    },
+    "queue": {
+      "path": "src/aconsole/core/infrastructure/persistence/cleanup.py",
+      "function": "_queue_ref",
+      "contains": [
+        "refs/aconsole/checkpoints/",
+        "GitRefDeletion("
+      ]
+    },
+    "drain-wire": {
+      "path": "src/aconsole/core/bootstrap.py",
+      "function": "_drop_swept_refs",
+      "contains": [
+        "drain_ref_deletions",
+        "self.review.forget_refs"
+      ]
+    },
+    "drain": {
+      "path": "src/aconsole/core/infrastructure/git/retention.py",
+      "function": "drain_ref_deletions",
+      "contains": [
+        "store.delete",
+        "queue.protected(job)",
+        "queue.complete(job)"
+      ]
+    },
+    "forget-wire": {
+      "path": "src/aconsole/core/application/services/review.py",
+      "function": "forget_refs",
+      "contains": [
+        "self.checkpoints.forget"
+      ]
+    },
+    "forget": {
+      "path": "src/aconsole/core/application/services/checkpoints.py",
+      "function": "forget",
+      "contains": [
+        "self._store.delete",
+        "self.protected_ref"
+      ]
+    },
+    "review-rpc": {
+      "path": "src/aconsole/core/application/services/review.py",
+      "function": "dispatch",
+      "contains": [
+        "checkpoint/list",
+        "checkpoint/restorePreview",
+        "checkpoint/restore"
+      ]
+    },
+    "history": {
+      "path": "src/aconsole/core/infrastructure/git/history.py",
+      "function": "log",
+      "contains": [
+        "self._git.read"
+      ]
+    },
+    "preview": {
+      "path": "src/aconsole/core/infrastructure/git/history.py",
+      "function": "merge_probe",
+      "contains": [
+        "merge-tree"
+      ]
+    },
+    "diff": {
+      "path": "src/aconsole/core/infrastructure/git/diff.py",
+      "function": "_git_stdout",
+      "contains": [
+        "runner.invoke"
+      ]
+    },
+    "mcp-git": {
+      "path": "src/aconsole/core/infrastructure/mcp/tools.py",
+      "function": "_git",
+      "contains": [
+        "_GIT_RUNNER.read"
+      ]
+    },
+    "clipboard": {
+      "path": "src/aconsole/core/infrastructure/clipboard.py",
+      "function": "_exclude",
+      "contains": [
+        "GitRunner(git=git, timeout_s=10).read"
+      ]
+    },
+    "repos": {
+      "path": "src/aconsole/core/infrastructure/tabs.py",
+      "function": "_ask",
+      "contains": [
+        "self._runner.invoke"
+      ]
+    },
+    "trailers": {
+      "path": "src/aconsole/core/infrastructure/git/operations.py",
+      "function": "with_trailers",
+      "contains": [
+        "interpret-trailers"
+      ]
+    },
+    "runner": {
+      "path": "src/aconsole/core/infrastructure/git/runner.py",
+      "function": "_spawn",
+      "contains": [
+        "_without_drivers",
+        "_execute"
+      ]
+    },
+    "ingest-wire": {
+      "path": "src/aconsole/core/bootstrap.py",
+      "function": "_open_ingest",
+      "contains": [
+        "IngestHandlers(",
+        "on_prompt=self._prompt_sent"
+      ]
+    },
+    "prompt-kind": {
+      "path": "src/aconsole/core/infrastructure/http/consumer.py",
+      "function": "submitted_prompt",
+      "contains": [
+        "UserPromptSubmit",
+        "hook.prompt"
+      ]
+    },
+    "sweep-start": {
+      "path": "src/aconsole/core/bootstrap.py",
+      "function": "_open_database",
+      "contains": [
+        "asyncio.create_task(self._sweep_loop(writer))"
+      ]
+    }
+  },
+  "upstream_files": [
+    "artifacts/sec11/stage-a-ledger/ledger.json",
+    "artifacts/sec11/stage-a-ledger/evidence.json",
+    "artifacts/sec11/stage-a-ledger/REPORT.md",
+    "artifacts/sec11/stage-a-ledger/validation.json",
+    "artifacts/sec11/architecture/DESIGN.md",
+    "artifacts/sec11/command-inventory/inventory.json",
+    "artifacts/git6/REPORT.md"
+  ],
+  "scope": {
+    "candidate": "Fresh standalone disposable non-bare repository with detached HEAD or unborn HEAD; separate object database, index and worktree. No linked gitdir or live-project mount. Snapshot importer is trusted future work, not git worktree add or --shared clone.",
+    "formats": [
+      "sha1",
+      "sha256"
+    ],
+    "origin_handling": {
+      "ordinary": "only captured snapshot; not original checkout",
+      "unborn": "empty initial index; no HEAD required",
+      "linked": "reject original origin in v1, even though SEC28 stage/commit RPC exists",
+      "bare": "reject; SEC28 project/add rejection is not no-checkout target acceptance",
+      "no_checkout_target": "reject ref mutation; not equivalent to bare origin",
+      "alternates_external_gitdir_submodules_sparse_split_index": "reject"
+    },
+    "publication": "none: candidate tree OID and bounded status only; no host copy-back, refs or journal mutation",
+    "raw_argv": false,
+    "extra_env": false,
+    "unknown_request": "UNSUPPORTED_OPERATION",
+    "phase_execution": [],
+    "hook_policy": "Reject any installed executable hook, including unrecognized names; non-executable files are data only; executable *.sample files also reject conservatively. Reject non-default core.hooksPath. Validate captured common-dir hooks and runtime mode semantics; no host discovery fallback. Conservative whole-request rejection even for hooks irrelevant to the chosen command.",
+    "helper_policy": "Reject all configured filter.* drivers and any effective filter attribute, custom merge driver/config/attribute, filter-process, signing, fsmonitor, external diff/textconv, submodule commands and config-selected exec. No success with raw bytes when a filter would apply.",
+    "snapshot_policy": "Pin source config/includes/attributes/ignore/object metadata and contents as one reviewed input digest; uncertain capture, concurrent change or unsupported dependency yields INPUT_UNSTABLE/UNSUPPORTED_ORIGIN before candidate execution. Mutable discovery cannot be security enforcement. Stage B containment remains mandatory.",
+    "limits": {
+      "wall_seconds": 30,
+      "memory_MiB": 256,
+      "processes": 16,
+      "streamed_combined_output_bytes": 8388608,
+      "request_bytes": 1048576,
+      "paths": 4096,
+      "cancel_grace_seconds": 1,
+      "status": "proposed_limits_not_probed; setup failure or unsupported limits reject RUNTIME_UNAVAILABLE"
+    },
+    "environment": "Trusted fixed Git/runtime identity and minimal environment; no caller environment, PATH, HOME, credentials or host sockets. Broker-owned GIT_INDEX_FILE and scratch only; native hooks disabled as defense in depth. GIT_OPTIONAL_LOCKS=0 for InspectCandidate. No executable exceptions for child Git/helpers.",
+    "failure_state": "Preflight deny preserves candidate and original bytes. After execution begins, record actual candidate index/object changes and discard/quarantine candidate on failure; do not claim Git add is atomic. Original snapshot/live project is never a write target. Timeout or missing descendant termination proof is recovery_required, no success/retry."
+  },
+  "operations": [
+    {
+      "id": "InspectCandidate",
+      "support": "planned_candidate_only",
+      "request": {
+        "candidate_id": "trusted registration, not path",
+        "expected_digest": "exact immutable snapshot digest"
+      },
+      "argv_templates": [
+        [
+          "status",
+          "--porcelain=v2",
+          "-z",
+          "--branch",
+          "--untracked-files=all",
+          "--ignore-submodules=none"
+        ]
+      ],
+      "source_refs": [
+        "status"
+      ],
+      "evidence": [
+        "SEC-17",
+        "SEC-28"
+      ],
+      "phases": [],
+      "writes": "no candidate writes; GIT_OPTIONAL_LOCKS=0 and read-only mount; reject unsupported runtime",
+      "result": "bounded byte records; no user-supplied revision/options"
+    },
+    {
+      "id": "StageCandidatePaths",
+      "support": "planned_candidate_only",
+      "request": {
+        "candidate_id": "trusted registration",
+        "expected_digest": "exact snapshot digest",
+        "paths": "nonempty unique relative literal paths; reject absolute, dot-dot, NUL, metadata paths and symlink parent escapes; leading dash is literal after --"
+      },
+      "argv_templates": [
+        [
+          "--literal-pathspecs",
+          "add",
+          "-A",
+          "--",
+          "{paths...}"
+        ],
+        [
+          "write-tree"
+        ]
+      ],
+      "source_refs": [
+        "stage-service",
+        "stage-git",
+        "capture"
+      ],
+      "evidence": [
+        "SEC-17",
+        "SEC-20",
+        "SEC-27",
+        "SEC-28"
+      ],
+      "phases": [],
+      "writes": "candidate index and object database only; helper/hook/origin preflight must complete first",
+      "result": "tree OID, index digest and changed paths; new snapshot digest invalidates prior requests; no commit, ref, checkpoint or live staging equivalence claim"
+    }
+  ],
+  "excluded": [
+    {
+      "id": "unstage_restore",
+      "support": "excluded_v1",
+      "source_refs": [
+        "unstage",
+        "restore",
+        "materialize"
+      ],
+      "evidence": [
+        "SEC-17",
+        "SEC-19",
+        "SEC-26",
+        "SEC-27"
+      ],
+      "diagnostic": "UNSUPPORTED_OPERATION",
+      "reason": "Restoration writes files and may require smudge helpers; no whole-file rollback claim.",
+      "phases": []
+    },
+    {
+      "id": "commit_root_amend",
+      "support": "excluded_v1",
+      "source_refs": [
+        "commit-service",
+        "commit-git"
+      ],
+      "evidence": [
+        "SEC-15",
+        "SEC-16",
+        "SEC-28"
+      ],
+      "diagnostic": "UNSUPPORTED_OPERATION",
+      "reason": "No commit/commit-tree substitution. Root/ordinary/amend message/index edits and hook ordering require broker acceptance.",
+      "phases": []
+    },
+    {
+      "id": "merge_squash_ff",
+      "support": "excluded_v1",
+      "source_refs": [
+        "merge-service",
+        "merge-git",
+        "direct-hooks",
+        "candidate-refusal"
+      ],
+      "evidence": [
+        "SEC-15",
+        "SEC-16",
+        "SEC-24",
+        "GIT-6"
+      ],
+      "diagnostic": "UNSUPPORTED_OPERATION",
+      "reason": "Reject all checkout and no-checkout variants. Missing prepare/reference/post phases cannot become silent success. Preserve existing GIT6 changed-tree refusal; no code change.",
+      "phases": []
+    },
+    {
+      "id": "sequencer_continue_abort",
+      "support": "excluded_v1",
+      "source_refs": [
+        "rewrite",
+        "rebase",
+        "cherry-pick"
+      ],
+      "evidence": [
+        "SEC-18",
+        "SEC-22",
+        "SEC-23",
+        "SEC-25"
+      ],
+      "diagnostic": "UNSUPPORTED_OPERATION",
+      "reason": "No rebase/cherry-pick/merge continue or abort; absent daemon hooks are a compatibility difference.",
+      "phases": []
+    },
+    {
+      "id": "checkpoint_prompt_restore_delete",
+      "support": "excluded_v1",
+      "source_refs": [
+        "prompt",
+        "legacy-prompt",
+        "session-prompt",
+        "capture",
+        "materialize",
+        "delete",
+        "keep-trim",
+        "forget",
+        "review-rpc"
+      ],
+      "evidence": [
+        "SEC-19",
+        "SEC-26"
+      ],
+      "diagnostic": "UNSUPPORTED_OPERATION",
+      "reason": "Full capture includes commit-tree/update-ref; StageCandidatePaths is not capture. Prompt, safety, retention and delete remain excluded.",
+      "phases": []
+    },
+    {
+      "id": "worktree_create_remove_prune",
+      "support": "excluded_v1",
+      "source_refs": [
+        "worktree-create",
+        "worktree-detached",
+        "worktree-rollback",
+        "tab-close",
+        "tab-finish",
+        "host-remove",
+        "worktree-close",
+        "worktree-remove",
+        "cleanup-service",
+        "cleanup-git",
+        "prune"
+      ],
+      "evidence": [
+        "SEC-17",
+        "SEC-19",
+        "SEC-26"
+      ],
+      "diagnostic": "UNSUPPORTED_OPERATION",
+      "reason": "No setup script, linked worktree mutation, cleanup, branch deletion or metadata prune. Existing two removal paths are distinct.",
+      "phases": []
+    },
+    {
+      "id": "history_diff_preview",
+      "support": "excluded_v1",
+      "source_refs": [
+        "history",
+        "preview",
+        "diff"
+      ],
+      "evidence": [
+        "SEC-17",
+        "SEC-20",
+        "SEC-27"
+      ],
+      "diagnostic": "UNSUPPORTED_OPERATION",
+      "reason": "No arbitrary read interface; merge-tree writes objects and may invoke helpers. Only exact InspectCandidate status template is planned.",
+      "phases": []
+    },
+    {
+      "id": "auxiliary_git",
+      "support": "excluded_v1",
+      "source_refs": [
+        "mcp-git",
+        "clipboard",
+        "repos",
+        "trailers",
+        "runner"
+      ],
+      "evidence": [
+        "SEC-17"
+      ],
+      "diagnostic": "UNSUPPORTED_OPERATION",
+      "reason": "MCP diff/verification, clipboard exclude writes, project discovery, trailers and generic runner are not routed.",
+      "phases": []
+    },
+    {
+      "id": "external_helpers",
+      "support": "excluded_v1",
+      "source_refs": [
+        "stage-git",
+        "capture",
+        "preview",
+        "runner"
+      ],
+      "evidence": [
+        "SEC-20",
+        "SEC-27"
+      ],
+      "diagnostic": "UNSUPPORTED_HELPER",
+      "reason": "Reject required and optional filter drivers, custom merge, filter-process, signing and unsupported dependencies; never silently stage WORK instead of CLEAN.",
+      "phases": []
+    },
+    {
+      "id": "installed_hooks",
+      "support": "excluded_v1",
+      "source_refs": [
+        "direct-hooks",
+        "commit-git",
+        "status",
+        "stage-git"
+      ],
+      "evidence": [
+        "SEC-16",
+        "SEC-17",
+        "SEC-24",
+        "SEC-27"
+      ],
+      "diagnostic": "UNSUPPORTED_HOOK",
+      "reason": "No approved bundle runner exists in v1; reject executable hooks rather than skipping. No shell/interpreter permission exception.",
+      "phases": []
+    },
+    {
+      "id": "origin_variants",
+      "support": "excluded_v1",
+      "source_refs": [
+        "repos",
+        "worktree-detached",
+        "capture"
+      ],
+      "evidence": [
+        "SEC-21",
+        "SEC-28"
+      ],
+      "diagnostic": "UNSUPPORTED_ORIGIN",
+      "reason": "Linked/bare/external gitdir/alternates/submodule originals and no-checkout publication excluded. SHA1/SHA256 candidate snapshots only.",
+      "phases": []
+    }
+  ],
+  "phase_contract": {
+    "observed_hook_phases": [
+      "commit-msg",
+      "post-commit",
+      "post-index-change",
+      "post-merge",
+      "pre-commit",
+      "pre-merge-commit",
+      "prepare-commit-msg",
+      "reference-transaction",
+      "post-rewrite",
+      "post-checkout",
+      "pre-rebase"
+    ],
+    "supported": [],
+    "disposition": "all observed phases unsupported in v1; any executable installed hook blocks both requests before writes",
+    "fallback": "pre-merge-commit sample may source git-sh-setup and invoke pre-commit. Reject executable fallback script or unresolved dependency; do not add git-sh-setup, shell or arbitrary helper exceptions. No claim of fallback parity.",
+    "message_index": "v1 runs no hook and creates no commit; no message editing. Future broker retains changed candidate and requires new review/grant; current GIT6 refusal remains in product only.",
+    "reference_post": "v1 never calls update-ref/commit; reference-transaction/prepared/committed/aborted and post-success phases excluded. Future publication must record completed mutation separately from late hook failure; never rerun consumed grant."
+  },
+  "lifecycle": [
+    {
+      "id": "prompt_capture",
+      "source_refs": [
+        "ingest-wire",
+        "prompt-kind",
+        "ingest",
+        "prompt-wire",
+        "prompt",
+        "legacy-prompt",
+        "capture"
+      ],
+      "evidence": [
+        "SEC-17",
+        "SEC-26"
+      ],
+      "disposition": "excluded_v1",
+      "claim": "consume submitted_prompt -> callback -> review.on_prompt (tab and enabled guards) -> legacy capture. Callback wiring inspected in bootstrap IngestHandlers(on_prompt=self._prompt_sent). No standalone capture RPC.",
+      "measurement": "source_reachability_only_not_new_runtime_trace"
+    },
+    {
+      "id": "session_prompt_capture",
+      "source_refs": [
+        "prompt",
+        "session-prompt",
+        "session-capture",
+        "session-complete",
+        "capture"
+      ],
+      "evidence": [
+        "SEC-17",
+        "SEC-26"
+      ],
+      "disposition": "excluded_v1",
+      "claim": "Review also requests session checkpoint first; only active work-session/history branch captures. WorkSessionHistory.complete uses GitCheckpoints. Not separately measured by SEC26 legacy restore cases.",
+      "measurement": "source_reachability_only_not_new_runtime_trace"
+    },
+    {
+      "id": "keep_count_delete",
+      "source_refs": [
+        "legacy-prompt",
+        "keep-trim",
+        "delete"
+      ],
+      "evidence": [
+        "SEC-17",
+        "SEC-26"
+      ],
+      "disposition": "excluded_v1",
+      "claim": "Prompt keep-count overflow drops unprotected refs and journal rows; not an explicit delete RPC.",
+      "measurement": "source_reachability_only_not_new_runtime_trace"
+    },
+    {
+      "id": "retention_outbox_delete",
+      "source_refs": [
+        "sweep-start",
+        "sweep-loop",
+        "sweep-once",
+        "sweep",
+        "queue",
+        "drain-wire",
+        "drain",
+        "delete",
+        "forget-wire",
+        "forget"
+      ],
+      "evidence": [
+        "SEC-17",
+        "SEC-26"
+      ],
+      "disposition": "excluded_v1",
+      "claim": "Startup/hourly sweep queues legacy deletions durably before row cascade. Drain validates absolute repo/ref shape, skips protected refs, retains failed jobs. forget_refs then updates in-memory logs and can repeat delete for known tabs; not an exactly-once Git deletion guarantee. Session refs excluded from automatic queue. No retention runtime/hook claim.",
+      "measurement": "source_reachability_only_not_new_runtime_trace"
+    },
+    {
+      "id": "legacy_tab_remove",
+      "source_refs": [
+        "tab-close",
+        "tab-finish",
+        "host-remove",
+        "worktree-close",
+        "worktree-remove"
+      ],
+      "evidence": [
+        "SEC-17",
+        "SEC-26"
+      ],
+      "disposition": "excluded_v1",
+      "claim": "Legacy close may remove only after stop/decision and created_here guards; session close retains workspace. Worktrees.close checks lock/dirty/ahead/ignored then non-force remove followed by branch deletion. Refusal preserves worktree; no new native hook measurement.",
+      "measurement": "source_reachability_only_not_new_runtime_trace"
+    },
+    {
+      "id": "git_cleanup_remove",
+      "source_refs": [
+        "cleanup-service",
+        "cleanup-git"
+      ],
+      "evidence": [
+        "SEC-17",
+        "SEC-26"
+      ],
+      "disposition": "excluded_v1",
+      "claim": "Explicit Git cleanup service closes tabs, checks journal/state, removes via GitMutations then may delete owned branch. Distinct from Worktrees.close; not covered by SEC26 worktree-create cases.",
+      "measurement": "source_reachability_only_not_new_runtime_trace"
+    },
+    {
+      "id": "create_rollback_remove",
+      "source_refs": [
+        "worktree-create",
+        "worktree-rollback",
+        "worktree-detached"
+      ],
+      "evidence": [
+        "SEC-17",
+        "SEC-26"
+      ],
+      "disposition": "excluded_v1",
+      "claim": "Failed create/setup paths may force-remove disposable tree and branch. create_detached also has rollback; not normal close semantics.",
+      "measurement": "source_reachability_only_not_new_runtime_trace"
+    },
+    {
+      "id": "worktree_prune",
+      "source_refs": [
+        "prune"
+      ],
+      "evidence": [
+        "SEC-17"
+      ],
+      "disposition": "excluded_v1",
+      "claim": "No production Worktrees.prune call found by current src AST attribute-call scan; only low-level method plus tests/core/test_worktrees.py calls. This bounded syntactic negative is not proof against reflection or runtime injection.",
+      "measurement": "source_reachability_only_not_new_runtime_trace"
+    }
+  ],
+  "decisions": [
+    {
+      "id": "D-helper",
+      "state": "specified_for_v1_not_implemented",
+      "semantics": "All external helper requirements reject before writes; no raw-content fallback. Runtime denial is still required against late injection.",
+      "acceptance": [
+        "T-helper",
+        "T-isolation"
+      ]
+    },
+    {
+      "id": "D-phases",
+      "state": "specified_for_v1_not_implemented",
+      "semantics": "No hook phase supported; all installed executable hooks reject; all commit/merge/sequencer/worktree/ref mutation operations excluded. No native transparency claim.",
+      "acceptance": [
+        "T-hooks",
+        "T-deny"
+      ]
+    },
+    {
+      "id": "D-scope",
+      "state": "specified_for_v1_not_implemented",
+      "semantics": "Only two typed candidate requests and three argv templates; no general runner, original repository mounts, live writes or publication.",
+      "acceptance": [
+        "T-positive",
+        "T-input",
+        "T-deny"
+      ]
+    },
+    {
+      "id": "D-candidate",
+      "state": "existing_GIT6_policy_only",
+      "semantics": "Keep product ref-squash changed-index refusal. Future changed candidate retained/reviewed; no claim current temporary index survives.",
+      "acceptance": [
+        "T-candidate"
+      ]
+    },
+    {
+      "id": "D-post",
+      "state": "unimplemented_later_gate",
+      "semantics": "Publication and late post failure recorded separately, consumed hook never rerun automatically. v1 excludes both.",
+      "acceptance": [
+        "T-publication"
+      ]
+    },
+    {
+      "id": "D-publication",
+      "state": "excluded_v1",
+      "semantics": "No live worktree/ref publication; C/D one-shot grants and crash/cancel reconciliation remain mandatory.",
+      "acceptance": [
+        "T-publication"
+      ]
+    }
+  ],
+  "diagnostics": {
+    "UNSUPPORTED_OPERATION": {
+      "retry_automatically": false,
+      "success": false,
+      "required_detail": "typed operation/variant; no arbitrary command fallback"
+    },
+    "UNSUPPORTED_HELPER": {
+      "retry_automatically": false,
+      "success": false,
+      "required_detail": "driver/filter/attribute and input manifest digest; no filtered-success claim"
+    },
+    "UNSUPPORTED_HOOK": {
+      "retry_automatically": false,
+      "success": false,
+      "required_detail": "installed phase/path and bundle digest if captured; bounded escaped text only"
+    },
+    "UNSUPPORTED_ORIGIN": {
+      "retry_automatically": false,
+      "success": false,
+      "required_detail": "unsupported gitdir/origin/dependency without host path dereference"
+    },
+    "INPUT_UNSTABLE": {
+      "retry_automatically": false,
+      "success": false,
+      "required_detail": "expected and observed snapshot identity; no mutation"
+    },
+    "RUNTIME_UNAVAILABLE": {
+      "retry_automatically": false,
+      "success": false,
+      "required_detail": "missing capability/unsupported ABI/runtime; no execution"
+    },
+    "EXECUTION_FAILED": {
+      "retry_automatically": false,
+      "success": false,
+      "required_detail": "bounded exit/stderr, actual candidate changes; never blanket unchanged-state claim after process started"
+    },
+    "CANCELLED": {
+      "retry_automatically": false,
+      "success": false,
+      "required_detail": "descendant termination and candidate disposition; ambiguous termination becomes recovery_required"
+    }
+  },
+  "acceptance": [
+    {
+      "id": "T-positive",
+      "gate": "bounded_scope_compatibility",
+      "status": "NOT RUN",
+      "cases": [
+        "SHA1/SHA256 detached and unborn standalone snapshots: native versus future worker status bytes, stage add/modify/delete with literal unusual/leading-dash paths, tree/index/file hashes, untracked and ignored preservation. Do not reuse old RPC PASS as worker acceptance."
+      ]
+    },
+    {
+      "id": "T-helper",
+      "gate": "bounded_scope_compatibility",
+      "status": "NOT RUN",
+      "cases": [
+        "SEC20/27 native required clean/smudge success/refusal and custom merge driver positive controls remain real; worker must reject helper fixtures with UNSUPPORTED_HELPER and unchanged input/candidate preflight state, never WORK-as-CLEAN.",
+        "Optional/process/unused driver/config/include/attribute cases reject conservatively; discovery uncertainty cannot be treated as no helper."
+      ]
+    },
+    {
+      "id": "T-hooks",
+      "gate": "bounded_scope_compatibility",
+      "status": "NOT RUN",
+      "cases": [
+        "Executable hook for each of the eleven observed phases, unknown hook name, core.hooksPath and executable pre-merge fallback sample: reject UNSUPPORTED_HOOK before candidate writes; retain native phase positive controls.",
+        "Non-executable hook/sample controls and executable *.sample rejection controls, hook mode/path/dependency changes during capture, post-index-change on status/add/write-tree; no hook marker from worker."
+      ]
+    },
+    {
+      "id": "T-input",
+      "gate": "bounded_scope_compatibility",
+      "status": "NOT RUN",
+      "cases": [
+        "Reject paths outside snapshot, NUL/metadata/symlink escapes, stale digest, unknown fields/options/environment/executable path, unsupported origin and alternates/submodules; original refs/index/files/ignored/untracked unchanged."
+      ]
+    },
+    {
+      "id": "T-deny",
+      "gate": "bounded_scope_compatibility",
+      "status": "NOT RUN",
+      "cases": [
+        "Every excluded operation including prompt/retention, both removal paths, rollback/prune, no-checkout merge/FF, sequencer continue/abort, root/amend/signing has a typed deny case; no fallback to current runner or direct _run_hook."
+      ]
+    },
+    {
+      "id": "T-isolation",
+      "gate": "stage_B_only",
+      "status": "NOT RUN",
+      "cases": [
+        "Installed immutable runtime required in a separate node after reviewed gate; original SEC11 race and SEC13 replace/include/worktree/inplace probes unchanged with positive controls; exec/FD/ABI/descendants, canaries/socket/network denial, streaming/resource/cancel limits. Preflight config listing is not enforcement."
+      ]
+    },
+    {
+      "id": "T-candidate",
+      "gate": "stages_C_D_only",
+      "status": "NOT RUN",
+      "cases": [
+        "GIT6 changed candidate refuses before ref update with staged/unstaged/untracked/ignored preservation; future retained bundle/tree/message changes require new review/grant; no arbitrary side-effect rollback assertion."
+      ]
+    },
+    {
+      "id": "T-publication",
+      "gate": "stages_C_D_E_only",
+      "status": "NOT RUN",
+      "cases": [
+        "Authenticated immutable bundles and one-shot persisted grants; crashes/cancel/late post failures/old-OID CAS/restart and concurrent live writes; coordinated routing only after independent installed acceptance and related core/UI/contracts. Graceful restart is insufficient."
+      ]
+    }
+  ],
+  "remaining_gaps": [
+    "T-positive",
+    "T-helper",
+    "T-hooks",
+    "T-input",
+    "T-deny",
+    "T-isolation",
+    "T-candidate",
+    "T-publication"
+  ],
+  "next_action": "Separate bounded candidate compatibility fixture node for T-positive/T-helper/T-hooks/T-input/T-deny. No installed runtime, host permission change, broker or production routing; Stage A remains incomplete. Any scope expansion requires a new explicit contract and named gate."
+}

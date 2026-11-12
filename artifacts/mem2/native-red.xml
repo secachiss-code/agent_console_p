@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="3" skipped="0" tests="3" time="1.964" timestamp="2026-11-12T21:30:42.693108+03:00" hostname="somovasnbook14"><testcase classname="tests.gui.front.test_bootstrap_lifecycle" name="test_repeated_runs_close_owned_loops_and_finish_cleanup[False]" time="0.006"><failure message="assert False&#10; +  where False = all(&lt;generator object test_repeated_runs_close_owned_loops_and_finish_cleanup.&lt;locals&gt;.&lt;genexpr&gt; at 0x7a609c0fba00&gt;)">monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7a60ba86d810&gt;
+fails = False
+
+    @pytest.mark.parametrize("fails", [False, True])
+    def test_repeated_runs_close_owned_loops_and_finish_cleanup(monkeypatch: pytest.MonkeyPatch, *, fails: bool) -&gt; None:
+        from gi.repository import Gio, GLib
+    
+        from aconsole.ui.bootstrap import _TASKS, run_gtk, spawn_task
+    
+        before = set(_TASKS)
+        loops: list[asyncio.AbstractEventLoop] = []
+        cleaned: list[str] = []
+        generators: list[AsyncIterator[None]] = []
+        context = GLib.MainContext.default()
+        unrelated = GLib.timeout_add(60_000, lambda: GLib.SOURCE_CONTINUE)
+        foreign = asyncio.new_event_loop()
+    
+        foreign_task = foreign.create_task(asyncio.sleep(60_000))
+        _TASKS.add(foreign_task)
+    
+        async def finish(app: Gio.Application) -&gt; None:
+            loops.append(asyncio.get_running_loop())
+            generator = _stream(cleaned)
+            generators.append(generator)
+            await anext(generator)
+            # Retain a generator and both tracked and directly created tasks.
+            # The completed quit task also needs its done callback.
+            _ = spawn_task(_pending(cleaned))
+            _ = asyncio.get_running_loop().create_task(_pending(cleaned))
+            await asyncio.sleep(0)
+            app.quit()
+    
+        def activate(app: Gio.Application) -&gt; None:
+            app.hold()
+            _ = spawn_task(finish(app))
+    
+        try:
+            for _ in range(3):
+                app = Gio.Application(flags=Gio.ApplicationFlags.NON_UNIQUE)
+                _ = app.connect("activate", activate)
+                def fail_after_run(args: list[str], run: Callable[[list[str]], int] = app.run) -&gt; int:
+                    _ = run(args)
+                    message = "run failed"
+                    raise RuntimeError(message)
+    
+                if fails:
+                    monkeypatch.setattr(app, "run", fail_after_run)
+                    with pytest.raises(RuntimeError, match="run failed"):
+                        _ = run_gtk(app, ["loop-cleanup"])
+                else:
+                    assert run_gtk(app, ["loop-cleanup"]) == 0
+&gt;               assert all(loop.is_closed() for loop in loops)
+E               assert False
+E                +  where False = all(&lt;generator object test_repeated_runs_close_owned_loops_and_finish_cleanup.&lt;locals&gt;.&lt;genexpr&gt; at 0x7a609c0fba00&gt;)
+
+tests/gui/front/test_bootstrap_lifecycle.py:80: AssertionError</failure></testcase><testcase classname="tests.gui.front.test_bootstrap_lifecycle" name="test_repeated_runs_close_owned_loops_and_finish_cleanup[True]" time="0.002"><failure message="assert False&#10; +  where False = all(&lt;generator object test_repeated_runs_close_owned_loops_and_finish_cleanup.&lt;locals&gt;.&lt;genexpr&gt; at 0x7a6083fa04a0&gt;)">monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7a60bdba39b0&gt;
+fails = True
+
+    @pytest.mark.parametrize("fails", [False, True])
+    def test_repeated_runs_close_owned_loops_and_finish_cleanup(monkeypatch: pytest.MonkeyPatch, *, fails: bool) -&gt; None:
+        from gi.repository import Gio, GLib
+    
+        from aconsole.ui.bootstrap import _TASKS, run_gtk, spawn_task
+    
+        before = set(_TASKS)
+        loops: list[asyncio.AbstractEventLoop] = []
+        cleaned: list[str] = []
+        generators: list[AsyncIterator[None]] = []
+        context = GLib.MainContext.default()
+        unrelated = GLib.timeout_add(60_000, lambda: GLib.SOURCE_CONTINUE)
+        foreign = asyncio.new_event_loop()
+    
+        foreign_task = foreign.create_task(asyncio.sleep(60_000))
+        _TASKS.add(foreign_task)
+    
+        async def finish(app: Gio.Application) -&gt; None:
+            loops.append(asyncio.get_running_loop())
+            generator = _stream(cleaned)
+            generators.append(generator)
+            await anext(generator)
+            # Retain a generator and both tracked and directly created tasks.
+            # The completed quit task also needs its done callback.
+            _ = spawn_task(_pending(cleaned))
+            _ = asyncio.get_running_loop().create_task(_pending(cleaned))
+            await asyncio.sleep(0)
+            app.quit()
+    
+        def activate(app: Gio.Application) -&gt; None:
+            app.hold()
+            _ = spawn_task(finish(app))
+    
+        try:
+            for _ in range(3):
+                app = Gio.Application(flags=Gio.ApplicationFlags.NON_UNIQUE)
+                _ = app.connect("activate", activate)
+                def fail_after_run(args: list[str], run: Callable[[list[str]], int] = app.run) -&gt; int:
+                    _ = run(args)
+                    message = "run failed"
+                    raise RuntimeError(message)
+    
+                if fails:
+                    monkeypatch.setattr(app, "run", fail_after_run)
+                    with pytest.raises(RuntimeError, match="run failed"):
+                        _ = run_gtk(app, ["loop-cleanup"])
+                else:
+                    assert run_gtk(app, ["loop-cleanup"]) == 0
+&gt;               assert all(loop.is_closed() for loop in loops)
+E               assert False
+E                +  where False = all(&lt;generator object test_repeated_runs_close_owned_loops_and_finish_cleanup.&lt;locals&gt;.&lt;genexpr&gt; at 0x7a6083fa04a0&gt;)
+
+tests/gui/front/test_bootstrap_lifecycle.py:80: AssertionError</failure></testcase><testcase classname="tests.gui.front.test_window_badge_lifecycle" name="test_badge_timer_stops_on_disposal_and_cannot_restart_on_remap" time="1.512"><failure message="AssertionError: AssertionError('assert 75 is None\n +  where 75 = &lt;window.MainWindow object at 0x7a60a41b5580 (aconsole+ui+views+window+MainWindow at 0x2b988900)&gt;._git_badge_timer')&#10;assert AssertionError('assert 75 is None\n +  where 75 = &lt;window.MainWindow object at 0x7a60a41b5580 (aconsole+ui+views+window+MainWindow at 0x2b988900)&gt;._git_badge_timer') is None&#10; +  where AssertionError('assert 75 is None\n +  where 75 = &lt;window.MainWindow object at 0x7a60a41b5580 (aconsole+ui+views+window+MainWindow at 0x2b988900)&gt;._git_badge_timer') = &lt;test_b5a_page._PageTestApp object at 0x7a60a41b7440 (tests+gui+front+test_b5a_page+_PageTestApp at 0x2ba7e1c0)&gt;.error">def test_badge_timer_stops_on_disposal_and_cannot_restart_on_remap() -&gt; None:
+        from gi.repository import GLib
+    
+        from aconsole.core.infrastructure.fake.scenarios import demo_snapshot
+        from aconsole.ui.viewmodels.tabs_vm import TabsViewModel
+        from aconsole.ui.views.window import MainWindow
+    
+        async def scenario(app: _PageTestApp) -&gt; None:
+            app.client.store.apply_snapshot(demo_snapshot(), 0)
+            window = MainWindow(app, TabsViewModel(app.client))
+            app.window = window
+            window.present()
+            await _until(lambda: bool(window.terminal_pages))
+            for page in window.terminal_pages.values():
+                if page.worker is not None:
+                    await asyncio.wait_for(page.worker, timeout=5.0)
+            model = window.tabs.model
+            model.items_changed(0, 0, 0)
+            timer = window._git_badge_timer
+            assert timer is not None
+            context = GLib.MainContext.default()
+            source = context.find_source_by_id(timer)
+            assert source is not None
+            watch_calls = sum(method == "git/watch" for method, _params in app.client.calls)
+            source.set_ready_time(0)
+            await _until(lambda: sum(method == "git/watch" for method, _params in app.client.calls) &gt; watch_calls)
+            assert context.find_source_by_id(timer) is not None
+            model.items_changed(0, 0, 0)
+            assert window._git_badge_timer == timer
+    
+            unrelated = GLib.timeout_add(60_000, lambda: GLib.SOURCE_CONTINUE)
+            try:
+                window.unrealize()
+                assert window._git_badge_timer is None
+                assert context.find_source_by_id(timer) is None
+                calls = len(app.client.calls)
+                window.realize()
+                model.items_changed(0, 0, 0)
+                assert window._keep_git_badges() == GLib.SOURCE_REMOVE
+                await asyncio.sleep(0)
+                assert window._git_badge_timer is None
+                assert len(app.client.calls) == calls
+                assert context.find_source_by_id(unrelated) is not None
+                window.unrealize()
+            finally:
+                _ = GLib.source_remove(unrelated)
+    
+&gt;       _run_ui(scenario)
+
+tests/gui/front/test_window_badge_lifecycle.py:59: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+scenario = &lt;function test_badge_timer_stops_on_disposal_and_cannot_restart_on_remap.&lt;locals&gt;.scenario at 0x7a6083f78930&gt;
+
+    def _run_ui(scenario: Callable[[_PageTestApp], Awaitable[None]]) -&gt; None:
+        app = _PageTestApp(scenario)
+        assert run_app(lambda: app, ["aconsole-b5a-page-test"]) == 0
+&gt;       assert app.error is None, repr(app.error)
+E       AssertionError: AssertionError('assert 75 is None\n +  where 75 = &lt;window.MainWindow object at 0x7a60a41b5580 (aconsole+ui+views+window+MainWindow at 0x2b988900)&gt;._git_badge_timer')
+E       assert AssertionError('assert 75 is None\n +  where 75 = &lt;window.MainWindow object at 0x7a60a41b5580 (aconsole+ui+views+window+MainWindow at 0x2b988900)&gt;._git_badge_timer') is None
+E        +  where AssertionError('assert 75 is None\n +  where 75 = &lt;window.MainWindow object at 0x7a60a41b5580 (aconsole+ui+views+window+MainWindow at 0x2b988900)&gt;._git_badge_timer') = &lt;test_b5a_page._PageTestApp object at 0x7a60a41b7440 (tests+gui+front+test_b5a_page+_PageTestApp at 0x2ba7e1c0)&gt;.error
+
+tests/gui/front/test_b5a_page.py:92: AssertionError</failure></testcase></testsuite></testsuites>

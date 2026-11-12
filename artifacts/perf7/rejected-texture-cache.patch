@@ -1,0 +1,58 @@
+diff --git a/src/aconsole/ui/views/review/graph_cell.py b/src/aconsole/ui/views/review/graph_cell.py
+index 76af3a00..a8a8cf45 100644
+--- a/src/aconsole/ui/views/review/graph_cell.py
++++ b/src/aconsole/ui/views/review/graph_cell.py
+@@ -2,6 +2,7 @@
+ 
+ from __future__ import annotations
+ 
++from collections import OrderedDict
+ from typing import Final, override
+ 
+ import gi
+@@ -43,6 +44,7 @@ def _rgba(spec: str) -> Gdk.RGBA:
+ 
+ 
+ _COLORS: Final = tuple(_rgba(spec) for spec in _PALETTE)
++_TEXTURES = OrderedDict()
+ 
+ 
+ def lane_x(lane: int) -> float:
+@@ -86,6 +88,37 @@ class GraphCell(Gtk.Widget):
+ 
+     @override
+     def do_snapshot(self, snapshot: Gtk.Snapshot) -> None:
++        row = self.row
++        if row is None:
++            return
++        native = self.get_native()
++        renderer = native.get_renderer() if native is not None else None
++        if renderer is None:
++            self._draw_graph(snapshot)
++            return
++        found, bg = self.get_style_context().lookup_color("view_bg_color")
++        background = (bg.red, bg.green, bg.blue, bg.alpha) if found else None
++        width, height = self.get_width(), self.get_height()
++        scale = self.get_scale_factor()
++        key = (renderer, row, self.snapshot_node, self.uncommitted, width, height, scale, background)
++        texture = _TEXTURES.get(key)
++        if texture is None:
++            drawing = Gtk.Snapshot()
++            drawing.scale(scale, scale)
++            self._draw_graph(drawing)
++            node = drawing.to_node()
++            if node is None:
++                return
++            viewport = Graphene.Rect().init(0, 0, width * scale, height * scale)
++            texture = renderer.render_texture(node, viewport)
++            _TEXTURES[key] = texture
++            if len(_TEXTURES) > 128:
++                _TEXTURES.popitem(last=False)
++        else:
++            _TEXTURES.move_to_end(key)
++        snapshot.append_texture(texture, Graphene.Rect().init(0, 0, width, height))
++
++    def _draw_graph(self, snapshot: Gtk.Snapshot) -> None:
+         row = self.row
+         if row is None:
+             return

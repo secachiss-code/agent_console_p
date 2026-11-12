@@ -1,0 +1,38 @@
+"""Run on the host using the core environment, preserving all coverage inputs."""
+import argparse
+import os
+from pathlib import Path
+import subprocess
+import sys
+
+root = Path(__file__).resolve().parents[2]
+out = root / 'artifacts/qa16'
+parser = argparse.ArgumentParser()
+parser.add_argument('--full', action='store_true')
+parser.add_argument('--new-only', action='store_true')
+parser.add_argument('--baseline', action='store_true')
+options = parser.parse_args()
+label = 'core-baseline' if options.baseline else 'regression' if options.new_only else ('core' if options.full else 'focused')
+tests = [
+    'tests/core', 'tests/contracts', 'tests/gate', 'tests/hostrun', 'tests/smoke',
+    'tests/test_package.py', 'tests/test_packaging.py', 'tests/test_contrast.py',
+    'tests/test_build_guards.py', 'tests/test_socket_paths.py', '-m', 'not performance',
+] if options.full else [
+    'tests/core/test_git_read_boundaries.py', 'tests/core/test_git_wire.py',
+    'tests/core/test_git_history.py', 'tests/core/test_diff_review.py',
+    'tests/core/test_work_session_result_integrity.py',
+]
+if options.new_only:
+    tests = ['tests/core/test_git_read_boundaries.py']
+if options.baseline:
+    assert options.full
+    tests += ['--ignore=tests/core/test_git_read_boundaries.py']
+env = dict(os.environ, COVERAGE_FILE=str(out / ('.coverage.' + label)), PYTHONUNBUFFERED='1')
+command = [sys.executable, '-m', 'pytest', *tests,
+           '--cov', '--cov-branch', '--cov-report=', '--cov-fail-under=0',
+           '--basetemp=/tmp/ac-qa16-' + label, '-o', 'faulthandler_timeout=90',
+           '--junitxml=' + str(out / (label + '.xml'))]
+with (out / (label + '.log')).open('w') as stream:
+    result = subprocess.run(command, cwd=root, env=env, stdout=stream, stderr=subprocess.STDOUT, timeout=900)
+print(label, result.returncode)
+raise SystemExit(result.returncode)

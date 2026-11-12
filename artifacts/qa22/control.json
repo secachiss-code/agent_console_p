@@ -1,0 +1,65 @@
+{
+  "mode": "control",
+  "application_id": "io.github.aconsole.GeometryProbe",
+  "display": ":0",
+  "database_before": [],
+  "database_after": [],
+  "events": [
+    {
+      "label": "100ms",
+      "size": [
+        700,
+        800
+      ],
+      "default": [
+        700,
+        800
+      ],
+      "active": true,
+      "maximized": false,
+      "fullscreen": false,
+      "xprop": "WM_CLASS(STRING) = \"qa22-geometry\", \"qa22-geometry\"\n_GTK_APPLICATION_ID(UTF8_STRING) = \"io.github.aconsole.GeometryProbe\"\nWM_NORMAL_HINTS(WM_SIZE_HINTS):\n\t\tprogram specified minimum size: 258 by 137\n_NET_WM_STATE(ATOM) = _NET_WM_STATE_FOCUSED\n_GTK_FRAME_EXTENTS(CARDINAL) = 61, 61, 55, 67\n"
+    },
+    {
+      "label": "700ms",
+      "size": [
+        700,
+        800
+      ],
+      "default": [
+        700,
+        800
+      ],
+      "active": true,
+      "maximized": false,
+      "fullscreen": false,
+      "xprop": "WM_CLASS(STRING) = \"qa22-geometry\", \"qa22-geometry\"\n_GTK_APPLICATION_ID(UTF8_STRING) = \"io.github.aconsole.GeometryProbe\"\nWM_NORMAL_HINTS(WM_SIZE_HINTS):\n\t\tprogram specified minimum size: 258 by 137\n_NET_WM_STATE(ATOM) = _NET_WM_STATE_FOCUSED\n_GTK_FRAME_EXTENTS(CARDINAL) = 61, 61, 55, 67\n"
+    }
+  ],
+  "gala_symbols": [
+    "gala_window_state_saver_on_shutdown",
+    "gala_window_state_saver_init",
+    "gala_window_state_saver_construct",
+    "gala_window_state_saver_on_map",
+    "gala_window_state_saver_new",
+    "gala_window_state_saver_login_manager_proxy_get_type",
+    "gala_window_state_saver_get_type",
+    "WindowStateSaver.vala:31: Cannot open database: %d, %s",
+    "WindowStateSaver.vala:57: Unable to disable synchronous mode %d, %s",
+    "WindowStateSaver.vala:64: Cannot create table 'apps': %d, %s",
+    "WindowStateSaver.vala:106: Cannot query app information from database: %d, %s",
+    "WindowStateSaver.vala:148: Cannot insert app information into database: %d, %s",
+    "WindowStateSaver.vala:161: Cannot insert app information into database: %d, %s",
+    "WindowStateSaver.vala:196: Could not save window that is not mapped %s",
+    "WindowStateSaver.vala:214: Cannot update app position in database: %d, %s",
+    "WindowStateSaver.vala:227: Cannot update app position in database: %d, %s",
+    "WindowStateSaver.vala:76: Unable to connect to logind bus: %s",
+    "gala_window_state_saver_find_window_index",
+    "gala_window_state_saver_save_window_state",
+    "gala_window_state_saver_track_window",
+    "gala_window_state_saver_validate_last_window_position",
+    "gala_window_state_saver_on_map",
+    "gala_window_state_saver_init",
+    "gala_window_state_saver_connect_to_logind_co"
+  ]
+}

@@ -1,0 +1,1 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="0" skipped="0" tests="1" time="13.111" timestamp="2026-11-12T23:28:22.764625+03:00" hostname="somovasnbook14"><testcase classname="tests.gui.front.test_git_scale_ui" name="test_scrolling_a_long_history" time="12.962" /></testsuite></testsuites>

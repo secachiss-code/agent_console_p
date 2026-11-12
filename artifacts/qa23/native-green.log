@@ -1,0 +1,116 @@
+Collected 0 items to run in parallel
+..............F...F.                                                     [100%]
+=================================== FAILURES ===================================
+_ test_opening_waits_for_focus_but_background_requests_still_ring[waiting-focus] _
+
+core = '/tmp/aconsole-gui-f8nmwbn8/core.sock', case = 'focus'
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7a601df35d30>
+
+    @pytest.mark.parametrize("case", ["focus", "unfocused", "resolved", "unmap", "destroy", "remap"])
+    @pytest.mark.parametrize("core", ["waiting"], indirect=True)
+    def test_opening_waits_for_focus_but_background_requests_still_ring(
+        core: str, case: str, monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        from aconsole.ui.views.window import MainWindow
+    
+        # Hold the focus observation inactive from construction; the actual native
+        # focus/action path is covered by the unchanged test above.
+        monkeypatch.setattr(MainWindow, "is_active", lambda _window: False)
+        app = _OpeningApp(CoreClient(core), case, monkeypatch)
+        assert run_app(lambda: app, ["approval-opening-test"]) == 0
+        if app.failure is not None:
+>           raise app.failure
+
+tests/gui/front/test_approval_alerts.py:330: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/gui/front/test_approval_alerts.py:197: in _open
+    await self._check(self.window)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <test_approval_alerts._OpeningApp object at 0x7a601df25b00 (tests+gui+front+test_approval_alerts+_OpeningApp at 0x34f87db0)>
+window = <window.MainWindow object at 0x7a604ca1d3c0 (aconsole+ui+views+window+MainWindow at 0x3551f8c0)>
+
+    async def _check(self, window: MainWindow) -> None:
+        store = window.tabs.client.store
+        snapshot = store.snapshot
+        assert snapshot is not None
+        await asyncio.sleep(0.12)
+        assert window.get_mapped()
+>       assert self.sent == []
+E       AssertionError: assert ['approval-01...0000000101-1'] == []
+E         
+E         Left contains one more item: 'approval-01JB2Z00000000000000000101-1'
+E         Use -v to get more diff
+
+tests/gui/front/test_approval_alerts.py:277: AssertionError
+_ test_opening_waits_for_focus_but_background_requests_still_ring[waiting-destroy] _
+
+core = '/tmp/aconsole-gui-1rcsx17i/core.sock', case = 'destroy'
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7a601df22d50>
+
+    @pytest.mark.parametrize("case", ["focus", "unfocused", "resolved", "unmap", "destroy", "remap"])
+    @pytest.mark.parametrize("core", ["waiting"], indirect=True)
+    def test_opening_waits_for_focus_but_background_requests_still_ring(
+        core: str, case: str, monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        from aconsole.ui.views.window import MainWindow
+    
+        # Hold the focus observation inactive from construction; the actual native
+        # focus/action path is covered by the unchanged test above.
+        monkeypatch.setattr(MainWindow, "is_active", lambda _window: False)
+        app = _OpeningApp(CoreClient(core), case, monkeypatch)
+        assert run_app(lambda: app, ["approval-opening-test"]) == 0
+        if app.failure is not None:
+>           raise app.failure
+
+tests/gui/front/test_approval_alerts.py:330: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/gui/front/test_approval_alerts.py:197: in _open
+    await self._check(self.window)
+tests/gui/front/test_approval_alerts.py:296: in _check
+    await asyncio.sleep(0.55)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+delay = 0.55, result = None
+
+    async def sleep(delay, result=None):
+        """Coroutine that completes after a given time (in seconds)."""
+        if delay <= 0:
+            await __sleep0()
+            return result
+    
+        if math.isnan(delay):
+            raise ValueError("Invalid delay: NaN (not a number)")
+    
+        loop = events.get_running_loop()
+        future = loop.create_future()
+        h = loop.call_later(delay,
+                            futures._set_result_unless_cancelled,
+                            future, result)
+        try:
+>           return await future
+                   ^^^^^^^^^^^^
+E           asyncio.exceptions.CancelledError
+
+../../../../uv/python/cpython-3.15.1-linux-x86_64-gnu/lib/python3.15/asyncio/tasks.py:725: CancelledError
+------------------------------ Captured log call -------------------------------
+ERROR    asyncio:base_events.py:1899 Unhandled exception in client_connected_cb
+transport: <_SelectorSocketTransport closed fd=32>
+Traceback (most recent call last):
+  File "/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/038657e1539f15ad/src/aconsole/core/infrastructure/fake/server.py", line 193, in _client
+    await writer.wait_closed()
+  File "/home/sas/.local/share/uv/python/cpython-3.15.1-linux-x86_64-gnu/lib/python3.15/asyncio/streams.py", line 369, in wait_closed
+    await self._protocol._get_close_waiter(self)
+  File "/home/sas/.local/share/uv/python/cpython-3.15.1-linux-x86_64-gnu/lib/python3.15/asyncio/selector_events.py", line 1018, in _read_ready__data_received
+    data = self._sock.recv(self.max_size)
+ConnectionResetError: [Errno 104] Соединение разорвано другой стороной
+=============================== warnings summary ===============================
+../../../../../../Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/events.py:803
+  /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/events.py:803: DeprecationWarning: 'asyncio.AbstractEventLoopPolicy' is deprecated and slated for removal in Python 3.16
+    AbstractEventLoopPolicy = getattr(asyncio, "AbstractEventLoopPolicy", object)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/gui/front/test_approval_alerts.py::test_opening_waits_for_focus_but_background_requests_still_ring[waiting-focus]
+FAILED tests/gui/front/test_approval_alerts.py::test_opening_waits_for_focus_but_background_requests_still_ring[waiting-destroy]
+2 failed, 18 passed, 1 warning in 8.24s

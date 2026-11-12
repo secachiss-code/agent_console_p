@@ -1,0 +1,8 @@
+{
+  "command": [
+    "/home/sas/Projects/sp_aconsole_prototype/.venv-ui/bin/python",
+    "packaging/build_deb.py"
+  ],
+  "exit_code": 0,
+  "seconds": 55.806619513999976
+}

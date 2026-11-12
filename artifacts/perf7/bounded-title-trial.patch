@@ -1,0 +1,14 @@
+diff --git a/src/aconsole/ui/views/review/git_pane.py b/src/aconsole/ui/views/review/git_pane.py
+--- a/src/aconsole/ui/views/review/git_pane.py
++++ b/src/aconsole/ui/views/review/git_pane.py
+@@ -76,7 +76,9 @@ class _RowWidget(Gtk.Box):
+         self.set_size_request(-1, ROW_HEIGHT)
+         self.cell: GraphCell = GraphCell()
+         self.append(self.cell)
+-        self.title: Gtk.Label = Gtk.Label(xalign=0, hexpand=True, ellipsize=Pango.EllipsizeMode.END, width_chars=18)
++        self.title: Gtk.Label = Gtk.Label(
++            xalign=0, hexpand=True, ellipsize=Pango.EllipsizeMode.END, width_chars=18, max_width_chars=18,
++        )
+         # Setting tooltip-text on every recycled row triggers a display-wide tooltip
+         # query. Keep the text here and answer only when GTK actually asks for it.
+         self._tooltip_text: str = ""

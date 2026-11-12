@@ -1,0 +1,282 @@
+INP001 File `artifacts/sec11/worker-review-gate/collect.py` is part of an implicit namespace package. Add an `__init__.py`.
+--> artifacts/sec11/worker-review-gate/collect.py:1:1
+
+ANN201 Missing return type annotation for public function `digest`
+  --> artifacts/sec11/worker-review-gate/collect.py:30:5
+   |
+30 | def digest(data):
+   |     ^^^^^^
+31 |     return hashlib.sha256(data).hexdigest()
+   |
+help: Add return type annotation
+
+ANN001 Missing type annotation for function argument `data`
+  --> artifacts/sec11/worker-review-gate/collect.py:30:12
+   |
+30 | def digest(data):
+   |            ^^^^
+31 |     return hashlib.sha256(data).hexdigest()
+   |
+
+ANN201 Missing return type annotation for public function `collect`
+  --> artifacts/sec11/worker-review-gate/collect.py:34:5
+   |
+34 | def collect():
+   |     ^^^^^^^
+35 |     tracked = subprocess.check_output(["git", "ls-tree", "-r", "--name-only", BASE], cwd=ROOT).decode().splitlines()
+36 |     upstream = sorted(set(PROBES) | {
+   |
+help: Add return type annotation
+
+S603 `subprocess` call: check for execution of untrusted input
+  --> artifacts/sec11/worker-review-gate/collect.py:35:15
+   |
+34 | def collect():
+35 |     tracked = subprocess.check_output(["git", "ls-tree", "-r", "--name-only", BASE], cwd=ROOT).decode().splitlines()
+   |               ^^^^^^^^^^^^^^^^^^^^^^^
+36 |     upstream = sorted(set(PROBES) | {
+37 |         p for p in tracked if any(p.startswith(f"artifacts/sec11/{folder}/") for folder in FOLDERS)
+   |
+
+S607 Starting a process with a partial executable path
+  --> artifacts/sec11/worker-review-gate/collect.py:35:39
+   |
+34 | def collect():
+35 |     tracked = subprocess.check_output(["git", "ls-tree", "-r", "--name-only", BASE], cwd=ROOT).decode().splitlines()
+   |                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+36 |     upstream = sorted(set(PROBES) | {
+37 |         p for p in tracked if any(p.startswith(f"artifacts/sec11/{folder}/") for folder in FOLDERS)
+   |
+
+T201 `print` found
+  --> artifacts/sec11/worker-review-gate/collect.py:52:5
+   |
+51 | if __name__ == "__main__":
+52 |     print(json.dumps(collect(), indent=2, sort_keys=True))
+   |     ^^^^^
+help: Remove `print`
+   |
+51 | if __name__ == "__main__":
+   -     print(json.dumps(collect(), indent=2, sort_keys=True))
+52 +     pass
+   |
+note: This is an unsafe fix and may change runtime behavior
+
+INP001 File `artifacts/sec11/worker-review-gate/verify.py` is part of an implicit namespace package. Add an `__init__.py`.
+--> artifacts/sec11/worker-review-gate/verify.py:1:1
+
+ANN201 Missing return type annotation for public function `require`
+  --> artifacts/sec11/worker-review-gate/verify.py:22:5
+   |
+22 | def require(value, message):
+   |     ^^^^^^^
+23 |     if not value:
+24 |         raise ValueError(message)
+   |
+help: Add return type annotation: `None`
+   |
+21 |
+   - def require(value, message):
+22 + def require(value, message) -> None:
+23 |     if not value:
+   |
+note: This is an unsafe fix and may change runtime behavior
+
+ANN001 Missing type annotation for function argument `value`
+  --> artifacts/sec11/worker-review-gate/verify.py:22:13
+   |
+22 | def require(value, message):
+   |             ^^^^^
+23 |     if not value:
+24 |         raise ValueError(message)
+   |
+
+ANN001 Missing type annotation for function argument `message`
+  --> artifacts/sec11/worker-review-gate/verify.py:22:20
+   |
+22 | def require(value, message):
+   |                    ^^^^^^^
+23 |     if not value:
+24 |         raise ValueError(message)
+   |
+
+ANN201 Missing return type annotation for public function `semantics`
+  --> artifacts/sec11/worker-review-gate/verify.py:27:5
+   |
+27 | def semantics(c, upstream):
+   |     ^^^^^^^^^
+28 |     require(c["schema"] == 1 and c["base_commit"] == BASE, "Unknown packet base/schema")
+29 |     require(c["disposition"] == {
+   |
+help: Add return type annotation: `None`
+   |
+26 |
+   - def semantics(c, upstream):
+27 + def semantics(c, upstream) -> None:
+28 |     require(c["schema"] == 1 and c["base_commit"] == BASE, "Unknown packet base/schema")
+   |
+note: This is an unsafe fix and may change runtime behavior
+
+ANN001 Missing type annotation for function argument `c`
+  --> artifacts/sec11/worker-review-gate/verify.py:27:15
+   |
+27 | def semantics(c, upstream):
+   |               ^
+28 |     require(c["schema"] == 1 and c["base_commit"] == BASE, "Unknown packet base/schema")
+29 |     require(c["disposition"] == {
+   |
+
+ANN001 Missing type annotation for function argument `upstream`
+  --> artifacts/sec11/worker-review-gate/verify.py:27:18
+   |
+27 | def semantics(c, upstream):
+   |                  ^^^^^^^^
+28 |     require(c["schema"] == 1 and c["base_commit"] == BASE, "Unknown packet base/schema")
+29 |     require(c["disposition"] == {
+   |
+
+E501 Line too long (133 > 120)
+  --> artifacts/sec11/worker-review-gate/verify.py:58:121
+   |
+56 |         "response_bytes": 8388608, "combined_stream_bytes": 8388608,
+57 |     }, "Response bound drift")
+58 |     require(response["success_fields"] == ["ok", "operation", "status", "candidate_digest", "index_digest"], "Success identity lost")
+   |                                                                                                                         ^^^^^^^^^^^^^
+59 |     require(response["stage_success_fields"] == ["tree_oid", "changed_paths_hex", "index_changed_paths_hex"], "Stage delta lost")
+60 |     require(response["failure_fields"] == [
+   |
+
+E501 Line too long (129 > 120)
+  --> artifacts/sec11/worker-review-gate/verify.py:59:121
+   |
+57 |     }, "Response bound drift")
+58 |     require(response["success_fields"] == ["ok", "operation", "status", "candidate_digest", "index_digest"], "Success identity lost")
+59 |     require(response["stage_success_fields"] == ["tree_oid", "changed_paths_hex", "index_changed_paths_hex"], "Stage delta lost")
+   |                                                                                                                         ^^^^^^^^^
+60 |     require(response["failure_fields"] == [
+61 |         "ok", "diagnostic", "phase", "execution_started", "retry_automatically", "disposition",
+   |
+
+PLR2004 Magic value used in comparison, consider replacing `6` with a constant variable
+   --> artifacts/sec11/worker-review-gate/verify.py:102:81
+    |
+100 |         "stimulus", "expected", "positive_control",
+101 |     )) for r in c["acceptance"]), "Invented acceptance/missing native control")
+102 |     require(set(c["remaining_gates"]) == set("ABCDE") and len(c["sequence"]) == 6, "Lost later gate")
+    |                                                                                 ^
+103 |     # These are explicit review requirements in prose, not enforcement by this verifier.
+104 |     for key in ("installation", "identity", "launch_exec", "input", "environment", "descendants",
+    |
+
+ANN201 Missing return type annotation for public function `verify`
+   --> artifacts/sec11/worker-review-gate/verify.py:109:5
+    |
+109 | def verify():
+    |     ^^^^^^
+110 |     c = json.loads((HERE / "contract.json").read_text())
+111 |     upstream = json.loads((ROOT / "artifacts/sec11/stage-a-contract/contract.json").read_text())
+    |
+help: Add return type annotation
+
+S603 `subprocess` call: check for execution of untrusted input
+   --> artifacts/sec11/worker-review-gate/verify.py:115:5
+    |
+113 |     index = json.loads((HERE / "source-index.json").read_text())
+114 |     require(index == collect(), "Source/evidence index drift")
+115 |     subprocess.run(["git", "merge-base", "--is-ancestor", BASE, "HEAD"], cwd=ROOT, check=True)
+    |     ^^^^^^^^^^^^^^
+116 |     pinned = index["product_source_hashes"] | index["upstream_hashes"]
+117 |     for path, expected in pinned.items():
+    |
+
+S607 Starting a process with a partial executable path
+   --> artifacts/sec11/worker-review-gate/verify.py:115:20
+    |
+113 |     index = json.loads((HERE / "source-index.json").read_text())
+114 |     require(index == collect(), "Source/evidence index drift")
+115 |     subprocess.run(["git", "merge-base", "--is-ancestor", BASE, "HEAD"], cwd=ROOT, check=True)
+    |                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+116 |     pinned = index["product_source_hashes"] | index["upstream_hashes"]
+117 |     for path, expected in pinned.items():
+    |
+
+S603 `subprocess` call: check for execution of untrusted input
+   --> artifacts/sec11/worker-review-gate/verify.py:118:16
+    |
+116 |     pinned = index["product_source_hashes"] | index["upstream_hashes"]
+117 |     for path, expected in pinned.items():
+118 |         blob = subprocess.check_output(["git", "show", f"{BASE}:{path}"], cwd=ROOT)
+    |                ^^^^^^^^^^^^^^^^^^^^^^^
+119 |         require(digest(blob) == expected, f"Base blob drift: {path}")
+120 |     prior = json.loads((ROOT / "artifacts/sec11/candidate-result-contract/results.json").read_text())
+    |
+
+S607 Starting a process with a partial executable path
+   --> artifacts/sec11/worker-review-gate/verify.py:118:40
+    |
+116 |     pinned = index["product_source_hashes"] | index["upstream_hashes"]
+117 |     for path, expected in pinned.items():
+118 |         blob = subprocess.check_output(["git", "show", f"{BASE}:{path}"], cwd=ROOT)
+    |                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+119 |         require(digest(blob) == expected, f"Base blob drift: {path}")
+120 |     prior = json.loads((ROOT / "artifacts/sec11/candidate-result-contract/results.json").read_text())
+    |
+
+E501 Line too long (121 > 120)
+   --> artifacts/sec11/worker-review-gate/verify.py:145:121
+    |
+143 |         "implicit-observation-approval": lambda d: d["operation_abi"].update(observation_decision="APPROVED"),
+144 |         "response-limit": lambda d: d["response_abi"]["limits"].update(response_bytes=999999999),
+145 |         "failure-retry": lambda d: d["response_abi"]["diagnostics"]["EXECUTION_FAILED"].update(retry_automatically=True),
+    |                                                                                                                         ^
+146 |         "lost-recovery": lambda d: d["response_abi"]["failure_fields"].remove("recovery_required"),
+147 |         "host-mount": lambda d: d["runtime_abi"]["mounts"]["writable"].append("host home"),
+    |
+
+TRY003 Avoid specifying long messages outside the exception class
+   --> artifacts/sec11/worker-review-gate/verify.py:165:19
+    |
+163 |             rejected.append(name)
+164 |         else:
+165 |             raise ValueError(f"Accepted negative control: {name}")
+    |                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+166 |     return {
+167 |         "local_packet_integrity": "PASS", "actual_review": "NOT PERFORMED", "stage_B_authorized": False,
+    |
+
+EM102 Exception must not use an f-string literal, assign to variable first
+   --> artifacts/sec11/worker-review-gate/verify.py:165:30
+    |
+163 |             rejected.append(name)
+164 |         else:
+165 |             raise ValueError(f"Accepted negative control: {name}")
+    |                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+166 |     return {
+167 |         "local_packet_integrity": "PASS", "actual_review": "NOT PERFORMED", "stage_B_authorized": False,
+    |
+help: Assign to variable; remove f-string literal
+    |
+164 |         else:
+    -             raise ValueError(f"Accepted negative control: {name}")
+165 +             msg = f"Accepted negative control: {name}"
+166 +             raise ValueError(msg)
+167 |     return {
+    |
+note: This is an unsafe fix and may change runtime behavior
+
+T201 `print` found
+   --> artifacts/sec11/worker-review-gate/verify.py:180:5
+    |
+179 | if __name__ == "__main__":
+180 |     print(json.dumps(verify(), indent=2, sort_keys=True))
+    |     ^^^^^
+help: Remove `print`
+    |
+179 | if __name__ == "__main__":
+    -     print(json.dumps(verify(), indent=2, sort_keys=True))
+180 +     pass
+    |
+note: This is an unsafe fix and may change runtime behavior
+
+Found 26 errors.
+5 unsafe fixes available with `--fix --unsafe-fixes`.

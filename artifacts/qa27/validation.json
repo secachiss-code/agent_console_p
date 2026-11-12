@@ -1,0 +1,57 @@
+{
+  "targeted-desktop": {
+    "tests": 8,
+    "passed": 8,
+    "failed": [],
+    "skipped": 0,
+    "returncode": 0
+  },
+  "full-private": {
+    "tests": 534,
+    "passed": 533,
+    "failed": [
+      "tests.gui.front.test_git_scale_ui::test_scrolling_a_long_history"
+    ],
+    "skipped": 0,
+    "returncode": 1
+  },
+  "full-desktop": {
+    "tests": 534,
+    "passed": 525,
+    "failed": [
+      "tests.gui.front.test_b0_window::test_sidebar_lists_demo_tabs[700-True]",
+      "tests.gui.front.test_b0_window::test_collapsed_sidebar_button_opens_and_closes_sidebar",
+      "tests.gui.front.test_b0_window::test_system_title_buttons_keep_clear_header_space[700-True-left]",
+      "tests.gui.front.test_b0_window::test_system_title_buttons_keep_clear_header_space[700-True-right]",
+      "tests.gui.front.test_b0_window::test_system_title_buttons_keep_clear_header_space[700-True-both]",
+      "tests.gui.front.test_b1_keys::test_b1_keys_narrow_window",
+      "tests.gui.front.test_des3_visual::test_native_widgets_match_reviewed_baselines[light-1280-light]",
+      "tests.gui.front.test_des3_visual::test_native_widgets_match_reviewed_baselines[dark-1280-dark]",
+      "tests.gui.front.test_des3_visual::test_native_widgets_match_reviewed_baselines[light-700-narrow]"
+    ],
+    "skipped": 0,
+    "returncode": 1
+  },
+  "preserved": {
+    "base": "4b7a426c8e06e81e742fe430a2062efbbb52ca7e",
+    "files_checked": 934,
+    "path_content_digest": "21c9e09cae0a656d671ec2d61563155bb4402e65727fcd017bca246f2467115d",
+    "only_test_change": "optional locks disabled in three read-only status calls; comment and wrapping"
+  },
+  "evidence_hashes": {
+    "artifacts/qa27/REPORT.md": "b79d47bce4bb0f36596614198ec1c66bb00313cba3f56c03d912aabfeb63668e",
+    "artifacts/qa27/controls.json": "1d16da7fc459c1edc5f2bac3ae385fa505c4e841c2cba1e50c5ecde0d5eedc45",
+    "artifacts/qa27/controls.py": "6fe75db4b06ab88199a0388060dffdfde0c8039cbd4347fb6136de7edf23f97a",
+    "artifacts/qa27/full-desktop/pytest.log": "bcbfa90fc805a0ddbe61be5e9c412ed273d8f518dd0863b717d847c4614a2ad6",
+    "artifacts/qa27/full-desktop/pytest.xml": "3990791cf704c92a22dec6af745e1f287194eb278ab187bbdf581fbcce9307bb",
+    "artifacts/qa27/full-desktop/run.json": "7e9692d360f52f768996585e23e8f4a04f74f8b29b5d782ada8780a6f45c1948",
+    "artifacts/qa27/full-private/pytest.log": "a923208169fce886d6df825ce8cdb18dcbc0f95411f0600a891f016706703106",
+    "artifacts/qa27/full-private/pytest.xml": "525380da51d61d40d8d97e4a52b965ea967c57f7d3b15f4a60c720cf0b63a081",
+    "artifacts/qa27/full-private/run.json": "c8ab7a0c33947d816e37d50307c4252334ce1da1f6da631d9520e7459c768b44",
+    "artifacts/qa27/full-private/xvfb.log": "b987a262609a3720f450ab6815ed90b2069dd47b7b012959ca19c325aebf5d55",
+    "artifacts/qa27/targeted-desktop/pytest.log": "dd92282615582249d49e43ff6d1048b6beea01a751cb2e758b0be9584cbaffc3",
+    "artifacts/qa27/targeted-desktop/pytest.xml": "a680422ba282beefe4e3693ee2edee3b97a0b74ed7d4827fe268f844060f60fd",
+    "artifacts/qa27/targeted-desktop/run.json": "04b9959aa4d0511ae69fb9fbf02f72868efad0839fd816c9a85e7eda3dc4fab9",
+    "artifacts/qa27/verify.py": "8a22e688f65cbdb2e45420abfc13f34b1d7c13b4e84dd83e6f0941dff109b8fc"
+  }
+}

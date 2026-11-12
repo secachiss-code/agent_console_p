@@ -1,0 +1,23 @@
+diff --git a/src/aconsole/ui/views/review/graph_cell.py b/src/aconsole/ui/views/review/graph_cell.py
+index 76af3a00..25c5c975 100644
+--- a/src/aconsole/ui/views/review/graph_cell.py
++++ b/src/aconsole/ui/views/review/graph_cell.py
+@@ -50,9 +50,17 @@ def lane_x(lane: int) -> float:
+ 
+ 
+ def _edge(snapshot: Gtk.Snapshot, edge: LaneEdge, top: float, bottom: float) -> None:
+-    builder = Gsk.PathBuilder.new()
+     start = lane_x(edge.start)
+     end = lane_x(edge.end)
++    if edge.start == edge.end and not edge.dashed:
++        # A solid vertical stroke has rectangular bounds. Avoid a GPU path mask
++        # for the common straight lane while retaining the same butt endpoints.
++        snapshot.append_color(
++            _COLORS[edge.color % len(_COLORS)],
++            Graphene.Rect().init(start - _LINE / 2, top, _LINE, bottom - top),
++        )
++        return
++    builder = Gsk.PathBuilder.new()
+     builder.move_to(start, top)
+     if edge.start == edge.end:
+         builder.line_to(end, bottom)

@@ -1,0 +1,70 @@
+{
+  "base": "a8cb8def8b354058058513962fe17df2761fc459",
+  "summaries": {
+    "before.xml": {
+      "junit": {
+        "name": "pytest",
+        "errors": "0",
+        "failures": "4",
+        "skipped": "0",
+        "tests": "5",
+        "time": "7.287",
+        "timestamp": "2026-11-10T22:21:24.791237+03:00",
+        "hostname": "somovasnbook14"
+      },
+      "sha256": "80d3313e29fab57295f4dbfadbb08265f0b1159fc7d689412b1b1a13c5cd517f"
+    },
+    "after.xml": {
+      "junit": {
+        "name": "pytest",
+        "errors": "0",
+        "failures": "0",
+        "skipped": "0",
+        "tests": "5",
+        "time": "7.337",
+        "timestamp": "2026-11-10T22:22:49.672214+03:00",
+        "hostname": "somovasnbook14"
+      },
+      "sha256": "337f7eda681ada65c31d365768ba0c00d2618291274a71d8f8e8c57fc60ef0db"
+    },
+    "regression.xml": {
+      "junit": {
+        "name": "pytest",
+        "errors": "0",
+        "failures": "0",
+        "skipped": "0",
+        "tests": "5",
+        "time": "7.829",
+        "timestamp": "2026-11-10T22:24:07.262641+03:00",
+        "hostname": "somovasnbook14"
+      },
+      "sha256": "f59dd8e9c84b3e0ed53df5d24d54a89c551a5783dc74ac145bccac9d6cb3e0f9"
+    },
+    "related.xml": {
+      "junit": {
+        "name": "pytest",
+        "errors": "0",
+        "failures": "0",
+        "skipped": "0",
+        "tests": "132",
+        "time": "99.924",
+        "timestamp": "2026-11-10T22:24:31.148808+03:00",
+        "hostname": "somovasnbook14"
+      },
+      "sha256": "53bdaf2ec395684e5bc41d0af6c269e6288f6f13dc604944c5bfa8808207c8d2"
+    }
+  },
+  "checks": {
+    "ruff": "pass",
+    "basedpyright": "0 errors,0 warnings,0 notes",
+    "product_diff_whitespace": "pass"
+  },
+  "type_config": {
+    "extends": "/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/038657e1539f15ad/pyproject.toml",
+    "venvPath": "/home/sas/Projects/sp_aconsole_prototype",
+    "venv": ".venv-core",
+    "include": [
+      "/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/038657e1539f15ad/src/aconsole/core/infrastructure/git/operations.py"
+    ]
+  }
+}

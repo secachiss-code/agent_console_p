@@ -1,0 +1,55 @@
+{
+  "sources-full": {
+    "events_by_stage": {
+      "setup": 476,
+      "teardown": 476
+    },
+    "windows_before_scale": 0,
+    "mapped_before_scale": 0,
+    "mapped_applications_before_scale": {},
+    "fds_before_scale": 233,
+    "threads_before_scale": 11,
+    "windows_at_end": 0,
+    "maximum_windows": 0,
+    "scale": "git scale: 10000 rows, 166 frames in 4 s, median 17.5 ms, p95 35.1 ms, worst 51.1 ms, RSS 592 MB (start 580, first page 580, all rows 591 after 3.2 s)",
+    "passed": 465,
+    "failures": [
+      "tests.gui.front.test_approval_alerts::test_the_window_rings_withdraws_and_a_click_opens_the_tab[waiting]",
+      "tests.gui.front.test_b0_window::test_sidebar_lists_demo_tabs[700-True]",
+      "tests.gui.front.test_b0_window::test_collapsed_sidebar_button_opens_and_closes_sidebar",
+      "tests.gui.front.test_b0_window::test_system_title_buttons_keep_clear_header_space[700-True-left]",
+      "tests.gui.front.test_b0_window::test_system_title_buttons_keep_clear_header_space[700-True-right]",
+      "tests.gui.front.test_b0_window::test_system_title_buttons_keep_clear_header_space[700-True-both]",
+      "tests.gui.front.test_b1_keys::test_b1_keys_narrow_window",
+      "tests.gui.front.test_des3_visual::test_native_widgets_match_reviewed_baselines[light-1280-light]",
+      "tests.gui.front.test_des3_visual::test_native_widgets_match_reviewed_baselines[dark-1280-dark]",
+      "tests.gui.front.test_des3_visual::test_native_widgets_match_reviewed_baselines[light-700-narrow]",
+      "tests.gui.front.test_preferences_drafts::test_closing_dirty_preferences_can_cancel_or_discard"
+    ],
+    "errors": 0,
+    "skipped": 0,
+    "renderer": "GskNglRenderer",
+    "gtk_version": [
+      4,
+      14,
+      5
+    ],
+    "load_before": [
+      3.43896484375,
+      2.31494140625,
+      2.00830078125
+    ],
+    "load_after": [
+      3.484375,
+      2.34326171875,
+      2.01904296875
+    ],
+    "evidence_sha256": {
+      "sources-full-lifecycle.jsonl.gz": "5173e3cef125ce6bc773a6184b9d3e0d6c4cb8cac6601e1392b0cdbc51024436",
+      "sources-full.jsonl": "e41974a213f6683125016d61708193438a3a061ead14453b734d0d69e59e577e",
+      "sources-full.xml": "94a4971c095355d797cd253ff0b6d1f356fde541873e5cce9d425172b8f08748",
+      "sources-full-scale.txt": "4991591f09a26a4d5fc772ddd0c8bc4990374479e1f2aefc245450f50994a52c",
+      "sources-full-gl.txt": "aa7b6fc7c98a56f659f60d2c4be1f725fba88578fef1bc4fcc2e793c2998863d"
+    }
+  }
+}

@@ -1,0 +1,59 @@
+"""Fresh core coverage plus saved GUI data, discarding GUI data for changed source."""
+import json
+from pathlib import Path
+import shutil
+import subprocess
+import sys
+
+import coverage
+
+root = Path(__file__).resolve().parents[2]
+out = root / 'artifacts/git5'
+source_base = 'e6bcd572cd5964a90dbb395064a256daef8f606f'
+gui_base = '4559120751b55be5808af7d68cfbb2e18c16f3a9'
+changed_file = 'src/aconsole/core/application/services/git_merge.py'
+gui_changed_files = [changed_file, 'src/aconsole/core/infrastructure/persistence/repositories/knowledge.py']
+changed = subprocess.check_output(
+    ['git', 'diff', '--name-only', source_base, '--', 'src', 'pyproject.toml'],
+    cwd=root, text=True,
+).splitlines()
+assert changed == [changed_file], changed
+gui_changed = subprocess.check_output(
+    ['git', 'diff', '--name-only', gui_base, '--', 'src', 'pyproject.toml'],
+    cwd=root, text=True,
+).splitlines()
+assert sorted(gui_changed) == sorted(gui_changed_files), gui_changed
+
+saved_gui = root / 'artifacts/qa9/.coverage.final-full'
+filtered_gui = out / '.coverage.gui-unchanged'
+shutil.copyfile(saved_gui, filtered_gui)
+gui = coverage.CoverageData(basename=str(filtered_gui))
+gui.read()
+purged = [name for name in gui.measured_files() if any(name.endswith(path) for path in gui_changed_files)]
+gui.purge_files(purged)
+gui.write()
+
+combined = out / '.coverage.combined'
+cov = coverage.Coverage(data_file=str(combined))
+cov.combine([str(out / '.coverage.core'), str(filtered_gui)], keep=True)
+cov.save()
+cov.json_report(outfile=str(out / 'coverage-full.json'))
+report = json.loads((out / 'coverage-full.json').read_text())
+(out / 'coverage-full.json').unlink()
+summary = {
+    'source_base': source_base,
+    'gui_source_base': gui_base,
+    'changed_source': changed,
+    'fresh_core': 'artifacts/git5/.coverage.core',
+    'saved_gui': 'artifacts/qa9/.coverage.final-full',
+    'gui_files_purged': purged,
+    'totals': report['totals'],
+    'limitation': 'Current full core plus previous GUI on unchanged modules; not a fresh CI or full GUI run.',
+}
+(out / 'coverage-summary.json').write_text(json.dumps(summary, indent=2) + '\n')
+result = subprocess.run([
+    sys.executable, '-m', 'coverage', 'report', '--data-file=' + str(combined),
+    '--precision=2', '--format=total',
+], cwd=root, text=True, capture_output=True, check=False)
+(out / 'coverage-gate.txt').write_text(result.stdout + result.stderr + '\nexit_code=' + str(result.returncode) + '\n')
+print(report['totals']['percent_covered'], 'coverage gate exit', result.returncode)

@@ -1,0 +1,42 @@
+{
+  "base_commit": "1afffa7760c4e6dd7d4ad783a7e7bfd8b31ea6fb",
+  "product_changes": false,
+  "acceptance": "FAIL",
+  "full_suite": {
+    "passed": 468,
+    "failed": 6,
+    "warnings": 416,
+    "seconds": 170.7
+  },
+  "source": {
+    "src/aconsole/ui/views/review/git_pane.py": {
+      "sha256": "6e000cb1d3f87766bc668ce1421f80775faf508c502ee69e77fad7d049f108a8",
+      "matches_base": true
+    },
+    "src/aconsole/ui/views/review/graph_cell.py": {
+      "sha256": "56038137006acf77a99907152a35fbf6cf183e6724f4c41e221656b657cb65dc",
+      "matches_base": true
+    },
+    "tests/gui/front/test_git_scale_ui.py": {
+      "sha256": "c9455d75de02cde25f09cbc4f9e423d3e66a0a583c51f50ebac7eb9789634c4c",
+      "matches_base": true
+    },
+    "artifacts/perf7/measure.py": {
+      "sha256": "c06e46aebd4041a9531a48e827f5818db221ba92f5e32bf6df3c12762a854d7b",
+      "matches_base": true
+    },
+    "artifacts/perf7/runner.txt": {
+      "sha256": "5685354e698e07b021bea51abd99e47d3ef404c9d35a73f56adc0a050a5c22cc",
+      "matches_base": true
+    }
+  },
+  "artifacts": {
+    "SCHEDULING.md": "63873a127b7668005c6db7adfb2aa517163c684d40f387bd8a1aef367ab37afc",
+    "analyze_scheduling.py": "cb312e657e8f0a827b00ac121d6cbb783da332edc999b261d5300873798d2425",
+    "scheduling-analysis.json": "258907a9f80dde16a0ac16a5b2c80119488209ccb12f3df50e530242366ff81e",
+    "resume-full-phases-gl.txt": "aa7b6fc7c98a56f659f60d2c4be1f725fba88578fef1bc4fcc2e793c2998863d",
+    "resume-full-phases-scale.txt": "1ac3ac4b73439d3ed49ab5038bc304e4d794bbe3bd7bb0450440086b94c60aa0",
+    "resume-full-phases.jsonl": "42258e3b9258ac7e14fd75b23390dd9435be914b96c2796862d126a05824d770",
+    "resume-full-phases.xml": "3bfe8863a8328f952ca55fc16e81be7e034ad8c92d70639abf6f2f300a5c65ce"
+  }
+}

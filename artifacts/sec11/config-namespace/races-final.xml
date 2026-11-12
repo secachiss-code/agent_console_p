@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="0.221" timestamp="2026-11-10T22:06:00.846298+03:00" hostname="somovasnbook14"><testcase classname="artifacts.sec11.config-namespace.test_snapshot_races" name="test_original_config_changes_after_mount[replace-False]" time="0.131"><failure message="AssertionError: assert not True&#10; +  where True = exists()&#10; +    where exists = PosixPath('/tmp/pytest-of-sas/pytest-9/test_original_config_changes_a0/executed').exists">tmp_path = PosixPath('/tmp/pytest-of-sas/pytest-9/test_original_config_changes_a0')
+linked = False, mutation = 'replace'
+
+    @pytest.mark.parametrize("linked", [False, True])
+    @pytest.mark.parametrize("mutation", ["replace", "include", "worktree"])
+    def test_original_config_changes_after_mount(tmp_path, linked, mutation):
+        repo = new_repo(tmp_path / "repo")
+        commit(repo, "f.txt", "one\n", "seed")
+        work = add_worktree(repo, tmp_path / "linked", "worker") if linked else repo
+        (work / "f.txt").write_text("two\n")
+        (work / ".gitattributes").write_text("* filter=late\n")
+        marker = tmp_path / "executed"
+        script = tmp_path / "late.sh"
+        _script(script, marker)
+        if mutation == "worktree":
+            git(repo, "config", "extensions.worktreeConfig", "true")
+        ready, release = tmp_path / "ready", tmp_path / "release"
+        env = dict(os.environ, ACONSOLE_EXPERIMENT_PARENT_MNT=os.readlink("/proc/self/ns/mnt"),
+                   ACONSOLE_EXPERIMENT_READY=str(ready), ACONSOLE_EXPERIMENT_RELEASE=str(release))
+        original_mount = os.readlink("/proc/self/ns/mnt")
+        command = ["/usr/bin/unshare", "--user", "--map-root-user", "--mount", sys.executable,
+                   str(Path(__file__).with_name("launcher.py")), "/usr/bin/git", "-C", str(work),
+                   "status", "--porcelain"]
+        child = subprocess.Popen(command, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        try:
+            deadline = time.monotonic() + 10
+            while not ready.exists():
+                if child.poll() is not None:
+                    stdout, stderr = child.communicate()
+                    pytest.fail(f"launcher failed before snapshot: {stdout!r} {stderr!r}")
+                assert time.monotonic() &lt; deadline, "snapshot handshake timed out"
+                time.sleep(.005)
+            if mutation == "replace":
+                original = repo / ".git" / "config"
+                replacement = tmp_path / "replacement"
+                replacement.write_bytes(original.read_bytes())
+                subprocess.run(["/usr/bin/git", "config", "--file", str(replacement),
+                                "filter.late.clean", str(script)], check=True)
+                replacement.replace(original)
+            elif mutation == "include":
+                included = tmp_path / "late.config"
+                subprocess.run(["/usr/bin/git", "config", "--file", str(included),
+                                "filter.late.clean", str(script)], check=True)
+                git(repo, "config", "include.path", str(included))
+            else:
+                git(work, "config", "--worktree", "filter.late.clean", str(script))
+            release.write_text("go\n")
+            stdout, stderr = child.communicate(timeout=10)
+            assert child.returncode == 0, stderr
+            assert b"f.txt" in stdout
+&gt;           assert not marker.exists()
+E           AssertionError: assert not True
+E            +  where True = exists()
+E            +    where exists = PosixPath('/tmp/pytest-of-sas/pytest-9/test_original_config_changes_a0/executed').exists
+
+artifacts/sec11/config-namespace/test_snapshot_races.py:62: AssertionError</failure></testcase></testsuite></testsuites>

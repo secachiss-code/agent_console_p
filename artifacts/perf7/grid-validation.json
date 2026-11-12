@@ -1,0 +1,340 @@
+{
+  "base": "b4755a38d44a2c0158d808868104c7a8d15bd138",
+  "candidate_sources": {
+    "src/aconsole/ui/views/review/git_pane.py": "6e000cb1d3f87766bc668ce1421f80775faf508c502ee69e77fad7d049f108a8",
+    "src/aconsole/ui/style/style.css": "0bf53041e9a928b2281f9cb7fa75f30b8c36f8cdda0783f97fd65627a7467290",
+    "src/aconsole/ui/views/review/graph_cell.py": "56038137006acf77a99907152a35fbf6cf183e6724f4c41e221656b657cb65dc",
+    "tests/gui/front/test_git_scale_ui.py": "c9455d75de02cde25f09cbc4f9e423d3e66a0a583c51f50ebac7eb9789634c4c",
+    "tests/gui/front/test_git_history_keyboard.py": "fe7bf6bea16cd1770bf18274c450be358f37666ddffee3cddedb9fd28e94869d"
+  },
+  "original_scale_unchanged": true,
+  "runner_sha256": "5685354e698e07b021bea51abd99e47d3ef404c9d35a73f56adc0a050a5c22cc",
+  "runner_note": "Full candidate started before the history-only CLI mode was added; full-mode workload and product bytes are unchanged.",
+  "acceptance": "FAIL: isolated final-CSS run passes, history/full-suite runs exceed 17.5ms; neither full suite is green.",
+  "runs": {
+    "allocation-control": {
+      "passed": 1,
+      "failures": [
+        {
+          "name": "tests.gui.front.test_git_scale_ui::test_scrolling_a_long_history",
+          "message": "AssertionError: git scale: 10000 rows, 118 frames in 4 s, median 33.4 ms, p95 36.5 ms, worst 69.2 ms, RSS 269 MB (start 250, first page 251, all rows 269 after 3.0 s)\nassert 33.42437749961391 <= 17.5"
+        }
+      ],
+      "errors": 0,
+      "skipped": 0,
+      "gtk_version": [
+        4,
+        14,
+        5
+      ],
+      "renderer": "GskNglRenderer",
+      "load_before": [
+        2.7919921875,
+        2.47119140625,
+        2.46435546875
+      ],
+      "load_after": [
+        2.88916015625,
+        2.49658203125,
+        2.47265625
+      ],
+      "gtk_env": {
+        "GDK_BACKEND": "x11"
+      },
+      "row_probe": null,
+      "scale": "git scale: 10000 rows, 118 frames in 4 s, median 33.4 ms, p95 36.5 ms, worst 69.2 ms, RSS 269 MB (start 250, first page 251, all rows 269 after 3.0 s)"
+    },
+    "single-column-grid": {
+      "passed": 5,
+      "failures": [],
+      "errors": 0,
+      "skipped": 0,
+      "gtk_version": [
+        4,
+        14,
+        5
+      ],
+      "renderer": "GskNglRenderer",
+      "load_before": [
+        2.43017578125,
+        2.44775390625,
+        2.45556640625
+      ],
+      "load_after": [
+        2.3955078125,
+        2.43994140625,
+        2.45263671875
+      ],
+      "gtk_env": {
+        "GDK_BACKEND": "x11"
+      },
+      "row_probe": null,
+      "scale": "git scale: 10000 rows, 177 frames in 4 s, median 17.1 ms, p95 34.7 ms, worst 116.4 ms, RSS 267 MB (start 250, first page 250, all rows 262 after 3.0 s)"
+    },
+    "grid-styled": {
+      "passed": 5,
+      "failures": [],
+      "errors": 0,
+      "skipped": 0,
+      "gtk_version": [
+        4,
+        14,
+        5
+      ],
+      "renderer": "GskNglRenderer",
+      "load_before": [
+        2.9619140625,
+        2.55224609375,
+        2.48876953125
+      ],
+      "load_after": [
+        3.12548828125,
+        2.59326171875,
+        2.50244140625
+      ],
+      "gtk_env": {
+        "GDK_BACKEND": "x11"
+      },
+      "row_probe": null,
+      "scale": "git scale: 10000 rows, 162 frames in 4 s, median 17.3 ms, p95 35.4 ms, worst 234.1 ms, RSS 274 MB (start 250, first page 250, all rows 261 after 3.1 s)"
+    },
+    "grid-history": {
+      "passed": 26,
+      "failures": [
+        {
+          "name": "tests.gui.front.test_git_scale_ui::test_scrolling_a_long_history",
+          "message": "AssertionError: git scale: 10000 rows, 156 frames in 4 s, median 18.8 ms, p95 37.3 ms, worst 116.8 ms, RSS 320 MB (start 295, first page 296, all rows 308 after 3.2 s)\nassert 18.750164499579114 <= 17.5"
+        }
+      ],
+      "errors": 0,
+      "skipped": 0,
+      "gtk_version": [
+        4,
+        14,
+        5
+      ],
+      "renderer": "GskNglRenderer",
+      "load_before": [
+        2.7470703125,
+        3.17529296875,
+        2.80419921875
+      ],
+      "load_after": [
+        2.68701171875,
+        3.15576171875,
+        2.7998046875
+      ],
+      "gtk_env": {
+        "GDK_BACKEND": "x11"
+      },
+      "row_probe": null,
+      "scale": "git scale: 10000 rows, 156 frames in 4 s, median 18.8 ms, p95 37.3 ms, worst 116.8 ms, RSS 320 MB (start 295, first page 296, all rows 308 after 3.2 s)"
+    },
+    "grid-full": {
+      "passed": 467,
+      "failures": [
+        {
+          "name": "tests.gui.front.test_approval_alerts::test_the_window_rings_withdraws_and_a_click_opens_the_tab[waiting]",
+          "message": "AssertionError: a window that is opening must not ring\nassert ['approval-01...0000000101-1'] == []\n  \n  Left contains one more item: 'approval-01JB2Z00000000000000000101-1'\n  Use -v to get more diff"
+        },
+        {
+          "name": "tests.gui.front.test_des3_visual::test_native_widgets_match_reviewed_baselines[light-1280-light]",
+          "message": "assert (1270, 790, 4, 5080) == (1280, 800, 4, 5120)\n  \n  At index 0 diff: 1270 != 1280\n  Use -v to get more diff"
+        },
+        {
+          "name": "tests.gui.front.test_des3_visual::test_native_widgets_match_reviewed_baselines[dark-1280-dark]",
+          "message": "assert (1270, 790, 4, 5080) == (1280, 800, 4, 5120)\n  \n  At index 0 diff: 1270 != 1280\n  Use -v to get more diff"
+        },
+        {
+          "name": "tests.gui.front.test_des3_visual::test_native_widgets_match_reviewed_baselines[light-700-narrow]",
+          "message": "assert (690, 790, 4, 2760) == (700, 800, 4, 2800)\n  \n  At index 0 diff: 690 != 700\n  Use -v to get more diff"
+        },
+        {
+          "name": "tests.gui.front.test_git_scale_ui::test_scrolling_a_long_history",
+          "message": "AssertionError: git scale: 10000 rows, 145 frames in 4 s, median 31.1 ms, p95 37.9 ms, worst 73.0 ms, RSS 672 MB (start 661, first page 661, all rows 672 after 3.2 s)\nassert 31.146317000093404 <= 17.5"
+        },
+        {
+          "name": "tests.gui.front.test_preferences_drafts::test_closing_dirty_preferences_can_cancel_or_discard",
+          "message": "AssertionError: AssertionError('GTK wait failed at 89')\nassert AssertionError('GTK wait failed at 89') is None\n +  where AssertionError('GTK wait failed at 89') = <test_b2_tabs._TabsTestApp object at 0x7623293d4a40 (tests+gui+front+test_b2_tabs+_TabsTestApp at 0x2531e720)>.error"
+        }
+      ],
+      "errors": 0,
+      "skipped": 0,
+      "gtk_version": [
+        4,
+        14,
+        5
+      ],
+      "renderer": "GskNglRenderer",
+      "load_before": [
+        4.39892578125,
+        3.2529296875,
+        2.75439453125
+      ],
+      "load_after": [
+        4.6875,
+        3.33203125,
+        2.78271484375
+      ],
+      "gtk_env": {
+        "GDK_BACKEND": "x11"
+      },
+      "row_probe": null,
+      "scale": "git scale: 10000 rows, 145 frames in 4 s, median 31.1 ms, p95 37.9 ms, worst 73.0 ms, RSS 672 MB (start 661, first page 661, all rows 672 after 3.2 s)"
+    },
+    "grid-baseline-full": {
+      "passed": 466,
+      "failures": [
+        {
+          "name": "tests.gui.front.test_approval_alerts::test_the_window_rings_withdraws_and_a_click_opens_the_tab[waiting]",
+          "message": "AssertionError: a window that is opening must not ring\nassert ['approval-01...0000000101-1'] == []\n  \n  Left contains one more item: 'approval-01JB2Z00000000000000000101-1'\n  Use -v to get more diff"
+        },
+        {
+          "name": "tests.gui.front.test_des3_visual::test_native_widgets_match_reviewed_baselines[light-1280-light]",
+          "message": "assert (1270, 790, 4, 5080) == (1280, 800, 4, 5120)\n  \n  At index 0 diff: 1270 != 1280\n  Use -v to get more diff"
+        },
+        {
+          "name": "tests.gui.front.test_des3_visual::test_native_widgets_match_reviewed_baselines[dark-1280-dark]",
+          "message": "assert (1270, 790, 4, 5080) == (1280, 800, 4, 5120)\n  \n  At index 0 diff: 1270 != 1280\n  Use -v to get more diff"
+        },
+        {
+          "name": "tests.gui.front.test_des3_visual::test_native_widgets_match_reviewed_baselines[light-700-narrow]",
+          "message": "assert (690, 790, 4, 2760) == (700, 800, 4, 2800)\n  \n  At index 0 diff: 690 != 700\n  Use -v to get more diff"
+        },
+        {
+          "name": "tests.gui.front.test_des3_visual::test_packaged_stylesheet_works_without_the_checkout",
+          "message": "subprocess.CalledProcessError: Command ('git', 'ls-files', '--others', '--exclude-standard', '-z', '--', 'src/aconsole', 'migrations') returned non-zero exit status 128."
+        },
+        {
+          "name": "tests.gui.front.test_git_scale_ui::test_scrolling_a_long_history",
+          "message": "AssertionError: git scale: 10000 rows, 79 frames in 4 s, median 50.0 ms, p95 67.0 ms, worst 97.1 ms, RSS 684 MB (start 670, first page 671, all rows 683 after 3.2 s)\nassert 49.98164899916446 <= 17.5"
+        },
+        {
+          "name": "tests.ui.test_i18n::test_deb_source_copy_can_translate_without_the_checkout",
+          "message": "subprocess.CalledProcessError: Command ('git', 'ls-files', '--others', '--exclude-standard', '-z', '--', 'src/aconsole', 'migrations') returned non-zero exit status 128."
+        }
+      ],
+      "errors": 0,
+      "skipped": 0,
+      "gtk_version": [
+        4,
+        14,
+        5
+      ],
+      "renderer": "GskNglRenderer",
+      "load_before": [
+        3.4912109375,
+        3.07568359375,
+        2.82861328125
+      ],
+      "load_after": [
+        3.37158203125,
+        3.0576171875,
+        2.82373046875
+      ],
+      "gtk_env": {
+        "GDK_BACKEND": "x11"
+      },
+      "row_probe": null,
+      "scale": "git scale: 10000 rows, 79 frames in 4 s, median 50.0 ms, p95 67.0 ms, worst 97.1 ms, RSS 684 MB (start 670, first page 671, all rows 683 after 3.2 s)"
+    },
+    "grid-preferences": {
+      "passed": 1,
+      "failures": [],
+      "errors": 0,
+      "skipped": 0
+    }
+  },
+  "images": {
+    "artifacts/perf7/grid-reviewed-ui/git-dark.png": {
+      "size": [
+        1290,
+        810
+      ],
+      "sha256": "7c9a4cafc6c3fd3b8bfb930bf7d4f76dc5fab31f0e476600c240b0788c150b37"
+    },
+    "artifacts/perf7/grid-reviewed-ui/git-light.png": {
+      "size": [
+        1290,
+        810
+      ],
+      "sha256": "bc86d247c38915e977060e86834c1d9ab273727d92267dfa4257e285aa4af75c"
+    },
+    "artifacts/perf7/grid-reviewed-ui/git-narrow.png": {
+      "size": [
+        710,
+        810
+      ],
+      "sha256": "acbb4da1681fd08e7c56fa8287a7b634b69c55de9b1997b3f5325e9e9c699d6a"
+    },
+    "artifacts/perf7/grid-private-reviewed-ui/git-dark.png": {
+      "size": [
+        1270,
+        790
+      ],
+      "sha256": "bfa3f18e6faaa4975030e12577f3e53295cb876e0c2045903644d2c5fc7a53a4"
+    },
+    "artifacts/perf7/grid-private-reviewed-ui/git-light.png": {
+      "size": [
+        1270,
+        790
+      ],
+      "sha256": "0b1ac44552ab1b16da2c094de8d906f9e46905b8891c51d8c2092266ac0e5d2f"
+    },
+    "artifacts/perf7/grid-private-reviewed-ui/git-narrow.png": {
+      "size": [
+        700,
+        790
+      ],
+      "sha256": "02acf16309c99dcd7f3fcc13f6f2b7723a1aa88d89d990fedbff2ab12efe1aeb"
+    }
+  },
+  "evidence_sha256": {
+    "artifacts/perf7/GRID_HISTORY.md": "3eae65751490b0445c735207487d5cac1210ac2839ea6d2d67ee1712d61c6fe2",
+    "artifacts/perf7/allocation-control-gl.txt": "aa7b6fc7c98a56f659f60d2c4be1f725fba88578fef1bc4fcc2e793c2998863d",
+    "artifacts/perf7/allocation-control-scale.txt": "dca3f5edc1c4abdc94eec33d8a21ae95893e195914f8bd6a6aabf35fa21d678f",
+    "artifacts/perf7/allocation-control.jsonl": "4dd6c9b395359c134110ecd2ed7e774f07c2340d813061cf31898c97f47b9e72",
+    "artifacts/perf7/allocation-control.xml": "3ce6bfc74f4185869fc3b7a488793bfcae818a205c167c97a28f6c7d1c7db331",
+    "artifacts/perf7/grid-baseline-full-checkout.txt": "d1f5ffb4cd44fe42175ca0bfeb94d4fd084150d433310ee4aa6fe431a1bc07ec",
+    "artifacts/perf7/grid-baseline-full-gl.txt": "aa7b6fc7c98a56f659f60d2c4be1f725fba88578fef1bc4fcc2e793c2998863d",
+    "artifacts/perf7/grid-baseline-full-scale.txt": "6b9ced8f92cd984c715957b3a6c731db8c5f4f046cd8c55bc5c089633f850ac8",
+    "artifacts/perf7/grid-baseline-full.jsonl": "b088a9820e032c7aa888cc90cf67cb3b0630ce8c45cad98a8c2904efaf702f59",
+    "artifacts/perf7/grid-baseline-full.xml": "cc4bc11bef9942824b92d81ad943565f3e3a87c5716b2eb697d86a09829fbc1e",
+    "artifacts/perf7/grid-full-gl.txt": "aa7b6fc7c98a56f659f60d2c4be1f725fba88578fef1bc4fcc2e793c2998863d",
+    "artifacts/perf7/grid-full-scale.txt": "6b0406a719930dd285eb1046bfebb11072a0d90ec52393520243e237e4a7aa80",
+    "artifacts/perf7/grid-full.jsonl": "f1c68dbca1f811930e1a98411082b2c0a4ca9ef7966fd120c1668ecc821a484f",
+    "artifacts/perf7/grid-full.xml": "6b337ffd46ee9e22c4fe7b23f008d166dfe1868dca6230b782c62648446b75cc",
+    "artifacts/perf7/grid-history-gl.txt": "aa7b6fc7c98a56f659f60d2c4be1f725fba88578fef1bc4fcc2e793c2998863d",
+    "artifacts/perf7/grid-history-scale.txt": "d4cda10edf28318ceab12d5040ad53edef2300a55ac186c7a4a0d64bf997c987",
+    "artifacts/perf7/grid-history.jsonl": "55b62a489751632552fc6ea8ca18aaafbf7f3996dd34ac0b4a3ee12989129320",
+    "artifacts/perf7/grid-history.xml": "85018d5b69788424f39ec0bfc40de7a47bd443736a7073eaccd6a95cffec6203",
+    "artifacts/perf7/grid-preferences-gl.txt": "aa7b6fc7c98a56f659f60d2c4be1f725fba88578fef1bc4fcc2e793c2998863d",
+    "artifacts/perf7/grid-preferences.jsonl": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "artifacts/perf7/grid-preferences.xml": "b47b240005b0b0773304d34d8e1f246556e77c202ebba5af611b693c4c5ab45b",
+    "artifacts/perf7/grid-private-reviewed-gl.txt": "89817e7f6aa574d6dac7a3fa2392251c765c1bb1198fdf005f4de49c899a5ad1",
+    "artifacts/perf7/grid-private-reviewed-ui/git-dark.png": "bfa3f18e6faaa4975030e12577f3e53295cb876e0c2045903644d2c5fc7a53a4",
+    "artifacts/perf7/grid-private-reviewed-ui/git-light.png": "0b1ac44552ab1b16da2c094de8d906f9e46905b8891c51d8c2092266ac0e5d2f",
+    "artifacts/perf7/grid-private-reviewed-ui/git-narrow.png": "02acf16309c99dcd7f3fcc13f6f2b7723a1aa88d89d990fedbff2ab12efe1aeb",
+    "artifacts/perf7/grid-reviewed-gl.txt": "aa7b6fc7c98a56f659f60d2c4be1f725fba88578fef1bc4fcc2e793c2998863d",
+    "artifacts/perf7/grid-reviewed-ui/git-dark.png": "7c9a4cafc6c3fd3b8bfb930bf7d4f76dc5fab31f0e476600c240b0788c150b37",
+    "artifacts/perf7/grid-reviewed-ui/git-light.png": "bc86d247c38915e977060e86834c1d9ab273727d92267dfa4257e285aa4af75c",
+    "artifacts/perf7/grid-reviewed-ui/git-narrow.png": "acbb4da1681fd08e7c56fa8287a7b634b69c55de9b1997b3f5325e9e9c699d6a",
+    "artifacts/perf7/grid-source-hashes.json": "c38987f96bef45d0802e2c9e8e48026abbfcb9bb8f669b506e2c571d0e040dc5",
+    "artifacts/perf7/grid-styled-gl.txt": "aa7b6fc7c98a56f659f60d2c4be1f725fba88578fef1bc4fcc2e793c2998863d",
+    "artifacts/perf7/grid-styled-scale.txt": "4aecfbc9315980dd12d82ca93573e8b7ab9cd6a7ea94ae2f18176ca4df819b65",
+    "artifacts/perf7/grid-styled.jsonl": "da4f0253e770b93e71c5f23f9258333c1f429e9666ab844c9941f7b10522b816",
+    "artifacts/perf7/grid-styled.xml": "78b035290acf83d13d3741063f16e04f799524c68c38c67b7919b5b35d52fbe8",
+    "artifacts/perf7/measure.py": "c06e46aebd4041a9531a48e827f5818db221ba92f5e32bf6df3c12762a854d7b",
+    "artifacts/perf7/runner.txt": "5685354e698e07b021bea51abd99e47d3ef404c9d35a73f56adc0a050a5c22cc",
+    "artifacts/perf7/single-column-grid-gl.txt": "aa7b6fc7c98a56f659f60d2c4be1f725fba88578fef1bc4fcc2e793c2998863d",
+    "artifacts/perf7/single-column-grid-scale.txt": "50c1ab45ef064f1aef5aa627c50abe61abb33c046c94709f93625742f46e468c",
+    "artifacts/perf7/single-column-grid.jsonl": "23042eb6ef9eae49adf56d442bbbbaa35484fd52ec234853882ad25c1c73bb0f",
+    "artifacts/perf7/single-column-grid.xml": "f90ecb3d0bbf961719a2101a3a5784c817d8fca5f0b2ce3a399316a0d43ecee2"
+  },
+  "checks": {
+    "ruff": "pass",
+    "basedpyright": "0 errors,0 warnings",
+    "observer_cleanup": "four subcases pass",
+    "screenshot_review": "all six images opened; actual dimensions recorded; no screen-reader session or contrast measurement"
+  }
+}

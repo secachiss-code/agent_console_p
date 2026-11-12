@@ -1,0 +1,38 @@
+"""Use the existing core environment on the host for real IPC authentication."""
+import argparse
+import hashlib
+import json
+import os
+from pathlib import Path
+import subprocess
+import sys
+import time
+import xml.etree.ElementTree as ET
+
+root = Path(__file__).resolve().parents[2]
+out = Path(__file__).resolve().parent
+parser = argparse.ArgumentParser()
+parser.add_argument('--new-only', action='store_true')
+options = parser.parse_args()
+label = 'regression' if options.new_only else 'related'
+sources = ['src/aconsole/core/infrastructure/git/operations.py',
+           'tests/core/test_git_merge.py', 'artifacts/sec11/race_probe.py',
+           'tests/core/test_git_host_exec.py', 'tests/core/test_git_security_environment.py']
+hashes = {p: hashlib.sha256((root / p).read_bytes()).hexdigest() for p in sources}
+tests = ['tests/core/test_git_merge.py', '-k', 'no_checkout_squash'] if options.new_only else [
+    str(p.relative_to(root)) for p in sorted((root / 'tests/core').glob('test_git*.py'))]
+command = [sys.executable, '-m', 'pytest', '-o', 'addopts=', '-o', 'faulthandler_timeout=60',
+           '-q', *tests, '--junitxml=' + str(out / (label + '.xml'))]
+started = time.monotonic()
+with (out / (label + '.log')).open('w') as stream:
+    done = subprocess.run(command, cwd=root, env=dict(os.environ, PYTHONUNBUFFERED='1'),
+                          stdout=stream, stderr=subprocess.STDOUT, check=False, timeout=600)
+assert all(hashlib.sha256((root / p).read_bytes()).hexdigest() == h for p, h in hashes.items())
+summary = ET.parse(out / (label + '.xml')).getroot().find('testsuite').attrib
+result = {'base': subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=root, text=True).strip(),
+          'environment': 'host via distrobox-host-exec, existing locked core environment',
+          'command': command, 'exit': done.returncode, 'seconds': time.monotonic() - started,
+          'source_hashes': hashes, 'junit': summary}
+(out / (label + '-result.json')).write_text(json.dumps(result, indent=2) + '\n')
+print(json.dumps(result, indent=2))
+raise SystemExit(done.returncode)

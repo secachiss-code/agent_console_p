@@ -1,0 +1,37 @@
+{
+  "SEC11": "failed",
+  "SEC13": "failed",
+  "artifact_hashes": {
+    "REPORT.md": "8d73aa2365b71e663ec9bfbadd47d355127c48133a407e59480af7fd88dd1612",
+    "adapter.py": "67398694f130f1e7d471a387b6c7c3bc07947fae384cc42c94d7ca21c9a2e5fd",
+    "run.py": "2a0ab3d70a58ca367078534c51939c9c3fc4d68fd53badfd38be7d2520830b41",
+    "verify.py": "e102f52788cc1f6c38d045bd8cb80d9c8401bfbc41c3f598da072f7c7a2b5781"
+  },
+  "cases": 482,
+  "description": "Second fresh 482-case execution; full repeated results not retained. This is a local rerun summary, not independent acceptance.",
+  "groups": {
+    "T-deny": 152,
+    "T-helper": 52,
+    "T-hooks": 128,
+    "T-input": 128,
+    "T-positive": 4,
+    "native-fallback": 4,
+    "native-helper": 12,
+    "native-hooks": 2
+  },
+  "lab_compatibility": "PASS for finite fixtures only",
+  "local_integrity": "PASS",
+  "negative_controls_rejected": [
+    "promotion",
+    "lost_case",
+    "helper_false_success",
+    "tree_change",
+    "deny_mutation",
+    "raw_exec"
+  ],
+  "product_files": 279,
+  "production_routing": false,
+  "results_sha256": "fddb1b097ada285861ef51c124ef099129cc29c23af00235cb43a48ae6a1c566",
+  "security_acceptance": "NOT RUN",
+  "stage_A": "INCOMPLETE"
+}

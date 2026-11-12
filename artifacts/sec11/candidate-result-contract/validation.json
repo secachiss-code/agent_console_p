@@ -1,0 +1,42 @@
+{
+  "SEC11": "failed",
+  "SEC13": "failed",
+  "artifact_hashes": {
+    "REPORT.md": "6578e2abd441778df218fb63585297caa9cbe87066b3684a14d5d206ff307471",
+    "model.py": "f12a915b68973b2c1a87bf96bad06009b1c2316b53793ed6ffd3598ae16fc50f",
+    "run.py": "6d1ec8e01473f1484311867a74dc62c091145075994ca2b65b343aaeefcce38c",
+    "verify.py": "c17cf5b6332b2b7c2ceb8c59a34dc8e3c5810c5ad8a2121dae7d5b8d682f1f35"
+  },
+  "cases": 122,
+  "containment": false,
+  "finite_lab": "PASS",
+  "groups": {
+    "add-failure": 4,
+    "diagnostic-bound": 4,
+    "execution-failure": 4,
+    "native-parity": 4,
+    "parser-positive": 14,
+    "parser-reject": 48,
+    "preflight-deny": 24,
+    "preservation": 4,
+    "response-failure": 12,
+    "restage": 4
+  },
+  "local_integrity": "PASS",
+  "negative_controls_rejected": [
+    "security-promotion",
+    "routing-promotion",
+    "lost-case",
+    "lost-status",
+    "wrong-tree",
+    "lost-path",
+    "lost-partial-state",
+    "retry-failure",
+    "source-mutation",
+    "accepted-malformed"
+  ],
+  "product_files": 279,
+  "results_sha256": "90315def7f1d6e199d7d25b7a6c4fad4f98f7854ca61169ffb40897fc1e51219",
+  "security_acceptance": "NOT RUN",
+  "stage_A": "INCOMPLETE"
+}

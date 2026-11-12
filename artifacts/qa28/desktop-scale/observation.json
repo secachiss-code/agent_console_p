@@ -1,0 +1,112 @@
+{
+  "stage": "after existing all-rows wait, before original scrolling measurement",
+  "rows": 10000,
+  "renderer": "GskNglRenderer",
+  "gtk": [
+    4,
+    14,
+    5
+  ],
+  "display": ":0",
+  "renderer_override": null,
+  "allocation": {
+    "window": {
+      "type": "AdwApplicationWindow",
+      "width": 1280,
+      "height": 800,
+      "mapped": true
+    },
+    "pane": {
+      "type": "aconsole+ui+views+review+git_pane+GitPane",
+      "width": 1280,
+      "height": 800,
+      "mapped": true
+    },
+    "list": {
+      "type": "GtkGridView",
+      "width": 620,
+      "height": 766,
+      "mapped": true
+    },
+    "scroller": {
+      "type": "GtkScrolledWindow",
+      "width": 620,
+      "height": 766,
+      "mapped": true
+    }
+  },
+  "windows": [
+    {
+      "type": "AdwApplicationWindow",
+      "width": 1280,
+      "height": 800,
+      "mapped": true
+    }
+  ],
+  "tasks": [
+    {
+      "coroutine": "_on_pane.<locals>._App._run",
+      "done": false,
+      "loop_closed": false
+    }
+  ],
+  "sources": [
+    {
+      "id": 1,
+      "name": "GDK X11 Event source (:0)",
+      "priority": 0
+    },
+    {
+      "id": 2,
+      "name": "[gtk] sleep serial",
+      "priority": -100
+    },
+    {
+      "id": 3,
+      "name": "python asyncio integration",
+      "priority": 0
+    },
+    {
+      "id": 4,
+      "name": "GLibEventLoop._idle_source",
+      "priority": 0
+    },
+    {
+      "id": 10,
+      "name": null,
+      "priority": 0
+    },
+    {
+      "id": 18,
+      "name": null,
+      "priority": 0
+    },
+    {
+      "id": 23,
+      "name": null,
+      "priority": 0
+    },
+    {
+      "id": 223,
+      "name": "[gtk] gdk_frame_clock_paint_idle",
+      "priority": 120
+    },
+    {
+      "id": 224,
+      "name": "GIdleSource",
+      "priority": -110
+    }
+  ],
+  "source_id_sample": [
+    1,
+    65536
+  ],
+  "source_enumeration_complete": false,
+  "rss_mb": 257.140625,
+  "load": [
+    3.2177734375,
+    2.69873046875,
+    2.56103515625
+  ],
+  "observation_seconds": 0.06894618799924501
+}

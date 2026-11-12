@@ -1,0 +1,45 @@
+io.elementary.desktop.wm.accessibility colorblindness-correction-filter 'none'
+io.elementary.desktop.wm.accessibility colorblindness-correction-filter-strength 1.0
+io.elementary.desktop.wm.accessibility enable-monochrome-filter false
+io.elementary.desktop.wm.accessibility monochrome-filter-strength 1.0
+io.elementary.desktop.wm.animations enable-animations true
+io.elementary.desktop.wm.behavior enable-hotcorners-in-fullscreen true
+io.elementary.desktop.wm.behavior hotcorner-bottomleft 'show-workspace-view'
+io.elementary.desktop.wm.behavior hotcorner-bottomright 'none'
+io.elementary.desktop.wm.behavior hotcorner-custom-command ''
+io.elementary.desktop.wm.behavior hotcorner-topleft 'none'
+io.elementary.desktop.wm.behavior hotcorner-topright 'none'
+io.elementary.desktop.wm.behavior interactive-screenshot-action 'flatpak run io.elementary.screenshot'
+io.elementary.desktop.wm.behavior move-fullscreened-workspace true
+io.elementary.desktop.wm.behavior move-maximized-workspace true
+io.elementary.desktop.wm.behavior overlay-action 'io.elementary.wingpanel --toggle-indicator=app-launcher'
+io.elementary.desktop.wm.behavior panel-main-menu-action 'io.elementary.wingpanel --toggle-indicator=app-launcher'
+io.elementary.desktop.wm.behavior super-scroll-action 'none'
+io.elementary.desktop.wm.behavior toggle-recording-action ''
+io.elementary.desktop.wm.gestures four-finger-pinch 'none'
+io.elementary.desktop.wm.gestures four-finger-swipe-horizontal 'none'
+io.elementary.desktop.wm.gestures four-finger-swipe-up 'none'
+io.elementary.desktop.wm.gestures three-finger-pinch 'none'
+io.elementary.desktop.wm.gestures three-finger-swipe-horizontal 'switch-to-workspace'
+io.elementary.desktop.wm.gestures three-finger-swipe-up 'multitasking-view'
+io.elementary.desktop.wm.keybindings area-screenshot ['<Shift>Print']
+io.elementary.desktop.wm.keybindings area-screenshot-clip ['<Control><Shift>Print']
+io.elementary.desktop.wm.keybindings cycle-workspaces-next ['<Super>Tab']
+io.elementary.desktop.wm.keybindings cycle-workspaces-previous ['<Super><Shift>Tab']
+io.elementary.desktop.wm.keybindings expose-all-windows ['<Super>a']
+io.elementary.desktop.wm.keybindings interactive-screenshot ['<Super>Print']
+io.elementary.desktop.wm.keybindings move-to-workspace-first ['<Super><Shift>Home']
+io.elementary.desktop.wm.keybindings move-to-workspace-last ['<Super><Shift>End', '<Super><Shift>0']
+io.elementary.desktop.wm.keybindings panel-main-menu ['<Alt>F2']
+io.elementary.desktop.wm.keybindings pip ['<Super>f']
+io.elementary.desktop.wm.keybindings screenshot ['Print']
+io.elementary.desktop.wm.keybindings screenshot-clip ['<Control>Print']
+io.elementary.desktop.wm.keybindings switch-input-source ['<Super>Space']
+io.elementary.desktop.wm.keybindings switch-input-source-backward ['<Super><Shift>Space']
+io.elementary.desktop.wm.keybindings switch-to-workspace-first ['<Super>Home']
+io.elementary.desktop.wm.keybindings switch-to-workspace-last ['<Super>End', '<Super>0']
+io.elementary.desktop.wm.keybindings toggle-multitasking-view ['<Super>Down', '<Super>s']
+io.elementary.desktop.wm.keybindings window-screenshot ['<Alt>Print']
+io.elementary.desktop.wm.keybindings window-screenshot-clip ['<Control><Alt>Print']
+io.elementary.desktop.wm.keybindings zoom-in ['<Super>plus', '<Super>KP_Add']
+io.elementary.desktop.wm.keybindings zoom-out ['<Super>minus', '<Super>KP_Subtract']

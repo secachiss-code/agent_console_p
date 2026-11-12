@@ -1,0 +1,6 @@
+test_cleanup_with_and_without_phases_after_success_or_failure (tests.unit.test_perf7_observer.ObserverCleanupTest.test_cleanup_with_and_without_phases_after_success_or_failure) ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 0.022s
+
+OK

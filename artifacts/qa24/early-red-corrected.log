@@ -1,0 +1,191 @@
+Collected 0 items to run in parallel
+FFF                                                                      [100%]
+=================================== FAILURES ===================================
+_______________ test_preferences_close_before_first_frame[clean] _______________
+
+decision = 'clean'
+
+    @pytest.mark.parametrize("decision", ["clean", "discard", "save"])
+    def test_preferences_close_before_first_frame(decision: str) -> None:
+        async def scenario(app: _TabsTestApp) -> None:
+            client, _tabs = _model(demo_snapshot())
+            settings = Settings(rev=1, vault_path="", worktrees_dir="")
+            patches: list[SettingsPatch] = []
+    
+            async def request(method: str, params: msgspec.Struct, _result: type[msgspec.Struct]) -> msgspec.Struct:
+                nonlocal settings
+                if method == "settings/update":
+                    patches.append(params.patch)
+                    settings = commit_settings(settings, params.patch)
+                return settings
+    
+            client.request = request
+            dialog = PreferencesDialog(PreferencesViewModel(client))
+            assert app.window is not None
+            app.window.set_default_size(800, 800)
+            app.window.present()
+            dialog.open(app.window)
+            # Deliver a confirmed close before GTK's opening frame callbacks run.
+            assert dialog.get_width() == 0
+            if decision == "clean":
+                dialog.close()
+            else:
+                assert dialog.worker is not None
+                await dialog.worker
+                dialog.font_entry.set_text("Early draft")
+                dialog.close()
+                prompt = dialog._close_prompt
+                assert prompt is not None
+                await _answer(prompt, decision)
+            await _until(lambda: not dialog._active)
+            await _until(lambda: not dialog.get_mapped())
+            assert dialog._unsubscribe is None
+            assert bool(patches) == (decision == "save")
+            assert settings.terminal_font == ("Early draft" if decision == "save" else None)
+            await client.close()
+    
+>       _run_ui(scenario)
+
+tests/gui/front/test_preferences_drafts.py:135: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+scenario = <function test_preferences_close_before_first_frame.<locals>.scenario at 0x74d86f339220>
+
+    def _run_ui(scenario: Callable[[_TabsTestApp], Awaitable[None]]) -> None:
+        app = _TabsTestApp(scenario)
+        assert run_app(lambda: app, ["aconsole-b2-tabs-test"]) == 0
+>       assert app.error is None, repr(app.error)
+E       AssertionError: AssertionError('GTK wait failed at 128')
+E       assert AssertionError('GTK wait failed at 128') is None
+E        +  where AssertionError('GTK wait failed at 128') = <test_b2_tabs._TabsTestApp object at 0x74d86f306500 (tests+gui+front+test_b2_tabs+_TabsTestApp at 0x20342810)>.error
+
+tests/gui/front/test_b2_tabs.py:67: AssertionError
+______________ test_preferences_close_before_first_frame[discard] ______________
+
+decision = 'discard'
+
+    @pytest.mark.parametrize("decision", ["clean", "discard", "save"])
+    def test_preferences_close_before_first_frame(decision: str) -> None:
+        async def scenario(app: _TabsTestApp) -> None:
+            client, _tabs = _model(demo_snapshot())
+            settings = Settings(rev=1, vault_path="", worktrees_dir="")
+            patches: list[SettingsPatch] = []
+    
+            async def request(method: str, params: msgspec.Struct, _result: type[msgspec.Struct]) -> msgspec.Struct:
+                nonlocal settings
+                if method == "settings/update":
+                    patches.append(params.patch)
+                    settings = commit_settings(settings, params.patch)
+                return settings
+    
+            client.request = request
+            dialog = PreferencesDialog(PreferencesViewModel(client))
+            assert app.window is not None
+            app.window.set_default_size(800, 800)
+            app.window.present()
+            dialog.open(app.window)
+            # Deliver a confirmed close before GTK's opening frame callbacks run.
+            assert dialog.get_width() == 0
+            if decision == "clean":
+                dialog.close()
+            else:
+                assert dialog.worker is not None
+                await dialog.worker
+                dialog.font_entry.set_text("Early draft")
+                dialog.close()
+                prompt = dialog._close_prompt
+                assert prompt is not None
+                await _answer(prompt, decision)
+            await _until(lambda: not dialog._active)
+            await _until(lambda: not dialog.get_mapped())
+            assert dialog._unsubscribe is None
+            assert bool(patches) == (decision == "save")
+            assert settings.terminal_font == ("Early draft" if decision == "save" else None)
+            await client.close()
+    
+>       _run_ui(scenario)
+
+tests/gui/front/test_preferences_drafts.py:135: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+scenario = <function test_preferences_close_before_first_frame.<locals>.scenario at 0x74d86c3981a0>
+
+    def _run_ui(scenario: Callable[[_TabsTestApp], Awaitable[None]]) -> None:
+        app = _TabsTestApp(scenario)
+        assert run_app(lambda: app, ["aconsole-b2-tabs-test"]) == 0
+>       assert app.error is None, repr(app.error)
+E       AssertionError: AssertionError('GTK wait failed at 128')
+E       assert AssertionError('GTK wait failed at 128') is None
+E        +  where AssertionError('GTK wait failed at 128') = <test_b2_tabs._TabsTestApp object at 0x74d86efe3b80 (tests+gui+front+test_b2_tabs+_TabsTestApp at 0x209e9a70)>.error
+
+tests/gui/front/test_b2_tabs.py:67: AssertionError
+_______________ test_preferences_close_before_first_frame[save] ________________
+
+decision = 'save'
+
+    @pytest.mark.parametrize("decision", ["clean", "discard", "save"])
+    def test_preferences_close_before_first_frame(decision: str) -> None:
+        async def scenario(app: _TabsTestApp) -> None:
+            client, _tabs = _model(demo_snapshot())
+            settings = Settings(rev=1, vault_path="", worktrees_dir="")
+            patches: list[SettingsPatch] = []
+    
+            async def request(method: str, params: msgspec.Struct, _result: type[msgspec.Struct]) -> msgspec.Struct:
+                nonlocal settings
+                if method == "settings/update":
+                    patches.append(params.patch)
+                    settings = commit_settings(settings, params.patch)
+                return settings
+    
+            client.request = request
+            dialog = PreferencesDialog(PreferencesViewModel(client))
+            assert app.window is not None
+            app.window.set_default_size(800, 800)
+            app.window.present()
+            dialog.open(app.window)
+            # Deliver a confirmed close before GTK's opening frame callbacks run.
+            assert dialog.get_width() == 0
+            if decision == "clean":
+                dialog.close()
+            else:
+                assert dialog.worker is not None
+                await dialog.worker
+                dialog.font_entry.set_text("Early draft")
+                dialog.close()
+                prompt = dialog._close_prompt
+                assert prompt is not None
+                await _answer(prompt, decision)
+            await _until(lambda: not dialog._active)
+            await _until(lambda: not dialog.get_mapped())
+            assert dialog._unsubscribe is None
+            assert bool(patches) == (decision == "save")
+            assert settings.terminal_font == ("Early draft" if decision == "save" else None)
+            await client.close()
+    
+>       _run_ui(scenario)
+
+tests/gui/front/test_preferences_drafts.py:135: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+scenario = <function test_preferences_close_before_first_frame.<locals>.scenario at 0x74d86c398b40>
+
+    def _run_ui(scenario: Callable[[_TabsTestApp], Awaitable[None]]) -> None:
+        app = _TabsTestApp(scenario)
+        assert run_app(lambda: app, ["aconsole-b2-tabs-test"]) == 0
+>       assert app.error is None, repr(app.error)
+E       AssertionError: AssertionError('GTK wait failed at 128')
+E       assert AssertionError('GTK wait failed at 128') is None
+E        +  where AssertionError('GTK wait failed at 128') = <test_b2_tabs._TabsTestApp object at 0x74d86efeebc0 (tests+gui+front+test_b2_tabs+_TabsTestApp at 0x21be5a10)>.error
+
+tests/gui/front/test_b2_tabs.py:67: AssertionError
+=============================== warnings summary ===============================
+../../../../../../Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/events.py:803
+  /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/events.py:803: DeprecationWarning: 'asyncio.AbstractEventLoopPolicy' is deprecated and slated for removal in Python 3.16
+    AbstractEventLoopPolicy = getattr(asyncio, "AbstractEventLoopPolicy", object)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/gui/front/test_preferences_drafts.py::test_preferences_close_before_first_frame[clean]
+FAILED tests/gui/front/test_preferences_drafts.py::test_preferences_close_before_first_frame[discard]
+FAILED tests/gui/front/test_preferences_drafts.py::test_preferences_close_before_first_frame[save]
+3 failed, 1 warning in 6.84s

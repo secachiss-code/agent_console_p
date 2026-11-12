@@ -22,6 +22,7 @@ from aconsole.ui.client.core_client import CoreClient  # noqa: E402
 from aconsole.ui.viewmodels.approval_alerts import Alert, ApprovalAlerts  # noqa: E402
 from aconsole.ui.views.app import AConsoleApp  # noqa: E402
 from aconsole.ui.views.approvals.alert import OPEN_APPROVAL_ACTION, alert_body, alert_notification  # noqa: E402
+from tests.gui.watchdog import arm_watchdog  # noqa: E402
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
@@ -189,7 +190,7 @@ class _WindowApp(AConsoleApp):
         self.gone.append(notification_id)
 
     async def _open(self) -> None:
-        _ = GLib.timeout_add(_TIMEOUT_MS, self._expired)
+        _ = arm_watchdog(self, _TIMEOUT_MS, self._expired)
         try:
             await super()._open()
             assert self.window is not None
@@ -257,5 +258,92 @@ class _WindowApp(AConsoleApp):
 def test_the_window_rings_withdraws_and_a_click_opens_the_tab(core: str) -> None:
     app = _WindowApp(CoreClient(core))
     assert run_app(lambda: app, ["approval-alert-test"]) == 0
+    if app.failure is not None:
+        raise app.failure
+
+
+class _OpeningApp(_WindowApp):
+    def __init__(self, client: CoreClient, case: str, monkeypatch: pytest.MonkeyPatch) -> None:
+        super().__init__(client)
+        self.case = case
+        self.monkeypatch = monkeypatch
+
+    async def _check(self, window: MainWindow) -> None:
+        # Destroying the last window must not end the loop before cancellation
+        # can be observed by this scenario.
+        self.hold()
+        try:
+            await self._exercise(window)
+        finally:
+            self.release()
+
+    async def _exercise(self, window: MainWindow) -> None:
+        store = window.tabs.client.store
+        snapshot = store.snapshot
+        assert snapshot is not None
+        assert window.get_mapped()
+        assert self.sent == []
+        timer = window._approval_opening_timer
+        assert timer is not None
+        context = GLib.MainContext.default()
+        source = context.find_source_by_id(timer)
+        assert source is not None
+        assert source.get_ready_time() > 0
+        assert source.get_ready_time() - GLib.get_monotonic_time() <= 500_000
+        # Drive the real source explicitly: cold desktop rendering can block
+        # longer than the opening interval before a Python sleep resumes.
+        if self.case != "deadline":
+            source.set_ready_time(GLib.get_monotonic_time() + 60_000_000)
+            await asyncio.sleep(0.12)
+            assert self.sent == []
+        if self.case == "focus":
+            self.monkeypatch.setattr(window, "is_active", lambda: True)
+            window.notify("is-active")
+            assert window._approval_opening_timer is None
+            assert context.find_source_by_id(timer) is None
+        elif self.case == "resolved":
+            store.apply_snapshot(msgspec.structs.replace(snapshot, approvals=()), store.seq + 1)
+        elif self.case in {"unmap", "destroy", "remap"}:
+            if self.case == "destroy":
+                window.destroy()
+            else:
+                window.set_visible(False)
+            assert window._approval_opening_timer is None
+            assert context.find_source_by_id(timer) is None
+        if self.case != "deadline":
+            source.set_ready_time(0)
+        await asyncio.sleep(0.65 if self.case == "deadline" else 0.05)
+        if self.case in {"unfocused", "deadline"}:
+            assert len(self.sent) == len({view.tab_id for view in snapshot.approvals})
+            assert window._approval_opening_timer is None
+            window._sync_approvals(store)
+            assert len(self.sent) == len({view.tab_id for view in snapshot.approvals})
+        else:
+            assert self.sent == []
+        if self.case == "remap":
+            window.present()
+            assert self.sent == []
+            assert window._approval_opening_timer is not None
+            await asyncio.sleep(0.55)
+            assert len(self.sent) == len({view.tab_id for view in snapshot.approvals})
+        if self.case == "focus":
+            # Once startup focus arrived, losing it must notify immediately.
+            self.monkeypatch.setattr(window, "is_active", lambda: False)
+            window.notify("is-active")
+            assert len(self.sent) == len({view.tab_id for view in snapshot.approvals})
+
+
+@pytest.mark.parametrize("case", ["focus", "unfocused", "deadline", "resolved", "unmap", "destroy", "remap"])
+@pytest.mark.parametrize("core", ["waiting"], indirect=True)
+def test_opening_waits_for_focus_but_background_requests_still_ring(
+    core: str, case: str, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from aconsole.ui.views.window import MainWindow
+
+    # Hold the focus observation inactive from construction; the actual native
+    # focus/action path is covered by the unchanged test above.
+    monkeypatch.setattr(MainWindow, "is_active", lambda _window: False)
+    app = _OpeningApp(CoreClient(core), case, monkeypatch)
+    assert run_app(lambda: app, ["approval-opening-test"]) == 0
     if app.failure is not None:
         raise app.failure

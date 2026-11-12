@@ -417,8 +417,10 @@ class GitMergeService:
         if not checked.ok:
             return checked
         made = self._writer.commit_tree(root, tree or "", parents, checked.text or message)
-        if not made.ok or made.oid is None:
+        if not made.ok:
             return made
+        if made.oid is None:
+            return GitDone(ok=False, said=made.said or "git commit-tree returned no commit id")
         moved = self._writer.move_ref(root, ref, made.oid, record.target_oid)
         return GitDone(ok=moved.ok, said=moved.said, oid=made.oid if moved.ok else None)
 

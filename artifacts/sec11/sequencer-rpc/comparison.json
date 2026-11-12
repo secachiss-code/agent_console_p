@@ -1,0 +1,1402 @@
+[
+  {
+    "format": "sha1",
+    "operation": "rebase",
+    "mode": "observe",
+    "steps": [
+      {
+        "label": "start",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true,
+          "tree_entries": true,
+          "head_hook_content": true,
+          "index_hook_content": true
+        }
+      },
+      {
+        "label": "resolve_stage",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true,
+          "tree_entries": true,
+          "head_hook_content": true,
+          "index_hook_content": true
+        }
+      },
+      {
+        "label": "continue",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true,
+          "tree_entries": true,
+          "head_hook_content": true,
+          "index_hook_content": true
+        }
+      }
+    ]
+  },
+  {
+    "format": "sha1",
+    "operation": "rebase",
+    "mode": "prepare_message",
+    "steps": [
+      {
+        "label": "start",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true,
+          "tree_entries": true,
+          "head_hook_content": true,
+          "index_hook_content": true
+        }
+      },
+      {
+        "label": "resolve_stage",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true,
+          "tree_entries": true,
+          "head_hook_content": true,
+          "index_hook_content": true
+        }
+      },
+      {
+        "label": "continue",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": false,
+          "target": false,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": false,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true,
+          "tree_entries": true,
+          "head_hook_content": true,
+          "index_hook_content": true
+        }
+      }
+    ]
+  },
+  {
+    "format": "sha1",
+    "operation": "rebase",
+    "mode": "commit_message",
+    "steps": [
+      {
+        "label": "start",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true,
+          "tree_entries": true,
+          "head_hook_content": true,
+          "index_hook_content": true
+        }
+      },
+      {
+        "label": "resolve_stage",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true,
+          "tree_entries": true,
+          "head_hook_content": true,
+          "index_hook_content": true
+        }
+      },
+      {
+        "label": "continue",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true,
+          "tree_entries": true,
+          "head_hook_content": true,
+          "index_hook_content": true
+        }
+      }
+    ]
+  },
+  {
+    "format": "sha1",
+    "operation": "rebase",
+    "mode": "pre_index",
+    "steps": [
+      {
+        "label": "start",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true,
+          "tree_entries": true,
+          "head_hook_content": true,
+          "index_hook_content": true
+        }
+      },
+      {
+        "label": "resolve_stage",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true,
+          "tree_entries": true,
+          "head_hook_content": true,
+          "index_hook_content": true
+        }
+      },
+      {
+        "label": "continue",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true,
+          "tree_entries": true,
+          "head_hook_content": true,
+          "index_hook_content": true
+        }
+      }
+    ]
+  },
+  {
+    "format": "sha1",
+    "operation": "rebase",
+    "mode": "prepare_index",
+    "steps": [
+      {
+        "label": "start",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true,
+          "tree_entries": true,
+          "head_hook_content": true,
+          "index_hook_content": true
+        }
+      },
+      {
+        "label": "resolve_stage",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true,
+          "tree_entries": true,
+          "head_hook_content": true,
+          "index_hook_content": true
+        }
+      },
+      {
+        "label": "continue",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": false,
+          "unmerged": true,
+          "status": false,
+          "state": true,
+          "files": false,
+          "tree_entries": true,
+          "head_hook_content": true,
+          "index_hook_content": false
+        }
+      }
+    ]
+  },
+  {
+    "format": "sha1",
+    "operation": "cherry-pick",
+    "mode": "observe",
+    "steps": [
+      {
+        "label": "start",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true,
+          "tree_entries": true,
+          "head_hook_content": true,
+          "index_hook_content": true
+        }
+      },
+      {
+        "label": "resolve_stage",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true,
+          "tree_entries": true,
+          "head_hook_content": true,
+          "index_hook_content": true
+        }
+      },
+      {
+        "label": "continue",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true,
+          "tree_entries": true,
+          "head_hook_content": true,
+          "index_hook_content": true
+        }
+      }
+    ]
+  },
+  {
+    "format": "sha1",
+    "operation": "cherry-pick",
+    "mode": "prepare_message",
+    "steps": [
+      {
+        "label": "start",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true,
+          "tree_entries": true,
+          "head_hook_content": true,
+          "index_hook_content": true
+        }
+      },
+      {
+        "label": "resolve_stage",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true,
+          "tree_entries": true,
+          "head_hook_content": true,
+          "index_hook_content": true
+        }
+      },
+      {
+        "label": "continue",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": false,
+          "target": false,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": false,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true,
+          "tree_entries": true,
+          "head_hook_content": true,
+          "index_hook_content": true
+        }
+      }
+    ]
+  },
+  {
+    "format": "sha1",
+    "operation": "cherry-pick",
+    "mode": "commit_message",
+    "steps": [
+      {
+        "label": "start",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true,
+          "tree_entries": true,
+          "head_hook_content": true,
+          "index_hook_content": true
+        }
+      },
+      {
+        "label": "resolve_stage",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true,
+          "tree_entries": true,
+          "head_hook_content": true,
+          "index_hook_content": true
+        }
+      },
+      {
+        "label": "continue",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": false,
+          "target": false,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": false,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true,
+          "tree_entries": true,
+          "head_hook_content": true,
+          "index_hook_content": true
+        }
+      }
+    ]
+  },
+  {
+    "format": "sha1",
+    "operation": "cherry-pick",
+    "mode": "pre_index",
+    "steps": [
+      {
+        "label": "start",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true,
+          "tree_entries": true,
+          "head_hook_content": true,
+          "index_hook_content": true
+        }
+      },
+      {
+        "label": "resolve_stage",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true,
+          "tree_entries": true,
+          "head_hook_content": true,
+          "index_hook_content": true
+        }
+      },
+      {
+        "label": "continue",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": false,
+          "target": false,
+          "symbolic_head": true,
+          "head_tree": false,
+          "target_tree": false,
+          "head_message": true,
+          "index": false,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": false,
+          "tree_entries": false,
+          "head_hook_content": false,
+          "index_hook_content": false
+        }
+      }
+    ]
+  },
+  {
+    "format": "sha1",
+    "operation": "cherry-pick",
+    "mode": "prepare_index",
+    "steps": [
+      {
+        "label": "start",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true,
+          "tree_entries": true,
+          "head_hook_content": true,
+          "index_hook_content": true
+        }
+      },
+      {
+        "label": "resolve_stage",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true,
+          "tree_entries": true,
+          "head_hook_content": true,
+          "index_hook_content": true
+        }
+      },
+      {
+        "label": "continue",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": false,
+          "unmerged": true,
+          "status": false,
+          "state": true,
+          "files": false,
+          "tree_entries": true,
+          "head_hook_content": true,
+          "index_hook_content": false
+        }
+      }
+    ]
+  },
+  {
+    "format": "sha256",
+    "operation": "rebase",
+    "mode": "observe",
+    "steps": [
+      {
+        "label": "start",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true,
+          "tree_entries": true,
+          "head_hook_content": true,
+          "index_hook_content": true
+        }
+      },
+      {
+        "label": "resolve_stage",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true,
+          "tree_entries": true,
+          "head_hook_content": true,
+          "index_hook_content": true
+        }
+      },
+      {
+        "label": "continue",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true,
+          "tree_entries": true,
+          "head_hook_content": true,
+          "index_hook_content": true
+        }
+      }
+    ]
+  },
+  {
+    "format": "sha256",
+    "operation": "rebase",
+    "mode": "prepare_message",
+    "steps": [
+      {
+        "label": "start",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true,
+          "tree_entries": true,
+          "head_hook_content": true,
+          "index_hook_content": true
+        }
+      },
+      {
+        "label": "resolve_stage",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true,
+          "tree_entries": true,
+          "head_hook_content": true,
+          "index_hook_content": true
+        }
+      },
+      {
+        "label": "continue",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": false,
+          "target": false,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": false,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true,
+          "tree_entries": true,
+          "head_hook_content": true,
+          "index_hook_content": true
+        }
+      }
+    ]
+  },
+  {
+    "format": "sha256",
+    "operation": "rebase",
+    "mode": "commit_message",
+    "steps": [
+      {
+        "label": "start",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true,
+          "tree_entries": true,
+          "head_hook_content": true,
+          "index_hook_content": true
+        }
+      },
+      {
+        "label": "resolve_stage",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true,
+          "tree_entries": true,
+          "head_hook_content": true,
+          "index_hook_content": true
+        }
+      },
+      {
+        "label": "continue",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true,
+          "tree_entries": true,
+          "head_hook_content": true,
+          "index_hook_content": true
+        }
+      }
+    ]
+  },
+  {
+    "format": "sha256",
+    "operation": "rebase",
+    "mode": "pre_index",
+    "steps": [
+      {
+        "label": "start",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true,
+          "tree_entries": true,
+          "head_hook_content": true,
+          "index_hook_content": true
+        }
+      },
+      {
+        "label": "resolve_stage",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true,
+          "tree_entries": true,
+          "head_hook_content": true,
+          "index_hook_content": true
+        }
+      },
+      {
+        "label": "continue",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true,
+          "tree_entries": true,
+          "head_hook_content": true,
+          "index_hook_content": true
+        }
+      }
+    ]
+  },
+  {
+    "format": "sha256",
+    "operation": "rebase",
+    "mode": "prepare_index",
+    "steps": [
+      {
+        "label": "start",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true,
+          "tree_entries": true,
+          "head_hook_content": true,
+          "index_hook_content": true
+        }
+      },
+      {
+        "label": "resolve_stage",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true,
+          "tree_entries": true,
+          "head_hook_content": true,
+          "index_hook_content": true
+        }
+      },
+      {
+        "label": "continue",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": false,
+          "unmerged": true,
+          "status": false,
+          "state": true,
+          "files": false,
+          "tree_entries": true,
+          "head_hook_content": true,
+          "index_hook_content": false
+        }
+      }
+    ]
+  },
+  {
+    "format": "sha256",
+    "operation": "cherry-pick",
+    "mode": "observe",
+    "steps": [
+      {
+        "label": "start",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true,
+          "tree_entries": true,
+          "head_hook_content": true,
+          "index_hook_content": true
+        }
+      },
+      {
+        "label": "resolve_stage",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true,
+          "tree_entries": true,
+          "head_hook_content": true,
+          "index_hook_content": true
+        }
+      },
+      {
+        "label": "continue",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true,
+          "tree_entries": true,
+          "head_hook_content": true,
+          "index_hook_content": true
+        }
+      }
+    ]
+  },
+  {
+    "format": "sha256",
+    "operation": "cherry-pick",
+    "mode": "prepare_message",
+    "steps": [
+      {
+        "label": "start",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true,
+          "tree_entries": true,
+          "head_hook_content": true,
+          "index_hook_content": true
+        }
+      },
+      {
+        "label": "resolve_stage",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true,
+          "tree_entries": true,
+          "head_hook_content": true,
+          "index_hook_content": true
+        }
+      },
+      {
+        "label": "continue",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": false,
+          "target": false,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": false,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true,
+          "tree_entries": true,
+          "head_hook_content": true,
+          "index_hook_content": true
+        }
+      }
+    ]
+  },
+  {
+    "format": "sha256",
+    "operation": "cherry-pick",
+    "mode": "commit_message",
+    "steps": [
+      {
+        "label": "start",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true,
+          "tree_entries": true,
+          "head_hook_content": true,
+          "index_hook_content": true
+        }
+      },
+      {
+        "label": "resolve_stage",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true,
+          "tree_entries": true,
+          "head_hook_content": true,
+          "index_hook_content": true
+        }
+      },
+      {
+        "label": "continue",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": false,
+          "target": false,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": false,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true,
+          "tree_entries": true,
+          "head_hook_content": true,
+          "index_hook_content": true
+        }
+      }
+    ]
+  },
+  {
+    "format": "sha256",
+    "operation": "cherry-pick",
+    "mode": "pre_index",
+    "steps": [
+      {
+        "label": "start",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true,
+          "tree_entries": true,
+          "head_hook_content": true,
+          "index_hook_content": true
+        }
+      },
+      {
+        "label": "resolve_stage",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true,
+          "tree_entries": true,
+          "head_hook_content": true,
+          "index_hook_content": true
+        }
+      },
+      {
+        "label": "continue",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": false,
+          "target": false,
+          "symbolic_head": true,
+          "head_tree": false,
+          "target_tree": false,
+          "head_message": true,
+          "index": false,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": false,
+          "tree_entries": false,
+          "head_hook_content": false,
+          "index_hook_content": false
+        }
+      }
+    ]
+  },
+  {
+    "format": "sha256",
+    "operation": "cherry-pick",
+    "mode": "prepare_index",
+    "steps": [
+      {
+        "label": "start",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true,
+          "tree_entries": true,
+          "head_hook_content": true,
+          "index_hook_content": true
+        }
+      },
+      {
+        "label": "resolve_stage",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true,
+          "tree_entries": true,
+          "head_hook_content": true,
+          "index_hook_content": true
+        }
+      },
+      {
+        "label": "continue",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": false,
+          "unmerged": true,
+          "status": false,
+          "state": true,
+          "files": false,
+          "tree_entries": true,
+          "head_hook_content": true,
+          "index_hook_content": false
+        }
+      }
+    ]
+  }
+]

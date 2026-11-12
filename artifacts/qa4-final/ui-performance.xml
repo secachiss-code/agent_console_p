@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="13.752" timestamp="2026-11-10T21:42:52.401116+03:00" hostname="somovasnbook14"><testcase classname="tests.gui.front.test_git_scale_ui" name="test_scrolling_a_long_history" time="13.528"><failure message="AssertionError: git scale: 10000 rows, 108 frames in 4 s, median 33.7 ms, p95 44.5 ms, worst 187.3 ms, RSS 382 MB (start 328, first page 349, all rows 370 after 3.3 s)&#10;assert 33.65239100003237 &lt;= 17.5">tmp_path = PosixPath('/tmp/ac-qa4-final-ui-performance/test_scrolling_a_long_history0')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x728849acfa80&gt;
+
+    def test_scrolling_a_long_history(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -&gt; None:
+        repo = tmp_path / "repo"
+        repo.mkdir()
+        _ = _git(repo, "init", "-q", "-b", "develop")
+        lines: list[str] = []
+        for number in range(_COMMITS):
+            message = f"commit {number}"
+            lines.extend((
+                "commit refs/heads/develop",
+                f"committer t &lt;t@e&gt; {1_700_000_000 + number} +0000",
+                f"data {len(message)}",
+                message,
+                f"M 100644 inline f{number % 200}.txt",
+                f"data {len(message)}",
+                message,
+                "",
+            ))
+        _ = subprocess.run(
+            [_GIT, "-C", str(repo), "fast-import", "--quiet"], input="\n".join(lines), text=True, check=True
+        )
+        _ = _git(repo, "checkout", "-qf", "develop")
+
+        async def check(pane: GitPane, _toasts: list[str], _window: Adw.ApplicationWindow) -&gt; None:
+            before = _rss_mb()
+            marks = [f"start {before:.0f}"]
+            await _settled(lambda: pane.store.get_n_items() &gt;= 200)
+            marks.append(f"first page {_rss_mb():.0f}")
+            loading = time.perf_counter()
+            for _ in range(_PAGE_ATTEMPTS):
+                if pane.store.get_n_items() &gt;= _COMMITS:
+                    break
+                await pane.load_more()
+            await _settled(lambda: pane.store.get_n_items() &gt;= _COMMITS)
+            loaded = time.perf_counter() - loading
+            marks.append(f"all rows {_rss_mb():.0f} after {loaded:.1f} s")
+            adjustment = pane.scroller.get_vadjustment()
+            frames: list[float] = []
+            started = time.perf_counter()
+            last = started
+
+            def tick(_widget: Gtk.Widget, _clock: Gdk.FrameClock) -&gt; bool:
+                nonlocal last
+                now = time.perf_counter()
+                frames.append(now - last)
+                last = now
+                span = adjustment.get_upper() - adjustment.get_page_size()
+                progress = (now - started) / _SCROLL_S
+                adjustment.set_value(span * min(progress, 1.0))
+                return now - started &lt; _SCROLL_S
+
+            _ = pane.list_view.add_tick_callback(tick)
+            await _settled(lambda: time.perf_counter() - started &gt;= _SCROLL_S)
+            assert len(frames) &gt;= _MIN_FRAMES, f"only {len(frames)} frames"
+            median = statistics.median(frames) * _MS
+            p95 = statistics.quantiles(frames, n=_PERCENTILES)[_P95_INDEX] * _MS
+            rss = _rss_mb()
+            line = (
+                f"git scale: {pane.store.get_n_items()} rows, {len(frames)} frames in {_SCROLL_S:.0f} s, "
+                f"median {median:.1f} ms, p95 {p95:.1f} ms, worst {max(frames) * _MS:.1f} ms, "
+                f"RSS {rss:.0f} MB ({', '.join(marks)})"
+            )
+            _report(line)
+            assert adjustment.get_value() &gt; 0, "the list never moved"
+            assert median &lt;= _FRAME_LIMIT_MS, line
+            assert rss - before &lt;= _GROWTH_LIMIT_MB, line
+
+&gt;       _on_pane(tmp_path, monkeypatch, repo, check)
+
+tests/gui/front/test_git_scale_ui.py:148:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests/gui/front/test_git_pane.py:129: in _on_pane
+    raise failures[0]
+tests/gui/front/test_git_pane.py:110: in _run
+    await check(pane, toasts, window)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+pane = &lt;git_pane.GitPane object at 0x72883016ff00 (aconsole+ui+views+review+git_pane+GitPane at 0x37082bc0)&gt;
+_toasts = []
+_window = &lt;Adw.ApplicationWindow object at 0x7288301baec0 (AdwApplicationWindow at 0x371dd970)&gt;
+
+    async def check(pane: GitPane, _toasts: list[str], _window: Adw.ApplicationWindow) -&gt; None:
+        before = _rss_mb()
+        marks = [f"start {before:.0f}"]
+        await _settled(lambda: pane.store.get_n_items() &gt;= 200)
+        marks.append(f"first page {_rss_mb():.0f}")
+        loading = time.perf_counter()
+        for _ in range(_PAGE_ATTEMPTS):
+            if pane.store.get_n_items() &gt;= _COMMITS:
+                break
+            await pane.load_more()
+        await _settled(lambda: pane.store.get_n_items() &gt;= _COMMITS)
+        loaded = time.perf_counter() - loading
+        marks.append(f"all rows {_rss_mb():.0f} after {loaded:.1f} s")
+        adjustment = pane.scroller.get_vadjustment()
+        frames: list[float] = []
+        started = time.perf_counter()
+        last = started
+
+        def tick(_widget: Gtk.Widget, _clock: Gdk.FrameClock) -&gt; bool:
+            nonlocal last
+            now = time.perf_counter()
+            frames.append(now - last)
+            last = now
+            span = adjustment.get_upper() - adjustment.get_page_size()
+            progress = (now - started) / _SCROLL_S
+            adjustment.set_value(span * min(progress, 1.0))
+            return now - started &lt; _SCROLL_S
+
+        _ = pane.list_view.add_tick_callback(tick)
+        await _settled(lambda: time.perf_counter() - started &gt;= _SCROLL_S)
+        assert len(frames) &gt;= _MIN_FRAMES, f"only {len(frames)} frames"
+        median = statistics.median(frames) * _MS
+        p95 = statistics.quantiles(frames, n=_PERCENTILES)[_P95_INDEX] * _MS
+        rss = _rss_mb()
+        line = (
+            f"git scale: {pane.store.get_n_items()} rows, {len(frames)} frames in {_SCROLL_S:.0f} s, "
+            f"median {median:.1f} ms, p95 {p95:.1f} ms, worst {max(frames) * _MS:.1f} ms, "
+            f"RSS {rss:.0f} MB ({', '.join(marks)})"
+        )
+        _report(line)
+        assert adjustment.get_value() &gt; 0, "the list never moved"
+&gt;       assert median &lt;= _FRAME_LIMIT_MS, line
+E       AssertionError: git scale: 10000 rows, 108 frames in 4 s, median 33.7 ms, p95 44.5 ms, worst 187.3 ms, RSS 382 MB (start 328, first page 349, all rows 370 after 3.3 s)
+E       assert 33.65239100003237 &lt;= 17.5
+
+tests/gui/front/test_git_scale_ui.py:145: AssertionError</failure></testcase></testsuite></testsuites>

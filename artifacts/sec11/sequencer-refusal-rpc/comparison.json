@@ -1,0 +1,3170 @@
+[
+  {
+    "format": "sha1",
+    "operation": "rebase",
+    "flow": "success",
+    "mode": "observe",
+    "steps": [
+      {
+        "label": "start",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      }
+    ]
+  },
+  {
+    "format": "sha1",
+    "operation": "rebase",
+    "flow": "success",
+    "mode": "pre_rebase_refuse",
+    "steps": [
+      {
+        "label": "start",
+        "outcome_equal": false,
+        "phases_equal": false,
+        "state_equal": {
+          "head": false,
+          "target": false,
+          "symbolic_head": true,
+          "head_tree": false,
+          "target_tree": false,
+          "head_message": true,
+          "index": false,
+          "unmerged": true,
+          "status": true,
+          "state": false,
+          "files": false
+        }
+      }
+    ]
+  },
+  {
+    "format": "sha1",
+    "operation": "rebase",
+    "flow": "success",
+    "mode": "post_rewrite_fail",
+    "steps": [
+      {
+        "label": "start",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      }
+    ]
+  },
+  {
+    "format": "sha1",
+    "operation": "rebase",
+    "flow": "success",
+    "mode": "post_commit_fail",
+    "steps": [
+      {
+        "label": "start",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      }
+    ]
+  },
+  {
+    "format": "sha1",
+    "operation": "rebase",
+    "flow": "success",
+    "mode": "target_prepared_refuse",
+    "steps": [
+      {
+        "label": "start",
+        "outcome_equal": false,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": false,
+          "symbolic_head": false,
+          "head_tree": true,
+          "target_tree": false,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": false,
+          "files": true
+        }
+      }
+    ]
+  },
+  {
+    "format": "sha1",
+    "operation": "rebase",
+    "flow": "success",
+    "mode": "target_committed_fail",
+    "steps": [
+      {
+        "label": "start",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      }
+    ]
+  },
+  {
+    "format": "sha1",
+    "operation": "rebase",
+    "flow": "continue",
+    "mode": "observe",
+    "steps": [
+      {
+        "label": "start",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      },
+      {
+        "label": "resolve_stage",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      },
+      {
+        "label": "continue",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      }
+    ]
+  },
+  {
+    "format": "sha1",
+    "operation": "rebase",
+    "flow": "continue",
+    "mode": "pre_rebase_refuse",
+    "steps": [
+      {
+        "label": "start",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      },
+      {
+        "label": "resolve_stage",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      },
+      {
+        "label": "continue",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      }
+    ]
+  },
+  {
+    "format": "sha1",
+    "operation": "rebase",
+    "flow": "continue",
+    "mode": "post_rewrite_fail",
+    "steps": [
+      {
+        "label": "start",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      },
+      {
+        "label": "resolve_stage",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      },
+      {
+        "label": "continue",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      }
+    ]
+  },
+  {
+    "format": "sha1",
+    "operation": "rebase",
+    "flow": "continue",
+    "mode": "post_commit_fail",
+    "steps": [
+      {
+        "label": "start",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      },
+      {
+        "label": "resolve_stage",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      },
+      {
+        "label": "continue",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      }
+    ]
+  },
+  {
+    "format": "sha1",
+    "operation": "rebase",
+    "flow": "continue",
+    "mode": "target_prepared_refuse",
+    "steps": [
+      {
+        "label": "start",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      },
+      {
+        "label": "resolve_stage",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      },
+      {
+        "label": "continue",
+        "outcome_equal": false,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": false,
+          "symbolic_head": false,
+          "head_tree": true,
+          "target_tree": false,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": false,
+          "files": true
+        }
+      }
+    ]
+  },
+  {
+    "format": "sha1",
+    "operation": "rebase",
+    "flow": "continue",
+    "mode": "target_committed_fail",
+    "steps": [
+      {
+        "label": "start",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      },
+      {
+        "label": "resolve_stage",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      },
+      {
+        "label": "continue",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      }
+    ]
+  },
+  {
+    "format": "sha1",
+    "operation": "rebase",
+    "flow": "abort",
+    "mode": "observe",
+    "steps": [
+      {
+        "label": "start",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      },
+      {
+        "label": "abort",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      }
+    ]
+  },
+  {
+    "format": "sha1",
+    "operation": "rebase",
+    "flow": "abort",
+    "mode": "pre_rebase_refuse",
+    "steps": [
+      {
+        "label": "start",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      },
+      {
+        "label": "abort",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      }
+    ]
+  },
+  {
+    "format": "sha1",
+    "operation": "rebase",
+    "flow": "abort",
+    "mode": "post_rewrite_fail",
+    "steps": [
+      {
+        "label": "start",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      },
+      {
+        "label": "abort",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      }
+    ]
+  },
+  {
+    "format": "sha1",
+    "operation": "rebase",
+    "flow": "abort",
+    "mode": "post_commit_fail",
+    "steps": [
+      {
+        "label": "start",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      },
+      {
+        "label": "abort",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      }
+    ]
+  },
+  {
+    "format": "sha1",
+    "operation": "rebase",
+    "flow": "abort",
+    "mode": "target_prepared_refuse",
+    "steps": [
+      {
+        "label": "start",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      },
+      {
+        "label": "abort",
+        "outcome_equal": false,
+        "phases_equal": false,
+        "state_equal": {
+          "head": false,
+          "target": true,
+          "symbolic_head": false,
+          "head_tree": false,
+          "target_tree": true,
+          "head_message": false,
+          "index": true,
+          "unmerged": true,
+          "status": false,
+          "state": false,
+          "files": true
+        }
+      }
+    ]
+  },
+  {
+    "format": "sha1",
+    "operation": "rebase",
+    "flow": "abort",
+    "mode": "target_committed_fail",
+    "steps": [
+      {
+        "label": "start",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      },
+      {
+        "label": "abort",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      }
+    ]
+  },
+  {
+    "format": "sha1",
+    "operation": "cherry-pick",
+    "flow": "success",
+    "mode": "observe",
+    "steps": [
+      {
+        "label": "start",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      }
+    ]
+  },
+  {
+    "format": "sha1",
+    "operation": "cherry-pick",
+    "flow": "success",
+    "mode": "pre_rebase_refuse",
+    "steps": [
+      {
+        "label": "start",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      }
+    ]
+  },
+  {
+    "format": "sha1",
+    "operation": "cherry-pick",
+    "flow": "success",
+    "mode": "post_rewrite_fail",
+    "steps": [
+      {
+        "label": "start",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      }
+    ]
+  },
+  {
+    "format": "sha1",
+    "operation": "cherry-pick",
+    "flow": "success",
+    "mode": "post_commit_fail",
+    "steps": [
+      {
+        "label": "start",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      }
+    ]
+  },
+  {
+    "format": "sha1",
+    "operation": "cherry-pick",
+    "flow": "success",
+    "mode": "target_prepared_refuse",
+    "steps": [
+      {
+        "label": "start",
+        "outcome_equal": false,
+        "phases_equal": false,
+        "state_equal": {
+          "head": false,
+          "target": false,
+          "symbolic_head": true,
+          "head_tree": false,
+          "target_tree": false,
+          "head_message": false,
+          "index": true,
+          "unmerged": true,
+          "status": false,
+          "state": false,
+          "files": true
+        }
+      }
+    ]
+  },
+  {
+    "format": "sha1",
+    "operation": "cherry-pick",
+    "flow": "success",
+    "mode": "target_committed_fail",
+    "steps": [
+      {
+        "label": "start",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      }
+    ]
+  },
+  {
+    "format": "sha1",
+    "operation": "cherry-pick",
+    "flow": "continue",
+    "mode": "observe",
+    "steps": [
+      {
+        "label": "start",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      },
+      {
+        "label": "resolve_stage",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      },
+      {
+        "label": "continue",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      }
+    ]
+  },
+  {
+    "format": "sha1",
+    "operation": "cherry-pick",
+    "flow": "continue",
+    "mode": "pre_rebase_refuse",
+    "steps": [
+      {
+        "label": "start",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      },
+      {
+        "label": "resolve_stage",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      },
+      {
+        "label": "continue",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      }
+    ]
+  },
+  {
+    "format": "sha1",
+    "operation": "cherry-pick",
+    "flow": "continue",
+    "mode": "post_rewrite_fail",
+    "steps": [
+      {
+        "label": "start",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      },
+      {
+        "label": "resolve_stage",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      },
+      {
+        "label": "continue",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      }
+    ]
+  },
+  {
+    "format": "sha1",
+    "operation": "cherry-pick",
+    "flow": "continue",
+    "mode": "post_commit_fail",
+    "steps": [
+      {
+        "label": "start",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      },
+      {
+        "label": "resolve_stage",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      },
+      {
+        "label": "continue",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      }
+    ]
+  },
+  {
+    "format": "sha1",
+    "operation": "cherry-pick",
+    "flow": "continue",
+    "mode": "target_prepared_refuse",
+    "steps": [
+      {
+        "label": "start",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      },
+      {
+        "label": "resolve_stage",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      },
+      {
+        "label": "continue",
+        "outcome_equal": false,
+        "phases_equal": false,
+        "state_equal": {
+          "head": false,
+          "target": false,
+          "symbolic_head": true,
+          "head_tree": false,
+          "target_tree": false,
+          "head_message": false,
+          "index": true,
+          "unmerged": true,
+          "status": false,
+          "state": false,
+          "files": true
+        }
+      }
+    ]
+  },
+  {
+    "format": "sha1",
+    "operation": "cherry-pick",
+    "flow": "continue",
+    "mode": "target_committed_fail",
+    "steps": [
+      {
+        "label": "start",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      },
+      {
+        "label": "resolve_stage",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      },
+      {
+        "label": "continue",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      }
+    ]
+  },
+  {
+    "format": "sha1",
+    "operation": "cherry-pick",
+    "flow": "abort",
+    "mode": "observe",
+    "steps": [
+      {
+        "label": "start",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      },
+      {
+        "label": "abort",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      }
+    ]
+  },
+  {
+    "format": "sha1",
+    "operation": "cherry-pick",
+    "flow": "abort",
+    "mode": "pre_rebase_refuse",
+    "steps": [
+      {
+        "label": "start",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      },
+      {
+        "label": "abort",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      }
+    ]
+  },
+  {
+    "format": "sha1",
+    "operation": "cherry-pick",
+    "flow": "abort",
+    "mode": "post_rewrite_fail",
+    "steps": [
+      {
+        "label": "start",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      },
+      {
+        "label": "abort",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      }
+    ]
+  },
+  {
+    "format": "sha1",
+    "operation": "cherry-pick",
+    "flow": "abort",
+    "mode": "post_commit_fail",
+    "steps": [
+      {
+        "label": "start",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      },
+      {
+        "label": "abort",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      }
+    ]
+  },
+  {
+    "format": "sha1",
+    "operation": "cherry-pick",
+    "flow": "abort",
+    "mode": "target_prepared_refuse",
+    "steps": [
+      {
+        "label": "start",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      },
+      {
+        "label": "abort",
+        "outcome_equal": false,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": false,
+          "files": true
+        }
+      }
+    ]
+  },
+  {
+    "format": "sha1",
+    "operation": "cherry-pick",
+    "flow": "abort",
+    "mode": "target_committed_fail",
+    "steps": [
+      {
+        "label": "start",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      },
+      {
+        "label": "abort",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      }
+    ]
+  },
+  {
+    "format": "sha256",
+    "operation": "rebase",
+    "flow": "success",
+    "mode": "observe",
+    "steps": [
+      {
+        "label": "start",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      }
+    ]
+  },
+  {
+    "format": "sha256",
+    "operation": "rebase",
+    "flow": "success",
+    "mode": "pre_rebase_refuse",
+    "steps": [
+      {
+        "label": "start",
+        "outcome_equal": false,
+        "phases_equal": false,
+        "state_equal": {
+          "head": false,
+          "target": false,
+          "symbolic_head": true,
+          "head_tree": false,
+          "target_tree": false,
+          "head_message": true,
+          "index": false,
+          "unmerged": true,
+          "status": true,
+          "state": false,
+          "files": false
+        }
+      }
+    ]
+  },
+  {
+    "format": "sha256",
+    "operation": "rebase",
+    "flow": "success",
+    "mode": "post_rewrite_fail",
+    "steps": [
+      {
+        "label": "start",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      }
+    ]
+  },
+  {
+    "format": "sha256",
+    "operation": "rebase",
+    "flow": "success",
+    "mode": "post_commit_fail",
+    "steps": [
+      {
+        "label": "start",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      }
+    ]
+  },
+  {
+    "format": "sha256",
+    "operation": "rebase",
+    "flow": "success",
+    "mode": "target_prepared_refuse",
+    "steps": [
+      {
+        "label": "start",
+        "outcome_equal": false,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": false,
+          "symbolic_head": false,
+          "head_tree": true,
+          "target_tree": false,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": false,
+          "files": true
+        }
+      }
+    ]
+  },
+  {
+    "format": "sha256",
+    "operation": "rebase",
+    "flow": "success",
+    "mode": "target_committed_fail",
+    "steps": [
+      {
+        "label": "start",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      }
+    ]
+  },
+  {
+    "format": "sha256",
+    "operation": "rebase",
+    "flow": "continue",
+    "mode": "observe",
+    "steps": [
+      {
+        "label": "start",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      },
+      {
+        "label": "resolve_stage",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      },
+      {
+        "label": "continue",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      }
+    ]
+  },
+  {
+    "format": "sha256",
+    "operation": "rebase",
+    "flow": "continue",
+    "mode": "pre_rebase_refuse",
+    "steps": [
+      {
+        "label": "start",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      },
+      {
+        "label": "resolve_stage",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      },
+      {
+        "label": "continue",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      }
+    ]
+  },
+  {
+    "format": "sha256",
+    "operation": "rebase",
+    "flow": "continue",
+    "mode": "post_rewrite_fail",
+    "steps": [
+      {
+        "label": "start",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      },
+      {
+        "label": "resolve_stage",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      },
+      {
+        "label": "continue",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      }
+    ]
+  },
+  {
+    "format": "sha256",
+    "operation": "rebase",
+    "flow": "continue",
+    "mode": "post_commit_fail",
+    "steps": [
+      {
+        "label": "start",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      },
+      {
+        "label": "resolve_stage",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      },
+      {
+        "label": "continue",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      }
+    ]
+  },
+  {
+    "format": "sha256",
+    "operation": "rebase",
+    "flow": "continue",
+    "mode": "target_prepared_refuse",
+    "steps": [
+      {
+        "label": "start",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      },
+      {
+        "label": "resolve_stage",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      },
+      {
+        "label": "continue",
+        "outcome_equal": false,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": false,
+          "symbolic_head": false,
+          "head_tree": true,
+          "target_tree": false,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": false,
+          "files": true
+        }
+      }
+    ]
+  },
+  {
+    "format": "sha256",
+    "operation": "rebase",
+    "flow": "continue",
+    "mode": "target_committed_fail",
+    "steps": [
+      {
+        "label": "start",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      },
+      {
+        "label": "resolve_stage",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      },
+      {
+        "label": "continue",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      }
+    ]
+  },
+  {
+    "format": "sha256",
+    "operation": "rebase",
+    "flow": "abort",
+    "mode": "observe",
+    "steps": [
+      {
+        "label": "start",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      },
+      {
+        "label": "abort",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      }
+    ]
+  },
+  {
+    "format": "sha256",
+    "operation": "rebase",
+    "flow": "abort",
+    "mode": "pre_rebase_refuse",
+    "steps": [
+      {
+        "label": "start",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      },
+      {
+        "label": "abort",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      }
+    ]
+  },
+  {
+    "format": "sha256",
+    "operation": "rebase",
+    "flow": "abort",
+    "mode": "post_rewrite_fail",
+    "steps": [
+      {
+        "label": "start",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      },
+      {
+        "label": "abort",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      }
+    ]
+  },
+  {
+    "format": "sha256",
+    "operation": "rebase",
+    "flow": "abort",
+    "mode": "post_commit_fail",
+    "steps": [
+      {
+        "label": "start",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      },
+      {
+        "label": "abort",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      }
+    ]
+  },
+  {
+    "format": "sha256",
+    "operation": "rebase",
+    "flow": "abort",
+    "mode": "target_prepared_refuse",
+    "steps": [
+      {
+        "label": "start",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      },
+      {
+        "label": "abort",
+        "outcome_equal": false,
+        "phases_equal": false,
+        "state_equal": {
+          "head": false,
+          "target": true,
+          "symbolic_head": false,
+          "head_tree": false,
+          "target_tree": true,
+          "head_message": false,
+          "index": true,
+          "unmerged": true,
+          "status": false,
+          "state": false,
+          "files": true
+        }
+      }
+    ]
+  },
+  {
+    "format": "sha256",
+    "operation": "rebase",
+    "flow": "abort",
+    "mode": "target_committed_fail",
+    "steps": [
+      {
+        "label": "start",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      },
+      {
+        "label": "abort",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      }
+    ]
+  },
+  {
+    "format": "sha256",
+    "operation": "cherry-pick",
+    "flow": "success",
+    "mode": "observe",
+    "steps": [
+      {
+        "label": "start",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      }
+    ]
+  },
+  {
+    "format": "sha256",
+    "operation": "cherry-pick",
+    "flow": "success",
+    "mode": "pre_rebase_refuse",
+    "steps": [
+      {
+        "label": "start",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      }
+    ]
+  },
+  {
+    "format": "sha256",
+    "operation": "cherry-pick",
+    "flow": "success",
+    "mode": "post_rewrite_fail",
+    "steps": [
+      {
+        "label": "start",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      }
+    ]
+  },
+  {
+    "format": "sha256",
+    "operation": "cherry-pick",
+    "flow": "success",
+    "mode": "post_commit_fail",
+    "steps": [
+      {
+        "label": "start",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      }
+    ]
+  },
+  {
+    "format": "sha256",
+    "operation": "cherry-pick",
+    "flow": "success",
+    "mode": "target_prepared_refuse",
+    "steps": [
+      {
+        "label": "start",
+        "outcome_equal": false,
+        "phases_equal": false,
+        "state_equal": {
+          "head": false,
+          "target": false,
+          "symbolic_head": true,
+          "head_tree": false,
+          "target_tree": false,
+          "head_message": false,
+          "index": true,
+          "unmerged": true,
+          "status": false,
+          "state": false,
+          "files": true
+        }
+      }
+    ]
+  },
+  {
+    "format": "sha256",
+    "operation": "cherry-pick",
+    "flow": "success",
+    "mode": "target_committed_fail",
+    "steps": [
+      {
+        "label": "start",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      }
+    ]
+  },
+  {
+    "format": "sha256",
+    "operation": "cherry-pick",
+    "flow": "continue",
+    "mode": "observe",
+    "steps": [
+      {
+        "label": "start",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      },
+      {
+        "label": "resolve_stage",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      },
+      {
+        "label": "continue",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      }
+    ]
+  },
+  {
+    "format": "sha256",
+    "operation": "cherry-pick",
+    "flow": "continue",
+    "mode": "pre_rebase_refuse",
+    "steps": [
+      {
+        "label": "start",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      },
+      {
+        "label": "resolve_stage",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      },
+      {
+        "label": "continue",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      }
+    ]
+  },
+  {
+    "format": "sha256",
+    "operation": "cherry-pick",
+    "flow": "continue",
+    "mode": "post_rewrite_fail",
+    "steps": [
+      {
+        "label": "start",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      },
+      {
+        "label": "resolve_stage",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      },
+      {
+        "label": "continue",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      }
+    ]
+  },
+  {
+    "format": "sha256",
+    "operation": "cherry-pick",
+    "flow": "continue",
+    "mode": "post_commit_fail",
+    "steps": [
+      {
+        "label": "start",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      },
+      {
+        "label": "resolve_stage",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      },
+      {
+        "label": "continue",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      }
+    ]
+  },
+  {
+    "format": "sha256",
+    "operation": "cherry-pick",
+    "flow": "continue",
+    "mode": "target_prepared_refuse",
+    "steps": [
+      {
+        "label": "start",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      },
+      {
+        "label": "resolve_stage",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      },
+      {
+        "label": "continue",
+        "outcome_equal": false,
+        "phases_equal": false,
+        "state_equal": {
+          "head": false,
+          "target": false,
+          "symbolic_head": true,
+          "head_tree": false,
+          "target_tree": false,
+          "head_message": false,
+          "index": true,
+          "unmerged": true,
+          "status": false,
+          "state": false,
+          "files": true
+        }
+      }
+    ]
+  },
+  {
+    "format": "sha256",
+    "operation": "cherry-pick",
+    "flow": "continue",
+    "mode": "target_committed_fail",
+    "steps": [
+      {
+        "label": "start",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      },
+      {
+        "label": "resolve_stage",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      },
+      {
+        "label": "continue",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      }
+    ]
+  },
+  {
+    "format": "sha256",
+    "operation": "cherry-pick",
+    "flow": "abort",
+    "mode": "observe",
+    "steps": [
+      {
+        "label": "start",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      },
+      {
+        "label": "abort",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      }
+    ]
+  },
+  {
+    "format": "sha256",
+    "operation": "cherry-pick",
+    "flow": "abort",
+    "mode": "pre_rebase_refuse",
+    "steps": [
+      {
+        "label": "start",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      },
+      {
+        "label": "abort",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      }
+    ]
+  },
+  {
+    "format": "sha256",
+    "operation": "cherry-pick",
+    "flow": "abort",
+    "mode": "post_rewrite_fail",
+    "steps": [
+      {
+        "label": "start",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      },
+      {
+        "label": "abort",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      }
+    ]
+  },
+  {
+    "format": "sha256",
+    "operation": "cherry-pick",
+    "flow": "abort",
+    "mode": "post_commit_fail",
+    "steps": [
+      {
+        "label": "start",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      },
+      {
+        "label": "abort",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      }
+    ]
+  },
+  {
+    "format": "sha256",
+    "operation": "cherry-pick",
+    "flow": "abort",
+    "mode": "target_prepared_refuse",
+    "steps": [
+      {
+        "label": "start",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      },
+      {
+        "label": "abort",
+        "outcome_equal": false,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": false,
+          "files": true
+        }
+      }
+    ]
+  },
+  {
+    "format": "sha256",
+    "operation": "cherry-pick",
+    "flow": "abort",
+    "mode": "target_committed_fail",
+    "steps": [
+      {
+        "label": "start",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      },
+      {
+        "label": "abort",
+        "outcome_equal": true,
+        "phases_equal": false,
+        "state_equal": {
+          "head": true,
+          "target": true,
+          "symbolic_head": true,
+          "head_tree": true,
+          "target_tree": true,
+          "head_message": true,
+          "index": true,
+          "unmerged": true,
+          "status": true,
+          "state": true,
+          "files": true
+        }
+      }
+    ]
+  }
+]

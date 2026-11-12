@@ -1,0 +1,306 @@
+[
+  {
+    "format": "sha1",
+    "operation": "stage",
+    "mode": "success",
+    "outcome_equal": true,
+    "state_equal": {
+      "head": true,
+      "refs": true,
+      "head_tree": true,
+      "head_content": true,
+      "index": false,
+      "index_content": false,
+      "file": true,
+      "ignored": true,
+      "untracked": true,
+      "merge_head": true
+    },
+    "candidate_equal": true
+  },
+  {
+    "format": "sha1",
+    "operation": "stage",
+    "mode": "fail",
+    "outcome_equal": false,
+    "state_equal": {
+      "head": true,
+      "refs": true,
+      "head_tree": true,
+      "head_content": true,
+      "index": false,
+      "index_content": false,
+      "file": true,
+      "ignored": true,
+      "untracked": true,
+      "merge_head": true
+    },
+    "candidate_equal": true
+  },
+  {
+    "format": "sha1",
+    "operation": "restore",
+    "mode": "success",
+    "outcome_equal": true,
+    "state_equal": {
+      "head": true,
+      "refs": true,
+      "head_tree": true,
+      "head_content": true,
+      "index": true,
+      "index_content": true,
+      "file": false,
+      "ignored": true,
+      "untracked": true,
+      "merge_head": true
+    },
+    "candidate_equal": true
+  },
+  {
+    "format": "sha1",
+    "operation": "restore",
+    "mode": "fail",
+    "outcome_equal": false,
+    "state_equal": {
+      "head": true,
+      "refs": true,
+      "head_tree": true,
+      "head_content": true,
+      "index": true,
+      "index_content": true,
+      "file": false,
+      "ignored": true,
+      "untracked": true,
+      "merge_head": true
+    },
+    "candidate_equal": true
+  },
+  {
+    "format": "sha1",
+    "operation": "merge",
+    "mode": "success",
+    "outcome_equal": false,
+    "state_equal": {
+      "head": false,
+      "refs": false,
+      "head_tree": false,
+      "head_content": false,
+      "index": false,
+      "index_content": false,
+      "file": false,
+      "ignored": true,
+      "untracked": true,
+      "merge_head": true
+    },
+    "candidate_equal": true
+  },
+  {
+    "format": "sha1",
+    "operation": "merge",
+    "mode": "fail",
+    "outcome_equal": true,
+    "state_equal": {
+      "head": true,
+      "refs": true,
+      "head_tree": true,
+      "head_content": true,
+      "index": true,
+      "index_content": true,
+      "file": true,
+      "ignored": true,
+      "untracked": true,
+      "merge_head": true
+    },
+    "candidate_equal": true
+  },
+  {
+    "format": "sha1",
+    "operation": "probe",
+    "mode": "success",
+    "outcome_equal": false,
+    "state_equal": {
+      "head": true,
+      "refs": true,
+      "head_tree": true,
+      "head_content": true,
+      "index": true,
+      "index_content": true,
+      "file": true,
+      "ignored": true,
+      "untracked": true,
+      "merge_head": true
+    },
+    "candidate_equal": false
+  },
+  {
+    "format": "sha1",
+    "operation": "probe",
+    "mode": "fail",
+    "outcome_equal": true,
+    "state_equal": {
+      "head": true,
+      "refs": true,
+      "head_tree": true,
+      "head_content": true,
+      "index": true,
+      "index_content": true,
+      "file": true,
+      "ignored": true,
+      "untracked": true,
+      "merge_head": true
+    },
+    "candidate_equal": true
+  },
+  {
+    "format": "sha256",
+    "operation": "stage",
+    "mode": "success",
+    "outcome_equal": true,
+    "state_equal": {
+      "head": true,
+      "refs": true,
+      "head_tree": true,
+      "head_content": true,
+      "index": false,
+      "index_content": false,
+      "file": true,
+      "ignored": true,
+      "untracked": true,
+      "merge_head": true
+    },
+    "candidate_equal": true
+  },
+  {
+    "format": "sha256",
+    "operation": "stage",
+    "mode": "fail",
+    "outcome_equal": false,
+    "state_equal": {
+      "head": true,
+      "refs": true,
+      "head_tree": true,
+      "head_content": true,
+      "index": false,
+      "index_content": false,
+      "file": true,
+      "ignored": true,
+      "untracked": true,
+      "merge_head": true
+    },
+    "candidate_equal": true
+  },
+  {
+    "format": "sha256",
+    "operation": "restore",
+    "mode": "success",
+    "outcome_equal": true,
+    "state_equal": {
+      "head": true,
+      "refs": true,
+      "head_tree": true,
+      "head_content": true,
+      "index": true,
+      "index_content": true,
+      "file": false,
+      "ignored": true,
+      "untracked": true,
+      "merge_head": true
+    },
+    "candidate_equal": true
+  },
+  {
+    "format": "sha256",
+    "operation": "restore",
+    "mode": "fail",
+    "outcome_equal": false,
+    "state_equal": {
+      "head": true,
+      "refs": true,
+      "head_tree": true,
+      "head_content": true,
+      "index": true,
+      "index_content": true,
+      "file": false,
+      "ignored": true,
+      "untracked": true,
+      "merge_head": true
+    },
+    "candidate_equal": true
+  },
+  {
+    "format": "sha256",
+    "operation": "merge",
+    "mode": "success",
+    "outcome_equal": false,
+    "state_equal": {
+      "head": false,
+      "refs": false,
+      "head_tree": false,
+      "head_content": false,
+      "index": false,
+      "index_content": false,
+      "file": false,
+      "ignored": true,
+      "untracked": true,
+      "merge_head": true
+    },
+    "candidate_equal": true
+  },
+  {
+    "format": "sha256",
+    "operation": "merge",
+    "mode": "fail",
+    "outcome_equal": true,
+    "state_equal": {
+      "head": true,
+      "refs": true,
+      "head_tree": true,
+      "head_content": true,
+      "index": true,
+      "index_content": true,
+      "file": true,
+      "ignored": true,
+      "untracked": true,
+      "merge_head": true
+    },
+    "candidate_equal": true
+  },
+  {
+    "format": "sha256",
+    "operation": "probe",
+    "mode": "success",
+    "outcome_equal": false,
+    "state_equal": {
+      "head": true,
+      "refs": true,
+      "head_tree": true,
+      "head_content": true,
+      "index": true,
+      "index_content": true,
+      "file": true,
+      "ignored": true,
+      "untracked": true,
+      "merge_head": true
+    },
+    "candidate_equal": false
+  },
+  {
+    "format": "sha256",
+    "operation": "probe",
+    "mode": "fail",
+    "outcome_equal": true,
+    "state_equal": {
+      "head": true,
+      "refs": true,
+      "head_tree": true,
+      "head_content": true,
+      "index": true,
+      "index_content": true,
+      "file": true,
+      "ignored": true,
+      "untracked": true,
+      "merge_head": true
+    },
+    "candidate_equal": true
+  }
+]

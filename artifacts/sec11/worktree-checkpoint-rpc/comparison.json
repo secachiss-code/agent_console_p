@@ -1,0 +1,338 @@
+[
+  {
+    "format": "sha1",
+    "operation": "worktree",
+    "mode": "observe",
+    "outcome_equal": true,
+    "phases_equal": false,
+    "state_equal": {
+      "head": true,
+      "symbolic_head": true,
+      "index": true,
+      "files": true,
+      "dest_files": true
+    }
+  },
+  {
+    "format": "sha1",
+    "operation": "worktree",
+    "mode": "prepared_refuse",
+    "outcome_equal": false,
+    "phases_equal": false,
+    "state_equal": {
+      "head": true,
+      "symbolic_head": true,
+      "index": true,
+      "files": true,
+      "dest_files": false
+    }
+  },
+  {
+    "format": "sha1",
+    "operation": "worktree",
+    "mode": "committed_fail",
+    "outcome_equal": true,
+    "phases_equal": false,
+    "state_equal": {
+      "head": true,
+      "symbolic_head": true,
+      "index": true,
+      "files": true,
+      "dest_files": true
+    }
+  },
+  {
+    "format": "sha1",
+    "operation": "worktree",
+    "mode": "post_checkout_fail",
+    "outcome_equal": false,
+    "phases_equal": false,
+    "state_equal": {
+      "head": true,
+      "symbolic_head": true,
+      "index": true,
+      "files": true,
+      "dest_files": true
+    }
+  },
+  {
+    "format": "sha1",
+    "operation": "detached",
+    "mode": "observe",
+    "outcome_equal": true,
+    "phases_equal": false,
+    "state_equal": {
+      "head": true,
+      "symbolic_head": true,
+      "index": true,
+      "files": true,
+      "dest_files": true
+    }
+  },
+  {
+    "format": "sha1",
+    "operation": "detached",
+    "mode": "prepared_refuse",
+    "outcome_equal": false,
+    "phases_equal": false,
+    "state_equal": {
+      "head": true,
+      "symbolic_head": true,
+      "index": true,
+      "files": true,
+      "dest_files": false
+    }
+  },
+  {
+    "format": "sha1",
+    "operation": "detached",
+    "mode": "committed_fail",
+    "outcome_equal": true,
+    "phases_equal": false,
+    "state_equal": {
+      "head": true,
+      "symbolic_head": true,
+      "index": true,
+      "files": true,
+      "dest_files": true
+    }
+  },
+  {
+    "format": "sha1",
+    "operation": "detached",
+    "mode": "post_checkout_fail",
+    "outcome_equal": false,
+    "phases_equal": false,
+    "state_equal": {
+      "head": true,
+      "symbolic_head": true,
+      "index": true,
+      "files": true,
+      "dest_files": true
+    }
+  },
+  {
+    "format": "sha1",
+    "operation": "restore",
+    "mode": "observe",
+    "outcome_equal": true,
+    "phases_equal": false,
+    "state_equal": {
+      "head": true,
+      "symbolic_head": true,
+      "index": true,
+      "files": true,
+      "dest_files": true
+    }
+  },
+  {
+    "format": "sha1",
+    "operation": "restore",
+    "mode": "prepared_refuse",
+    "outcome_equal": false,
+    "phases_equal": false,
+    "state_equal": {
+      "head": true,
+      "symbolic_head": true,
+      "index": true,
+      "files": false,
+      "dest_files": true
+    }
+  },
+  {
+    "format": "sha1",
+    "operation": "restore",
+    "mode": "committed_fail",
+    "outcome_equal": true,
+    "phases_equal": false,
+    "state_equal": {
+      "head": true,
+      "symbolic_head": true,
+      "index": true,
+      "files": true,
+      "dest_files": true
+    }
+  },
+  {
+    "format": "sha1",
+    "operation": "restore",
+    "mode": "post_checkout_fail",
+    "outcome_equal": false,
+    "phases_equal": false,
+    "state_equal": {
+      "head": true,
+      "symbolic_head": true,
+      "index": true,
+      "files": false,
+      "dest_files": true
+    }
+  },
+  {
+    "format": "sha256",
+    "operation": "worktree",
+    "mode": "observe",
+    "outcome_equal": true,
+    "phases_equal": false,
+    "state_equal": {
+      "head": true,
+      "symbolic_head": true,
+      "index": true,
+      "files": true,
+      "dest_files": true
+    }
+  },
+  {
+    "format": "sha256",
+    "operation": "worktree",
+    "mode": "prepared_refuse",
+    "outcome_equal": false,
+    "phases_equal": false,
+    "state_equal": {
+      "head": true,
+      "symbolic_head": true,
+      "index": true,
+      "files": true,
+      "dest_files": false
+    }
+  },
+  {
+    "format": "sha256",
+    "operation": "worktree",
+    "mode": "committed_fail",
+    "outcome_equal": true,
+    "phases_equal": false,
+    "state_equal": {
+      "head": true,
+      "symbolic_head": true,
+      "index": true,
+      "files": true,
+      "dest_files": true
+    }
+  },
+  {
+    "format": "sha256",
+    "operation": "worktree",
+    "mode": "post_checkout_fail",
+    "outcome_equal": false,
+    "phases_equal": false,
+    "state_equal": {
+      "head": true,
+      "symbolic_head": true,
+      "index": true,
+      "files": true,
+      "dest_files": true
+    }
+  },
+  {
+    "format": "sha256",
+    "operation": "detached",
+    "mode": "observe",
+    "outcome_equal": true,
+    "phases_equal": false,
+    "state_equal": {
+      "head": true,
+      "symbolic_head": true,
+      "index": true,
+      "files": true,
+      "dest_files": true
+    }
+  },
+  {
+    "format": "sha256",
+    "operation": "detached",
+    "mode": "prepared_refuse",
+    "outcome_equal": false,
+    "phases_equal": false,
+    "state_equal": {
+      "head": true,
+      "symbolic_head": true,
+      "index": true,
+      "files": true,
+      "dest_files": false
+    }
+  },
+  {
+    "format": "sha256",
+    "operation": "detached",
+    "mode": "committed_fail",
+    "outcome_equal": true,
+    "phases_equal": false,
+    "state_equal": {
+      "head": true,
+      "symbolic_head": true,
+      "index": true,
+      "files": true,
+      "dest_files": true
+    }
+  },
+  {
+    "format": "sha256",
+    "operation": "detached",
+    "mode": "post_checkout_fail",
+    "outcome_equal": false,
+    "phases_equal": false,
+    "state_equal": {
+      "head": true,
+      "symbolic_head": true,
+      "index": true,
+      "files": true,
+      "dest_files": true
+    }
+  },
+  {
+    "format": "sha256",
+    "operation": "restore",
+    "mode": "observe",
+    "outcome_equal": true,
+    "phases_equal": false,
+    "state_equal": {
+      "head": true,
+      "symbolic_head": true,
+      "index": true,
+      "files": true,
+      "dest_files": true
+    }
+  },
+  {
+    "format": "sha256",
+    "operation": "restore",
+    "mode": "prepared_refuse",
+    "outcome_equal": false,
+    "phases_equal": false,
+    "state_equal": {
+      "head": true,
+      "symbolic_head": true,
+      "index": true,
+      "files": false,
+      "dest_files": true
+    }
+  },
+  {
+    "format": "sha256",
+    "operation": "restore",
+    "mode": "committed_fail",
+    "outcome_equal": true,
+    "phases_equal": false,
+    "state_equal": {
+      "head": true,
+      "symbolic_head": true,
+      "index": true,
+      "files": true,
+      "dest_files": true
+    }
+  },
+  {
+    "format": "sha256",
+    "operation": "restore",
+    "mode": "post_checkout_fail",
+    "outcome_equal": false,
+    "phases_equal": false,
+    "state_equal": {
+      "head": true,
+      "symbolic_head": true,
+      "index": true,
+      "files": false,
+      "dest_files": true
+    }
+  }
+]

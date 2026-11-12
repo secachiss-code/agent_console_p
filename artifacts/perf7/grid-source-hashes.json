@@ -1,0 +1,11 @@
+{
+  "base": "b4755a38d44a2c0158d808868104c7a8d15bd138",
+  "candidate_sources": {
+    "src/aconsole/ui/views/review/git_pane.py": "6e000cb1d3f87766bc668ce1421f80775faf508c502ee69e77fad7d049f108a8",
+    "src/aconsole/ui/style/style.css": "0bf53041e9a928b2281f9cb7fa75f30b8c36f8cdda0783f97fd65627a7467290",
+    "src/aconsole/ui/views/review/graph_cell.py": "56038137006acf77a99907152a35fbf6cf183e6724f4c41e221656b657cb65dc",
+    "tests/gui/front/test_git_scale_ui.py": "c9455d75de02cde25f09cbc4f9e423d3e66a0a583c51f50ebac7eb9789634c4c",
+    "tests/gui/front/test_git_history_keyboard.py": "fe7bf6bea16cd1770bf18274c450be358f37666ddffee3cddedb9fd28e94869d"
+  },
+  "original_scale_unchanged": true
+}

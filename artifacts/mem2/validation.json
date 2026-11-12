@@ -1,0 +1,224 @@
+{
+  "base": "8e1aa930",
+  "benchmark_unchanged": true,
+  "sources": {
+    "snapshots": 964,
+    "late_dispatches": 0,
+    "late_by_callback": {},
+    "late_dispatches_during_scale": 0,
+    "late_callbacks_during_scale": {},
+    "maximum_sources": 0,
+    "maximum_tasks": 0,
+    "evidence_sha256": {
+      "mem2-sources-full-sources.jsonl.gz": "bca20b6125cce3be2ae86790487c2dc21b5d8ce78789c24d8c54b8fccb3994dc"
+    },
+    "source_callbacks_before_scale": {},
+    "task_count_before_scale": 0,
+    "task_count_at_end": 0
+  },
+  "runs": {
+    "mem2-sources-full": {
+      "events_by_stage": {
+        "setup": 482,
+        "teardown": 482
+      },
+      "windows_before_scale": 0,
+      "mapped_before_scale": 0,
+      "mapped_applications_before_scale": {},
+      "fds_before_scale": 31,
+      "threads_before_scale": 11,
+      "windows_at_end": 0,
+      "maximum_windows": 0,
+      "scale": "git scale: 10000 rows, 164 frames in 4 s, median 17.4 ms, p95 36.0 ms, worst 50.3 ms, RSS 575 MB (start 564, first page 564, all rows 575 after 3.0 s)",
+      "passed": 471,
+      "failures": [
+        "tests.gui.front.test_approval_alerts::test_the_window_rings_withdraws_and_a_click_opens_the_tab[waiting]",
+        "tests.gui.front.test_b0_window::test_sidebar_lists_demo_tabs[700-True]",
+        "tests.gui.front.test_b0_window::test_collapsed_sidebar_button_opens_and_closes_sidebar",
+        "tests.gui.front.test_b0_window::test_system_title_buttons_keep_clear_header_space[700-True-left]",
+        "tests.gui.front.test_b0_window::test_system_title_buttons_keep_clear_header_space[700-True-right]",
+        "tests.gui.front.test_b0_window::test_system_title_buttons_keep_clear_header_space[700-True-both]",
+        "tests.gui.front.test_b1_keys::test_b1_keys_narrow_window",
+        "tests.gui.front.test_des3_visual::test_native_widgets_match_reviewed_baselines[light-1280-light]",
+        "tests.gui.front.test_des3_visual::test_native_widgets_match_reviewed_baselines[dark-1280-dark]",
+        "tests.gui.front.test_des3_visual::test_native_widgets_match_reviewed_baselines[light-700-narrow]",
+        "tests.gui.front.test_preferences_drafts::test_closing_dirty_preferences_can_cancel_or_discard"
+      ],
+      "errors": 0,
+      "skipped": 0,
+      "renderer": "GskNglRenderer",
+      "gtk_version": [
+        4,
+        14,
+        5
+      ],
+      "load_before": [
+        2.2744140625,
+        2.390625,
+        2.51318359375
+      ],
+      "load_after": [
+        2.2255859375,
+        2.37744140625,
+        2.5078125
+      ],
+      "evidence_sha256": {
+        "mem2-sources-full-lifecycle.jsonl.gz": "20ea52f68d4eab44a75ee4bb220312bdeb05e73b5fddc698c6fd684a46e97f22",
+        "mem2-sources-full.jsonl": "b93ec4ccf0b1bf7eed01908e4d63a0e1abb9fcee98383a2410182f21f75946ae",
+        "mem2-sources-full.xml": "747296186f3d2293adaf2d9caf921ac813816a964774283731390906b34cb9ce",
+        "mem2-sources-full-scale.txt": "80ff7af11990f6b50372748cc79dc4d54258b6f1e4f10a67f9a90ee7557b00b4",
+        "mem2-sources-full-gl.txt": "aa7b6fc7c98a56f659f60d2c4be1f725fba88578fef1bc4fcc2e793c2998863d"
+      }
+    },
+    "mem2-full": {
+      "events_by_stage": {
+        "setup": 482,
+        "teardown": 482
+      },
+      "windows_before_scale": 0,
+      "mapped_before_scale": 0,
+      "mapped_applications_before_scale": {},
+      "fds_before_scale": 31,
+      "threads_before_scale": 12,
+      "windows_at_end": 0,
+      "maximum_windows": 0,
+      "scale": "git scale: 10000 rows, 161 frames in 4 s, median 29.8 ms, p95 35.2 ms, worst 36.2 ms, RSS 577 MB (start 566, first page 566, all rows 577 after 3.4 s)",
+      "passed": 470,
+      "failures": [
+        "tests.gui.front.test_approval_alerts::test_the_window_rings_withdraws_and_a_click_opens_the_tab[waiting]",
+        "tests.gui.front.test_b0_window::test_sidebar_lists_demo_tabs[700-True]",
+        "tests.gui.front.test_b0_window::test_collapsed_sidebar_button_opens_and_closes_sidebar",
+        "tests.gui.front.test_b0_window::test_system_title_buttons_keep_clear_header_space[700-True-left]",
+        "tests.gui.front.test_b0_window::test_system_title_buttons_keep_clear_header_space[700-True-right]",
+        "tests.gui.front.test_b0_window::test_system_title_buttons_keep_clear_header_space[700-True-both]",
+        "tests.gui.front.test_b1_keys::test_b1_keys_narrow_window",
+        "tests.gui.front.test_des3_visual::test_native_widgets_match_reviewed_baselines[light-1280-light]",
+        "tests.gui.front.test_des3_visual::test_native_widgets_match_reviewed_baselines[dark-1280-dark]",
+        "tests.gui.front.test_des3_visual::test_native_widgets_match_reviewed_baselines[light-700-narrow]",
+        "tests.gui.front.test_git_scale_ui::test_scrolling_a_long_history",
+        "tests.gui.front.test_preferences_drafts::test_closing_dirty_preferences_can_cancel_or_discard"
+      ],
+      "errors": 0,
+      "skipped": 0,
+      "renderer": "GskNglRenderer",
+      "gtk_version": [
+        4,
+        14,
+        5
+      ],
+      "load_before": [
+        4.21484375,
+        3.04833984375,
+        2.72998046875
+      ],
+      "load_after": [
+        3.87353515625,
+        3.01318359375,
+        2.7216796875
+      ],
+      "evidence_sha256": {
+        "mem2-full-lifecycle.jsonl.gz": "6a59050236ca4f5cd3dbd80385d30d38b1fff1a40dbd7ad4049324e0fb5c8d3b",
+        "mem2-full.jsonl": "39292f7c28ce463052c8efbdef3cc833e599d8315effbe6f407fa6101331c0db",
+        "mem2-full.xml": "dc0eae62beba813bc4a717bc2c7f70523afdebc1752ff9808b7c0ce5968e6650",
+        "mem2-full-scale.txt": "b27f3f9c1ae0f1075e770133b6644bcd43e943bf44332953ea9da88d07836db6",
+        "mem2-full-gl.txt": "aa7b6fc7c98a56f659f60d2c4be1f725fba88578fef1bc4fcc2e793c2998863d"
+      }
+    },
+    "mem2-isolated": {
+      "events_by_stage": {
+        "setup": 5,
+        "teardown": 5
+      },
+      "windows_before_scale": 0,
+      "mapped_before_scale": 0,
+      "mapped_applications_before_scale": {},
+      "fds_before_scale": 22,
+      "threads_before_scale": 10,
+      "windows_at_end": 0,
+      "maximum_windows": 0,
+      "scale": "git scale: 10000 rows, 162 frames in 4 s, median 17.5 ms, p95 35.6 ms, worst 131.0 ms, RSS 260 MB (start 247, first page 248, all rows 258 after 3.4 s)",
+      "passed": 4,
+      "failures": [
+        "tests.gui.front.test_git_scale_ui::test_scrolling_a_long_history"
+      ],
+      "errors": 0,
+      "skipped": 0,
+      "renderer": "GskNglRenderer",
+      "gtk_version": [
+        4,
+        14,
+        5
+      ],
+      "load_before": [
+        2.697265625,
+        2.83837890625,
+        2.68017578125
+      ],
+      "load_after": [
+        2.7216796875,
+        2.84130859375,
+        2.68212890625
+      ],
+      "evidence_sha256": {
+        "mem2-isolated-lifecycle.jsonl.gz": "a0f16ded39884b6285f0beb5877e627388434e96c1425af4e8b970a252da511f",
+        "mem2-isolated.jsonl": "3b70d2faf076fe73618c0067030c38b28c7ca88e6f55c5d89b73b89881df12d7",
+        "mem2-isolated.xml": "8d322d5d786a7905532d065ea479c2486c77b693a5266f511c7676a4474372c1",
+        "mem2-isolated-scale.txt": "80053867ed42d85d3ab17514991f6da60a933a57b3c7cc54804c94d572fc908f",
+        "mem2-isolated-gl.txt": "aa7b6fc7c98a56f659f60d2c4be1f725fba88578fef1bc4fcc2e793c2998863d"
+      }
+    },
+    "mem2-base-isolated": {
+      "events_by_stage": {
+        "setup": 5,
+        "teardown": 5
+      },
+      "windows_before_scale": 0,
+      "mapped_before_scale": 0,
+      "mapped_applications_before_scale": {},
+      "fds_before_scale": 24,
+      "threads_before_scale": 10,
+      "windows_at_end": 0,
+      "maximum_windows": 0,
+      "scale": "git scale: 10000 rows, 157 frames in 4 s, median 18.4 ms, p95 35.6 ms, worst 115.4 ms, RSS 259 MB (start 247, first page 248, all rows 258 after 3.0 s)",
+      "passed": 4,
+      "failures": [
+        "tests.gui.front.test_git_scale_ui::test_scrolling_a_long_history"
+      ],
+      "errors": 0,
+      "skipped": 0,
+      "renderer": "GskNglRenderer",
+      "gtk_version": [
+        4,
+        14,
+        5
+      ],
+      "load_before": [
+        0.36767578125,
+        1.302734375,
+        2.080078125
+      ],
+      "load_after": [
+        0.69921875,
+        1.3427734375,
+        2.0849609375
+      ],
+      "evidence_sha256": {
+        "mem2-base-isolated-lifecycle.jsonl.gz": "8c7b5c5eab9fc0a0f49f0e922b7c3aa342cd1f2a139a17351b6e53f287c50dd7",
+        "mem2-base-isolated.jsonl": "4023c21b546512b78e59d72055f1fd0aa7699c43ca82b19cb8d01042ecc43c3d",
+        "mem2-base-isolated.xml": "bbb6cbfb619faa97d1d58c793e9abb8a2dd7805721f6c7c54df45d239b1f5740",
+        "mem2-base-isolated-scale.txt": "e59aa8d67345b2250669d414d95fd653e1250413b0dfe1e7045a231ba5d4da48",
+        "mem2-base-isolated-gl.txt": "aa7b6fc7c98a56f659f60d2c4be1f725fba88578fef1bc4fcc2e793c2998863d"
+      }
+    }
+  },
+  "additional_standard_full_failures": [
+    "tests.gui.front.test_git_scale_ui::test_scrolling_a_long_history"
+  ],
+  "source_sha256": {
+    "src/aconsole/ui/bootstrap.py": "a09e232f285bec5a492235376bb82200917e7798aa99658ba7f0e505206ca23a",
+    "src/aconsole/ui/views/window.py": "fed49b4d1c15850440027caa4e4cc377f2c5f2cbc97a0f7f176b73fa4c9f7a5c",
+    "tests/gui/front/test_bootstrap_lifecycle.py": "df2e64f10a057658d7077cc7f054f827ace31a3fbf79ebbf0c76902e6a57f875",
+    "tests/gui/front/test_window_badge_lifecycle.py": "71c82f828f8a746e0f2a2a874e36486ce36794a97ae507027e4c0e06384f0d36",
+    "tests/gui/front/test_git_scale_ui.py": "c9455d75de02cde25f09cbc4f9e423d3e66a0a583c51f50ebac7eb9789634c4c"
+  }
+}
