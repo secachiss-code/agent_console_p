@@ -1,0 +1,114 @@
+{
+  "lifecycle-full": {
+    "events_by_stage": {
+      "setup": 474,
+      "teardown": 474
+    },
+    "windows_before_scale": 61,
+    "mapped_before_scale": 52,
+    "mapped_applications_before_scale": {
+      "io.github.aconsole.GitPaneTest": 9,
+      "io.github.aconsole.ReviewTest": 2,
+      "io.github.aconsole.B7DialogTest": 2,
+      "io.github.aconsole.B5aPageTest": 1,
+      "io.github.aconsole.B4bQuotaTest": 2,
+      "io.github.aconsole.B2MenuTest": 1,
+      "io.github.aconsole.B10ViewsTest": 10,
+      "io.github.aconsole.AConsole": 9,
+      "io.github.aconsole.ApprovalTest": 16
+    },
+    "fds_before_scale": 227,
+    "threads_before_scale": 125,
+    "windows_at_end": 83,
+    "maximum_windows": 83,
+    "scale": "git scale: 10000 rows, 124 frames in 4 s, median 32.8 ms, p95 47.4 ms, worst 88.1 ms, RSS 685 MB (start 660, first page 661, all rows 685 after 3.4 s)",
+    "passed": 468,
+    "failures": [
+      "tests.gui.front.test_approval_alerts::test_the_window_rings_withdraws_and_a_click_opens_the_tab[waiting]",
+      "tests.gui.front.test_des3_visual::test_native_widgets_match_reviewed_baselines[light-1280-light]",
+      "tests.gui.front.test_des3_visual::test_native_widgets_match_reviewed_baselines[dark-1280-dark]",
+      "tests.gui.front.test_des3_visual::test_native_widgets_match_reviewed_baselines[light-700-narrow]",
+      "tests.gui.front.test_git_scale_ui::test_scrolling_a_long_history",
+      "tests.gui.front.test_preferences_drafts::test_closing_dirty_preferences_can_cancel_or_discard"
+    ],
+    "errors": 0,
+    "skipped": 0,
+    "renderer": "GskNglRenderer",
+    "gtk_version": [
+      4,
+      14,
+      5
+    ],
+    "load_before": [
+      3.16455078125,
+      2.32958984375,
+      1.5244140625
+    ],
+    "load_after": [
+      3.13916015625,
+      2.35205078125,
+      1.541015625
+    ],
+    "evidence_sha256": {
+      "lifecycle-full-lifecycle.jsonl.gz": "b44f384092156594ecc3fee35fcdf4caeeeb9a6995f5fac1d42aee82915f31e8",
+      "lifecycle-full.jsonl": "f9e755431ad8e2c1b1c82f67a6e57e9b146c3da63bea066eb9ed93eb60b9b802",
+      "lifecycle-full.xml": "e9cb2590a47e4d9feca8fd77ec1ccb01828ff3bcbe0f2d197c5ba086dc0919e5",
+      "lifecycle-full-scale.txt": "618807ef5ff4bc2be4d2be6943f215529064cae6e376299addf4eba79bf9eab7",
+      "lifecycle-full-gl.txt": "aa7b6fc7c98a56f659f60d2c4be1f725fba88578fef1bc4fcc2e793c2998863d"
+    }
+  },
+  "lifecycle-destroy-full": {
+    "events_by_stage": {
+      "setup": 474,
+      "teardown": 474,
+      "destroyed": 474
+    },
+    "windows_before_scale": 0,
+    "mapped_before_scale": 0,
+    "mapped_applications_before_scale": {},
+    "fds_before_scale": 227,
+    "threads_before_scale": 11,
+    "windows_at_end": 0,
+    "maximum_windows": 1,
+    "scale": "git scale: 10000 rows, 180 frames in 4 s, median 16.9 ms, p95 35.2 ms, worst 50.6 ms, RSS 586 MB (start 574, first page 574, all rows 586 after 3.4 s)",
+    "passed": 463,
+    "failures": [
+      "tests.gui.front.test_approval_alerts::test_the_window_rings_withdraws_and_a_click_opens_the_tab[waiting]",
+      "tests.gui.front.test_b0_window::test_sidebar_lists_demo_tabs[700-True]",
+      "tests.gui.front.test_b0_window::test_collapsed_sidebar_button_opens_and_closes_sidebar",
+      "tests.gui.front.test_b0_window::test_system_title_buttons_keep_clear_header_space[700-True-left]",
+      "tests.gui.front.test_b0_window::test_system_title_buttons_keep_clear_header_space[700-True-right]",
+      "tests.gui.front.test_b0_window::test_system_title_buttons_keep_clear_header_space[700-True-both]",
+      "tests.gui.front.test_b1_keys::test_b1_keys_narrow_window",
+      "tests.gui.front.test_des3_visual::test_native_widgets_match_reviewed_baselines[light-1280-light]",
+      "tests.gui.front.test_des3_visual::test_native_widgets_match_reviewed_baselines[dark-1280-dark]",
+      "tests.gui.front.test_des3_visual::test_native_widgets_match_reviewed_baselines[light-700-narrow]",
+      "tests.gui.front.test_preferences_drafts::test_closing_dirty_preferences_can_cancel_or_discard"
+    ],
+    "errors": 0,
+    "skipped": 0,
+    "renderer": "GskNglRenderer",
+    "gtk_version": [
+      4,
+      14,
+      5
+    ],
+    "load_before": [
+      4.3623046875,
+      3.35791015625,
+      2.1259765625
+    ],
+    "load_after": [
+      4.15869140625,
+      3.34619140625,
+      2.13525390625
+    ],
+    "evidence_sha256": {
+      "lifecycle-destroy-full-lifecycle.jsonl.gz": "1980e9bc1ab3f58835c3223243540c508193bc6213e4752fe97c1746ce034e8f",
+      "lifecycle-destroy-full.jsonl": "3bbcc5d2827e348d3a2c08e4edda58ad8e98fbad2b20d7ee2b28a377227f835e",
+      "lifecycle-destroy-full.xml": "2dea3a625259af303d636c963d966ac216d7e51cd7d0aeb9c73ed837ea542636",
+      "lifecycle-destroy-full-scale.txt": "8c780122c544d7a8a362c6123e76e982a9bcb7a9a46c9687af58c2343ad3497c",
+      "lifecycle-destroy-full-gl.txt": "aa7b6fc7c98a56f659f60d2c4be1f725fba88578fef1bc4fcc2e793c2998863d"
+    }
+  }
+}

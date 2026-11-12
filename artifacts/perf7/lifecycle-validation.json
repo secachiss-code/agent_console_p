@@ -1,0 +1,19 @@
+{
+  "base": "11aec835a7247c1e7203f779b598aa9a564cc2ce",
+  "product_and_benchmark_unchanged": true,
+  "sources_sha256": {
+    "src/aconsole/ui/views/review/git_pane.py": "6e000cb1d3f87766bc668ce1421f80775faf508c502ee69e77fad7d049f108a8",
+    "src/aconsole/ui/views/review/graph_cell.py": "56038137006acf77a99907152a35fbf6cf183e6724f4c41e221656b657cb65dc",
+    "src/aconsole/ui/style/style.css": "0bf53041e9a928b2281f9cb7fa75f30b8c36f8cdda0783f97fd65627a7467290",
+    "tests/gui/front/test_git_scale_ui.py": "c9455d75de02cde25f09cbc4f9e423d3e66a0a583c51f50ebac7eb9789634c4c",
+    "tests/gui/front/test_git_pane.py": "ce77ba2fd975e843307c5b6a816da6560b4e7d450002b4f75ffc6d5457fbe472"
+  },
+  "diagnostic_sources_sha256": {
+    "artifacts/perf7/runner.txt": "5887308b2f342f029d0534c202182d7355c15308dc0bdaf0b45f553591b05787",
+    "artifacts/perf7/measure.py": "c06e46aebd4041a9531a48e827f5818db221ba92f5e32bf6df3c12762a854d7b",
+    "artifacts/perf7/lifecycle.py": "4b4c32d808fc15d611c0dc7b63934d302418a0fa6768ed7e2d63e6053d7c002a",
+    "artifacts/perf7/analyze_lifecycle.py": "ce22fc6bf55a832d15119361f18b2ffb8ac23187c89b92c14fac14d745427e4a"
+  },
+  "verdict": "PERF-7 FAIL: baseline32.8ms;diagnostic teardown16.9ms;full suite11fail;permanent fixture QA-19 pending",
+  "baseline_instrumentation_note": "Observer/runner loaded before optional destruction branch was added; baseline command does not enable it."
+}

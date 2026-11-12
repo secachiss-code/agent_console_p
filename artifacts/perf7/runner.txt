@@ -27,10 +27,14 @@ parser.add_argument('--row-probe',choices=['static-title','static-date','no-grap
 parser.add_argument('--a11y-default',action='store_true')
 parser.add_argument('--desktop',action='store_true')
 parser.add_argument('--native-stack',action='store_true')
+parser.add_argument('--lifecycle',action='store_true')
+parser.add_argument('--destroy-windows',action='store_true')
 parser.add_argument('--prepare-gdb',action='store_true')
 options=parser.parse_args()
 if options.row_probe and (not options.scale_only or options.mode != 'isolated'):
     parser.error('--row-probe requires --scale-only and --mode isolated; diagnostics are not acceptance')
+if options.destroy_windows and not options.lifecycle:
+    parser.error('--destroy-windows requires --lifecycle; diagnostics are not acceptance')
 label=options.label or options.mode
 output=root/'artifacts/perf7'
 if options.mode=='tools':
@@ -115,6 +119,12 @@ with tempfile.TemporaryDirectory(prefix='perf7-xvfb-') as directory:
             raise SystemExit(0)
         if options.scale_only: tests=['tests/gui/front/test_git_scale_ui.py']
         plugin=['-p','measure']
+        if options.lifecycle:
+            lifecycle_log=output/(label+'-lifecycle.jsonl')
+            lifecycle_log.write_text('')
+            env['ACONSOLE_PERF7_LIFECYCLE']=str(lifecycle_log)
+            plugin.extend(['-p','lifecycle'])
+            if options.destroy_windows: env['ACONSOLE_PERF7_DESTROY_WINDOWS']='1'
         command=[sys.executable,'-m','pytest','-o','addopts=','-q',*plugin,'--junitxml='+str(output/(label+'.xml')),*tests]
         sampler_stop=threading.Event()
         sampler_thread=None
