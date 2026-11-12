@@ -80,6 +80,7 @@ _LOG = logging.getLogger(__name__)
 _GIT_KEEP_S = 15
 _ISLAND_MARGIN = 8
 _TAB_ARRIVAL_MS = 200
+_APPROVAL_OPENING_MS = 500
 _BANNER_HEIGHT = 48
 
 if TYPE_CHECKING:
@@ -333,6 +334,8 @@ class MainWindow(Adw.ApplicationWindow):
 
     def _dispose_terminals(self, _widget: Gtk.Widget) -> None:
         self._terminals_disposed = True
+        self._cancel_approval_opening()
+        self._approval_ready = False
         if self._git_badge_timer is not None:
             _ = GLib.source_remove(self._git_badge_timer)
             self._git_badge_timer = None
@@ -773,6 +776,8 @@ class MainWindow(Adw.ApplicationWindow):
         return True
 
     def _install_approvals(self, content: Adw.ToolbarView) -> None:
+        self._approval_opening_timer: int | None = None
+        self._approval_ready: bool = False
         self.approval_panel: ApprovalPanel = ApprovalPanel(
             ApprovalsViewModel(self.tabs.client),
             on_toast=self._tab_error,
@@ -784,6 +789,8 @@ class MainWindow(Adw.ApplicationWindow):
         self.approvals_overlay.add_overlay(self.approval_panel)
         _ = self.approvals_overlay.connect("get-child-position", place_at_bottom)
         self.approval_alerts: ApprovalAlerts = ApprovalAlerts(self._post_alert, self._withdraw_alert)
+        _ = self.connect("map", self._approval_mapped)
+        _ = self.connect("unmap", self._approval_unmapped)
         _ = self.connect("notify::is-active", self._activity_changed)
         self._connection_unsubscribe: Callable[[], None] = self.tabs.client.store.subscribe_connection(
             self._connection_changed,
@@ -840,8 +847,7 @@ class MainWindow(Adw.ApplicationWindow):
                 titles,
                 TabId(str(selected.tab_id)) if isinstance(selected, TabItem) else None,
             )
-            if not self._snapshot_mode and self.get_mapped():
-                # Before mapping there is no user-visible selection to notify about.
+            if not self._snapshot_mode and self.get_mapped() and self._approval_ready:
                 self.approval_alerts.update(
                     snapshot.approvals, titles, window_active=self.is_active(),
                     notify_when="unfocused" if self._terminal_settings is None else self._terminal_settings.notify_when,
@@ -849,7 +855,38 @@ class MainWindow(Adw.ApplicationWindow):
                 )
 
     def _activity_changed(self, _object: object, _property: object) -> None:
+        if self.get_mapped() and self.is_active() and not self._terminals_disposed:
+            self._cancel_approval_opening()
+            self._approval_ready = True
         self._sync_approvals(self.tabs.client.store)
+
+    def _approval_mapped(self, _widget: Gtk.Widget) -> None:
+        if self._snapshot_mode or self._terminals_disposed:
+            return
+        self._cancel_approval_opening()
+        self._approval_ready = self.is_active()
+        if self._approval_ready:
+            self._sync_approvals(self.tabs.client.store)
+        else:
+            # Mapping precedes the WM's initial focus event. Bound the wait so a
+            # window opened in the background still notifies without store updates.
+            self._approval_opening_timer = GLib.timeout_add(_APPROVAL_OPENING_MS, self._approval_opened)
+
+    def _approval_opened(self) -> bool:
+        self._approval_opening_timer = None
+        if self.get_mapped() and not self._terminals_disposed:
+            self._approval_ready = True
+            self._sync_approvals(self.tabs.client.store)
+        return GLib.SOURCE_REMOVE
+
+    def _approval_unmapped(self, _widget: Gtk.Widget) -> None:
+        self._cancel_approval_opening()
+        self._approval_ready = False
+
+    def _cancel_approval_opening(self) -> None:
+        if self._approval_opening_timer is not None:
+            _ = GLib.source_remove(self._approval_opening_timer)
+            self._approval_opening_timer = None
 
     def _post_alert(self, alert: Alert) -> None:
         app = self.get_application()

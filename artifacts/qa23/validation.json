@@ -1,0 +1,44 @@
+{
+  "base": "d0ce1d87a5d1c5d6aac0d6ba0719f65093392725",
+  "results": {
+    "native-green": {
+      "total": 20,
+      "failed": [
+        "test_opening_waits_for_focus_but_background_requests_still_ring[waiting-focus]",
+        "test_opening_waits_for_focus_but_background_requests_still_ring[waiting-destroy]"
+      ]
+    },
+    "native-green-2": {
+      "total": 21,
+      "failed": []
+    },
+    "desktop-selection": {
+      "total": 56,
+      "failed": [
+        "test_sidebar_lists_demo_tabs[700-True]",
+        "test_collapsed_sidebar_button_opens_and_closes_sidebar",
+        "test_system_title_buttons_keep_clear_header_space[700-True-left]",
+        "test_system_title_buttons_keep_clear_header_space[700-True-right]",
+        "test_system_title_buttons_keep_clear_header_space[700-True-both]",
+        "test_b1_keys_narrow_window",
+        "test_native_widgets_match_reviewed_baselines[light-1280-light]",
+        "test_native_widgets_match_reviewed_baselines[dark-1280-dark]",
+        "test_native_widgets_match_reviewed_baselines[light-700-narrow]"
+      ]
+    },
+    "native-final": {
+      "total": 22,
+      "failed": []
+    }
+  },
+  "hashes": {
+    "src/aconsole/ui/views/window.py": "4c7d276edcbf20ee4c1af5fde7d4b45219b79cd0eaebbee98fdbe303a22e492a",
+    "tests/gui/front/test_approval_alerts.py": "c8ad10c4f570ed32e315b670636a25bc8f90f8e9cc374951efdd742728c63349",
+    "artifacts/qa23/ui/window-dark.png": "ab6119e4b2f627b98b70823d88f18e6be7d4d6e47689cad4e622ae486405924c",
+    "artifacts/qa23/ui/window-light.png": "c3806b236632456899a19d733671783de9dba43b389a36181b1f4883efc76562",
+    "artifacts/qa23/ui/window-narrow.png": "4ed3471e43d269a150c4ddc417387f08d0035a1689d755e7b3bb262dbd8a1bbe"
+  },
+  "qa4_accepted": false,
+  "performance_accepted": false,
+  "security_accepted": false
+}

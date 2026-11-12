@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="2" skipped="0" tests="20" time="8.208" timestamp="2026-11-12T22:29:55.486151+03:00" hostname="somovasnbook14"><testcase classname="tests.gui.front.test_approval_alerts" name="test_a_request_in_an_inactive_window_rings_once_with_the_tab" time="0.003" /><testcase classname="tests.gui.front.test_approval_alerts" name="test_an_active_window_does_not_ring" time="0.001" /><testcase classname="tests.gui.front.test_approval_alerts" name="test_notification_policy_always_never_and_live_change" time="0.001" /><testcase classname="tests.gui.front.test_approval_alerts" name="test_an_inactive_tab_rings_in_an_active_window" time="0.001" /><testcase classname="tests.gui.front.test_approval_alerts" name="test_switching_to_a_notified_tab_withdraws_without_repeating_its_episode" time="0.001" /><testcase classname="tests.gui.front.test_approval_alerts" name="test_an_active_window_without_a_selected_tab_does_not_hide_requests" time="0.001" /><testcase classname="tests.gui.front.test_approval_alerts" name="test_a_decision_withdraws_and_the_next_request_is_a_new_episode" time="0.001" /><testcase classname="tests.gui.front.test_approval_alerts" name="test_coming_back_withdraws_and_leaving_again_does_not_ring_again" time="0.001" /><testcase classname="tests.gui.front.test_approval_alerts" name="test_leaving_a_window_with_an_open_request_rings_once" time="0.001" /><testcase classname="tests.gui.front.test_approval_alerts" name="test_each_tab_has_its_own_episode_and_only_the_decided_one_goes" time="0.001" /><testcase classname="tests.gui.front.test_approval_alerts" name="test_a_tab_title_that_is_unknown_still_rings" time="0.001" /><testcase classname="tests.gui.front.test_approval_alerts" name="test_a_closing_window_takes_its_notifications_along" time="0.001" /><testcase classname="tests.gui.front.test_approval_alerts" name="test_the_notification_does_not_show_the_command" time="0.004" /><testcase classname="tests.gui.front.test_approval_alerts" name="test_the_window_rings_withdraws_and_a_click_opens_the_tab[waiting]" time="2.656" /><testcase classname="tests.gui.front.test_approval_alerts" name="test_opening_waits_for_focus_but_background_requests_still_ring[waiting-focus]" time="0.668"><failure message="AssertionError: assert ['approval-01...0000000101-1'] == []&#10;  &#10;  Left contains one more item: 'approval-01JB2Z00000000000000000101-1'&#10;  Use -v to get more diff">core = '/tmp/aconsole-gui-f8nmwbn8/core.sock', case = 'focus'
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7a601df35d30&gt;
+
+    @pytest.mark.parametrize("case", ["focus", "unfocused", "resolved", "unmap", "destroy", "remap"])
+    @pytest.mark.parametrize("core", ["waiting"], indirect=True)
+    def test_opening_waits_for_focus_but_background_requests_still_ring(
+        core: str, case: str, monkeypatch: pytest.MonkeyPatch,
+    ) -&gt; None:
+        from aconsole.ui.views.window import MainWindow
+    
+        # Hold the focus observation inactive from construction; the actual native
+        # focus/action path is covered by the unchanged test above.
+        monkeypatch.setattr(MainWindow, "is_active", lambda _window: False)
+        app = _OpeningApp(CoreClient(core), case, monkeypatch)
+        assert run_app(lambda: app, ["approval-opening-test"]) == 0
+        if app.failure is not None:
+&gt;           raise app.failure
+
+tests/gui/front/test_approval_alerts.py:330: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/gui/front/test_approval_alerts.py:197: in _open
+    await self._check(self.window)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = &lt;test_approval_alerts._OpeningApp object at 0x7a601df25b00 (tests+gui+front+test_approval_alerts+_OpeningApp at 0x34f87db0)&gt;
+window = &lt;window.MainWindow object at 0x7a604ca1d3c0 (aconsole+ui+views+window+MainWindow at 0x3551f8c0)&gt;
+
+    async def _check(self, window: MainWindow) -&gt; None:
+        store = window.tabs.client.store
+        snapshot = store.snapshot
+        assert snapshot is not None
+        await asyncio.sleep(0.12)
+        assert window.get_mapped()
+&gt;       assert self.sent == []
+E       AssertionError: assert ['approval-01...0000000101-1'] == []
+E         
+E         Left contains one more item: 'approval-01JB2Z00000000000000000101-1'
+E         Use -v to get more diff
+
+tests/gui/front/test_approval_alerts.py:277: AssertionError</failure></testcase><testcase classname="tests.gui.front.test_approval_alerts" name="test_opening_waits_for_focus_but_background_requests_still_ring[waiting-unfocused]" time="0.821" /><testcase classname="tests.gui.front.test_approval_alerts" name="test_opening_waits_for_focus_but_background_requests_still_ring[waiting-resolved]" time="0.881" /><testcase classname="tests.gui.front.test_approval_alerts" name="test_opening_waits_for_focus_but_background_requests_still_ring[waiting-unmap]" time="0.850" /><testcase classname="tests.gui.front.test_approval_alerts" name="test_opening_waits_for_focus_but_background_requests_still_ring[waiting-destroy]" time="0.300"><failure message="asyncio.exceptions.CancelledError">core = '/tmp/aconsole-gui-1rcsx17i/core.sock', case = 'destroy'
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7a601df22d50&gt;
+
+    @pytest.mark.parametrize("case", ["focus", "unfocused", "resolved", "unmap", "destroy", "remap"])
+    @pytest.mark.parametrize("core", ["waiting"], indirect=True)
+    def test_opening_waits_for_focus_but_background_requests_still_ring(
+        core: str, case: str, monkeypatch: pytest.MonkeyPatch,
+    ) -&gt; None:
+        from aconsole.ui.views.window import MainWindow
+    
+        # Hold the focus observation inactive from construction; the actual native
+        # focus/action path is covered by the unchanged test above.
+        monkeypatch.setattr(MainWindow, "is_active", lambda _window: False)
+        app = _OpeningApp(CoreClient(core), case, monkeypatch)
+        assert run_app(lambda: app, ["approval-opening-test"]) == 0
+        if app.failure is not None:
+&gt;           raise app.failure
+
+tests/gui/front/test_approval_alerts.py:330: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/gui/front/test_approval_alerts.py:197: in _open
+    await self._check(self.window)
+tests/gui/front/test_approval_alerts.py:296: in _check
+    await asyncio.sleep(0.55)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+delay = 0.55, result = None
+
+    async def sleep(delay, result=None):
+        """Coroutine that completes after a given time (in seconds)."""
+        if delay &lt;= 0:
+            await __sleep0()
+            return result
+    
+        if math.isnan(delay):
+            raise ValueError("Invalid delay: NaN (not a number)")
+    
+        loop = events.get_running_loop()
+        future = loop.create_future()
+        h = loop.call_later(delay,
+                            futures._set_result_unless_cancelled,
+                            future, result)
+        try:
+&gt;           return await future
+                   ^^^^^^^^^^^^
+E           asyncio.exceptions.CancelledError
+
+../../../../uv/python/cpython-3.15.1-linux-x86_64-gnu/lib/python3.15/asyncio/tasks.py:725: CancelledError</failure></testcase><testcase classname="tests.gui.front.test_approval_alerts" name="test_opening_waits_for_focus_but_background_requests_still_ring[waiting-remap]" time="1.612" /></testsuite></testsuites>
