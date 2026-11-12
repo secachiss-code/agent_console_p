@@ -28,6 +28,7 @@ parser.add_argument('--a11y-default',action='store_true')
 parser.add_argument('--desktop',action='store_true')
 parser.add_argument('--native-stack',action='store_true')
 parser.add_argument('--lifecycle',action='store_true')
+parser.add_argument('--sources',action='store_true')
 parser.add_argument('--destroy-windows',action='store_true')
 parser.add_argument('--prepare-gdb',action='store_true')
 options=parser.parse_args()
@@ -119,6 +120,9 @@ with tempfile.TemporaryDirectory(prefix='perf7-xvfb-') as directory:
             raise SystemExit(0)
         if options.scale_only: tests=['tests/gui/front/test_git_scale_ui.py']
         plugin=['-p','measure']
+        if options.sources:
+            env['ACONSOLE_PERF7_SOURCES']=str(output/(label+'-sources.jsonl'))
+            plugin.extend(['-p','sources'])
         if options.lifecycle:
             lifecycle_log=output/(label+'-lifecycle.jsonl')
             lifecycle_log.write_text('')

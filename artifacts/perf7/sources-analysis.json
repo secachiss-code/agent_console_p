@@ -1,0 +1,1805 @@
+{
+  "sources-full": {
+    "snapshots": 952,
+    "late_dispatches": 52,
+    "late_by_callback": {
+      "tests.gui.front.test_approval_alerts._WindowApp._expired": 1,
+      "tests.gui.front.test_approval_panel._on_panel.<locals>._App._expired": 16,
+      "tests.gui.front.test_approval_panel._WindowApp._expired": 2,
+      "aconsole.ui.views.window.MainWindow._keep_git_badges": 12,
+      "tests.gui.front.test_review_page._on_page.<locals>._App._expired": 10,
+      "tests.gui.front.test_git_pane._on_pane.<locals>._App._expired": 11
+    },
+    "late_dispatches_during_scale": 5,
+    "late_callbacks_during_scale": {
+      "tests.gui.front.test_git_pane._on_pane.<locals>._App._expired": 4,
+      "aconsole.ui.views.window.MainWindow._keep_git_badges": 1
+    },
+    "sources_before_scale": [
+      {
+        "owner": "tests/gui/front/test_b10_views.py::test_window_shows_connection_loss_and_recovers_controls",
+        "kind": "timeout_add_seconds",
+        "callback": "aconsole.ui.views.window.MainWindow._keep_git_badges",
+        "interval": 15,
+        "created": 3600.116336562,
+        "calls": 3,
+        "late_calls": 3,
+        "cpu_ns": 347879,
+        "id": 1818
+      },
+      {
+        "owner": "tests/gui/front/test_b5a_page.py::test_b5a_disposed_window_ignores_later_store_and_selection_updates",
+        "kind": "timeout_add_seconds",
+        "callback": "aconsole.ui.views.window.MainWindow._keep_git_badges",
+        "interval": 15,
+        "created": 3610.398328419,
+        "calls": 3,
+        "late_calls": 3,
+        "cpu_ns": 342615,
+        "id": 3544
+      },
+      {
+        "owner": "tests/gui/front/test_git_actions.py::test_merge_removes_the_worktree_unless_told_not_to",
+        "kind": "timeout_add",
+        "callback": "tests.gui.front.test_git_pane._on_pane.<locals>._App._expired",
+        "interval": 30000,
+        "created": 3626.667930016,
+        "calls": 0,
+        "late_calls": 0,
+        "cpu_ns": 0,
+        "id": 4722
+      },
+      {
+        "owner": "tests/gui/front/test_git_actions.py::test_a_conflicted_rebase_offers_abort_and_a_stale_commit_is_refused",
+        "kind": "timeout_add",
+        "callback": "tests.gui.front.test_git_pane._on_pane.<locals>._App._expired",
+        "interval": 30000,
+        "created": 3631.025767553,
+        "calls": 0,
+        "late_calls": 0,
+        "cpu_ns": 0,
+        "id": 4864
+      },
+      {
+        "owner": "tests/gui/front/test_git_actions.py::test_restore_a_file_from_a_commit",
+        "kind": "timeout_add",
+        "callback": "tests.gui.front.test_git_pane._on_pane.<locals>._App._expired",
+        "interval": 30000,
+        "created": 3634.944827665,
+        "calls": 0,
+        "late_calls": 0,
+        "cpu_ns": 0,
+        "id": 4943
+      },
+      {
+        "owner": "tests/gui/front/test_git_actions.py::test_the_facts_banner_shows_what_the_core_found",
+        "kind": "timeout_add",
+        "callback": "tests.gui.front.test_git_pane._on_pane.<locals>._App._expired",
+        "interval": 30000,
+        "created": 3638.547887038,
+        "calls": 0,
+        "late_calls": 0,
+        "cpu_ns": 0,
+        "id": 4992
+      },
+      {
+        "owner": "tests/gui/front/test_git_history_keyboard.py::test_native_history_keys_update_selection_and_inspector",
+        "kind": "timeout_add",
+        "callback": "tests.gui.front.test_git_pane._on_pane.<locals>._App._expired",
+        "interval": 30000,
+        "created": 3642.09963476,
+        "calls": 0,
+        "late_calls": 0,
+        "cpu_ns": 0,
+        "id": 5022
+      },
+      {
+        "owner": "tests/gui/front/test_git_pane.py::test_graph_rows_and_inspector_on_a_real_repository",
+        "kind": "timeout_add",
+        "callback": "tests.gui.front.test_git_pane._on_pane.<locals>._App._expired",
+        "interval": 30000,
+        "created": 3645.743976633,
+        "calls": 0,
+        "late_calls": 0,
+        "cpu_ns": 0,
+        "id": 5079
+      },
+      {
+        "owner": "tests/gui/front/test_git_pane.py::test_long_history_loads_in_pages",
+        "kind": "timeout_add",
+        "callback": "tests.gui.front.test_git_pane._on_pane.<locals>._App._expired",
+        "interval": 30000,
+        "created": 3649.548781512,
+        "calls": 0,
+        "late_calls": 0,
+        "cpu_ns": 0,
+        "id": 5160
+      },
+      {
+        "owner": "tests/gui/front/test_git_scale_ui.py::test_a_narrow_page_puts_the_inspector_under_the_graph",
+        "kind": "timeout_add",
+        "callback": "tests.gui.front.test_git_pane._on_pane.<locals>._App._expired",
+        "interval": 30000,
+        "created": 3653.169739728,
+        "calls": 0,
+        "late_calls": 0,
+        "cpu_ns": 0,
+        "id": 5190
+      }
+    ],
+    "tasks_before_scale": [
+      {
+        "coroutine": "GitPane._load_file",
+        "done": false,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "TerminalPage._observe",
+        "done": false,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_on_panel.<locals>._App._run",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_SectionsTestApp._run_scenario",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "TerminalPage._observe",
+        "done": false,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "AConsoleApp._finish",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "MainWindow._refresh_settings",
+        "done": false,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "GitPane._load_files",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "TerminalPage._observe",
+        "done": false,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "TerminalSession._run",
+        "done": false,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "MainWindow._load_git_badges",
+        "done": false,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "HealthDialog.refresh",
+        "done": false,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "MainWindow._report_focus",
+        "done": false,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "MainWindow._load_git_badges",
+        "done": false,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "TerminalSession._run",
+        "done": false,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_PageTestApp._run_scenario",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "AConsoleApp._finish",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "AConsoleApp._finish",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_ClipboardApp._open",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_ViewTestApp._run_scenario",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "MainWindow._refresh_settings",
+        "done": false,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "TerminalPage._observe",
+        "done": false,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_on_panel.<locals>._App._run",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_SectionsTestApp._run_scenario",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "MainWindow._report_focus",
+        "done": false,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "MainWindow._load_git_badges",
+        "done": false,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "MainWindow._load_git_badges",
+        "done": false,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "TerminalSession._run",
+        "done": false,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "MainWindow._load_git_badges",
+        "done": false,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "TerminalPage._observe",
+        "done": false,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_PageTestApp._run_scenario",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_ViewTestApp._run_scenario",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_StatusTestApp._run_scenario",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_on_panel.<locals>._App._run",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "TerminalSession._run",
+        "done": false,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "AConsoleApp._finish",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_TabsTestApp._run_scenario",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_ClipboardApp._open",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_on_panel.<locals>._App._run",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "AConsoleApp._finish",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_on_panel.<locals>._App._run",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_DndTestApp._run_scenario",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_TabsTestApp._run_scenario",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_PaletteTestApp._run_scenario",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_on_panel.<locals>._App._run",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_TabsTestApp._run_scenario",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_TabsTestApp._run_scenario",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_PaletteTestApp._run_scenario",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_on_panel.<locals>._App._run",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "AConsoleApp._finish",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "MainWindow._refresh_settings",
+        "done": false,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "TerminalSession._run",
+        "done": false,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "GitPane._load_files",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "MainWindow._refresh_settings",
+        "done": false,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_MenuTestApp._run_scenario",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_TabsTestApp._run_scenario",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_ClipboardApp._open",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "AConsoleApp._open",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "AConsoleApp._finish",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "TerminalPage._observe",
+        "done": false,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_TabsTestApp._run_scenario",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "TerminalPage._observe",
+        "done": false,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "TerminalSession._run",
+        "done": false,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_on_pane.<locals>._App._run",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_ViewTestApp._run_scenario",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_TabsTestApp._run_scenario",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "TerminalSession._run",
+        "done": false,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_on_panel.<locals>._App._run",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "TerminalPage._observe",
+        "done": false,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_MenuTestApp._run_scenario",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_ClipboardApp._open",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_TabsTestApp._run_scenario",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_on_pane.<locals>._App._run",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "AConsoleApp._finish",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_QuotaTestApp._run_scenario",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "GitPane._load_files",
+        "done": false,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_ViewTestApp._run_scenario",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_PageTestApp._run_scenario",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "GitPane.refresh",
+        "done": false,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_on_pane.<locals>._App._run",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_ViewTestApp._run_scenario",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_PageTestApp._run_scenario",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "MainWindow._report_focus",
+        "done": false,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_run_vte_probe",
+        "done": true,
+        "loop_closed": true
+      },
+      {
+        "coroutine": "_on_panel.<locals>._App._run",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "TerminalSession._run",
+        "done": false,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_on_pane.<locals>._App._run",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_ViewTestApp._run_scenario",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "TerminalSession._run",
+        "done": false,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_PaletteTestApp._run_scenario",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "TerminalPage._observe",
+        "done": false,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_QuotaTestApp._run_scenario",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_on_pane.<locals>._App._run",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_ViewTestApp._run_scenario",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_run_vte_probe",
+        "done": true,
+        "loop_closed": true
+      },
+      {
+        "coroutine": "TerminalSession._run",
+        "done": false,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "GitPane._load_file",
+        "done": false,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_on_page.<locals>._App._run",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "TerminalSession._run",
+        "done": false,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_ViewTestApp._run_scenario",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_MenuTestApp._run_scenario",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_on_panel.<locals>._App._run",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_ClipboardApp._open",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "GitActions._guarded",
+        "done": false,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "TerminalPage._observe",
+        "done": false,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "AConsoleApp._finish",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "TerminalPage._observe",
+        "done": false,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_TabsTestApp._run_scenario",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "TerminalPage._observe",
+        "done": false,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "TerminalPage._observe",
+        "done": false,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_PageTestApp._run_scenario",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_on_panel.<locals>._App._run",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "AConsoleApp._finish",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_on_pane.<locals>._App._run",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_on_panel.<locals>._App._run",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_ViewTestApp._run_scenario",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "TerminalSession._run",
+        "done": false,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_on_pane.<locals>._App._run",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "AConsoleApp._finish",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_on_pane.<locals>._App._run",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_ViewTestApp._run_scenario",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_MenuTestApp._run_scenario",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_on_pane.<locals>._App._run",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_ViewTestApp._run_scenario",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "TerminalPage._observe",
+        "done": false,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "AConsoleApp._finish",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_on_panel.<locals>._App._run",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "AConsoleApp._finish",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "MainWindow._load_git_badges",
+        "done": false,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "MainWindow._report_focus",
+        "done": false,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_on_page.<locals>._App._run",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_on_panel.<locals>._App._run",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_TabsTestApp._run_scenario",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "MainWindow._refresh_settings",
+        "done": false,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "AConsoleApp._finish",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "TerminalPage._observe",
+        "done": false,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "GitPane.refresh",
+        "done": false,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_MenuTestApp._run_scenario",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "TerminalPage._observe",
+        "done": false,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_ClipboardApp._open",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_on_panel.<locals>._App._run",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "AConsoleApp._finish",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_on_panel.<locals>._App._run",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "AConsoleApp._finish",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_PageTestApp._run_scenario",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "GitPane.refresh",
+        "done": true,
+        "loop_closed": false
+      }
+    ],
+    "sources_at_end": [
+      {
+        "owner": "tests/gui/front/test_b10_views.py::test_window_shows_connection_loss_and_recovers_controls",
+        "kind": "timeout_add_seconds",
+        "callback": "aconsole.ui.views.window.MainWindow._keep_git_badges",
+        "interval": 15,
+        "created": 3600.116336562,
+        "calls": 6,
+        "late_calls": 6,
+        "cpu_ns": 573428,
+        "id": 1818
+      },
+      {
+        "owner": "tests/gui/front/test_b5a_page.py::test_b5a_disposed_window_ignores_later_store_and_selection_updates",
+        "kind": "timeout_add_seconds",
+        "callback": "aconsole.ui.views.window.MainWindow._keep_git_badges",
+        "interval": 15,
+        "created": 3610.398328419,
+        "calls": 6,
+        "late_calls": 6,
+        "cpu_ns": 507846,
+        "id": 3544
+      },
+      {
+        "owner": "tests/gui/front/test_work_sessions.py::test_session_picker_rename_archive_and_resume",
+        "kind": "timeout_add",
+        "callback": "tests.gui.front.test_git_pane._on_pane.<locals>._App._expired",
+        "interval": 30000,
+        "created": 3710.016992702,
+        "calls": 0,
+        "late_calls": 0,
+        "cpu_ns": 0,
+        "id": 6629
+      }
+    ],
+    "tasks_at_end": [
+      {
+        "coroutine": "GitPane._load_file",
+        "done": false,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "TerminalPage._observe",
+        "done": false,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_on_panel.<locals>._App._run",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_SectionsTestApp._run_scenario",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "TerminalPage._observe",
+        "done": false,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_ViewTestApp._run_scenario",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_on_page.<locals>._App._run",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "AConsoleApp._finish",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "MainWindow._refresh_settings",
+        "done": false,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "GitPane._load_files",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "TerminalPage._observe",
+        "done": false,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "TerminalSession._run",
+        "done": false,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "MainWindow._load_git_badges",
+        "done": false,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "HealthDialog.refresh",
+        "done": false,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "MainWindow._report_focus",
+        "done": false,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_TabsTestApp._run_scenario",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "MainWindow._load_git_badges",
+        "done": false,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "TerminalSession._run",
+        "done": false,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_PageTestApp._run_scenario",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "AConsoleApp._finish",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "AConsoleApp._finish",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_ClipboardApp._open",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "TerminalPage._observe",
+        "done": false,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_ViewTestApp._run_scenario",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "MainWindow._refresh_settings",
+        "done": false,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_ViewTestApp._run_scenario",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "TerminalPage._observe",
+        "done": false,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_TabsTestApp._run_scenario",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_on_panel.<locals>._App._run",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_SectionsTestApp._run_scenario",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "MainWindow._report_focus",
+        "done": false,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "MainWindow._load_git_badges",
+        "done": false,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "MainWindow._load_git_badges",
+        "done": false,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "TerminalSession._run",
+        "done": false,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "MainWindow._load_git_badges",
+        "done": false,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "TerminalPage._observe",
+        "done": false,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_PageTestApp._run_scenario",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_on_page.<locals>._App._run",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_ViewTestApp._run_scenario",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_StatusTestApp._run_scenario",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_on_panel.<locals>._App._run",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "TerminalSession._run",
+        "done": false,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "AConsoleApp._finish",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_TabsTestApp._run_scenario",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_ClipboardApp._open",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_on_page.<locals>._App._run",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_on_panel.<locals>._App._run",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "AConsoleApp._finish",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_on_panel.<locals>._App._run",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_DndTestApp._run_scenario",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_TabsTestApp._run_scenario",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_TabsTestApp._run_scenario",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_TabsTestApp._run_scenario",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_PaletteTestApp._run_scenario",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_TabsTestApp._run_scenario",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_on_pane.<locals>._App._run",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "TerminalSession._run",
+        "done": false,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_on_panel.<locals>._App._run",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_TabsTestApp._run_scenario",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_TabsTestApp._run_scenario",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_PaletteTestApp._run_scenario",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_TabsTestApp._run_scenario",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_on_pane.<locals>._App._run",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_on_panel.<locals>._App._run",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "AConsoleApp._finish",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "MainWindow._refresh_settings",
+        "done": false,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "TerminalSession._run",
+        "done": false,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "GitPane._load_files",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_TabsTestApp._run_scenario",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "MainWindow._refresh_settings",
+        "done": false,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_MenuTestApp._run_scenario",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_TabsTestApp._run_scenario",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_ClipboardApp._open",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "AConsoleApp._open",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "AConsoleApp._finish",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "TerminalPage._observe",
+        "done": false,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_TabsTestApp._run_scenario",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "TerminalPage._observe",
+        "done": false,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "TerminalSession._run",
+        "done": false,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_on_pane.<locals>._App._run",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_on_page.<locals>._App._run",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_ViewTestApp._run_scenario",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_TabsTestApp._run_scenario",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "TerminalSession._run",
+        "done": false,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_on_panel.<locals>._App._run",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "TerminalPage._observe",
+        "done": false,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_MenuTestApp._run_scenario",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_ClipboardApp._open",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_TabsTestApp._run_scenario",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_TabsTestApp._run_scenario",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_TabsTestApp._run_scenario",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_on_pane.<locals>._App._run",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "AConsoleApp._finish",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_QuotaTestApp._run_scenario",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "GitPane._load_files",
+        "done": false,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_TabsTestApp._run_scenario",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_ViewTestApp._run_scenario",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_PageTestApp._run_scenario",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "GitPane.refresh",
+        "done": false,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_on_pane.<locals>._App._run",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_ViewTestApp._run_scenario",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_PageTestApp._run_scenario",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "MainWindow._report_focus",
+        "done": false,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_run_vte_probe",
+        "done": true,
+        "loop_closed": true
+      },
+      {
+        "coroutine": "NewTabDialog._load_sessions",
+        "done": false,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_on_panel.<locals>._App._run",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "TerminalSession._run",
+        "done": false,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_on_pane.<locals>._App._run",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_RealApp._open",
+        "done": false,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_ViewTestApp._run_scenario",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "TerminalSession._run",
+        "done": false,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_PaletteTestApp._run_scenario",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_TabsTestApp._run_scenario",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_RealApp._open",
+        "done": false,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "TerminalPage._observe",
+        "done": false,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_QuotaTestApp._run_scenario",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_on_pane.<locals>._App._run",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_ViewTestApp._run_scenario",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_run_vte_probe",
+        "done": true,
+        "loop_closed": true
+      },
+      {
+        "coroutine": "TerminalSession._run",
+        "done": false,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "GitPane._load_file",
+        "done": false,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_on_page.<locals>._App._run",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "MainWindow._refresh_settings",
+        "done": false,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "TerminalSession._run",
+        "done": false,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_ViewTestApp._run_scenario",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_MenuTestApp._run_scenario",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_on_panel.<locals>._App._run",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_ClipboardApp._open",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "GitActions._guarded",
+        "done": false,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "TerminalPage._observe",
+        "done": false,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "AConsoleApp._finish",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "AConsoleApp._finish",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "TerminalPage._observe",
+        "done": false,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_TabsTestApp._run_scenario",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_on_pane.<locals>._App._run",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "TerminalPage._observe",
+        "done": false,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "TerminalPage._observe",
+        "done": false,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_PageTestApp._run_scenario",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_on_panel.<locals>._App._run",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "AConsoleApp._finish",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_on_pane.<locals>._App._run",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "MainWindow._refresh_settings",
+        "done": false,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_on_panel.<locals>._App._run",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_ViewTestApp._run_scenario",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "TerminalSession._run",
+        "done": false,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_on_pane.<locals>._App._run",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "AConsoleApp._finish",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "AConsoleApp._finish",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_on_pane.<locals>._App._run",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_ViewTestApp._run_scenario",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_MenuTestApp._run_scenario",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_on_pane.<locals>._App._run",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_ViewTestApp._run_scenario",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "TerminalPage._observe",
+        "done": false,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "AConsoleApp._finish",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_on_page.<locals>._App._run",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_on_panel.<locals>._App._run",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "AConsoleApp._finish",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "MainWindow._load_git_badges",
+        "done": false,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "MainWindow._report_focus",
+        "done": false,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_on_page.<locals>._App._run",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_on_panel.<locals>._App._run",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_TabsTestApp._run_scenario",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_on_page.<locals>._App._run",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "MainWindow._refresh_settings",
+        "done": false,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_TabsTestApp._run_scenario",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_on_page.<locals>._App._run",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "AConsoleApp._finish",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "TerminalPage._observe",
+        "done": false,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "GitPane.refresh",
+        "done": false,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_MenuTestApp._run_scenario",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "TerminalPage._observe",
+        "done": false,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_ClipboardApp._open",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_on_panel.<locals>._App._run",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "AConsoleApp._finish",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_on_panel.<locals>._App._run",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "AConsoleApp._finish",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_PageTestApp._run_scenario",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "GitPane.refresh",
+        "done": true,
+        "loop_closed": false
+      },
+      {
+        "coroutine": "_on_page.<locals>._App._run",
+        "done": true,
+        "loop_closed": false
+      }
+    ],
+    "maximum_sources": 16,
+    "maximum_tasks": 180,
+    "evidence_sha256": {
+      "sources-full-sources.jsonl.gz": "cb41c598de4975c8cf7b4d7d663214c5686572dea20234ce786461220492fa56"
+    }
+  }
+}
