@@ -1,0 +1,543 @@
+Collected 0 items to run in parallel
+.............F...................FF...FFF............................... [ 15%]
+F....................................................................... [ 30%]
+..........................FFF........................................... [ 45%]
+........................F............................................... [ 60%]
+........................................................................ [ 75%]
+........................................................................ [ 90%]
+...............................................                          [100%]Task was destroyed but it is pending!
+task: <GLibTask cancelling name='Task-1178' coro=<_echo_server() done, defined at /home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/038657e1539f15ad/src/aconsole/ui/spike.py:29> wait_for=<Future cancelled>>
+
+=================================== FAILURES ===================================
+______ test_the_window_rings_withdraws_and_a_click_opens_the_tab[waiting] ______
+
+core = '/tmp/aconsole-gui-t0c5y2zm/core.sock'
+
+    @pytest.mark.parametrize("core", ["waiting"], indirect=True)
+    def test_the_window_rings_withdraws_and_a_click_opens_the_tab(core: str) -> None:
+        app = _WindowApp(CoreClient(core))
+        assert run_app(lambda: app, ["approval-alert-test"]) == 0
+        if app.failure is not None:
+>           raise app.failure
+
+tests/gui/front/test_approval_alerts.py:262: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/gui/front/test_approval_alerts.py:197: in _open
+    await self._check(self.window)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <test_approval_alerts._WindowApp object at 0x7e0cb7524cc0 (tests+gui+front+test_approval_alerts+_WindowApp at 0x31460c30)>
+window = <window.MainWindow object at 0x7e0cb769b9c0 (aconsole+ui+views+window+MainWindow at 0x3383a230)>
+
+    async def _check(self, window: MainWindow) -> None:
+        store = window.tabs.client.store
+        snapshot = store.snapshot
+        assert snapshot is not None
+        assert snapshot.approvals
+        await asyncio.sleep(0.2)
+>       assert self.sent == [], "a window that is opening must not ring"
+E       AssertionError: a window that is opening must not ring
+E       assert ['approval-01...0000000101-1'] == []
+E         
+E         Left contains one more item: 'approval-01JB2Z00000000000000000101-1'
+E         Use -v to get more diff
+
+tests/gui/front/test_approval_alerts.py:217: AssertionError
+____________________ test_sidebar_lists_demo_tabs[700-True] ____________________
+
+running_app = '/tmp/aconsole-gui-8_nynf8t/core.sock'
+tmp_path = PosixPath('/tmp/pytest-of-sas/pytest-12/test_sidebar_lists_demo_tabs_70')
+width = 700, collapsed = True
+
+    @pytest.mark.parametrize(("width", "collapsed"), [(1280, False), (700, True)])
+    def test_sidebar_lists_demo_tabs(
+        running_app: str, tmp_path: Path, width: int, *, collapsed: bool,
+    ) -> None:
+        from aconsole.ui.bootstrap import run_app
+        from aconsole.ui.client.core_client import CoreClient
+        from aconsole.ui.views.app import AConsoleApp, SnapshotRequest
+    
+        request = SnapshotRequest(view="window", theme="light", width=width, height=800, out=tmp_path / "window.png")
+        client = CoreClient(running_app)
+        app = AConsoleApp(client, request)
+        assert run_app(lambda: app, ["aconsole-test"]) == 0
+        assert not app.failed
+        assert request.out.stat().st_size > 0
+    
+        window = app.window
+        assert window is not None
+        snapshot = client.store.snapshot
+        assert snapshot is not None
+        expected = sorted(snapshot.tabs, key=lambda tab: tab.order)
+        assert len(expected) == 5
+        assert window.selection.get_n_items() == 5
+        selected = [window.selection.get_item(index) for index in range(5)]
+        assert all(item is not None for item in selected)
+        assert [item.get_property("tab-id") for item in selected if item is not None] == [
+            str(tab.id) for tab in expected
+        ]
+        assert [item.get_property("title") for item in selected if item is not None] == [
+            tab.title for tab in expected
+        ]
+>       assert window.split.get_collapsed() is collapsed
+E       assert False is True
+E        +  where False = get_collapsed()
+E        +    where get_collapsed = <Adw.OverlaySplitView object at 0x7e0cb5974bc0 (AdwOverlaySplitView at 0x3540b7f0)>.get_collapsed
+E        +      where <Adw.OverlaySplitView object at 0x7e0cb5974bc0 (AdwOverlaySplitView at 0x3540b7f0)> = <window.MainWindow object at 0x7e0cb729bc80 (aconsole+ui+views+window+MainWindow at 0x32487930)>.split
+
+tests/gui/front/test_b0_window.py:128: AssertionError
+____________ test_collapsed_sidebar_button_opens_and_closes_sidebar ____________
+
+running_app = '/tmp/aconsole-gui-njs0h1pz/core.sock'
+tmp_path = PosixPath('/tmp/pytest-of-sas/pytest-12/test_collapsed_sidebar_button_0')
+
+    def test_collapsed_sidebar_button_opens_and_closes_sidebar(
+        running_app: str, tmp_path: Path,
+    ) -> None:
+        from aconsole.ui.bootstrap import run_app
+        from aconsole.ui.client.core_client import CoreClient
+        from aconsole.ui.views.app import AConsoleApp, SnapshotRequest
+    
+        request = SnapshotRequest(view="window", theme="light", width=700, height=800, out=tmp_path / "narrow.png")
+        client = CoreClient(running_app)
+        app = AConsoleApp(client, request)
+        assert run_app(lambda: app, ["aconsole-test-sidebar-toggle"]) == 0
+        assert not app.failed
+    
+        window = app.window
+        assert window is not None
+>       assert window.split.get_collapsed()
+E       assert False
+E        +  where False = get_collapsed()
+E        +    where get_collapsed = <Adw.OverlaySplitView object at 0x7e0cb69bb000 (AdwOverlaySplitView at 0x345d26d0)>.get_collapsed
+E        +      where <Adw.OverlaySplitView object at 0x7e0cb69bb000 (AdwOverlaySplitView at 0x345d26d0)> = <window.MainWindow object at 0x7e0cb6918640 (aconsole+ui+views+window+MainWindow at 0x32b18fe0)>.split
+
+tests/gui/front/test_b0_window.py:147: AssertionError
+_______ test_system_title_buttons_keep_clear_header_space[700-True-left] _______
+
+running_app = '/tmp/aconsole-gui-a7quyl7k/core.sock'
+tmp_path = PosixPath('/tmp/pytest-of-sas/pytest-12/test_system_title_buttons_keep3')
+decoration_layout = 'close,minimize,maximize:', width = 700, collapsed = True
+
+    @pytest.mark.parametrize(
+        "decoration_layout",
+        [
+            "close,minimize,maximize:",
+            ":close,minimize,maximize",
+            "close,minimize,maximize:close,minimize,maximize",
+        ],
+        ids=["left", "right", "both"],
+    )
+    @pytest.mark.parametrize(("width", "collapsed"), [(1280, False), (700, True)])
+    def test_system_title_buttons_keep_clear_header_space(
+        running_app: str,
+        tmp_path: Path,
+        decoration_layout: str,
+        width: int,
+        *,
+        collapsed: bool,
+    ) -> None:
+        """Keep GTK's title-button slots available on both sides at both widths."""
+        settings = Gtk.Settings.get_default()
+        assert settings is not None
+        previous_layout = settings.get_property("gtk-decoration-layout")
+        settings.set_property("gtk-decoration-layout", decoration_layout)
+        try:
+            request = SnapshotRequest(
+                view="window",
+                theme="light",
+                width=width,
+                height=800,
+                out=tmp_path / f"window-{width}.png",
+            )
+            client = CoreClient(running_app)
+            changed_layout = (
+                ":close,minimize,maximize"
+                if decoration_layout.endswith(":")
+                else "close,minimize,maximize:"
+            )
+            app = _LayoutProbeApp(client, request, settings, changed_layout)
+            assert run_app(lambda: app, ["aconsole-test-title-buttons"]) == 0
+            assert not app.failed
+            assert app.layout_change_observed
+            assert app.controls_layout_error is None, app.controls_layout_error
+    
+            window = app.window
+            assert window is not None
+>           _assert_header_state(window, collapsed=collapsed)
+
+tests/gui/front/test_b0_window.py:203: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+window = <window.MainWindow object at 0x7e0cb6605b40 (aconsole+ui+views+window+MainWindow at 0x35eea680)>
+collapsed = True
+
+    def _assert_header_state(window: MainWindow, *, collapsed: bool) -> None:
+>       assert window.split.get_collapsed() is collapsed
+E       assert False is True
+E        +  where False = get_collapsed()
+E        +    where get_collapsed = <Adw.OverlaySplitView object at 0x7e0cb6610780 (AdwOverlaySplitView at 0x3413e0e0)>.get_collapsed
+E        +      where <Adw.OverlaySplitView object at 0x7e0cb6610780 (AdwOverlaySplitView at 0x3413e0e0)> = <window.MainWindow object at 0x7e0cb6605b40 (aconsole+ui+views+window+MainWindow at 0x35eea680)>.split
+
+tests/gui/front/test_b0_window.py:82: AssertionError
+______ test_system_title_buttons_keep_clear_header_space[700-True-right] _______
+
+running_app = '/tmp/aconsole-gui-wnmz1jpl/core.sock'
+tmp_path = PosixPath('/tmp/pytest-of-sas/pytest-12/test_system_title_buttons_keep4')
+decoration_layout = ':close,minimize,maximize', width = 700, collapsed = True
+
+    @pytest.mark.parametrize(
+        "decoration_layout",
+        [
+            "close,minimize,maximize:",
+            ":close,minimize,maximize",
+            "close,minimize,maximize:close,minimize,maximize",
+        ],
+        ids=["left", "right", "both"],
+    )
+    @pytest.mark.parametrize(("width", "collapsed"), [(1280, False), (700, True)])
+    def test_system_title_buttons_keep_clear_header_space(
+        running_app: str,
+        tmp_path: Path,
+        decoration_layout: str,
+        width: int,
+        *,
+        collapsed: bool,
+    ) -> None:
+        """Keep GTK's title-button slots available on both sides at both widths."""
+        settings = Gtk.Settings.get_default()
+        assert settings is not None
+        previous_layout = settings.get_property("gtk-decoration-layout")
+        settings.set_property("gtk-decoration-layout", decoration_layout)
+        try:
+            request = SnapshotRequest(
+                view="window",
+                theme="light",
+                width=width,
+                height=800,
+                out=tmp_path / f"window-{width}.png",
+            )
+            client = CoreClient(running_app)
+            changed_layout = (
+                ":close,minimize,maximize"
+                if decoration_layout.endswith(":")
+                else "close,minimize,maximize:"
+            )
+            app = _LayoutProbeApp(client, request, settings, changed_layout)
+            assert run_app(lambda: app, ["aconsole-test-title-buttons"]) == 0
+            assert not app.failed
+            assert app.layout_change_observed
+            assert app.controls_layout_error is None, app.controls_layout_error
+    
+            window = app.window
+            assert window is not None
+>           _assert_header_state(window, collapsed=collapsed)
+
+tests/gui/front/test_b0_window.py:203: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+window = <window.MainWindow object at 0x7e0cb69a3480 (aconsole+ui+views+window+MainWindow at 0x2f873820)>
+collapsed = True
+
+    def _assert_header_state(window: MainWindow, *, collapsed: bool) -> None:
+>       assert window.split.get_collapsed() is collapsed
+E       assert False is True
+E        +  where False = get_collapsed()
+E        +    where get_collapsed = <Adw.OverlaySplitView object at 0x7e0cb69cdfc0 (AdwOverlaySplitView at 0x35b97aa0)>.get_collapsed
+E        +      where <Adw.OverlaySplitView object at 0x7e0cb69cdfc0 (AdwOverlaySplitView at 0x35b97aa0)> = <window.MainWindow object at 0x7e0cb69a3480 (aconsole+ui+views+window+MainWindow at 0x2f873820)>.split
+
+tests/gui/front/test_b0_window.py:82: AssertionError
+_______ test_system_title_buttons_keep_clear_header_space[700-True-both] _______
+
+running_app = '/tmp/aconsole-gui-7bq7svh1/core.sock'
+tmp_path = PosixPath('/tmp/pytest-of-sas/pytest-12/test_system_title_buttons_keep5')
+decoration_layout = 'close,minimize,maximize:close,minimize,maximize'
+width = 700, collapsed = True
+
+    @pytest.mark.parametrize(
+        "decoration_layout",
+        [
+            "close,minimize,maximize:",
+            ":close,minimize,maximize",
+            "close,minimize,maximize:close,minimize,maximize",
+        ],
+        ids=["left", "right", "both"],
+    )
+    @pytest.mark.parametrize(("width", "collapsed"), [(1280, False), (700, True)])
+    def test_system_title_buttons_keep_clear_header_space(
+        running_app: str,
+        tmp_path: Path,
+        decoration_layout: str,
+        width: int,
+        *,
+        collapsed: bool,
+    ) -> None:
+        """Keep GTK's title-button slots available on both sides at both widths."""
+        settings = Gtk.Settings.get_default()
+        assert settings is not None
+        previous_layout = settings.get_property("gtk-decoration-layout")
+        settings.set_property("gtk-decoration-layout", decoration_layout)
+        try:
+            request = SnapshotRequest(
+                view="window",
+                theme="light",
+                width=width,
+                height=800,
+                out=tmp_path / f"window-{width}.png",
+            )
+            client = CoreClient(running_app)
+            changed_layout = (
+                ":close,minimize,maximize"
+                if decoration_layout.endswith(":")
+                else "close,minimize,maximize:"
+            )
+            app = _LayoutProbeApp(client, request, settings, changed_layout)
+            assert run_app(lambda: app, ["aconsole-test-title-buttons"]) == 0
+            assert not app.failed
+            assert app.layout_change_observed
+            assert app.controls_layout_error is None, app.controls_layout_error
+    
+            window = app.window
+            assert window is not None
+>           _assert_header_state(window, collapsed=collapsed)
+
+tests/gui/front/test_b0_window.py:203: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+window = <window.MainWindow object at 0x7e0cb58e8280 (aconsole+ui+views+window+MainWindow at 0x332cf370)>
+collapsed = True
+
+    def _assert_header_state(window: MainWindow, *, collapsed: bool) -> None:
+>       assert window.split.get_collapsed() is collapsed
+E       assert False is True
+E        +  where False = get_collapsed()
+E        +    where get_collapsed = <Adw.OverlaySplitView object at 0x7e0cb6646800 (AdwOverlaySplitView at 0x364c9b20)>.get_collapsed
+E        +      where <Adw.OverlaySplitView object at 0x7e0cb6646800 (AdwOverlaySplitView at 0x364c9b20)> = <window.MainWindow object at 0x7e0cb58e8280 (aconsole+ui+views+window+MainWindow at 0x332cf370)>.split
+
+tests/gui/front/test_b0_window.py:82: AssertionError
+__________________________ test_b1_keys_narrow_window __________________________
+
+running_app = '/tmp/aconsole-gui-iwc_mtvw/core.sock'
+tmp_path = PosixPath('/tmp/pytest-of-sas/pytest-12/test_b1_keys_narrow_window0')
+
+    def test_b1_keys_narrow_window(running_app: str, tmp_path: Path) -> None:
+        """At 700 px the sidebar collapses and the content header keeps title-button space."""
+        request = SnapshotRequest(
+            view="window", theme="light", width=700, height=800, out=tmp_path / "b1-narrow.png",
+        )
+        app = AConsoleApp(CoreClient(running_app), request)
+        try:
+            assert run_app(lambda: app, ["aconsole-test-b1-narrow"]) == 0
+        finally:
+            if app.window is not None:
+                app.window.set_visible(False)
+                app.window.destroy()
+        assert not app.failed
+        window = app.window
+        assert window is not None
+        assert window.shortcut_manager is not None
+>       assert window.split.get_collapsed()
+E       assert False
+E        +  where False = get_collapsed()
+E        +    where get_collapsed = <Adw.OverlaySplitView object at 0x7e0cb641f100 (AdwOverlaySplitView at 0x37f7d0d0)>.get_collapsed
+E        +      where <Adw.OverlaySplitView object at 0x7e0cb641f100 (AdwOverlaySplitView at 0x37f7d0d0)> = <window.MainWindow object at 0x7e0cb641da40 (aconsole+ui+views+window+MainWindow at 0x323a7b80)>.split
+
+tests/gui/front/test_b1_keys.py:767: AssertionError
+________ test_native_widgets_match_reviewed_baselines[light-1280-light] ________
+
+tmp_path = PosixPath('/tmp/pytest-of-sas/pytest-12/test_native_widgets_match_revi0')
+theme = 'light', width = 1280, name = 'light'
+
+    @pytest.mark.parametrize(("theme", "width", "name"), [
+        ("light", 1280, "light"), ("dark", 1280, "dark"), ("light", 700, "narrow"),
+    ])
+    def test_native_widgets_match_reviewed_baselines(tmp_path: Path, theme: str, width: int, name: str) -> None:
+        output = tmp_path / f"{name}.png"
+        env = {**os.environ, "GSK_RENDERER": "cairo", "GDK_SCALE": "1", "GDK_DPI_SCALE": "1", "TZ": "UTC"}
+        subprocess.run([sys.executable, "-m", "tests.gui.style_preview", theme, str(width), str(output)],
+                       cwd=_ROOT, env=env, timeout=15, check=True)
+>       difference = pixel_difference(_BASE / f"{name}.png", output)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/gui/front/test_des3_visual.py:52: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+first = PosixPath('/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/038657e1539f15ad/tests/gui/snapshots/DES3/light.png')
+second = PosixPath('/tmp/pytest-of-sas/pytest-12/test_native_widgets_match_revi0/light.png')
+
+    def pixel_difference(first: Path, second: Path) -> float:
+        left = GdkPixbuf.Pixbuf.new_from_file(str(first))
+        right = GdkPixbuf.Pixbuf.new_from_file(str(second))
+        assert left is not None
+        assert right is not None
+>       assert (left.get_width(), left.get_height(), left.get_n_channels(), left.get_rowstride()) == (
+            right.get_width(), right.get_height(), right.get_n_channels(), right.get_rowstride(),
+        )
+E       assert (1270, 790, 4, 5080) == (1280, 800, 4, 5120)
+E         
+E         At index 0 diff: 1270 != 1280
+E         Use -v to get more diff
+
+tests/gui/front/test_des3_visual.py:35: AssertionError
+_________ test_native_widgets_match_reviewed_baselines[dark-1280-dark] _________
+
+tmp_path = PosixPath('/tmp/pytest-of-sas/pytest-12/test_native_widgets_match_revi1')
+theme = 'dark', width = 1280, name = 'dark'
+
+    @pytest.mark.parametrize(("theme", "width", "name"), [
+        ("light", 1280, "light"), ("dark", 1280, "dark"), ("light", 700, "narrow"),
+    ])
+    def test_native_widgets_match_reviewed_baselines(tmp_path: Path, theme: str, width: int, name: str) -> None:
+        output = tmp_path / f"{name}.png"
+        env = {**os.environ, "GSK_RENDERER": "cairo", "GDK_SCALE": "1", "GDK_DPI_SCALE": "1", "TZ": "UTC"}
+        subprocess.run([sys.executable, "-m", "tests.gui.style_preview", theme, str(width), str(output)],
+                       cwd=_ROOT, env=env, timeout=15, check=True)
+>       difference = pixel_difference(_BASE / f"{name}.png", output)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/gui/front/test_des3_visual.py:52: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+first = PosixPath('/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/038657e1539f15ad/tests/gui/snapshots/DES3/dark.png')
+second = PosixPath('/tmp/pytest-of-sas/pytest-12/test_native_widgets_match_revi1/dark.png')
+
+    def pixel_difference(first: Path, second: Path) -> float:
+        left = GdkPixbuf.Pixbuf.new_from_file(str(first))
+        right = GdkPixbuf.Pixbuf.new_from_file(str(second))
+        assert left is not None
+        assert right is not None
+>       assert (left.get_width(), left.get_height(), left.get_n_channels(), left.get_rowstride()) == (
+            right.get_width(), right.get_height(), right.get_n_channels(), right.get_rowstride(),
+        )
+E       assert (1270, 790, 4, 5080) == (1280, 800, 4, 5120)
+E         
+E         At index 0 diff: 1270 != 1280
+E         Use -v to get more diff
+
+tests/gui/front/test_des3_visual.py:35: AssertionError
+________ test_native_widgets_match_reviewed_baselines[light-700-narrow] ________
+
+tmp_path = PosixPath('/tmp/pytest-of-sas/pytest-12/test_native_widgets_match_revi2')
+theme = 'light', width = 700, name = 'narrow'
+
+    @pytest.mark.parametrize(("theme", "width", "name"), [
+        ("light", 1280, "light"), ("dark", 1280, "dark"), ("light", 700, "narrow"),
+    ])
+    def test_native_widgets_match_reviewed_baselines(tmp_path: Path, theme: str, width: int, name: str) -> None:
+        output = tmp_path / f"{name}.png"
+        env = {**os.environ, "GSK_RENDERER": "cairo", "GDK_SCALE": "1", "GDK_DPI_SCALE": "1", "TZ": "UTC"}
+        subprocess.run([sys.executable, "-m", "tests.gui.style_preview", theme, str(width), str(output)],
+                       cwd=_ROOT, env=env, timeout=15, check=True)
+>       difference = pixel_difference(_BASE / f"{name}.png", output)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/gui/front/test_des3_visual.py:52: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+first = PosixPath('/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/038657e1539f15ad/tests/gui/snapshots/DES3/narrow.png')
+second = PosixPath('/tmp/pytest-of-sas/pytest-12/test_native_widgets_match_revi2/narrow.png')
+
+    def pixel_difference(first: Path, second: Path) -> float:
+        left = GdkPixbuf.Pixbuf.new_from_file(str(first))
+        right = GdkPixbuf.Pixbuf.new_from_file(str(second))
+        assert left is not None
+        assert right is not None
+>       assert (left.get_width(), left.get_height(), left.get_n_channels(), left.get_rowstride()) == (
+            right.get_width(), right.get_height(), right.get_n_channels(), right.get_rowstride(),
+        )
+E       assert (690, 790, 4, 2760) == (700, 800, 4, 2800)
+E         
+E         At index 0 diff: 690 != 700
+E         Use -v to get more diff
+
+tests/gui/front/test_des3_visual.py:35: AssertionError
+_____________ test_closing_dirty_preferences_can_cancel_or_discard _____________
+
+    def test_closing_dirty_preferences_can_cancel_or_discard() -> None:
+        async def scenario(app: _TabsTestApp) -> None:
+            client, _tabs = _model(demo_snapshot())
+            settings = Settings(rev=1, vault_path="", worktrees_dir="")
+    
+            async def request(_method: str, _params: msgspec.Struct, _result: type[msgspec.Struct]) -> msgspec.Struct:
+                return settings
+    
+            client.request = request
+            dialog = PreferencesDialog(PreferencesViewModel(client))
+            assert app.window is not None
+            app.window.set_default_size(800, 800)
+            app.window.present()
+            dialog.open(app.window)
+            await _until(lambda: not dialog.loading)
+            await _until(dialog.get_mapped)
+            dialog.font_entry.set_text("Draft font")
+            quitting = AConsoleApp(client)
+            quitting.window = app.window
+            app.window.preferences_dialog = dialog
+            quitting._close_now(app.window)
+            assert app.window.get_visible(), "application exit must not silently lose the draft"
+            assert dialog._active
+            prompt = dialog._close_prompt
+            assert prompt is not None
+            await _answer(prompt, "cancel")
+            await _until(lambda: dialog._close_prompt is None)
+            assert dialog.font_entry.get_text() == "Draft font"
+            dialog.close()
+            prompt = dialog._close_prompt
+            assert prompt is not None
+            await _answer(prompt, "discard")
+            await _until(lambda: not dialog._active)
+            await client.close()
+    
+>       _run_ui(scenario)
+
+tests/gui/front/test_preferences_drafts.py:92: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+scenario = <function test_closing_dirty_preferences_can_cancel_or_discard.<locals>.scenario at 0x7e0cb6f09220>
+
+    def _run_ui(scenario: Callable[[_TabsTestApp], Awaitable[None]]) -> None:
+        app = _TabsTestApp(scenario)
+        assert run_app(lambda: app, ["aconsole-b2-tabs-test"]) == 0
+>       assert app.error is None, repr(app.error)
+E       AssertionError: AssertionError('GTK wait failed at 89')
+E       assert AssertionError('GTK wait failed at 89') is None
+E        +  where AssertionError('GTK wait failed at 89') = <test_b2_tabs._TabsTestApp object at 0x7e0cb5924dc0 (tests+gui+front+test_b2_tabs+_TabsTestApp at 0x3ee065c0)>.error
+
+tests/gui/front/test_b2_tabs.py:67: AssertionError
+=============================== warnings summary ===============================
+../../../../../../Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/events.py:803
+  /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/events.py:803: DeprecationWarning: 'asyncio.AbstractEventLoopPolicy' is deprecated and slated for removal in Python 3.16
+    AbstractEventLoopPolicy = getattr(asyncio, "AbstractEventLoopPolicy", object)
+
+tests/gui/front/test_b1_keys.py::test_b1_keys_terminal_passthrough
+  /home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/038657e1539f15ad/tests/gui/front/test_b1_keys.py:286: DeprecationWarning: Vte.Pty.close is deprecated
+    pty.close()
+
+tests/gui/front/test_contrast_table.py: 400 warnings
+tests/gui/front/test_ux1_shortcuts.py: 138 warnings
+tests/gui/front/test_watchdog_cleanup.py: 3 warnings
+  /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/events.py:890: DeprecationWarning: 'asyncio.get_event_loop_policy' is deprecated and slated for removal in Python 3.16
+    if not isinstance(_get_event_loop_policy(), GLibEventLoopPolicy):
+
+tests/gui/front/test_git_actions.py::test_stage_commit_and_file_buttons_in_the_inspector
+  /home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/038657e1539f15ad/src/aconsole/ui/views/review/graph_cell.py:113: DeprecationWarning: Gtk.Widget.get_style_context is deprecated
+    _found, background = self.get_style_context().lookup_color("view_bg_color")
+
+tests/gui/front/test_git_actions.py::test_stage_commit_and_file_buttons_in_the_inspector
+  /home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/038657e1539f15ad/src/aconsole/ui/views/review/graph_cell.py:113: DeprecationWarning: Gtk.StyleContext.lookup_color is deprecated
+    _found, background = self.get_style_context().lookup_color("view_bg_color")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/gui/front/test_approval_alerts.py::test_the_window_rings_withdraws_and_a_click_opens_the_tab[waiting]
+FAILED tests/gui/front/test_b0_window.py::test_sidebar_lists_demo_tabs[700-True]
+FAILED tests/gui/front/test_b0_window.py::test_collapsed_sidebar_button_opens_and_closes_sidebar
+FAILED tests/gui/front/test_b0_window.py::test_system_title_buttons_keep_clear_header_space[700-True-left]
+FAILED tests/gui/front/test_b0_window.py::test_system_title_buttons_keep_clear_header_space[700-True-right]
+FAILED tests/gui/front/test_b0_window.py::test_system_title_buttons_keep_clear_header_space[700-True-both]
+FAILED tests/gui/front/test_b1_keys.py::test_b1_keys_narrow_window - assert F...
+FAILED tests/gui/front/test_des3_visual.py::test_native_widgets_match_reviewed_baselines[light-1280-light]
+FAILED tests/gui/front/test_des3_visual.py::test_native_widgets_match_reviewed_baselines[dark-1280-dark]
+FAILED tests/gui/front/test_des3_visual.py::test_native_widgets_match_reviewed_baselines[light-700-narrow]
+FAILED tests/gui/front/test_preferences_drafts.py::test_closing_dirty_preferences_can_cancel_or_discard
+11 failed, 468 passed, 545 warnings in 145.42s (0:02:25)

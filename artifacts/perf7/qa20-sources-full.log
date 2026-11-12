@@ -1,0 +1,1060 @@
+Collected 0 items to run in parallel
+.............F...................FF...FFF............................... [ 15%]
+F....................................................................... [ 30%]
+..........................FFF........................................... [ 45%]
+..F.....................F............................................... [ 60%]
+........................................................................ [ 75%]
+........................................................................ [ 90%]
+...............................................                          [100%]
+=================================== FAILURES ===================================
+______ test_the_window_rings_withdraws_and_a_click_opens_the_tab[waiting] ______
+
+core = '/tmp/aconsole-gui-adkzld05/core.sock'
+
+    @pytest.mark.parametrize("core", ["waiting"], indirect=True)
+    def test_the_window_rings_withdraws_and_a_click_opens_the_tab(core: str) -> None:
+        app = _WindowApp(CoreClient(core))
+        assert run_app(lambda: app, ["approval-alert-test"]) == 0
+        if app.failure is not None:
+>           raise app.failure
+
+tests/gui/front/test_approval_alerts.py:262: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/gui/front/test_approval_alerts.py:197: in _open
+    await self._check(self.window)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <test_approval_alerts._WindowApp object at 0x762270a085c0 (tests+gui+front+test_approval_alerts+_WindowApp at 0x125de620)>
+window = <window.MainWindow object at 0x762270616880 (aconsole+ui+views+window+MainWindow at 0x12fcb370)>
+
+    async def _check(self, window: MainWindow) -> None:
+        store = window.tabs.client.store
+        snapshot = store.snapshot
+        assert snapshot is not None
+        assert snapshot.approvals
+        await asyncio.sleep(0.2)
+>       assert self.sent == [], "a window that is opening must not ring"
+E       AssertionError: a window that is opening must not ring
+E       assert ['approval-01...0000000101-1'] == []
+E         
+E         Left contains one more item: 'approval-01JB2Z00000000000000000101-1'
+E         Use -v to get more diff
+
+tests/gui/front/test_approval_alerts.py:217: AssertionError
+____________________ test_sidebar_lists_demo_tabs[700-True] ____________________
+
+running_app = '/tmp/aconsole-gui-dee273fj/core.sock'
+tmp_path = PosixPath('/tmp/pytest-of-sas/pytest-11/test_sidebar_lists_demo_tabs_70')
+width = 700, collapsed = True
+
+    @pytest.mark.parametrize(("width", "collapsed"), [(1280, False), (700, True)])
+    def test_sidebar_lists_demo_tabs(
+        running_app: str, tmp_path: Path, width: int, *, collapsed: bool,
+    ) -> None:
+        from aconsole.ui.bootstrap import run_app
+        from aconsole.ui.client.core_client import CoreClient
+        from aconsole.ui.views.app import AConsoleApp, SnapshotRequest
+    
+        request = SnapshotRequest(view="window", theme="light", width=width, height=800, out=tmp_path / "window.png")
+        client = CoreClient(running_app)
+        app = AConsoleApp(client, request)
+        assert run_app(lambda: app, ["aconsole-test"]) == 0
+        assert not app.failed
+        assert request.out.stat().st_size > 0
+    
+        window = app.window
+        assert window is not None
+        snapshot = client.store.snapshot
+        assert snapshot is not None
+        expected = sorted(snapshot.tabs, key=lambda tab: tab.order)
+        assert len(expected) == 5
+        assert window.selection.get_n_items() == 5
+        selected = [window.selection.get_item(index) for index in range(5)]
+        assert all(item is not None for item in selected)
+        assert [item.get_property("tab-id") for item in selected if item is not None] == [
+            str(tab.id) for tab in expected
+        ]
+        assert [item.get_property("title") for item in selected if item is not None] == [
+            tab.title for tab in expected
+        ]
+>       assert window.split.get_collapsed() is collapsed
+E       assert False is True
+E        +  where False = get_collapsed()
+E        +    where get_collapsed = <Adw.OverlaySplitView object at 0x762270676880 (AdwOverlaySplitView at 0x1350a970)>.get_collapsed
+E        +      where <Adw.OverlaySplitView object at 0x762270676880 (AdwOverlaySplitView at 0x1350a970)> = <window.MainWindow object at 0x76227071e5c0 (aconsole+ui+views+window+MainWindow at 0x14edc050)>.split
+
+tests/gui/front/test_b0_window.py:128: AssertionError
+____________ test_collapsed_sidebar_button_opens_and_closes_sidebar ____________
+
+running_app = '/tmp/aconsole-gui-f5nrnygg/core.sock'
+tmp_path = PosixPath('/tmp/pytest-of-sas/pytest-11/test_collapsed_sidebar_button_0')
+
+    def test_collapsed_sidebar_button_opens_and_closes_sidebar(
+        running_app: str, tmp_path: Path,
+    ) -> None:
+        from aconsole.ui.bootstrap import run_app
+        from aconsole.ui.client.core_client import CoreClient
+        from aconsole.ui.views.app import AConsoleApp, SnapshotRequest
+    
+        request = SnapshotRequest(view="window", theme="light", width=700, height=800, out=tmp_path / "narrow.png")
+        client = CoreClient(running_app)
+        app = AConsoleApp(client, request)
+        assert run_app(lambda: app, ["aconsole-test-sidebar-toggle"]) == 0
+        assert not app.failed
+    
+        window = app.window
+        assert window is not None
+>       assert window.split.get_collapsed()
+E       assert False
+E        +  where False = get_collapsed()
+E        +    where get_collapsed = <Adw.OverlaySplitView object at 0x76226ec609c0 (AdwOverlaySplitView at 0x153c95c0)>.get_collapsed
+E        +      where <Adw.OverlaySplitView object at 0x76226ec609c0 (AdwOverlaySplitView at 0x153c95c0)> = <window.MainWindow object at 0x76226ec434c0 (aconsole+ui+views+window+MainWindow at 0x154f6740)>.split
+
+tests/gui/front/test_b0_window.py:147: AssertionError
+_______ test_system_title_buttons_keep_clear_header_space[700-True-left] _______
+
+running_app = '/tmp/aconsole-gui-tdx80mxs/core.sock'
+tmp_path = PosixPath('/tmp/pytest-of-sas/pytest-11/test_system_title_buttons_keep3')
+decoration_layout = 'close,minimize,maximize:', width = 700, collapsed = True
+
+    @pytest.mark.parametrize(
+        "decoration_layout",
+        [
+            "close,minimize,maximize:",
+            ":close,minimize,maximize",
+            "close,minimize,maximize:close,minimize,maximize",
+        ],
+        ids=["left", "right", "both"],
+    )
+    @pytest.mark.parametrize(("width", "collapsed"), [(1280, False), (700, True)])
+    def test_system_title_buttons_keep_clear_header_space(
+        running_app: str,
+        tmp_path: Path,
+        decoration_layout: str,
+        width: int,
+        *,
+        collapsed: bool,
+    ) -> None:
+        """Keep GTK's title-button slots available on both sides at both widths."""
+        settings = Gtk.Settings.get_default()
+        assert settings is not None
+        previous_layout = settings.get_property("gtk-decoration-layout")
+        settings.set_property("gtk-decoration-layout", decoration_layout)
+        try:
+            request = SnapshotRequest(
+                view="window",
+                theme="light",
+                width=width,
+                height=800,
+                out=tmp_path / f"window-{width}.png",
+            )
+            client = CoreClient(running_app)
+            changed_layout = (
+                ":close,minimize,maximize"
+                if decoration_layout.endswith(":")
+                else "close,minimize,maximize:"
+            )
+            app = _LayoutProbeApp(client, request, settings, changed_layout)
+            assert run_app(lambda: app, ["aconsole-test-title-buttons"]) == 0
+            assert not app.failed
+            assert app.layout_change_observed
+            assert app.controls_layout_error is None, app.controls_layout_error
+    
+            window = app.window
+            assert window is not None
+>           _assert_header_state(window, collapsed=collapsed)
+
+tests/gui/front/test_b0_window.py:203: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+window = <window.MainWindow object at 0x76226ec9c540 (aconsole+ui+views+window+MainWindow at 0x1469c000)>
+collapsed = True
+
+    def _assert_header_state(window: MainWindow, *, collapsed: bool) -> None:
+>       assert window.split.get_collapsed() is collapsed
+E       assert False is True
+E        +  where False = get_collapsed()
+E        +    where get_collapsed = <Adw.OverlaySplitView object at 0x76226eaae880 (AdwOverlaySplitView at 0x16a6fec0)>.get_collapsed
+E        +      where <Adw.OverlaySplitView object at 0x76226eaae880 (AdwOverlaySplitView at 0x16a6fec0)> = <window.MainWindow object at 0x76226ec9c540 (aconsole+ui+views+window+MainWindow at 0x1469c000)>.split
+
+tests/gui/front/test_b0_window.py:82: AssertionError
+______ test_system_title_buttons_keep_clear_header_space[700-True-right] _______
+
+running_app = '/tmp/aconsole-gui-apwt1c8v/core.sock'
+tmp_path = PosixPath('/tmp/pytest-of-sas/pytest-11/test_system_title_buttons_keep4')
+decoration_layout = ':close,minimize,maximize', width = 700, collapsed = True
+
+    @pytest.mark.parametrize(
+        "decoration_layout",
+        [
+            "close,minimize,maximize:",
+            ":close,minimize,maximize",
+            "close,minimize,maximize:close,minimize,maximize",
+        ],
+        ids=["left", "right", "both"],
+    )
+    @pytest.mark.parametrize(("width", "collapsed"), [(1280, False), (700, True)])
+    def test_system_title_buttons_keep_clear_header_space(
+        running_app: str,
+        tmp_path: Path,
+        decoration_layout: str,
+        width: int,
+        *,
+        collapsed: bool,
+    ) -> None:
+        """Keep GTK's title-button slots available on both sides at both widths."""
+        settings = Gtk.Settings.get_default()
+        assert settings is not None
+        previous_layout = settings.get_property("gtk-decoration-layout")
+        settings.set_property("gtk-decoration-layout", decoration_layout)
+        try:
+            request = SnapshotRequest(
+                view="window",
+                theme="light",
+                width=width,
+                height=800,
+                out=tmp_path / f"window-{width}.png",
+            )
+            client = CoreClient(running_app)
+            changed_layout = (
+                ":close,minimize,maximize"
+                if decoration_layout.endswith(":")
+                else "close,minimize,maximize:"
+            )
+            app = _LayoutProbeApp(client, request, settings, changed_layout)
+            assert run_app(lambda: app, ["aconsole-test-title-buttons"]) == 0
+            assert not app.failed
+            assert app.layout_change_observed
+            assert app.controls_layout_error is None, app.controls_layout_error
+    
+            window = app.window
+            assert window is not None
+>           _assert_header_state(window, collapsed=collapsed)
+
+tests/gui/front/test_b0_window.py:203: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+window = <window.MainWindow object at 0x7622708b2a00 (aconsole+ui+views+window+MainWindow at 0x12b7a370)>
+collapsed = True
+
+    def _assert_header_state(window: MainWindow, *, collapsed: bool) -> None:
+>       assert window.split.get_collapsed() is collapsed
+E       assert False is True
+E        +  where False = get_collapsed()
+E        +    where get_collapsed = <Adw.OverlaySplitView object at 0x76226eace880 (AdwOverlaySplitView at 0x171a4040)>.get_collapsed
+E        +      where <Adw.OverlaySplitView object at 0x76226eace880 (AdwOverlaySplitView at 0x171a4040)> = <window.MainWindow object at 0x7622708b2a00 (aconsole+ui+views+window+MainWindow at 0x12b7a370)>.split
+
+tests/gui/front/test_b0_window.py:82: AssertionError
+_______ test_system_title_buttons_keep_clear_header_space[700-True-both] _______
+
+running_app = '/tmp/aconsole-gui-3cprbp6i/core.sock'
+tmp_path = PosixPath('/tmp/pytest-of-sas/pytest-11/test_system_title_buttons_keep5')
+decoration_layout = 'close,minimize,maximize:close,minimize,maximize'
+width = 700, collapsed = True
+
+    @pytest.mark.parametrize(
+        "decoration_layout",
+        [
+            "close,minimize,maximize:",
+            ":close,minimize,maximize",
+            "close,minimize,maximize:close,minimize,maximize",
+        ],
+        ids=["left", "right", "both"],
+    )
+    @pytest.mark.parametrize(("width", "collapsed"), [(1280, False), (700, True)])
+    def test_system_title_buttons_keep_clear_header_space(
+        running_app: str,
+        tmp_path: Path,
+        decoration_layout: str,
+        width: int,
+        *,
+        collapsed: bool,
+    ) -> None:
+        """Keep GTK's title-button slots available on both sides at both widths."""
+        settings = Gtk.Settings.get_default()
+        assert settings is not None
+        previous_layout = settings.get_property("gtk-decoration-layout")
+        settings.set_property("gtk-decoration-layout", decoration_layout)
+        try:
+            request = SnapshotRequest(
+                view="window",
+                theme="light",
+                width=width,
+                height=800,
+                out=tmp_path / f"window-{width}.png",
+            )
+            client = CoreClient(running_app)
+            changed_layout = (
+                ":close,minimize,maximize"
+                if decoration_layout.endswith(":")
+                else "close,minimize,maximize:"
+            )
+            app = _LayoutProbeApp(client, request, settings, changed_layout)
+            assert run_app(lambda: app, ["aconsole-test-title-buttons"]) == 0
+            assert not app.failed
+            assert app.layout_change_observed
+            assert app.controls_layout_error is None, app.controls_layout_error
+    
+            window = app.window
+            assert window is not None
+>           _assert_header_state(window, collapsed=collapsed)
+
+tests/gui/front/test_b0_window.py:203: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+window = <window.MainWindow object at 0x76226ea88400 (aconsole+ui+views+window+MainWindow at 0x166867a0)>
+collapsed = True
+
+    def _assert_header_state(window: MainWindow, *, collapsed: bool) -> None:
+>       assert window.split.get_collapsed() is collapsed
+E       assert False is True
+E        +  where False = get_collapsed()
+E        +    where get_collapsed = <Adw.OverlaySplitView object at 0x76226eaac1c0 (AdwOverlaySplitView at 0x173f8080)>.get_collapsed
+E        +      where <Adw.OverlaySplitView object at 0x76226eaac1c0 (AdwOverlaySplitView at 0x173f8080)> = <window.MainWindow object at 0x76226ea88400 (aconsole+ui+views+window+MainWindow at 0x166867a0)>.split
+
+tests/gui/front/test_b0_window.py:82: AssertionError
+__________________________ test_b1_keys_narrow_window __________________________
+
+running_app = '/tmp/aconsole-gui-lwjdhswz/core.sock'
+tmp_path = PosixPath('/tmp/pytest-of-sas/pytest-11/test_b1_keys_narrow_window0')
+
+    def test_b1_keys_narrow_window(running_app: str, tmp_path: Path) -> None:
+        """At 700 px the sidebar collapses and the content header keeps title-button space."""
+        request = SnapshotRequest(
+            view="window", theme="light", width=700, height=800, out=tmp_path / "b1-narrow.png",
+        )
+        app = AConsoleApp(CoreClient(running_app), request)
+        try:
+            assert run_app(lambda: app, ["aconsole-test-b1-narrow"]) == 0
+        finally:
+            if app.window is not None:
+                app.window.set_visible(False)
+                app.window.destroy()
+        assert not app.failed
+        window = app.window
+        assert window is not None
+        assert window.shortcut_manager is not None
+>       assert window.split.get_collapsed()
+E       assert False
+E        +  where False = get_collapsed()
+E        +    where get_collapsed = <Adw.OverlaySplitView object at 0x7622702e2680 (AdwOverlaySplitView at 0x19e62790)>.get_collapsed
+E        +      where <Adw.OverlaySplitView object at 0x7622702e2680 (AdwOverlaySplitView at 0x19e62790)> = <window.MainWindow object at 0x76226ec8ab00 (aconsole+ui+views+window+MainWindow at 0x17762630)>.split
+
+tests/gui/front/test_b1_keys.py:767: AssertionError
+________ test_native_widgets_match_reviewed_baselines[light-1280-light] ________
+
+tmp_path = PosixPath('/tmp/pytest-of-sas/pytest-11/test_native_widgets_match_revi0')
+theme = 'light', width = 1280, name = 'light'
+
+    @pytest.mark.parametrize(("theme", "width", "name"), [
+        ("light", 1280, "light"), ("dark", 1280, "dark"), ("light", 700, "narrow"),
+    ])
+    def test_native_widgets_match_reviewed_baselines(tmp_path: Path, theme: str, width: int, name: str) -> None:
+        output = tmp_path / f"{name}.png"
+        env = {**os.environ, "GSK_RENDERER": "cairo", "GDK_SCALE": "1", "GDK_DPI_SCALE": "1", "TZ": "UTC"}
+        subprocess.run([sys.executable, "-m", "tests.gui.style_preview", theme, str(width), str(output)],
+                       cwd=_ROOT, env=env, timeout=15, check=True)
+>       difference = pixel_difference(_BASE / f"{name}.png", output)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/gui/front/test_des3_visual.py:52: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+first = PosixPath('/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/038657e1539f15ad/tests/gui/snapshots/DES3/light.png')
+second = PosixPath('/tmp/pytest-of-sas/pytest-11/test_native_widgets_match_revi0/light.png')
+
+    def pixel_difference(first: Path, second: Path) -> float:
+        left = GdkPixbuf.Pixbuf.new_from_file(str(first))
+        right = GdkPixbuf.Pixbuf.new_from_file(str(second))
+        assert left is not None
+        assert right is not None
+>       assert (left.get_width(), left.get_height(), left.get_n_channels(), left.get_rowstride()) == (
+            right.get_width(), right.get_height(), right.get_n_channels(), right.get_rowstride(),
+        )
+E       assert (1270, 790, 4, 5080) == (1280, 800, 4, 5120)
+E         
+E         At index 0 diff: 1270 != 1280
+E         Use -v to get more diff
+
+tests/gui/front/test_des3_visual.py:35: AssertionError
+_________ test_native_widgets_match_reviewed_baselines[dark-1280-dark] _________
+
+tmp_path = PosixPath('/tmp/pytest-of-sas/pytest-11/test_native_widgets_match_revi1')
+theme = 'dark', width = 1280, name = 'dark'
+
+    @pytest.mark.parametrize(("theme", "width", "name"), [
+        ("light", 1280, "light"), ("dark", 1280, "dark"), ("light", 700, "narrow"),
+    ])
+    def test_native_widgets_match_reviewed_baselines(tmp_path: Path, theme: str, width: int, name: str) -> None:
+        output = tmp_path / f"{name}.png"
+        env = {**os.environ, "GSK_RENDERER": "cairo", "GDK_SCALE": "1", "GDK_DPI_SCALE": "1", "TZ": "UTC"}
+        subprocess.run([sys.executable, "-m", "tests.gui.style_preview", theme, str(width), str(output)],
+                       cwd=_ROOT, env=env, timeout=15, check=True)
+>       difference = pixel_difference(_BASE / f"{name}.png", output)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/gui/front/test_des3_visual.py:52: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+first = PosixPath('/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/038657e1539f15ad/tests/gui/snapshots/DES3/dark.png')
+second = PosixPath('/tmp/pytest-of-sas/pytest-11/test_native_widgets_match_revi1/dark.png')
+
+    def pixel_difference(first: Path, second: Path) -> float:
+        left = GdkPixbuf.Pixbuf.new_from_file(str(first))
+        right = GdkPixbuf.Pixbuf.new_from_file(str(second))
+        assert left is not None
+        assert right is not None
+>       assert (left.get_width(), left.get_height(), left.get_n_channels(), left.get_rowstride()) == (
+            right.get_width(), right.get_height(), right.get_n_channels(), right.get_rowstride(),
+        )
+E       assert (1270, 790, 4, 5080) == (1280, 800, 4, 5120)
+E         
+E         At index 0 diff: 1270 != 1280
+E         Use -v to get more diff
+
+tests/gui/front/test_des3_visual.py:35: AssertionError
+________ test_native_widgets_match_reviewed_baselines[light-700-narrow] ________
+
+tmp_path = PosixPath('/tmp/pytest-of-sas/pytest-11/test_native_widgets_match_revi2')
+theme = 'light', width = 700, name = 'narrow'
+
+    @pytest.mark.parametrize(("theme", "width", "name"), [
+        ("light", 1280, "light"), ("dark", 1280, "dark"), ("light", 700, "narrow"),
+    ])
+    def test_native_widgets_match_reviewed_baselines(tmp_path: Path, theme: str, width: int, name: str) -> None:
+        output = tmp_path / f"{name}.png"
+        env = {**os.environ, "GSK_RENDERER": "cairo", "GDK_SCALE": "1", "GDK_DPI_SCALE": "1", "TZ": "UTC"}
+        subprocess.run([sys.executable, "-m", "tests.gui.style_preview", theme, str(width), str(output)],
+                       cwd=_ROOT, env=env, timeout=15, check=True)
+>       difference = pixel_difference(_BASE / f"{name}.png", output)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/gui/front/test_des3_visual.py:52: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+first = PosixPath('/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/038657e1539f15ad/tests/gui/snapshots/DES3/narrow.png')
+second = PosixPath('/tmp/pytest-of-sas/pytest-11/test_native_widgets_match_revi2/narrow.png')
+
+    def pixel_difference(first: Path, second: Path) -> float:
+        left = GdkPixbuf.Pixbuf.new_from_file(str(first))
+        right = GdkPixbuf.Pixbuf.new_from_file(str(second))
+        assert left is not None
+        assert right is not None
+>       assert (left.get_width(), left.get_height(), left.get_n_channels(), left.get_rowstride()) == (
+            right.get_width(), right.get_height(), right.get_n_channels(), right.get_rowstride(),
+        )
+E       assert (690, 790, 4, 2760) == (700, 800, 4, 2800)
+E         
+E         At index 0 diff: 690 != 700
+E         Use -v to get more diff
+
+tests/gui/front/test_des3_visual.py:35: AssertionError
+________________________ test_scrolling_a_long_history _________________________
+
+tmp_path = PosixPath('/tmp/pytest-of-sas/pytest-11/test_scrolling_a_long_history0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x76226ef66820>
+
+    def test_scrolling_a_long_history(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+        repo = tmp_path / "repo"
+        repo.mkdir()
+        _ = _git(repo, "init", "-q", "-b", "develop")
+        lines: list[str] = []
+        for number in range(_COMMITS):
+            message = f"commit {number}"
+            lines.extend((
+                "commit refs/heads/develop",
+                f"committer t <t@e> {1_700_000_000 + number} +0000",
+                f"data {len(message)}",
+                message,
+                f"M 100644 inline f{number % 200}.txt",
+                f"data {len(message)}",
+                message,
+                "",
+            ))
+        _ = subprocess.run(
+            [_GIT, "-C", str(repo), "fast-import", "--quiet"], input="\n".join(lines), text=True, check=True
+        )
+        _ = _git(repo, "checkout", "-qf", "develop")
+    
+        async def check(pane: GitPane, _toasts: list[str], _window: Adw.ApplicationWindow) -> None:
+            before = _rss_mb()
+            marks = [f"start {before:.0f}"]
+            await _settled(lambda: pane.store.get_n_items() >= 200)
+            marks.append(f"first page {_rss_mb():.0f}")
+            loading = time.perf_counter()
+            for _ in range(_PAGE_ATTEMPTS):
+                if pane.store.get_n_items() >= _COMMITS:
+                    break
+                await pane.load_more()
+            await _settled(lambda: pane.store.get_n_items() >= _COMMITS)
+            loaded = time.perf_counter() - loading
+            marks.append(f"all rows {_rss_mb():.0f} after {loaded:.1f} s")
+            adjustment = pane.scroller.get_vadjustment()
+            frames: list[float] = []
+            started = time.perf_counter()
+            last = started
+    
+            def tick(_widget: Gtk.Widget, _clock: Gdk.FrameClock) -> bool:
+                nonlocal last
+                now = time.perf_counter()
+                frames.append(now - last)
+                last = now
+                span = adjustment.get_upper() - adjustment.get_page_size()
+                progress = (now - started) / _SCROLL_S
+                adjustment.set_value(span * min(progress, 1.0))
+                return now - started < _SCROLL_S
+    
+            _ = pane.list_view.add_tick_callback(tick)
+            await _settled(lambda: time.perf_counter() - started >= _SCROLL_S)
+            assert len(frames) >= _MIN_FRAMES, f"only {len(frames)} frames"
+            median = statistics.median(frames) * _MS
+            p95 = statistics.quantiles(frames, n=_PERCENTILES)[_P95_INDEX] * _MS
+            rss = _rss_mb()
+            line = (
+                f"git scale: {pane.store.get_n_items()} rows, {len(frames)} frames in {_SCROLL_S:.0f} s, "
+                f"median {median:.1f} ms, p95 {p95:.1f} ms, worst {max(frames) * _MS:.1f} ms, "
+                f"RSS {rss:.0f} MB ({', '.join(marks)})"
+            )
+            _report(line)
+            assert adjustment.get_value() > 0, "the list never moved"
+            assert median <= _FRAME_LIMIT_MS, line
+            assert rss - before <= _GROWTH_LIMIT_MB, line
+    
+>       _on_pane(tmp_path, monkeypatch, repo, check)
+
+tests/gui/front/test_git_scale_ui.py:148: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+artifacts/perf7/measure.py:214: in on_pane
+    return original(tmp_path, monkeypatch, repo, observed)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/gui/front/test_git_pane.py:130: in _on_pane
+    raise failures[0]
+tests/gui/front/test_git_pane.py:111: in _run
+    await check(pane, toasts, window)
+artifacts/perf7/measure.py:191: in observed
+    await check(pane, toasts, window)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+pane = <git_pane.GitPane object at 0x76226e83db00 (aconsole+ui+views+review+git_pane+GitPane at 0x1e88ae60)>
+_toasts = []
+_window = <Adw.ApplicationWindow object at 0x76226e848d80 (AdwApplicationWindow at 0x20c7dfc0)>
+
+    async def check(pane: GitPane, _toasts: list[str], _window: Adw.ApplicationWindow) -> None:
+        before = _rss_mb()
+        marks = [f"start {before:.0f}"]
+        await _settled(lambda: pane.store.get_n_items() >= 200)
+        marks.append(f"first page {_rss_mb():.0f}")
+        loading = time.perf_counter()
+        for _ in range(_PAGE_ATTEMPTS):
+            if pane.store.get_n_items() >= _COMMITS:
+                break
+            await pane.load_more()
+        await _settled(lambda: pane.store.get_n_items() >= _COMMITS)
+        loaded = time.perf_counter() - loading
+        marks.append(f"all rows {_rss_mb():.0f} after {loaded:.1f} s")
+        adjustment = pane.scroller.get_vadjustment()
+        frames: list[float] = []
+        started = time.perf_counter()
+        last = started
+    
+        def tick(_widget: Gtk.Widget, _clock: Gdk.FrameClock) -> bool:
+            nonlocal last
+            now = time.perf_counter()
+            frames.append(now - last)
+            last = now
+            span = adjustment.get_upper() - adjustment.get_page_size()
+            progress = (now - started) / _SCROLL_S
+            adjustment.set_value(span * min(progress, 1.0))
+            return now - started < _SCROLL_S
+    
+        _ = pane.list_view.add_tick_callback(tick)
+        await _settled(lambda: time.perf_counter() - started >= _SCROLL_S)
+        assert len(frames) >= _MIN_FRAMES, f"only {len(frames)} frames"
+        median = statistics.median(frames) * _MS
+        p95 = statistics.quantiles(frames, n=_PERCENTILES)[_P95_INDEX] * _MS
+        rss = _rss_mb()
+        line = (
+            f"git scale: {pane.store.get_n_items()} rows, {len(frames)} frames in {_SCROLL_S:.0f} s, "
+            f"median {median:.1f} ms, p95 {p95:.1f} ms, worst {max(frames) * _MS:.1f} ms, "
+            f"RSS {rss:.0f} MB ({', '.join(marks)})"
+        )
+        _report(line)
+        assert adjustment.get_value() > 0, "the list never moved"
+>       assert median <= _FRAME_LIMIT_MS, line
+E       AssertionError: git scale: 10000 rows, 163 frames in 4 s, median 17.6 ms, p95 35.6 ms, worst 49.9 ms, RSS 591 MB (start 580, first page 580, all rows 591 after 3.2 s)
+E       assert 17.58356600021216 <= 17.5
+
+tests/gui/front/test_git_scale_ui.py:145: AssertionError
+----------------------------- Captured stderr call -----------------------------
+[11/12/26 21:14:25] INFO     Context impl SQLiteImpl.           migration.py:205
+                    INFO     Will assume non-transactional DDL. migration.py:208
+                    INFO     Running upgrade  -> 0001_initial,  migration.py:611
+                             Initial schema from DATA_MODEL §3,                 
+                             written out table by table.                        
+[11/12/26 21:14:26] INFO     Running upgrade 0001_initial ->    migration.py:611
+                             0002_plan_node_details, Keep what                  
+                             an agent wrote on a plan node: its                 
+                             boundaries, output format, and                     
+                             note.                                              
+                    INFO     Running upgrade                    migration.py:611
+                             0002_plan_node_details ->                          
+                             0003_knowledge_details, Keep what                  
+                             a fact says and what a handover                    
+                             packet lists, not only their                       
+                             titles.                                            
+                    INFO     Running upgrade                    migration.py:611
+                             0003_knowledge_details ->                          
+                             0004_git_operations, A journal of                  
+                             merges and rebases, so a restart                   
+                             can say what happened to a branch.                 
+                    INFO     Running upgrade                    migration.py:611
+                             0004_git_operations ->                             
+                             0005_work_sessions, Task sessions                  
+                             retain existing workspaces without                 
+                             executing Git or moving refs.                      
+                    INFO     Running upgrade 0005_work_sessions migration.py:611
+                             -> 0006_session_history, Durable                   
+                             session snapshots retain actors                    
+                             even after a tab is pruned.                        
+                    INFO     Running upgrade                    migration.py:611
+                             0006_session_history ->                            
+                             0007_git_ref_deletions, Durable                    
+                             outbox for expired legacy                          
+                             checkpoint refs.                                   
+                    INFO     Running upgrade                    migration.py:611
+                             0007_git_ref_deletions ->                          
+                             0008_pending_session_fork, Keep a                  
+                             native CLI fork distinct from a                    
+                             resume across core restarts.                       
+                    INFO     Running upgrade                    migration.py:611
+                             0007_git_ref_deletions ->                          
+                             0008_approval_policy, Project                      
+                             approval-policy override. Null                     
+                             inherits the global choice stored                  
+                             in settings.                                       
+                    INFO     Running upgrade                    migration.py:611
+                             0008_approval_policy,                              
+                             0008_pending_session_fork ->                       
+                             0009_merge_approval_fork, Join                     
+                             approval-policy and pending-fork                   
+                             migration histories without                        
+                             rewriting either.                                  
+                    INFO     StreamableHTTP       streamable_http_manager.py:162
+                             session manager                                    
+                             started                                            
+                    WARNING  cannot read HOME of container           tabs.py:257
+                             agent-codex                                        
+                             ╭─ Traceback (most recent call last) ─╮            
+                             │ /home/sas/.local/share/aconsole/wor │            
+                             │ ktrees/sp_aconsole_prototype/038657 │            
+                             │ e1539f15ad/src/aconsole/core/infras │            
+                             │ tructure/tabs.py:254 in agent_home  │            
+                             │                                     │            
+                             │   251 │   │   if cached is not None │            
+                             │   252 │   │   │   return cached     │            
+                             │   253 │   │   try:                  │            
+                             │ ❱ 254 │   │   │   inspected = self. │            
+                             │   255 │   │   │   text = inspected. │            
+                             │       "-c", 'printf %s "$HOME"'))   │            
+                             │   256 │   │   except (ContainerErro │            
+                             │   257 │   │   │   _LOG.warning("can │            
+                             │                                     │            
+                             │ /home/sas/.local/share/aconsole/wor │            
+                             │ ktrees/sp_aconsole_prototype/038657 │            
+                             │ e1539f15ad/src/aconsole/core/infras │            
+                             │ tructure/containers/podman.py:111   │            
+                             │ in inspect                          │            
+                             │                                     │            
+                             │   108 │   def inspect(self, name: s │            
+                             │   109 │   │   """Return id, name, a │            
+                             │   110 │   │   check_container_name( │            
+                             │ ❱ 111 │   │   text = self._run(("in │            
+                             │   112 │   │   try:                  │            
+                             │   113 │   │   │   rows = msgspec.js │            
+                             │   114 │   │   except msgspec.Decode │            
+                             │                                     │            
+                             │ /home/sas/.local/share/aconsole/wor │            
+                             │ ktrees/sp_aconsole_prototype/038657 │            
+                             │ e1539f15ad/src/aconsole/core/infras │            
+                             │ tructure/containers/podman.py:216   │            
+                             │ in _run                             │            
+                             │                                     │            
+                             │   213 │   │   except FileNotFoundEr │            
+                             │   214 │   │   │   raise ContainerEr │            
+                             │   215 │   │   if completed.returnco │            
+                             │ ❱ 216 │   │   │   raise ContainerEr │            
+                             │       detail=completed.stderr)      │            
+                             │   217 │   │   return completed.stdo │            
+                             │   218                               │            
+                             ╰─────────────────────────────────────╯            
+                             ContainerError: podman command failed              
+[11/12/26 21:14:27] WARNING  cannot read HOME of container           tabs.py:257
+                             agent-codex                                        
+                             ╭─ Traceback (most recent call last) ─╮            
+                             │ /home/sas/.local/share/aconsole/wor │            
+                             │ ktrees/sp_aconsole_prototype/038657 │            
+                             │ e1539f15ad/src/aconsole/core/infras │            
+                             │ tructure/tabs.py:254 in agent_home  │            
+                             │                                     │            
+                             │   251 │   │   if cached is not None │            
+                             │   252 │   │   │   return cached     │            
+                             │   253 │   │   try:                  │            
+                             │ ❱ 254 │   │   │   inspected = self. │            
+                             │   255 │   │   │   text = inspected. │            
+                             │       "-c", 'printf %s "$HOME"'))   │            
+                             │   256 │   │   except (ContainerErro │            
+                             │   257 │   │   │   _LOG.warning("can │            
+                             │                                     │            
+                             │ /home/sas/.local/share/aconsole/wor │            
+                             │ ktrees/sp_aconsole_prototype/038657 │            
+                             │ e1539f15ad/src/aconsole/core/infras │            
+                             │ tructure/containers/podman.py:111   │            
+                             │ in inspect                          │            
+                             │                                     │            
+                             │   108 │   def inspect(self, name: s │            
+                             │   109 │   │   """Return id, name, a │            
+                             │   110 │   │   check_container_name( │            
+                             │ ❱ 111 │   │   text = self._run(("in │            
+                             │   112 │   │   try:                  │            
+                             │   113 │   │   │   rows = msgspec.js │            
+                             │   114 │   │   except msgspec.Decode │            
+                             │                                     │            
+                             │ /home/sas/.local/share/aconsole/wor │            
+                             │ ktrees/sp_aconsole_prototype/038657 │            
+                             │ e1539f15ad/src/aconsole/core/infras │            
+                             │ tructure/containers/podman.py:216   │            
+                             │ in _run                             │            
+                             │                                     │            
+                             │   213 │   │   except FileNotFoundEr │            
+                             │   214 │   │   │   raise ContainerEr │            
+                             │   215 │   │   if completed.returnco │            
+                             │ ❱ 216 │   │   │   raise ContainerEr │            
+                             │       detail=completed.stderr)      │            
+                             │   217 │   │   return completed.stdo │            
+                             │   218                               │            
+                             ╰─────────────────────────────────────╯            
+                             ContainerError: podman command failed              
+[11/12/26 21:14:28] WARNING  cannot read HOME of container           tabs.py:257
+                             agent-codex                                        
+                             ╭─ Traceback (most recent call last) ─╮            
+                             │ /home/sas/.local/share/aconsole/wor │            
+                             │ ktrees/sp_aconsole_prototype/038657 │            
+                             │ e1539f15ad/src/aconsole/core/infras │            
+                             │ tructure/tabs.py:254 in agent_home  │            
+                             │                                     │            
+                             │   251 │   │   if cached is not None │            
+                             │   252 │   │   │   return cached     │            
+                             │   253 │   │   try:                  │            
+                             │ ❱ 254 │   │   │   inspected = self. │            
+                             │   255 │   │   │   text = inspected. │            
+                             │       "-c", 'printf %s "$HOME"'))   │            
+                             │   256 │   │   except (ContainerErro │            
+                             │   257 │   │   │   _LOG.warning("can │            
+                             │                                     │            
+                             │ /home/sas/.local/share/aconsole/wor │            
+                             │ ktrees/sp_aconsole_prototype/038657 │            
+                             │ e1539f15ad/src/aconsole/core/infras │            
+                             │ tructure/containers/podman.py:111   │            
+                             │ in inspect                          │            
+                             │                                     │            
+                             │   108 │   def inspect(self, name: s │            
+                             │   109 │   │   """Return id, name, a │            
+                             │   110 │   │   check_container_name( │            
+                             │ ❱ 111 │   │   text = self._run(("in │            
+                             │   112 │   │   try:                  │            
+                             │   113 │   │   │   rows = msgspec.js │            
+                             │   114 │   │   except msgspec.Decode │            
+                             │                                     │            
+                             │ /home/sas/.local/share/aconsole/wor │            
+                             │ ktrees/sp_aconsole_prototype/038657 │            
+                             │ e1539f15ad/src/aconsole/core/infras │            
+                             │ tructure/containers/podman.py:216   │            
+                             │ in _run                             │            
+                             │                                     │            
+                             │   213 │   │   except FileNotFoundEr │            
+                             │   214 │   │   │   raise ContainerEr │            
+                             │   215 │   │   if completed.returnco │            
+                             │ ❱ 216 │   │   │   raise ContainerEr │            
+                             │       detail=completed.stderr)      │            
+                             │   217 │   │   return completed.stdo │            
+                             │   218                               │            
+                             ╰─────────────────────────────────────╯            
+                             ContainerError: podman command failed              
+[11/12/26 21:14:29] WARNING  cannot read HOME of container           tabs.py:257
+                             agent-codex                                        
+                             ╭─ Traceback (most recent call last) ─╮            
+                             │ /home/sas/.local/share/aconsole/wor │            
+                             │ ktrees/sp_aconsole_prototype/038657 │            
+                             │ e1539f15ad/src/aconsole/core/infras │            
+                             │ tructure/tabs.py:254 in agent_home  │            
+                             │                                     │            
+                             │   251 │   │   if cached is not None │            
+                             │   252 │   │   │   return cached     │            
+                             │   253 │   │   try:                  │            
+                             │ ❱ 254 │   │   │   inspected = self. │            
+                             │   255 │   │   │   text = inspected. │            
+                             │       "-c", 'printf %s "$HOME"'))   │            
+                             │   256 │   │   except (ContainerErro │            
+                             │   257 │   │   │   _LOG.warning("can │            
+                             │                                     │            
+                             │ /home/sas/.local/share/aconsole/wor │            
+                             │ ktrees/sp_aconsole_prototype/038657 │            
+                             │ e1539f15ad/src/aconsole/core/infras │            
+                             │ tructure/containers/podman.py:111   │            
+                             │ in inspect                          │            
+                             │                                     │            
+                             │   108 │   def inspect(self, name: s │            
+                             │   109 │   │   """Return id, name, a │            
+                             │   110 │   │   check_container_name( │            
+                             │ ❱ 111 │   │   text = self._run(("in │            
+                             │   112 │   │   try:                  │            
+                             │   113 │   │   │   rows = msgspec.js │            
+                             │   114 │   │   except msgspec.Decode │            
+                             │                                     │            
+                             │ /home/sas/.local/share/aconsole/wor │            
+                             │ ktrees/sp_aconsole_prototype/038657 │            
+                             │ e1539f15ad/src/aconsole/core/infras │            
+                             │ tructure/containers/podman.py:216   │            
+                             │ in _run                             │            
+                             │                                     │            
+                             │   213 │   │   except FileNotFoundEr │            
+                             │   214 │   │   │   raise ContainerEr │            
+                             │   215 │   │   if completed.returnco │            
+                             │ ❱ 216 │   │   │   raise ContainerEr │            
+                             │       detail=completed.stderr)      │            
+                             │   217 │   │   return completed.stdo │            
+                             │   218                               │            
+                             ╰─────────────────────────────────────╯            
+                             ContainerError: podman command failed              
+[11/12/26 21:14:30] WARNING  cannot read HOME of container           tabs.py:257
+                             agent-codex                                        
+                             ╭─ Traceback (most recent call last) ─╮            
+                             │ /home/sas/.local/share/aconsole/wor │            
+                             │ ktrees/sp_aconsole_prototype/038657 │            
+                             │ e1539f15ad/src/aconsole/core/infras │            
+                             │ tructure/tabs.py:254 in agent_home  │            
+                             │                                     │            
+                             │   251 │   │   if cached is not None │            
+                             │   252 │   │   │   return cached     │            
+                             │   253 │   │   try:                  │            
+                             │ ❱ 254 │   │   │   inspected = self. │            
+                             │   255 │   │   │   text = inspected. │            
+                             │       "-c", 'printf %s "$HOME"'))   │            
+                             │   256 │   │   except (ContainerErro │            
+                             │   257 │   │   │   _LOG.warning("can │            
+                             │                                     │            
+                             │ /home/sas/.local/share/aconsole/wor │            
+                             │ ktrees/sp_aconsole_prototype/038657 │            
+                             │ e1539f15ad/src/aconsole/core/infras │            
+                             │ tructure/containers/podman.py:111   │            
+                             │ in inspect                          │            
+                             │                                     │            
+                             │   108 │   def inspect(self, name: s │            
+                             │   109 │   │   """Return id, name, a │            
+                             │   110 │   │   check_container_name( │            
+                             │ ❱ 111 │   │   text = self._run(("in │            
+                             │   112 │   │   try:                  │            
+                             │   113 │   │   │   rows = msgspec.js │            
+                             │   114 │   │   except msgspec.Decode │            
+                             │                                     │            
+                             │ /home/sas/.local/share/aconsole/wor │            
+                             │ ktrees/sp_aconsole_prototype/038657 │            
+                             │ e1539f15ad/src/aconsole/core/infras │            
+                             │ tructure/containers/podman.py:216   │            
+                             │ in _run                             │            
+                             │                                     │            
+                             │   213 │   │   except FileNotFoundEr │            
+                             │   214 │   │   │   raise ContainerEr │            
+                             │   215 │   │   if completed.returnco │            
+                             │ ❱ 216 │   │   │   raise ContainerEr │            
+                             │       detail=completed.stderr)      │            
+                             │   217 │   │   return completed.stdo │            
+                             │   218                               │            
+                             ╰─────────────────────────────────────╯            
+                             ContainerError: podman command failed              
+[11/12/26 21:14:32] WARNING  cannot read HOME of container           tabs.py:257
+                             agent-codex                                        
+                             ╭─ Traceback (most recent call last) ─╮            
+                             │ /home/sas/.local/share/aconsole/wor │            
+                             │ ktrees/sp_aconsole_prototype/038657 │            
+                             │ e1539f15ad/src/aconsole/core/infras │            
+                             │ tructure/tabs.py:254 in agent_home  │            
+                             │                                     │            
+                             │   251 │   │   if cached is not None │            
+                             │   252 │   │   │   return cached     │            
+                             │   253 │   │   try:                  │            
+                             │ ❱ 254 │   │   │   inspected = self. │            
+                             │   255 │   │   │   text = inspected. │            
+                             │       "-c", 'printf %s "$HOME"'))   │            
+                             │   256 │   │   except (ContainerErro │            
+                             │   257 │   │   │   _LOG.warning("can │            
+                             │                                     │            
+                             │ /home/sas/.local/share/aconsole/wor │            
+                             │ ktrees/sp_aconsole_prototype/038657 │            
+                             │ e1539f15ad/src/aconsole/core/infras │            
+                             │ tructure/containers/podman.py:111   │            
+                             │ in inspect                          │            
+                             │                                     │            
+                             │   108 │   def inspect(self, name: s │            
+                             │   109 │   │   """Return id, name, a │            
+                             │   110 │   │   check_container_name( │            
+                             │ ❱ 111 │   │   text = self._run(("in │            
+                             │   112 │   │   try:                  │            
+                             │   113 │   │   │   rows = msgspec.js │            
+                             │   114 │   │   except msgspec.Decode │            
+                             │                                     │            
+                             │ /home/sas/.local/share/aconsole/wor │            
+                             │ ktrees/sp_aconsole_prototype/038657 │            
+                             │ e1539f15ad/src/aconsole/core/infras │            
+                             │ tructure/containers/podman.py:216   │            
+                             │ in _run                             │            
+                             │                                     │            
+                             │   213 │   │   except FileNotFoundEr │            
+                             │   214 │   │   │   raise ContainerEr │            
+                             │   215 │   │   if completed.returnco │            
+                             │ ❱ 216 │   │   │   raise ContainerEr │            
+                             │       detail=completed.stderr)      │            
+                             │   217 │   │   return completed.stdo │            
+                             │   218                               │            
+                             ╰─────────────────────────────────────╯            
+                             ContainerError: podman command failed              
+[11/12/26 21:14:33] WARNING  cannot read HOME of container           tabs.py:257
+                             agent-codex                                        
+                             ╭─ Traceback (most recent call last) ─╮            
+                             │ /home/sas/.local/share/aconsole/wor │            
+                             │ ktrees/sp_aconsole_prototype/038657 │            
+                             │ e1539f15ad/src/aconsole/core/infras │            
+                             │ tructure/tabs.py:254 in agent_home  │            
+                             │                                     │            
+                             │   251 │   │   if cached is not None │            
+                             │   252 │   │   │   return cached     │            
+                             │   253 │   │   try:                  │            
+                             │ ❱ 254 │   │   │   inspected = self. │            
+                             │   255 │   │   │   text = inspected. │            
+                             │       "-c", 'printf %s "$HOME"'))   │            
+                             │   256 │   │   except (ContainerErro │            
+                             │   257 │   │   │   _LOG.warning("can │            
+                             │                                     │            
+                             │ /home/sas/.local/share/aconsole/wor │            
+                             │ ktrees/sp_aconsole_prototype/038657 │            
+                             │ e1539f15ad/src/aconsole/core/infras │            
+                             │ tructure/containers/podman.py:111   │            
+                             │ in inspect                          │            
+                             │                                     │            
+                             │   108 │   def inspect(self, name: s │            
+                             │   109 │   │   """Return id, name, a │            
+                             │   110 │   │   check_container_name( │            
+                             │ ❱ 111 │   │   text = self._run(("in │            
+                             │   112 │   │   try:                  │            
+                             │   113 │   │   │   rows = msgspec.js │            
+                             │   114 │   │   except msgspec.Decode │            
+                             │                                     │            
+                             │ /home/sas/.local/share/aconsole/wor │            
+                             │ ktrees/sp_aconsole_prototype/038657 │            
+                             │ e1539f15ad/src/aconsole/core/infras │            
+                             │ tructure/containers/podman.py:216   │            
+                             │ in _run                             │            
+                             │                                     │            
+                             │   213 │   │   except FileNotFoundEr │            
+                             │   214 │   │   │   raise ContainerEr │            
+                             │   215 │   │   if completed.returnco │            
+                             │ ❱ 216 │   │   │   raise ContainerEr │            
+                             │       detail=completed.stderr)      │            
+                             │   217 │   │   return completed.stdo │            
+                             │   218                               │            
+                             ╰─────────────────────────────────────╯            
+                             ContainerError: podman command failed              
+[11/12/26 21:14:34] INFO     StreamableHTTP       streamable_http_manager.py:166
+                             session manager                                    
+                             shutting down                                      
+_____________ test_closing_dirty_preferences_can_cancel_or_discard _____________
+
+    def test_closing_dirty_preferences_can_cancel_or_discard() -> None:
+        async def scenario(app: _TabsTestApp) -> None:
+            client, _tabs = _model(demo_snapshot())
+            settings = Settings(rev=1, vault_path="", worktrees_dir="")
+    
+            async def request(_method: str, _params: msgspec.Struct, _result: type[msgspec.Struct]) -> msgspec.Struct:
+                return settings
+    
+            client.request = request
+            dialog = PreferencesDialog(PreferencesViewModel(client))
+            assert app.window is not None
+            app.window.set_default_size(800, 800)
+            app.window.present()
+            dialog.open(app.window)
+            await _until(lambda: not dialog.loading)
+            await _until(dialog.get_mapped)
+            dialog.font_entry.set_text("Draft font")
+            quitting = AConsoleApp(client)
+            quitting.window = app.window
+            app.window.preferences_dialog = dialog
+            quitting._close_now(app.window)
+            assert app.window.get_visible(), "application exit must not silently lose the draft"
+            assert dialog._active
+            prompt = dialog._close_prompt
+            assert prompt is not None
+            await _answer(prompt, "cancel")
+            await _until(lambda: dialog._close_prompt is None)
+            assert dialog.font_entry.get_text() == "Draft font"
+            dialog.close()
+            prompt = dialog._close_prompt
+            assert prompt is not None
+            await _answer(prompt, "discard")
+            await _until(lambda: not dialog._active)
+            await client.close()
+    
+>       _run_ui(scenario)
+
+tests/gui/front/test_preferences_drafts.py:92: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+scenario = <function test_closing_dirty_preferences_can_cancel_or_discard.<locals>.scenario at 0x76224f42f320>
+
+    def _run_ui(scenario: Callable[[_TabsTestApp], Awaitable[None]]) -> None:
+        app = _TabsTestApp(scenario)
+        assert run_app(lambda: app, ["aconsole-b2-tabs-test"]) == 0
+>       assert app.error is None, repr(app.error)
+E       AssertionError: AssertionError('GTK wait failed at 89')
+E       assert AssertionError('GTK wait failed at 89') is None
+E        +  where AssertionError('GTK wait failed at 89') = <test_b2_tabs._TabsTestApp object at 0x76224f4f7400 (tests+gui+front+test_b2_tabs+_TabsTestApp at 0x20970930)>.error
+
+tests/gui/front/test_b2_tabs.py:67: AssertionError
+=============================== warnings summary ===============================
+../../../../../../Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/events.py:803
+  /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/events.py:803: DeprecationWarning: 'asyncio.AbstractEventLoopPolicy' is deprecated and slated for removal in Python 3.16
+    AbstractEventLoopPolicy = getattr(asyncio, "AbstractEventLoopPolicy", object)
+
+tests/gui/front/test_b1_keys.py::test_b1_keys_terminal_passthrough
+  /home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/038657e1539f15ad/tests/gui/front/test_b1_keys.py:286: DeprecationWarning: Vte.Pty.close is deprecated
+    pty.close()
+
+tests/gui/front/test_contrast_table.py: 400 warnings
+tests/gui/front/test_ux1_shortcuts.py: 225 warnings
+tests/gui/front/test_watchdog_cleanup.py: 3 warnings
+  /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/events.py:890: DeprecationWarning: 'asyncio.get_event_loop_policy' is deprecated and slated for removal in Python 3.16
+    if not isinstance(_get_event_loop_policy(), GLibEventLoopPolicy):
+
+tests/gui/front/test_git_actions.py::test_stage_commit_and_file_buttons_in_the_inspector
+  /home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/038657e1539f15ad/src/aconsole/ui/views/review/graph_cell.py:113: DeprecationWarning: Gtk.Widget.get_style_context is deprecated
+    _found, background = self.get_style_context().lookup_color("view_bg_color")
+
+tests/gui/front/test_git_actions.py::test_stage_commit_and_file_buttons_in_the_inspector
+  /home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/038657e1539f15ad/src/aconsole/ui/views/review/graph_cell.py:113: DeprecationWarning: Gtk.StyleContext.lookup_color is deprecated
+    _found, background = self.get_style_context().lookup_color("view_bg_color")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/gui/front/test_approval_alerts.py::test_the_window_rings_withdraws_and_a_click_opens_the_tab[waiting]
+FAILED tests/gui/front/test_b0_window.py::test_sidebar_lists_demo_tabs[700-True]
+FAILED tests/gui/front/test_b0_window.py::test_collapsed_sidebar_button_opens_and_closes_sidebar
+FAILED tests/gui/front/test_b0_window.py::test_system_title_buttons_keep_clear_header_space[700-True-left]
+FAILED tests/gui/front/test_b0_window.py::test_system_title_buttons_keep_clear_header_space[700-True-right]
+FAILED tests/gui/front/test_b0_window.py::test_system_title_buttons_keep_clear_header_space[700-True-both]
+FAILED tests/gui/front/test_b1_keys.py::test_b1_keys_narrow_window - assert F...
+FAILED tests/gui/front/test_des3_visual.py::test_native_widgets_match_reviewed_baselines[light-1280-light]
+FAILED tests/gui/front/test_des3_visual.py::test_native_widgets_match_reviewed_baselines[dark-1280-dark]
+FAILED tests/gui/front/test_des3_visual.py::test_native_widgets_match_reviewed_baselines[light-700-narrow]
+FAILED tests/gui/front/test_git_scale_ui.py::test_scrolling_a_long_history - ...
+FAILED tests/gui/front/test_preferences_drafts.py::test_closing_dirty_preferences_can_cancel_or_discard
+12 failed, 467 passed, 632 warnings in 138.26s (0:02:18)

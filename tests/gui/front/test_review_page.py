@@ -17,6 +17,7 @@ from aconsole.ui.bootstrap import run_app, spawn_task  # noqa: E402
 from aconsole.ui.client.core_client import CoreClient  # noqa: E402
 from aconsole.ui.viewmodels.review_vm import ReviewViewModel, files_preview, gutter  # noqa: E402
 from aconsole.ui.views.review.page import ReviewPage  # noqa: E402
+from tests.gui.watchdog import arm_watchdog  # noqa: E402
 
 if TYPE_CHECKING:
     from collections.abc import Awaitable, Callable
@@ -37,7 +38,7 @@ def _on_page(socket: str, check: Callable[[ReviewPage, list[str]], Awaitable[Non
                 return
             self._held = True
             self.hold()
-            _ = GLib.timeout_add(_TIMEOUT_MS, self._expired)
+            _ = arm_watchdog(self, _TIMEOUT_MS, self._expired)
             _ = spawn_task(self._run())
 
         def _expired(self) -> bool:

@@ -22,6 +22,7 @@ from aconsole.ui.client.core_client import CoreClient  # noqa: E402
 from aconsole.ui.viewmodels.approval_alerts import Alert, ApprovalAlerts  # noqa: E402
 from aconsole.ui.views.app import AConsoleApp  # noqa: E402
 from aconsole.ui.views.approvals.alert import OPEN_APPROVAL_ACTION, alert_body, alert_notification  # noqa: E402
+from tests.gui.watchdog import arm_watchdog  # noqa: E402
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
@@ -189,7 +190,7 @@ class _WindowApp(AConsoleApp):
         self.gone.append(notification_id)
 
     async def _open(self) -> None:
-        _ = GLib.timeout_add(_TIMEOUT_MS, self._expired)
+        _ = arm_watchdog(self, _TIMEOUT_MS, self._expired)
         try:
             await super()._open()
             assert self.window is not None

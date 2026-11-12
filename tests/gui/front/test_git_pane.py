@@ -24,6 +24,7 @@ from aconsole.ui.snapshot import capture_window  # noqa: E402
 from aconsole.ui.viewmodels.git_vm import GitViewModel, merge_badges  # noqa: E402
 from aconsole.ui.views.review.git_pane import GitPane, RowItem  # noqa: E402
 from tests.gui.core_daemon import core_command  # noqa: E402
+from tests.gui.watchdog import arm_watchdog  # noqa: E402
 
 if TYPE_CHECKING:
     from collections.abc import Awaitable, Callable
@@ -89,7 +90,7 @@ def _on_pane(
                 return
             self._held = True
             self.hold()
-            _ = GLib.timeout_add(_TIMEOUT_MS, self._expired)
+            _ = arm_watchdog(self, _TIMEOUT_MS, self._expired)
             _ = spawn_task(self._run())
 
         def _expired(self) -> bool:
