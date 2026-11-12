@@ -1,0 +1,49 @@
+Collected 0 items to run in parallel
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_____________ test_hiding_parent_cancels_pending_preferences_close _____________
+
+    def test_hiding_parent_cancels_pending_preferences_close() -> None:
+        async def scenario(app: _TabsTestApp) -> None:
+            client, _tabs = _model(demo_snapshot())
+    
+            async def request(_method: str, _params: msgspec.Struct, _result: type[msgspec.Struct]) -> msgspec.Struct:
+                return Settings(rev=1, vault_path="", worktrees_dir="")
+    
+            client.request = request
+            dialog = PreferencesDialog(PreferencesViewModel(client))
+            assert app.window is not None
+            app.window.present()
+            dialog.open(app.window)
+            dialog.close()
+            assert dialog._close_tick_id != 0
+            app.window.set_visible(False)
+            assert dialog._close_tick_id == 0
+            await _check_reopened_close(dialog, app.window)
+            await client.close()
+    
+>       _run_ui(scenario)
+
+tests/gui/front/test_preferences_drafts.py:183: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+scenario = <function test_hiding_parent_cancels_pending_preferences_close.<locals>.scenario at 0x7dd0fa9f17a0>
+
+    def _run_ui(scenario: Callable[[_TabsTestApp], Awaitable[None]]) -> None:
+        app = _TabsTestApp(scenario)
+        assert run_app(lambda: app, ["aconsole-b2-tabs-test"]) == 0
+>       assert app.error is None, repr(app.error)
+E       AssertionError: AssertionError('GTK wait failed at 99')
+E       assert AssertionError('GTK wait failed at 99') is None
+E        +  where AssertionError('GTK wait failed at 99') = <test_b2_tabs._TabsTestApp object at 0x7dd1247caa00 (tests+gui+front+test_b2_tabs+_TabsTestApp at 0x3cd4580)>.error
+
+tests/gui/front/test_b2_tabs.py:67: AssertionError
+=============================== warnings summary ===============================
+../../../../../../Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/events.py:803
+  /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/events.py:803: DeprecationWarning: 'asyncio.AbstractEventLoopPolicy' is deprecated and slated for removal in Python 3.16
+    AbstractEventLoopPolicy = getattr(asyncio, "AbstractEventLoopPolicy", object)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/gui/front/test_preferences_drafts.py::test_hiding_parent_cancels_pending_preferences_close
+1 failed, 1 warning in 2.58s

@@ -6,7 +6,9 @@ import asyncio
 from typing import TYPE_CHECKING
 
 import msgspec
+import pytest
 
+from aconsole.contracts.app import SettingsUpdateParams
 from aconsole.contracts.settings import Settings, SettingsPatch, commit_settings
 from aconsole.core.infrastructure.fake.scenarios import demo_snapshot
 from aconsole.ui.viewmodels.setup_vm import PreferencesViewModel
@@ -87,6 +89,96 @@ def test_closing_dirty_preferences_can_cancel_or_discard() -> None:
         assert prompt is not None
         await _answer(prompt, "discard")
         await _until(lambda: not dialog._active)
+        await client.close()
+
+    _run_ui(scenario)
+
+
+async def _check_reopened_close(dialog: PreferencesDialog, parent: Gtk.Widget) -> None:
+    dialog.open(parent)
+    await _until(lambda: not dialog.loading and dialog.get_width() > 0)
+    assert dialog._active
+    dialog.close()
+    await _until(lambda: not dialog.get_mapped())
+    assert dialog._close_tick_id == 0
+    assert dialog._unsubscribe is None
+
+
+@pytest.mark.parametrize("decision", ["clean", "discard", "save", "clean-edited", "save-edited"])
+def test_preferences_close_before_first_frame(decision: str) -> None:
+    async def scenario(app: _TabsTestApp) -> None:
+        client, _tabs = _model(demo_snapshot())
+        settings = Settings(rev=1, vault_path="", worktrees_dir="")
+        patches: list[SettingsPatch] = []
+        action = decision.split("-", maxsplit=1)[0]
+
+        async def request(method: str, params: msgspec.Struct, _result: type[msgspec.Struct]) -> msgspec.Struct:
+            nonlocal settings
+            if method == "settings/update":
+                assert isinstance(params, SettingsUpdateParams)
+                patches.append(params.patch)
+                settings = commit_settings(settings, params.patch)
+            return settings
+
+        client.request = request
+        dialog = PreferencesDialog(PreferencesViewModel(client))
+        assert app.window is not None
+        app.window.set_default_size(800, 800)
+        app.window.present()
+        dialog.open(app.window)
+        # Deliver a confirmed close before GTK's opening frame callbacks run.
+        assert dialog.get_width() == 0
+        if action == "clean":
+            dialog.close()
+        else:
+            assert dialog.worker is not None
+            await dialog.worker
+            dialog.font_entry.set_text("Early draft")
+            dialog.close()
+            prompt = dialog._close_prompt
+            assert prompt is not None
+            await _answer(prompt, action)
+        if decision.endswith("-edited"):
+            assert dialog.worker is not None
+            await dialog.worker
+            assert dialog._close_tick_id != 0
+            dialog.font_entry.set_text("Later draft")
+            await _until(lambda: dialog._close_tick_id == 0)
+            assert dialog._active
+            assert dialog.font_entry.get_text() == "Later draft"
+            dialog.close()
+            prompt = dialog._close_prompt
+            assert prompt is not None
+            await _answer(prompt, "discard")
+        await _until(lambda: not dialog._active)
+        await _until(lambda: not dialog.get_mapped())
+        assert dialog._unsubscribe is None
+        assert bool(patches) == (action == "save")
+        assert settings.terminal_font == ("Early draft" if action == "save" else None)
+        await _check_reopened_close(dialog, app.window)
+        await client.close()
+
+    _run_ui(scenario)
+
+
+def test_hiding_parent_cancels_pending_preferences_close() -> None:
+    async def scenario(app: _TabsTestApp) -> None:
+        client, _tabs = _model(demo_snapshot())
+
+        async def request(_method: str, _params: msgspec.Struct, _result: type[msgspec.Struct]) -> msgspec.Struct:
+            return Settings(rev=1, vault_path="", worktrees_dir="")
+
+        client.request = request
+        dialog = PreferencesDialog(PreferencesViewModel(client))
+        assert app.window is not None
+        app.window.present()
+        dialog.open(app.window)
+        dialog.close()
+        assert dialog._close_tick_id != 0
+        app.window.set_visible(False)
+        assert dialog._close_tick_id == 0
+        app.window.present()
+        await _check_reopened_close(dialog, app.window)
         await client.close()
 
     _run_ui(scenario)

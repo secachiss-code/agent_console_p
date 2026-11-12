@@ -11,7 +11,7 @@ import msgspec
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
-from gi.repository import Adw, Gio, GLib, GObject, Gtk, Pango  # noqa: E402
+from gi.repository import Adw, Gdk, Gio, GLib, GObject, Gtk, Pango  # noqa: E402
 
 from aconsole.contracts.app import ProjectApprovalPolicyParams, ProjectView  # noqa: E402
 from aconsole.contracts.common import AgentKind  # noqa: E402
@@ -27,6 +27,7 @@ _QUOTA_DISPLAYS: tuple[Literal["used", "remaining"], ...] = ("used", "remaining"
 _APPROVAL_MODES: tuple[Literal["inline", "native"], ...] = ("inline", "native")
 _POLICY_MODES: tuple[Literal["ask", "allow", "deny", "scenario"], ...] = ("ask", "allow", "deny", "scenario")
 _PROJECT_POLICIES: tuple[Literal["inherit", "ask", "allow", "deny"], ...] = ("inherit", "ask", "allow", "deny")
+_CLOSE_OPENING_TICKS = 3
 _HARNESSES: tuple[AgentKind, ...] = (AgentKind.CLAUDE, AgentKind.CODEX, AgentKind.OPENCODE, AgentKind.CURSOR)
 
 
@@ -45,6 +46,10 @@ class PreferencesDialog(Adw.PreferencesDialog):
         self._unsubscribe: Callable[[], None] | None = None
         self._close_prompt: Adw.AlertDialog | None = None
         self._close_after_save: bool = False
+        self._close_tick_id: int = 0
+        self._close_ticks: int = 0
+        self._discard_on_close: bool = False
+        _ = self.connect("unmap", self._cancel_pending_close)
         self.set_can_close(False)
         _ = self.connect("close-attempt", self._close_attempt)
         page = Adw.PreferencesPage()
@@ -267,7 +272,7 @@ class PreferencesDialog(Adw.PreferencesDialog):
                 dirty = self._shown is not None and self._changes(self._shown) != SettingsPatch()
                 self.status_label.set_label(translate("prefs.unsaved" if dirty else "prefs.saved"))
                 if self._close_after_save and not dirty:
-                    self.force_close()
+                    self._request_close()
         except Exception:  # noqa: BLE001 -- never publish an unconfirmed settings patch
             if self._active and generation == self._generation:
                 self.status_label.set_label(translate("prefs.error"))
@@ -398,7 +403,7 @@ class PreferencesDialog(Adw.PreferencesDialog):
             self.status_label.set_label(translate("prefs.saving"))
             return
         if self._shown is None or self._changes(self._shown) == SettingsPatch():
-            self.force_close()
+            self._request_close()
             return
         if self._close_prompt is not None:
             return
@@ -418,16 +423,39 @@ class PreferencesDialog(Adw.PreferencesDialog):
             return
         self._close_prompt = None
         if response == "discard":
-            _ = GLib.idle_add(self._discard_after_prompt)
+            self._request_close(discard=True)
         elif response == "save":
             self._close_after_save = True
             self.save()
 
-    def _discard_after_prompt(self) -> bool:
+    def _request_close(self, *, discard: bool = False) -> None:
+        if not self._active or self._close_tick_id:
+            return
+        self._close_ticks = 0
+        self._discard_on_close = discard
+        self._close_tick_id = self.add_tick_callback(self._close_after_opening)
+
+    def _close_after_opening(self, _widget: Gtk.Widget, _clock: Gdk.FrameClock) -> bool:
+        # libadwaita 1.5 opens embedded sheets on their second map tick. Closing
+        # earlier is a no-op, then that opening tick resurrects the dialog.
+        # Three ticks also leave the nested alert's response stack before closing.
+        self._close_ticks += 1
+        if self._close_ticks < _CLOSE_OPENING_TICKS:
+            return GLib.SOURCE_CONTINUE
+        self._close_tick_id = 0
+        if not self._discard_on_close and self._shown is not None and self._changes(self._shown) != SettingsPatch():
+            self.status_label.set_label(translate("prefs.unsaved"))
+            return GLib.SOURCE_REMOVE
         self.force_close()
         return GLib.SOURCE_REMOVE
 
+    def _cancel_pending_close(self, _widget: Gtk.Widget) -> None:
+        if self._close_tick_id:
+            self.remove_tick_callback(self._close_tick_id)
+            self._close_tick_id = 0
+
     def _closed(self, _dialog: Adw.Dialog) -> None:
+        self._cancel_pending_close(self)
         self._active = False
         self._generation += 1
         if self._unsubscribe is not None:

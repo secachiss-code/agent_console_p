@@ -1,0 +1,63 @@
+{
+  "base": "91e7396d6e6f5b11e6727e52476d9825c72d1791",
+  "results": {
+    "early-red": {
+      "total": 3,
+      "failures": [
+        "tests.gui.front.test_preferences_drafts:test_preferences_close_before_first_frame[clean]",
+        "tests.gui.front.test_preferences_drafts:test_preferences_close_before_first_frame[discard]",
+        "tests.gui.front.test_preferences_drafts:test_preferences_close_before_first_frame[save]"
+      ]
+    },
+    "early-red-corrected": {
+      "total": 3,
+      "failures": [
+        "tests.gui.front.test_preferences_drafts:test_preferences_close_before_first_frame[clean]",
+        "tests.gui.front.test_preferences_drafts:test_preferences_close_before_first_frame[discard]",
+        "tests.gui.front.test_preferences_drafts:test_preferences_close_before_first_frame[save]"
+      ]
+    },
+    "native-green": {
+      "total": 6,
+      "failures": []
+    },
+    "native-final": {
+      "total": 30,
+      "failures": []
+    },
+    "native-unmap": {
+      "total": 1,
+      "failures": [
+        "tests.gui.front.test_preferences_drafts:test_hiding_parent_cancels_pending_preferences_close"
+      ]
+    },
+    "native-release": {
+      "total": 31,
+      "failures": []
+    },
+    "desktop-selection": {
+      "total": 61,
+      "failures": [
+        "tests.gui.front.test_b0_window:test_sidebar_lists_demo_tabs[700-True]",
+        "tests.gui.front.test_b0_window:test_collapsed_sidebar_button_opens_and_closes_sidebar",
+        "tests.gui.front.test_b0_window:test_system_title_buttons_keep_clear_header_space[700-True-left]",
+        "tests.gui.front.test_b0_window:test_system_title_buttons_keep_clear_header_space[700-True-right]",
+        "tests.gui.front.test_b0_window:test_system_title_buttons_keep_clear_header_space[700-True-both]",
+        "tests.gui.front.test_b1_keys:test_b1_keys_narrow_window",
+        "tests.gui.front.test_des3_visual:test_native_widgets_match_reviewed_baselines[light-1280-light]",
+        "tests.gui.front.test_des3_visual:test_native_widgets_match_reviewed_baselines[dark-1280-dark]",
+        "tests.gui.front.test_des3_visual:test_native_widgets_match_reviewed_baselines[light-700-narrow]"
+      ]
+    }
+  },
+  "hashes": {
+    "src/aconsole/ui/views/setup/preferences.py": "0c5c8d3b690d41892984391cead93d0f19d1d3e293d4bbf4eaeb9638abd99c12",
+    "tests/gui/front/test_preferences_drafts.py": "1549fa422306db01a8028075a9ca53da0aba10c1e043890c53e78afa0eafeebe",
+    "artifacts/qa24/ui/prefs-dark.png": "0b4a0bf8ae5e0676c5aeb68dca9040e52c830669db0d2181060ad6ecbe86a147",
+    "artifacts/qa24/ui/prefs-light.png": "85a3cc6431277e98fa814b7a92ed40297a908996ab8e213838c02934f85b7b95",
+    "artifacts/qa24/ui/prefs-narrow.png": "3018aca4a6d6990c71f03e1f0e8992ab2c091a8d398191c157c6324eafb77e5d"
+  },
+  "qa4_accepted": false,
+  "performance_accepted": false,
+  "security_accepted": false
+}

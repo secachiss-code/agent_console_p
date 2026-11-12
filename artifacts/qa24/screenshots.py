@@ -1,0 +1,40 @@
+import os
+import secrets
+import struct
+import subprocess
+import sys
+import tempfile
+import time
+from pathlib import Path
+
+root = Path(__file__).resolve().parents[2]
+with tempfile.TemporaryDirectory(prefix='qa24-xvfb-') as directory:
+    temp = Path(directory)
+    subprocess.run(['/usr/bin/apt-get', 'download', 'xvfb'], cwd=temp, timeout=90, check=True)
+    packages = list(temp.glob('xvfb_*.deb'))
+    assert len(packages) == 1
+    subprocess.run(['/usr/bin/dpkg-deb', '-x', str(packages[0]), str(temp/'package')], timeout=20, check=True)
+    number = next(n for n in range(101,120) if not Path(f'/tmp/.X11-unix/X{n}').exists())
+    display = str(number).encode()
+    cookie = secrets.token_bytes(16)
+    auth = temp/'Xauthority'
+    auth.write_bytes(struct.pack('>HH',65535,0)+struct.pack('>H',len(display))+display+struct.pack('>H',18)+b'MIT-MAGIC-COOKIE-1'+struct.pack('>H',16)+cookie)
+    auth.chmod(0o600)
+    server = subprocess.Popen([str(temp/'package/usr/bin/Xvfb'),f':{number}','-screen','0','1280x800x24','-nolisten','tcp','-auth',str(auth)])
+    try:
+        for _ in range(100):
+            if Path(f'/tmp/.X11-unix/X{number}').exists():
+                break
+            if server.poll() is not None:
+                raise RuntimeError('temporary Xvfb failed to start')
+            time.sleep(0.05)
+        env = dict(os.environ, DISPLAY=f':{number}',XAUTHORITY=str(auth),GDK_BACKEND='x11',GTK_A11Y='none',PYTHONPATH=str(root/'src'))
+        env.pop('WAYLAND_DISPLAY',None)
+        env.pop('BROADWAY_DISPLAY',None)
+        output=root/'artifacts/qa24/ui'
+        output.mkdir(parents=True,exist_ok=True)
+        for theme,size,name in [('light','1280x800','prefs-light'),('dark','1280x800','prefs-dark'),('light','700x800','prefs-narrow')]:
+            subprocess.run([sys.executable,str(root/'tools/ui_snapshot.py'),'--scenario','demo','--view','prefs','--theme',theme,'--size',size,'--out',str(output/(name+'.png'))],env=env,cwd=root,timeout=25,check=True)
+    finally:
+        server.terminate()
+        server.wait(timeout=5)
