@@ -74,8 +74,8 @@ def test_stage_commit_and_file_buttons_in_the_inspector(tmp_path: Path, monkeypa
         # One file at a time, from its own row.
         await _settled(lambda: ("git.file_stage", "n.txt") in actions.file_actions)
         actions.file_actions["git.file_stage", "n.txt"].emit("clicked")
-        await _settled(lambda: "A  n.txt" in _git(repo, "status", "--porcelain"))
-        assert "?? m.txt" in _git(repo, "status", "--porcelain")
+        await _settled(lambda: "A  n.txt" in _git(repo, "--no-optional-locks", "status", "--porcelain"))
+        assert "?? m.txt" in _git(repo, "--no-optional-locks", "status", "--porcelain")
 
         # Discarding asks first, says what happens, and keeps a way back.
         await _settled(lambda: ("git.file_discard", "a.txt") in actions.file_actions)
@@ -167,8 +167,12 @@ def test_a_conflicted_rebase_offers_abort_and_a_stale_commit_is_refused(
         _press(pane, "abort")
         _answer(pane)
         try:
+            # Observing completion must not compete with abort for the index lock.
             await _settled(
-                lambda: _git(tree, "status", "--porcelain") == "" and _git(tree, "rev-parse", "HEAD") == before
+                lambda: (
+                    _git(tree, "--no-optional-locks", "status", "--porcelain") == ""
+                    and _git(tree, "rev-parse", "HEAD") == before
+                )
             )
         except AssertionError as error:
             error.add_note(f"Abort messages: {toasts!r}; selected row: {pane.selected_row()!r}")

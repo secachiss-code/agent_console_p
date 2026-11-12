@@ -1,0 +1,384 @@
+[
+  {
+    "argv": [
+      "init",
+      "-q",
+      "-b",
+      "develop",
+      "--object-format=sha1"
+    ],
+    "returncode": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "add",
+      "a.txt"
+    ],
+    "returncode": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "commit",
+      "-qm",
+      "first"
+    ],
+    "returncode": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "--no-optional-locks",
+      "status",
+      "--porcelain"
+    ],
+    "returncode": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "status",
+      "--porcelain"
+    ],
+    "returncode": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "worktree",
+      "add",
+      "-q",
+      "-b",
+      "ac/feature",
+      "/tmp/aconsole-qa27-uvfzewok/wt"
+    ],
+    "returncode": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "commit",
+      "-qam",
+      "work side"
+    ],
+    "returncode": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "rev-parse",
+      "HEAD"
+    ],
+    "returncode": 0,
+    "stdout": "68795dfaecb393cfc27c4dec60a580c72c131ca0\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "commit",
+      "-qam",
+      "base side"
+    ],
+    "returncode": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "rebase",
+      "develop"
+    ],
+    "returncode": 1,
+    "stdout": "Auto-merging a.txt\nCONFLICT (content): Merge conflict in a.txt\n",
+    "stderr": "Rebasing (1/1)\nerror: could not apply 68795df... work side\nhint: Resolve all conflicts manually, mark them as resolved with\nhint: \"git add/rm <conflicted_files>\", then run \"git rebase --continue\".\nhint: You can instead skip this commit: run \"git rebase --skip\".\nhint: To abort and get back to the state before \"git rebase\", run \"git rebase --abort\".\nhint: Disable this message with \"git config advice.mergeConflict false\"\nCould not apply 68795df... work side\n"
+  },
+  {
+    "argv": [
+      "--no-optional-locks",
+      "status",
+      "--porcelain"
+    ],
+    "returncode": 0,
+    "stdout": "UU a.txt\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "rev-parse",
+      "--absolute-git-dir"
+    ],
+    "returncode": 0,
+    "stdout": "/tmp/aconsole-qa27-uvfzewok/repo/.git/worktrees/wt\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "rev-parse",
+      "HEAD"
+    ],
+    "returncode": 0,
+    "stdout": "17bada38504cb57c817a0e6cc680710306c4e07a\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "--no-optional-locks",
+      "status",
+      "--porcelain"
+    ],
+    "returncode": 0,
+    "stdout": "UU a.txt\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "rebase",
+      "--abort"
+    ],
+    "returncode": 128,
+    "stdout": "",
+    "stderr": "error: Unable to create '/tmp/aconsole-qa27-uvfzewok/repo/.git/worktrees/wt/index.lock': File exists.\n\nAnother git process seems to be running in this repository, e.g.\nan editor opened by 'git commit'. Please make sure all processes\nare terminated then try again. If it still fails, a git process\nmay have crashed in this repository earlier:\nremove the file manually to continue.\nfatal: could not move back to 68795dfaecb393cfc27c4dec60a580c72c131ca0\n"
+  },
+  {
+    "argv": [
+      "rev-parse",
+      "HEAD"
+    ],
+    "returncode": 0,
+    "stdout": "17bada38504cb57c817a0e6cc680710306c4e07a\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "rebase",
+      "--abort"
+    ],
+    "returncode": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "--no-optional-locks",
+      "status",
+      "--porcelain"
+    ],
+    "returncode": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "rev-parse",
+      "HEAD"
+    ],
+    "returncode": 0,
+    "stdout": "68795dfaecb393cfc27c4dec60a580c72c131ca0\n",
+    "stderr": ""
+  },
+  {
+    "algorithm": "sha1",
+    "passed": true,
+    "restored_head": "68795dfaecb393cfc27c4dec60a580c72c131ca0",
+    "conflict_index_sha256": "37b7fc96cc9826923f942d203910db1793af3ce7ad48d6249d20bd8bad7601ce"
+  },
+  {
+    "argv": [
+      "init",
+      "-q",
+      "-b",
+      "develop",
+      "--object-format=sha256"
+    ],
+    "returncode": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "add",
+      "a.txt"
+    ],
+    "returncode": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "commit",
+      "-qm",
+      "first"
+    ],
+    "returncode": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "--no-optional-locks",
+      "status",
+      "--porcelain"
+    ],
+    "returncode": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "status",
+      "--porcelain"
+    ],
+    "returncode": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "worktree",
+      "add",
+      "-q",
+      "-b",
+      "ac/feature",
+      "/tmp/aconsole-qa27-mk7xnioq/wt"
+    ],
+    "returncode": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "commit",
+      "-qam",
+      "work side"
+    ],
+    "returncode": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "rev-parse",
+      "HEAD"
+    ],
+    "returncode": 0,
+    "stdout": "f25c2d4c2864b7d46b8aaffa5033abbb36e3c5ca36731d49888f6323563a7456\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "commit",
+      "-qam",
+      "base side"
+    ],
+    "returncode": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "rebase",
+      "develop"
+    ],
+    "returncode": 1,
+    "stdout": "Auto-merging a.txt\nCONFLICT (content): Merge conflict in a.txt\n",
+    "stderr": "Rebasing (1/1)\nerror: could not apply f25c2d4... work side\nhint: Resolve all conflicts manually, mark them as resolved with\nhint: \"git add/rm <conflicted_files>\", then run \"git rebase --continue\".\nhint: You can instead skip this commit: run \"git rebase --skip\".\nhint: To abort and get back to the state before \"git rebase\", run \"git rebase --abort\".\nhint: Disable this message with \"git config advice.mergeConflict false\"\nCould not apply f25c2d4... work side\n"
+  },
+  {
+    "argv": [
+      "--no-optional-locks",
+      "status",
+      "--porcelain"
+    ],
+    "returncode": 0,
+    "stdout": "UU a.txt\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "rev-parse",
+      "--absolute-git-dir"
+    ],
+    "returncode": 0,
+    "stdout": "/tmp/aconsole-qa27-mk7xnioq/repo/.git/worktrees/wt\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "rev-parse",
+      "HEAD"
+    ],
+    "returncode": 0,
+    "stdout": "39f35ec49521f406636975b68c43632061c0f119fb733dd6effe29535aad9d1c\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "--no-optional-locks",
+      "status",
+      "--porcelain"
+    ],
+    "returncode": 0,
+    "stdout": "UU a.txt\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "rebase",
+      "--abort"
+    ],
+    "returncode": 128,
+    "stdout": "",
+    "stderr": "error: Unable to create '/tmp/aconsole-qa27-mk7xnioq/repo/.git/worktrees/wt/index.lock': File exists.\n\nAnother git process seems to be running in this repository, e.g.\nan editor opened by 'git commit'. Please make sure all processes\nare terminated then try again. If it still fails, a git process\nmay have crashed in this repository earlier:\nremove the file manually to continue.\nfatal: could not move back to f25c2d4c2864b7d46b8aaffa5033abbb36e3c5ca36731d49888f6323563a7456\n"
+  },
+  {
+    "argv": [
+      "rev-parse",
+      "HEAD"
+    ],
+    "returncode": 0,
+    "stdout": "39f35ec49521f406636975b68c43632061c0f119fb733dd6effe29535aad9d1c\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "rebase",
+      "--abort"
+    ],
+    "returncode": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "--no-optional-locks",
+      "status",
+      "--porcelain"
+    ],
+    "returncode": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "rev-parse",
+      "HEAD"
+    ],
+    "returncode": 0,
+    "stdout": "f25c2d4c2864b7d46b8aaffa5033abbb36e3c5ca36731d49888f6323563a7456\n",
+    "stderr": ""
+  },
+  {
+    "algorithm": "sha256",
+    "passed": true,
+    "restored_head": "f25c2d4c2864b7d46b8aaffa5033abbb36e3c5ca36731d49888f6323563a7456",
+    "conflict_index_sha256": "7da93bd9d98cb816f3bd7f18d011210959372f0d87df45f5d83df26d3b546fa0"
+  }
+]
