@@ -1,0 +1,31 @@
+{
+  "requested": [
+    700,
+    800
+  ],
+  "default_size": [
+    1920,
+    1080
+  ],
+  "actual": [
+    1920,
+    1080
+  ],
+  "maximized": false,
+  "fullscreen": false,
+  "surface_state": "43584",
+  "surface_state_nicks": [
+    "focused",
+    "top-resizable",
+    "right-resizable",
+    "bottom-resizable",
+    "left-resizable"
+  ],
+  "collapsed": false,
+  "environment": {
+    "GDK_BACKEND": "x11",
+    "XDG_CURRENT_DESKTOP": "Pantheon",
+    "XDG_SESSION_TYPE": "x11",
+    "DESKTOP_SESSION": "pantheon"
+  }
+}

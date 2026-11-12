@@ -1,0 +1,3 @@
+PASS: cleanup helper preserves free-threaded interpreter without importing gi
+Interpreter: host .venv-core/bin/python -Xgil=0
+Check: import helper; enter/exit context without GTK; sys._is_gil_enabled() remains False; gi absent from sys.modules.

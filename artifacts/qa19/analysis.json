@@ -1,0 +1,140 @@
+{
+  "qa19-full": {
+    "events_by_stage": {
+      "setup": 476,
+      "teardown": 476
+    },
+    "windows_before_scale": 0,
+    "mapped_before_scale": 0,
+    "mapped_applications_before_scale": {},
+    "fds_before_scale": 227,
+    "threads_before_scale": 11,
+    "windows_at_end": 1,
+    "maximum_windows": 1,
+    "scale": "git scale: 10000 rows, 161 frames in 4 s, median 17.9 ms, p95 35.8 ms, worst 49.0 ms, RSS 585 MB (start 573, first page 573, all rows 584 after 3.0 s)",
+    "passed": 464,
+    "failures": [
+      "tests.gui.front.test_approval_alerts::test_the_window_rings_withdraws_and_a_click_opens_the_tab[waiting]",
+      "tests.gui.front.test_b0_window::test_sidebar_lists_demo_tabs[700-True]",
+      "tests.gui.front.test_b0_window::test_collapsed_sidebar_button_opens_and_closes_sidebar",
+      "tests.gui.front.test_b0_window::test_system_title_buttons_keep_clear_header_space[700-True-left]",
+      "tests.gui.front.test_b0_window::test_system_title_buttons_keep_clear_header_space[700-True-right]",
+      "tests.gui.front.test_b0_window::test_system_title_buttons_keep_clear_header_space[700-True-both]",
+      "tests.gui.front.test_b1_keys::test_b1_keys_narrow_window",
+      "tests.gui.front.test_des3_visual::test_native_widgets_match_reviewed_baselines[light-1280-light]",
+      "tests.gui.front.test_des3_visual::test_native_widgets_match_reviewed_baselines[dark-1280-dark]",
+      "tests.gui.front.test_des3_visual::test_native_widgets_match_reviewed_baselines[light-700-narrow]",
+      "tests.gui.front.test_git_scale_ui::test_scrolling_a_long_history",
+      "tests.gui.front.test_preferences_drafts::test_closing_dirty_preferences_can_cancel_or_discard"
+    ],
+    "errors": 0,
+    "skipped": 0,
+    "renderer": "GskNglRenderer",
+    "gtk_version": [
+      4,
+      14,
+      5
+    ],
+    "load_before": [
+      3.18017578125,
+      2.8916015625,
+      2.3720703125
+    ],
+    "load_after": [
+      3.52783203125,
+      2.9775390625,
+      2.40576171875
+    ],
+    "evidence_sha256": {
+      "qa19-full-lifecycle.jsonl.gz": "3fc5c7bfc925b38ba6510ef54a470cb296dfc96df3b9840d534bb4ef88225492",
+      "qa19-full.jsonl": "6fcaeee20e7bdbd33486b00cfca17585dad6dc2fd00c825bda83e63e3985b54f",
+      "qa19-full.xml": "eaf42495e2ed13a11df810996745df7882787c41b021e7d8c82e53ff25c2c133",
+      "qa19-full-scale.txt": "373be900ef064c1ad62a708acfa7ab64c5062f9f1f89dd9fe51874c31d8de02a",
+      "qa19-full-gl.txt": "aa7b6fc7c98a56f659f60d2c4be1f725fba88578fef1bc4fcc2e793c2998863d"
+    }
+  },
+  "qa19-isolated": {
+    "events_by_stage": {
+      "setup": 5,
+      "teardown": 5
+    },
+    "windows_before_scale": 0,
+    "mapped_before_scale": 0,
+    "mapped_applications_before_scale": {},
+    "fds_before_scale": 24,
+    "threads_before_scale": 10,
+    "windows_at_end": 0,
+    "maximum_windows": 0,
+    "scale": "git scale: 10000 rows, 178 frames in 4 s, median 17.0 ms, p95 36.0 ms, worst 116.9 ms, RSS 259 MB (start 247, first page 248, all rows 258 after 3.0 s)",
+    "passed": 5,
+    "failures": [],
+    "errors": 0,
+    "skipped": 0,
+    "renderer": "GskNglRenderer",
+    "gtk_version": [
+      4,
+      14,
+      5
+    ],
+    "load_before": [
+      2.94873046875,
+      3.0390625,
+      2.49658203125
+    ],
+    "load_after": [
+      2.87255859375,
+      3.021484375,
+      2.49365234375
+    ],
+    "evidence_sha256": {
+      "qa19-isolated-lifecycle.jsonl.gz": "cbfe0d2d712cf4c6999b13b38f926ba04d18b61e1580644881b28b9ff302b0bb",
+      "qa19-isolated.jsonl": "f720310aa245cfa1ca942345d33117dbbc98c0d88291dae1704c5a877751a7bd",
+      "qa19-isolated.xml": "4c9b8bcd0261c39efd2731006fbfe0ecda3168e5cf16a23e3397dad32732f279",
+      "qa19-isolated-scale.txt": "cec304d767453909d396f79970afa59f68333cc4f0e5cab838085d71b28847fc",
+      "qa19-isolated-gl.txt": "aa7b6fc7c98a56f659f60d2c4be1f725fba88578fef1bc4fcc2e793c2998863d"
+    }
+  },
+  "qa19-private": {
+    "events_by_stage": {
+      "setup": 476,
+      "teardown": 476
+    },
+    "windows_before_scale": 0,
+    "mapped_before_scale": 0,
+    "mapped_applications_before_scale": {},
+    "fds_before_scale": 226,
+    "threads_before_scale": 16,
+    "windows_at_end": 0,
+    "maximum_windows": 0,
+    "scale": "git scale: 10000 rows, 165 frames in 4 s, median 23.8 ms, p95 31.3 ms, worst 55.5 ms, RSS 711 MB (start 692, first page 696, all rows 707 after 3.0 s)",
+    "passed": 475,
+    "failures": [
+      "tests.gui.front.test_git_scale_ui::test_scrolling_a_long_history"
+    ],
+    "errors": 0,
+    "skipped": 0,
+    "renderer": "GskGLRenderer",
+    "gtk_version": [
+      4,
+      14,
+      5
+    ],
+    "load_before": [
+      4.02197265625,
+      2.884765625,
+      2.52880859375
+    ],
+    "load_after": [
+      4.1806640625,
+      2.9365234375,
+      2.5478515625
+    ],
+    "evidence_sha256": {
+      "qa19-private-lifecycle.jsonl.gz": "65c60d4c6ac57d630c7f0720365e7e5f308bdd81af2ef9a7baebae4d66bb7ca2",
+      "qa19-private.jsonl": "c1a0b8d08c96d0f8fbdfa0a4cc9cf3f4ebd5676a6847682f16e1b31af50a6ae4",
+      "qa19-private.xml": "08503c626099080a0c125590e0166628dac9ae8e8ec5763c98f95524d928141c",
+      "qa19-private-scale.txt": "9120b3c6122f464b1dbb2e3dd9d06579a157018ee803b198ccca1c29a6bb139d",
+      "qa19-private-gl.txt": "dc578363496d83e84f71033158b3c2da4cc1a41524e663f9f4751d2bf3cd4f28"
+    }
+  }
+}

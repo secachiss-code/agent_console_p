@@ -1,0 +1,24 @@
+{
+  "base": "e1a8d559c40a7dddce1fb1e19310275bcecba92e",
+  "unchanged_sources_sha256": {
+    "src/aconsole/ui/views/review/git_pane.py": "6e000cb1d3f87766bc668ce1421f80775faf508c502ee69e77fad7d049f108a8",
+    "src/aconsole/ui/views/review/graph_cell.py": "56038137006acf77a99907152a35fbf6cf183e6724f4c41e221656b657cb65dc",
+    "src/aconsole/ui/style/style.css": "0bf53041e9a928b2281f9cb7fa75f30b8c36f8cdda0783f97fd65627a7467290",
+    "tests/gui/front/test_git_scale_ui.py": "c9455d75de02cde25f09cbc4f9e423d3e66a0a583c51f50ebac7eb9789634c4c",
+    "artifacts/perf7/runner.txt": "5887308b2f342f029d0534c202182d7355c15308dc0bdaf0b45f553591b05787",
+    "artifacts/perf7/measure.py": "c06e46aebd4041a9531a48e827f5818db221ba92f5e32bf6df3c12762a854d7b",
+    "artifacts/perf7/lifecycle.py": "4b4c32d808fc15d611c0dc7b63934d302418a0fa6768ed7e2d63e6053d7c002a"
+  },
+  "final_authored_sources_sha256": {
+    "tests/gui/window_cleanup.py": "2e4763272095985179e7d1f73d6887c85fc452fc0124d51dcb04e636eec7b7eb",
+    "tests/gui/front/conftest.py": "8ab89ba8eb1f4a21f090c48baa6e4cf274abea0afa5a7f636b977f977a996267",
+    "tests/gui/front/test_window_cleanup.py": "0a80f6cdee4abe94728dbb6384eb8ac5d90ab42deadfd3e671cdc0d6754e3e30",
+    "tests/ui/conftest.py": "17134a66af273ed654ad4b0ae8c74b979b7379315b2ee05ce5f3ac85cdc977f3",
+    "artifacts/qa19/geometry_probe.py": "6018a5a938717a82612f1cd503f9a3532defda300184b0e3fd9fcbf621a60176",
+    "artifacts/qa19/geometry.json": "0630ac5e888417bfbe0c991ede50775a46fa247f650000dc71525efb36e42c35",
+    "artifacts/qa19/gil-check.txt": "730853878cfd55ac8d20b4e31d3b0ece13553d01e10883ed6f81bfb9b2103288"
+  },
+  "qa19": "PASS: test-owned window cleanup including failures; existing windows preserved; final privatefull475pass1perfFAIL; GILguardPASS",
+  "perf7": "FAIL: GPUfull17.9ms; isolated17.0msPASS; no threshold changes",
+  "scope_note": "GPU runs predate lazy-GTK and tests/ui spike cleanup refinement; final private full validates final helper scope. Final cleanup test adds an explicit Gtk version requirement only."
+}

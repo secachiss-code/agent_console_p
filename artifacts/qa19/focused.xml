@@ -1,0 +1,283 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="6" skipped="0" tests="15" time="7.829" timestamp="2026-11-12T20:36:37.654547+03:00" hostname="somovasnbook14"><testcase classname="tests.gui.front.test_window_cleanup" name="test_cleanup_releases_owned_windows_and_preserves_existing[False]" time="0.040" /><testcase classname="tests.gui.front.test_window_cleanup" name="test_cleanup_releases_owned_windows_and_preserves_existing[True]" time="0.006" /><testcase classname="tests.gui.front.test_b0_window" name="test_sidebar_lists_demo_tabs[1280-False]" time="2.268" /><testcase classname="tests.gui.front.test_b0_window" name="test_sidebar_lists_demo_tabs[700-True]" time="0.489"><failure message="assert False is True&#10; +  where False = get_collapsed()&#10; +    where get_collapsed = &lt;Adw.OverlaySplitView object at 0x77a1d15ee540 (AdwOverlaySplitView at 0x20f19dc0)&gt;.get_collapsed&#10; +      where &lt;Adw.OverlaySplitView object at 0x77a1d15ee540 (AdwOverlaySplitView at 0x20f19dc0)&gt; = &lt;window.MainWindow object at 0x77a1d15895c0 (aconsole+ui+views+window+MainWindow at 0x22f528b0)&gt;.split">running_app = '/tmp/aconsole-gui-9l3rgalm/core.sock'
+tmp_path = PosixPath('/tmp/pytest-of-sas/pytest-3/test_sidebar_lists_demo_tabs_70')
+width = 700, collapsed = True
+
+    @pytest.mark.parametrize(("width", "collapsed"), [(1280, False), (700, True)])
+    def test_sidebar_lists_demo_tabs(
+        running_app: str, tmp_path: Path, width: int, *, collapsed: bool,
+    ) -&gt; None:
+        from aconsole.ui.bootstrap import run_app
+        from aconsole.ui.client.core_client import CoreClient
+        from aconsole.ui.views.app import AConsoleApp, SnapshotRequest
+    
+        request = SnapshotRequest(view="window", theme="light", width=width, height=800, out=tmp_path / "window.png")
+        client = CoreClient(running_app)
+        app = AConsoleApp(client, request)
+        assert run_app(lambda: app, ["aconsole-test"]) == 0
+        assert not app.failed
+        assert request.out.stat().st_size &gt; 0
+    
+        window = app.window
+        assert window is not None
+        snapshot = client.store.snapshot
+        assert snapshot is not None
+        expected = sorted(snapshot.tabs, key=lambda tab: tab.order)
+        assert len(expected) == 5
+        assert window.selection.get_n_items() == 5
+        selected = [window.selection.get_item(index) for index in range(5)]
+        assert all(item is not None for item in selected)
+        assert [item.get_property("tab-id") for item in selected if item is not None] == [
+            str(tab.id) for tab in expected
+        ]
+        assert [item.get_property("title") for item in selected if item is not None] == [
+            tab.title for tab in expected
+        ]
+&gt;       assert window.split.get_collapsed() is collapsed
+E       assert False is True
+E        +  where False = get_collapsed()
+E        +    where get_collapsed = &lt;Adw.OverlaySplitView object at 0x77a1d15ee540 (AdwOverlaySplitView at 0x20f19dc0)&gt;.get_collapsed
+E        +      where &lt;Adw.OverlaySplitView object at 0x77a1d15ee540 (AdwOverlaySplitView at 0x20f19dc0)&gt; = &lt;window.MainWindow object at 0x77a1d15895c0 (aconsole+ui+views+window+MainWindow at 0x22f528b0)&gt;.split
+
+tests/gui/front/test_b0_window.py:128: AssertionError</failure></testcase><testcase classname="tests.gui.front.test_b0_window" name="test_collapsed_sidebar_button_opens_and_closes_sidebar" time="0.476"><failure message="assert False&#10; +  where False = get_collapsed()&#10; +    where get_collapsed = &lt;Adw.OverlaySplitView object at 0x77a1d02e3a40 (AdwOverlaySplitView at 0x241a8410)&gt;.get_collapsed&#10; +      where &lt;Adw.OverlaySplitView object at 0x77a1d02e3a40 (AdwOverlaySplitView at 0x241a8410)&gt; = &lt;window.MainWindow object at 0x77a1d15f9480 (aconsole+ui+views+window+MainWindow at 0x24973500)&gt;.split">running_app = '/tmp/aconsole-gui-dmgk0dtc/core.sock'
+tmp_path = PosixPath('/tmp/pytest-of-sas/pytest-3/test_collapsed_sidebar_button_0')
+
+    def test_collapsed_sidebar_button_opens_and_closes_sidebar(
+        running_app: str, tmp_path: Path,
+    ) -&gt; None:
+        from aconsole.ui.bootstrap import run_app
+        from aconsole.ui.client.core_client import CoreClient
+        from aconsole.ui.views.app import AConsoleApp, SnapshotRequest
+    
+        request = SnapshotRequest(view="window", theme="light", width=700, height=800, out=tmp_path / "narrow.png")
+        client = CoreClient(running_app)
+        app = AConsoleApp(client, request)
+        assert run_app(lambda: app, ["aconsole-test-sidebar-toggle"]) == 0
+        assert not app.failed
+    
+        window = app.window
+        assert window is not None
+&gt;       assert window.split.get_collapsed()
+E       assert False
+E        +  where False = get_collapsed()
+E        +    where get_collapsed = &lt;Adw.OverlaySplitView object at 0x77a1d02e3a40 (AdwOverlaySplitView at 0x241a8410)&gt;.get_collapsed
+E        +      where &lt;Adw.OverlaySplitView object at 0x77a1d02e3a40 (AdwOverlaySplitView at 0x241a8410)&gt; = &lt;window.MainWindow object at 0x77a1d15f9480 (aconsole+ui+views+window+MainWindow at 0x24973500)&gt;.split
+
+tests/gui/front/test_b0_window.py:147: AssertionError</failure></testcase><testcase classname="tests.gui.front.test_b0_window" name="test_system_title_buttons_keep_clear_header_space[1280-False-left]" time="0.516" /><testcase classname="tests.gui.front.test_b0_window" name="test_system_title_buttons_keep_clear_header_space[1280-False-right]" time="0.502" /><testcase classname="tests.gui.front.test_b0_window" name="test_system_title_buttons_keep_clear_header_space[1280-False-both]" time="0.510" /><testcase classname="tests.gui.front.test_b0_window" name="test_system_title_buttons_keep_clear_header_space[700-True-left]" time="0.493"><failure message="assert False is True&#10; +  where False = get_collapsed()&#10; +    where get_collapsed = &lt;Adw.OverlaySplitView object at 0x77a1b7c73100 (AdwOverlaySplitView at 0x23357200)&gt;.get_collapsed&#10; +      where &lt;Adw.OverlaySplitView object at 0x77a1b7c73100 (AdwOverlaySplitView at 0x23357200)&gt; = &lt;window.MainWindow object at 0x77a1d0345840 (aconsole+ui+views+window+MainWindow at 0x25073080)&gt;.split">running_app = '/tmp/aconsole-gui-6392ujga/core.sock'
+tmp_path = PosixPath('/tmp/pytest-of-sas/pytest-3/test_system_title_buttons_keep3')
+decoration_layout = 'close,minimize,maximize:', width = 700, collapsed = True
+
+    @pytest.mark.parametrize(
+        "decoration_layout",
+        [
+            "close,minimize,maximize:",
+            ":close,minimize,maximize",
+            "close,minimize,maximize:close,minimize,maximize",
+        ],
+        ids=["left", "right", "both"],
+    )
+    @pytest.mark.parametrize(("width", "collapsed"), [(1280, False), (700, True)])
+    def test_system_title_buttons_keep_clear_header_space(
+        running_app: str,
+        tmp_path: Path,
+        decoration_layout: str,
+        width: int,
+        *,
+        collapsed: bool,
+    ) -&gt; None:
+        """Keep GTK's title-button slots available on both sides at both widths."""
+        settings = Gtk.Settings.get_default()
+        assert settings is not None
+        previous_layout = settings.get_property("gtk-decoration-layout")
+        settings.set_property("gtk-decoration-layout", decoration_layout)
+        try:
+            request = SnapshotRequest(
+                view="window",
+                theme="light",
+                width=width,
+                height=800,
+                out=tmp_path / f"window-{width}.png",
+            )
+            client = CoreClient(running_app)
+            changed_layout = (
+                ":close,minimize,maximize"
+                if decoration_layout.endswith(":")
+                else "close,minimize,maximize:"
+            )
+            app = _LayoutProbeApp(client, request, settings, changed_layout)
+            assert run_app(lambda: app, ["aconsole-test-title-buttons"]) == 0
+            assert not app.failed
+            assert app.layout_change_observed
+            assert app.controls_layout_error is None, app.controls_layout_error
+    
+            window = app.window
+            assert window is not None
+&gt;           _assert_header_state(window, collapsed=collapsed)
+
+tests/gui/front/test_b0_window.py:203: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+window = &lt;window.MainWindow object at 0x77a1d0345840 (aconsole+ui+views+window+MainWindow at 0x25073080)&gt;
+collapsed = True
+
+    def _assert_header_state(window: MainWindow, *, collapsed: bool) -&gt; None:
+&gt;       assert window.split.get_collapsed() is collapsed
+E       assert False is True
+E        +  where False = get_collapsed()
+E        +    where get_collapsed = &lt;Adw.OverlaySplitView object at 0x77a1b7c73100 (AdwOverlaySplitView at 0x23357200)&gt;.get_collapsed
+E        +      where &lt;Adw.OverlaySplitView object at 0x77a1b7c73100 (AdwOverlaySplitView at 0x23357200)&gt; = &lt;window.MainWindow object at 0x77a1d0345840 (aconsole+ui+views+window+MainWindow at 0x25073080)&gt;.split
+
+tests/gui/front/test_b0_window.py:82: AssertionError</failure></testcase><testcase classname="tests.gui.front.test_b0_window" name="test_system_title_buttons_keep_clear_header_space[700-True-right]" time="0.551"><failure message="assert False is True&#10; +  where False = get_collapsed()&#10; +    where get_collapsed = &lt;Adw.OverlaySplitView object at 0x77a1b7ca3a40 (AdwOverlaySplitView at 0x2331fdd0)&gt;.get_collapsed&#10; +      where &lt;Adw.OverlaySplitView object at 0x77a1b7ca3a40 (AdwOverlaySplitView at 0x2331fdd0)&gt; = &lt;window.MainWindow object at 0x77a1d0381580 (aconsole+ui+views+window+MainWindow at 0x2546d6d0)&gt;.split">running_app = '/tmp/aconsole-gui-0x6sg369/core.sock'
+tmp_path = PosixPath('/tmp/pytest-of-sas/pytest-3/test_system_title_buttons_keep4')
+decoration_layout = ':close,minimize,maximize', width = 700, collapsed = True
+
+    @pytest.mark.parametrize(
+        "decoration_layout",
+        [
+            "close,minimize,maximize:",
+            ":close,minimize,maximize",
+            "close,minimize,maximize:close,minimize,maximize",
+        ],
+        ids=["left", "right", "both"],
+    )
+    @pytest.mark.parametrize(("width", "collapsed"), [(1280, False), (700, True)])
+    def test_system_title_buttons_keep_clear_header_space(
+        running_app: str,
+        tmp_path: Path,
+        decoration_layout: str,
+        width: int,
+        *,
+        collapsed: bool,
+    ) -&gt; None:
+        """Keep GTK's title-button slots available on both sides at both widths."""
+        settings = Gtk.Settings.get_default()
+        assert settings is not None
+        previous_layout = settings.get_property("gtk-decoration-layout")
+        settings.set_property("gtk-decoration-layout", decoration_layout)
+        try:
+            request = SnapshotRequest(
+                view="window",
+                theme="light",
+                width=width,
+                height=800,
+                out=tmp_path / f"window-{width}.png",
+            )
+            client = CoreClient(running_app)
+            changed_layout = (
+                ":close,minimize,maximize"
+                if decoration_layout.endswith(":")
+                else "close,minimize,maximize:"
+            )
+            app = _LayoutProbeApp(client, request, settings, changed_layout)
+            assert run_app(lambda: app, ["aconsole-test-title-buttons"]) == 0
+            assert not app.failed
+            assert app.layout_change_observed
+            assert app.controls_layout_error is None, app.controls_layout_error
+    
+            window = app.window
+            assert window is not None
+&gt;           _assert_header_state(window, collapsed=collapsed)
+
+tests/gui/front/test_b0_window.py:203: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+window = &lt;window.MainWindow object at 0x77a1d0381580 (aconsole+ui+views+window+MainWindow at 0x2546d6d0)&gt;
+collapsed = True
+
+    def _assert_header_state(window: MainWindow, *, collapsed: bool) -&gt; None:
+&gt;       assert window.split.get_collapsed() is collapsed
+E       assert False is True
+E        +  where False = get_collapsed()
+E        +    where get_collapsed = &lt;Adw.OverlaySplitView object at 0x77a1b7ca3a40 (AdwOverlaySplitView at 0x2331fdd0)&gt;.get_collapsed
+E        +      where &lt;Adw.OverlaySplitView object at 0x77a1b7ca3a40 (AdwOverlaySplitView at 0x2331fdd0)&gt; = &lt;window.MainWindow object at 0x77a1d0381580 (aconsole+ui+views+window+MainWindow at 0x2546d6d0)&gt;.split
+
+tests/gui/front/test_b0_window.py:82: AssertionError</failure></testcase><testcase classname="tests.gui.front.test_b0_window" name="test_system_title_buttons_keep_clear_header_space[700-True-both]" time="0.536"><failure message="assert False is True&#10; +  where False = get_collapsed()&#10; +    where get_collapsed = &lt;Adw.OverlaySplitView object at 0x77a1b7cdfe80 (AdwOverlaySplitView at 0x259aa180)&gt;.get_collapsed&#10; +      where &lt;Adw.OverlaySplitView object at 0x77a1b7cdfe80 (AdwOverlaySplitView at 0x259aa180)&gt; = &lt;window.MainWindow object at 0x77a1f83ce000 (aconsole+ui+views+window+MainWindow at 0x23bdf9b0)&gt;.split">running_app = '/tmp/aconsole-gui-ddygq7on/core.sock'
+tmp_path = PosixPath('/tmp/pytest-of-sas/pytest-3/test_system_title_buttons_keep5')
+decoration_layout = 'close,minimize,maximize:close,minimize,maximize'
+width = 700, collapsed = True
+
+    @pytest.mark.parametrize(
+        "decoration_layout",
+        [
+            "close,minimize,maximize:",
+            ":close,minimize,maximize",
+            "close,minimize,maximize:close,minimize,maximize",
+        ],
+        ids=["left", "right", "both"],
+    )
+    @pytest.mark.parametrize(("width", "collapsed"), [(1280, False), (700, True)])
+    def test_system_title_buttons_keep_clear_header_space(
+        running_app: str,
+        tmp_path: Path,
+        decoration_layout: str,
+        width: int,
+        *,
+        collapsed: bool,
+    ) -&gt; None:
+        """Keep GTK's title-button slots available on both sides at both widths."""
+        settings = Gtk.Settings.get_default()
+        assert settings is not None
+        previous_layout = settings.get_property("gtk-decoration-layout")
+        settings.set_property("gtk-decoration-layout", decoration_layout)
+        try:
+            request = SnapshotRequest(
+                view="window",
+                theme="light",
+                width=width,
+                height=800,
+                out=tmp_path / f"window-{width}.png",
+            )
+            client = CoreClient(running_app)
+            changed_layout = (
+                ":close,minimize,maximize"
+                if decoration_layout.endswith(":")
+                else "close,minimize,maximize:"
+            )
+            app = _LayoutProbeApp(client, request, settings, changed_layout)
+            assert run_app(lambda: app, ["aconsole-test-title-buttons"]) == 0
+            assert not app.failed
+            assert app.layout_change_observed
+            assert app.controls_layout_error is None, app.controls_layout_error
+    
+            window = app.window
+            assert window is not None
+&gt;           _assert_header_state(window, collapsed=collapsed)
+
+tests/gui/front/test_b0_window.py:203: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+window = &lt;window.MainWindow object at 0x77a1f83ce000 (aconsole+ui+views+window+MainWindow at 0x23bdf9b0)&gt;
+collapsed = True
+
+    def _assert_header_state(window: MainWindow, *, collapsed: bool) -&gt; None:
+&gt;       assert window.split.get_collapsed() is collapsed
+E       assert False is True
+E        +  where False = get_collapsed()
+E        +    where get_collapsed = &lt;Adw.OverlaySplitView object at 0x77a1b7cdfe80 (AdwOverlaySplitView at 0x259aa180)&gt;.get_collapsed
+E        +      where &lt;Adw.OverlaySplitView object at 0x77a1b7cdfe80 (AdwOverlaySplitView at 0x259aa180)&gt; = &lt;window.MainWindow object at 0x77a1f83ce000 (aconsole+ui+views+window+MainWindow at 0x23bdf9b0)&gt;.split
+
+tests/gui/front/test_b0_window.py:82: AssertionError</failure></testcase><testcase classname="tests.gui.front.test_b0_window" name="test_snapshot_connection_error_exits_without_a_window" time="0.014" /><testcase classname="tests.gui.front.test_b0_window" name="test_startup_error_offers_retry_and_opens_the_window" time="0.362" /><testcase classname="tests.gui.front.test_b0_window" name="test_startup_connection_error_says_so_and_exits_once_closed" time="0.152" /><testcase classname="tests.gui.front.test_b1_keys" name="test_b1_keys_narrow_window" time="0.553"><failure message="assert False&#10; +  where False = get_collapsed()&#10; +    where get_collapsed = &lt;Adw.OverlaySplitView object at 0x77a1b7afb000 (AdwOverlaySplitView at 0x2379c8d0)&gt;.get_collapsed&#10; +      where &lt;Adw.OverlaySplitView object at 0x77a1b7afb000 (AdwOverlaySplitView at 0x2379c8d0)&gt; = &lt;window.MainWindow object at 0x77a1d15cffc0 (aconsole+ui+views+window+MainWindow at 0x259ff1e0)&gt;.split">running_app = '/tmp/aconsole-gui-xyah7z9z/core.sock'
+tmp_path = PosixPath('/tmp/pytest-of-sas/pytest-3/test_b1_keys_narrow_window0')
+
+    def test_b1_keys_narrow_window(running_app: str, tmp_path: Path) -&gt; None:
+        """At 700 px the sidebar collapses and the content header keeps title-button space."""
+        request = SnapshotRequest(
+            view="window", theme="light", width=700, height=800, out=tmp_path / "b1-narrow.png",
+        )
+        app = AConsoleApp(CoreClient(running_app), request)
+        try:
+            assert run_app(lambda: app, ["aconsole-test-b1-narrow"]) == 0
+        finally:
+            if app.window is not None:
+                app.window.set_visible(False)
+                app.window.destroy()
+        assert not app.failed
+        window = app.window
+        assert window is not None
+        assert window.shortcut_manager is not None
+&gt;       assert window.split.get_collapsed()
+E       assert False
+E        +  where False = get_collapsed()
+E        +    where get_collapsed = &lt;Adw.OverlaySplitView object at 0x77a1b7afb000 (AdwOverlaySplitView at 0x2379c8d0)&gt;.get_collapsed
+E        +      where &lt;Adw.OverlaySplitView object at 0x77a1b7afb000 (AdwOverlaySplitView at 0x2379c8d0)&gt; = &lt;window.MainWindow object at 0x77a1d15cffc0 (aconsole+ui+views+window+MainWindow at 0x259ff1e0)&gt;.split
+
+tests/gui/front/test_b1_keys.py:767: AssertionError</failure></testcase></testsuite></testsuites>
