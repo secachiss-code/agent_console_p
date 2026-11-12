@@ -1,0 +1,78 @@
+{
+  "desktop-full": {
+    "tests": 534,
+    "passed": 525,
+    "failed": [
+      "tests.gui.front.test_b0_window::test_sidebar_lists_demo_tabs[700-True]",
+      "tests.gui.front.test_b0_window::test_collapsed_sidebar_button_opens_and_closes_sidebar",
+      "tests.gui.front.test_b0_window::test_system_title_buttons_keep_clear_header_space[700-True-left]",
+      "tests.gui.front.test_b0_window::test_system_title_buttons_keep_clear_header_space[700-True-right]",
+      "tests.gui.front.test_b0_window::test_system_title_buttons_keep_clear_header_space[700-True-both]",
+      "tests.gui.front.test_b1_keys::test_b1_keys_narrow_window",
+      "tests.gui.front.test_des3_visual::test_native_widgets_match_reviewed_baselines[light-1280-light]",
+      "tests.gui.front.test_des3_visual::test_native_widgets_match_reviewed_baselines[dark-1280-dark]",
+      "tests.gui.front.test_des3_visual::test_native_widgets_match_reviewed_baselines[light-700-narrow]"
+    ],
+    "skipped": 0,
+    "returncode": 1,
+    "scale_passed": true,
+    "scale_report": "git scale: 10000 rows, 182 frames in 4 s, median 17.0 ms, p95 35.5 ms, worst 54.1 ms, RSS 616 MB (start 605, first page 605, all rows 616 after 3.2 s)",
+    "window": {
+      "type": "AdwApplicationWindow",
+      "width": 1280,
+      "height": 800,
+      "mapped": true
+    },
+    "windows": 1,
+    "mapped_windows": 1,
+    "tasks": 1,
+    "sampled_sources": 13
+  },
+  "desktop-scale": {
+    "tests": 1,
+    "passed": 1,
+    "failed": [],
+    "skipped": 0,
+    "returncode": 0,
+    "scale_passed": true,
+    "scale_report": "git scale: 10000 rows, 159 frames in 4 s, median 17.5 ms, p95 35.5 ms, worst 101.3 ms, RSS 262 MB (start 198, first page 244, all rows 257 after 3.1 s)",
+    "window": {
+      "type": "AdwApplicationWindow",
+      "width": 1280,
+      "height": 800,
+      "mapped": true
+    },
+    "windows": 1,
+    "mapped_windows": 1,
+    "tasks": 1,
+    "sampled_sources": 9
+  },
+  "preserved": {
+    "base": "b61c6edd8251600a947e66535de48a06cdf8489f",
+    "paths": [
+      "src",
+      "tests",
+      "tools",
+      "artifacts/qa26",
+      "artifacts/qa27"
+    ]
+  },
+  "evidence_hashes": {
+    "artifacts/qa28/REPORT.md": "8d66ee09822daf6bb1c8a72f0d0d9d530d28b02ceb98000eff5ea6adf9523b2a",
+    "artifacts/qa28/desktop-full/environment.json": "395633552cbbfcba9828fc70494a79e729cf819d485faad6dd9c887dd0a4081c",
+    "artifacts/qa28/desktop-full/observation.json": "d8ec0e274a847f0e43074ee664abd744bd6ee5481d091534e3de203c1ed3d2aa",
+    "artifacts/qa28/desktop-full/pytest.log": "b5bb5147e5325c82f0174a89ea7ce10492433798717523e5322a444d4eac157b",
+    "artifacts/qa28/desktop-full/pytest.xml": "0c80cb71ec453bd602e884d7d0f18d5214fd940b4c244719ff6e3e0da6209dfb",
+    "artifacts/qa28/desktop-full/run.json": "6d0a607a495a827488f8488feba7699a303a16afcb2db6efc16e1c239fc178dd",
+    "artifacts/qa28/desktop-full/scale.txt": "346dcff97eb307e01354d59fe7d0fc0111562c98b94c2037e65033232b962a16",
+    "artifacts/qa28/desktop-scale/environment.json": "395633552cbbfcba9828fc70494a79e729cf819d485faad6dd9c887dd0a4081c",
+    "artifacts/qa28/desktop-scale/observation.json": "a40519d4a9316ecb9e59d3516c87cdc32359b8281d8a8a6e07794964b57f6048",
+    "artifacts/qa28/desktop-scale/pytest.log": "f3e20bff63a4c9ed4a9ddd69e35d1178c25929c294ac94b3f742d5ec29cd612a",
+    "artifacts/qa28/desktop-scale/pytest.xml": "00072ff9e77c75003642999186027fe12d6ff17afa0d497af89afa01d552184f",
+    "artifacts/qa28/desktop-scale/run.json": "6692576bf0754fe43491522481dc9509695bca058924b5cc63b63e496fbf907b",
+    "artifacts/qa28/desktop-scale/scale.txt": "6da361d0a74d4c80f3f2bfe7658721a953fb5d3faf724c280879f992b940c48f",
+    "artifacts/qa28/desktop.py": "bbf0ac81316fab38dd87f7518bbcff9d616463d7366631de8fff1e5e99be346a",
+    "artifacts/qa28/observe.py": "508a70228857102a383a1b6cc715c865e70ca197a2d7aef0227fc4c3f6e9cae4",
+    "artifacts/qa28/verify.py": "bb6d880821c51ddecb9bdec5f81b8aa5f241c7536c859005f7259d0b5b29b259"
+  }
+}

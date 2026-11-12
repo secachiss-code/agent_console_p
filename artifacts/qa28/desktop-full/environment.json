@@ -1,0 +1,27 @@
+{
+  "head": "b61c6edd8251600a947e66535de48a06cdf8489f",
+  "environment": {
+    "DISPLAY": ":0",
+    "GSK_RENDERER": null,
+    "GDK_BACKEND": null,
+    "GTK_A11Y": null,
+    "XDG_SESSION_TYPE": "x11",
+    "LIBGL_ALWAYS_SOFTWARE": null,
+    "MESA_LOADER_DRIVER_OVERRIDE": null
+  },
+  "glxinfo": {
+    "returncode": 0,
+    "stdout": "name of display: :0\ndisplay: :0  screen: 0\ndirect rendering: Yes\nExtended renderer info (GLX_MESA_query_renderer):\n    Vendor: Intel (0x8086)\n    Device: Mesa Intel(R) Graphics (ADL-N) (0x46d1)\n    Version: 25.2.8\n    Accelerated: yes\n    Video memory: 15724MB\n    Unified memory: yes\n    Preferred profile: core (0x1)\n    Max core profile version: 4.6\n    Max compat profile version: 4.6\n    Max GLES1 profile version: 1.1\n    Max GLES[23] profile version: 3.2\nOpenGL vendor string: Intel\nOpenGL renderer string: Mesa Intel(R) Graphics (ADL-N)\nOpenGL core profile version string: 4.6 (Core Profile) Mesa 25.2.8-0ubuntu0.24.04.4\nOpenGL core profile shading language version string: 4.60\nOpenGL core profile context flags: (none)\nOpenGL core profile profile mask: core profile\n\nOpenGL version string: 4.6 (Compatibility Profile) Mesa 25.2.8-0ubuntu0.24.04.4\nOpenGL shading language version string: 4.60\nOpenGL context flags: (none)\nOpenGL profile mask: compatibility profile\n\nOpenGL ES profile version string: OpenGL ES 3.2 Mesa 25.2.8-0ubuntu0.24.04.4\nOpenGL ES profile shading language version string: OpenGL ES GLSL ES 3.20\n\n",
+    "stderr": ""
+  },
+  "xprop": {
+    "returncode": 0,
+    "stdout": "_NET_SUPPORTING_WM_CHECK(WINDOW): window id # 0x1400001\n",
+    "stderr": ""
+  },
+  "wm_name": {
+    "returncode": 0,
+    "stdout": "_NET_WM_NAME(UTF8_STRING) = \"Mutter(Gala)\"\n",
+    "stderr": ""
+  }
+}
