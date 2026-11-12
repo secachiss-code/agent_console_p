@@ -1,0 +1,8 @@
+{
+  "pytest_usage_error": 4,
+  "timeout": 124,
+  "server_failure": "Xvfb failed before readiness; see xvfb.log",
+  "reaped_process": -15,
+  "terminated_descendant_after_parent_exit": true,
+  "refuses_overwrite": true
+}

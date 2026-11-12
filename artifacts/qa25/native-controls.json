@@ -1,0 +1,14 @@
+{
+  "final-geometry": {
+    "returncode": 0,
+    "owned_x_socket_and_lock_removed": true
+  },
+  "native-error": {
+    "returncode": 4,
+    "owned_x_socket_and_lock_removed": true
+  },
+  "native-timeout": {
+    "returncode": 124,
+    "owned_x_socket_and_lock_removed": true
+  }
+}

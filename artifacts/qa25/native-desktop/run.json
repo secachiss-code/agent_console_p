@@ -1,0 +1,19 @@
+{
+  "command": [
+    "/home/sas/Projects/sp_aconsole_prototype/.venv-ui/bin/python",
+    "-m",
+    "pytest",
+    "-o",
+    "addopts=",
+    "-q",
+    "--junitxml=/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/038657e1539f15ad/artifacts/qa25/native-desktop/pytest.xml",
+    "tests/gui/front/test_approval_alerts.py",
+    "tests/gui/front/test_preferences_drafts.py",
+    "tests/gui/front/test_window_badge_lifecycle.py"
+  ],
+  "display": ":0",
+  "gdk_backend": "x11",
+  "renderer_override": null,
+  "production_identity_changed": false,
+  "returncode": 0
+}
