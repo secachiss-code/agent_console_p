@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="2" time="1.335" timestamp="2026-11-12T22:22:04.489964+03:00" hostname="somovasnbook14"><testcase classname="tests.gui.front.test_approval_alerts" name="test_the_window_rings_withdraws_and_a_click_opens_the_tab[waiting]" time="1.000"><failure message="AssertionError: a window that is opening must not ring&#10;assert ['approval-01...0000000101-1'] == []&#10;  &#10;  Left contains one more item: 'approval-01JB2Z00000000000000000101-1'&#10;  Use -v to get more diff">core = '/tmp/aconsole-gui-mr_bphc4/core.sock'
+
+    @pytest.mark.parametrize("core", ["waiting"], indirect=True)
+    def test_the_window_rings_withdraws_and_a_click_opens_the_tab(core: str) -&gt; None:
+        app = _WindowApp(CoreClient(core))
+        assert run_app(lambda: app, ["approval-alert-test"]) == 0
+        if app.failure is not None:
+&gt;           raise app.failure
+
+tests/gui/front/test_approval_alerts.py:262: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/gui/front/test_approval_alerts.py:197: in _open
+    await self._check(self.window)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = &lt;test_approval_alerts._WindowApp object at 0x715911de5740 (tests+gui+front+test_approval_alerts+_WindowApp at 0xa3b5d80)&gt;
+window = &lt;window.MainWindow object at 0x715911d98e40 (aconsole+ui+views+window+MainWindow at 0xac0a550)&gt;
+
+    async def _check(self, window: MainWindow) -&gt; None:
+        store = window.tabs.client.store
+        snapshot = store.snapshot
+        assert snapshot is not None
+        assert snapshot.approvals
+        await asyncio.sleep(0.2)
+&gt;       assert self.sent == [], "a window that is opening must not ring"
+E       AssertionError: a window that is opening must not ring
+E       assert ['approval-01...0000000101-1'] == []
+E         
+E         Left contains one more item: 'approval-01JB2Z00000000000000000101-1'
+E         Use -v to get more diff
+
+tests/gui/front/test_approval_alerts.py:217: AssertionError</failure></testcase><testcase classname="tests.gui.front.test_preferences_drafts" name="test_closing_dirty_preferences_can_cancel_or_discard" time="0.244" /></testsuite></testsuites>
