@@ -1,0 +1,19 @@
+{
+  "command": [
+    "/home/sas/Projects/sp_aconsole_prototype/.venv-ui/bin/python",
+    "-m",
+    "pytest",
+    "-o",
+    "addopts=",
+    "-q",
+    "--junitxml=/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/038657e1539f15ad/artifacts/qa26/full-private/pytest.xml",
+    "tests/gui",
+    "tests/ui",
+    "tests/smoke"
+  ],
+  "display": ":101",
+  "gdk_backend": "x11",
+  "renderer_override": null,
+  "production_identity_changed": false,
+  "returncode": 1
+}

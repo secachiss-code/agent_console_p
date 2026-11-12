@@ -1,0 +1,15 @@
+{
+  "renderer": "GskNglRenderer",
+  "gtk": [
+    4,
+    14,
+    5
+  ],
+  "display": ":0",
+  "renderer_override": null,
+  "load": [
+    2.50732421875,
+    2.36865234375,
+    2.271484375
+  ]
+}
