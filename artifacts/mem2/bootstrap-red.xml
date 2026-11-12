@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="2" skipped="0" tests="2" time="0.114" timestamp="2026-11-12T21:24:01.055719+03:00" hostname="somovasnbook14"><testcase classname="tests.gui.front.test_bootstrap_lifecycle" name="test_repeated_runs_close_owned_loops_and_finish_cleanup[False]" time="0.037"><failure message="assert False&#10; +  where False = all(&lt;generator object test_repeated_runs_close_owned_loops_and_finish_cleanup.&lt;locals&gt;.&lt;genexpr&gt; at 0x7e186e0ad7e0&gt;)">monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7e186eefc3e0&gt;
+fails = False
+
+    @pytest.mark.parametrize("fails", [False, True])
+    def test_repeated_runs_close_owned_loops_and_finish_cleanup(monkeypatch: pytest.MonkeyPatch, *, fails: bool) -&gt; None:
+        from gi.repository import Gio, GLib
+    
+        from aconsole.ui.bootstrap import _TASKS, run_gtk, spawn_task
+    
+        before = set(_TASKS)
+        loops: list[asyncio.AbstractEventLoop] = []
+        cleaned: list[str] = []
+        context = GLib.MainContext.default()
+        unrelated = GLib.timeout_add(60_000, lambda: GLib.SOURCE_CONTINUE)
+        foreign = asyncio.new_event_loop()
+    
+        async def parked() -&gt; None:
+            await asyncio.Event().wait()
+    
+        foreign_task = foreign.create_task(parked())
+        _TASKS.add(foreign_task)
+    
+        async def stream() -&gt; AsyncIterator[None]:
+            try:
+                yield
+            finally:
+                await asyncio.sleep(0)
+                cleaned.append("generator")
+    
+        async def pending() -&gt; None:
+            try:
+                await asyncio.Event().wait()
+            finally:
+                await asyncio.sleep(0)
+                cleaned.append("task")
+    
+        async def finish(app: Gio.Application) -&gt; None:
+            loops.append(asyncio.get_running_loop())
+            generator = stream()
+            await anext(generator)
+            # Keep the generator alive until cancellation, then let loop shutdown
+            # finalize it. The completed quit task also needs its done callback.
+            async def consume() -&gt; None:
+                try:
+                    await pending()
+                finally:
+                    assert generator is not None
+    
+            _ = spawn_task(consume())
+            _ = asyncio.get_running_loop().create_task(pending())
+            await asyncio.sleep(0)
+            app.quit()
+    
+        def activate(app: Gio.Application) -&gt; None:
+            app.hold()
+            _ = spawn_task(finish(app))
+    
+        try:
+            for _ in range(3):
+                app = Gio.Application(flags=Gio.ApplicationFlags.NON_UNIQUE)
+                _ = app.connect("activate", activate)
+                original = app.run
+    
+                def fail_after_run(args: list[str]) -&gt; int:
+                    _ = original(args)
+                    message = "run failed"
+                    raise RuntimeError(message)
+    
+                if fails:
+                    monkeypatch.setattr(app, "run", fail_after_run)
+                    with pytest.raises(RuntimeError, match="run failed"):
+                        _ = run_gtk(app, ["loop-cleanup"])
+                else:
+                    assert run_gtk(app, ["loop-cleanup"]) == 0
+&gt;               assert all(loop.is_closed() for loop in loops)
+E               assert False
+E                +  where False = all(&lt;generator object test_repeated_runs_close_owned_loops_and_finish_cleanup.&lt;locals&gt;.&lt;genexpr&gt; at 0x7e186e0ad7e0&gt;)
+
+tests/gui/front/test_bootstrap_lifecycle.py:85: AssertionError</failure></testcase><testcase classname="tests.gui.front.test_bootstrap_lifecycle" name="test_repeated_runs_close_owned_loops_and_finish_cleanup[True]" time="0.002"><failure message="assert False&#10; +  where False = all(&lt;generator object test_repeated_runs_close_owned_loops_and_finish_cleanup.&lt;locals&gt;.&lt;genexpr&gt; at 0x7e186e0adfc0&gt;)">monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7e186ee4e9f0&gt;
+fails = True
+
+    @pytest.mark.parametrize("fails", [False, True])
+    def test_repeated_runs_close_owned_loops_and_finish_cleanup(monkeypatch: pytest.MonkeyPatch, *, fails: bool) -&gt; None:
+        from gi.repository import Gio, GLib
+    
+        from aconsole.ui.bootstrap import _TASKS, run_gtk, spawn_task
+    
+        before = set(_TASKS)
+        loops: list[asyncio.AbstractEventLoop] = []
+        cleaned: list[str] = []
+        context = GLib.MainContext.default()
+        unrelated = GLib.timeout_add(60_000, lambda: GLib.SOURCE_CONTINUE)
+        foreign = asyncio.new_event_loop()
+    
+        async def parked() -&gt; None:
+            await asyncio.Event().wait()
+    
+        foreign_task = foreign.create_task(parked())
+        _TASKS.add(foreign_task)
+    
+        async def stream() -&gt; AsyncIterator[None]:
+            try:
+                yield
+            finally:
+                await asyncio.sleep(0)
+                cleaned.append("generator")
+    
+        async def pending() -&gt; None:
+            try:
+                await asyncio.Event().wait()
+            finally:
+                await asyncio.sleep(0)
+                cleaned.append("task")
+    
+        async def finish(app: Gio.Application) -&gt; None:
+            loops.append(asyncio.get_running_loop())
+            generator = stream()
+            await anext(generator)
+            # Keep the generator alive until cancellation, then let loop shutdown
+            # finalize it. The completed quit task also needs its done callback.
+            async def consume() -&gt; None:
+                try:
+                    await pending()
+                finally:
+                    assert generator is not None
+    
+            _ = spawn_task(consume())
+            _ = asyncio.get_running_loop().create_task(pending())
+            await asyncio.sleep(0)
+            app.quit()
+    
+        def activate(app: Gio.Application) -&gt; None:
+            app.hold()
+            _ = spawn_task(finish(app))
+    
+        try:
+            for _ in range(3):
+                app = Gio.Application(flags=Gio.ApplicationFlags.NON_UNIQUE)
+                _ = app.connect("activate", activate)
+                original = app.run
+    
+                def fail_after_run(args: list[str]) -&gt; int:
+                    _ = original(args)
+                    message = "run failed"
+                    raise RuntimeError(message)
+    
+                if fails:
+                    monkeypatch.setattr(app, "run", fail_after_run)
+                    with pytest.raises(RuntimeError, match="run failed"):
+                        _ = run_gtk(app, ["loop-cleanup"])
+                else:
+                    assert run_gtk(app, ["loop-cleanup"]) == 0
+&gt;               assert all(loop.is_closed() for loop in loops)
+E               assert False
+E                +  where False = all(&lt;generator object test_repeated_runs_close_owned_loops_and_finish_cleanup.&lt;locals&gt;.&lt;genexpr&gt; at 0x7e186e0adfc0&gt;)
+
+tests/gui/front/test_bootstrap_lifecycle.py:85: AssertionError</failure></testcase></testsuite></testsuites>

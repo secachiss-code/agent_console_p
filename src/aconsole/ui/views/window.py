@@ -333,6 +333,9 @@ class MainWindow(Adw.ApplicationWindow):
 
     def _dispose_terminals(self, _widget: Gtk.Widget) -> None:
         self._terminals_disposed = True
+        if self._git_badge_timer is not None:
+            _ = GLib.source_remove(self._git_badge_timer)
+            self._git_badge_timer = None
         self._preferences_unsubscribe()
         self._connection_unsubscribe()
         self.approval_panel.stop()
@@ -968,6 +971,8 @@ class MainWindow(Adw.ApplicationWindow):
 
     def _tab_list_changed(self, _model: Gio.ListStore, _at: int, _removed: int, _added: int) -> None:
         """A project with its first tab starts showing Git in the sidebar. No timer asks git anything after this."""
+        if self._terminals_disposed:
+            return
         for project_id in self._tab_projects():
             if project_id not in self._git_badged:
                 self._git_badged.add(project_id)
@@ -980,6 +985,9 @@ class MainWindow(Adw.ApplicationWindow):
         return frozenset() if snapshot is None else frozenset(tab.project_id for tab in snapshot.tabs)
 
     def _keep_git_badges(self) -> bool:
+        if self._terminals_disposed:
+            self._git_badge_timer = None
+            return GLib.SOURCE_REMOVE
         for project_id in self._tab_projects():
             _ = spawn_task(self._renew_git_watch(project_id))
         return GLib.SOURCE_CONTINUE

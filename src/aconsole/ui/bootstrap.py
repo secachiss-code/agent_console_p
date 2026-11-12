@@ -48,11 +48,14 @@ def run_app(create_app: Callable[[], Gio.Application], argv: Sequence[str] | Non
 def run_gtk(app: Gio.Application, argv: Sequence[str] | None = None) -> int:
     """Run ``app`` inside a ``GLibEventLoop`` context."""
     args = list(argv) if argv is not None else list(sys.argv)
-    loop = GLibEventLoop()
-    if not isinstance(loop, _GtkLoop):
-        message = "GLibEventLoop cannot enter a context"
-        raise TypeError(message)
-    with loop as entered:
-        asyncio.set_event_loop(entered)
-        status = app.run(args)
+    # GLibEventLoop.__exit__ only unregisters its context. Runner owns the
+    # actual shutdown: cancel/await this loop's tasks, finalize async generators
+    # and its executor, then close it, including when app.run raises.
+    with asyncio.Runner(loop_factory=GLibEventLoop) as runner:
+        loop = runner.get_loop()
+        if not isinstance(loop, _GtkLoop):
+            message = "GLibEventLoop cannot enter a context"
+            raise TypeError(message)
+        with loop:
+            status = app.run(args)
     return int(status)
