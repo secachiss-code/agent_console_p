@@ -1,0 +1,186 @@
+{
+  "grid-styled": {
+    "input": "grid-styled.jsonl",
+    "sha256": "da4f0253e770b93e71c5f23f9258333c1f429e9666ab844c9941f7b10522b816",
+    "acceptance_report": "git scale: 10000 rows, 162 frames in 4 s, median 17.3 ms, p95 35.4 ms, worst 234.1 ms, RSS 274 MB (start 250, first page 250, all rows 261 after 3.1 s)",
+    "observer_frames": 162,
+    "observer_window_seconds": [
+      3.2391610639988357,
+      7.241697245999603
+    ],
+    "observer_median_ms": {
+      "wall": 17.90642200012371,
+      "thread": 12.362142000000187,
+      "cpu": 13.03058550000058
+    },
+    "observer_sum_seconds": {
+      "wall": 4.002536182000767,
+      "thread": 2.412550675,
+      "cpu": 2.741690697
+    },
+    "gc_overlapping_pauses_ms": [
+      0.16092199984996114
+    ],
+    "phase_median_ms": {
+      "update -> layout": 0.7391125000000001,
+      "layout -> paint": 4.9928625,
+      "paint -> after-paint": 0.0739455,
+      "after-paint -> before-paint": 7.088482,
+      "before-paint -> update": 5.665102,
+      "layout -> layout": 0.22710750000000002
+    },
+    "phase_samples": {
+      "update -> layout": 162,
+      "layout -> paint": 162,
+      "paint -> after-paint": 162,
+      "after-paint -> before-paint": 161,
+      "before-paint -> update": 161,
+      "layout -> layout": 112
+    },
+    "cpu_stat_before": "usage_usec 11987278000\nuser_usec 8430030000\nsystem_usec 3557248000\nnice_usec 252000\ncore_sched.force_idle_usec 0\nnr_periods 0\nnr_throttled 0\nthrottled_usec 0\nnr_bursts 0\nburst_usec 0",
+    "cpu_stat_after": "usage_usec 11999191000\nuser_usec 8439214000\nsystem_usec 3559977000\nnice_usec 253000\ncore_sched.force_idle_usec 0\nnr_periods 0\nnr_throttled 0\nthrottled_usec 0\nnr_bursts 0\nburst_usec 0",
+    "cpu_max": null,
+    "load_before": [
+      2.9619140625,
+      2.55224609375,
+      2.48876953125
+    ],
+    "load_after": [
+      3.12548828125,
+      2.59326171875,
+      2.50244140625
+    ],
+    "renderer": "GskNglRenderer"
+  },
+  "grid-history": {
+    "input": "grid-history.jsonl",
+    "sha256": "55b62a489751632552fc6ea8ca18aaafbf7f3996dd34ac0b4a3ee12989129320",
+    "acceptance_report": "git scale: 10000 rows, 156 frames in 4 s, median 18.8 ms, p95 37.3 ms, worst 116.8 ms, RSS 320 MB (start 295, first page 296, all rows 308 after 3.2 s)",
+    "observer_frames": 156,
+    "observer_window_seconds": [
+      3.3962410770000133,
+      7.405860025000948
+    ],
+    "observer_median_ms": {
+      "wall": 19.463478500256315,
+      "thread": 14.325989500000524,
+      "cpu": 14.960377000000413
+    },
+    "observer_sum_seconds": {
+      "wall": 4.009618948000934,
+      "thread": 2.5531472100000006,
+      "cpu": 2.736600866
+    },
+    "gc_overlapping_pauses_ms": [
+      0.12024900024698582
+    ],
+    "phase_median_ms": {},
+    "phase_samples": {},
+    "cpu_stat_before": "usage_usec 12434604000\nuser_usec 8780607000\nsystem_usec 3653997000\nnice_usec 266000\ncore_sched.force_idle_usec 0\nnr_periods 0\nnr_throttled 0\nthrottled_usec 0\nnr_bursts 0\nburst_usec 0",
+    "cpu_stat_after": "usage_usec 12447998000\nuser_usec 8790823000\nsystem_usec 3657175000\nnice_usec 267000\ncore_sched.force_idle_usec 0\nnr_periods 0\nnr_throttled 0\nthrottled_usec 0\nnr_bursts 0\nburst_usec 0",
+    "cpu_max": null,
+    "load_before": [
+      2.7470703125,
+      3.17529296875,
+      2.80419921875
+    ],
+    "load_after": [
+      2.68701171875,
+      3.15576171875,
+      2.7998046875
+    ],
+    "renderer": "GskNglRenderer"
+  },
+  "grid-full": {
+    "input": "grid-full.jsonl",
+    "sha256": "f1c68dbca1f811930e1a98411082b2c0a4ca9ef7966fd120c1668ecc821a484f",
+    "acceptance_report": "git scale: 10000 rows, 145 frames in 4 s, median 31.1 ms, p95 37.9 ms, worst 73.0 ms, RSS 672 MB (start 661, first page 661, all rows 672 after 3.2 s)",
+    "observer_frames": 145,
+    "observer_window_seconds": [
+      3.388134507998984,
+      7.410864363999281
+    ],
+    "observer_median_ms": {
+      "wall": 29.951934000564506,
+      "thread": 16.437735000003784,
+      "cpu": 17.390517000002603
+    },
+    "observer_sum_seconds": {
+      "wall": 4.022729856000296,
+      "thread": 2.4696213369999995,
+      "cpu": 2.6171396599999994
+    },
+    "gc_overlapping_pauses_ms": [
+      0.1715970010991441
+    ],
+    "phase_median_ms": {},
+    "phase_samples": {},
+    "cpu_stat_before": "usage_usec 12209734000\nuser_usec 8604503000\nsystem_usec 3605231000\nnice_usec 261000\ncore_sched.force_idle_usec 0\nnr_periods 0\nnr_throttled 0\nthrottled_usec 0\nnr_bursts 0\nburst_usec 0",
+    "cpu_stat_after": "usage_usec 12222809000\nuser_usec 8614688000\nsystem_usec 3608121000\nnice_usec 261000\ncore_sched.force_idle_usec 0\nnr_periods 0\nnr_throttled 0\nthrottled_usec 0\nnr_bursts 0\nburst_usec 0",
+    "cpu_max": null,
+    "load_before": [
+      4.39892578125,
+      3.2529296875,
+      2.75439453125
+    ],
+    "load_after": [
+      4.6875,
+      3.33203125,
+      2.78271484375
+    ],
+    "renderer": "GskNglRenderer"
+  },
+  "resume-full-phases": {
+    "input": "resume-full-phases.jsonl",
+    "sha256": "42258e3b9258ac7e14fd75b23390dd9435be914b96c2796862d126a05824d770",
+    "acceptance_report": "git scale: 10000 rows, 154 frames in 4 s, median 30.2 ms, p95 36.8 ms, worst 49.7 ms, RSS 678 MB (start 666, first page 666, all rows 677 after 3.5 s)",
+    "observer_frames": 154,
+    "observer_window_seconds": [
+      3.6828560260000813,
+      7.71358314400004
+    ],
+    "observer_median_ms": {
+      "wall": 28.670461000047,
+      "thread": 17.352586500003042,
+      "cpu": 18.36748700000257
+    },
+    "observer_sum_seconds": {
+      "wall": 4.030727117999959,
+      "thread": 2.634671650999998,
+      "cpu": 2.7748658599999985
+    },
+    "gc_overlapping_pauses_ms": [
+      0.322846999893045
+    ],
+    "phase_median_ms": {
+      "update -> layout": 0.7556925,
+      "layout -> paint": 6.446427,
+      "paint -> after-paint": 0.09902749999999999,
+      "after-paint -> before-paint": 8.330709,
+      "before-paint -> update": 6.601919,
+      "layout -> layout": 0.2521325
+    },
+    "phase_samples": {
+      "update -> layout": 154,
+      "layout -> paint": 154,
+      "paint -> after-paint": 154,
+      "after-paint -> before-paint": 153,
+      "before-paint -> update": 153,
+      "layout -> layout": 106
+    },
+    "cpu_stat_before": "usage_usec 452939000\nuser_usec 312627000\nsystem_usec 140312000\nnice_usec 23000\ncore_sched.force_idle_usec 0\nnr_periods 0\nnr_throttled 0\nthrottled_usec 0\nnr_bursts 0\nburst_usec 0",
+    "cpu_stat_after": "usage_usec 466297000\nuser_usec 323159000\nsystem_usec 143138000\nnice_usec 23000\ncore_sched.force_idle_usec 0\nnr_periods 0\nnr_throttled 0\nthrottled_usec 0\nnr_bursts 0\nburst_usec 0",
+    "cpu_max": null,
+    "load_before": [
+      2.28759765625,
+      1.58154296875,
+      0.84814453125
+    ],
+    "load_after": [
+      2.5048828125,
+      1.638671875,
+      0.87060546875
+    ],
+    "renderer": "GskNglRenderer"
+  }
+}
