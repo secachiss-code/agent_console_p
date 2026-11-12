@@ -1,0 +1,28 @@
+[
+  {
+    "label": "100ms",
+    "width": 690,
+    "height": 790,
+    "default": [
+      700,
+      800
+    ],
+    "maximized": false,
+    "fullscreen": false,
+    "active": true,
+    "xprop": "WM_NORMAL_HINTS(WM_SIZE_HINTS):\n\t\tprogram specified minimum size: 102 by 25\n_NET_WM_STATE:  not found.\n_GTK_FRAME_EXTENTS:  no such atom on any window.\n"
+  },
+  {
+    "label": "settled",
+    "width": 690,
+    "height": 790,
+    "default": [
+      700,
+      800
+    ],
+    "maximized": false,
+    "fullscreen": false,
+    "active": true,
+    "xprop": "WM_NORMAL_HINTS(WM_SIZE_HINTS):\n\t\tprogram specified minimum size: 102 by 25\n_NET_WM_STATE:  not found.\n_GTK_FRAME_EXTENTS:  no such atom on any window.\n"
+  }
+]
