@@ -8,6 +8,10 @@ mcp_servers.aconsole.tool_timeout_sec=60
 -c
 notify=["__AGENT_HOME__/.aconsole/bin/aconsole-notify","codex"]
 -c
+approval_policy="on-request"
+-c
+sandbox_mode="workspace-write"
+-c
 tui.notification_method="osc9"
 -c
 tui.notification_condition="always"

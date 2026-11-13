@@ -1,0 +1,521 @@
+[
+  {
+    "case": "never-pre-allow",
+    "exit": 0,
+    "executed": true,
+    "hooks": [
+      {
+        "session_id": "01a1d6e6-a1ba-7b23-b82b-6f1aef9ea678",
+        "transcript_path": "/tmp/aconsole-apr7-7pvffw9y/home/.codex/sessions/2026/11/14/rollout-2026-11-14T00-53-21-01a1d6e6-a1ba-7b23-b82b-6f1aef9ea678.jsonl",
+        "cwd": "/tmp/aconsole-apr7-7pvffw9y/work",
+        "hook_event_name": "SessionStart",
+        "model": "gpt-6.1-sol",
+        "permission_mode": "bypassPermissions",
+        "source": "startup"
+      },
+      {
+        "session_id": "01a1d6e6-a1ba-7b23-b82b-6f1aef9ea678",
+        "turn_id": "01a1d6e6-a1d5-70f3-9d5c-0ccb4595b33b",
+        "transcript_path": "/tmp/aconsole-apr7-7pvffw9y/home/.codex/sessions/2026/11/14/rollout-2026-11-14T00-53-21-01a1d6e6-a1ba-7b23-b82b-6f1aef9ea678.jsonl",
+        "cwd": "/tmp/aconsole-apr7-7pvffw9y/work",
+        "hook_event_name": "UserPromptSubmit",
+        "model": "gpt-6.1-sol",
+        "permission_mode": "bypassPermissions",
+        "prompt": "Run the probe once."
+      },
+      {
+        "session_id": "01a1d6e6-a1ba-7b23-b82b-6f1aef9ea678",
+        "turn_id": "01a1d6e6-a1d5-70f3-9d5c-0ccb4595b33b",
+        "transcript_path": "/tmp/aconsole-apr7-7pvffw9y/home/.codex/sessions/2026/11/14/rollout-2026-11-14T00-53-21-01a1d6e6-a1ba-7b23-b82b-6f1aef9ea678.jsonl",
+        "cwd": "/tmp/aconsole-apr7-7pvffw9y/work",
+        "hook_event_name": "PreToolUse",
+        "model": "gpt-6.1-sol",
+        "permission_mode": "bypassPermissions",
+        "tool_name": "Bash",
+        "tool_input": {
+          "command": "touch marker"
+        },
+        "tool_use_id": "call_probe"
+      },
+      {
+        "session_id": "01a1d6e6-a1ba-7b23-b82b-6f1aef9ea678",
+        "turn_id": "01a1d6e6-a1d5-70f3-9d5c-0ccb4595b33b",
+        "transcript_path": "/tmp/aconsole-apr7-7pvffw9y/home/.codex/sessions/2026/11/14/rollout-2026-11-14T00-53-21-01a1d6e6-a1ba-7b23-b82b-6f1aef9ea678.jsonl",
+        "cwd": "/tmp/aconsole-apr7-7pvffw9y/work",
+        "hook_event_name": "PostToolUse",
+        "model": "gpt-6.1-sol",
+        "permission_mode": "bypassPermissions",
+        "tool_name": "Bash",
+        "tool_input": {
+          "command": "touch marker"
+        },
+        "tool_response": "",
+        "tool_use_id": "call_probe"
+      },
+      {
+        "session_id": "01a1d6e6-a1ba-7b23-b82b-6f1aef9ea678",
+        "turn_id": "01a1d6e6-a1d5-70f3-9d5c-0ccb4595b33b",
+        "transcript_path": "/tmp/aconsole-apr7-7pvffw9y/home/.codex/sessions/2026/11/14/rollout-2026-11-14T00-53-21-01a1d6e6-a1ba-7b23-b82b-6f1aef9ea678.jsonl",
+        "cwd": "/tmp/aconsole-apr7-7pvffw9y/work",
+        "hook_event_name": "Stop",
+        "model": "gpt-6.1-sol",
+        "permission_mode": "bypassPermissions",
+        "stop_hook_active": false,
+        "last_assistant_message": "Probe complete."
+      },
+      {
+        "type": "agent-turn-complete",
+        "thread-id": "01a1d6e6-a1ba-7b23-b82b-6f1aef9ea678",
+        "turn-id": "01a1d6e6-a1d5-70f3-9d5c-0ccb4595b33b",
+        "cwd": "/tmp/aconsole-apr7-7pvffw9y/work",
+        "client": "codex_exec",
+        "input-messages": [
+          "Run the probe once."
+        ],
+        "last-assistant-message": "Probe complete."
+      },
+      {
+        "session_id": "01a1d6e6-a1ba-7b23-b82b-6f1aef9ea678",
+        "transcript_path": "/tmp/aconsole-apr7-7pvffw9y/home/.codex/sessions/2026/11/14/rollout-2026-11-14T00-53-21-01a1d6e6-a1ba-7b23-b82b-6f1aef9ea678.jsonl",
+        "cwd": "/tmp/aconsole-apr7-7pvffw9y/work",
+        "hook_event_name": "SessionEnd",
+        "reason": "other"
+      }
+    ],
+    "requests": [
+      {
+        "path": "/v1/responses",
+        "tools": []
+      },
+      {
+        "path": "/v1/responses",
+        "tools": []
+      }
+    ]
+  },
+  {
+    "case": "never-pre-deny",
+    "exit": 0,
+    "executed": false,
+    "hooks": [
+      {
+        "session_id": "01a1d6e6-b4b7-7dc0-8d35-45dd765e4c4d",
+        "transcript_path": "/tmp/aconsole-apr7-cnrd6ynn/home/.codex/sessions/2026/11/14/rollout-2026-11-14T00-53-26-01a1d6e6-b4b7-7dc0-8d35-45dd765e4c4d.jsonl",
+        "cwd": "/tmp/aconsole-apr7-cnrd6ynn/work",
+        "hook_event_name": "SessionStart",
+        "model": "gpt-6.1-sol",
+        "permission_mode": "bypassPermissions",
+        "source": "startup"
+      },
+      {
+        "session_id": "01a1d6e6-b4b7-7dc0-8d35-45dd765e4c4d",
+        "turn_id": "01a1d6e6-b4c6-7a11-a823-6a492b454575",
+        "transcript_path": "/tmp/aconsole-apr7-cnrd6ynn/home/.codex/sessions/2026/11/14/rollout-2026-11-14T00-53-26-01a1d6e6-b4b7-7dc0-8d35-45dd765e4c4d.jsonl",
+        "cwd": "/tmp/aconsole-apr7-cnrd6ynn/work",
+        "hook_event_name": "UserPromptSubmit",
+        "model": "gpt-6.1-sol",
+        "permission_mode": "bypassPermissions",
+        "prompt": "Run the probe once."
+      },
+      {
+        "session_id": "01a1d6e6-b4b7-7dc0-8d35-45dd765e4c4d",
+        "turn_id": "01a1d6e6-b4c6-7a11-a823-6a492b454575",
+        "transcript_path": "/tmp/aconsole-apr7-cnrd6ynn/home/.codex/sessions/2026/11/14/rollout-2026-11-14T00-53-26-01a1d6e6-b4b7-7dc0-8d35-45dd765e4c4d.jsonl",
+        "cwd": "/tmp/aconsole-apr7-cnrd6ynn/work",
+        "hook_event_name": "PreToolUse",
+        "model": "gpt-6.1-sol",
+        "permission_mode": "bypassPermissions",
+        "tool_name": "Bash",
+        "tool_input": {
+          "command": "touch marker"
+        },
+        "tool_use_id": "call_probe"
+      },
+      {
+        "session_id": "01a1d6e6-b4b7-7dc0-8d35-45dd765e4c4d",
+        "turn_id": "01a1d6e6-b4c6-7a11-a823-6a492b454575",
+        "transcript_path": "/tmp/aconsole-apr7-cnrd6ynn/home/.codex/sessions/2026/11/14/rollout-2026-11-14T00-53-26-01a1d6e6-b4b7-7dc0-8d35-45dd765e4c4d.jsonl",
+        "cwd": "/tmp/aconsole-apr7-cnrd6ynn/work",
+        "hook_event_name": "Stop",
+        "model": "gpt-6.1-sol",
+        "permission_mode": "bypassPermissions",
+        "stop_hook_active": false,
+        "last_assistant_message": "Probe complete."
+      },
+      {
+        "type": "agent-turn-complete",
+        "thread-id": "01a1d6e6-b4b7-7dc0-8d35-45dd765e4c4d",
+        "turn-id": "01a1d6e6-b4c6-7a11-a823-6a492b454575",
+        "cwd": "/tmp/aconsole-apr7-cnrd6ynn/work",
+        "client": "codex_exec",
+        "input-messages": [
+          "Run the probe once."
+        ],
+        "last-assistant-message": "Probe complete."
+      },
+      {
+        "session_id": "01a1d6e6-b4b7-7dc0-8d35-45dd765e4c4d",
+        "transcript_path": "/tmp/aconsole-apr7-cnrd6ynn/home/.codex/sessions/2026/11/14/rollout-2026-11-14T00-53-26-01a1d6e6-b4b7-7dc0-8d35-45dd765e4c4d.jsonl",
+        "cwd": "/tmp/aconsole-apr7-cnrd6ynn/work",
+        "hook_event_name": "SessionEnd",
+        "reason": "other"
+      }
+    ],
+    "requests": [
+      {
+        "path": "/v1/responses",
+        "tools": []
+      },
+      {
+        "path": "/v1/responses",
+        "tools": []
+      }
+    ]
+  },
+  {
+    "case": "never-pre-ask",
+    "exit": 0,
+    "executed": true,
+    "hooks": [
+      {
+        "session_id": "01a1d6e6-c388-7ec3-b071-af0d470bfa5b",
+        "transcript_path": "/tmp/aconsole-apr7-q6xhtpbr/home/.codex/sessions/2026/11/14/rollout-2026-11-14T00-53-29-01a1d6e6-c388-7ec3-b071-af0d470bfa5b.jsonl",
+        "cwd": "/tmp/aconsole-apr7-q6xhtpbr/work",
+        "hook_event_name": "SessionStart",
+        "model": "gpt-6.1-sol",
+        "permission_mode": "bypassPermissions",
+        "source": "startup"
+      },
+      {
+        "session_id": "01a1d6e6-c388-7ec3-b071-af0d470bfa5b",
+        "turn_id": "01a1d6e6-c3a1-79f2-9ad4-39f5884308dd",
+        "transcript_path": "/tmp/aconsole-apr7-q6xhtpbr/home/.codex/sessions/2026/11/14/rollout-2026-11-14T00-53-29-01a1d6e6-c388-7ec3-b071-af0d470bfa5b.jsonl",
+        "cwd": "/tmp/aconsole-apr7-q6xhtpbr/work",
+        "hook_event_name": "UserPromptSubmit",
+        "model": "gpt-6.1-sol",
+        "permission_mode": "bypassPermissions",
+        "prompt": "Run the probe once."
+      },
+      {
+        "session_id": "01a1d6e6-c388-7ec3-b071-af0d470bfa5b",
+        "turn_id": "01a1d6e6-c3a1-79f2-9ad4-39f5884308dd",
+        "transcript_path": "/tmp/aconsole-apr7-q6xhtpbr/home/.codex/sessions/2026/11/14/rollout-2026-11-14T00-53-29-01a1d6e6-c388-7ec3-b071-af0d470bfa5b.jsonl",
+        "cwd": "/tmp/aconsole-apr7-q6xhtpbr/work",
+        "hook_event_name": "PreToolUse",
+        "model": "gpt-6.1-sol",
+        "permission_mode": "bypassPermissions",
+        "tool_name": "Bash",
+        "tool_input": {
+          "command": "touch marker"
+        },
+        "tool_use_id": "call_probe"
+      },
+      {
+        "session_id": "01a1d6e6-c388-7ec3-b071-af0d470bfa5b",
+        "turn_id": "01a1d6e6-c3a1-79f2-9ad4-39f5884308dd",
+        "transcript_path": "/tmp/aconsole-apr7-q6xhtpbr/home/.codex/sessions/2026/11/14/rollout-2026-11-14T00-53-29-01a1d6e6-c388-7ec3-b071-af0d470bfa5b.jsonl",
+        "cwd": "/tmp/aconsole-apr7-q6xhtpbr/work",
+        "hook_event_name": "PostToolUse",
+        "model": "gpt-6.1-sol",
+        "permission_mode": "bypassPermissions",
+        "tool_name": "Bash",
+        "tool_input": {
+          "command": "touch marker"
+        },
+        "tool_response": "",
+        "tool_use_id": "call_probe"
+      },
+      {
+        "session_id": "01a1d6e6-c388-7ec3-b071-af0d470bfa5b",
+        "turn_id": "01a1d6e6-c3a1-79f2-9ad4-39f5884308dd",
+        "transcript_path": "/tmp/aconsole-apr7-q6xhtpbr/home/.codex/sessions/2026/11/14/rollout-2026-11-14T00-53-29-01a1d6e6-c388-7ec3-b071-af0d470bfa5b.jsonl",
+        "cwd": "/tmp/aconsole-apr7-q6xhtpbr/work",
+        "hook_event_name": "Stop",
+        "model": "gpt-6.1-sol",
+        "permission_mode": "bypassPermissions",
+        "stop_hook_active": false,
+        "last_assistant_message": "Probe complete."
+      },
+      {
+        "type": "agent-turn-complete",
+        "thread-id": "01a1d6e6-c388-7ec3-b071-af0d470bfa5b",
+        "turn-id": "01a1d6e6-c3a1-79f2-9ad4-39f5884308dd",
+        "cwd": "/tmp/aconsole-apr7-q6xhtpbr/work",
+        "client": "codex_exec",
+        "input-messages": [
+          "Run the probe once."
+        ],
+        "last-assistant-message": "Probe complete."
+      },
+      {
+        "session_id": "01a1d6e6-c388-7ec3-b071-af0d470bfa5b",
+        "transcript_path": "/tmp/aconsole-apr7-q6xhtpbr/home/.codex/sessions/2026/11/14/rollout-2026-11-14T00-53-29-01a1d6e6-c388-7ec3-b071-af0d470bfa5b.jsonl",
+        "cwd": "/tmp/aconsole-apr7-q6xhtpbr/work",
+        "hook_event_name": "SessionEnd",
+        "reason": "other"
+      }
+    ],
+    "requests": [
+      {
+        "path": "/v1/responses",
+        "tools": []
+      },
+      {
+        "path": "/v1/responses",
+        "tools": []
+      }
+    ]
+  },
+  {
+    "case": "on-request-permission-allow",
+    "exit": 0,
+    "executed": false,
+    "hooks": [
+      {
+        "session_id": "01a1d6e6-d329-7330-81c6-e9414ba4973f",
+        "transcript_path": "/tmp/aconsole-apr7-s53x5b7e/home/.codex/sessions/2026/11/14/rollout-2026-11-14T00-53-33-01a1d6e6-d329-7330-81c6-e9414ba4973f.jsonl",
+        "cwd": "/tmp/aconsole-apr7-s53x5b7e/work",
+        "hook_event_name": "SessionStart",
+        "model": "gpt-6.1-sol",
+        "permission_mode": "bypassPermissions",
+        "source": "startup"
+      },
+      {
+        "session_id": "01a1d6e6-d329-7330-81c6-e9414ba4973f",
+        "turn_id": "01a1d6e6-d337-77c2-bb9a-29625e3c1088",
+        "transcript_path": "/tmp/aconsole-apr7-s53x5b7e/home/.codex/sessions/2026/11/14/rollout-2026-11-14T00-53-33-01a1d6e6-d329-7330-81c6-e9414ba4973f.jsonl",
+        "cwd": "/tmp/aconsole-apr7-s53x5b7e/work",
+        "hook_event_name": "UserPromptSubmit",
+        "model": "gpt-6.1-sol",
+        "permission_mode": "bypassPermissions",
+        "prompt": "Run the probe once."
+      },
+      {
+        "session_id": "01a1d6e6-d329-7330-81c6-e9414ba4973f",
+        "turn_id": "01a1d6e6-d337-77c2-bb9a-29625e3c1088",
+        "transcript_path": "/tmp/aconsole-apr7-s53x5b7e/home/.codex/sessions/2026/11/14/rollout-2026-11-14T00-53-33-01a1d6e6-d329-7330-81c6-e9414ba4973f.jsonl",
+        "cwd": "/tmp/aconsole-apr7-s53x5b7e/work",
+        "hook_event_name": "PreToolUse",
+        "model": "gpt-6.1-sol",
+        "permission_mode": "bypassPermissions",
+        "tool_name": "Bash",
+        "tool_input": {
+          "command": "touch marker"
+        },
+        "tool_use_id": "call_probe"
+      },
+      {
+        "session_id": "01a1d6e6-d329-7330-81c6-e9414ba4973f",
+        "turn_id": "01a1d6e6-d337-77c2-bb9a-29625e3c1088",
+        "transcript_path": "/tmp/aconsole-apr7-s53x5b7e/home/.codex/sessions/2026/11/14/rollout-2026-11-14T00-53-33-01a1d6e6-d329-7330-81c6-e9414ba4973f.jsonl",
+        "cwd": "/tmp/aconsole-apr7-s53x5b7e/work",
+        "hook_event_name": "Stop",
+        "model": "gpt-6.1-sol",
+        "permission_mode": "bypassPermissions",
+        "stop_hook_active": false,
+        "last_assistant_message": "Probe complete."
+      },
+      {
+        "type": "agent-turn-complete",
+        "thread-id": "01a1d6e6-d329-7330-81c6-e9414ba4973f",
+        "turn-id": "01a1d6e6-d337-77c2-bb9a-29625e3c1088",
+        "cwd": "/tmp/aconsole-apr7-s53x5b7e/work",
+        "client": "codex_exec",
+        "input-messages": [
+          "Run the probe once."
+        ],
+        "last-assistant-message": "Probe complete."
+      },
+      {
+        "session_id": "01a1d6e6-d329-7330-81c6-e9414ba4973f",
+        "transcript_path": "/tmp/aconsole-apr7-s53x5b7e/home/.codex/sessions/2026/11/14/rollout-2026-11-14T00-53-33-01a1d6e6-d329-7330-81c6-e9414ba4973f.jsonl",
+        "cwd": "/tmp/aconsole-apr7-s53x5b7e/work",
+        "hook_event_name": "SessionEnd",
+        "reason": "other"
+      }
+    ],
+    "requests": [
+      {
+        "path": "/v1/responses",
+        "tools": []
+      },
+      {
+        "path": "/v1/responses",
+        "tools": []
+      }
+    ]
+  },
+  {
+    "case": "never-permission-allow",
+    "exit": 0,
+    "executed": false,
+    "hooks": [
+      {
+        "session_id": "01a1d6e6-dfbe-7583-a43b-c7243a7cbb91",
+        "transcript_path": "/tmp/aconsole-apr7-c1l2pzmd/home/.codex/sessions/2026/11/14/rollout-2026-11-14T00-53-37-01a1d6e6-dfbe-7583-a43b-c7243a7cbb91.jsonl",
+        "cwd": "/tmp/aconsole-apr7-c1l2pzmd/work",
+        "hook_event_name": "SessionStart",
+        "model": "gpt-6.1-sol",
+        "permission_mode": "bypassPermissions",
+        "source": "startup"
+      },
+      {
+        "session_id": "01a1d6e6-dfbe-7583-a43b-c7243a7cbb91",
+        "turn_id": "01a1d6e6-dfd7-7c92-80bf-43b693182325",
+        "transcript_path": "/tmp/aconsole-apr7-c1l2pzmd/home/.codex/sessions/2026/11/14/rollout-2026-11-14T00-53-37-01a1d6e6-dfbe-7583-a43b-c7243a7cbb91.jsonl",
+        "cwd": "/tmp/aconsole-apr7-c1l2pzmd/work",
+        "hook_event_name": "UserPromptSubmit",
+        "model": "gpt-6.1-sol",
+        "permission_mode": "bypassPermissions",
+        "prompt": "Run the probe once."
+      },
+      {
+        "session_id": "01a1d6e6-dfbe-7583-a43b-c7243a7cbb91",
+        "turn_id": "01a1d6e6-dfd7-7c92-80bf-43b693182325",
+        "transcript_path": "/tmp/aconsole-apr7-c1l2pzmd/home/.codex/sessions/2026/11/14/rollout-2026-11-14T00-53-37-01a1d6e6-dfbe-7583-a43b-c7243a7cbb91.jsonl",
+        "cwd": "/tmp/aconsole-apr7-c1l2pzmd/work",
+        "hook_event_name": "PreToolUse",
+        "model": "gpt-6.1-sol",
+        "permission_mode": "bypassPermissions",
+        "tool_name": "Bash",
+        "tool_input": {
+          "command": "touch marker"
+        },
+        "tool_use_id": "call_probe"
+      },
+      {
+        "session_id": "01a1d6e6-dfbe-7583-a43b-c7243a7cbb91",
+        "turn_id": "01a1d6e6-dfd7-7c92-80bf-43b693182325",
+        "transcript_path": "/tmp/aconsole-apr7-c1l2pzmd/home/.codex/sessions/2026/11/14/rollout-2026-11-14T00-53-37-01a1d6e6-dfbe-7583-a43b-c7243a7cbb91.jsonl",
+        "cwd": "/tmp/aconsole-apr7-c1l2pzmd/work",
+        "hook_event_name": "Stop",
+        "model": "gpt-6.1-sol",
+        "permission_mode": "bypassPermissions",
+        "stop_hook_active": false,
+        "last_assistant_message": "Probe complete."
+      },
+      {
+        "type": "agent-turn-complete",
+        "thread-id": "01a1d6e6-dfbe-7583-a43b-c7243a7cbb91",
+        "turn-id": "01a1d6e6-dfd7-7c92-80bf-43b693182325",
+        "cwd": "/tmp/aconsole-apr7-c1l2pzmd/work",
+        "client": "codex_exec",
+        "input-messages": [
+          "Run the probe once."
+        ],
+        "last-assistant-message": "Probe complete."
+      },
+      {
+        "session_id": "01a1d6e6-dfbe-7583-a43b-c7243a7cbb91",
+        "transcript_path": "/tmp/aconsole-apr7-c1l2pzmd/home/.codex/sessions/2026/11/14/rollout-2026-11-14T00-53-37-01a1d6e6-dfbe-7583-a43b-c7243a7cbb91.jsonl",
+        "cwd": "/tmp/aconsole-apr7-c1l2pzmd/work",
+        "hook_event_name": "SessionEnd",
+        "reason": "other"
+      }
+    ],
+    "requests": [
+      {
+        "path": "/v1/responses",
+        "tools": []
+      },
+      {
+        "path": "/v1/responses",
+        "tools": []
+      }
+    ]
+  },
+  {
+    "case": "offline-pre-deny",
+    "exit": 0,
+    "executed": true,
+    "hooks": [
+      {
+        "session_id": "01a1d6e6-eca6-7501-a017-88c7030f0ca0",
+        "transcript_path": "/tmp/aconsole-apr7-2_gx08_x/home/.codex/sessions/2026/11/14/rollout-2026-11-14T00-53-40-01a1d6e6-eca6-7501-a017-88c7030f0ca0.jsonl",
+        "cwd": "/tmp/aconsole-apr7-2_gx08_x/work",
+        "hook_event_name": "SessionStart",
+        "model": "gpt-6.1-sol",
+        "permission_mode": "bypassPermissions",
+        "source": "startup"
+      },
+      {
+        "session_id": "01a1d6e6-eca6-7501-a017-88c7030f0ca0",
+        "turn_id": "01a1d6e6-ecba-7782-87dd-04b2176910bb",
+        "transcript_path": "/tmp/aconsole-apr7-2_gx08_x/home/.codex/sessions/2026/11/14/rollout-2026-11-14T00-53-40-01a1d6e6-eca6-7501-a017-88c7030f0ca0.jsonl",
+        "cwd": "/tmp/aconsole-apr7-2_gx08_x/work",
+        "hook_event_name": "UserPromptSubmit",
+        "model": "gpt-6.1-sol",
+        "permission_mode": "bypassPermissions",
+        "prompt": "Run the probe once."
+      },
+      {
+        "session_id": "01a1d6e6-eca6-7501-a017-88c7030f0ca0",
+        "turn_id": "01a1d6e6-ecba-7782-87dd-04b2176910bb",
+        "transcript_path": "/tmp/aconsole-apr7-2_gx08_x/home/.codex/sessions/2026/11/14/rollout-2026-11-14T00-53-40-01a1d6e6-eca6-7501-a017-88c7030f0ca0.jsonl",
+        "cwd": "/tmp/aconsole-apr7-2_gx08_x/work",
+        "hook_event_name": "PreToolUse",
+        "model": "gpt-6.1-sol",
+        "permission_mode": "bypassPermissions",
+        "tool_name": "Bash",
+        "tool_input": {
+          "command": "touch marker"
+        },
+        "tool_use_id": "call_probe"
+      },
+      {
+        "session_id": "01a1d6e6-eca6-7501-a017-88c7030f0ca0",
+        "turn_id": "01a1d6e6-ecba-7782-87dd-04b2176910bb",
+        "transcript_path": "/tmp/aconsole-apr7-2_gx08_x/home/.codex/sessions/2026/11/14/rollout-2026-11-14T00-53-40-01a1d6e6-eca6-7501-a017-88c7030f0ca0.jsonl",
+        "cwd": "/tmp/aconsole-apr7-2_gx08_x/work",
+        "hook_event_name": "PostToolUse",
+        "model": "gpt-6.1-sol",
+        "permission_mode": "bypassPermissions",
+        "tool_name": "Bash",
+        "tool_input": {
+          "command": "touch marker"
+        },
+        "tool_response": "",
+        "tool_use_id": "call_probe"
+      },
+      {
+        "session_id": "01a1d6e6-eca6-7501-a017-88c7030f0ca0",
+        "turn_id": "01a1d6e6-ecba-7782-87dd-04b2176910bb",
+        "transcript_path": "/tmp/aconsole-apr7-2_gx08_x/home/.codex/sessions/2026/11/14/rollout-2026-11-14T00-53-40-01a1d6e6-eca6-7501-a017-88c7030f0ca0.jsonl",
+        "cwd": "/tmp/aconsole-apr7-2_gx08_x/work",
+        "hook_event_name": "Stop",
+        "model": "gpt-6.1-sol",
+        "permission_mode": "bypassPermissions",
+        "stop_hook_active": false,
+        "last_assistant_message": "Probe complete."
+      },
+      {
+        "type": "agent-turn-complete",
+        "thread-id": "01a1d6e6-eca6-7501-a017-88c7030f0ca0",
+        "turn-id": "01a1d6e6-ecba-7782-87dd-04b2176910bb",
+        "cwd": "/tmp/aconsole-apr7-2_gx08_x/work",
+        "client": "codex_exec",
+        "input-messages": [
+          "Run the probe once."
+        ],
+        "last-assistant-message": "Probe complete."
+      },
+      {
+        "session_id": "01a1d6e6-eca6-7501-a017-88c7030f0ca0",
+        "transcript_path": "/tmp/aconsole-apr7-2_gx08_x/home/.codex/sessions/2026/11/14/rollout-2026-11-14T00-53-40-01a1d6e6-eca6-7501-a017-88c7030f0ca0.jsonl",
+        "cwd": "/tmp/aconsole-apr7-2_gx08_x/work",
+        "hook_event_name": "SessionEnd",
+        "reason": "other"
+      }
+    ],
+    "requests": [
+      {
+        "path": "/v1/responses",
+        "tools": []
+      },
+      {
+        "path": "/v1/responses",
+        "tools": []
+      }
+    ]
+  }
+]

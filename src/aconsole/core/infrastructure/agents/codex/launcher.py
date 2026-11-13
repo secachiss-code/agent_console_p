@@ -8,12 +8,13 @@ from __future__ import annotations
 
 import re
 import shlex
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Final
 
 import msgspec
 
+from aconsole.core.domain.approval_policy import ApprovalPolicyChoice, ApprovalPolicyMode, DangerousSubmode
 from aconsole.core.infrastructure.agents.codex.trust import HookTrustCache, verified_hooks
 from aconsole.core.infrastructure.agents.private_files import atomic_write, check_home, private_dir
 
@@ -33,7 +34,7 @@ _HOOKS: Final = (
     ("PermissionRequest", "permission_request", _PERMISSION_TIMEOUT),
     ("SessionStart", "session_start", _HOOK_TIMEOUT),
     ("UserPromptSubmit", "user_prompt_submit", _HOOK_TIMEOUT),
-    ("PreToolUse", "pre_tool_use", _HOOK_TIMEOUT),
+    ("PreToolUse", "pre_tool_use", _PERMISSION_TIMEOUT),
     ("PostToolUse", "post_tool_use", _HOOK_TIMEOUT),
     ("Stop", "stop", _HOOK_TIMEOUT),
     ("SessionEnd", "session_end", _SESSION_END_TIMEOUT),
@@ -45,9 +46,9 @@ _PORT: Final = "port must be from 1 to 65535"
 _EMPTY: Final = "tab token must be non-empty"
 _QUOTE: Final = "path cannot contain a quote or backslash"
 _HOOK: Final = """#!/bin/sh
-curl -sS --max-time 590 -H @/proc/self/fd/3 \\
+curl -fsS --max-time 590 -H @/proc/self/fd/3 \\
   --data-binary @- "http://127.0.0.1:$ACONSOLE_PORT/v1/tabs/$ACONSOLE_TAB/codex/hook" \\
-  3<<ACONSOLE_AUTH 2>/dev/null || true
+  3<<ACONSOLE_AUTH 2>/dev/null || { echo AConsole-hook-failed >&2; exit 2; }
 Authorization: Bearer $ACONSOLE_TAB_TOKEN
 ACONSOLE_AUTH
 exit 0
@@ -78,6 +79,7 @@ class CodexTab:
     tab_id: str
     port: int
     token: str
+    policy: ApprovalPolicyChoice = field(default_factory=ApprovalPolicyChoice)
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -96,7 +98,7 @@ class CodexLauncher:
     def probe(self, tab: CodexTab) -> CodexLaunch:
         """List all generated definitions without granting trust or starting a model turn."""
         launch = self.launch(tab, HookTrustCache())
-        command = f"{shlex.quote(str(launch.hook_path))} codex"
+        command = _hook_command(launch.hook_path)
         args = list(launch.argv)
         for name, _snake, timeout in _HOOKS:
             args.extend(("-c", _hook_flag(name, command, timeout)))
@@ -105,7 +107,7 @@ class CodexLauncher:
     def verified(self, tab: CodexTab, raw: bytes, *, require_trusted: bool = False) -> CodexLaunch:
         """Use hashes returned by the installed Codex for precisely these generated definitions."""
         hook = tab.agent_home / ".aconsole/bin/aconsole-hook"
-        command = f"{shlex.quote(str(hook))} codex"
+        command = _hook_command(hook)
         expected = {
             _state_key(snake): (name[0].lower() + name[1:], command, timeout) for name, snake, timeout in _HOOKS
         }
@@ -129,7 +131,7 @@ class CodexLauncher:
         _atomic_write(notify, _NOTIFY.encode("utf-8"), _SCRIPT_MODE)
         env = {_ENV_PORT: str(tab.port), _ENV_TAB: tab.tab_id, _ENV_AUTH: tab.token}
         return CodexLaunch(
-            argv=_argv(tab.port, hook, notify, trust),
+            argv=_argv(tab.port, hook, notify, trust, tab.policy),
             env=env,
             hook_path=hook,
             notify_path=notify,
@@ -183,8 +185,16 @@ def _hook_flag(name: str, command: str, timeout: int) -> str:
     return f'hooks.{name}=[{{hooks=[{{type="command",command={quoted},timeout={timeout}}}]}}]'
 
 
-def _argv(port: int, hook: Path, notify: Path, trust: HookTrustCache) -> tuple[str, ...]:
-    command = f"{shlex.quote(str(hook))} codex"
+def _hook_command(hook: Path) -> str:
+    # The outer shell survives a missing or crashed script and translates its
+    # failure into Codex's explicit blocking exit code, instead of a hook error.
+    return f"{shlex.quote(str(hook))} codex || {{ echo AConsole-hook-failed >&2; exit 2; }}"
+
+
+def _argv(
+    port: int, hook: Path, notify: Path, trust: HookTrustCache, policy: ApprovalPolicyChoice,
+) -> tuple[str, ...]:
+    command = _hook_command(hook)
     trusted = _trusted_hooks(trust)
     args = [
         "codex",
@@ -197,6 +207,12 @@ def _argv(port: int, hook: Path, notify: Path, trust: HookTrustCache) -> tuple[s
         "-c",
         f'notify=["{notify}","codex"]',
     ]
+    approval, sandbox = "on-request", "workspace-write"
+    if policy.mode is ApprovalPolicyMode.DENY:
+        approval, sandbox = "never", "read-only"
+    elif policy.mode is ApprovalPolicyMode.ALLOW and policy.dangerous is DangerousSubmode.ALLOW:
+        approval, sandbox = "never", "danger-full-access"
+    args.extend(("-c", f'approval_policy="{approval}"', "-c", f'sandbox_mode="{sandbox}"'))
     for name, _key, _digest, timeout in trusted:
         args.extend(("-c", _hook_flag(name, command, timeout)))
     if trusted:

@@ -89,6 +89,10 @@ def test_project_override_applies_without_ui_or_inline_mode(tmp_path: Path) -> N
     daemon._approval_policy.set_project("project", None, origin=PolicyOrigin.UI)
     response = asyncio.run(daemon._permission(_item()))
     assert json.loads(response.body)["hookSpecificOutput"]["permissionDecision"] == "deny"
+    daemon._agent_commands._policy_tabs.clear()
+    daemon._approval_policy.set_global(ApprovalPolicyChoice(mode=ApprovalPolicyMode.ALLOW), origin=PolicyOrigin.UI)
+    response = asyncio.run(daemon._permission(_item()))
+    assert json.loads(response.body)["hookSpecificOutput"]["permissionDecision"] == "deny"
 
 
 def test_unknown_tool_cannot_silently_pass_dangerous_ask() -> None:
@@ -164,3 +168,79 @@ def test_opencode_launch_uses_the_project_policy_in_the_server_configuration() -
     assert "approval_policy_static" in commands.capabilities(AgentKind.OPENCODE)
     commands.release(AgentKind.OPENCODE, "tab", "agent-opencode")
     assert "approval_policy_static" not in commands.capabilities(AgentKind.OPENCODE)
+
+
+@pytest.mark.parametrize("fallback", ["expire", "release", "ui-loss", "drop-tab"])
+def test_codex_pretool_approval_never_falls_through_on_lost_ui(fallback: str) -> None:
+    async def scenario() -> None:
+        from datetime import timedelta
+
+        from aconsole.contracts.app import ReleaseParams
+
+        hold = ApprovalHold(ApprovalBook(), publish=lambda _event: None, notify=lambda _row: None,
+                            audit=lambda _row: None, now=lambda: datetime.now(UTC))
+        item = _item()
+        task = asyncio.create_task(handle_permission(
+            IngestItem(tab_id=item.tab_id, kind="codex.hook", body=item.body), hold,
+            hold_seconds=30, worktree="/work",
+        ))
+        await asyncio.sleep(0)
+        view, = hold.pending_views()
+        if fallback == "expire":
+            hold.expire(at=datetime.now(UTC) + timedelta(minutes=1))
+        elif fallback == "release":
+            hold.release_to_native(ReleaseParams(approval_id=view.id, nonce=view.nonce), at=datetime.now(UTC))
+        elif fallback == "ui-loss":
+            hold.release_pending()
+        else:
+            hold.drop_tab("tab")
+        response = await task
+        assert json.loads(response.body)["hookSpecificOutput"]["permissionDecision"] == "deny"
+        assert hold.pending_views() == ()
+
+    asyncio.run(scenario())
+
+
+def test_codex_dangerous_native_call_is_blocked_instead_of_unsupported_ask() -> None:
+    item = _item(command="rm -f marker")
+    hold = ApprovalHold(ApprovalBook(), publish=lambda _event: None, notify=lambda _row: None,
+                        audit=lambda _row: None, now=lambda: datetime.now(UTC))
+    response = asyncio.run(handle_permission(
+        IngestItem(tab_id=item.tab_id, kind="codex.hook", body=item.body), hold, hold_seconds=30,
+        worktree="/work", choice=ApprovalPolicyChoice(mode=ApprovalPolicyMode.ALLOW), inline=False,
+    ))
+    assert json.loads(response.body)["hookSpecificOutput"]["permissionDecision"] == "deny"
+
+
+def test_codex_pretool_allow_does_not_approve_a_later_privilege_escalation() -> None:
+    async def scenario() -> None:
+        from aconsole.contracts.app import DecideParams
+        from aconsole.contracts.common import ApprovalDecision, ApprovalScope
+
+        hold = ApprovalHold(ApprovalBook(), publish=lambda _event: None, notify=lambda _row: None,
+                            audit=lambda _row: None, now=lambda: datetime.now(UTC))
+        item = _item(command="rm -f marker")
+        choice = ApprovalPolicyChoice(mode=ApprovalPolicyMode.ALLOW)
+        first = asyncio.create_task(handle_permission(
+            IngestItem(tab_id=item.tab_id, kind="codex.hook", body=item.body), hold,
+            hold_seconds=30, worktree="/work", choice=choice,
+        ))
+        await asyncio.sleep(0)
+        view, = hold.pending_views()
+        hold.decide(DecideParams(approval_id=view.id, nonce=view.nonce,
+                                 decision=ApprovalDecision.ALLOW, scope=ApprovalScope.ONCE), at=datetime.now(UTC))
+        assert json.loads((await first).body)["hookSpecificOutput"]["permissionDecision"] == "allow"
+        item = _item(event="PermissionRequest", command="rm -f marker")
+        second = asyncio.create_task(handle_permission(
+            IngestItem(tab_id=item.tab_id, kind="codex.hook", body=item.body), hold,
+            hold_seconds=30, worktree="/work", choice=choice,
+        ))
+        await asyncio.sleep(0)
+        assert not second.done()
+        escalation, = hold.pending_views()
+        assert escalation.id != view.id
+        hold.decide(DecideParams(approval_id=escalation.id, nonce=escalation.nonce,
+                                 decision=ApprovalDecision.DENY, scope=ApprovalScope.ONCE), at=datetime.now(UTC))
+        assert json.loads((await second).body)["hookSpecificOutput"]["decision"]["behavior"] == "deny"
+
+    asyncio.run(scenario())

@@ -9,7 +9,12 @@ from pathlib import Path
 import msgspec
 import pytest
 
-from aconsole.core.infrastructure.agents.codex.launcher import CodexLauncher, CodexTab, thread_start_request
+from aconsole.core.infrastructure.agents.codex.launcher import (
+    CodexLauncher,
+    CodexTab,
+    _hook_command,
+    thread_start_request,
+)
 from aconsole.core.infrastructure.agents.codex.trust import HookTrustCache
 
 _PROBES = Path(__file__).resolve().parents[1] / "fixtures" / "codex" / "0.164.0"
@@ -127,8 +132,8 @@ def test_codex_launcher_live_hooks_state_matches_the_probe(tmp_path: Path) -> No
     home = tmp_path / "home"
     home.mkdir()
     launch = CodexLauncher().launch(_tab(home), trust)
-    command = f"{launch.hook_path} codex"
-    assert command.endswith("/.aconsole/bin/aconsole-hook codex")
+    command = _hook_command(launch.hook_path)
+    assert "|| { echo AConsole-hook-failed >&2; exit 2; }" in command
     assert _state_map(launch.argv) == {hook.key: hook.current_hash for hook in listed}
     assert "aconsole:" not in "\n".join(launch.argv)
     end = next(item for item in launch.argv if item.startswith("hooks.SessionEnd="))

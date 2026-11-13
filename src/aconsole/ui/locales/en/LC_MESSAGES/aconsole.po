@@ -2023,3 +2023,6 @@ msgstr "No hooks: requests stay in the agent's terminal"
 
 msgid "prefs.harness_opencode_policy"
 msgstr "OpenCode v2.1.2: modes apply to new sessions; prompts stay in the terminal. With dangerous calls set to ask, only exact pwd and git status/diff/log/branch commands without arguments are automatic; other calls ask. Protecting settings requires filesystem isolation."
+
+msgid "prefs.harness_codex_policy"
+msgstr "Codex 0.169: new sessions with verified hooks apply modes. Full approval uses the panel; without it, dangerous calls in Allow are blocked. Allowing dangerous calls disables the Codex sandbox. Hosted tools and protection of settings files are outside this coverage."

@@ -1,0 +1,79 @@
+{
+  "case": "on-request-permission-allow",
+  "exit": 0,
+  "executed": false,
+  "hooks": [
+    {
+      "session_id": "01a1d6e6-d329-7330-81c6-e9414ba4973f",
+      "transcript_path": "/tmp/aconsole-apr7-s53x5b7e/home/.codex/sessions/2026/11/14/rollout-2026-11-14T00-53-33-01a1d6e6-d329-7330-81c6-e9414ba4973f.jsonl",
+      "cwd": "/tmp/aconsole-apr7-s53x5b7e/work",
+      "hook_event_name": "SessionStart",
+      "model": "gpt-6.1-sol",
+      "permission_mode": "bypassPermissions",
+      "source": "startup"
+    },
+    {
+      "session_id": "01a1d6e6-d329-7330-81c6-e9414ba4973f",
+      "turn_id": "01a1d6e6-d337-77c2-bb9a-29625e3c1088",
+      "transcript_path": "/tmp/aconsole-apr7-s53x5b7e/home/.codex/sessions/2026/11/14/rollout-2026-11-14T00-53-33-01a1d6e6-d329-7330-81c6-e9414ba4973f.jsonl",
+      "cwd": "/tmp/aconsole-apr7-s53x5b7e/work",
+      "hook_event_name": "UserPromptSubmit",
+      "model": "gpt-6.1-sol",
+      "permission_mode": "bypassPermissions",
+      "prompt": "Run the probe once."
+    },
+    {
+      "session_id": "01a1d6e6-d329-7330-81c6-e9414ba4973f",
+      "turn_id": "01a1d6e6-d337-77c2-bb9a-29625e3c1088",
+      "transcript_path": "/tmp/aconsole-apr7-s53x5b7e/home/.codex/sessions/2026/11/14/rollout-2026-11-14T00-53-33-01a1d6e6-d329-7330-81c6-e9414ba4973f.jsonl",
+      "cwd": "/tmp/aconsole-apr7-s53x5b7e/work",
+      "hook_event_name": "PreToolUse",
+      "model": "gpt-6.1-sol",
+      "permission_mode": "bypassPermissions",
+      "tool_name": "Bash",
+      "tool_input": {
+        "command": "touch marker"
+      },
+      "tool_use_id": "call_probe"
+    },
+    {
+      "session_id": "01a1d6e6-d329-7330-81c6-e9414ba4973f",
+      "turn_id": "01a1d6e6-d337-77c2-bb9a-29625e3c1088",
+      "transcript_path": "/tmp/aconsole-apr7-s53x5b7e/home/.codex/sessions/2026/11/14/rollout-2026-11-14T00-53-33-01a1d6e6-d329-7330-81c6-e9414ba4973f.jsonl",
+      "cwd": "/tmp/aconsole-apr7-s53x5b7e/work",
+      "hook_event_name": "Stop",
+      "model": "gpt-6.1-sol",
+      "permission_mode": "bypassPermissions",
+      "stop_hook_active": false,
+      "last_assistant_message": "Probe complete."
+    },
+    {
+      "type": "agent-turn-complete",
+      "thread-id": "01a1d6e6-d329-7330-81c6-e9414ba4973f",
+      "turn-id": "01a1d6e6-d337-77c2-bb9a-29625e3c1088",
+      "cwd": "/tmp/aconsole-apr7-s53x5b7e/work",
+      "client": "codex_exec",
+      "input-messages": [
+        "Run the probe once."
+      ],
+      "last-assistant-message": "Probe complete."
+    },
+    {
+      "session_id": "01a1d6e6-d329-7330-81c6-e9414ba4973f",
+      "transcript_path": "/tmp/aconsole-apr7-s53x5b7e/home/.codex/sessions/2026/11/14/rollout-2026-11-14T00-53-33-01a1d6e6-d329-7330-81c6-e9414ba4973f.jsonl",
+      "cwd": "/tmp/aconsole-apr7-s53x5b7e/work",
+      "hook_event_name": "SessionEnd",
+      "reason": "other"
+    }
+  ],
+  "requests": [
+    {
+      "path": "/v1/responses",
+      "tools": []
+    },
+    {
+      "path": "/v1/responses",
+      "tools": []
+    }
+  ]
+}

@@ -12,7 +12,7 @@ import pytest
 from aconsole.contracts.app import ProjectAddParams, ProjectView, TabIdParams, TabView, TerminalLaunchSpec
 from aconsole.contracts.common import AgentKind
 from aconsole.contracts.events import Notify
-from aconsole.core.infrastructure.agents.codex.launcher import CodexLauncher, CodexTab
+from aconsole.core.infrastructure.agents.codex.launcher import CodexLauncher, CodexTab, _hook_command
 from aconsole.core.infrastructure.agents.launch import HostAgentCommands
 from aconsole.ui.client.core_client import CoreClient
 from tests.core.conftest import wait_for_socket
@@ -24,9 +24,12 @@ _COMMAND = "/home/example/.containers/containers/agent-codex/.aconsole/bin/acons
 
 
 def _reply(home: Path) -> bytes:
-    return (_FIXTURES / "hooks-list.jsonl").read_bytes().replace(
-        _COMMAND.encode(), f"{home}/.aconsole/bin/aconsole-hook codex".encode(),
-    )
+    doc = json.loads((_FIXTURES / "hooks-list.jsonl").read_bytes())
+    for hook in doc["result"]["data"][0]["hooks"]:
+        hook["command"] = _hook_command(home / ".aconsole/bin/aconsole-hook")
+        if hook["eventName"] == "preToolUse":
+            hook["timeoutSec"] = 600
+    return json.dumps(doc).encode()
 
 
 def test_readme_matches_the_codex_capability_steps() -> None:
@@ -96,15 +99,17 @@ def test_probe_does_not_change_user_configuration(tmp_path: Path) -> None:
 
 
 @pytest.mark.parametrize("version", ["0.164.0", "0.166.0"])
-def test_generated_state_matches_captured_real_cli_versions(tmp_path: Path, version: str) -> None:
+def test_historical_wire_shapes_accept_the_new_hook_definitions(tmp_path: Path, version: str) -> None:
     folder = _FIXTURES.parent / version
     first = "hooks-list.jsonl" if version == "0.164.0" else "hooks-list-untrusted.jsonl"
     untrusted = json.loads((folder / first).read_bytes())
     trusted = json.loads((folder / "hooks-list-trusted.jsonl").read_bytes())
-    command = f"{tmp_path}/.aconsole/bin/aconsole-hook codex"
+    command = _hook_command(tmp_path / ".aconsole/bin/aconsole-hook")
     for document in (untrusted, trusted):
         for hook in document["result"]["data"][0]["hooks"]:
             hook["command"] = command
+            if hook["eventName"] == "preToolUse":
+                hook["timeoutSec"] = 600
     launcher = CodexLauncher()
     tab = CodexTab(agent_home=tmp_path, tab_id="tab-a", token=_TOKEN, port=8765)
     launch = launcher.verified(tab, json.dumps(untrusted).encode())

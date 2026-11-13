@@ -56,6 +56,7 @@ class HostAgentCommands:
         self._codex_hooks = codex_hooks
         self._codex_issue = codex_issue
         self._codex_ready = False
+        self._codex_policy_tabs: set[str] = set()
         self._claude = ClaudeLauncher()
         self._codex = CodexLauncher()
         self._cursor = CursorLauncher()
@@ -76,18 +77,22 @@ class HostAgentCommands:
         if agent is AgentKind.OPENCODE:
             return self._opencode_command(container, tab_id, token, number)
         if number == _NO_PORT or agent not in {AgentKind.CLAUDE, AgentKind.CODEX, AgentKind.OPENCODE, AgentKind.CURSOR}:
-            return None
+            return self._unavailable_command(agent, tab_id)
         home = self._home_of(container)
         if home is None:
-            return None
+            return self._unavailable_command(agent, tab_id)
         try:
             if agent is AgentKind.CODEX:
-                tab = CodexTab(agent_home=home, tab_id=tab_id, port=number, token=token)
+                choice = ApprovalPolicyChoice() if self._approval_choice is None else self._approval_choice(tab_id)
+                tab = CodexTab(agent_home=home, tab_id=tab_id, port=number, token=token, policy=choice)
                 return self._codex_command(tab, container)
             return self._cursor.launch(home)
         except (OSError, ValueError):  # json.JSONDecodeError is a ValueError
             _LOG.warning("cannot write hooks for tab %s; starting the agent without them", tab_id, exc_info=True)
-            return None
+            return self._unavailable_command(agent, tab_id)
+
+    def _unavailable_command(self, agent: AgentKind, tab_id: str) -> tuple[str, ...] | None:
+        return self._codex_policy_unavailable() if agent is AgentKind.CODEX and self._automatic(tab_id) else None
 
     def _automatic(self, tab_id: str) -> bool:
         return self._approval_choice is not None and self._approval_choice(tab_id).mode.value in {"allow", "deny"}
@@ -113,7 +118,7 @@ class HostAgentCommands:
         return ("/bin/sh", "-c", message)
 
     def policy_ready(self, tab_id: str) -> bool:
-        return tab_id in self._policy_tabs
+        return tab_id in self._policy_tabs or tab_id in self._codex_policy_tabs
 
     def _claude_command(self, container: str, tab_id: str, token: str, port: int) -> tuple[str, ...] | None:
         self._policy_tabs.discard(tab_id)
@@ -139,6 +144,7 @@ class HostAgentCommands:
 
     def _codex_command(self, codex: CodexTab, container: str) -> tuple[str, ...]:
         self._codex_ready = False
+        self._codex_policy_tabs.discard(codex.tab_id)
         source = self._codex_hooks
         if source is not None:
             try:
@@ -147,10 +153,18 @@ class HostAgentCommands:
                 _LOG.warning("Codex hook verification failed for %s", codex.tab_id, exc_info=True)
             else:
                 self._codex_ready = True
+                self._codex_policy_tabs.add(codex.tab_id)
                 return argv
+        if self._automatic(codex.tab_id):
+            return self._codex_policy_unavailable()
         if self._codex_issue is not None:
             self._codex_issue(codex.tab_id, _CODEX_HOOKS_HELP)
         return self._codex.launch(codex, HookTrustCache()).argv
+
+    @staticmethod
+    def _codex_policy_unavailable() -> tuple[str, ...]:
+        message = "echo 'AConsole: automatic Codex policy requires verified permission hooks' >&2; exit 1"
+        return ("/bin/sh", "-c", message)
 
     def _verified_codex(
         self, tab: CodexTab, container: str, source: Callable[[str, tuple[str, ...]], bytes],
@@ -171,7 +185,7 @@ class HostAgentCommands:
         if kind is AgentKind.OPENCODE and self._opencode_policy_tabs:
             return names | {"approval_policy_static"}
         if kind is AgentKind.CODEX and self._codex_ready:
-            return names | {"hooks", "approvals", "checkpoints"}
+            return names | {"hooks", "approvals", "checkpoints", "approval_policy_codex"}
         return names
 
     def release(self, agent: AgentKind, tab_id: str, container: str) -> None:
@@ -179,6 +193,7 @@ class HostAgentCommands:
         self._stop_stream(tab_id)
         self._policy_tabs.discard(tab_id)
         self._opencode_policy_tabs.discard(tab_id)
+        self._codex_policy_tabs.discard(tab_id)
         home = self._home_of(container)
         if home is None or agent is not AgentKind.CLAUDE:
             return

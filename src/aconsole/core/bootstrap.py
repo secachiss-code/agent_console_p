@@ -60,7 +60,7 @@ from aconsole.core.application.services.setup import SetupService
 from aconsole.core.application.services.tabs import TabService
 from aconsole.core.application.services.work_session_git import WorkSessionGit
 from aconsole.core.application.services.work_session_history import WorkSessionHistory
-from aconsole.core.domain.approval_policy import ApprovalPolicyChoice
+from aconsole.core.domain.approval_policy import ApprovalPolicyChoice, ApprovalPolicyMode
 from aconsole.core.domain.approvals import Approval, ApprovalBook
 from aconsole.core.domain.clock import Clock
 from aconsole.core.domain.errors import DomainError
@@ -889,11 +889,14 @@ class Daemon:
         worktree = self._permission_worktrees.get(item.tab_id)
         if worktree is None:
             return json_response(empty_json())
+        choice = self._approval_policy.choice_for(self._permission_projects.get(item.tab_id))
+        if choice.mode is ApprovalPolicyMode.ALLOW and not self._agent_commands.policy_ready(item.tab_id):
+            # Restored hook clients have not been verified by this daemon yet.
+            # A restart must neither grant unverified ALLOW nor forget DENY.
+            choice = ApprovalPolicyChoice(mode=ApprovalPolicyMode.DENY)
         return await handle_permission(
             item, self.approvals, hold_seconds=settings.approval_hold_seconds, worktree=worktree,
-            choice=self._approval_policy.choice_for(self._permission_projects.get(item.tab_id))
-                if item.kind == "claude.hook" and self._agent_commands.policy_ready(item.tab_id)
-                else ApprovalPolicyChoice(),
+            choice=choice,
             inline=inline,
         )
 

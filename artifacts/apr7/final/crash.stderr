@@ -1,0 +1,4 @@
+WARNING: proceeding, even though we could not create PATH aliases: Refusing to create helper binaries under temporary dir "/tmp" (codex_home: AbsolutePathBuf("/tmp/aconsole-apr7-6ct_uoxs/home/.codex"))
+Reading additional input from stdin...
+2026-11-13T22:03:18.476605Z ERROR codex_core::tools::router: error=Command blocked by PreToolUse hook: /usr/bin/bash: line 1: 59916 Killed                  /tmp/aconsole-apr7-6ct_uoxs/home/.aconsole/bin/aconsole-hook codex
+AConsole-hook-failed. Command: touch marker

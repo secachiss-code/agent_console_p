@@ -184,6 +184,7 @@ class OpenRequest:
     allow_tab_session: bool
     # Stable id of this tool call, when the hook protocol has one. Empty means each delivery is a new call.
     event_id: str = ""
+    fallback_to_native: bool = True
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -202,6 +203,7 @@ class Approval:
     by: DecisionBy | None
     allow_tab_session: bool
     reason: str | None = None
+    fallback_to_native: bool = True
 
 
 def _input_key(request: OpenRequest) -> tuple[str, str, str, str]:
@@ -280,6 +282,7 @@ class ApprovalBook:
             by=by,
             allow_tab_session=request.allow_tab_session,
             reason=reason,
+            fallback_to_native=request.fallback_to_native,
         )
         self._items[request.approval_id] = created
         self._by_input[_input_key(request)] = request.approval_id
@@ -330,13 +333,13 @@ class ApprovalBook:
 
     def release(self, approval_id: str, *, nonce: str, at: datetime) -> Approval:
         current = self._live(approval_id, nonce, at)
-        return self._replace(current, phase=ApprovalPhase.EXPIRED_TO_NATIVE, by=DecisionBy.USER)
+        return self._replace(current, phase=self._fallback_phase(current), by=DecisionBy.USER)
 
     def release_pending(self) -> tuple[Approval, ...]:
         """Return every pending request to the agent's native prompt."""
         pending = tuple(item for item in self._items.values() if item.phase is ApprovalPhase.PENDING)
         return tuple(
-            self._replace(item, phase=ApprovalPhase.EXPIRED_TO_NATIVE, by=DecisionBy.TIMEOUT) for item in pending
+            self._replace(item, phase=self._fallback_phase(item), by=DecisionBy.TIMEOUT) for item in pending
         )
 
     def expire(self, at: datetime) -> tuple[Approval, ...]:
@@ -346,7 +349,7 @@ class ApprovalBook:
             if item.phase is ApprovalPhase.PENDING and at >= item.expires_at
         ]
         expired = tuple(
-            self._replace(item, phase=ApprovalPhase.EXPIRED_TO_NATIVE, by=DecisionBy.TIMEOUT) for item in due
+            self._replace(item, phase=self._fallback_phase(item), by=DecisionBy.TIMEOUT) for item in due
         )
         _ = self.prune(at)
         return expired
@@ -421,9 +424,14 @@ class ApprovalBook:
             by=by,
             allow_tab_session=current.allow_tab_session,
             reason=current.reason,
+            fallback_to_native=current.fallback_to_native,
         )
         self._items[current.id] = updated
         return updated
+
+    @staticmethod
+    def _fallback_phase(current: Approval) -> ApprovalPhase:
+        return ApprovalPhase.EXPIRED_TO_NATIVE if current.fallback_to_native else ApprovalPhase.DENIED
 
     def _deny_rule_for(self, tab_id: str, tool: str, command: str) -> TabDenyRule | None:
         for rule in self._deny_rules:
