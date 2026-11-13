@@ -266,3 +266,79 @@ def test_custom_quota_thresholds_update_sidebar_and_open_details() -> None:
         details.close()
 
     _run_ui(scenario)
+
+
+@pytest.mark.parametrize(("policy", "dangerous"), [("ask", False), ("allow", False), ("allow", True), ("deny", False)])
+def test_saved_approval_policy_is_clean_on_close(policy: str, *, dangerous: bool) -> None:
+    async def scenario(app: _TabsTestApp) -> None:
+        client, _tabs = _model(demo_snapshot())
+        settings = Settings(rev=1, vault_path="", worktrees_dir="")
+
+        async def request(method: str, params: msgspec.Struct, _result: type[msgspec.Struct]) -> msgspec.Struct:
+            nonlocal settings
+            if method == "settings/update":
+                settings = commit_settings(settings, params.patch)
+            return settings
+
+        client.request = request
+        dialog = PreferencesDialog(PreferencesViewModel(client))
+        assert app.window is not None
+        app.window.present()
+        dialog.open(app.window)
+        await _until(lambda: not dialog.loading)
+        dialog.policy.set_selected(("ask", "allow", "deny").index(policy))
+        if dangerous:
+            dialog._dangerous_answered(None, "allow")
+        dialog.save()
+        assert dialog.worker is not None
+        await dialog.worker
+        assert dialog._shown == settings
+        assert dialog._changes(settings) == SettingsPatch()
+        assert not dialog.protect_close()
+        dialog.close()
+        await _until(lambda: not dialog._active)
+        assert dialog._close_prompt is None
+        await client.close()
+
+    _run_ui(scenario)
+
+
+def test_saved_project_policy_uses_rpc_confirmation_before_snapshot_event() -> None:
+    async def scenario(app: _TabsTestApp) -> None:
+        from aconsole.contracts.app import ProjectApprovalPolicyParams
+
+        client, _tabs = _model(demo_snapshot())
+        settings = Settings(rev=1, vault_path="", worktrees_dir="")
+        viewmodel = PreferencesViewModel(client)
+        project = viewmodel.active_project()
+        assert project is not None
+
+        async def request(method: str, params: msgspec.Struct, _result: type[msgspec.Struct]) -> msgspec.Struct:
+            if method == "project/setApprovalPolicy":
+                assert isinstance(params, ProjectApprovalPolicyParams)
+                return msgspec.structs.replace(project, approval_policy=params.approval_policy,
+                                               approval_dangerous=params.approval_dangerous)
+            return settings
+
+        client.request = request
+        dialog = PreferencesDialog(viewmodel)
+        assert app.window is not None
+        app.window.present()
+        dialog.open(app.window)
+        await _until(lambda: not dialog.loading)
+        dialog.project_policy.set_selected(2)
+        assert dialog.protect_close(), "a project draft must protect application exit"
+        prompt = dialog._close_prompt
+        assert prompt is not None
+        await _answer(prompt, "cancel")
+        dialog.save()
+        assert dialog.worker is not None
+        await dialog.worker
+        assert dialog._project_params() is None, "the returned project is a confirmed saved baseline"
+        assert not dialog.protect_close()
+        dialog.close()
+        await _until(lambda: not dialog._active)
+        assert dialog._close_prompt is None
+        await client.close()
+
+    _run_ui(scenario)

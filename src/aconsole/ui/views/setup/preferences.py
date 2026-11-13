@@ -175,6 +175,7 @@ class PreferencesDialog(Adw.PreferencesDialog):
         self._active = True
         self._generation += 1
         self._shown = None
+        self._project = None
         if self._unsubscribe is None:
             self._unsubscribe = self.viewmodel.subscribe(self._show_settings)
         self.save_button.set_sensitive(False)
@@ -199,7 +200,7 @@ class PreferencesDialog(Adw.PreferencesDialog):
         if not self._active or settings == self._shown:
             return
         previous = self._shown
-        dirty = previous is not None and self._changes(previous) != SettingsPatch()
+        dirty = self._has_changes()
         if previous is None or self.font_entry.get_text() == (previous.terminal_font or ""):
             self.font_entry.set_text(settings.terminal_font or "")
         if previous is None or self.font_size.get_value_as_int() == previous.terminal_font_size:
@@ -267,9 +268,15 @@ class PreferencesDialog(Adw.PreferencesDialog):
             if patch != SettingsPatch():
                 _ = await self.viewmodel.update(patch)
             if project is not None:
-                _ = await self.viewmodel.set_project_policy(project)
+                confirmed = await self.viewmodel.set_project_policy(project)
+                if self._active and generation == self._generation:
+                    self._project = confirmed
+                    stored = confirmed.approval_policy
+                    self._project_loaded = (
+                        _PROJECT_POLICIES.index(stored) if stored in _PROJECT_POLICIES else 0
+                    )
             if self._active and generation == self._generation:
-                dirty = self._shown is not None and self._changes(self._shown) != SettingsPatch()
+                dirty = self._has_changes()
                 self.status_label.set_label(translate("prefs.unsaved" if dirty else "prefs.saved"))
                 if self._close_after_save and not dirty:
                     self._request_close()
@@ -344,6 +351,12 @@ class PreferencesDialog(Adw.PreferencesDialog):
 
     def _show_project(self, settings: Settings) -> None:
         project = self.viewmodel.active_project()
+        previous = self._project
+        selected = self.project_policy.get_selected()
+        same = previous is not None and project is not None and previous.id == project.id
+        dirty = same and selected != self._project_loaded
+        if same:
+            project = previous
         self._project = project
         self.project_policy.set_visible(project is not None)
         if project is None:
@@ -362,7 +375,7 @@ class PreferencesDialog(Adw.PreferencesDialog):
         else:
             self.project_policy.set_subtitle("")
         index = 0 if stored is None or stored not in _PROJECT_POLICIES else _PROJECT_POLICIES.index(stored)
-        self.project_policy.set_selected(index)
+        self.project_policy.set_selected(selected if dirty else index)
         self._project_loaded = index
 
     def _project_params(self) -> ProjectApprovalPolicyParams | None:
@@ -389,9 +402,14 @@ class PreferencesDialog(Adw.PreferencesDialog):
     def _save_clicked(self, _button: Gtk.Button) -> None:
         self.save()
 
+    def _has_changes(self) -> bool:
+        return self._shown is not None and (
+            self._changes(self._shown) != SettingsPatch() or self._project_params() is not None
+        )
+
     def protect_close(self) -> bool:
         """Route application exit through the draft decision before the window can disappear."""
-        dirty = self._shown is not None and self._changes(self._shown) != SettingsPatch()
+        dirty = self._has_changes()
         saving = not self.loading and self.worker is not None and not self.worker.done()
         if self._active and (dirty or saving):
             _ = self.close()
@@ -402,7 +420,7 @@ class PreferencesDialog(Adw.PreferencesDialog):
         if not self.loading and self.worker is not None and not self.worker.done():
             self.status_label.set_label(translate("prefs.saving"))
             return
-        if self._shown is None or self._changes(self._shown) == SettingsPatch():
+        if not self._has_changes():
             self._request_close()
             return
         if self._close_prompt is not None:
@@ -443,7 +461,7 @@ class PreferencesDialog(Adw.PreferencesDialog):
         if self._close_ticks < _CLOSE_OPENING_TICKS:
             return GLib.SOURCE_CONTINUE
         self._close_tick_id = 0
-        if not self._discard_on_close and self._shown is not None and self._changes(self._shown) != SettingsPatch():
+        if not self._discard_on_close and self._has_changes():
             self.status_label.set_label(translate("prefs.unsaved"))
             return GLib.SOURCE_REMOVE
         self.force_close()
