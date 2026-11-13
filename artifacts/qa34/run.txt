@@ -1,0 +1,129 @@
+"""Build current sources and install only in a fresh disposable rootless container."""
+# ruff: noqa: INP001, S603, S607, TRY003, EM101, PLR2004, PLR0915
+# Bounded evidence script; subprocess arguments and isolated installation are explicit.
+import hashlib
+import json
+import os
+import subprocess
+import sys
+import time
+import uuid
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[2]
+OUT = Path(__file__).resolve().parent
+BASE = Path('/home/sas/Projects/sp_aconsole_prototype')
+
+
+def digest(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def sources() -> dict[str, str]:
+    names = subprocess.check_output(
+        ['git', 'ls-files', '-z', '--', 'src', 'migrations', 'packaging', 'pyproject.toml', 'uv.lock'],
+        cwd=ROOT,
+    ).decode().split('\0')
+    return {name: digest(ROOT / name) for name in names if name}
+
+
+def main() -> None:
+    record = OUT / 'results.json'
+    with record.open('x') as stream:
+        stream.write('{}\n')
+    data = {'head': subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip(),
+            'source_before': sources(), 'runner_sha256': digest(Path(__file__)), 'runs': {},
+            'uid': os.getuid(), 'python': sys.executable}
+
+    def save() -> None:
+        record.write_text(json.dumps(data, indent=2) + '\n')
+
+    def run(name: str, argv: list[str], timeout: int = 180, allowed: tuple[int, ...] = (0,)) -> str:
+        start = time.time_ns()
+        try:
+            result = subprocess.run(argv, cwd=ROOT, capture_output=True, timeout=timeout, check=False)
+            status, output = result.returncode, result.stdout + result.stderr
+        except subprocess.TimeoutExpired as error:
+            status, output = 124, (error.stdout or b'') + (error.stderr or b'')
+        log = OUT / (name + '.log')
+        log.write_bytes(output)
+        data['runs'][name] = {'argv': argv, 'exit': status, 'start_ns': start,
+                              'end_ns': time.time_ns(), 'log_sha256': digest(log)}
+        save()
+        print(name, status, flush=True)
+        if status not in allowed:
+            raise RuntimeError(f'{name} failed: {status}; see {log}')
+        return output.decode(errors='replace')
+
+    container = 'aconsole-qa34-' + uuid.uuid4().hex[:12]
+    data['container'] = container
+    created = False
+    links = []
+    try:
+        info = json.loads(run('podman-info', ['/usr/bin/podman', 'info', '--format', 'json']))
+        if os.getuid() == 0 or not info['host']['security']['rootless']:
+            raise RuntimeError('Rootless host Podman required')
+        for name in ('.venv-core', '.venv-ui'):
+            link = ROOT / name
+            if link.exists() or link.is_symlink():
+                raise RuntimeError(f'Refusing existing environment path: {link}')
+            link.symlink_to(BASE / name, target_is_directory=True)
+            links.append(link)
+        build_code = (
+            'import runpy; from pathlib import Path; '
+            f'm=runpy.run_path({str(ROOT / "packaging/build_deb.py")!r}); '
+            f'print(m["build"](Path({str(OUT / "deb")!r})))'
+        )
+        run('build', [str(BASE / '.venv-ui/bin/python'), '-c', build_code], 600)
+        package = OUT / 'deb/aconsole_0.1.1_amd64.deb'
+        data['package'] = {'path': str(package.relative_to(ROOT)), 'sha256': digest(package),
+                           'size': package.stat().st_size}
+        if sources() != data['source_before']:
+            raise RuntimeError('Sources changed during build')
+        run('deb-control', ['/usr/bin/dpkg-deb', '--info', str(package)])
+        run('pull', ['/usr/bin/podman', 'pull', 'docker.io/library/ubuntu:24.04'], 600)
+        image = json.loads(run('image', ['/usr/bin/podman', 'image', 'inspect', 'docker.io/library/ubuntu:24.04']))[0]
+        data['image_id'], data['image_digest'] = image['Id'], image['Digest']
+        run('create', ['/usr/bin/podman', 'create', '--name', container, '--label', 'aconsole.qa=QA-34',
+                       '--entrypoint', '/bin/sleep', image['Id'], 'infinity'])
+        created = True
+        inspect = json.loads(run('container-before', ['/usr/bin/podman', 'inspect', container]))[0]
+        if inspect['Mounts'] or inspect['HostConfig']['Binds']:
+            raise RuntimeError('Unexpected host mounts')
+        run('copy', ['/usr/bin/podman', 'cp', str(package), container + ':/tmp/aconsole.deb'])
+        run('start', ['/usr/bin/podman', 'start', container])
+        prefix = ['/usr/bin/podman', 'exec', '--workdir', '/tmp', container]
+        run('container-os', [*prefix, '/bin/cat', '/etc/os-release'])
+        run('copied-hash', [*prefix, '/usr/bin/sha256sum', '/tmp/aconsole.deb'])
+        run('apt-update', [*prefix, '/usr/bin/apt-get', 'update'], 600)
+        run('apt-install', [*prefix, '/usr/bin/env', 'DEBIAN_FRONTEND=noninteractive', '/usr/bin/apt-get',
+                            '-o', 'Dpkg::Options::=--debug=2', 'install', '-y', '/tmp/aconsole.deb'], 1200)
+        run('dpkg-status', [*prefix, '/usr/bin/dpkg-query', '-W', '-f=${Status} ${Version} ${Architecture}\n', 'aconsole'])
+        run('maintainer-scripts', [*prefix, '/bin/sh', '-c',
+                                   'cat /var/lib/dpkg/info/aconsole.postinst /var/lib/dpkg/info/aconsole.prerm'])
+        run('dpkg-log', [*prefix, '/bin/cat', '/var/log/dpkg.log'])
+        clean = [*prefix, '/usr/bin/env', '-i', 'PATH=/usr/bin:/bin', 'HOME=/tmp', 'LANG=C.UTF-8']
+        run('ui-launcher', [*clean, '/usr/bin/aconsole', '--help'])
+        run('core-launcher', [*clean, '/usr/bin/aconsoled', '--help'], allowed=(2,))
+        run('core-import', [*clean, '/opt/aconsole/core/bin/python', '-c',
+                            'import sys; assert not sys._is_gil_enabled(); import aconsole.core; '
+                            'assert not sys._is_gil_enabled(); print(sys.executable, aconsole.core.__file__)'])
+        run('ui-import', [*clean, '/opt/aconsole/ui/bin/python', '-c',
+                          'import sys; assert sys._is_gil_enabled(); import aconsole.ui; '
+                          'assert sys._is_gil_enabled(); print(sys.executable, aconsole.ui.__file__)'])
+        data['checks_passed'] = True
+    except BaseException as error:
+        data['error'] = repr(error)
+        raise
+    finally:
+        if created:
+            run('cleanup', ['/usr/bin/podman', 'rm', '--force', container])
+            run('cleanup-absent', ['/usr/bin/podman', 'container', 'exists', container], allowed=(1,))
+        for link in links:
+            link.unlink()
+        data['source_after'] = sources()
+        save()
+
+
+if __name__ == '__main__':
+    main()

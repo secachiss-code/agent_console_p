@@ -1,0 +1,11 @@
+#!/bin/sh
+set -e
+if [ "$1" = configure ]; then
+    /opt/aconsole/core/bin/python -m compileall -q -j 0 /opt/aconsole/core/lib >/dev/null 2>&1 || true
+    /opt/aconsole/ui/bin/python -m compileall -q -j 0 /opt/aconsole/ui/lib >/dev/null 2>&1 || true
+    update-desktop-database -q /usr/share/applications 2>/dev/null || true
+    gtk-update-icon-cache -q -t /usr/share/icons/hicolor 2>/dev/null || true
+fi
+#!/bin/sh
+set -e
+find /opt/aconsole -type d -name __pycache__ -prune -exec rm -rf {} + 2>/dev/null || true

@@ -1,0 +1,81 @@
+[
+     {
+          "Id": "7da97f743f397971f35dd21cd2d19a7da070a150e0cfa3eda559e71891ec7533",
+          "Digest": "sha256:2198e4c65076e9cb0b3d695219df667c0e3b0072da64ca3c2648aca17dcecaf5",
+          "RepoTags": [
+               "docker.io/library/ubuntu:24.04"
+          ],
+          "RepoDigests": [
+               "docker.io/library/ubuntu@sha256:2198e4c65076e9cb0b3d695219df667c0e3b0072da64ca3c2648aca17dcecaf5",
+               "docker.io/library/ubuntu@sha256:77eb101c607d6e3d4f5ad0c8a02c2136c689b98aba1f359e6502ba517e5c57ec"
+          ],
+          "Parent": "",
+          "Comment": "",
+          "Created": "2026-11-10T08:36:35.098007755Z",
+          "Config": {
+               "Env": [
+                    "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+               ],
+               "Cmd": [
+                    "/bin/bash"
+               ],
+               "Labels": {
+                    "org.opencontainers.image.version": "24.04"
+               }
+          },
+          "Version": "26.1.3",
+          "Author": "",
+          "Architecture": "amd64",
+          "Os": "linux",
+          "Size": 80725363,
+          "VirtualSize": 80725363,
+          "GraphDriver": {
+               "Name": "overlay",
+               "Data": {
+                    "UpperDir": "/home/sas/.containers/images/overlay/21210938f5a37a9887b2d0a20428917b923a636ca6efe038c3c7d9cd9f1f9b61/diff",
+                    "WorkDir": "/home/sas/.containers/images/overlay/21210938f5a37a9887b2d0a20428917b923a636ca6efe038c3c7d9cd9f1f9b61/work"
+               }
+          },
+          "RootFS": {
+               "Type": "layers",
+               "Layers": [
+                    "sha256:21210938f5a37a9887b2d0a20428917b923a636ca6efe038c3c7d9cd9f1f9b61"
+               ]
+          },
+          "Labels": {
+               "org.opencontainers.image.version": "24.04"
+          },
+          "Annotations": {},
+          "ManifestType": "application/vnd.oci.image.manifest.v1+json",
+          "User": "",
+          "History": [
+               {
+                    "created": "2026-11-10T08:36:30.089187849Z",
+                    "created_by": "/bin/sh -c #(nop)  ARG RELEASE",
+                    "empty_layer": true
+               },
+               {
+                    "created": "2026-11-10T08:36:30.118560043Z",
+                    "created_by": "/bin/sh -c #(nop)  ARG LAUNCHPAD_BUILD_ARCH",
+                    "empty_layer": true
+               },
+               {
+                    "created": "2026-11-10T08:36:30.16114408Z",
+                    "created_by": "/bin/sh -c #(nop)  LABEL org.opencontainers.image.version=24.04",
+                    "empty_layer": true
+               },
+               {
+                    "created": "2026-11-10T08:36:34.672149163Z",
+                    "created_by": "/bin/sh -c #(nop) ADD file:3c41cdb0a333e30d2a3c4a90a152da473ef44ae84245fd34a49167a6b8f26cc6 in / "
+               },
+               {
+                    "created": "2026-11-10T08:36:35.098007755Z",
+                    "created_by": "/bin/sh -c #(nop)  CMD [\"/bin/bash\"]",
+                    "empty_layer": true
+               }
+          ],
+          "NamesHistory": [
+               "docker.io/library/ubuntu:24.04"
+          ]
+     }
+]

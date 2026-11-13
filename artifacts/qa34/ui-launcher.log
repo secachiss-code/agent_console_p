@@ -1,0 +1,14 @@
+usage: python -m aconsole [-h]
+                          [--fake {demo,empty,stress,errors,waiting,quota-critical,approval-expired,agents}]
+                          [--socket SOCKET]
+                          [--snapshot-view {window,tabs,plan-graph,review,git,quota-dialog,quota-account,palette,setup,prefs}]
+                          [--theme {light,dark}] [--size SIZE] [--out OUT]
+
+options:
+  -h, --help            show this help message and exit
+  --fake, --fake-core {demo,empty,stress,errors,waiting,quota-critical,approval-expired,agents}
+  --socket SOCKET
+  --snapshot-view {window,tabs,plan-graph,review,git,quota-dialog,quota-account,palette,setup,prefs}
+  --theme {light,dark}
+  --size SIZE
+  --out OUT

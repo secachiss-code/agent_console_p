@@ -1,0 +1,6 @@
+7da97f743f397971f35dd21cd2d19a7da070a150e0cfa3eda559e71891ec7533
+Trying to pull docker.io/library/ubuntu:24.04...
+Getting image source signatures
+Copying blob sha256:26538842dfbfed820e62531e047bc6cfd3359a7e0a52f59c1a951ccc6ca787fe
+Copying config sha256:7da97f743f397971f35dd21cd2d19a7da070a150e0cfa3eda559e71891ec7533
+Writing manifest to image destination

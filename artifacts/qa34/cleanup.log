@@ -1,0 +1,2 @@
+aconsole-qa34-fe74b4ea944e
+time="2026-11-13T23:30:19+03:00" level=warning msg="StopSignal SIGTERM failed to stop container aconsole-qa34-fe74b4ea944e in 10 seconds, resorting to SIGKILL"

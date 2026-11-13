@@ -1,0 +1,2 @@
+usage: python -m aconsole.core --fake SCENARIO [--socket PATH]
+       python -m aconsole.core --serve [--socket PATH] [--allow-gil]
