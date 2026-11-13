@@ -60,6 +60,7 @@ from aconsole.core.application.services.setup import SetupService
 from aconsole.core.application.services.tabs import TabService
 from aconsole.core.application.services.work_session_git import WorkSessionGit
 from aconsole.core.application.services.work_session_history import WorkSessionHistory
+from aconsole.core.domain.approval_policy import ApprovalPolicyChoice
 from aconsole.core.domain.approvals import Approval, ApprovalBook
 from aconsole.core.domain.clock import Clock
 from aconsole.core.domain.errors import DomainError
@@ -516,6 +517,8 @@ class Daemon:
         # The loop consumes immutable policy and loop-published paths without queueing behind tab/Git work.
         self._permission_settings: Settings = self.tabs.current_settings()
         self._permission_worktrees: dict[str, str] = {}
+        self._permission_projects: dict[str, str] = {}
+        self._approval_policy: ApprovalPolicyBook = ApprovalPolicyBook()
         self.tabs.on_ingest = self._ingest_minted
         self._catalog: ProjectCatalog = ProjectCatalog(
             HostRepos(), new_id=self._host.new_id, now=lambda: datetime.now(UTC),
@@ -524,6 +527,8 @@ class Daemon:
         self._agent_commands: HostAgentCommands = HostAgentCommands(
             self._host.agent_home, self._opencode_heard, codex_hooks=self._host.codex_hooks,
             codex_issue=self._codex_hook_issue,
+            approval_choice=self.tabs.approval_choice,
+            claude_version=self._host.claude_version,
         )
         self._agents_source: Callable[[], tuple[AgentInfo, ...]] = HostAgents(
             self._host.inspect_container, signed_in=self._host.signed_in,
@@ -835,6 +840,7 @@ class Daemon:
     def _register_tab(self, tab: TabView, token: str) -> None:
         tab_id = str(tab.id)
         self._permission_worktrees[tab_id] = tab.worktree_path
+        self._permission_projects[tab_id] = str(tab.project_id)
         if self._recovery is not None and self._recovery.tokens.get(tab_id) != token:
             self._recovery.tokens[tab_id] = token
             _write_recovery(self._recovery_path, self._recovery)
@@ -864,7 +870,8 @@ class Daemon:
             return
         record = ApprovalRecord(id=approval.id, tab_id=approval.tab_id, agent_session_id=approval.session_id,
             tool=approval.tool, input_sha256=approval.input_sha256, nonce=approval.nonce,
-            summary=approval.command or approval.tool, risk=[tag.value for tag in approval.risk],
+            summary=(f"{approval.reason}: " if approval.reason else "") + (approval.command or approval.tool),
+            risk=[tag.value for tag in approval.risk],
             status=ApprovalStatus(approval.phase.value), decided_by=approval.by.value if approval.by else None,
             requested_at=approval.requested_at, decided_at=datetime.now(UTC), expires_at=approval.expires_at)
         future = writer.submit(lambda session: ApprovalRepository().add(session, record))
@@ -877,13 +884,16 @@ class Daemon:
 
     async def _permission(self, item: IngestItem) -> HttpResponse:
         settings = self._permission_settings
-        if settings.approvals_mode == "native" or not self._has_approval_ui() or self._stop_requested:
-            return json_response(empty_json())
+        inline = settings.approvals_mode != "native" and self._has_approval_ui() and not self._stop_requested
         worktree = self._permission_worktrees.get(item.tab_id)
         if worktree is None:
             return json_response(empty_json())
         return await handle_permission(
             item, self.approvals, hold_seconds=settings.approval_hold_seconds, worktree=worktree,
+            choice=self._approval_policy.choice_for(self._permission_projects.get(item.tab_id))
+                if item.kind == "claude.hook" and self._agent_commands.policy_ready(item.tab_id)
+                else ApprovalPolicyChoice(),
+            inline=inline,
         )
 
     def _has_approval_ui(self) -> bool:
@@ -894,10 +904,12 @@ class Daemon:
         """Number the event once, send it to every subscribed connection, and keep tokens and liveness current."""
         if isinstance(event, (TabAdded, TabUpdated)):
             self._permission_worktrees[str(event.tab.id)] = event.tab.worktree_path
+            self._permission_projects[str(event.tab.id)] = str(event.tab.project_id)
         if isinstance(event, TabAdded) and token is not None:
             self._register_tab(event.tab, token)
         if isinstance(event, TabRemoved):
             _ = self._permission_worktrees.pop(str(event.tab_id), None)
+            _ = self._permission_projects.pop(str(event.tab_id), None)
             self.approvals.drop_tab(str(event.tab_id))
             self._tokens.drop(str(event.tab_id))
             self._mcp_tokens.drop(str(event.tab_id))
@@ -1391,6 +1403,7 @@ class Daemon:
         policy = ApprovalPolicyBook()
         await asyncio.to_thread(policy.attach, store)
         self.tabs.use_policy(policy)
+        self._approval_policy = policy
         await asyncio.to_thread(self.tabs.work_sessions.use_store, WorkSessionDatabase(writer))
         if self.tabs.history is not None:
             await asyncio.to_thread(self.tabs.history.use_store, WorkSessionHistoryDatabase(writer))

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="7" time="1.782" timestamp="2026-11-14T00:15:44.192296+03:00" hostname="somovasnbook14"><testcase classname="tests.core.test_approval_hold" name="test_hold_decision_is_idempotent_and_audited_once" time="0.004" /><testcase classname="tests.core.test_approval_hold" name="test_duplicate_hold_waiter_cancellation_does_not_cancel_shared_future" time="0.002" /><testcase classname="tests.core.test_approval_hold" name="test_last_waiter_cancellation_resolves_and_removes_the_card" time="0.002" /><testcase classname="tests.core.test_approval_hold" name="test_real_permission_handler_publishes_details_and_returns_user_decision[Write]" time="0.003" /><testcase classname="tests.core.test_approval_hold" name="test_real_permission_handler_publishes_details_and_returns_user_decision[Edit]" time="0.002" /><testcase classname="tests.core.test_approval_hold" name="test_real_permission_handler_publishes_details_and_returns_user_decision[mcp__example__send]" time="0.002" /><testcase classname="tests.core.test_approval_hold" name="test_tcp_disconnect_cancels_real_permission_hold" time="0.002"><failure message="PermissionError: [Errno 1] Operation not permitted">def test_tcp_disconnect_cancels_real_permission_hold() -&gt; None:
+&gt;       asyncio.run(_tcp_disconnect_cancels_real_permission_hold())
+
+tests/core/test_approval_hold.py:308: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+../../../../uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py:205: in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+../../../../uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/runners.py:128: in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../../uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/asyncio/base_events.py:724: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+tests/core/test_approval_hold.py:321: in _tcp_disconnect_cancels_real_permission_hold
+    with socket.socket() as listener:
+         ^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = &lt;socket.socket fd=-1, family=0, type=0, proto=0&gt;
+family = &lt;AddressFamily.AF_INET: 2&gt;, type = &lt;SocketKind.SOCK_STREAM: 1&gt;
+proto = 0, fileno = None
+
+    def __init__(self, family=-1, type=-1, proto=-1, fileno=None):
+        # For user code address family and type values are IntEnum members, but
+        # for the underlying _socket.socket they're just integers. The
+        # constructor of _socket.socket converts the given argument to an
+        # integer automatically.
+        if fileno is None:
+            if family == -1:
+                family = AF_INET
+            if type == -1:
+                type = SOCK_STREAM
+            if proto == -1:
+                proto = 0
+&gt;       _socket.socket.__init__(self, family, type, proto, fileno)
+E       PermissionError: [Errno 1] Operation not permitted
+
+../../../../uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/socket.py:237: PermissionError</failure></testcase></testsuite></testsuites>

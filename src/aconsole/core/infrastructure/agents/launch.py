@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import re
 from collections.abc import Callable
 from pathlib import Path
 from typing import Final, final
@@ -12,6 +13,7 @@ from aconsole.contracts.common import AgentKind
 from aconsole.contracts.messages import UiMessage
 from aconsole.core.domain.agent import CAPABILITIES
 from aconsole.core.domain.agent import AgentKind as DomainAgent
+from aconsole.core.domain.approval_policy import ApprovalPolicyChoice
 from aconsole.core.infrastructure.agents.claude import sessions as claude_sessions
 from aconsole.core.infrastructure.agents.claude.launcher import ClaudeLauncher, ClaudeTab
 from aconsole.core.infrastructure.agents.codex import sessions as codex_sessions
@@ -34,15 +36,20 @@ class HostAgentCommands:
     Without a home or an ingest port the plain agent still runs, just without status from hooks.
     """
 
-    def __init__(
+    def __init__(  # noqa: PLR0913 -- independent launcher probes and policy source
         self,
         home_of: Callable[[str], Path | None],
         opencode_heard: Callable[[str, bytes], None] | None = None,
         *,
         codex_hooks: Callable[[str, tuple[str, ...]], bytes] | None = None,
         codex_issue: Callable[[str, str], None] | None = None,
+        approval_choice: Callable[[str], ApprovalPolicyChoice] | None = None,
+        claude_version: Callable[[str], str] | None = None,
     ) -> None:
         self._home_of = home_of
+        self._approval_choice = approval_choice
+        self._claude_version = claude_version
+        self._policy_tabs: set[str] = set()
         self._codex_hooks = codex_hooks
         self._codex_issue = codex_issue
         self._codex_ready = False
@@ -54,11 +61,15 @@ class HostAgentCommands:
         self._streams: dict[str, EventStream] = {}
         self._servers: dict[str, tuple[int, str]] = {}
 
-    def command(self, agent: AgentKind, tab_id: str, token: str, container: str, port: str) -> tuple[str, ...] | None:
+    def command(  # noqa: PLR0911 -- one exit per harness and its unavailable fallback
+        self, agent: AgentKind, tab_id: str, token: str, container: str, port: str,
+    ) -> tuple[str, ...] | None:
         """`claude --settings …`, `codex -c …`, or the OpenCode server script. None means run the plain command."""
         if agent is AgentKind.CODEX:
             self._codex_ready = False
         number = int(port) if port.isdecimal() else _NO_PORT
+        if agent is AgentKind.CLAUDE:
+            return self._claude_command(container, tab_id, token, number)
         if number == _NO_PORT or agent not in {AgentKind.CLAUDE, AgentKind.CODEX, AgentKind.OPENCODE, AgentKind.CURSOR}:
             return None
         if agent is AgentKind.OPENCODE:
@@ -70,15 +81,43 @@ class HostAgentCommands:
             if agent is AgentKind.CODEX:
                 tab = CodexTab(agent_home=home, tab_id=tab_id, port=number, token=token)
                 return self._codex_command(tab, container)
-            return self._write_files(agent, home, tab_id, token, number)
+            return self._cursor.launch(home)
         except (OSError, ValueError):  # json.JSONDecodeError is a ValueError
             _LOG.warning("cannot write hooks for tab %s; starting the agent without them", tab_id, exc_info=True)
             return None
 
-    def _write_files(self, agent: AgentKind, home: Path, tab_id: str, token: str, port: int) -> tuple[str, ...]:
-        if agent is AgentKind.CLAUDE:
-            return self._claude.launch(ClaudeTab(agent_home=home, tab_id=tab_id, port=port, token=token)).argv
-        return self._cursor.launch(home)
+    def _automatic(self, tab_id: str) -> bool:
+        return self._approval_choice is not None and self._approval_choice(tab_id).mode.value in {"allow", "deny"}
+
+    @staticmethod
+    def _policy_unavailable() -> tuple[str, ...]:
+        message = "echo 'AConsole: policy requires Claude >=2.1.295 and writable tab settings' >&2; exit 1"
+        return ("/bin/sh", "-c", message)
+
+    def policy_ready(self, tab_id: str) -> bool:
+        return tab_id in self._policy_tabs
+
+    def _claude_command(self, container: str, tab_id: str, token: str, port: int) -> tuple[str, ...] | None:
+        self._policy_tabs.discard(tab_id)
+        try:
+            home = self._home_of(container)
+            if home is None or port == _NO_PORT:
+                return self._policy_unavailable() if self._automatic(tab_id) else None
+            if self._claude_version is not None:
+                version = re.match(r"(\d+)\.(\d+)\.(\d+)", self._claude_version(container).strip())
+                supported = version is not None and tuple(int(part) for part in version.groups()) >= (2, 1, 295)
+                if not supported and self._automatic(tab_id):
+                    return self._policy_unavailable()
+                if supported:
+                    self._policy_tabs.add(tab_id)
+            choice = ApprovalPolicyChoice() if self._approval_choice is None else self._approval_choice(tab_id)
+            return self._claude.launch(ClaudeTab(
+                agent_home=home, tab_id=tab_id, port=port, token=token, policy=choice,
+            )).argv
+        except (OSError, ValueError):
+            self._policy_tabs.discard(tab_id)
+            _LOG.warning("cannot prepare Claude policy for tab %s", tab_id, exc_info=True)
+            return self._policy_unavailable() if self._automatic(tab_id) else None
 
     def _codex_command(self, codex: CodexTab, container: str) -> tuple[str, ...]:
         self._codex_ready = False
@@ -109,6 +148,8 @@ class HostAgentCommands:
     def capabilities(self, kind: AgentKind) -> frozenset[str]:
         """Advertise Codex hook features only after the installed CLI confirmed their trust."""
         names = CAPABILITIES[DomainAgent(kind.value)].names()
+        if kind is AgentKind.CLAUDE and self._policy_tabs:
+            return names | {"approval_policy"}
         if kind is AgentKind.CODEX and self._codex_ready:
             return names | {"hooks", "approvals", "checkpoints"}
         return names
@@ -116,6 +157,7 @@ class HostAgentCommands:
     def release(self, agent: AgentKind, tab_id: str, container: str) -> None:
         """Stop the tab's event stream and drop its Claude settings. The shared scripts stay."""
         self._stop_stream(tab_id)
+        self._policy_tabs.discard(tab_id)
         home = self._home_of(container)
         if home is None or agent is not AgentKind.CLAUDE:
             return

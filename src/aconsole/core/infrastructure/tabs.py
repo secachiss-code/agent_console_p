@@ -216,6 +216,13 @@ class HostTabs:
         )
         return ask_app_server(argv, request, timeout_s=5)
 
+    def claude_version(self, name: str) -> str:
+        """Probe the permission engine before advertising automatic policy support."""
+        try:
+            return self._podman.run_in(name, self._user, (*LOGIN_SHELL, "claude", "--version"))
+        except (ContainerError, ValueError):
+            return ""
+
     def codex_rate_limits(self, name: str) -> bytes:
         """The `account/rateLimits/read` reply of the container's Codex. Empty when it is stopped or silent."""
         try:

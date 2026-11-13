@@ -1,0 +1,113 @@
+{
+  "version": "2.1.318 (Claude Code)",
+  "runs": [
+    {
+      "case": "allow-ask-plain",
+      "exit": 0,
+      "executed": true,
+      "events": [
+        "UserPromptSubmit",
+        "PreToolUse",
+        "PostToolUse",
+        "Stop",
+        "SessionEnd"
+      ],
+      "audit": [
+        {
+          "phase": "allowed",
+          "by": "rule"
+        }
+      ]
+    },
+    {
+      "case": "allow-ask-risky",
+      "exit": 0,
+      "executed": false,
+      "events": [
+        "UserPromptSubmit",
+        "PreToolUse",
+        "Stop",
+        "SessionEnd"
+      ],
+      "audit": []
+    },
+    {
+      "case": "allow-allow-risky",
+      "exit": 0,
+      "executed": true,
+      "events": [
+        "UserPromptSubmit",
+        "PreToolUse",
+        "PostToolUse",
+        "Stop",
+        "SessionEnd"
+      ],
+      "audit": [
+        {
+          "phase": "allowed",
+          "by": "rule"
+        }
+      ]
+    },
+    {
+      "case": "deny-ask-plain",
+      "exit": 0,
+      "executed": false,
+      "events": [
+        "UserPromptSubmit",
+        "Stop",
+        "SessionEnd"
+      ],
+      "audit": []
+    },
+    {
+      "case": "deny-ask-plain-offline",
+      "exit": 0,
+      "executed": false,
+      "events": [
+        "UserPromptSubmit",
+        "Stop",
+        "SessionEnd"
+      ],
+      "audit": []
+    },
+    {
+      "case": "ask-ask-plain",
+      "exit": 0,
+      "executed": false,
+      "events": [
+        "UserPromptSubmit",
+        "PreToolUse",
+        "PermissionRequest",
+        "Stop",
+        "SessionEnd"
+      ],
+      "audit": []
+    },
+    {
+      "case": "scenario-ask-plain",
+      "exit": 0,
+      "executed": false,
+      "events": [
+        "UserPromptSubmit",
+        "PreToolUse",
+        "PermissionRequest",
+        "Stop",
+        "SessionEnd"
+      ],
+      "audit": []
+    },
+    {
+      "case": "allow-allow-plain-offline",
+      "exit": 0,
+      "executed": false,
+      "events": [
+        "UserPromptSubmit",
+        "PreToolUse",
+        "Stop",
+        "SessionEnd"
+      ],
+      "audit": []
+    }
+  ]
+}

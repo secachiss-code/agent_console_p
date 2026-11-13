@@ -9,10 +9,11 @@ from __future__ import annotations
 
 import json
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Final, final
 
+from aconsole.core.domain.approval_policy import ApprovalPolicyChoice, ApprovalPolicyMode
 from aconsole.core.infrastructure.agents.private_files import atomic_write, check_home, private_dir, remove_tree
 
 _FILE_MODE: Final = 0o600
@@ -80,6 +81,7 @@ class ClaudeTab:
     tab_id: str
     port: int
     token: str
+    policy: ApprovalPolicyChoice = field(default_factory=ApprovalPolicyChoice)
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -114,7 +116,7 @@ class ClaudeLauncher:
         settings = tab_dir / "settings.json"
         mcp = tab_dir / "mcp.json"
         _atomic_write(script, _STATUSLINE.encode("utf-8"), _SCRIPT_MODE)
-        _atomic_write(settings, _settings_payload(tab.port, tab.tab_id, script), _FILE_MODE)
+        _atomic_write(settings, _settings_payload(tab.port, tab.tab_id, script, tab.policy), _FILE_MODE)
         _atomic_write(mcp, _mcp_payload(tab.port), _FILE_MODE)
         env = {_ENV_PORT: str(tab.port), _ENV_TAB: tab.tab_id, _ENV_AUTH: tab.token}
         return ClaudeLaunch(
@@ -159,17 +161,23 @@ def _private_dir(path: Path) -> None:
     private_dir(path)
 
 
-def _settings_payload(port: int, tab_id: str, script: Path) -> bytes:
+def _settings_payload(port: int, tab_id: str, script: Path, policy: ApprovalPolicyChoice) -> bytes:
     url = f"http://127.0.0.1:{port}/v1/tabs/{tab_id}/claude/hook"
     hooks: dict[str, _Json] = {}
     for name in _EVENTS:
-        timeout = _PERMISSION_TIMEOUT if name == "PermissionRequest" else _HOOK_TIMEOUT
-        hooks[name] = [_hook_group(url, timeout)]
+        gate = name in {"PermissionRequest", "PreToolUse"}
+        timeout = _PERMISSION_TIMEOUT if gate else _HOOK_TIMEOUT
+        hooks[name] = [_hook_group(url, timeout, block=gate)]
     document: dict[str, _Json] = {
         "hooks": hooks,
         "statusLine": {"type": "command", "command": str(script), "refreshInterval": _REFRESH_S},
-        "permissions": {"allow": [_ALLOW]},
+        "permissions": {
+            "allow": [_ALLOW],
+            "deny": ["Edit(.claude/**)", "Edit(.git/**)", "Edit(~/.claude/**)", "Edit(~/.aconsole/**)"],
+        },
     }
+    if policy.mode is ApprovalPolicyMode.DENY:
+        document["permissions"] = {"deny": ["*"], "defaultMode": "dontAsk"}
     return json.dumps(document, indent=2, ensure_ascii=False).encode("utf-8") + b"\n"
 
 
@@ -183,7 +191,7 @@ def _mcp_payload(port: int) -> bytes:
     return json.dumps(document, indent=2).encode("utf-8") + b"\n"
 
 
-def _hook_group(url: str, timeout: int) -> dict[str, _Json]:
+def _hook_group(url: str, timeout: int, *, block: bool = False) -> dict[str, _Json]:
     hook: dict[str, _Json] = {
         "type": "http",
         "url": url,
@@ -191,6 +199,8 @@ def _hook_group(url: str, timeout: int) -> dict[str, _Json]:
         "allowedEnvVars": [_ENV_PORT, _ENV_TAB, _ENV_AUTH],
         "timeout": timeout,
     }
+    if block:
+        hook["onFailure"] = "block"
     return {"hooks": [hook]}
 
 

@@ -151,7 +151,8 @@ class IngestApp:
         if (
             handler is not None
             and route.kind in {"claude.hook", "codex.hook"}
-            and getattr(parsed, "hook_event_name", None) == "PermissionRequest"
+            and (getattr(parsed, "hook_event_name", None) == "PermissionRequest"
+                 or (route.kind == "claude.hook" and getattr(parsed, "hook_event_name", None) == "PreToolUse"))
         ):
             return await _permission_response(handler, item, receive)
         if route.kind in _NO_CONTENT_KINDS:

@@ -515,6 +515,13 @@ class TabService:
         """Keep the in-memory policy aligned with settings and project writes."""
         self._policy = book
 
+    def approval_choice(self, tab_id: str) -> ApprovalPolicyChoice:
+        """Resolve a tab's project override at the point the harness is launched."""
+        tab = self._tabs.get(tab_id)
+        return ApprovalPolicyChoice() if self._policy is None else self._policy.choice_for(
+            None if tab is None else tab.project_id,
+        )
+
     def note_settings(self, rev: int, *, setup_completed: bool = False) -> None:
         """Remember the settings revision and wizard flag the snapshot reports."""
         self._settings_rev = rev

@@ -14,7 +14,8 @@
               "ACONSOLE_TAB",
               "ACONSOLE_TAB_TOKEN"
             ],
-            "timeout": 600
+            "timeout": 600,
+            "onFailure": "block"
           }
         ]
       }
@@ -109,7 +110,8 @@
               "ACONSOLE_TAB",
               "ACONSOLE_TAB_TOKEN"
             ],
-            "timeout": 5
+            "timeout": 600,
+            "onFailure": "block"
           }
         ]
       }
@@ -218,6 +220,12 @@
   "permissions": {
     "allow": [
       "mcp__aconsole__*"
+    ],
+    "deny": [
+      "Edit(.claude/**)",
+      "Edit(.git/**)",
+      "Edit(~/.claude/**)",
+      "Edit(~/.aconsole/**)"
     ]
   }
 }

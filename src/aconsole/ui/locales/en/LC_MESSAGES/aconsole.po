@@ -2003,6 +2003,9 @@ msgstr "No hooks. Requests stay in its terminal, so this mode does not apply."
 msgid "prefs.harness_asks"
 msgstr "Hooks can ask. Allow and deny are not applied to this CLI yet."
 
+msgid "prefs.harness_policy"
+msgstr "Claude Code ≥2.1.295: modes apply through hooks. Start a new session for a complete deny. Protecting settings requires filesystem isolation: shell commands can bypass file-tool rules."
+
 msgid "prefs.banner_allow"
 msgstr "Allow is on for untagged calls. Agents still ask until their adapter applies it."
 

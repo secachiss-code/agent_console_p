@@ -1,10 +1,11 @@
 """Approval lifecycle: nonce, input hash, dedup, and exact command-prefix rules."""
 
 import hashlib
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import datetime
 from enum import StrEnum
 
+from aconsole.core.domain.approval_policy import PolicyVerdict
 from aconsole.core.domain.errors import DomainError
 from aconsole.core.domain.prefix_allowlist import AllowEntry, allowed_by_entry, entry_for_prefix
 from aconsole.core.domain.risk import RiskTag, classify, has_command_substitution
@@ -200,6 +201,7 @@ class Approval:
     phase: ApprovalPhase
     by: DecisionBy | None
     allow_tab_session: bool
+    reason: str | None = None
 
 
 def _input_key(request: OpenRequest) -> tuple[str, str, str, str]:
@@ -232,19 +234,32 @@ class ApprovalBook:
             raise _conflict(_NOT_FOUND, "APPROVAL_NOT_FOUND")
         return found
 
-    def open(self, request: OpenRequest) -> Approval:
+    def open(self, request: OpenRequest, *, policy: PolicyVerdict = PolicyVerdict.ASK) -> Approval:
         if request.expires_at < request.at:
             message = "expires_at must not precede the request"
             raise ValueError(message)
         _ = self.prune(request.at)
         replay = self._replay(request)
+        reason = None if policy is PolicyVerdict.ASK else f"policy={policy.value}"
         if replay is not None:
-            return replay
+            if replay.reason == reason:
+                return replay
+            if policy is not PolicyVerdict.ASK and replay.phase is ApprovalPhase.PENDING:
+                updated = replace(replay, phase=ApprovalPhase.ALLOWED if policy is PolicyVerdict.ALLOW
+                                  else ApprovalPhase.DENIED, by=DecisionBy.RULE, reason=reason)
+                self._items[replay.id] = updated
+                return updated
         risk = request.risk | classify(request.command, cwd=self._scope.cwd, worktree=self._scope.worktree)
         phase = ApprovalPhase.PENDING
         by = None
         # A deny rule is checked first, so it wins over any allow rule that also covers the command.
-        if self._deny_rule_for(request.tab_id, request.tool, request.command) is not None:
+        if policy is PolicyVerdict.DENY:
+            phase = ApprovalPhase.DENIED
+            by = DecisionBy.RULE
+        elif policy is PolicyVerdict.ALLOW:
+            phase = ApprovalPhase.ALLOWED
+            by = DecisionBy.RULE
+        elif self._deny_rule_for(request.tab_id, request.tool, request.command) is not None:
             phase = ApprovalPhase.DENIED
             by = DecisionBy.RULE
         elif self._rule_for(request.tab_id, request.tool, request.command, exact_only=bool(request.risk)) is not None:
@@ -264,6 +279,7 @@ class ApprovalBook:
             phase=phase,
             by=by,
             allow_tab_session=request.allow_tab_session,
+            reason=reason,
         )
         self._items[request.approval_id] = created
         self._by_input[_input_key(request)] = request.approval_id
@@ -404,6 +420,7 @@ class ApprovalBook:
             phase=phase,
             by=by,
             allow_tab_session=current.allow_tab_session,
+            reason=current.reason,
         )
         self._items[current.id] = updated
         return updated

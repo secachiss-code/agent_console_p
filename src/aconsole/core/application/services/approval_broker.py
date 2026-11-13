@@ -16,6 +16,7 @@ from aconsole.contracts.app import (
 )
 from aconsole.contracts.common import ApprovalId, ApprovalScope
 from aconsole.contracts.events import ApprovalRequested, ApprovalResolved
+from aconsole.core.domain.approval_policy import PolicyVerdict
 from aconsole.core.domain.approvals import Approval, ApprovalBook, ApprovalDecision, ApprovalPhase, OpenRequest
 from aconsole.core.domain.errors import DomainError
 
@@ -77,8 +78,10 @@ class ApprovalHold:
         with self._views_lock:
             return tuple(self._views.values())
 
-    async def hold(self, request: OpenRequest, view: ApprovalView) -> HookOutcome:
-        approval = self._book.open(request)
+    async def hold(
+        self, request: OpenRequest, view: ApprovalView, *, policy: PolicyVerdict = PolicyVerdict.ASK,
+    ) -> HookOutcome:
+        approval = self._book.open(request, policy=policy)
         if approval.phase is not ApprovalPhase.PENDING:
             self._settle(approval, None)
             return HookOutcome(approval.phase)
