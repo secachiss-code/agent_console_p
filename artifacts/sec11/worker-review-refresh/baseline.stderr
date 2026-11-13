@@ -1,0 +1,10 @@
+Traceback (most recent call last):
+  File "<ROOT>/artifacts/sec11/worker-review-gate/verify.py", line 180, in <module>
+    print(json.dumps(verify(), indent=2, sort_keys=True))
+                     ~~~~~~^^
+  File "<ROOT>/artifacts/sec11/worker-review-gate/verify.py", line 114, in verify
+    require(index == collect(), "Source/evidence index drift")
+    ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<ROOT>/artifacts/sec11/worker-review-gate/verify.py", line 24, in require
+    raise ValueError(message)
+ValueError: Source/evidence index drift

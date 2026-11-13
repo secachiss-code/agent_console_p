@@ -1,0 +1,68 @@
+{
+  "SEC11": "failed",
+  "SEC13": "failed",
+  "actual_review": "NOT PERFORMED",
+  "baseline": {
+    "command": "python3 -B artifacts/sec11/worker-review-gate/verify.py",
+    "exit": 1,
+    "stderr_root_normalized": true,
+    "stderr_sha256": "c209a7adf33d405486e482f07528f1e5e1562a98062f0431fb42c7469a89fb1f",
+    "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "changed_product_paths": [
+    "src/aconsole/ui/bootstrap.py",
+    "src/aconsole/ui/style/style.css",
+    "src/aconsole/ui/views/review/git_pane.py",
+    "src/aconsole/ui/views/setup/preferences.py",
+    "src/aconsole/ui/views/window.py"
+  ],
+  "changes": [
+    {
+      "current": "a09e232f285bec5a492235376bb82200917e7798aa99658ba7f0e505206ca23a",
+      "group": "product_source_hashes",
+      "historical": "cfd76b1e5f322ca4a6867bf1d755c3909d31603b2ddc67041b7447373579119f",
+      "path": "src/aconsole/ui/bootstrap.py"
+    },
+    {
+      "current": "6e000cb1d3f87766bc668ce1421f80775faf508c502ee69e77fad7d049f108a8",
+      "group": "product_source_hashes",
+      "historical": "293c353fe89209d8b0d0b3e5c4eb658fdfb8d8cb4239c5d58d7c58d7c98e523d",
+      "path": "src/aconsole/ui/views/review/git_pane.py"
+    },
+    {
+      "current": "0c5c8d3b690d41892984391cead93d0f19d1d3e293d4bbf4eaeb9638abd99c12",
+      "group": "product_source_hashes",
+      "historical": "a7521178af40affe3bb73f9995d63cc2c3c31a619aabe506ff70ed9297428a6a",
+      "path": "src/aconsole/ui/views/setup/preferences.py"
+    },
+    {
+      "current": "4c7d276edcbf20ee4c1af5fde7d4b45219b79cd0eaebbee98fdbe303a22e492a",
+      "group": "product_source_hashes",
+      "historical": "c7d88a5cb397049dac832d0ae83652ff78e0c99dbf30e54b694a9c4284f3146a",
+      "path": "src/aconsole/ui/views/window.py"
+    }
+  ],
+  "core_diff": false,
+  "head": "b4222eed15ffbc87bb1c0ace7a60008f260301a3",
+  "historical_base": "fea8c49c3604bde3e5fdb8fd2e2fa263970aec03",
+  "historical_counts": {
+    "product_source_hashes": 279,
+    "upstream_hashes": 52
+  },
+  "historical_hashes_match_base": true,
+  "installed_acceptance": "NOT RUN",
+  "packet_hashes": {
+    "REPORT.md": "45d62c310890fe2ae55ad70c071e2e1010f7c8c621cb2da7b90fd2661f6e095d",
+    "collect.py": "1ed9f425f9caf6ff05fe8013fde74971ff63934d599ce6508398a3771a34248a",
+    "contract.json": "989d3316fcf60c9f7f3d78d4f00a4f4dd26f23c1c30cdf452824872d9974dd61",
+    "lint-all.txt": "035ba5379d6daad10ce061feaf4095085b84ccf0c2f3203e9e049a7632c21ec1",
+    "source-index.json": "98083d3522be6cf645ff80ae475e718e4dc13d3c58bcc28ffc3d67d65567fa60",
+    "upstream-reverification.json": "acf4e72185adfc6facafd666317e09f8fe2057f2000ccbf173d22669a3178656",
+    "validation.json": "09f046ccba31ba5c65239c73cd042518ab4d981cc630ab1e4b7cfa14fa713ffa",
+    "verify.py": "ca2b075a8317af96247cb930f641712199c9990f6110f6b7d57a7d92226f3481"
+  },
+  "patch_sha256": "0d09c2929f1b6fcf369f9212d2c0afd583cbf53aad900ceba3559fbf3198d094",
+  "schema": 1,
+  "stage_B_authorized": false,
+  "upstream_diff": false
+}

@@ -1,0 +1,162 @@
+diff --git a/src/aconsole/ui/bootstrap.py b/src/aconsole/ui/bootstrap.py
+index cf4f5fae..f161ed25 100644
+--- a/src/aconsole/ui/bootstrap.py
++++ b/src/aconsole/ui/bootstrap.py
+@@ -30,2 +30,8 @@ def spawn_task(work: Coroutine[object, object, None]) -> asyncio.Task[None]:
+-    """Schedule ``work`` and keep the task alive until it finishes."""
+-    task = asyncio.get_running_loop().create_task(work)
++    """Take ownership of ``work`` and keep its task alive until it finishes."""
++    try:
++        task = asyncio.get_running_loop().create_task(work)
++    except BaseException:
++        # No task owns the coroutine when loop lookup or task creation fails.
++        # Release its frame even when scheduling is interrupted during shutdown.
++        work.close()
++        raise
+@@ -45,7 +51,10 @@ def run_gtk(app: Gio.Application, argv: Sequence[str] | None = None) -> int:
+-    loop = GLibEventLoop()
+-    if not isinstance(loop, _GtkLoop):
+-        message = "GLibEventLoop cannot enter a context"
+-        raise TypeError(message)
+-    with loop as entered:
+-        asyncio.set_event_loop(entered)
+-        status = app.run(args)
++    # GLibEventLoop.__exit__ only unregisters its context. Runner owns the
++    # actual shutdown: cancel/await this loop's tasks, finalize async generators
++    # and its executor, then close it, including when app.run raises.
++    with asyncio.Runner(loop_factory=GLibEventLoop) as runner:
++        loop = runner.get_loop()
++        if not isinstance(loop, _GtkLoop):
++            message = "GLibEventLoop cannot enter a context"
++            raise TypeError(message)
++        with loop:
++            status = app.run(args)
+diff --git a/src/aconsole/ui/style/style.css b/src/aconsole/ui/style/style.css
+index 5928cd62..03403b96 100644
+--- a/src/aconsole/ui/style/style.css
++++ b/src/aconsole/ui/style/style.css
+@@ -139 +139 @@ button.ac-quota-group-open { background-color: alpha(@accent_bg_color, 0.18); }
+-.ac-git-list > row { padding: 0; min-height: 36px; }
++.ac-git-list > child { padding: 0; min-height: 36px; }
+diff --git a/src/aconsole/ui/views/review/git_pane.py b/src/aconsole/ui/views/review/git_pane.py
+index 75f5c333..0560cd3f 100644
+--- a/src/aconsole/ui/views/review/git_pane.py
++++ b/src/aconsole/ui/views/review/git_pane.py
+@@ -299 +299,3 @@ class GitPane(Gtk.Box):
+-        self.list_view: Gtk.ListView = Gtk.ListView(model=self.selection, factory=factory)
++        self.list_view: Gtk.GridView = Gtk.GridView(
++            model=self.selection, factory=factory, min_columns=1, max_columns=1,
++        )
+diff --git a/src/aconsole/ui/views/setup/preferences.py b/src/aconsole/ui/views/setup/preferences.py
+index c9a26597..215aec7c 100644
+--- a/src/aconsole/ui/views/setup/preferences.py
++++ b/src/aconsole/ui/views/setup/preferences.py
+@@ -14 +14 @@ gi.require_version("Adw", "1")
+-from gi.repository import Adw, Gio, GLib, GObject, Gtk, Pango  # noqa: E402
++from gi.repository import Adw, Gdk, Gio, GLib, GObject, Gtk, Pango  # noqa: E402
+@@ -29,0 +30 @@ _PROJECT_POLICIES: tuple[Literal["inherit", "ask", "allow", "deny"], ...] = ("in
++_CLOSE_OPENING_TICKS = 3
+@@ -47,0 +49,4 @@ class PreferencesDialog(Adw.PreferencesDialog):
++        self._close_tick_id: int = 0
++        self._close_ticks: int = 0
++        self._discard_on_close: bool = False
++        _ = self.connect("unmap", self._cancel_pending_close)
+@@ -270 +275 @@ class PreferencesDialog(Adw.PreferencesDialog):
+-                    self.force_close()
++                    self._request_close()
+@@ -401 +406 @@ class PreferencesDialog(Adw.PreferencesDialog):
+-            self.force_close()
++            self._request_close()
+@@ -421 +426 @@ class PreferencesDialog(Adw.PreferencesDialog):
+-            _ = GLib.idle_add(self._discard_after_prompt)
++            self._request_close(discard=True)
+@@ -426 +431,18 @@ class PreferencesDialog(Adw.PreferencesDialog):
+-    def _discard_after_prompt(self) -> bool:
++    def _request_close(self, *, discard: bool = False) -> None:
++        if not self._active or self._close_tick_id:
++            return
++        self._close_ticks = 0
++        self._discard_on_close = discard
++        self._close_tick_id = self.add_tick_callback(self._close_after_opening)
++
++    def _close_after_opening(self, _widget: Gtk.Widget, _clock: Gdk.FrameClock) -> bool:
++        # libadwaita 1.5 opens embedded sheets on their second map tick. Closing
++        # earlier is a no-op, then that opening tick resurrects the dialog.
++        # Three ticks also leave the nested alert's response stack before closing.
++        self._close_ticks += 1
++        if self._close_ticks < _CLOSE_OPENING_TICKS:
++            return GLib.SOURCE_CONTINUE
++        self._close_tick_id = 0
++        if not self._discard_on_close and self._shown is not None and self._changes(self._shown) != SettingsPatch():
++            self.status_label.set_label(translate("prefs.unsaved"))
++            return GLib.SOURCE_REMOVE
+@@ -429,0 +452,5 @@ class PreferencesDialog(Adw.PreferencesDialog):
++    def _cancel_pending_close(self, _widget: Gtk.Widget) -> None:
++        if self._close_tick_id:
++            self.remove_tick_callback(self._close_tick_id)
++            self._close_tick_id = 0
++
+@@ -430,0 +458 @@ class PreferencesDialog(Adw.PreferencesDialog):
++        self._cancel_pending_close(self)
+diff --git a/src/aconsole/ui/views/window.py b/src/aconsole/ui/views/window.py
+index 14442153..cc898010 100644
+--- a/src/aconsole/ui/views/window.py
++++ b/src/aconsole/ui/views/window.py
+@@ -82,0 +83 @@ _TAB_ARRIVAL_MS = 200
++_APPROVAL_OPENING_MS = 500
+@@ -335,0 +337,5 @@ class MainWindow(Adw.ApplicationWindow):
++        self._cancel_approval_opening()
++        self._approval_ready = False
++        if self._git_badge_timer is not None:
++            _ = GLib.source_remove(self._git_badge_timer)
++            self._git_badge_timer = None
+@@ -772,0 +779,2 @@ class MainWindow(Adw.ApplicationWindow):
++        self._approval_opening_timer: int | None = None
++        self._approval_ready: bool = False
+@@ -783,0 +792,2 @@ class MainWindow(Adw.ApplicationWindow):
++        _ = self.connect("map", self._approval_mapped)
++        _ = self.connect("unmap", self._approval_unmapped)
+@@ -840,2 +850 @@ class MainWindow(Adw.ApplicationWindow):
+-            if not self._snapshot_mode and self.get_mapped():
+-                # Before mapping there is no user-visible selection to notify about.
++            if not self._snapshot_mode and self.get_mapped() and self._approval_ready:
+@@ -848,0 +858,3 @@ class MainWindow(Adw.ApplicationWindow):
++        if self.get_mapped() and self.is_active() and not self._terminals_disposed:
++            self._cancel_approval_opening()
++            self._approval_ready = True
+@@ -850,0 +863,28 @@ class MainWindow(Adw.ApplicationWindow):
++    def _approval_mapped(self, _widget: Gtk.Widget) -> None:
++        if self._snapshot_mode or self._terminals_disposed:
++            return
++        self._cancel_approval_opening()
++        self._approval_ready = self.is_active()
++        if self._approval_ready:
++            self._sync_approvals(self.tabs.client.store)
++        else:
++            # Mapping precedes the WM's initial focus event. Bound the wait so a
++            # window opened in the background still notifies without store updates.
++            self._approval_opening_timer = GLib.timeout_add(_APPROVAL_OPENING_MS, self._approval_opened)
++
++    def _approval_opened(self) -> bool:
++        self._approval_opening_timer = None
++        if self.get_mapped() and not self._terminals_disposed:
++            self._approval_ready = True
++            self._sync_approvals(self.tabs.client.store)
++        return GLib.SOURCE_REMOVE
++
++    def _approval_unmapped(self, _widget: Gtk.Widget) -> None:
++        self._cancel_approval_opening()
++        self._approval_ready = False
++
++    def _cancel_approval_opening(self) -> None:
++        if self._approval_opening_timer is not None:
++            _ = GLib.source_remove(self._approval_opening_timer)
++            self._approval_opening_timer = None
++
+@@ -970,0 +1011,2 @@ class MainWindow(Adw.ApplicationWindow):
++        if self._terminals_disposed:
++            return
+@@ -982,0 +1025,3 @@ class MainWindow(Adw.ApplicationWindow):
++        if self._terminals_disposed:
++            self._git_badge_timer = None
++            return GLib.SOURCE_REMOVE
