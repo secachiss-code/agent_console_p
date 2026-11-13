@@ -1,0 +1,63 @@
+{
+  "repository": "secachiss-code/agent_console_p",
+  "commit": "035af5801ae9a9d31367f99af3c84804dabbffdb",
+  "requests": [
+    "fetch_commit",
+    "get_commit_combined_status",
+    "fetch_commit_workflow_runs"
+  ],
+  "results": [
+    {
+      "status": "fulfilled",
+      "value": {
+        "content": [
+          {
+            "type": "text",
+            "text": "GitHub API error 422: {\"message\":\"No commit found for SHA: 035af5801ae9a9d31367f99af3c84804dabbffdb\",\"documentation_url\":\"https://docs.github.com/rest/commits/commits#get-a-commit\",\"status\":\"422\"}"
+          }
+        ],
+        "structuredContent": {
+          "error": "GitHub API error 422: {\"message\":\"No commit found for SHA: 035af5801ae9a9d31367f99af3c84804dabbffdb\",\"documentation_url\":\"https://docs.github.com/rest/commits/commits#get-a-commit\",\"status\":\"422\"}",
+          "error_code": "INVALID_ARGUMENT",
+          "error_data": {
+            "message": "No commit found for SHA: 035af5801ae9a9d31367f99af3c84804dabbffdb",
+            "documentation_url": "https://docs.github.com/rest/commits/commits#get-a-commit",
+            "status": "422"
+          }
+        },
+        "isError": true
+      }
+    },
+    {
+      "status": "fulfilled",
+      "value": {
+        "content": [
+          {
+            "type": "text",
+            "text": "Action completed."
+          }
+        ],
+        "structuredContent": {
+          "statuses": []
+        },
+        "isError": false
+      }
+    },
+    {
+      "status": "fulfilled",
+      "value": {
+        "content": [
+          {
+            "type": "text",
+            "text": "Action completed."
+          }
+        ],
+        "structuredContent": {
+          "workflow_runs": []
+        },
+        "isError": false
+      }
+    }
+  ],
+  "limits": "Workflow query filters to PR-triggered runs and first page. Empty combined statuses alone do not prove absence of Actions runs. Commit lookup returned 422. No push or rerun performed."
+}

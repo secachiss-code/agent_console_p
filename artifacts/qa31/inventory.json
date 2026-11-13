@@ -1,0 +1,190 @@
+{
+  "base_head": "035af5801ae9a9d31367f99af3c84804dabbffdb",
+  "container_uid": 1000,
+  "container_os_release": "PRETTY_NAME=\"Debian GNU/Linux 13 (trixie)\"\nNAME=\"Debian GNU/Linux\"\nVERSION_ID=\"13\"\nVERSION=\"13 (trixie)\"\nVERSION_CODENAME=trixie\nDEBIAN_VERSION_FULL=13.7\nID=debian\nHOME_URL=\"https://www.debian.org/\"\nSUPPORT_URL=\"https://www.debian.org/support\"\nBUG_REPORT_URL=\"https://bugs.debian.org/\"\n",
+  "container_tools": {
+    "podman": null,
+    "unshare": "/usr/bin/unshare",
+    "bwrap": null,
+    "proot": null,
+    "chroot": null,
+    "dpkg-deb": "/usr/bin/dpkg-deb",
+    "apt-get": "/usr/bin/apt-get"
+  },
+  "evidence": {
+    "artifacts/qa4-recheck/long-before.xml": {
+      "exists": true,
+      "sha256": "6f6966631866d0a22e2478c3774e2206bc2bec5e5bf7b305497a2194d351c583",
+      "junit": {
+        "tests": 1,
+        "failures": 1,
+        "errors": 0,
+        "skipped": 0
+      }
+    },
+    "artifacts/qa4-recheck/long-after.xml": {
+      "exists": true,
+      "sha256": "1d639359f0e7bdbb526f7a9fa41cc557db5dd97f00b8c9f62a6d001797881624",
+      "junit": {
+        "tests": 13,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      }
+    },
+    "artifacts/qa4-recheck/long-core.xml": {
+      "exists": true,
+      "sha256": "765e294f178ae05d86a29efd8b48fb06db4b24eefc19f654efb3af71ae5a985e",
+      "junit": {
+        "tests": 1983,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 1
+      }
+    },
+    "artifacts/qa4-final/core.xml": {
+      "exists": true,
+      "sha256": "76ccd41e2c4938ce588cf788ba45742867d8daca5e7f6bf88ce6664e6a805ffc",
+      "junit": {
+        "tests": 2177,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 1
+      }
+    },
+    "artifacts/qa4-final/ui.xml": {
+      "exists": true,
+      "sha256": "a59911d33dd999ad7faa5afd8fd604718b97a82a7e7dc453d5c7853cf515b703",
+      "junit": {
+        "tests": 507,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      }
+    },
+    "artifacts/qa4-final/coverage-gate.txt": {
+      "exists": true,
+      "sha256": "59286da8814a48b41121e3708973c42b881b6af064711c27174a3dea6508dc0d"
+    },
+    "artifacts/qa4-final/coverage-summary.json": {
+      "exists": true,
+      "sha256": "12518e46bd2f750136379cac86de996c202c00b3ae49ff84a223963bf48c89da"
+    },
+    "artifacts/qa4-final/build-result.json": {
+      "exists": true,
+      "sha256": "588511f384f825115d644cea5d0d0c7956af3ce330749350ec7402a2b8b871cb"
+    },
+    "artifacts/qa4-final/build-source.json": {
+      "exists": true,
+      "sha256": "87adeace7cdddc48386e524970ab551c4208343f8e57d330807d1395f2721572"
+    },
+    "artifacts/qa4-final/package-smoke.json": {
+      "exists": true,
+      "sha256": "508d9af1b5fe58dddaea3c31f23b8ff27f1368230e9887529ab2a46b2484a4d1"
+    },
+    "artifacts/qa4-final/ci-lookup.json": {
+      "exists": true,
+      "sha256": "9b906f361b2deaa6f8f9284ae324408be72a0ee6174784f8fa018673a982c29d"
+    },
+    "artifacts/qa4-recheck/ci43-result.log": {
+      "exists": true,
+      "sha256": "c1eef1385a40d54fc674fac05e395564c2dab2a35412ad41363a2d93d3c386cb"
+    },
+    "artifacts/qa25/final-geometry/pytest.xml": {
+      "exists": true,
+      "sha256": "94b75a05c0478a7ccc1cac69ede51a339b42aa6302c23a54a05de3dc02cfca45",
+      "junit": {
+        "tests": 31,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      }
+    },
+    "artifacts/qa26/full-private/pytest.xml": {
+      "exists": true,
+      "sha256": "1c731a743d54c579d1549c13743f9d65a28e6d064f7dd6b2bba7574b6c55eae4",
+      "junit": {
+        "tests": 534,
+        "failures": 1,
+        "errors": 0,
+        "skipped": 0
+      }
+    },
+    "artifacts/qa30/desktop-full/pytest.xml": {
+      "exists": true,
+      "sha256": "e3eeffbb73a142268d12856c1d1b7f1355ed4f5450cf0920ce465bdb5db819ca",
+      "junit": {
+        "tests": 536,
+        "failures": 9,
+        "errors": 0,
+        "skipped": 0
+      }
+    },
+    "artifacts/qa30/desktop-scale/pytest.xml": {
+      "exists": true,
+      "sha256": "9c8c66f22ca7cc052d6435edf215fb9838961e932fd1194c79beb8e6a4653113",
+      "junit": {
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      }
+    }
+  },
+  "qa17_source_comparisons": {
+    "core": {
+      "base": "3af391ab275b4e006660fbf2370cca14a7268941",
+      "snapshot_files": 280,
+      "changed_or_missing": [
+        "src/aconsole/core/infrastructure/git/operations.py",
+        "src/aconsole/ui/bootstrap.py",
+        "src/aconsole/ui/views/review/git_pane.py",
+        "src/aconsole/ui/views/setup/preferences.py",
+        "src/aconsole/ui/views/window.py"
+      ]
+    },
+    "ui": {
+      "base": "3af391ab275b4e006660fbf2370cca14a7268941",
+      "snapshot_files": 280,
+      "changed_or_missing": [
+        "src/aconsole/core/infrastructure/git/operations.py",
+        "src/aconsole/ui/bootstrap.py",
+        "src/aconsole/ui/views/review/git_pane.py",
+        "src/aconsole/ui/views/setup/preferences.py",
+        "src/aconsole/ui/views/window.py"
+      ]
+    },
+    "build": {
+      "base": "3af391ab275b4e006660fbf2370cca14a7268941",
+      "snapshot_files": 280,
+      "changed_or_missing": [
+        "src/aconsole/core/infrastructure/git/operations.py",
+        "src/aconsole/ui/bootstrap.py",
+        "src/aconsole/ui/views/review/git_pane.py",
+        "src/aconsole/ui/views/setup/preferences.py",
+        "src/aconsole/ui/views/window.py"
+      ]
+    }
+  },
+  "guarded_diff_from_qa17": "",
+  "product_diff_from_qa17": "src/aconsole/core/infrastructure/git/operations.py\nsrc/aconsole/ui/bootstrap.py\nsrc/aconsole/ui/style/style.css\nsrc/aconsole/ui/views/review/git_pane.py\nsrc/aconsole/ui/views/setup/preferences.py\nsrc/aconsole/ui/views/window.py",
+  "tracked_golden_directories": [
+    "tests/fixtures/contracts/golden"
+  ],
+  "package": {
+    "path": "dist/aconsole_0.1.1_amd64.deb",
+    "sha256": "e93e88fb79cedb51fc150343705ece60180766c3da1b06b8ecfaf4bfcb614c46",
+    "bytes": 72820138
+  },
+  "current_inputs": {
+    ".github/workflows/check.yml": "3ebca3371e7d3dd75b6f78272baf6bbc6cf70691a21b56033a33adf1fea66733",
+    "pyproject.toml": "6a3cdb1315cf4696c612e121b4a3fc39fa26f94bc59a70297205d2e32316bdcc",
+    "packaging/build_deb.py": "8ac9cb50d6cc10e4f68753a8b350e57a2ccc8b81a0b53f87de53ba726493fef0",
+    "tests/conftest.py": "93b5400e98792b2c9cd882b182467cad1380dec55c76f1c741954f39c6e5a7dc",
+    "tests/socket_paths.py": "10af8a67462216e1118f3a293d0d4a49fcbf8e4b9ae769c7d98ad9dc7a51be05",
+    "tests/test_socket_paths.py": "e87eb1b97e5033273729940925afa658dbc84197e0180f73e0e55e7f2143e2fc",
+    "tests/test_build_guards.py": "ab3641fba6cea2e66c4681fbbafec0958a70b9db1bccfd29fbf55d4a2d18d5df",
+    "tools/check_contracts.py": "69c440b1ad68aed2758398a1e6a62cd87bb558755fd59a2746f626d5455fcde7"
+  },
+  "limit": "Inventory only. Historical results retain their original revision and scope."
+}

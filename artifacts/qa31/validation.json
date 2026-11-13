@@ -1,0 +1,14 @@
+{
+  "result": "PASS",
+  "scope": "Recorded inventory consistency only; QA4 remains failed",
+  "base_head": "035af5801ae9a9d31367f99af3c84804dabbffdb",
+  "sha256": {
+    "REPORT.md": "cc0149d77ac99000c50de4747b28958f805688270d3a6e85f957ad93acaf82dc",
+    "ci-lookup.json": "97ab3c36fc8c91c5fe564f591c734e4bd9a601824cdacccb9fe82f3e9052563e",
+    "host-environment.json": "a159da677205303843cd818da7a9f75f8f49cefbfb2756d8f2ab29a5593dbf60",
+    "host_probe.py": "1dc0bdb3e62f8c875a2c255500b94487917abb19f2f3ea5784cfda5cd927eb90",
+    "inventory.json": "f45766c33e57d579be326a6ef0f4c195bc5135b74561cb2eee772f2276fb9529",
+    "inventory.py": "a04dcc82b79b4682bacaa7a6bae5ec798b730ed1dda81c2321132c2df049cd56",
+    "verify.py": "94fba70fef0e3e9303b6e552c3074d3ce7480db13cdd048416dadcc79b9569b4"
+  }
+}

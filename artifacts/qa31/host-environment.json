@@ -1,0 +1,54 @@
+{
+  "python": "/home/sas/Projects/sp_aconsole_prototype/.venv-core/bin/python",
+  "uid": 1000,
+  "os_release": "PRETTY_NAME=\"elementary OS 8\"\nNAME=\"elementary OS\"\nCPE_NAME=\"cpe:/o:elementary:elementary_os:8\"\nVERSION_ID=\"8\"\nVERSION=\"8.1\"\nVERSION_CODENAME=circe\nID=elementary\nID_LIKE=\"ubuntu debian\"\nHOME_URL=\"https://elementary.io/\"\nDOCUMENTATION_URL=\"https://elementary.io/docs/learning-the-basics\"\nSUPPORT_URL=\"https://elementary.io/support\"\nBUG_REPORT_URL=\"https://docs.elementary.io/contributor-guide/feedback/reporting-issues\"\nPRIVACY_POLICY_URL=\"https://elementary.io/privacy-policy\"\nUBUNTU_CODENAME=noble\nLOGO=distributor-logo\nUBUNTU_CODENAME=noble\nUBUNTU_PRETTY_NAME=\"Ubuntu 24.04.5 LTS\"\nUBUNTU_NAME=\"Ubuntu\"\nUBUNTU_VERSION_ID=\"24.04\"\nUBUNTU_VERSION=\"24.04.5 LTS (Noble Numbat)\"\nUBUNTU_VERSION_CODENAME=noble\n",
+  "tools": {
+    "podman": "/usr/bin/podman",
+    "unshare": "/usr/bin/unshare",
+    "bwrap": "/usr/bin/bwrap",
+    "proot": null,
+    "chroot": "/usr/sbin/chroot",
+    "dpkg-deb": "/usr/bin/dpkg-deb",
+    "apt-get": "/usr/bin/apt-get"
+  },
+  "namespace_capability": {
+    "argv": [
+      "unshare",
+      "--user",
+      "--map-root-user",
+      "--mount",
+      "true"
+    ],
+    "exit_code": 1,
+    "stdout": "",
+    "stderr": "unshare: write failed /proc/self/uid_map: \u041e\u043f\u0435\u0440\u0430\u0446\u0438\u044f \u043d\u0435 \u043f\u043e\u0437\u0432\u043e\u043b\u0435\u043d\u0430\n"
+  },
+  "podman_info": {
+    "argv": [
+      "podman",
+      "info",
+      "--format",
+      "json"
+    ],
+    "exit_code": 0,
+    "stderr": "",
+    "selected_fields": {
+      "rootless": true,
+      "graph_driver": "overlay",
+      "version": "4.9.3"
+    }
+  },
+  "podman_images": {
+    "argv": [
+      "podman",
+      "images",
+      "--format",
+      "json"
+    ],
+    "exit_code": 0,
+    "stderr": "",
+    "image_count": 4,
+    "ubuntu_24_04_candidates": []
+  },
+  "limit": "Availability only: no new container, install, mount or package-manager transaction."
+}
