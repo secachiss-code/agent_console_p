@@ -1,0 +1,133 @@
+Collected 0 items to run in parallel
+........................................................................ [  3%]
+........................................................................ [  6%]
+........................................................................ [  9%]
+........................................................................ [ 13%]
+........................................................................ [ 16%]
+........................................................................ [ 19%]
+........................................................................ [ 23%]
+........................................................................ [ 26%]
+........................................................................ [ 29%]
+........................................................................ [ 32%]
+........................................................................ [ 36%]
+........................................................................ [ 39%]
+........................................................................ [ 42%]
+........................................................................ [ 46%]
+........................................................................ [ 49%]
+........................................................................ [ 52%]
+........................................................................ [ 56%]
+........................................................................ [ 59%]
+........................................................................ [ 62%]
+........................................................................ [ 65%]
+........................................................................ [ 69%]
+........................................................................ [ 72%]
+........................................................................ [ 75%]
+........................................................................ [ 79%]
+........................................................................ [ 82%]
+........................................................................ [ 85%]
+..............................................................s......... [ 89%]
+........................................................................ [ 92%]
+........................................................................ [ 95%]
+........................................................................ [ 98%]
+......................                                                   [100%]
+python 3.15.1 gil=False
+
+=============================== warnings summary ===============================
+tests/core/test_launch_security.py::test_rpc_launch_spec_keeps_ingest_and_sidecar_secrets_out_of_argv[claude]
+  /home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/util/langhelpers.py:1455: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x311c0a4dc80>
+    obj.__dict__[self.__name__] = result = self.fget(obj)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/core/test_mcp_knowledge_recovery.py::test_invalid_fact_source_does_not_publish_knowledge[../outside#L1-2]
+  /home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/038657e1539f15ad/src/aconsole/core/infrastructure/mcp/server.py:107: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x311acbe2920>
+    for key, value in schema.items():
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/core/test_plan_wire.py::test_plan_reaches_snapshot_and_survives_restart
+  /home/sas/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/annotationlib.py:169: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x311c0a4f6c0>
+    locals = dict(locals)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/core/test_plan_wire.py::test_plan_reaches_snapshot_and_survives_restart
+  /home/sas/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/annotationlib.py:169: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x31198d72d80>
+    locals = dict(locals)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/core/test_plan_wire.py::test_plan_reaches_snapshot_and_survives_restart
+  /home/sas/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/annotationlib.py:169: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x311bcc02a00>
+    locals = dict(locals)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/core/test_plan_wire.py::test_plan_reaches_snapshot_and_survives_restart
+  /home/sas/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/annotationlib.py:169: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x31194103fe0>
+    locals = dict(locals)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/core/test_plan_wire.py::test_plan_reaches_snapshot_and_survives_restart
+  /home/sas/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/annotationlib.py:169: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x31185a46740>
+    locals = dict(locals)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/core/test_plan_wire.py::test_plan_reaches_snapshot_and_survives_restart
+  /home/sas/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/annotationlib.py:169: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x31189180380>
+    locals = dict(locals)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/core/test_plan_wire.py::test_plan_reaches_snapshot_and_survives_restart
+  /home/sas/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/annotationlib.py:169: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x3119456a2c0>
+    locals = dict(locals)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/core/test_plan_wire.py::test_plan_reaches_snapshot_and_survives_restart
+  /home/sas/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/annotationlib.py:169: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x311884dc080>
+    locals = dict(locals)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/core/test_plan_wire.py::test_plan_reaches_snapshot_and_survives_restart
+  /home/sas/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/annotationlib.py:169: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x311898241a0>
+    locals = dict(locals)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/core/test_plan_wire.py::test_plan_reaches_snapshot_and_survives_restart
+  /home/sas/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/annotationlib.py:169: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x3118504ee00>
+    locals = dict(locals)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/core/test_plan_wire.py::test_plan_reaches_snapshot_and_survives_restart
+  /home/sas/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/annotationlib.py:169: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x31185a7d4a0>
+    locals = dict(locals)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/core/test_plan_wire.py::test_plan_reaches_snapshot_and_survives_restart
+  /home/sas/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/annotationlib.py:169: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x31187d7fa40>
+    locals = dict(locals)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/core/test_plan_wire.py::test_plan_reaches_snapshot_and_survives_restart
+  /home/sas/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/annotationlib.py:169: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x31190053c60>
+    locals = dict(locals)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/core/test_round6_k24.py: 4 warnings
+tests/core/test_sidecar.py: 6 warnings
+tests/core/test_sidecar_resilience.py: 2 warnings
+  /home/sas/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/pty.py:66: DeprecationWarning: This process (pid=80452) is multi-threaded, use of forkpty() may lead to deadlocks in the child.
+    pid, fd = os.forkpty()
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+2181 passed, 1 skipped, 1 deselected, 27 warnings in 468.76s (0:07:48)

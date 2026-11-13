@@ -1,0 +1,1 @@
+distrobox-host-exec /home/sas/Projects/sp_aconsole_prototype/.venv-ui/bin/python /home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/038657e1539f15ad/artifacts/qa33/run.py /home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/038657e1539f15ad/artifacts/qa32/xvfb-package/extracted/usr/bin/Xvfb

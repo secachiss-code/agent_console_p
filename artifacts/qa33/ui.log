@@ -1,0 +1,36 @@
+Collected 0 items to run in parallel
+........................................................................ [ 13%]
+........................................................................ [ 26%]
+........................................................................ [ 40%]
+........................................................................ [ 53%]
+........................................................................ [ 67%]
+........................................................................ [ 80%]
+........................................................................ [ 94%]
+...............................                                          [100%]
+python 3.15.1 gil=True
+
+=============================== warnings summary ===============================
+../../../../../../Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/events.py:803
+  /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/events.py:803: DeprecationWarning: 'asyncio.AbstractEventLoopPolicy' is deprecated and slated for removal in Python 3.16
+    AbstractEventLoopPolicy = getattr(asyncio, "AbstractEventLoopPolicy", object)
+
+tests/gui/front/test_clipboard_routing.py::test_real_clipboard_shortcuts[text]
+  /home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/038657e1539f15ad/tests/gui/front/test_clipboard_routing.py:146: DeprecationWarning: Vte.Pty.close is deprecated
+    pty.close()
+
+tests/gui/front/test_contrast_table.py: 400 warnings
+tests/gui/front/test_ux1_shortcuts.py: 6 warnings
+tests/gui/front/test_watchdog_cleanup.py: 3 warnings
+  /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/events.py:890: DeprecationWarning: 'asyncio.get_event_loop_policy' is deprecated and slated for removal in Python 3.16
+    if not isinstance(_get_event_loop_policy(), GLibEventLoopPolicy):
+
+tests/gui/front/test_git_actions.py::test_stage_commit_and_file_buttons_in_the_inspector
+  /home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/038657e1539f15ad/src/aconsole/ui/views/review/graph_cell.py:113: DeprecationWarning: Gtk.Widget.get_style_context is deprecated
+    _found, background = self.get_style_context().lookup_color("view_bg_color")
+
+tests/gui/front/test_git_actions.py::test_stage_commit_and_file_buttons_in_the_inspector
+  /home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/038657e1539f15ad/src/aconsole/ui/views/review/graph_cell.py:113: DeprecationWarning: Gtk.StyleContext.lookup_color is deprecated
+    _found, background = self.get_style_context().lookup_color("view_bg_color")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+535 passed, 1 deselected, 413 warnings in 160.27s (0:02:40)
