@@ -223,6 +223,13 @@ class HostTabs:
         except (ContainerError, ValueError):
             return ""
 
+    def opencode_version(self, name: str) -> str:
+        """OpenCode v2's static permission schema must match the tested CLI."""
+        try:
+            return self._podman.run_in(name, self._user, (*LOGIN_SHELL, "opencode", "--version"))
+        except (ContainerError, ValueError):
+            return ""
+
     def codex_rate_limits(self, name: str) -> bytes:
         """The `account/rateLimits/read` reply of the container's Codex. Empty when it is stopped or silent."""
         try:

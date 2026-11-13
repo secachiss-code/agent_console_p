@@ -1,0 +1,123 @@
+{
+  "case": "allow-ask",
+  "rules": {
+    "permissions": [
+      {
+        "action": "*",
+        "resource": "*",
+        "effect": "ask"
+      },
+      {
+        "action": "shell",
+        "resource": "pwd",
+        "effect": "allow"
+      },
+      {
+        "action": "shell",
+        "resource": "git status",
+        "effect": "allow"
+      },
+      {
+        "action": "shell",
+        "resource": "git diff",
+        "effect": "allow"
+      },
+      {
+        "action": "shell",
+        "resource": "git log",
+        "effect": "allow"
+      },
+      {
+        "action": "shell",
+        "resource": "git branch",
+        "effect": "allow"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "action": "shell",
+      "resource": "pwd",
+      "response": {
+        "status": 200,
+        "body": {
+          "data": {
+            "id": "per_1d6ddf3ba001QCkLWxRKHMR22w",
+            "effect": "allow"
+          }
+        }
+      }
+    },
+    {
+      "action": "shell",
+      "resource": "touch marker",
+      "response": {
+        "status": 200,
+        "body": {
+          "data": {
+            "id": "per_1d6ddf3be001yKWTRnqWOMfCck",
+            "effect": "allow"
+          }
+        }
+      }
+    },
+    {
+      "action": "shell",
+      "resource": "rm -f marker",
+      "response": {
+        "status": 200,
+        "body": {
+          "data": {
+            "id": "per_1d6ddf3c8001K364k8Ls6nT0hr",
+            "effect": "allow"
+          }
+        }
+      }
+    },
+    {
+      "action": "edit",
+      "resource": "marker",
+      "response": {
+        "status": 200,
+        "body": {
+          "data": {
+            "id": "per_1d6ddf3cc001IEneBeZQJOzBEW",
+            "effect": "allow"
+          }
+        }
+      }
+    },
+    {
+      "action": "mcp_unknown_execute",
+      "resource": "*",
+      "response": {
+        "status": 200,
+        "body": {
+          "data": {
+            "id": "per_1d6ddf3d7001kCBPULCLsUBzAh",
+            "effect": "ask"
+          }
+        }
+      }
+    }
+  ],
+  "pending": {
+    "status": 200,
+    "body": {
+      "data": [
+        {
+          "id": "per_1d6ddf3d7001kCBPULCLsUBzAh",
+          "sessionID": "ses_e29220d2dffe20o57A3tvubHIS",
+          "action": "mcp_unknown_execute",
+          "resources": [
+            "*"
+          ]
+        }
+      ]
+    }
+  },
+  "unauthenticated": {
+    "status": 401,
+    "body": "{\"_tag\":\"UnauthorizedError\",\"message\":\"Authentication required\"}"
+  }
+}

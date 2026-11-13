@@ -1,0 +1,26 @@
+{
+  "status": 200,
+  "body": {
+    "data": {
+      "id": "ses_e2922062bffe3PAwU9838kkuZj",
+      "projectID": "0a8734cd01ea6a81ed49e1c82bc77349ab5321de",
+      "cost": 0,
+      "tokens": {
+        "input": 0,
+        "output": 0,
+        "reasoning": 0,
+        "cache": {
+          "read": 0,
+          "write": 0
+        }
+      },
+      "time": {
+        "created": 1794606234410,
+        "updated": 1794606234410
+      },
+      "location": {
+        "directory": "/tmp/aconsole-apr6-izvweuny"
+      }
+    }
+  }
+}

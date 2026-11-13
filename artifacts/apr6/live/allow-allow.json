@@ -1,0 +1,89 @@
+{
+  "case": "allow-allow",
+  "rules": {
+    "permissions": [
+      {
+        "action": "*",
+        "resource": "*",
+        "effect": "allow"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "action": "shell",
+      "resource": "pwd",
+      "response": {
+        "status": 200,
+        "body": {
+          "data": {
+            "id": "per_1d6ddf7b2001QB7dk7nuEdQg3A",
+            "effect": "allow"
+          }
+        }
+      }
+    },
+    {
+      "action": "shell",
+      "resource": "touch marker",
+      "response": {
+        "status": 200,
+        "body": {
+          "data": {
+            "id": "per_1d6ddf7b6001NGikA5OgXsV5MW",
+            "effect": "allow"
+          }
+        }
+      }
+    },
+    {
+      "action": "shell",
+      "resource": "rm -f marker",
+      "response": {
+        "status": 200,
+        "body": {
+          "data": {
+            "id": "per_1d6ddf7c0001PJSq3FlNXgl2WA",
+            "effect": "allow"
+          }
+        }
+      }
+    },
+    {
+      "action": "edit",
+      "resource": "marker",
+      "response": {
+        "status": 200,
+        "body": {
+          "data": {
+            "id": "per_1d6ddf7cb001OA9spGQoCmzxJ4",
+            "effect": "allow"
+          }
+        }
+      }
+    },
+    {
+      "action": "mcp_unknown_execute",
+      "resource": "*",
+      "response": {
+        "status": 200,
+        "body": {
+          "data": {
+            "id": "per_1d6ddf7ce001z1Begxp8uKcqkH",
+            "effect": "allow"
+          }
+        }
+      }
+    }
+  ],
+  "pending": {
+    "status": 200,
+    "body": {
+      "data": []
+    }
+  },
+  "unauthenticated": {
+    "status": 401,
+    "body": "{\"_tag\":\"UnauthorizedError\",\"message\":\"Authentication required\"}"
+  }
+}

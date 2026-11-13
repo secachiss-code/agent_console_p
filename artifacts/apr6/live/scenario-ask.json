@@ -1,0 +1,98 @@
+{
+  "case": "scenario-ask",
+  "rules": {
+    "permissions": [
+      {
+        "action": "*",
+        "resource": "*",
+        "effect": "ask"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "action": "shell",
+      "resource": "pwd",
+      "response": {
+        "status": 200,
+        "body": {
+          "data": {
+            "id": "per_1d6ddfee2001ltnAmMw8uPxD1d",
+            "effect": "allow"
+          }
+        }
+      }
+    },
+    {
+      "action": "shell",
+      "resource": "touch marker",
+      "response": {
+        "status": 200,
+        "body": {
+          "data": {
+            "id": "per_1d6ddfeee001rLP2kLfk1X5Ue3",
+            "effect": "allow"
+          }
+        }
+      }
+    },
+    {
+      "action": "shell",
+      "resource": "rm -f marker",
+      "response": {
+        "status": 200,
+        "body": {
+          "data": {
+            "id": "per_1d6ddfef4001VxoLiThzHE80RF",
+            "effect": "allow"
+          }
+        }
+      }
+    },
+    {
+      "action": "edit",
+      "resource": "marker",
+      "response": {
+        "status": 200,
+        "body": {
+          "data": {
+            "id": "per_1d6ddfefb0010B4Mun7dzFIiTf",
+            "effect": "allow"
+          }
+        }
+      }
+    },
+    {
+      "action": "mcp_unknown_execute",
+      "resource": "*",
+      "response": {
+        "status": 200,
+        "body": {
+          "data": {
+            "id": "per_1d6ddff03001jsVgTdEigZi8Cw",
+            "effect": "ask"
+          }
+        }
+      }
+    }
+  ],
+  "pending": {
+    "status": 200,
+    "body": {
+      "data": [
+        {
+          "id": "per_1d6ddff03001jsVgTdEigZi8Cw",
+          "sessionID": "ses_e2922028cffeVWNOw5Xg31kl8J",
+          "action": "mcp_unknown_execute",
+          "resources": [
+            "*"
+          ]
+        }
+      ]
+    }
+  },
+  "unauthenticated": {
+    "status": 401,
+    "body": "{\"_tag\":\"UnauthorizedError\",\"message\":\"Authentication required\"}"
+  }
+}

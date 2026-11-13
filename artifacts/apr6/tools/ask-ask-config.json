@@ -1,0 +1,19 @@
+{
+  "permissions": [
+    {
+      "action": "*",
+      "resource": "*",
+      "effect": "ask"
+    }
+  ],
+  "update": "disable",
+  "model": "anthropic/claude-sonnet-4-6",
+  "providers": {
+    "anthropic": {
+      "settings": {
+        "baseURL": "http://127.0.0.1:45005/v1",
+        "apiKey": "probe-only"
+      }
+    }
+  }
+}

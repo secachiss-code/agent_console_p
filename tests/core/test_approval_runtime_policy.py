@@ -132,3 +132,35 @@ def test_automatic_policy_cannot_fall_back_to_an_unprotected_cli(tmp_path: Path,
     assert argv[:2] == ("/bin/sh", "-c")
     assert "exit 1" in argv[2]
     assert not commands.policy_ready("tab")
+
+
+@pytest.mark.parametrize("mode", ["allow", "deny"])
+def test_opencode_static_policy_requires_the_tested_version(mode: str) -> None:
+    from aconsole.contracts.common import AgentKind
+
+    commands = HostAgentCommands(lambda _container: None,
+        approval_choice=lambda _tab: ApprovalPolicyChoice(mode=ApprovalPolicyMode(mode)),
+        opencode_version=lambda _container: "1.0.0",
+    )
+    argv = commands.command(AgentKind.OPENCODE, "tab", "test-only", "agent-opencode", "8765")
+    assert argv is not None
+    assert argv[:2] == ("/bin/sh", "-c")
+    assert "exit 1" in argv[2]
+    assert "approval_policy_static" not in commands.capabilities(AgentKind.OPENCODE)
+
+
+def test_opencode_launch_uses_the_project_policy_in_the_server_configuration() -> None:
+    from aconsole.contracts.common import AgentKind
+
+    commands = HostAgentCommands(lambda _container: None,
+        approval_choice=lambda _tab: ApprovalPolicyChoice(mode=ApprovalPolicyMode.DENY),
+        opencode_version=lambda _container: "opencode v2.1.2",
+    )
+    argv = commands.command(AgentKind.OPENCODE, "tab", "test-only", "agent-opencode", "8765")
+    assert argv is not None
+    config = json.loads(argv[4])
+    assert config["permissions"] == [{"action": "*", "resource": "*", "effect": "deny"}]
+    assert config["policies"] == [{"action": "tool.use", "resource": "*", "effect": "deny"}]
+    assert "approval_policy_static" in commands.capabilities(AgentKind.OPENCODE)
+    commands.release(AgentKind.OPENCODE, "tab", "agent-opencode")
+    assert "approval_policy_static" not in commands.capabilities(AgentKind.OPENCODE)

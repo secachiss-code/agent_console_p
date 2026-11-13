@@ -11,6 +11,8 @@ import socket
 from dataclasses import dataclass
 from typing import Final, final
 
+from aconsole.core.domain.approval_policy import ApprovalPolicyChoice, ApprovalPolicyMode, DangerousSubmode
+
 _HOST: Final = "127.0.0.1"
 _MARK: Final = "@ACONSOLE_TOKEN@"
 # `$1` config, `$2` server port, the rest goes to the terminal client: `-s <session>`.
@@ -62,15 +64,15 @@ def free_port() -> int:
 class OpenCodeLauncher:
     """Build the command. It starts nothing."""
 
-    def launch(self, ingest_port: int) -> OpenCodeLaunch:
+    def launch(self, ingest_port: int, policy: ApprovalPolicyChoice | None = None) -> OpenCodeLaunch:
         port = free_port()
         return OpenCodeLaunch(
-            argv=("/bin/sh", "-c", _SCRIPT, "aconsole-opencode", _config(ingest_port), str(port)),
+            argv=("/bin/sh", "-c", _SCRIPT, "aconsole-opencode", _config(ingest_port, policy), str(port)),
             server_port=port,
         )
 
 
-def _config(ingest_port: int) -> str:
+def _config(ingest_port: int, policy: ApprovalPolicyChoice | None = None) -> str:
     server = {
         "type": "remote",
         "url": f"http://{_HOST}:{ingest_port}/mcp",
@@ -78,4 +80,19 @@ def _config(ingest_port: int) -> str:
         "oauth": False,
         "headers": {"Authorization": f"Bearer {_MARK}"},
     }
-    return json.dumps({"mcp": {"aconsole": server}}, separators=(",", ":"))
+    choice = ApprovalPolicyChoice() if policy is None else policy
+    effect = "ask"
+    if choice.mode is ApprovalPolicyMode.DENY:
+        effect = "deny"
+    elif choice.mode is ApprovalPolicyMode.ALLOW and choice.dangerous is DangerousSubmode.ALLOW:
+        effect = "allow"
+    rules = [{"action": "*", "resource": "*", "effect": effect}]
+    if choice.mode is ApprovalPolicyMode.ALLOW and choice.dangerous is DangerousSubmode.ASK:
+        # Static rules cannot run AConsole's classifier. Auto-allow only exact,
+        # argument-free inspection commands; everything else keeps native approval.
+        rules.extend({"action": "shell", "resource": command, "effect": "allow"}
+                     for command in ("pwd", "git status", "git diff", "git log", "git branch"))
+    document: dict[str, object] = {"mcp": {"servers": {"aconsole": server}}, "permissions": rules}
+    if choice.mode is ApprovalPolicyMode.DENY:
+        document["policies"] = [{"action": "tool.use", "resource": "*", "effect": "deny"}]
+    return json.dumps(document, separators=(",", ":"))

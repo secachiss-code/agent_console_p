@@ -1,0 +1,30 @@
+[
+  {
+    "path": "/doc",
+    "status": 200,
+    "bytes": 6962
+  },
+  {
+    "path": "/openapi.json",
+    "status": 200,
+    "bytes": 281456
+  },
+  {
+    "path": "/api/doc",
+    "error": "HTTP Error 404: Not Found"
+  },
+  {
+    "path": "/api/openapi.json",
+    "error": "HTTP Error 404: Not Found"
+  },
+  {
+    "path": "/api/config",
+    "status": 200,
+    "bytes": 83
+  },
+  {
+    "path": "/config",
+    "status": 200,
+    "bytes": 6962
+  }
+]

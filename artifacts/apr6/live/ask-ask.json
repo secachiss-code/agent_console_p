@@ -1,0 +1,106 @@
+{
+  "case": "ask-ask",
+  "rules": {
+    "permissions": [
+      {
+        "action": "*",
+        "resource": "*",
+        "effect": "ask"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "action": "shell",
+      "resource": "pwd",
+      "response": {
+        "status": 200,
+        "body": {
+          "data": {
+            "id": "per_1d6ddf002001oTlP5VN1yLN7B5",
+            "effect": "allow"
+          }
+        }
+      }
+    },
+    {
+      "action": "shell",
+      "resource": "touch marker",
+      "response": {
+        "status": 200,
+        "body": {
+          "data": {
+            "id": "per_1d6ddf00e001yjn7MvJFXhnFAt",
+            "effect": "allow"
+          }
+        }
+      }
+    },
+    {
+      "action": "shell",
+      "resource": "rm -f marker",
+      "response": {
+        "status": 200,
+        "body": {
+          "data": {
+            "id": "per_1d6ddf014001QAkX1oDcYiJ4zn",
+            "effect": "allow"
+          }
+        }
+      }
+    },
+    {
+      "action": "edit",
+      "resource": "marker",
+      "response": {
+        "status": 200,
+        "body": {
+          "data": {
+            "id": "per_1d6ddf01f0013StiBlcM6We0lU",
+            "effect": "ask"
+          }
+        }
+      }
+    },
+    {
+      "action": "mcp_unknown_execute",
+      "resource": "*",
+      "response": {
+        "status": 200,
+        "body": {
+          "data": {
+            "id": "per_1d6ddf02a0019XQbv2me8PKSh8",
+            "effect": "ask"
+          }
+        }
+      }
+    }
+  ],
+  "pending": {
+    "status": 200,
+    "body": {
+      "data": [
+        {
+          "id": "per_1d6ddf01f0013StiBlcM6We0lU",
+          "sessionID": "ses_e29221159ffeCZBfVVUuuhMEWG",
+          "action": "edit",
+          "resources": [
+            "marker"
+          ]
+        },
+        {
+          "id": "per_1d6ddf02a0019XQbv2me8PKSh8",
+          "sessionID": "ses_e29221159ffeCZBfVVUuuhMEWG",
+          "action": "mcp_unknown_execute",
+          "resources": [
+            "*"
+          ]
+        }
+      ]
+    }
+  },
+  "unauthenticated": {
+    "status": 401,
+    "body": "{\"_tag\":\"UnauthorizedError\",\"message\":\"Authentication required\"}"
+  }
+}

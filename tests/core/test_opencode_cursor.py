@@ -200,7 +200,7 @@ esac""",
     assert f"serve serve --hostname 127.0.0.1 --port {port} pw={_TOKEN}" in lines
     assert f"client --server http://127.0.0.1:{port} -s ses_1" in lines
     config = json.loads((tmp_path / "config").read_text(encoding="utf-8"))
-    server = config["mcp"]["aconsole"]
+    server = config["mcp"]["servers"]["aconsole"]
     assert server["url"] == "http://127.0.0.1:8765/mcp"
     assert server["type"] == "remote"
     assert server["headers"]["Authorization"] == f"Bearer {_TOKEN}"

@@ -1,0 +1,23 @@
+{
+  "case": "deny-ask",
+  "exit": 0,
+  "executed": false,
+  "requests": [
+    {
+      "path": "/v1/messages?beta=true",
+      "tools": []
+    },
+    {
+      "path": "/v1/messages?beta=true",
+      "tools": []
+    },
+    {
+      "path": "/v1/messages?beta=true",
+      "tools": []
+    },
+    {
+      "path": "/v1/messages?beta=true",
+      "tools": []
+    }
+  ]
+}

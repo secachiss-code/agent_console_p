@@ -529,6 +529,7 @@ class Daemon:
             codex_issue=self._codex_hook_issue,
             approval_choice=self.tabs.approval_choice,
             claude_version=self._host.claude_version,
+            opencode_version=self._host.opencode_version,
         )
         self._agents_source: Callable[[], tuple[AgentInfo, ...]] = HostAgents(
             self._host.inspect_container, signed_in=self._host.signed_in,

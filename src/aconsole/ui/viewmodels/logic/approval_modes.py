@@ -53,6 +53,8 @@ def harness_effect_key(capabilities: frozenset[str]) -> str:
     """What this CLI does today. Hooks can ask; none of them apply allow or deny yet."""
     if "approval_policy" in capabilities:
         return "prefs.harness_policy"
+    if "approval_policy_static" in capabilities:
+        return "prefs.harness_opencode_policy"
     if "hooks" not in capabilities:
         return NO_HOOKS
     return STILL_ASKS

@@ -2020,3 +2020,6 @@ msgstr "Answer in the terminal. There is no approval card for this request."
 
 msgid "tabs.no_hooks"
 msgstr "No hooks: requests stay in the agent's terminal"
+
+msgid "prefs.harness_opencode_policy"
+msgstr "OpenCode v2.1.2: modes apply to new sessions; prompts stay in the terminal. With dangerous calls set to ask, only exact pwd and git status/diff/log/branch commands without arguments are automatic; other calls ask. Protecting settings requires filesystem isolation."

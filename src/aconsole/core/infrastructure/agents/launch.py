@@ -45,10 +45,13 @@ class HostAgentCommands:
         codex_issue: Callable[[str, str], None] | None = None,
         approval_choice: Callable[[str], ApprovalPolicyChoice] | None = None,
         claude_version: Callable[[str], str] | None = None,
+        opencode_version: Callable[[str], str] | None = None,
     ) -> None:
         self._home_of = home_of
         self._approval_choice = approval_choice
         self._claude_version = claude_version
+        self._opencode_version = opencode_version
+        self._opencode_policy_tabs: set[str] = set()
         self._policy_tabs: set[str] = set()
         self._codex_hooks = codex_hooks
         self._codex_issue = codex_issue
@@ -70,10 +73,10 @@ class HostAgentCommands:
         number = int(port) if port.isdecimal() else _NO_PORT
         if agent is AgentKind.CLAUDE:
             return self._claude_command(container, tab_id, token, number)
+        if agent is AgentKind.OPENCODE:
+            return self._opencode_command(container, tab_id, token, number)
         if number == _NO_PORT or agent not in {AgentKind.CLAUDE, AgentKind.CODEX, AgentKind.OPENCODE, AgentKind.CURSOR}:
             return None
-        if agent is AgentKind.OPENCODE:
-            return self._open_opencode(tab_id, token, number)
         home = self._home_of(container)
         if home is None:
             return None
@@ -88,6 +91,21 @@ class HostAgentCommands:
 
     def _automatic(self, tab_id: str) -> bool:
         return self._approval_choice is not None and self._approval_choice(tab_id).mode.value in {"allow", "deny"}
+
+    def _opencode_command(self, container: str, tab_id: str, token: str, port: int) -> tuple[str, ...] | None:
+        self._opencode_policy_tabs.discard(tab_id)
+        supported = (self._opencode_version is not None
+                     and self._opencode_version(container).strip() == "opencode v2.1.2")
+        if port == _NO_PORT or (self._automatic(tab_id) and not supported):
+            if not self._automatic(tab_id):
+                return None
+            message = "echo 'AConsole: automatic policy requires verified OpenCode v2.1.2 and ingest' >&2; exit 1"
+            return ("/bin/sh", "-c", message)
+        choice = ApprovalPolicyChoice() if self._approval_choice is None else self._approval_choice(tab_id)
+        argv = self._open_opencode(tab_id, token, port, choice)
+        if supported:
+            self._opencode_policy_tabs.add(tab_id)
+        return argv
 
     @staticmethod
     def _policy_unavailable() -> tuple[str, ...]:
@@ -150,6 +168,8 @@ class HostAgentCommands:
         names = CAPABILITIES[DomainAgent(kind.value)].names()
         if kind is AgentKind.CLAUDE and self._policy_tabs:
             return names | {"approval_policy"}
+        if kind is AgentKind.OPENCODE and self._opencode_policy_tabs:
+            return names | {"approval_policy_static"}
         if kind is AgentKind.CODEX and self._codex_ready:
             return names | {"hooks", "approvals", "checkpoints"}
         return names
@@ -158,6 +178,7 @@ class HostAgentCommands:
         """Stop the tab's event stream and drop its Claude settings. The shared scripts stay."""
         self._stop_stream(tab_id)
         self._policy_tabs.discard(tab_id)
+        self._opencode_policy_tabs.discard(tab_id)
         home = self._home_of(container)
         if home is None or agent is not AgentKind.CLAUDE:
             return
@@ -205,9 +226,11 @@ class HostAgentCommands:
         for tab_id in tuple(self._servers.keys() | self._streams.keys()):
             self._stop_stream(tab_id)
 
-    def _open_opencode(self, tab_id: str, token: str, ingest_port: int) -> tuple[str, ...]:
+    def _open_opencode(
+        self, tab_id: str, token: str, ingest_port: int, policy: ApprovalPolicyChoice,
+    ) -> tuple[str, ...]:
         """A new terminal is a new server on a new port, so an older stream of this tab has nothing left to read."""
-        launch = self._opencode.launch(ingest_port)
+        launch = self._opencode.launch(ingest_port, policy)
         self._stop_stream(tab_id)
         self._servers[tab_id] = (launch.server_port, token)
         heard = self._opencode_heard
