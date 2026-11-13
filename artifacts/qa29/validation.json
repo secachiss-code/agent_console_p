@@ -1,0 +1,226 @@
+{
+  "control": {
+    "bare": {
+      "window": {
+        "width": 1280,
+        "height": 800,
+        "padding": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "pane": {
+        "width": 1280,
+        "height": 800,
+        "padding": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "list": {
+        "width": 620,
+        "height": 766,
+        "padding": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "scroller": {
+        "width": 620,
+        "height": 766,
+        "padding": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "toolbar": {
+        "width": 1280,
+        "height": 34,
+        "padding": [
+          0,
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    "styled": {
+      "window": {
+        "width": 1280,
+        "height": 800,
+        "padding": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "pane": {
+        "width": 1280,
+        "height": 800,
+        "padding": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "list": {
+        "width": 620,
+        "height": 754,
+        "padding": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "scroller": {
+        "width": 620,
+        "height": 754,
+        "padding": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "toolbar": {
+        "width": 1248,
+        "height": 34,
+        "padding": [
+          6,
+          16,
+          6,
+          16
+        ]
+      }
+    },
+    "removed": {
+      "window": {
+        "width": 1280,
+        "height": 800,
+        "padding": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "pane": {
+        "width": 1280,
+        "height": 800,
+        "padding": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "list": {
+        "width": 620,
+        "height": 766,
+        "padding": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "scroller": {
+        "width": 620,
+        "height": 766,
+        "padding": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "toolbar": {
+        "width": 1280,
+        "height": 34,
+        "padding": [
+          0,
+          0,
+          0,
+          0
+        ]
+      }
+    }
+  },
+  "preserved": {
+    "base": "07e4f2b3b0d90a6ad68a0dc38fa518c5f9533d72",
+    "paths": [
+      "src",
+      "tools",
+      "tests/gui/snapshots",
+      "artifacts/qa26",
+      "artifacts/qa27",
+      "artifacts/qa28"
+    ]
+  },
+  "runs": {
+    "control": {
+      "tests": 1,
+      "failures": [],
+      "returncode": 0,
+      "duration": "5.523"
+    },
+    "focused": {
+      "tests": 17,
+      "failures": [
+        "test_styles_are_removed_and_other_provider_survives[False]",
+        "test_styles_are_removed_and_other_provider_survives[True]"
+      ],
+      "returncode": 1,
+      "duration": "39.673"
+    },
+    "focused-fixed": {
+      "tests": 17,
+      "failures": [],
+      "returncode": 0,
+      "duration": "17.931"
+    },
+    "scale": {
+      "tests": 2,
+      "failures": [],
+      "returncode": 0,
+      "duration": "13.708"
+    }
+  },
+  "focused_scale_overlap_seconds": 3.230838,
+  "scale_report": "git scale: 10000 rows, 174 frames in 4 s, median 17.1 ms, p95 35.1 ms, worst 67.7 ms, RSS 260 MB (start 198, first page 244, all rows 258 after 3.0 s)",
+  "performance_acceptance_claimed": false,
+  "evidence_hashes": {
+    "artifacts/qa29/REPORT.md": "45d1bbdedf42137b9f3e0d3c1f49598c25aba53bc36f7c3b021727759856b51c",
+    "artifacts/qa29/control/pytest.log": "8e311eae0e323c6e09c0721fdd21d8d04f68a501e665ef4d66cc45cb3f18c86a",
+    "artifacts/qa29/control/pytest.xml": "656716e667d9ab03e0d12929295237d4ca486728aaf4424a906271d533d1b948",
+    "artifacts/qa29/control/run.json": "29e88415530e7ff41c8d46d1051335fa6784fb89688f33dd09829eb573847a09",
+    "artifacts/qa29/control.json": "2c279b6809a4dd1a5c3bd0292ce9af608d9d634581f1b8803991d61b3405e8a0",
+    "artifacts/qa29/focused/environment.json": "59dc6afced4d5cda66d5531940cd30e82bdb780cadd018c673f2d23b01a16f66",
+    "artifacts/qa29/focused/pytest.log": "d0bdb7814045a489cf8ae5028bf7da1c46d5ca06e24dbc7f44c3a750966e1987",
+    "artifacts/qa29/focused/pytest.xml": "614ba5b190eda59781c4653c1c773c96b6c74396af52badbe58ce3ed632988dc",
+    "artifacts/qa29/focused/run.json": "b9652a02006f339677a5b623674ac4690f00f51bfaee5b261f0583f2d1ad4f8f",
+    "artifacts/qa29/focused-fixed/environment.json": "45f241f92a25cb73fbe27fb5bb5ff7cfef711a03887d185398ef33841e342c6c",
+    "artifacts/qa29/focused-fixed/pytest.log": "b48df128d987d033749f9747dfdc2c0a3028bfe928c216e83b17ba7e33bd15a3",
+    "artifacts/qa29/focused-fixed/pytest.xml": "fce3c565e70b2a1a8bd13aad8b4fc3c7766f3ed823010cf9867f2a6df845856b",
+    "artifacts/qa29/focused-fixed/run.json": "aab486816bcc604f2b56356f8cf81da12d8dd2661e59304449e64ddef107c154",
+    "artifacts/qa29/run.py": "3bec2b071639218b075d40694a7b53fc95fabdacb9cae80e15d6edb1ac7dc8ec",
+    "artifacts/qa29/scale/environment.json": "45f241f92a25cb73fbe27fb5bb5ff7cfef711a03887d185398ef33841e342c6c",
+    "artifacts/qa29/scale/pytest.log": "b57106cb40ee24fd92a5ce79361aaeeb8c2167df33def4733d22c75f45173b0e",
+    "artifacts/qa29/scale/pytest.xml": "cde5de813b2ebd28ea9677de9e4e544d97b1a30b58a08ad0409cfc119efa9831",
+    "artifacts/qa29/scale/run.json": "880e8a5e662c2aae0712e832914a979e0953dd5e5423c4a77fdb1ff4119d424c",
+    "artifacts/qa29/scale/scale.txt": "cf97ab6685985ffb78ee829a945da0c10421bf44120239fe28e5310ccf0be8a3",
+    "artifacts/qa29/test_css_control.py": "9f5c313c3249cca9038fbcdbace35d3b0f47dd5b0350f9a72421d940dc1bea40",
+    "artifacts/qa29/verify.py": "9326b41e82ecc34043e496e5686392cb5fbe2a2a6a85f561809e5b181bd6f1cb"
+  }
+}

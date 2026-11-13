@@ -1,0 +1,25 @@
+Collected 0 items to run in parallel
+.                                                                        [100%]
+=============================== warnings summary ===============================
+artifacts/qa29/test_css_control.py:11
+  /home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/038657e1539f15ad/artifacts/qa29/test_css_control.py:11: PyGIWarning: Gdk was imported without specifying a version first. Use gi.require_version('Gdk', '4.0') before import to ensure that the right version gets loaded.
+    from gi.repository import Gdk, Gtk  # noqa: E402
+
+../../../../../../Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/events.py:803
+  /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/events.py:803: DeprecationWarning: 'asyncio.AbstractEventLoopPolicy' is deprecated and slated for removal in Python 3.16
+    AbstractEventLoopPolicy = getattr(asyncio, "AbstractEventLoopPolicy", object)
+
+artifacts/qa29/test_css_control.py::test_bare_styled_removed
+  /home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/038657e1539f15ad/src/aconsole/ui/views/review/graph_cell.py:113: DeprecationWarning: Gtk.Widget.get_style_context is deprecated
+    _found, background = self.get_style_context().lookup_color("view_bg_color")
+
+artifacts/qa29/test_css_control.py::test_bare_styled_removed
+  /home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/038657e1539f15ad/src/aconsole/ui/views/review/graph_cell.py:113: DeprecationWarning: Gtk.StyleContext.lookup_color is deprecated
+    _found, background = self.get_style_context().lookup_color("view_bg_color")
+
+artifacts/qa29/test_css_control.py::test_bare_styled_removed
+  /home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/038657e1539f15ad/artifacts/qa29/test_css_control.py:44: DeprecationWarning: Gtk.StyleContext.get_padding is deprecated
+    "padding": [getattr(widget.get_style_context().get_padding(), edge)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+1 passed, 5 warnings in 5.53s

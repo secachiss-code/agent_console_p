@@ -17,8 +17,6 @@ sys.path.insert(0, str(_ROOT / "tools"))
 
 import contrast_check  # noqa: E402
 
-from aconsole.ui.style import stylesheet  # noqa: E402
-
 _ALLOWED_DRIFT = 1 / 255 + 1e-6
 _FLOOR = (1, 5)
 
@@ -29,6 +27,7 @@ def _settle() -> None:
         _ = context.iteration(False)  # noqa: FBT003 -- GLib names this argument only in C
 
 
+@pytest.mark.usefixtures("production_css")
 def test_the_table_is_the_floor_theme_and_the_dim_label_is_readable() -> None:
     _ = Adw.init()
     if (Adw.get_major_version(), Adw.get_minor_version()) != _FLOOR:
@@ -38,10 +37,6 @@ def test_the_table_is_the_floor_theme_and_the_dim_label_is_readable() -> None:
     names = sorted(contrast_check.LIGHT_THEME)
     probes = Gtk.CssProvider()
     probes.load_from_string("".join(f".probe-{name} {{ color: @{name}; }}" for name in names))
-    sheet = Gtk.CssProvider()
-    sheet.load_from_string(stylesheet())
-    Gtk.StyleContext.add_provider_for_display(display, probes, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
-    Gtk.StyleContext.add_provider_for_display(display, sheet, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
     box = Gtk.Box()
     labels: dict[str, Gtk.Label] = {}
     for name in names:
@@ -54,7 +49,9 @@ def test_the_table_is_the_floor_theme_and_the_dim_label_is_readable() -> None:
     window = Gtk.Window(child=box)
     window.present()
     manager = Adw.StyleManager.get_default()
+    previous_scheme = manager.get_color_scheme()
     schemes = {"light": Adw.ColorScheme.FORCE_LIGHT, "dark": Adw.ColorScheme.FORCE_DARK}
+    Gtk.StyleContext.add_provider_for_display(display, probes, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
     try:
         for theme, scheme in schemes.items():
             manager.set_color_scheme(scheme)
@@ -66,5 +63,6 @@ def test_the_table_is_the_floor_theme_and_the_dim_label_is_readable() -> None:
                 assert seen == pytest.approx(expected, abs=_ALLOWED_DRIFT), f"{theme}: {name}"
             assert dim.get_opacity() == pytest.approx(1.0)
     finally:
-        manager.set_color_scheme(Adw.ColorScheme.DEFAULT)
+        Gtk.StyleContext.remove_provider_for_display(display, probes)
+        manager.set_color_scheme(previous_scheme)
         window.destroy()

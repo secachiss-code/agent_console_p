@@ -15,6 +15,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Final
 
 import gi
+import pytest
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
@@ -23,8 +24,9 @@ from gi.repository import Gtk  # noqa: E402
 
 from tests.gui.front.test_git_pane import _GIT, _git, _on_pane, _project, _settled  # noqa: E402
 
+pytestmark = pytest.mark.usefixtures("production_css")
+
 if TYPE_CHECKING:
-    import pytest
     from gi.repository import Adw, Gdk
 
     from aconsole.ui.views.review.git_pane import GitPane

@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="2" skipped="0" tests="17" time="39.673" timestamp="2026-11-13T21:48:49.285935+03:00" hostname="somovasnbook14"><testcase classname="tests.gui.front.test_css_lifecycle" name="test_styles_are_removed_and_other_provider_survives[False]" time="0.164"><failure message="assert 1.0 == 0.37 ± 0,00392157&#10;  &#10;  comparison failed&#10;  Obtained: 1.0&#10;  Expected: 0.37 ± 0,00392157">fail = False
+
+    @pytest.mark.parametrize("fail", [False, True])
+    def test_styles_are_removed_and_other_provider_survives(*, fail: bool) -&gt; None:
+        Adw.init()
+        display = Gdk.Display.get_default()
+        assert display is not None
+        other_provider = Gtk.CssProvider()
+        other_provider.load_from_string(".qa29-sentinel { opacity: 0.37; }")
+        Gtk.StyleContext.add_provider_for_display(display, other_provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+        toolbar = Gtk.Box(css_classes=["ac-git-toolbar", "qa29-sentinel"])
+        window = Gtk.Window(child=toolbar)
+        window.present()
+    
+        def padding() -&gt; list[int]:
+            _settle()
+            value = toolbar.get_style_context().get_padding()
+            return [value.top, value.right, value.bottom, value.left]
+    
+        def styled() -&gt; None:
+            with production_styles():
+                assert padding() == [6, 16, 6, 16]
+                if fail:
+                    message = "deliberate CSS owner failure"
+                    raise RuntimeError(message)
+    
+        try:
+            assert padding() == [0, 0, 0, 0]
+            if fail:
+                with pytest.raises(RuntimeError, match="deliberate CSS owner failure"):
+                    styled()
+            else:
+                styled()
+            assert padding() == [0, 0, 0, 0]
+&gt;           assert toolbar.get_opacity() == pytest.approx(0.37, abs=1 / 255)
+E           assert 1.0 == 0.37 ± 0,00392157
+E             
+E             comparison failed
+E             Obtained: 1.0
+E             Expected: 0.37 ± 0,00392157
+
+tests/gui/front/test_css_lifecycle.py:52: AssertionError</failure></testcase><testcase classname="tests.gui.front.test_css_lifecycle" name="test_styles_are_removed_and_other_provider_survives[True]" time="0.035"><failure message="assert 1.0 == 0.37 ± 0,00392157&#10;  &#10;  comparison failed&#10;  Obtained: 1.0&#10;  Expected: 0.37 ± 0,00392157">fail = True
+
+    @pytest.mark.parametrize("fail", [False, True])
+    def test_styles_are_removed_and_other_provider_survives(*, fail: bool) -&gt; None:
+        Adw.init()
+        display = Gdk.Display.get_default()
+        assert display is not None
+        other_provider = Gtk.CssProvider()
+        other_provider.load_from_string(".qa29-sentinel { opacity: 0.37; }")
+        Gtk.StyleContext.add_provider_for_display(display, other_provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+        toolbar = Gtk.Box(css_classes=["ac-git-toolbar", "qa29-sentinel"])
+        window = Gtk.Window(child=toolbar)
+        window.present()
+    
+        def padding() -&gt; list[int]:
+            _settle()
+            value = toolbar.get_style_context().get_padding()
+            return [value.top, value.right, value.bottom, value.left]
+    
+        def styled() -&gt; None:
+            with production_styles():
+                assert padding() == [6, 16, 6, 16]
+                if fail:
+                    message = "deliberate CSS owner failure"
+                    raise RuntimeError(message)
+    
+        try:
+            assert padding() == [0, 0, 0, 0]
+            if fail:
+                with pytest.raises(RuntimeError, match="deliberate CSS owner failure"):
+                    styled()
+            else:
+                styled()
+            assert padding() == [0, 0, 0, 0]
+&gt;           assert toolbar.get_opacity() == pytest.approx(0.37, abs=1 / 255)
+E           assert 1.0 == 0.37 ± 0,00392157
+E             
+E             comparison failed
+E             Obtained: 1.0
+E             Expected: 0.37 ± 0,00392157
+
+tests/gui/front/test_css_lifecycle.py:52: AssertionError</failure></testcase><testcase classname="tests.gui.front.test_contrast_table" name="test_the_table_is_the_floor_theme_and_the_dim_label_is_readable" time="0.261" /><testcase classname="tests.gui.front.test_git_pane" name="test_graph_rows_and_inspector_on_a_real_repository" time="4.526" /><testcase classname="tests.gui.front.test_git_pane" name="test_long_history_loads_in_pages" time="3.325" /><testcase classname="tests.gui.front.test_git_pane" name="test_behind_dirty_and_conflict_are_separate_badges" time="0.001" /><testcase classname="tests.gui.front.test_git_actions" name="test_stage_commit_and_file_buttons_in_the_inspector" time="3.570" /><testcase classname="tests.gui.front.test_git_actions" name="test_merge_removes_the_worktree_unless_told_not_to" time="4.162" /><testcase classname="tests.gui.front.test_git_actions" name="test_a_conflicted_rebase_offers_abort_and_a_stale_commit_is_refused" time="3.954" /><testcase classname="tests.gui.front.test_git_actions" name="test_restore_a_file_from_a_commit" time="3.495" /><testcase classname="tests.gui.front.test_git_actions" name="test_what_a_row_offers" time="0.001" /><testcase classname="tests.gui.front.test_git_actions" name="test_a_tab_shows_its_branch_node_and_size" time="0.001" /><testcase classname="tests.gui.front.test_git_actions" name="test_the_sidebar_item_follows_git_state" time="0.002" /><testcase classname="tests.gui.front.test_git_actions" name="test_the_facts_banner_shows_what_the_core_found" time="3.441" /><testcase classname="tests.gui.front.test_git_history_keyboard" name="test_native_history_keys_update_selection_and_inspector" time="3.519" /><testcase classname="tests.gui.front.test_git_truth" name="test_the_page_says_what_git_says" time="3.694" /><testcase classname="tests.gui.front.test_work_sessions" name="test_session_picker_rename_archive_and_resume" time="5.093" /></testsuite></testsuites>

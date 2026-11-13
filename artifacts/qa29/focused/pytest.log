@@ -1,0 +1,118 @@
+Collected 0 items to run in parallel
+FF...............                                                        [100%]
+=================================== FAILURES ===================================
+__________ test_styles_are_removed_and_other_provider_survives[False] __________
+
+fail = False
+
+    @pytest.mark.parametrize("fail", [False, True])
+    def test_styles_are_removed_and_other_provider_survives(*, fail: bool) -> None:
+        Adw.init()
+        display = Gdk.Display.get_default()
+        assert display is not None
+        other_provider = Gtk.CssProvider()
+        other_provider.load_from_string(".qa29-sentinel { opacity: 0.37; }")
+        Gtk.StyleContext.add_provider_for_display(display, other_provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+        toolbar = Gtk.Box(css_classes=["ac-git-toolbar", "qa29-sentinel"])
+        window = Gtk.Window(child=toolbar)
+        window.present()
+    
+        def padding() -> list[int]:
+            _settle()
+            value = toolbar.get_style_context().get_padding()
+            return [value.top, value.right, value.bottom, value.left]
+    
+        def styled() -> None:
+            with production_styles():
+                assert padding() == [6, 16, 6, 16]
+                if fail:
+                    message = "deliberate CSS owner failure"
+                    raise RuntimeError(message)
+    
+        try:
+            assert padding() == [0, 0, 0, 0]
+            if fail:
+                with pytest.raises(RuntimeError, match="deliberate CSS owner failure"):
+                    styled()
+            else:
+                styled()
+            assert padding() == [0, 0, 0, 0]
+>           assert toolbar.get_opacity() == pytest.approx(0.37, abs=1 / 255)
+E           assert 1.0 == 0.37 ± 0,00392157
+E             
+E             comparison failed
+E             Obtained: 1.0
+E             Expected: 0.37 ± 0,00392157
+
+tests/gui/front/test_css_lifecycle.py:52: AssertionError
+__________ test_styles_are_removed_and_other_provider_survives[True] ___________
+
+fail = True
+
+    @pytest.mark.parametrize("fail", [False, True])
+    def test_styles_are_removed_and_other_provider_survives(*, fail: bool) -> None:
+        Adw.init()
+        display = Gdk.Display.get_default()
+        assert display is not None
+        other_provider = Gtk.CssProvider()
+        other_provider.load_from_string(".qa29-sentinel { opacity: 0.37; }")
+        Gtk.StyleContext.add_provider_for_display(display, other_provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+        toolbar = Gtk.Box(css_classes=["ac-git-toolbar", "qa29-sentinel"])
+        window = Gtk.Window(child=toolbar)
+        window.present()
+    
+        def padding() -> list[int]:
+            _settle()
+            value = toolbar.get_style_context().get_padding()
+            return [value.top, value.right, value.bottom, value.left]
+    
+        def styled() -> None:
+            with production_styles():
+                assert padding() == [6, 16, 6, 16]
+                if fail:
+                    message = "deliberate CSS owner failure"
+                    raise RuntimeError(message)
+    
+        try:
+            assert padding() == [0, 0, 0, 0]
+            if fail:
+                with pytest.raises(RuntimeError, match="deliberate CSS owner failure"):
+                    styled()
+            else:
+                styled()
+            assert padding() == [0, 0, 0, 0]
+>           assert toolbar.get_opacity() == pytest.approx(0.37, abs=1 / 255)
+E           assert 1.0 == 0.37 ± 0,00392157
+E             
+E             comparison failed
+E             Obtained: 1.0
+E             Expected: 0.37 ± 0,00392157
+
+tests/gui/front/test_css_lifecycle.py:52: AssertionError
+=============================== warnings summary ===============================
+../../../../../../Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/events.py:803
+  /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/events.py:803: DeprecationWarning: 'asyncio.AbstractEventLoopPolicy' is deprecated and slated for removal in Python 3.16
+    AbstractEventLoopPolicy = getattr(asyncio, "AbstractEventLoopPolicy", object)
+
+tests/gui/front/test_css_lifecycle.py: 1200 warnings
+tests/gui/front/test_contrast_table.py: 400 warnings
+  /home/sas/Projects/sp_aconsole_prototype/.venv-ui/lib/python3.15/site-packages/gi/events.py:890: DeprecationWarning: 'asyncio.get_event_loop_policy' is deprecated and slated for removal in Python 3.16
+    if not isinstance(_get_event_loop_policy(), GLibEventLoopPolicy):
+
+tests/gui/front/test_css_lifecycle.py::test_styles_are_removed_and_other_provider_survives[False]
+  /home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/038657e1539f15ad/tests/gui/front/test_css_lifecycle.py:34: DeprecationWarning: Gtk.Widget.get_style_context is deprecated
+    value = toolbar.get_style_context().get_padding()
+
+tests/gui/front/test_css_lifecycle.py::test_styles_are_removed_and_other_provider_survives[False]
+  /home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/038657e1539f15ad/tests/gui/front/test_css_lifecycle.py:34: DeprecationWarning: Gtk.StyleContext.get_padding is deprecated
+    value = toolbar.get_style_context().get_padding()
+
+tests/gui/front/test_git_pane.py::test_graph_rows_and_inspector_on_a_real_repository
+  /home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/038657e1539f15ad/src/aconsole/ui/views/review/graph_cell.py:113: DeprecationWarning: Gtk.StyleContext.lookup_color is deprecated
+    _found, background = self.get_style_context().lookup_color("view_bg_color")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/gui/front/test_css_lifecycle.py::test_styles_are_removed_and_other_provider_survives[False]
+FAILED tests/gui/front/test_css_lifecycle.py::test_styles_are_removed_and_other_provider_survives[True]
+2 failed, 15 passed, 1604 warnings in 39.67s

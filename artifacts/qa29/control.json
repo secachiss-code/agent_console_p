@@ -1,0 +1,158 @@
+{
+  "bare": {
+    "window": {
+      "width": 1280,
+      "height": 800,
+      "padding": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    "pane": {
+      "width": 1280,
+      "height": 800,
+      "padding": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    "list": {
+      "width": 620,
+      "height": 766,
+      "padding": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    "scroller": {
+      "width": 620,
+      "height": 766,
+      "padding": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    "toolbar": {
+      "width": 1280,
+      "height": 34,
+      "padding": [
+        0,
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  "styled": {
+    "window": {
+      "width": 1280,
+      "height": 800,
+      "padding": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    "pane": {
+      "width": 1280,
+      "height": 800,
+      "padding": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    "list": {
+      "width": 620,
+      "height": 754,
+      "padding": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    "scroller": {
+      "width": 620,
+      "height": 754,
+      "padding": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    "toolbar": {
+      "width": 1248,
+      "height": 34,
+      "padding": [
+        6,
+        16,
+        6,
+        16
+      ]
+    }
+  },
+  "removed": {
+    "window": {
+      "width": 1280,
+      "height": 800,
+      "padding": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    "pane": {
+      "width": 1280,
+      "height": 800,
+      "padding": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    "list": {
+      "width": 620,
+      "height": 766,
+      "padding": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    "scroller": {
+      "width": 620,
+      "height": 766,
+      "padding": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    "toolbar": {
+      "width": 1280,
+      "height": 34,
+      "padding": [
+        0,
+        0,
+        0,
+        0
+      ]
+    }
+  }
+}

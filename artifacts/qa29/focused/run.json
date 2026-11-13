@@ -1,0 +1,23 @@
+{
+  "command": [
+    "/home/sas/Projects/sp_aconsole_prototype/.venv-ui/bin/python",
+    "-m",
+    "pytest",
+    "-o",
+    "addopts=",
+    "-q",
+    "--junitxml=/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/038657e1539f15ad/artifacts/qa29/focused/pytest.xml",
+    "tests/gui/front/test_css_lifecycle.py",
+    "tests/gui/front/test_contrast_table.py",
+    "tests/gui/front/test_git_pane.py",
+    "tests/gui/front/test_git_actions.py",
+    "tests/gui/front/test_git_history_keyboard.py",
+    "tests/gui/front/test_git_truth.py",
+    "tests/gui/front/test_work_sessions.py"
+  ],
+  "display": ":0",
+  "gdk_backend": "x11",
+  "renderer_override": null,
+  "production_identity_changed": false,
+  "returncode": 1
+}
