@@ -1,0 +1,36 @@
+{
+  "processes-before": {
+    "raw_sha256": "04ce3da044f55488aaa2d03fb273cc96b0105d48b1dd19492672d610d160cc9b",
+    "application_processes": [
+      {
+        "pid": 2727,
+        "ppid": 1548,
+        "argv": "/opt/aconsole/ui/bin/python -m aconsole",
+        "profile": "ui"
+      },
+      {
+        "pid": 2745,
+        "ppid": 2727,
+        "argv": "/opt/aconsole/core/bin/python -m aconsole.core --serve",
+        "profile": "core"
+      }
+    ]
+  },
+  "processes-after": {
+    "raw_sha256": "df406ee46c9a902c864c69fbfbfbc8757891118fff184c1af623b9885368ae13",
+    "application_processes": [
+      {
+        "pid": 2727,
+        "ppid": 1548,
+        "argv": "/opt/aconsole/ui/bin/python -m aconsole",
+        "profile": "ui"
+      },
+      {
+        "pid": 2745,
+        "ppid": 2727,
+        "argv": "/opt/aconsole/core/bin/python -m aconsole.core --serve",
+        "profile": "core"
+      }
+    ]
+  }
+}
