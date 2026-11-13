@@ -1,0 +1,58 @@
+{
+  "stage": "after original all-rows wait, before original scrolling measurement",
+  "rows": 10000,
+  "renderer": "GskNglRenderer",
+  "allocation": {
+    "window": {
+      "width": 1280,
+      "height": 800,
+      "padding": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    "pane": {
+      "width": 1280,
+      "height": 800,
+      "padding": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    "list": {
+      "width": 620,
+      "height": 754,
+      "padding": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    "scroller": {
+      "width": 620,
+      "height": 754,
+      "padding": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    "toolbar": {
+      "width": 1248,
+      "height": 34,
+      "padding": [
+        6,
+        16,
+        6,
+        16
+      ]
+    }
+  },
+  "observation_seconds": 0.0007041819999358268
+}

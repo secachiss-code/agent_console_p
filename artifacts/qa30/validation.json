@@ -1,0 +1,191 @@
+{
+  "desktop-full": {
+    "tests": 536,
+    "passed": 527,
+    "failed": [
+      "tests.gui.front.test_b0_window::test_sidebar_lists_demo_tabs[700-True]",
+      "tests.gui.front.test_b0_window::test_collapsed_sidebar_button_opens_and_closes_sidebar",
+      "tests.gui.front.test_b0_window::test_system_title_buttons_keep_clear_header_space[700-True-left]",
+      "tests.gui.front.test_b0_window::test_system_title_buttons_keep_clear_header_space[700-True-right]",
+      "tests.gui.front.test_b0_window::test_system_title_buttons_keep_clear_header_space[700-True-both]",
+      "tests.gui.front.test_b1_keys::test_b1_keys_narrow_window",
+      "tests.gui.front.test_des3_visual::test_native_widgets_match_reviewed_baselines[light-1280-light]",
+      "tests.gui.front.test_des3_visual::test_native_widgets_match_reviewed_baselines[dark-1280-dark]",
+      "tests.gui.front.test_des3_visual::test_native_widgets_match_reviewed_baselines[light-700-narrow]"
+    ],
+    "skipped": 0,
+    "returncode": 1,
+    "scale_passed": true,
+    "scale_report": "git scale: 10000 rows, 182 frames in 4 s, median 16.9 ms, p95 34.9 ms, worst 36.6 ms, RSS 615 MB (start 604, first page 605, all rows 615 after 3.2 s)",
+    "window": {
+      "width": 1280,
+      "height": 800,
+      "padding": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    "allocation": {
+      "window": {
+        "width": 1280,
+        "height": 800,
+        "padding": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "pane": {
+        "width": 1280,
+        "height": 800,
+        "padding": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "list": {
+        "width": 620,
+        "height": 754,
+        "padding": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "scroller": {
+        "width": 620,
+        "height": 754,
+        "padding": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "toolbar": {
+        "width": 1248,
+        "height": 34,
+        "padding": [
+          6,
+          16,
+          6,
+          16
+        ]
+      }
+    },
+    "new_failures": [],
+    "prior_failures_absent": []
+  },
+  "desktop-scale": {
+    "tests": 1,
+    "passed": 1,
+    "failed": [],
+    "skipped": 0,
+    "returncode": 0,
+    "scale_passed": true,
+    "scale_report": "git scale: 10000 rows, 172 frames in 4 s, median 17.1 ms, p95 34.8 ms, worst 67.0 ms, RSS 260 MB (start 198, first page 244, all rows 258 after 3.1 s)",
+    "window": {
+      "width": 1280,
+      "height": 800,
+      "padding": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    "allocation": {
+      "window": {
+        "width": 1280,
+        "height": 800,
+        "padding": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "pane": {
+        "width": 1280,
+        "height": 800,
+        "padding": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "list": {
+        "width": 620,
+        "height": 754,
+        "padding": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "scroller": {
+        "width": 620,
+        "height": 754,
+        "padding": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "toolbar": {
+        "width": 1248,
+        "height": 34,
+        "padding": [
+          6,
+          16,
+          6,
+          16
+        ]
+      }
+    },
+    "new_failures": [],
+    "prior_failures_absent": []
+  },
+  "pair_gap_seconds": 100.57527775,
+  "preserved": {
+    "base": "97cbf6c948ecdc0f61ee2f45c8b16db8a3a0fa7a",
+    "paths": [
+      "src",
+      "tests",
+      "tools",
+      "artifacts/qa26",
+      "artifacts/qa27",
+      "artifacts/qa28",
+      "artifacts/qa29"
+    ]
+  },
+  "evidence_hashes": {
+    "artifacts/qa30/REPORT.md": "1a9d3cd1ddfdeb33a6c8e5ec308348992014a087f41564e9d27f8ea368e00e9e",
+    "artifacts/qa30/desktop-full/environment.json": "af5f9d7994f141c50bed2bec7dae2f8beb877996bd9c9b455f0da55993bc55be",
+    "artifacts/qa30/desktop-full/interval.json": "d1c379f1c88ffbed39adb3dad35c3248b5e4e665220ba249fa8ff56a4c2e4db4",
+    "artifacts/qa30/desktop-full/observation.json": "1874f83d680ea47a71fb0ed743d63745f39933f0958737fc2115bdf204131db3",
+    "artifacts/qa30/desktop-full/pytest.log": "8e58a58ea54b8a2b7a217e2841bfb31f1dd7b2ca130068f29e5d1035c7b68358",
+    "artifacts/qa30/desktop-full/pytest.xml": "e3eeffbb73a142268d12856c1d1b7f1355ed4f5450cf0920ce465bdb5db819ca",
+    "artifacts/qa30/desktop-full/run.json": "3e550c93d12c857a48b9acc2cc69549823008555a8642befdc67f60e94d8142c",
+    "artifacts/qa30/desktop-full/scale.txt": "7b86c5312d6ba2d6685e4f252c8c44cffa4716ca4ee52bb61b8c996ee1ebbe64",
+    "artifacts/qa30/desktop-scale/environment.json": "af5f9d7994f141c50bed2bec7dae2f8beb877996bd9c9b455f0da55993bc55be",
+    "artifacts/qa30/desktop-scale/interval.json": "b8ac15d240701bdd903e91344f5f7d9eeaa34d53277ccd1377a2538a28f15e99",
+    "artifacts/qa30/desktop-scale/observation.json": "6e140e8d660816a396fba9cb603dcc3e4b727481bbb8b0a36abda7f1d50bf906",
+    "artifacts/qa30/desktop-scale/pytest.log": "7c5551b3433c23b18d1dacb43615eee9675c86770715c3c6647052fd0b65cf97",
+    "artifacts/qa30/desktop-scale/pytest.xml": "9c8c66f22ca7cc052d6435edf215fb9838961e932fd1194c79beb8e6a4653113",
+    "artifacts/qa30/desktop-scale/run.json": "4cde6202e19e06e07034b4ad4936f6856c8d5969ab16a1b84b757fdcbeeb70c1",
+    "artifacts/qa30/desktop-scale/scale.txt": "5a4ca8455fa6831dc8d4f3bacab61c059e17f799b55acd7601d5ece017e1bfd4",
+    "artifacts/qa30/desktop.py": "5df5737f82ba0b00e3846617d95943312c950b68f6d976f8d14124394a93d005",
+    "artifacts/qa30/observe.py": "32d84bed786981eb3f30065b38f344f1f34642a58e905f5bcb948499915ab36e",
+    "artifacts/qa30/verify.py": "aa70a79f87f56fe5a38d51bb7b1fe5c5fc2dc41af6950a358bea267b61b664b9"
+  }
+}
