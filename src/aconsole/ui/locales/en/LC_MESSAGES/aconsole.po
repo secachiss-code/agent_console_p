@@ -2026,3 +2026,6 @@ msgstr "OpenCode v2.1.2: modes apply to new sessions; prompts stay in the termin
 
 msgid "prefs.harness_codex_policy"
 msgstr "Codex 0.169: new sessions with verified hooks apply modes. Full approval uses the panel; without it, dangerous calls in Allow are blocked. Allowing dangerous calls disables the Codex sandbox. Hosted tools and protection of settings files are outside this coverage."
+
+msgid "prefs.harness_cursor_policy_unavailable"
+msgstr "Cursor 2026.11.13: local probes did not confirm tool execution or failClosed. Ask uses native Cursor permissions. Allow and Deny are unavailable: launch stops with an explanation instead of ignoring the selected mode."

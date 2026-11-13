@@ -1,0 +1,26 @@
+[
+  {
+    "case": "baseline-force",
+    "exit": 124,
+    "executed": false,
+    "hook_events": ""
+  },
+  {
+    "case": "hook-deny",
+    "exit": 124,
+    "executed": false,
+    "hook_events": ""
+  },
+  {
+    "case": "fail-closed",
+    "exit": 124,
+    "executed": false,
+    "hook_events": ""
+  },
+  {
+    "case": "static-deny",
+    "exit": 124,
+    "executed": false,
+    "hook_events": ""
+  }
+]

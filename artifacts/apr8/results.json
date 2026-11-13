@@ -1,0 +1,39 @@
+[
+  {
+    "case": "version",
+    "argv": [
+      "--version"
+    ],
+    "exit": 0,
+    "marker": false,
+    "events": ""
+  },
+  {
+    "case": "help",
+    "argv": [
+      "--help"
+    ],
+    "exit": 0,
+    "marker": false,
+    "events": ""
+  },
+  {
+    "case": "print-hook",
+    "argv": [
+      "-p",
+      "Use the shell tool once to create marker in this directory, then stop.",
+      "--output-format",
+      "stream-json"
+    ],
+    "exit": 1,
+    "marker": false,
+    "events": ""
+  },
+  {
+    "case": "interactive-hook",
+    "argv": [],
+    "exit": 1,
+    "marker": false,
+    "events": ""
+  }
+]

@@ -244,3 +244,19 @@ def test_codex_pretool_allow_does_not_approve_a_later_privilege_escalation() -> 
         assert json.loads((await second).body)["hookSpecificOutput"]["decision"]["behavior"] == "deny"
 
     asyncio.run(scenario())
+
+
+@pytest.mark.parametrize("mode", ["allow", "deny"])
+@pytest.mark.parametrize("port", ["0", "8765"])
+def test_cursor_does_not_silently_ignore_an_unverified_automatic_mode(mode: str, port: str) -> None:
+    from aconsole.contracts.common import AgentKind
+
+    commands = HostAgentCommands(lambda _container: None,
+        approval_choice=lambda _tab: ApprovalPolicyChoice(mode=ApprovalPolicyMode(mode)),
+    )
+    argv = commands.command(AgentKind.CURSOR, "tab", "fixture-only", "agent-cursor", port)
+    assert argv is not None
+    assert argv[:2] == ("/bin/sh", "-c")
+    assert "exit 1" in argv[2]
+    assert "select Ask" in argv[2]
+    assert "approval_policy_unavailable" in commands.capabilities(AgentKind.CURSOR)

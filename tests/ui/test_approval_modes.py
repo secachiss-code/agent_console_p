@@ -52,6 +52,7 @@ def test_each_harness_says_what_this_cli_really_does() -> None:
     assert harness_effect_key(frozenset({"hooks", "approval_policy"})) == "prefs.harness_policy"
     assert harness_effect_key(frozenset({"approval_policy_static"})) == "prefs.harness_opencode_policy"
     assert harness_effect_key(frozenset({"approval_policy_codex"})) == "prefs.harness_codex_policy"
+    assert harness_effect_key(frozenset({"approval_policy_unavailable"})) == "prefs.harness_cursor_policy_unavailable"
 
 
 def test_a_tab_without_hooks_says_so() -> None:

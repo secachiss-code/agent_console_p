@@ -10,6 +10,7 @@ import json
 from pathlib import Path
 from typing import Final, final
 
+from aconsole.core.domain.approval_policy import ApprovalPolicyChoice, ApprovalPolicyMode
 from aconsole.core.infrastructure.agents.private_files import atomic_write, check_home, private_dir, read_bytes
 
 _COMMAND: Final = ("agent",)
@@ -27,16 +28,26 @@ _NOT_OBJECT: Final = "mcp.json must hold a JSON object with an object in mcpServ
 class CursorLauncher:
     """Keep the MCP entry in place and return the command."""
 
-    def launch(self, agent_home: Path) -> tuple[str, ...]:
+    def launch(self, agent_home: Path, policy: ApprovalPolicyChoice | None = None) -> tuple[str, ...]:
         if not agent_home.is_absolute() or agent_home.is_symlink() or not agent_home.is_dir():
             raise ValueError(_HOME)
         check_home(agent_home)
+        if policy is not None and policy.mode in {ApprovalPolicyMode.ALLOW, ApprovalPolicyMode.DENY}:
+            return self.unavailable()
         folder = agent_home / ".cursor"
         if folder.is_symlink():
             raise ValueError(_SYMLINK)
         private_dir(folder)
         _merge(folder / "mcp.json")
         return _COMMAND
+
+    @staticmethod
+    def unavailable() -> tuple[str, ...]:
+        """Do not silently run native permissions under an unverified automatic mode."""
+        message = (
+            "echo 'AConsole: Cursor automatic modes are not verified; select Ask for native permissions' >&2; exit 1"
+        )
+        return ("/bin/sh", "-c", message)
 
 
 def _merge(path: Path) -> None:

@@ -76,6 +76,8 @@ class HostAgentCommands:
             return self._claude_command(container, tab_id, token, number)
         if agent is AgentKind.OPENCODE:
             return self._opencode_command(container, tab_id, token, number)
+        if agent is AgentKind.CURSOR and self._automatic(tab_id):
+            return self._cursor.unavailable()
         if number == _NO_PORT or agent not in {AgentKind.CLAUDE, AgentKind.CODEX, AgentKind.OPENCODE, AgentKind.CURSOR}:
             return self._unavailable_command(agent, tab_id)
         home = self._home_of(container)
@@ -86,7 +88,8 @@ class HostAgentCommands:
                 choice = ApprovalPolicyChoice() if self._approval_choice is None else self._approval_choice(tab_id)
                 tab = CodexTab(agent_home=home, tab_id=tab_id, port=number, token=token, policy=choice)
                 return self._codex_command(tab, container)
-            return self._cursor.launch(home)
+            choice = ApprovalPolicyChoice() if self._approval_choice is None else self._approval_choice(tab_id)
+            return self._cursor.launch(home, choice)
         except (OSError, ValueError):  # json.JSONDecodeError is a ValueError
             _LOG.warning("cannot write hooks for tab %s; starting the agent without them", tab_id, exc_info=True)
             return self._unavailable_command(agent, tab_id)
@@ -180,6 +183,8 @@ class HostAgentCommands:
     def capabilities(self, kind: AgentKind) -> frozenset[str]:
         """Advertise Codex hook features only after the installed CLI confirmed their trust."""
         names = CAPABILITIES[DomainAgent(kind.value)].names()
+        if kind is AgentKind.CURSOR:
+            return names | {"approval_policy_unavailable"}
         if kind is AgentKind.CLAUDE and self._policy_tabs:
             return names | {"approval_policy"}
         if kind is AgentKind.OPENCODE and self._opencode_policy_tabs:

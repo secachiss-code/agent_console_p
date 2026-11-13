@@ -1,0 +1,6 @@
+{
+  "case": "hook-deny",
+  "exit": 124,
+  "executed": false,
+  "hook_events": ""
+}

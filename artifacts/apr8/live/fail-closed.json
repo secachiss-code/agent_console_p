@@ -1,0 +1,6 @@
+{
+  "case": "fail-closed",
+  "exit": 124,
+  "executed": false,
+  "hook_events": ""
+}

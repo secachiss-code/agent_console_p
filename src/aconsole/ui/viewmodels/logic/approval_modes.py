@@ -57,6 +57,8 @@ def harness_effect_key(capabilities: frozenset[str]) -> str:
         return "prefs.harness_opencode_policy"
     if "approval_policy_codex" in capabilities:
         return "prefs.harness_codex_policy"
+    if "approval_policy_unavailable" in capabilities:
+        return "prefs.harness_cursor_policy_unavailable"
     if "hooks" not in capabilities:
         return NO_HOOKS
     return STILL_ASKS
