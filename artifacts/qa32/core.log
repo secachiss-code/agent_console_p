@@ -1,0 +1,133 @@
+Collected 0 items to run in parallel
+........................................................................ [  3%]
+........................................................................ [  6%]
+........................................................................ [  9%]
+........................................................................ [ 13%]
+........................................................................ [ 16%]
+........................................................................ [ 19%]
+........................................................................ [ 23%]
+........................................................................ [ 26%]
+........................................................................ [ 29%]
+........................................................................ [ 32%]
+........................................................................ [ 36%]
+........................................................................ [ 39%]
+........................................................................ [ 42%]
+........................................................................ [ 46%]
+........................................................................ [ 49%]
+........................................................................ [ 52%]
+........................................................................ [ 56%]
+........................................................................ [ 59%]
+........................................................................ [ 62%]
+........................................................................ [ 65%]
+........................................................................ [ 69%]
+........................................................................ [ 72%]
+........................................................................ [ 75%]
+........................................................................ [ 79%]
+........................................................................ [ 82%]
+........................................................................ [ 85%]
+..............................................................s......... [ 89%]
+........................................................................ [ 92%]
+........................................................................ [ 95%]
+........................................................................ [ 98%]
+......................                                                   [100%]
+python 3.15.1 gil=False
+
+=============================== warnings summary ===============================
+tests/core/test_launch_security.py::test_serving_daemon_refuses_foreign_http_headers[headers1-/health]
+  /home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/sql/schema.py:3837: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x5215af7e700>
+    def _set_target_column(self, column: Column[Any]) -> None:
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/core/test_mcp_handover_missing_project.py::test_missing_project_handover_is_rejected_and_can_be_retried_after_project_restore
+  /home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/sql/base.py:797: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x5216ecca800>
+    d._reflection_only_keys = frozenset(
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/core/test_plan_store.py::test_one_bad_job_does_not_take_its_batch_with_it
+  /home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/sql/compiler.py:7936: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x5216ea4e2a0>
+    def visit_VARCHAR(self, type_: sqltypes.String, **kw: Any) -> str:
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/core/test_plan_store.py::test_one_bad_job_does_not_take_its_batch_with_it
+  /home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/sql/compiler.py:7936: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x5215ecc8340>
+    def visit_VARCHAR(self, type_: sqltypes.String, **kw: Any) -> str:
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/core/test_plan_store.py::test_one_bad_job_does_not_take_its_batch_with_it
+  /home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/sql/compiler.py:7936: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x5216ae69ca0>
+    def visit_VARCHAR(self, type_: sqltypes.String, **kw: Any) -> str:
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/core/test_plan_store.py::test_one_bad_job_does_not_take_its_batch_with_it
+  /home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/sql/compiler.py:7936: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x5216ad23720>
+    def visit_VARCHAR(self, type_: sqltypes.String, **kw: Any) -> str:
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/core/test_plan_store.py::test_one_bad_job_does_not_take_its_batch_with_it
+  /home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/sql/compiler.py:7936: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x5214d1f3c60>
+    def visit_VARCHAR(self, type_: sqltypes.String, **kw: Any) -> str:
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/core/test_plan_store.py::test_one_bad_job_does_not_take_its_batch_with_it
+  /home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/sql/compiler.py:7936: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x52193016ac0>
+    def visit_VARCHAR(self, type_: sqltypes.String, **kw: Any) -> str:
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/core/test_plan_store.py::test_one_bad_job_does_not_take_its_batch_with_it
+  /home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/sql/compiler.py:7936: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x52167c4c5c0>
+    def visit_VARCHAR(self, type_: sqltypes.String, **kw: Any) -> str:
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/core/test_plan_store.py::test_one_bad_job_does_not_take_its_batch_with_it
+  /home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/sql/compiler.py:7936: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x5215751e1c0>
+    def visit_VARCHAR(self, type_: sqltypes.String, **kw: Any) -> str:
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/core/test_plan_store.py::test_one_bad_job_does_not_take_its_batch_with_it
+  /home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/sql/compiler.py:7936: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x5215751a800>
+    def visit_VARCHAR(self, type_: sqltypes.String, **kw: Any) -> str:
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/core/test_plan_store.py::test_one_bad_job_does_not_take_its_batch_with_it
+  /home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/sql/compiler.py:7936: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x521664eb0c0>
+    def visit_VARCHAR(self, type_: sqltypes.String, **kw: Any) -> str:
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/core/test_plan_store.py::test_one_bad_job_does_not_take_its_batch_with_it
+  /home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/sql/compiler.py:7936: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x52166ebb980>
+    def visit_VARCHAR(self, type_: sqltypes.String, **kw: Any) -> str:
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/core/test_plan_store.py::test_one_bad_job_does_not_take_its_batch_with_it
+  /home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/sql/compiler.py:7936: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x52192969760>
+    def visit_VARCHAR(self, type_: sqltypes.String, **kw: Any) -> str:
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/core/test_review_delivery.py::test_comment_to_unstarted_tab_is_refused
+  /home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/sql/schema.py:3544: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x52186dc4980>
+    @property
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/core/test_round6_k24.py: 4 warnings
+tests/core/test_sidecar.py: 6 warnings
+tests/core/test_sidecar_resilience.py: 2 warnings
+  /home/sas/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/pty.py:66: DeprecationWarning: This process (pid=48035) is multi-threaded, use of forkpty() may lead to deadlocks in the child.
+    pid, fd = os.forkpty()
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+2181 passed, 1 skipped, 1 deselected, 27 warnings in 470.82s (0:07:50)

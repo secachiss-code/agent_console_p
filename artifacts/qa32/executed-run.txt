@@ -1,0 +1,64 @@
+"""Bounded sequential coverage evidence; run with host UI Python."""
+import hashlib
+import json
+import os
+from pathlib import Path
+import subprocess
+import sys
+import time
+
+ROOT = Path(__file__).resolve().parents[2]
+OUT = ROOT / 'artifacts/qa32'
+sys.path.insert(0, str(ROOT / 'tools'))
+from native_ui_tests import private_display, stop_group  # noqa: E402
+
+
+def hashes():
+    return {str(p.relative_to(ROOT)): hashlib.sha256(p.read_bytes()).hexdigest()
+            for folder in ('src', 'tests', 'tools') for p in sorted((ROOT / folder).rglob('*'))
+            if p.is_file() and p.suffix in ('.py', '.css')}
+
+
+def main():
+    record = OUT / 'results.json'
+    if record.exists():
+        raise SystemExit('Refusing overwrite')
+    if len(sys.argv) != 2 or not Path(sys.argv[1]).is_file():
+        raise SystemExit('Supply existing host Xvfb executable')
+    before = hashes()
+    data = {'head': subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip(),
+            'source_hashes': before, 'environment': {k: os.environ.get(k) for k in ('DISPLAY', 'GSK_RENDERER', 'PATH', 'PYTHONPATH')}, 'runs': {}}
+    env = dict(os.environ, PYTHONPATH=str(ROOT / 'src'), GDK_BACKEND='x11', GTK_A11Y='test')
+    env.pop('WAYLAND_DISPLAY', None)
+    def run(name, cmd, extra=None):
+        start = time.time_ns()
+        with (OUT / (name + '.log')).open('xb') as log:
+            try:
+                process = subprocess.Popen(cmd, cwd=ROOT, env=dict(env, **(extra or {})),
+                                           stdout=log, stderr=subprocess.STDOUT, start_new_session=True)
+                try:
+                    status = process.wait(timeout=1200)
+                finally:
+                    stop_group(process)
+            except subprocess.TimeoutExpired:
+                status = 124
+        data['runs'][name] = dict(command=cmd, start_ns=start, end_ns=time.time_ns(), exit=status)
+        record.write_text(json.dumps(data, indent=2) + '\n')
+    core = '/home/sas/Projects/sp_aconsole_prototype/.venv-core/bin/python'
+    common = ['--cov', '--cov-branch', '--cov-report=', '--cov-fail-under=0', '-p', 'no:cacheprovider']
+    run('core', [core, '-m', 'pytest', *('tests/core tests/contracts tests/gate tests/hostrun tests/smoke tests/test_package.py tests/test_packaging.py tests/test_contrast.py tests/test_build_guards.py tests/test_socket_paths.py'.split()), '-m', 'not performance', *common, '--basetemp=/tmp/ac-qa32-long-' + 'x'*96, '--junitxml=' + str(OUT/'core.xml')], {'COVERAGE_FILE': str(OUT/'.coverage.core')})
+    uiout = OUT/'display'
+    uiout.mkdir()
+    try:
+        with private_display(sys.argv[1], uiout) as display:
+            run('ui', [sys.executable, '-m', 'pytest', 'tests/gui', 'tests/ui', 'tests/smoke', *common, '--basetemp=/tmp/ac-qa32-ui', '--deselect', 'tests/gui/front/test_git_scale_ui.py::test_scrolling_a_long_history', '--junitxml='+str(OUT/'ui.xml')], dict(display, COVERAGE_FILE=str(OUT/'.coverage.ui')))
+    except (OSError, RuntimeError) as error:
+        data['ui_setup_error'] = str(error)
+    run('combine', [core, '-m', 'coverage', 'combine', '--keep', str(OUT/'.coverage.core'), str(OUT/'.coverage.ui')], {'COVERAGE_FILE': str(OUT/'.coverage')})
+    run('report', [core, '-m', 'coverage', 'report', '--precision=2'], {'COVERAGE_FILE': str(OUT/'.coverage')})
+    data['sources_unchanged'] = before == hashes()
+    record.write_text(json.dumps(data, indent=2)+'\n')
+
+
+if __name__ == '__main__':
+    main()
