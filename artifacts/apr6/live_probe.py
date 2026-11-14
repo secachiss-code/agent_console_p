@@ -1,3 +1,5 @@
+# ruff: noqa: ANN001, ANN201, ANN202, B904, EM101, FBT002, INP001, S310, S603, T201, TRY003
+# Standalone native CLI evidence fixture; dynamic JSON and process calls are intentional.
 """Evaluate production static permission rules in the installed OpenCode server."""
 
 import base64

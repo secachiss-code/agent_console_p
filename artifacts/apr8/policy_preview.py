@@ -1,3 +1,7 @@
+# ruff: noqa: RUF100
+# Standalone evidence runner; dynamic protocol fixtures and bounded subprocesses are intentional.
+# ruff: noqa: ANN001, ANN201, ANN202, E402, I001, INP001, SLF001
+# Standalone native CLI evidence fixture; dynamic JSON and process calls are intentional.
 """Snapshot the policy explanation with explicit fake capability evidence."""
 
 import sys

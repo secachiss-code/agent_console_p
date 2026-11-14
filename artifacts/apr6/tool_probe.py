@@ -1,3 +1,5 @@
+# ruff: noqa: ANN001, ANN002, ANN201, ANN202, E501, INP001, S603, SIM105, T201
+# Standalone native CLI evidence fixture; dynamic JSON and process calls are intentional.
 """Real OpenCode model-tool path, isolated HOME and local Messages fixture."""
 
 import json

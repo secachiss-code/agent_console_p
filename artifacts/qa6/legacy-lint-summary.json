@@ -1,0 +1,464 @@
+{
+  "initial_head": "1d7df094",
+  "legacy_findings": 6193,
+  "legacy_files": {
+    "artifacts/perf7/analyze_scheduling.py": {
+      "initial_blob": "671db1978d4c46b9174660bdcd768fb657527570",
+      "current_blob": "671db1978d4c46b9174660bdcd768fb657527570",
+      "unchanged": true
+    },
+    "artifacts/qa21/app_geometry.py": {
+      "initial_blob": "a965841ccfd6efc2c81d98f12c40bd2f4a4d5ecc",
+      "current_blob": "a965841ccfd6efc2c81d98f12c40bd2f4a4d5ecc",
+      "unchanged": true
+    },
+    "artifacts/qa21/geometry.py": {
+      "initial_blob": "4f20f85a47871c811cdf52423824f67a86e858f9",
+      "current_blob": "4f20f85a47871c811cdf52423824f67a86e858f9",
+      "unchanged": true
+    },
+    "artifacts/qa21/matrix.py": {
+      "initial_blob": "a4daa99a9070d82eb68bc09a1900802f6cdaf7b9",
+      "current_blob": "a4daa99a9070d82eb68bc09a1900802f6cdaf7b9",
+      "unchanged": true
+    },
+    "artifacts/qa21/run.py": {
+      "initial_blob": "368b41189709d191bc92a147589624f2b3f1301c",
+      "current_blob": "368b41189709d191bc92a147589624f2b3f1301c",
+      "unchanged": true
+    },
+    "artifacts/qa21/verify.py": {
+      "initial_blob": "dbb66f861083fdde0cddd901ae74518932dd0de2",
+      "current_blob": "dbb66f861083fdde0cddd901ae74518932dd0de2",
+      "unchanged": true
+    },
+    "artifacts/qa22/probe.py": {
+      "initial_blob": "8db62bdf5af05f970cc168aa6bd603c21f58b435",
+      "current_blob": "8db62bdf5af05f970cc168aa6bd603c21f58b435",
+      "unchanged": true
+    },
+    "artifacts/qa22/run.py": {
+      "initial_blob": "2bc05358f22c5f4d0520c8a2cb8930fb93d5af28",
+      "current_blob": "2bc05358f22c5f4d0520c8a2cb8930fb93d5af28",
+      "unchanged": true
+    },
+    "artifacts/qa22/trace_failures.py": {
+      "initial_blob": "550dffde1168b66e935c097601c5f36d96503e98",
+      "current_blob": "550dffde1168b66e935c097601c5f36d96503e98",
+      "unchanged": true
+    },
+    "artifacts/qa22/verify.py": {
+      "initial_blob": "43039289e3f11e7e0d841b54a5b68646041cf046",
+      "current_blob": "43039289e3f11e7e0d841b54a5b68646041cf046",
+      "unchanged": true
+    },
+    "artifacts/qa23/verify.py": {
+      "initial_blob": "346cd9e30d9636ab63e8c5d5c7fedb14d7b6ee70",
+      "current_blob": "346cd9e30d9636ab63e8c5d5c7fedb14d7b6ee70",
+      "unchanged": true
+    },
+    "artifacts/qa24/run.py": {
+      "initial_blob": "6670728d85070a3aa0e306b00267a014c69951dd",
+      "current_blob": "6670728d85070a3aa0e306b00267a014c69951dd",
+      "unchanged": true
+    },
+    "artifacts/qa24/screenshots.py": {
+      "initial_blob": "90698395e99decf0787ffb540055a5e6e602c908",
+      "current_blob": "90698395e99decf0787ffb540055a5e6e602c908",
+      "unchanged": true
+    },
+    "artifacts/qa24/verify.py": {
+      "initial_blob": "0a39cff1bf888a1732732e5b54955bdfd4c2c6c9",
+      "current_blob": "0a39cff1bf888a1732732e5b54955bdfd4c2c6c9",
+      "unchanged": true
+    },
+    "artifacts/qa25/check_runner.py": {
+      "initial_blob": "50d395a227025cdbbdc1a4390a2cde25d21a24c2",
+      "current_blob": "50d395a227025cdbbdc1a4390a2cde25d21a24c2",
+      "unchanged": true
+    },
+    "artifacts/qa25/desktop.py": {
+      "initial_blob": "e9446194b60623f91607f39f8d0126850fabea90",
+      "current_blob": "e9446194b60623f91607f39f8d0126850fabea90",
+      "unchanged": true
+    },
+    "artifacts/qa25/final_native.py": {
+      "initial_blob": "f08efaf4e0244fec03a80edcecd40ba372d6746b",
+      "current_blob": "f08efaf4e0244fec03a80edcecd40ba372d6746b",
+      "unchanged": true
+    },
+    "artifacts/qa25/verify.py": {
+      "initial_blob": "ed620522109c136367837f49826133b41a9343be",
+      "current_blob": "ed620522109c136367837f49826133b41a9343be",
+      "unchanged": true
+    },
+    "artifacts/qa26/desktop.py": {
+      "initial_blob": "20abf63321587640580774b1962cb54cacee3e95",
+      "current_blob": "20abf63321587640580774b1962cb54cacee3e95",
+      "unchanged": true
+    },
+    "artifacts/qa26/renderer.py": {
+      "initial_blob": "32fc3eb4c7b27013558f1b53dd867e466b6444f2",
+      "current_blob": "32fc3eb4c7b27013558f1b53dd867e466b6444f2",
+      "unchanged": true
+    },
+    "artifacts/qa26/verify.py": {
+      "initial_blob": "279034a7996ad61ea2a1490c95bef7f780722ea3",
+      "current_blob": "279034a7996ad61ea2a1490c95bef7f780722ea3",
+      "unchanged": true
+    },
+    "artifacts/qa27/controls.py": {
+      "initial_blob": "3a623af063c61f5740b1e86d38e4b5028281676d",
+      "current_blob": "3a623af063c61f5740b1e86d38e4b5028281676d",
+      "unchanged": true
+    },
+    "artifacts/qa27/verify.py": {
+      "initial_blob": "acb8c755fe42ae42ff659c3295c6e233fa778528",
+      "current_blob": "acb8c755fe42ae42ff659c3295c6e233fa778528",
+      "unchanged": true
+    },
+    "artifacts/qa28/desktop.py": {
+      "initial_blob": "45ec07f394887681fb43b9790896d3636b80a481",
+      "current_blob": "45ec07f394887681fb43b9790896d3636b80a481",
+      "unchanged": true
+    },
+    "artifacts/qa28/observe.py": {
+      "initial_blob": "1c33d90feb354f99e7ac89cd5a3b582734dd49bd",
+      "current_blob": "1c33d90feb354f99e7ac89cd5a3b582734dd49bd",
+      "unchanged": true
+    },
+    "artifacts/qa28/verify.py": {
+      "initial_blob": "a429e53391ac702d161ca6ab9e6dc04d05d9f18c",
+      "current_blob": "a429e53391ac702d161ca6ab9e6dc04d05d9f18c",
+      "unchanged": true
+    },
+    "artifacts/qa29/run.py": {
+      "initial_blob": "90815a5bd9ea8c5ce0e27598e2f6632d9c09895b",
+      "current_blob": "90815a5bd9ea8c5ce0e27598e2f6632d9c09895b",
+      "unchanged": true
+    },
+    "artifacts/qa29/test_css_control.py": {
+      "initial_blob": "6d5d16cfb34e5989782bd24e6571a2b43578c1fd",
+      "current_blob": "6d5d16cfb34e5989782bd24e6571a2b43578c1fd",
+      "unchanged": true
+    },
+    "artifacts/qa29/verify.py": {
+      "initial_blob": "039d7c56dde7ca5b15e5cfaac26e4d2034c522a2",
+      "current_blob": "039d7c56dde7ca5b15e5cfaac26e4d2034c522a2",
+      "unchanged": true
+    },
+    "artifacts/qa30/desktop.py": {
+      "initial_blob": "811137eae1fa60d10dda633dfa805a519535e39c",
+      "current_blob": "811137eae1fa60d10dda633dfa805a519535e39c",
+      "unchanged": true
+    },
+    "artifacts/qa30/observe.py": {
+      "initial_blob": "737e5d692c7f9f87c514d9124716a7476648000b",
+      "current_blob": "737e5d692c7f9f87c514d9124716a7476648000b",
+      "unchanged": true
+    },
+    "artifacts/qa30/verify.py": {
+      "initial_blob": "93d66b8408468acdfee92a7af5b0e78e38d6e60d",
+      "current_blob": "93d66b8408468acdfee92a7af5b0e78e38d6e60d",
+      "unchanged": true
+    },
+    "artifacts/sec11/candidate-contract-fixtures/adapter.py": {
+      "initial_blob": "5525c31baf9f4d1a9595972584605ab2e39085d7",
+      "current_blob": "5525c31baf9f4d1a9595972584605ab2e39085d7",
+      "unchanged": true
+    },
+    "artifacts/sec11/candidate-contract-fixtures/run.py": {
+      "initial_blob": "68149ba3a8c62c3e87ba1dc5fc8441748172df38",
+      "current_blob": "68149ba3a8c62c3e87ba1dc5fc8441748172df38",
+      "unchanged": true
+    },
+    "artifacts/sec11/candidate-contract-fixtures/verify.py": {
+      "initial_blob": "755d3f70d0dd97a9692c8e05f1e581a0118c1f47",
+      "current_blob": "755d3f70d0dd97a9692c8e05f1e581a0118c1f47",
+      "unchanged": true
+    },
+    "artifacts/sec11/candidate-result-contract/model.py": {
+      "initial_blob": "a9a42efed57dd442c39590c86a3515528d2c196a",
+      "current_blob": "a9a42efed57dd442c39590c86a3515528d2c196a",
+      "unchanged": true
+    },
+    "artifacts/sec11/candidate-result-contract/run.py": {
+      "initial_blob": "7c1bfb453177131cadb57b831ba140cdf5c034a8",
+      "current_blob": "7c1bfb453177131cadb57b831ba140cdf5c034a8",
+      "unchanged": true
+    },
+    "artifacts/sec11/candidate-result-contract/verify.py": {
+      "initial_blob": "b78e12221995317dcb67c3f9cade38df0cc769ac",
+      "current_blob": "b78e12221995317dcb67c3f9cade38df0cc769ac",
+      "unchanged": true
+    },
+    "artifacts/sec11/candidate-snapshot-import/importer.py": {
+      "initial_blob": "92d88a3ac018c2b3f29789b4f229fff55ee5f37d",
+      "current_blob": "92d88a3ac018c2b3f29789b4f229fff55ee5f37d",
+      "unchanged": true
+    },
+    "artifacts/sec11/candidate-snapshot-import/run.py": {
+      "initial_blob": "23c2626bf049994bffddcd0fc333e5af9f71a43c",
+      "current_blob": "23c2626bf049994bffddcd0fc333e5af9f71a43c",
+      "unchanged": true
+    },
+    "artifacts/sec11/candidate-snapshot-import/verify.py": {
+      "initial_blob": "b0cb97921e7a650f3e9f1f72bf917bd0ad5d0bd3",
+      "current_blob": "b0cb97921e7a650f3e9f1f72bf917bd0ad5d0bd3",
+      "unchanged": true
+    },
+    "artifacts/sec11/command-inventory/run.py": {
+      "initial_blob": "a8a11efcaa1d2907e50d6460a801fa8b754eff3a",
+      "current_blob": "a8a11efcaa1d2907e50d6460a801fa8b754eff3a",
+      "unchanged": true
+    },
+    "artifacts/sec11/command-inventory/verify.py": {
+      "initial_blob": "4f9cbd83e28d3127ac1b98900b918fad57d1a7c2",
+      "current_blob": "4f9cbd83e28d3127ac1b98900b918fad57d1a7c2",
+      "unchanged": true
+    },
+    "artifacts/sec11/config-namespace/launcher.py": {
+      "initial_blob": "379f3fb9a891ce55df331a60ccd578b6d201e337",
+      "current_blob": "379f3fb9a891ce55df331a60ccd578b6d201e337",
+      "unchanged": true
+    },
+    "artifacts/sec11/config-namespace/namespace_plugin.py": {
+      "initial_blob": "29bb78a695f969ced54807c95b7d2be3ae0c7944",
+      "current_blob": "29bb78a695f969ced54807c95b7d2be3ae0c7944",
+      "unchanged": true
+    },
+    "artifacts/sec11/config-namespace/run.py": {
+      "initial_blob": "6afc9227ee55addc1670c7c6cc382ba196057f7f",
+      "current_blob": "6afc9227ee55addc1670c7c6cc382ba196057f7f",
+      "unchanged": true
+    },
+    "artifacts/sec11/config-namespace/test_snapshot_races.py": {
+      "initial_blob": "7f662209a85c1ca480f9b67cf4c3f16b0eaddf2a",
+      "current_blob": "7f662209a85c1ca480f9b67cf4c3f16b0eaddf2a",
+      "unchanged": true
+    },
+    "artifacts/sec11/helper-census/run.py": {
+      "initial_blob": "c3a2d26be64ba238929107baa1c55d4096686586",
+      "current_blob": "c3a2d26be64ba238929107baa1c55d4096686586",
+      "unchanged": true
+    },
+    "artifacts/sec11/helper-census/verify.py": {
+      "initial_blob": "f2f3f60a6ddb3910c6c51fc176c04fd161d81d90",
+      "current_blob": "f2f3f60a6ddb3910c6c51fc176c04fd161d81d90",
+      "unchanged": true
+    },
+    "artifacts/sec11/helper-rpc/run.py": {
+      "initial_blob": "699c394da7d7ec08cd75826540abbfe33956188a",
+      "current_blob": "699c394da7d7ec08cd75826540abbfe33956188a",
+      "unchanged": true
+    },
+    "artifacts/sec11/helper-rpc/verify.py": {
+      "initial_blob": "bd5727d3b5b059c35490af0ba85fd5562b82d94d",
+      "current_blob": "bd5727d3b5b059c35490af0ba85fd5562b82d94d",
+      "unchanged": true
+    },
+    "artifacts/sec11/hook-census-extended/run.py": {
+      "initial_blob": "a90ecbd183fd6ef6964ba2468077be9e8d8002b0",
+      "current_blob": "a90ecbd183fd6ef6964ba2468077be9e8d8002b0",
+      "unchanged": true
+    },
+    "artifacts/sec11/hook-census-extended/verify.py": {
+      "initial_blob": "15b185868bc21f610fc11b4dc2fdb342443e5deb",
+      "current_blob": "15b185868bc21f610fc11b4dc2fdb342443e5deb",
+      "unchanged": true
+    },
+    "artifacts/sec11/hook-census/run.py": {
+      "initial_blob": "e5b883c10db7c0171f73c421b678d6c93bc2ebd1",
+      "current_blob": "e5b883c10db7c0171f73c421b678d6c93bc2ebd1",
+      "unchanged": true
+    },
+    "artifacts/sec11/merge-refusal-rpc/run.py": {
+      "initial_blob": "5f87a22c5ec63fa0bd2678404bd298eeef42985f",
+      "current_blob": "5f87a22c5ec63fa0bd2678404bd298eeef42985f",
+      "unchanged": true
+    },
+    "artifacts/sec11/merge-refusal-rpc/verify.py": {
+      "initial_blob": "be01304847d559a64e12e9abd97876b1e9b5439e",
+      "current_blob": "be01304847d559a64e12e9abd97876b1e9b5439e",
+      "unchanged": true
+    },
+    "artifacts/sec11/repository-origins-rpc/run.py": {
+      "initial_blob": "4f91020c508eb60792e7a327c54b9a4d4d994705",
+      "current_blob": "4f91020c508eb60792e7a327c54b9a4d4d994705",
+      "unchanged": true
+    },
+    "artifacts/sec11/repository-origins-rpc/verify.py": {
+      "initial_blob": "42664540273fcfd8067e4e7d3e27064f4bc91244",
+      "current_blob": "42664540273fcfd8067e4e7d3e27064f4bc91244",
+      "unchanged": true
+    },
+    "artifacts/sec11/repository-origins/run.py": {
+      "initial_blob": "cbb2f2628eb0d170bea1d48ade0fdbbdf6c59ee3",
+      "current_blob": "cbb2f2628eb0d170bea1d48ade0fdbbdf6c59ee3",
+      "unchanged": true
+    },
+    "artifacts/sec11/repository-origins/verify.py": {
+      "initial_blob": "8b1a7cc6e199d29f3406c0f71541b149080c0231",
+      "current_blob": "8b1a7cc6e199d29f3406c0f71541b149080c0231",
+      "unchanged": true
+    },
+    "artifacts/sec11/sequencer-census/run.py": {
+      "initial_blob": "d7121e8782a3c4e771a54eb97ce6b2afa81ddc69",
+      "current_blob": "d7121e8782a3c4e771a54eb97ce6b2afa81ddc69",
+      "unchanged": true
+    },
+    "artifacts/sec11/sequencer-census/verify.py": {
+      "initial_blob": "c54a9164947af6949c957b0c1c72e8fb9207c1ff",
+      "current_blob": "c54a9164947af6949c957b0c1c72e8fb9207c1ff",
+      "unchanged": true
+    },
+    "artifacts/sec11/sequencer-edits/run.py": {
+      "initial_blob": "c8860df5e3478588620cf35b5cda5d3516c45290",
+      "current_blob": "c8860df5e3478588620cf35b5cda5d3516c45290",
+      "unchanged": true
+    },
+    "artifacts/sec11/sequencer-edits/verify.py": {
+      "initial_blob": "66be2cd7f43b7f41fd2578ccbfdb6d9159238bae",
+      "current_blob": "66be2cd7f43b7f41fd2578ccbfdb6d9159238bae",
+      "unchanged": true
+    },
+    "artifacts/sec11/sequencer-refusal-rpc/run.py": {
+      "initial_blob": "9ef0d770238810bfbec9a99b959830dae6773c9f",
+      "current_blob": "9ef0d770238810bfbec9a99b959830dae6773c9f",
+      "unchanged": true
+    },
+    "artifacts/sec11/sequencer-refusal-rpc/verify.py": {
+      "initial_blob": "bde087a6e3840f2eeeeb4d939f4a4a6bb8cd32a0",
+      "current_blob": "bde087a6e3840f2eeeeb4d939f4a4a6bb8cd32a0",
+      "unchanged": true
+    },
+    "artifacts/sec11/sequencer-rpc/run.py": {
+      "initial_blob": "39923c62513c10aee83b83a6edf995e982a158df",
+      "current_blob": "39923c62513c10aee83b83a6edf995e982a158df",
+      "unchanged": true
+    },
+    "artifacts/sec11/sequencer-rpc/verify.py": {
+      "initial_blob": "53922f522aa4d11fee5b949c319e019449615603",
+      "current_blob": "53922f522aa4d11fee5b949c319e019449615603",
+      "unchanged": true
+    },
+    "artifacts/sec11/stage-a-contract/collect.py": {
+      "initial_blob": "2b2008913ccab7f78640ad488dbf6b62b62998cc",
+      "current_blob": "2b2008913ccab7f78640ad488dbf6b62b62998cc",
+      "unchanged": true
+    },
+    "artifacts/sec11/stage-a-contract/verify.py": {
+      "initial_blob": "2f365a42ed63ee173b535414e413148980c99009",
+      "current_blob": "2f365a42ed63ee173b535414e413148980c99009",
+      "unchanged": true
+    },
+    "artifacts/sec11/stage-a-ledger/collect.py": {
+      "initial_blob": "4f929412411b905e9dbe7d58745256c13f2ec43f",
+      "current_blob": "4f929412411b905e9dbe7d58745256c13f2ec43f",
+      "unchanged": true
+    },
+    "artifacts/sec11/stage-a-ledger/reverify.py": {
+      "initial_blob": "bf49cef89a652d88c8437b21b229862d4cd6b644",
+      "current_blob": "bf49cef89a652d88c8437b21b229862d4cd6b644",
+      "unchanged": true
+    },
+    "artifacts/sec11/stage-a-ledger/verify.py": {
+      "initial_blob": "48233573d8d3bc74ca1fcdf5ec4c26c6772df464",
+      "current_blob": "48233573d8d3bc74ca1fcdf5ec4c26c6772df464",
+      "unchanged": true
+    },
+    "artifacts/sec11/worker-review-gate/collect.py": {
+      "initial_blob": "19fda8e19ff47572958f4ef155cf742b18a88ced",
+      "current_blob": "19fda8e19ff47572958f4ef155cf742b18a88ced",
+      "unchanged": true
+    },
+    "artifacts/sec11/worker-review-gate/verify.py": {
+      "initial_blob": "db8360d8ee2899fe6494592271031b63ee2744dc",
+      "current_blob": "db8360d8ee2899fe6494592271031b63ee2744dc",
+      "unchanged": true
+    },
+    "artifacts/sec11/worker-review-refresh/verify.py": {
+      "initial_blob": "3fe5c02f71efee493b42cc74ef46661c1c38308a",
+      "current_blob": "3fe5c02f71efee493b42cc74ef46661c1c38308a",
+      "unchanged": true
+    },
+    "artifacts/sec11/worktree-checkpoint-census/run.py": {
+      "initial_blob": "987b5631be648999ea599bb934ecb74e9da1d4a1",
+      "current_blob": "987b5631be648999ea599bb934ecb74e9da1d4a1",
+      "unchanged": true
+    },
+    "artifacts/sec11/worktree-checkpoint-census/verify.py": {
+      "initial_blob": "38a599db0c219723bb7c4f3ea15f7f247c400bf1",
+      "current_blob": "38a599db0c219723bb7c4f3ea15f7f247c400bf1",
+      "unchanged": true
+    },
+    "artifacts/sec11/worktree-checkpoint-rpc/run.py": {
+      "initial_blob": "cb6ae94283bbd22d54abbd65d0301e5b67d6cd4d",
+      "current_blob": "cb6ae94283bbd22d54abbd65d0301e5b67d6cd4d",
+      "unchanged": true
+    },
+    "artifacts/sec11/worktree-checkpoint-rpc/verify.py": {
+      "initial_blob": "fcb61ac7a2d8362acc4c9f10976a9428c697fa73",
+      "current_blob": "fcb61ac7a2d8362acc4c9f10976a9428c697fa73",
+      "unchanged": true
+    }
+  },
+  "all_legacy_files_unchanged": true,
+  "codes": {
+    "INP001": 80,
+    "E402": 24,
+    "PLR2004": 56,
+    "ANN201": 184,
+    "ANN001": 419,
+    "PLC0415": 36,
+    "C408": 103,
+    "S603": 74,
+    "ANN202": 41,
+    "T201": 74,
+    "ARG001": 4,
+    "TRY003": 31,
+    "EM101": 24,
+    "S101": 643,
+    "S108": 12,
+    "S314": 14,
+    "S607": 51,
+    "ANN002": 11,
+    "ANN003": 3,
+    "PT018": 64,
+    "Q000": 3995,
+    "PLW1510": 13,
+    "E501": 53,
+    "SLF001": 8,
+    "ASYNC230": 3,
+    "ICN001": 1,
+    "FBT002": 4,
+    "PTH115": 7,
+    "ANN204": 6,
+    "C901": 14,
+    "PLR0911": 2,
+    "PLR0912": 8,
+    "SIM102": 1,
+    "PLR0915": 8,
+    "PLR0913": 6,
+    "PLR0917": 6,
+    "ARG005": 3,
+    "FBT003": 8,
+    "B023": 22,
+    "PLW0108": 1,
+    "I001": 43,
+    "PLC0414": 1,
+    "N818": 3,
+    "RUF021": 1,
+    "TRY301": 1,
+    "N815": 1,
+    "PERF401": 3,
+    "EM102": 8,
+    "Q001": 8,
+    "A002": 1,
+    "ASYNC221": 1,
+    "S608": 2,
+    "PIE810": 1,
+    "SIM114": 1,
+    "F401": 1
+  }
+}

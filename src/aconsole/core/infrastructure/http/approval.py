@@ -22,12 +22,13 @@ from aconsole.core.infrastructure.http.routes import IngestItem
 
 _LOG = logging.getLogger(__name__)
 _ASK = ApprovalPolicyChoice()
+_EMPTY_INPUT = msgspec.Raw(b"{}")
 
 
 class _Permission(msgspec.Struct, frozen=True, kw_only=True):
     session_id: str
     tool_name: str
-    tool_input: msgspec.Raw
+    tool_input: msgspec.Raw = _EMPTY_INPUT
     cwd: str | None = None
     tool_use_id: str = ""
     hook_event_name: str = "PermissionRequest"

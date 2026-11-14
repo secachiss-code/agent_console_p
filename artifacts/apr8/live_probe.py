@@ -1,3 +1,5 @@
+# ruff: noqa: ANN001, ANN201, ANN202, INP001, PLR2004, S603, T201
+# Standalone native CLI evidence fixture; dynamic JSON and process calls are intentional.
 """Cursor hook/permission probes with isolated config and the existing CLI login.
 
 The native CLI receives an opaque temporary copy of its login. No credential is

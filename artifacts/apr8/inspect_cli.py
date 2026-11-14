@@ -1,3 +1,5 @@
+# ruff: noqa: INP001, S603, T201
+# Standalone native CLI evidence fixture; dynamic JSON and process calls are intentional.
 """Bounded Cursor CLI probes in an isolated home; never read user credentials."""
 
 import json

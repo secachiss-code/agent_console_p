@@ -1,0 +1,23 @@
+{
+  "command": [
+    "/home/sas/Projects/sp_aconsole_prototype/.venv-ui/bin/python",
+    "-m",
+    "pytest",
+    "-o",
+    "addopts=",
+    "-q",
+    "--junitxml=/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/038657e1539f15ad/artifacts/qa6/ui/pytest.xml",
+    "tests/gui/front/test_preferences_drafts.py",
+    "tests/gui/front/test_approval_panel.py",
+    "tests/gui/front/test_approval_alerts.py",
+    "tests/gui/front/test_plan_review_actions.py",
+    "tests/ui/test_approval_modes.py",
+    "tests/ui/test_approval_capability.py",
+    "tests/ui/test_approvals_vm.py"
+  ],
+  "display": ":101",
+  "gdk_backend": "x11",
+  "renderer_override": null,
+  "production_identity_changed": false,
+  "returncode": 0
+}

@@ -1,0 +1,64 @@
+{
+  "claude": {
+    "version": "2.1.318",
+    "ask": "native permission request / inline broker",
+    "allow_safe": "executed",
+    "allow_dangerous_ask": "not executed in native noninteractive probe; inline broker tested",
+    "allow_dangerous_allow": "executed",
+    "deny": "blocked, including unavailable HTTP daemon",
+    "coverage": "local hook path, mutable settings require file isolation",
+    "evidence": [
+      "artifacts/apr5/live/results.json",
+      "artifacts/apr5/complete.xml"
+    ]
+  },
+  "opencode": {
+    "version": "2.1.2",
+    "ask": "native; noninteractive call rejected",
+    "allow_safe": "pwd completed without prompt; static exact inspection allowlist",
+    "allow_dangerous_ask": "other calls remain native ask",
+    "allow_dangerous_allow": "executed",
+    "deny": "tool catalog empty, forced shell rejected",
+    "coverage": "static, new sessions; no inline panel",
+    "evidence": [
+      "artifacts/apr6/tools/results.json",
+      "artifacts/apr6/tools/allow-ask-safe.json",
+      "artifacts/apr6/complete.xml"
+    ]
+  },
+  "codex": {
+    "version": "0.169.0",
+    "ask": "inline pretool hold and PermissionRequest; native follows on-request",
+    "allow_safe": "executed",
+    "allow_dangerous_ask": "held inline; blocked without UI",
+    "allow_dangerous_allow": "executed, native sandbox explicitly disabled",
+    "deny": "blocked; HTTP/crash/missing hook failures block supported path",
+    "coverage": "verified local tool hooks; hosted paths outside coverage",
+    "evidence": [
+      "artifacts/apr7/policy/allow-all.json",
+      "artifacts/apr7/policy/deny.json",
+      "artifacts/apr7/policy/allow-safe.json",
+      "artifacts/apr7/policy/allow-risky-no-ui.json",
+      "artifacts/apr7/corrected/offline.json",
+      "artifacts/apr7/final/app-on-request.json",
+      "artifacts/apr7/final/app-never.json",
+      "artifacts/apr7/final/crash.json",
+      "artifacts/apr7/final/missing.json",
+      "artifacts/apr7/final-tests.xml"
+    ]
+  },
+  "cursor": {
+    "version": "2026.11.13-eacade1",
+    "ask": "native fallback; no successful real tool baseline obtained",
+    "allow_safe": "unverified/unavailable; launcher blocked",
+    "allow_dangerous_ask": "unverified/unavailable; launcher blocked",
+    "allow_dangerous_allow": "unverified/unavailable; launcher blocked",
+    "deny": "unverified/unavailable; launcher blocked",
+    "coverage": "real CLI attempts ended before tool execution; not a deny/failClosed PASS",
+    "evidence": [
+      "artifacts/apr8/results.json",
+      "artifacts/apr8/live/results.json",
+      "artifacts/apr8/tests.xml"
+    ]
+  }
+}

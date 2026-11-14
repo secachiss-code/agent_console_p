@@ -1,0 +1,37 @@
+{
+  "acceptance": "failed",
+  "release_ready": false,
+  "installed_app_updated": false,
+  "core_junit": {
+    "tests": 2218,
+    "passed": 2217,
+    "skipped": 1,
+    "failures": 0,
+    "errors": 0,
+    "outer_collector_exit": 143,
+    "pytest_os_exit": null
+  },
+  "gtk": {
+    "tests": 65,
+    "failures": 0,
+    "errors": 0,
+    "exit": 0
+  },
+  "acceptance_criteria": {
+    "real_cli_matrix": "partial; Cursor baseline missing",
+    "ipc_self_approval": "negative probes rejected",
+    "file_boundary": "failed; O_RDWR host DB and bashrc succeeds without byte changes",
+    "independent_security_review": "not obtained",
+    "full_collector": "abnormal143; JUnit success retained without OS-exit PASS"
+  },
+  "checks": {
+    "product_and_new_evidence_lint": "0 findings",
+    "legacy_root_lint": 6193,
+    "types": "0 errors/warnings",
+    "layers": "kept",
+    "contracts": "11 checks passed,2 unlinked docs skipped",
+    "remote_ci": "not run",
+    "coverage_gate": "not run",
+    "package_install": "not run"
+  }
+}

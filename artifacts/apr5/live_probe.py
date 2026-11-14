@@ -1,3 +1,5 @@
+# ruff: noqa: ANN002, ANN202, C901, E501, FBT001, FBT002, INP001, PLW1510, S106, S603, T201
+# Standalone native CLI evidence fixture; dynamic JSON and process calls are intentional.
 """Exercise installed Claude with a local deterministic Messages endpoint and real hooks.
 
 No external model, user account or user configuration is used. This verifies the CLI

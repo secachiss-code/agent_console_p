@@ -1,3 +1,5 @@
+# ruff: noqa: INP001, S603
+# Standalone native CLI evidence fixture; dynamic JSON and process calls are intentional.
 """Own the display used for three policy explanation snapshots."""
 
 import os

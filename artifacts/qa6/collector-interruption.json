@@ -1,0 +1,11 @@
+{
+  "run": "core-final",
+  "junit": "artifacts/qa6/core-final.xml",
+  "collector_exit": 143,
+  "result_metadata_saved": false,
+  "junit_failures": 0,
+  "junit_errors": 0,
+  "junit_tests": 2218,
+  "junit_skipped": 1,
+  "disposition": "Keep functional JUnit result; do not claim complete provenance/exit recording. One follow-up after collector repair writes metadata before spawning pytest and avoids signalling an already completed group."
+}

@@ -1,3 +1,5 @@
+# ruff: noqa: INP001, PLW1510, S310, S603, T201
+# Standalone native CLI evidence fixture; dynamic JSON and process calls are intentional.
 """Bounded isolated discovery of the installed OpenCode v2 interface."""
 
 import json

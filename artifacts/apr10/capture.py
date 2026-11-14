@@ -1,3 +1,5 @@
+# ruff: noqa: INP001, S603
+# Standalone native CLI evidence fixture; dynamic JSON and process calls are intentional.
 """Capture unchanged preferences layout on an owned private display."""
 
 import os

@@ -1,3 +1,5 @@
+# ruff: noqa: ANN001, ANN002, ANN201, ANN202, C901, E501, EM101, FBT002, I001, INP001, ISC004, PLC0415, PLR0912, PLR0913, PLR0915, PLR0917, PLR2004, Q000, S106, S603, SIM105, T201, TRY003
+# Standalone native CLI evidence fixture; dynamic JSON and process calls are intentional.
 """Installed Codex hook semantics with a local Responses API and disposable files."""
 
 import json

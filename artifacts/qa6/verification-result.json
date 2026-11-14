@@ -1,0 +1,15 @@
+{
+  "evidence_consistent": true,
+  "acceptance": "failed",
+  "release_ready": false,
+  "core_junit_passed": 2217,
+  "core_skipped": 1,
+  "gtk_passed": 65,
+  "core_os_exit_confirmed": false,
+  "failed_acceptance": [
+    "Cursor tool baseline missing",
+    "host files open read-write",
+    "independent security review missing",
+    "full collector terminated143"
+  ]
+}

@@ -260,3 +260,19 @@ def test_cursor_does_not_silently_ignore_an_unverified_automatic_mode(mode: str,
     assert "exit 1" in argv[2]
     assert "select Ask" in argv[2]
     assert "approval_policy_unavailable" in commands.capabilities(AgentKind.CURSOR)
+
+
+@pytest.mark.parametrize("mode", ["ask", "allow", "deny"])
+def test_legacy_pretool_without_input_is_observational_or_fails_closed(mode: str) -> None:
+    item = IngestItem(tab_id="tab", kind="claude.hook", body=json.dumps({
+        "hook_event_name": "PreToolUse", "session_id": "session", "tool_name": "Bash",
+    }).encode())
+    hold = ApprovalHold(ApprovalBook(), publish=lambda _event: None, notify=lambda _row: None,
+                        audit=lambda _row: None, now=lambda: datetime.now(UTC))
+    response = asyncio.run(handle_permission(item, hold, hold_seconds=30, worktree="/work", inline=False,
+                                           choice=ApprovalPolicyChoice(mode=ApprovalPolicyMode(mode))))
+    body = json.loads(response.body)
+    if mode == "ask":
+        assert body == {}
+    else:
+        assert body["hookSpecificOutput"]["permissionDecision"] == ("ask" if mode == "allow" else "deny")

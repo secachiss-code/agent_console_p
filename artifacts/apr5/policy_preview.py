@@ -1,3 +1,5 @@
+# ruff: noqa: ANN001, ANN201, ANN202, I001, INP001, SLF001
+# Standalone native CLI evidence fixture; dynamic JSON and process calls are intentional.
 """Snapshot the policy explanation with explicit fake capability evidence."""
 
 import sys

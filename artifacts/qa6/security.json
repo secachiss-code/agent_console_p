@@ -1,0 +1,223 @@
+{
+  "self_mount_namespace": "mnt:[4026532766]",
+  "ipc": [
+    {
+      "role": "ui",
+      "initialize": {
+        "code": -32008,
+        "message": "ROLE_FORBIDDEN",
+        "data": {
+          "reason": "ROLE_FORBIDDEN",
+          "domain": "aconsole.ipc",
+          "retryable": false,
+          "user_message_key": "error.role_forbidden",
+          "user_message_args": {},
+          "hint": null,
+          "details": null
+        }
+      },
+      "methods": [
+        {
+          "method": "settings/update",
+          "error": {
+            "code": -32001,
+            "message": "NOT_INITIALIZED",
+            "data": {
+              "reason": "NOT_INITIALIZED",
+              "domain": "aconsole.ipc",
+              "retryable": false,
+              "user_message_key": "error.not_initialized",
+              "user_message_args": {},
+              "hint": null,
+              "details": null
+            }
+          }
+        },
+        {
+          "method": "project/setApprovalPolicy",
+          "error": {
+            "code": -32001,
+            "message": "NOT_INITIALIZED",
+            "data": {
+              "reason": "NOT_INITIALIZED",
+              "domain": "aconsole.ipc",
+              "retryable": false,
+              "user_message_key": "error.not_initialized",
+              "user_message_args": {},
+              "hint": null,
+              "details": null
+            }
+          }
+        },
+        {
+          "method": "approval/decide",
+          "error": {
+            "code": -32001,
+            "message": "NOT_INITIALIZED",
+            "data": {
+              "reason": "NOT_INITIALIZED",
+              "domain": "aconsole.ipc",
+              "retryable": false,
+              "user_message_key": "error.not_initialized",
+              "user_message_args": {},
+              "hint": null,
+              "details": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "role": "cli",
+      "initialize": {
+        "code": -32008,
+        "message": "ROLE_FORBIDDEN",
+        "data": {
+          "reason": "ROLE_FORBIDDEN",
+          "domain": "aconsole.ipc",
+          "retryable": false,
+          "user_message_key": "error.role_forbidden",
+          "user_message_args": {},
+          "hint": null,
+          "details": null
+        }
+      },
+      "methods": [
+        {
+          "method": "settings/update",
+          "error": {
+            "code": -32001,
+            "message": "NOT_INITIALIZED",
+            "data": {
+              "reason": "NOT_INITIALIZED",
+              "domain": "aconsole.ipc",
+              "retryable": false,
+              "user_message_key": "error.not_initialized",
+              "user_message_args": {},
+              "hint": null,
+              "details": null
+            }
+          }
+        },
+        {
+          "method": "project/setApprovalPolicy",
+          "error": {
+            "code": -32001,
+            "message": "NOT_INITIALIZED",
+            "data": {
+              "reason": "NOT_INITIALIZED",
+              "domain": "aconsole.ipc",
+              "retryable": false,
+              "user_message_key": "error.not_initialized",
+              "user_message_args": {},
+              "hint": null,
+              "details": null
+            }
+          }
+        },
+        {
+          "method": "approval/decide",
+          "error": {
+            "code": -32001,
+            "message": "NOT_INITIALIZED",
+            "data": {
+              "reason": "NOT_INITIALIZED",
+              "domain": "aconsole.ipc",
+              "retryable": false,
+              "user_message_key": "error.not_initialized",
+              "user_message_args": {},
+              "hint": null,
+              "details": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "role": "sidecar",
+      "initialize": {
+        "code": -32007,
+        "message": "SIDECAR_TOKEN_INVALID",
+        "data": {
+          "reason": "SIDECAR_TOKEN_INVALID",
+          "domain": "aconsole.ipc",
+          "retryable": false,
+          "user_message_key": "error.sidecar_token_invalid",
+          "user_message_args": {},
+          "hint": null,
+          "details": null
+        }
+      },
+      "methods": [
+        {
+          "method": "settings/update",
+          "error": {
+            "code": -32001,
+            "message": "NOT_INITIALIZED",
+            "data": {
+              "reason": "NOT_INITIALIZED",
+              "domain": "aconsole.ipc",
+              "retryable": false,
+              "user_message_key": "error.not_initialized",
+              "user_message_args": {},
+              "hint": null,
+              "details": null
+            }
+          }
+        },
+        {
+          "method": "project/setApprovalPolicy",
+          "error": {
+            "code": -32001,
+            "message": "NOT_INITIALIZED",
+            "data": {
+              "reason": "NOT_INITIALIZED",
+              "domain": "aconsole.ipc",
+              "retryable": false,
+              "user_message_key": "error.not_initialized",
+              "user_message_args": {},
+              "hint": null,
+              "details": null
+            }
+          }
+        },
+        {
+          "method": "approval/decide",
+          "error": {
+            "code": -32001,
+            "message": "NOT_INITIALIZED",
+            "data": {
+              "reason": "NOT_INITIALIZED",
+              "domain": "aconsole.ipc",
+              "retryable": false,
+              "user_message_key": "error.not_initialized",
+              "user_message_args": {},
+              "hint": null,
+              "details": null
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "files": [
+    {
+      "path": "/home/sas/.local/share/aconsole/aconsole.db",
+      "read_write_open": true,
+      "size_before": 3276800,
+      "size_after": 3276800,
+      "mtime_before": 1794607918280273156,
+      "mtime_after": 1794607918280273156,
+      "bytes_changed_by_probe": false
+    },
+    {
+      "path": "/home/sas/.bashrc",
+      "read_write_open": true,
+      "size_before": 5718,
+      "size_after": 5718,
+      "mtime_before": 1792433729412353449,
+      "mtime_after": 1792433729412353449,
+      "bytes_changed_by_probe": false
+    }
+  ]
+}

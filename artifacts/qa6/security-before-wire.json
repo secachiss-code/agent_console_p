@@ -1,0 +1,40 @@
+{
+  "self_mount_namespace": "mnt:[4026532766]",
+  "ipc": [
+    {
+      "role": "ui",
+      "probe_error": "JSONDecodeError",
+      "detail": "Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "role": "cli",
+      "probe_error": "JSONDecodeError",
+      "detail": "Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "role": "sidecar",
+      "probe_error": "JSONDecodeError",
+      "detail": "Expecting value: line 1 column 1 (char 0)"
+    }
+  ],
+  "files": [
+    {
+      "path": "/home/sas/.local/share/aconsole/aconsole.db",
+      "read_write_open": true,
+      "size_before": 3276800,
+      "size_after": 3276800,
+      "mtime_before": 1794607918280273156,
+      "mtime_after": 1794607918280273156,
+      "bytes_changed_by_probe": false
+    },
+    {
+      "path": "/home/sas/.bashrc",
+      "read_write_open": true,
+      "size_before": 5718,
+      "size_after": 5718,
+      "mtime_before": 1792433729412353449,
+      "mtime_after": 1792433729412353449,
+      "bytes_changed_by_probe": false
+    }
+  ]
+}
