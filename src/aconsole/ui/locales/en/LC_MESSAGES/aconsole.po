@@ -1,6 +1,6 @@
 # AConsole UI catalog. Stable message IDs; brace placeholders are Python format fields.
 msgid ""
-msgstr "Project-Id-Version: AConsole 0.1.1\nLanguage: en\nContent-Type: text/plain; charset=UTF-8\nPlural-Forms: nplurals=2; plural=(n != 1);\n"
+msgstr "Project-Id-Version: AConsole 0.1.2\nLanguage: en\nContent-Type: text/plain; charset=UTF-8\nPlural-Forms: nplurals=2; plural=(n != 1);\n"
 
 msgid "approvals.alert.open"
 msgstr "Open"
