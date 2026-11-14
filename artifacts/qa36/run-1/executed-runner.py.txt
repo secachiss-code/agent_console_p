@@ -1,0 +1,80 @@
+# ruff: noqa: ANN201, INP001, S603, S607, SLF001, T201
+"""Observe the unchanged QA6 suite, preserving OS exit and shutdown stacks."""
+
+import hashlib
+import json
+import os
+import signal
+import subprocess
+import sys
+import time
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[2]
+OUT = Path(__file__).resolve().parent / "run-1"
+
+
+def manifest():
+    return {str(path.relative_to(ROOT)): hashlib.sha256(path.read_bytes()).hexdigest()
+            for folder in ("src", "tests", "contracts") for path in sorted((ROOT / folder).rglob("*"))
+            if path.is_file() and path.suffix in {".py", ".css", ".json", ".toml"}}
+
+
+def main():
+    OUT.mkdir(exist_ok=False)
+    command = [sys.executable, "-m", "pytest", "tests/core", "tests/contracts", "tests/gate", "tests/hostrun",
+               "tests/smoke", "tests/test_package.py", "tests/test_packaging.py", "tests/test_contrast.py",
+               "tests/test_build_guards.py", "tests/test_socket_paths.py", "-m", "not performance",
+               "-p", "no:cacheprovider", "-p", "artifacts.qa36.shutdown_probe",
+               f"--basetemp=/tmp/aconsole-qa36-{os.getpid()}", f"--junitxml={OUT / 'pytest.xml'}", "-q"]
+    record = {"head": subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip(),
+              "cwd": str(ROOT), "command": command, "source_before": manifest(), "start_ns": time.time_ns(),
+              "python": sys.version, "gil_enabled": sys._is_gil_enabled(), "runner_pid": os.getpid(),
+              "state": "starting", "signals": []}
+
+    def save():
+        temporary = OUT / "result.tmp"
+        temporary.write_text(json.dumps(record, indent=2) + "\n")
+        temporary.replace(OUT / "result.json")
+
+    def interrupted(signum, _frame):
+        record["signals"].append({"signal": signum, "time_ns": time.time_ns()})
+        save()
+        signal.signal(signum, signal.SIG_DFL)
+        os.kill(os.getpid(), signum)
+
+    for signum in (signal.SIGTERM, signal.SIGINT, signal.SIGHUP):
+        signal.signal(signum, interrupted)
+    save()
+    timed_out = False
+    with (OUT / "pytest.log").open("xb") as log:
+        child = subprocess.Popen(command, cwd=ROOT, stdout=log, stderr=subprocess.STDOUT, start_new_session=True)
+        record.update(state="running", pytest_pid=child.pid, pytest_pgid=os.getpgid(child.pid))
+        save()
+        started = time.monotonic()
+        while child.poll() is None:
+            try:
+                child.wait(timeout=30)
+            except subprocess.TimeoutExpired:
+                print(json.dumps({"elapsed_s": round(time.monotonic() - started),
+                                  "junit_present": (OUT / "pytest.xml").exists(), "pytest_pid": child.pid}), flush=True)
+                if time.monotonic() - started >= 900:
+                    timed_out = True
+                    os.killpg(child.pid, signal.SIGTERM)
+                    try:
+                        child.wait(timeout=10)
+                    except subprocess.TimeoutExpired:
+                        os.killpg(child.pid, signal.SIGKILL)
+                        child.wait(timeout=10)
+    record.update(state="pytest_finished", pytest_exit=child.returncode, timed_out=timed_out, end_ns=time.time_ns())
+    save()
+    record.update(state="complete", source_after=manifest())
+    record["source_unchanged"] = record["source_before"] == record["source_after"]
+    record["log_sha256"] = hashlib.sha256((OUT / "pytest.log").read_bytes()).hexdigest()
+    save()
+    print(json.dumps({key: record[key] for key in ("pytest_exit", "timed_out", "source_unchanged")}))
+    return 124 if timed_out else child.returncode
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

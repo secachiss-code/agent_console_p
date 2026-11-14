@@ -1,0 +1,58 @@
+{
+  "source_head": "547001714bdc49e58898671425fca3b7bc4576e5",
+  "cwd": "/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/038657e1539f15ad",
+  "interpreter": "/home/sas/Projects/sp_aconsole_prototype/.venv-core/bin/python",
+  "supplemental_checks": [
+    {
+      "args": [
+        "artifacts/gate1/verify.py"
+      ],
+      "exit": 0,
+      "result": "Evidence consistent; candidate acceptance remains UNVERIFIED."
+    },
+    {
+      "args": [
+        "artifacts/gate1/verify.py",
+        "/tmp/aconsole-gate1-candidate-2eea8a1f/candidate.zip"
+      ],
+      "exit": 0,
+      "result": "Archive and retained evidence consistent; acceptance remains UNVERIFIED."
+    },
+    {
+      "args": [
+        "artifacts/qa6/verify.py"
+      ],
+      "exit": 0,
+      "result": "Historical failed acceptance evidence consistent; release_ready=false."
+    },
+    {
+      "args": [
+        "-m",
+        "unittest",
+        "artifacts.gate1.test_prepare",
+        "-v"
+      ],
+      "exit": 0,
+      "passed": 7
+    }
+  ],
+  "independent_security_review": false,
+  "activation": false,
+  "history_rewritten": false,
+  "GATE-1_claim": "LEASE_HELD by another tab; no override",
+  "CMT-2_audit": "Preliminary read-only trailer mapping only; see commit-preflight.json",
+  "full_run": {
+    "command": [
+      "/home/sas/Projects/sp_aconsole_prototype/.venv-core/bin/python",
+      "artifacts/qa36/run.py"
+    ],
+    "collector_exit": 0,
+    "pytest_exit": 0,
+    "passed": 2217,
+    "skipped": 1,
+    "source_unchanged": true,
+    "timeout": false,
+    "historical_signal_cause": "not established",
+    "junit_seconds": 450.615
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "schema": "aconsole-qa36-evidence-v1",
+  "independent_security_review": false,
+  "sha256": {
+    "REPORT.md": "dada9f6c07fcc9c3e381508e0b2e5aaf6db815ab1032b90e331eabb123f2b634",
+    "checks.json": "1fe6bff14b5c37dfad30ef415ebb6419e8106f1bc4e8fce44e6056982e5cc0c5",
+    "commit-preflight.json": "ff70e1dd15072bb7d223d43daba5d76d7eaea383e03e6a59f6a40fd1b9137b2f",
+    "historical-inputs.json": "8fffda1f48789d281e786ee480423d3210fc604126a22df8b1a1982864cc1a89",
+    "run-1/executed-probe.py.txt": "1c5dab2bb71f41a188c0a80cfbb32113ec16205edae7e8270ce827d7a5e67d53",
+    "run-1/executed-runner.py.txt": "0ab5ad1f3633ac6e1c67153a83f0ea647ee35590a60cd38d30d2dbc1bd332f2c",
+    "run-1/pytest.log": "11950553702f3c1572c12f248b513f257579f660f81dc6ac5bda4483f75125cc",
+    "run-1/pytest.xml": "33cc4b8dc37104c1379f75e994358d3fc9a2d9752e47574d1a67d4bf0f345b0e",
+    "run-1/result.json": "93890471e09a2c4fc44e1cf923cca564cb9823b97f637fdb4c4390c4bc27bce6",
+    "run.py": "0d68ce5182849c9034c0b6fed558e2a28cef1482f0cce5e19c853f296e44c81a",
+    "shutdown_probe.py": "0654709435fe1e7765ca39d147837c928a9f42d8641840b913981f27b6956a84",
+    "verify.py": "9ebb2e3cae25820f18c6fa41fc60171222edff8fe581a4946dd2ed0be06a67f6"
+  }
+}

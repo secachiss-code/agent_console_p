@@ -1,0 +1,9 @@
+{
+  "qa6/run_core.py": "c63cef9dda14b0facdda6c8d1fd372e6479fbc1dfadc4c06db12d2a62d4770e7",
+  "qa6/collector-interruption.json": "e11c9c9499da5cefe407d42520c4911d57ed64e57301201e50baaee1c99fdf1e",
+  "qa6/core-verified-result.json": "ee043f9c4042e5f6f275a492be45ed3b57fcd511231e478cd34530a7c8d2f027",
+  "qa6/core-verified-recovery.json": "3a2cf152b654fe4ba0e664bb8ddf67493b4e7ca34387e7a5088a3a4302f9561a",
+  "qa6/core-verified.xml": "8d18295c86c4893f4fdf91bff731034ae7cc8ee535c46a53bac08fb3ae4c73b7",
+  "gate1/evidence.json": "70fc9643a48124e4c72c11bbe8bfff1f46fae47e400a09d5ebf5cda6b9717af3",
+  "gate1/REPORT.md": "000d970bc4ae87390dd4d7d587a8ca37c989db08062ae2767502fe54212c96b9"
+}
