@@ -1,0 +1,14 @@
+{
+  "schema": "aconsole-gate2-evidence-v1",
+  "acceptance": "UNVERIFIED",
+  "files": {
+    "prepare.py": "7598edf674102dd5fc66168faa942e234f3245b23bb65e7416bb2ce571a15a48",
+    "test_prepare.py": "109b3cfebd9577257d49c0bcb74a13a237abe106cd05418c18badf9b21f1d011",
+    "verify.py": "04064526f1378be2e2365ac24e3f602fafd73d3633af67f3211a6c2c15528662",
+    "ACCEPTANCE.md": "9d2f068ba46d18a882810c8fc3645f515119e444c841fdd847a675a2e0f3901c",
+    "REPORT.md": "000d970bc4ae87390dd4d7d587a8ca37c989db08062ae2767502fe54212c96b9",
+    "candidate.json": "0f44eba780a212cb65af52f9c5ea90d697b1a20eedb1ba5cf5759b9d6d0b9260",
+    "hostrun.xml": "008df3f47dc701940553e1cabb283d148f9a942741281256c6a50b5f2d5d80d8",
+    "checks.json": "72da990e6a2fd6d46d93e07b2503945d0769c8901c63892286a8c49b469bd6f7"
+  }
+}

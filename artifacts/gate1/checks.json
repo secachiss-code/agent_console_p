@@ -1,0 +1,113 @@
+{
+  "source_head": "2eea8a1f596b4aaa490c611f727e299efabdbb54",
+  "worktree": "/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/038657e1539f15ad",
+  "hostrun_routed_to_main": {
+    "command": [
+      "hostrun",
+      "test",
+      "hostrun"
+    ],
+    "exit": 0,
+    "audit": {
+      "ts": "2026-11-14T09:19:00.616830+00:00",
+      "container": "agent-codex",
+      "peer_pid": 10712,
+      "action": "test",
+      "args": [
+        "hostrun"
+      ],
+      "cwd": "/home/sas/Projects/sp_aconsole_prototype",
+      "argv": [
+        "podman",
+        "start",
+        "devtools",
+        "podman",
+        "exec",
+        "--workdir",
+        "/home/sas/Projects/sp_aconsole_prototype",
+        "-e",
+        "PYTHON_GIL=0",
+        "-e",
+        "HOSTRUN_CONTAINER=agent-codex",
+        "devtools",
+        "/home/sas/Projects/sp_aconsole_prototype/.venv-core/bin/python",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/hostrun"
+      ],
+      "exit": 0,
+      "duration_ms": 25636,
+      "error": "",
+      "http_status": 200
+    },
+    "counts": {
+      "passed": 219
+    },
+    "accepted_for_this_worktree": false
+  },
+  "current_worktree": {
+    "command": [
+      "/home/sas/Projects/sp_aconsole_prototype/.venv-core/bin/python",
+      "-m",
+      "pytest",
+      "tests/hostrun",
+      "-q",
+      "-p",
+      "no:cacheprovider",
+      "--junitxml=artifacts/gate1/hostrun.xml"
+    ],
+    "cwd": "/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/038657e1539f15ad",
+    "exit": 0,
+    "passed": 218,
+    "skipped": 1,
+    "junit": "hostrun.xml",
+    "independent_review": false,
+    "interpreter": "Python 3.15.1 free-threading build; no assertion of runtime GIL state recorded for this invocation"
+  },
+  "exporter_tests": {
+    "command": [
+      "python3",
+      "-m",
+      "unittest",
+      "artifacts.gate1.test_prepare",
+      "-v"
+    ],
+    "exit": 0,
+    "passed": 7,
+    "initial_passed": 6,
+    "reason_for_followup": "Added explicit historical --revision export and corresponding regression"
+  },
+  "prepare": {
+    "command": [
+      "python3",
+      "artifacts/gate1/prepare.py",
+      "/tmp/aconsole-gate1-candidate-2eea8a1f"
+    ],
+    "exit": 0,
+    "acceptance": "UNVERIFIED"
+  },
+  "activation": false,
+  "GATE-1": "in_progress",
+  "QA-6": "failed",
+  "CMT-2": "pending",
+  "lint": {
+    "command": [
+      "/home/sas/Projects/sp_aconsole_prototype/.venv-core/bin/ruff",
+      "check",
+      "artifacts/gate1",
+      "--output-format",
+      "concise"
+    ],
+    "exit": 0,
+    "findings": 0
+  },
+  "diff": {
+    "command": [
+      "git",
+      "diff",
+      "--check"
+    ],
+    "exit": 0
+  }
+}
