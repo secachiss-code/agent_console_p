@@ -1,10 +1,13 @@
 """Admission of H-DAG contracts, including language containment of path globs."""
 
+import hashlib
+import json
 from collections import deque
-from collections.abc import Mapping
-from dataclasses import dataclass
+from collections.abc import Callable, Mapping
+from dataclasses import dataclass, replace
+from datetime import datetime
 from fnmatch import fnmatchcase
-from typing import Protocol
+from typing import Literal, Protocol
 
 from aconsole.core.domain.errors import DomainError
 
@@ -13,6 +16,8 @@ _DIRECTION_MIN = 5
 _DIRECTION_MAX = 8
 _MODULE_MIN = 15
 _MODULE_MAX = 25
+_PARENT_DEPTH_MAX = 3
+_JSON_LOADS: Callable[[str], object] = json.loads
 
 
 class NodeContract(Protocol):
@@ -195,3 +200,215 @@ def admission_warnings(nodes: tuple[NodeContract, ...]) -> tuple[str, ...]:
     if not _MODULE_MIN <= modules <= _MODULE_MAX:
         warnings.append(f"L1_COUNT: {modules}; expected 15..25")
     return tuple(warnings)
+
+
+@dataclass(frozen=True, kw_only=True)
+class TopologyContract:
+    """Canonical, immutable contract input, independent of leases and node status.
+
+    gate_profile_json is canonicalized when constructed so mutable adapter dictionaries
+    cannot change a frozen plan. Application adapters serialize their L0 profile here.
+    """
+
+    key: str
+    objective: str
+    level: int = 1
+    parent: str | None = None
+    paths: tuple[str, ...] = ()
+    acceptance: tuple[str, ...] = ()
+    test_cmd: str | None = None
+    boundaries: str | None = None
+    output_format: str | None = None
+    invariants: str | None = None
+    gate_profile_json: str = "null"
+
+    def __post_init__(self) -> None:
+        decoded = _JSON_LOADS(self.gate_profile_json)
+        object.__setattr__(self, "gate_profile_json", _canonical(decoded).decode())
+
+
+def _canonical(value: object) -> bytes:
+    return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"), allow_nan=False).encode()
+
+
+def _hash(value: object) -> str:
+    return hashlib.sha256(_canonical(value)).hexdigest()
+
+
+def contract_sha256(node: TopologyContract, parent: TopologyContract | None) -> str:
+    """The §4.3 payload; direction invariants and gates bind every child contract."""
+    direction = node if node.level == 0 else parent
+    return _hash(
+        {
+            "objective": node.objective,
+            "acceptance": node.acceptance,
+            "paths": node.paths,
+            "test_cmd": node.test_cmd,
+            "boundaries": node.boundaries,
+            "output_format": node.output_format,
+            "parent": node.parent,
+            "invariants": None if direction is None else direction.invariants,
+            "gate_profile": None if direction is None else json.loads(direction.gate_profile_json),
+        }
+    )
+
+
+@dataclass(frozen=True, kw_only=True)
+class AppliedChange:
+    """A decision loaded by the application from plan_inbox, never from agent args.
+
+    proof_receipt is supplied only after the application has resolved the blocker
+    receipt from the audit store. The domain checks its presence for a split.
+    """
+
+    id: str
+    kind: Literal["add", "split", "backlog"]
+    nodes: tuple[TopologyContract, ...] = ()
+    status: Literal["open", "applied", "rejected"] = "open"
+    decided_by: str | None = None
+    proof_receipt: str | None = None
+
+
+@dataclass(frozen=True, kw_only=True)
+class PlanTopology:
+    """Domain admission policy. Graph status and backlog bodies live in their stores.
+
+    Cancelled nodes remain in nodes: gross_added counts every insertion, never live
+    work. All mutations return a new value, allowing adapters to commit atomically.
+    """
+
+    nodes: tuple[TopologyContract, ...] = ()
+    phase: Literal["draft", "frozen", "completed"] = "draft"
+    revision_no: int = 0
+    frozen_at: datetime | None = None
+    baseline_nodes: int = 0
+    gross_added: int = 0
+    baseline_children: tuple[tuple[str, int], ...] = ()
+    contract_hashes: tuple[tuple[str, str], ...] = ()
+    gates_sha256: str | None = None
+    applied_changes: tuple[str, ...] = ()
+
+    def add(self, nodes: tuple[TopologyContract, ...]) -> PlanTopology:
+        if self.phase != "draft":
+            raise _admission_error(4011, "PLAN_FROZEN")
+        return self._insert(nodes)
+
+    def freeze(self, *, at: datetime, decided_by: str) -> PlanTopology:
+        _require_human(decided_by)
+        if self.phase == "frozen":
+            return self
+        if self.phase != "draft":
+            raise _admission_error(4011, "PLAN_FROZEN")
+        _validate_topology(self.nodes)
+        parents = {node.key: node for node in self.nodes}
+        hashes = tuple(
+            sorted(
+                (node.key, contract_sha256(node, parents.get(node.parent) if node.parent is not None else None))
+                for node in self.nodes
+            )
+        )
+        gates = {node.key: json.loads(node.gate_profile_json) for node in self.nodes if node.level == 0}
+        return replace(
+            self,
+            phase="frozen",
+            revision_no=self.revision_no + 1,
+            frozen_at=at,
+            baseline_nodes=len(self.nodes),
+            gross_added=max(self.gross_added, len(self.nodes)),
+            baseline_children=_child_counts(self.nodes),
+            contract_hashes=hashes,
+            gates_sha256=_hash(gates),
+        )
+
+    def apply_change(self, change: AppliedChange) -> PlanTopology:
+        _require_human(change.decided_by)
+        if change.status != "applied" or not change.id or self.phase == "completed":
+            raise _admission_error(4011, "PLAN_FROZEN")
+        if change.kind == "backlog":
+            if change.nodes:
+                raise _admission_error(4013, "NODE_CONTRACT")
+            return self
+        if change.id in self.applied_changes:
+            raise _admission_error(4011, "PLAN_FROZEN")
+        if change.kind == "split" and not change.proof_receipt:
+            raise _admission_error(4019, "SPLIT_NO_PROOF")
+        updated = self._insert(change.nodes)
+        return replace(updated, revision_no=updated.revision_no + 1, applied_changes=(*self.applied_changes, change.id))
+
+    def complete(self, *, decided_by: str) -> PlanTopology:
+        """Caller first verifies direction receipts and terminal graph statuses."""
+        _require_human(decided_by)
+        if self.phase == "draft":
+            raise _admission_error(4011, "PLAN_FROZEN")
+        return replace(self, phase="completed")
+
+    def _insert(self, fresh: tuple[TopologyContract, ...]) -> PlanTopology:
+        nodes = (*self.nodes, *fresh)
+        _validate_topology(nodes)
+        gross = max(self.gross_added, len(self.nodes)) + len(fresh)
+        if self.phase == "frozen":
+            # Integer arithmetic avoids rounding 20% allowances up on small plans.
+            if gross * 5 > self.baseline_nodes * 6:
+                raise _admission_error(4014, "PLAN_GROWTH_LIMIT")
+            baseline = dict(self.baseline_children)
+            if any(count > baseline.get(key, 0) + 2 for key, count in _child_counts(nodes)):
+                raise _admission_error(4014, "PLAN_GROWTH_LIMIT")
+        parents = {node.key: node for node in nodes}
+        hashes = self.contract_hashes
+        if self.phase == "frozen":
+            # A change request can add contracts but cannot silently replace frozen ones.
+            hashes = tuple(
+                sorted(
+                    (
+                        *hashes,
+                        *(
+                            (
+                                node.key,
+                                contract_sha256(node, parents.get(node.parent) if node.parent is not None else None),
+                            )
+                            for node in fresh
+                        ),
+                    )
+                )
+            )
+        gates = self.gates_sha256
+        if self.phase == "frozen":
+            gates = _hash({node.key: json.loads(node.gate_profile_json) for node in nodes if node.level == 0})
+        return replace(self, nodes=nodes, gross_added=gross, contract_hashes=hashes, gates_sha256=gates)
+
+
+def _require_human(decided_by: str | None) -> None:
+    if decided_by != "human":
+        raise _admission_error(4012, "PLAN_ROLE")
+
+
+def _admission_error(code: int, name: str) -> DomainError:
+    return DomainError(code=code, name=name, retryable=False)
+
+
+def _child_counts(nodes: tuple[TopologyContract, ...]) -> tuple[tuple[str, int], ...]:
+    counts = dict.fromkeys((node.key for node in nodes), 0)
+    for node in nodes:
+        if node.parent is not None:
+            counts[node.parent] += 1
+    return tuple(sorted(counts.items()))
+
+
+def _validate_topology(nodes: tuple[TopologyContract, ...]) -> None:
+    by_key = {node.key: node for node in nodes}
+    if len(by_key) != len(nodes):
+        raise _admission_error(4013, "NODE_CONTRACT")
+    for node in nodes:
+        seen = {node.key}
+        parent = node.parent
+        depth = 1
+        while parent is not None:
+            if parent in seen:
+                raise _admission_error(4003, "PLAN_CYCLE")
+            if parent not in by_key:
+                raise _admission_error(4013, "NODE_CONTRACT")
+            seen.add(parent)
+            parent = by_key[parent].parent
+            depth += 1
+        if depth > _PARENT_DEPTH_MAX:
+            raise _admission_error(4014, "PLAN_GROWTH_LIMIT")
