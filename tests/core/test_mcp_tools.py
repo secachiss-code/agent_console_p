@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 from typing import TYPE_CHECKING
 
@@ -133,6 +134,54 @@ async def _call(client: Client, name: str, arguments: dict[str, object]) -> dict
 
 def test_mcp_tools_schema_content_and_hint(tmp_path: Path) -> None:
     asyncio.run(_each_tool(tmp_path))
+
+
+def test_execute_cannot_list_or_call_graph_mutations() -> None:
+    async def scenario() -> None:
+        board, _server_unused = _server(_Clock(), "planner")
+        ctx = TabContext(tab_id="executor", project_id="proj", worktree=None, agent="codex", mode="execute")
+        server = build_server(board, ctx)
+        async with Client(server) as client:
+            names = {tool.name for tool in (await client.list_tools()).tools}
+            assert not names.intersection({"plan_create", "plan_add_nodes", "change_propose"})
+            for name, arguments in (
+                ("plan_create", {"title": "Plan", "goal": "Goal"}),
+                ("plan_add_nodes", {"plan_id": "missing", "nodes": []}),
+            ):
+                result = await client.call_tool(name, arguments)
+                assert result.is_error
+                assert _error(result)["reason"] == "PLAN_ROLE"
+            assert board.views() == ()
+
+    asyncio.run(scenario())
+
+
+def test_planning_requires_full_contract_and_defaults_pipeline_on() -> None:
+    async def scenario() -> None:
+        board = PlanBoard()
+        ctx = TabContext(tab_id="planner", project_id="proj", worktree=None, agent="codex", mode="plan")
+        async with Client(build_server(board, ctx)) as client:
+            denied = await client.call_tool("plan_create", {"title": "Plan", "goal": "Goal", "nodes": [_node("C-1")]})
+            assert denied.is_error
+            assert _error(denied)["reason"] == "NODE_CONTRACT"
+            assert board.views() == ()
+            created = await _call(client, "plan_create", {
+                "title": "Plan", "goal": "Goal", "nodes": [
+                    {**_node("D-0", paths=["src/**"]), "level": 0, "invariants": "pure domain",
+                     "gate_profile": {"tests": ["pytest"]}, "acceptance": ["green"]},
+                    {**_node("C-1", paths=["src/a.py"]), "parent": "D-0", "test_cmd": "pytest",
+                     "acceptance": ["green"]},
+                ],
+            })
+            plan_id = str(created["plan_id"])
+            assert board._plans[plan_id].dag.get("C-1").pipeline
+            executor = build_server(board, replace(ctx, mode="execute"))
+            async with Client(executor) as execution:
+                denied = await execution.call_tool("plan_add_nodes", {"plan_id": plan_id, "nodes": [_node("C-2")]})
+                assert _error(denied)["reason"] == "PLAN_ROLE"
+            assert len(board.view(plan_id).nodes) == 2
+
+    asyncio.run(scenario())
 
 
 def test_mcp_tools_fence() -> None:

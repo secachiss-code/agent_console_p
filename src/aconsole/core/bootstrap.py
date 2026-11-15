@@ -858,6 +858,7 @@ class Daemon:
                 project_id=str(tab.project_id),
                 worktree=Path(worktree) if worktree else None,
                 agent=str(tab.agent),
+                mode=tab.mode,
             ),
         )
 

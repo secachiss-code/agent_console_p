@@ -11,6 +11,7 @@ from pathlib import Path
 from string import Template
 from urllib.parse import urlsplit
 
+import msgspec
 import pytest
 
 from aconsole.contracts.app import ProjectAddParams, ProjectView, TabIdParams, TabView, TerminalLaunchSpec
@@ -111,9 +112,12 @@ def test_claude_launch_config_lists_tools_and_isolates_projects(
         client = await _connect(daemon.socket)
         try:
             sessions = []
-            for repo in repos:
+            for index, repo in enumerate(repos):
                 project = await client.call("project/add", ProjectAddParams(root=str(repo)), ProjectView)
-                tab = await client.call("tab/open", _open(project.id), TabView)
+                params = _open(project.id)
+                if index == 0:
+                    params = msgspec.structs.replace(params, mode="plan", model="explicit-model")
+                tab = await client.call("tab/open", params, TabView)
                 spec = await client.call("tab/launchSpec", TabIdParams(tab_id=tab.id), TerminalLaunchSpec)
                 _path, config = _config(spec.argv)
                 session = _Mcp(config, spec.env)
@@ -128,6 +132,13 @@ def test_claude_launch_config_lists_tools_and_isolates_projects(
                 "name": "plan_create", "arguments": {"title": "Claude plan", "goal": "Ship"},
             })
             assert not made.get("isError", False)
+            execute_tools = await asyncio.to_thread(sessions[1].request, "tools/list", {})
+            assert not {tool["name"] for tool in execute_tools["tools"]}.intersection({"plan_create", "plan_add_nodes"})
+            refused = await asyncio.to_thread(sessions[1].request, "tools/call", {
+                "name": "plan_add_nodes", "arguments": {"plan_id": "missing", "nodes": []},
+            })
+            assert refused["isError"]
+            assert "PLAN_ROLE" in str(refused)
             plan_id = _content(made)["plan_id"]
             own = await asyncio.to_thread(sessions[0].request, "tools/call", {
                 "name": "plan_get", "arguments": {"plan_id": plan_id},

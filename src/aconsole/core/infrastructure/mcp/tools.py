@@ -305,6 +305,8 @@ class TabContext:
     project_id: str
     worktree: Path | None
     agent: str
+    # None supports trusted in-process callers predating tab modes. Live tokens always bind a mode.
+    mode: Literal["plan", "execute"] | None = None
 
 
 @dataclass
@@ -728,6 +730,7 @@ class PlanBoard:
     def create(self, ctx: TabContext, title: str, goal: str, nodes: list[NodeIn]) -> PlanCreated:
         """Create a plan, or return the one this project already has under ``title``."""
         _require_tab(ctx)
+        nodes = _planning_nodes(ctx, nodes)
         with self._lock:
             stored = self._by_title(ctx.project_id, title)
             created = stored is None
@@ -746,6 +749,7 @@ class PlanBoard:
     def add_nodes(self, ctx: TabContext, plan_id: str, nodes: list[NodeIn]) -> Added:
         """Add missing keys. A key that already exists is unchanged. A cycle adds nothing."""
         _require_tab(ctx)
+        nodes = _planning_nodes(ctx, nodes)
         with self._lock:
             stored = self._owned(ctx, plan_id)
             added = self._insert(stored, nodes)
@@ -1390,6 +1394,20 @@ def _require_tab(ctx: TabContext) -> None:
         _stop("INGEST_UNAUTHORIZED", "the request has no tab token")
 
 
+def _planning_nodes(ctx: TabContext, nodes: list[NodeIn]) -> list[NodeIn]:
+    if ctx.mode == "execute":
+        _stop("PLAN_ROLE", "graph changes require a planning tab")
+    if ctx.mode is None:
+        return nodes
+    for item in nodes:
+        direction_ok = bool(item.invariants and item.gate_profile) if item.level == 0 else bool(
+            item.parent and item.test_cmd
+        )
+        if not (item.objective.strip() and item.paths and item.acceptance and direction_ok):
+            _stop("NODE_CONTRACT", f"incomplete planning contract: {item.key}")
+    return [item.model_copy(update={"pipeline": item.level == 1}) for item in nodes]
+
+
 def _domain(exc: DomainError) -> NoReturn:
     detail = exc.name if not exc.extra else exc.name + " " + ", ".join(exc.extra)
     _stop(exc.name, detail)
@@ -1607,6 +1625,7 @@ def _git(worktree: Path | None, *args: str) -> str:
 
 
 _CODES: dict[str, int] = {
+    "PLAN_ROLE": 4012,
     "NODE_CONTRACT": 4013,
     "RESPONSE_TOO_LARGE": -32000,
     "INTERNAL_ERROR": -32603,

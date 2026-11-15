@@ -95,9 +95,15 @@ class _LeanServer(MCPServer):
     ("Depends On" for ``depends_on``), ``null`` alternatives and ``null`` defaults say nothing an agent can use.
     """
 
+    def __init__(self, context: TabContext) -> None:
+        super().__init__(name="aconsole", instructions="Plan, claim, and record knowledge for the current tab.")
+        self.tab_context: TabContext = context
+
     @override
     async def list_tools(self) -> list[Tool]:
         listed = await super().list_tools()
+        if active(self.tab_context).mode == "execute":
+            listed = [tool for tool in listed if tool.name not in {"plan_create", "plan_add_nodes", "change_propose"}]
         return [tool.model_copy(update={"input_schema": lean_schema(tool.input_schema)}) for tool in listed]
 
 
@@ -133,7 +139,7 @@ def build_server(board: PlanBoard, context: TabContext, sent: Callable[[str, int
 
     ``sent`` hears, per tab, the bytes of text each answer puts in that tab's agent's context.
     """
-    server = _LeanServer(name="aconsole", instructions="Plan, claim, and record knowledge for the current tab.")
+    server = _LeanServer(context)
     _register(server, board, context, sent)
     return server
 
