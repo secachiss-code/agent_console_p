@@ -6,7 +6,20 @@ from datetime import datetime
 from enum import StrEnum
 from typing import ClassVar, final
 
-from sqlalchemy import Boolean, Enum, Float, ForeignKey, Index, MetaData, String, Text, UniqueConstraint, column, false
+from sqlalchemy import (
+    Boolean,
+    CheckConstraint,
+    Enum,
+    Float,
+    ForeignKey,
+    Index,
+    MetaData,
+    String,
+    Text,
+    UniqueConstraint,
+    column,
+    false,
+)
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 from aconsole.core.domain.agent import AgentKind
@@ -198,6 +211,15 @@ class Plan(Base):
     title: Mapped[str] = mapped_column(String(200))
     goal: Mapped[str] = mapped_column(Text)
     status: Mapped[PlanStatus] = mapped_column(_enum(PlanStatus))
+    phase: Mapped[str] = mapped_column(
+        String(16), CheckConstraint("phase IN ('draft', 'frozen', 'completed')", name="phase"),
+        default="draft", server_default="draft",
+    )
+    revision_no: Mapped[int] = mapped_column(default=1, server_default="1")
+    frozen_at: Mapped[datetime | None] = mapped_column()
+    baseline_nodes: Mapped[int] = mapped_column(default=0, server_default="0")
+    gross_added: Mapped[int] = mapped_column(default=0, server_default="0")
+    gates_sha256: Mapped[str | None] = mapped_column(String(64))
     canvas_note_ref: Mapped[str | None] = mapped_column(String(1024))
     created_by_tab: Mapped[str | None] = mapped_column(
         ForeignKey("tabs.id", ondelete="SET NULL", use_alter=True, name="fk_plans_created_by_tab_tabs")
@@ -233,6 +255,16 @@ class PlanNode(Base):
     fence_seq: Mapped[int] = mapped_column()
     created_at: Mapped[datetime] = mapped_column()
     updated_at: Mapped[datetime] = mapped_column()
+    level: Mapped[int] = mapped_column(CheckConstraint("level IN (0, 1)", name="level"), default=1, server_default="1")
+    pipeline: Mapped[bool] = mapped_column(default=False, server_default=false())
+    max_attempts: Mapped[int] = mapped_column(
+        CheckConstraint("max_attempts BETWEEN 1 AND 4", name="max_attempts"), default=4, server_default="4",
+    )
+    contract_sha256: Mapped[str | None] = mapped_column(String(64))
+    invariants: Mapped[str | None] = mapped_column(Text)
+    gate_profile: Mapped[dict[str, object] | None] = mapped_column(JsonObject)
+    blast_radius: Mapped[list[str] | None] = mapped_column(JsonList)
+    baseline_children: Mapped[int] = mapped_column(default=0, server_default="0")
     boundaries: Mapped[str | None] = mapped_column(Text)
     output_format: Mapped[str | None] = mapped_column(Text)
     agent_note: Mapped[str | None] = mapped_column(Text)
@@ -251,6 +283,11 @@ class Tab(Base):
     isolated: Mapped[bool] = mapped_column(default=False)
     workspace_id: Mapped[str | None] = mapped_column(ForeignKey("workspaces.id", ondelete="SET NULL"))
     agent_kind: Mapped[AgentKind] = mapped_column(_enum(AgentKind))
+    mode: Mapped[str] = mapped_column(
+        String(16), CheckConstraint("mode IN ('plan', 'execute')", name="mode"),
+        default="execute", server_default="execute",
+    )
+    model: Mapped[str | None] = mapped_column(String(64))
     account_id: Mapped[str | None] = mapped_column(ForeignKey("agent_accounts.id"))
     title: Mapped[str] = mapped_column(String(80))
     tab_order: Mapped[int] = mapped_column()
@@ -550,3 +587,25 @@ class GitRefDeletion(Base):
 
     repo_path: Mapped[str] = mapped_column(String(4096), primary_key=True)
     git_ref: Mapped[str] = mapped_column(String(255), primary_key=True)
+
+
+@final
+class PlanInbox(Base):
+    __tablename__ = "plan_inbox"
+
+    id: Mapped[str] = mapped_column(String(26), primary_key=True)
+    plan_id: Mapped[str] = mapped_column(ForeignKey("plans.id", ondelete="CASCADE"), index=True)
+    node_id: Mapped[str | None] = mapped_column(ForeignKey("plan_nodes.id", ondelete="SET NULL"))
+    kind: Mapped[str] = mapped_column(
+        String(16), CheckConstraint("kind IN ('backlog','replan','human','add','split','reopen')", name="inbox_kind"),
+    )
+    body: Mapped[str] = mapped_column(Text)
+    payload: Mapped[dict[str, object]] = mapped_column(JsonObject, default=dict)
+    tab_id: Mapped[str | None] = mapped_column(ForeignKey("tabs.id", ondelete="SET NULL"))
+    status: Mapped[str] = mapped_column(
+        String(16), CheckConstraint("status IN ('open', 'applied', 'rejected')", name="inbox_status"),
+        default="open", server_default="open",
+    )
+    created_at: Mapped[datetime] = mapped_column()
+    decided_at: Mapped[datetime | None] = mapped_column()
+    decided_by: Mapped[str | None] = mapped_column(String(64))
