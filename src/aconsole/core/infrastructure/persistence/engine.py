@@ -12,6 +12,8 @@ from sqlalchemy import Connection, create_engine, event
 from sqlalchemy.engine import Engine
 from sqlalchemy.pool import QueuePool
 
+from aconsole.core.infrastructure.persistence.cache.schema import CACHE_SCHEMA
+
 
 def migrations_dir(module: Path | None = None) -> Path:
     """`aconsole/_migrations` in an installed package, `migrations/` in a checkout."""
@@ -143,3 +145,41 @@ def checkpoint_wal(engine: Engine, *, truncate: bool = False) -> WalCheckpoint:
                 raise ValueError(message)
     finally:
         pooled.close()
+
+
+def cache_engine(path: Path | None, *, max_mib: int = 64) -> Engine:
+    """Open disposable cache storage, recovering incompatible or corrupt files."""
+    minimum_mib, maximum_mib = 16, 256
+    if not minimum_mib <= max_mib <= maximum_mib:
+        message = "cache size must be between 16 and 256 MiB"
+        raise ValueError(message)
+    if path is not None:
+        path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
+        if path.exists():
+            valid = False
+            try:
+                with sqlite3.connect(path) as probe:
+                    version: object = probe.execute("PRAGMA user_version").fetchone()  # pyright: ignore[reportAny] -- SQLite row checked below
+                    integrity: object = probe.execute("PRAGMA quick_check").fetchone()  # pyright: ignore[reportAny] -- SQLite row checked below
+                    valid = version == (CACHE_SCHEMA,) and integrity == ("ok",)
+            except sqlite3.DatabaseError:
+                valid = False
+            if not valid:
+                path.unlink()
+        path.touch(mode=0o600, exist_ok=True)
+    engine = create_engine(
+        "sqlite://" if path is None else f"sqlite:///{path}",
+        poolclass=QueuePool, pool_size=1, max_overflow=0,
+        connect_args={"check_same_thread": False},
+    )
+
+    def configure(connection: sqlite3.Connection, _record: object) -> None:
+        for pragma in (
+            "PRAGMA page_size=4096", "PRAGMA journal_mode=MEMORY", "PRAGMA synchronous=OFF",
+            "PRAGMA temp_store=MEMORY", "PRAGMA foreign_keys=ON",
+            f"PRAGMA max_page_count={max_mib * 256}", f"PRAGMA user_version={CACHE_SCHEMA}",
+        ):
+            _ = connection.execute(pragma)
+
+    event.listen(engine, "connect", configure)
+    return engine
