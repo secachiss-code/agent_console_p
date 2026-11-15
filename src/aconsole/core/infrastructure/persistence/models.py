@@ -609,3 +609,70 @@ class PlanInbox(Base):
     created_at: Mapped[datetime] = mapped_column()
     decided_at: Mapped[datetime | None] = mapped_column()
     decided_by: Mapped[str | None] = mapped_column(String(64))
+
+
+@final
+class NodeAttempt(Base):
+    __tablename__ = "node_attempts"
+    __table_args__ = _table_args(
+        UniqueConstraint("node_id", "attempt_no"),
+        CheckConstraint("attempt_no BETWEEN 1 AND 4", name="attempt_no"),
+        CheckConstraint("status IN ('running','passed','failed','abandoned')", name="status"),
+        CheckConstraint("length(compact_verdict) <= 500", name="compact_verdict"),
+    )
+
+    id: Mapped[str] = mapped_column(String(26), primary_key=True)
+    node_id: Mapped[str] = mapped_column(ForeignKey("plan_nodes.id", ondelete="CASCADE"))
+    attempt_no: Mapped[int] = mapped_column()
+    status: Mapped[str] = mapped_column(String(24))
+    tab_id: Mapped[str | None] = mapped_column(String(26))
+    agent_kind: Mapped[str | None] = mapped_column(String(24))
+    model: Mapped[str | None] = mapped_column(String(64))
+    base_oid: Mapped[str] = mapped_column(String(64))
+    head_block: Mapped[str | None] = mapped_column(String(64))
+    diff_stat: Mapped[str | None] = mapped_column(String(200))
+    compact_verdict: Mapped[str | None] = mapped_column(String(500))
+    cost_usd: Mapped[float | None] = mapped_column(Float)
+    started_at: Mapped[datetime] = mapped_column()
+    finished_at: Mapped[datetime | None] = mapped_column()
+
+
+@final
+class NodeStepBlock(Base):
+    __tablename__ = "node_step_blocks"
+    __table_args__ = _table_args(
+        UniqueConstraint("attempt_id", "seq"),
+        CheckConstraint("seq BETWEEN 1 AND 4", name="seq"),
+        CheckConstraint("step_type IN ('spec','patch','test','verify')", name="step_type"),
+    )
+
+    block_hash: Mapped[str] = mapped_column(String(64), primary_key=True)
+    attempt_id: Mapped[str] = mapped_column(ForeignKey("node_attempts.id", ondelete="CASCADE"))
+    seq: Mapped[int] = mapped_column()
+    step_type: Mapped[str] = mapped_column(String(8))
+    prev_block_hash: Mapped[str] = mapped_column(String(64))
+    body: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column()
+
+
+@final
+class GateReceipt(Base):
+    __tablename__ = "gate_receipts"
+    __table_args__ = _table_args(
+        Index("ix_gate_receipts_node", "node_id", "tier", "created_at"),
+        CheckConstraint("tier IN ('micro','blast','direction')", name="tier"),
+        CheckConstraint("length(compact_verdict) <= 500", name="compact_verdict"),
+        CheckConstraint("duration_ms >= 0", name="duration_ms"),
+    )
+
+    receipt_hash: Mapped[str] = mapped_column(String(64), primary_key=True)
+    node_id: Mapped[str] = mapped_column(ForeignKey("plan_nodes.id", ondelete="CASCADE"))
+    tier: Mapped[str] = mapped_column(String(12))
+    state_hash: Mapped[str] = mapped_column(String(64))
+    argv_sha256: Mapped[str] = mapped_column(String(64))
+    exit_code: Mapped[int] = mapped_column()
+    passed: Mapped[bool] = mapped_column(Boolean(create_constraint=True))
+    compact_verdict: Mapped[str] = mapped_column(String(500))
+    log_ref: Mapped[str | None] = mapped_column(String(1024))
+    duration_ms: Mapped[int] = mapped_column()
+    created_at: Mapped[datetime] = mapped_column()

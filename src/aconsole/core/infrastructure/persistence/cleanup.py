@@ -5,15 +5,17 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from pathlib import Path
 
 from sqlalchemy import ColumnElement, CursorResult, and_, delete, select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, aliased
 
 from aconsole.core.domain.checkpoints import check_keep
 from aconsole.core.infrastructure.persistence.models import (
     Approval,
     Checkpoint,
     EventLog,
+    GateReceipt,
     GitRefDeletion,
     Project,
     QuotaHistory,
@@ -43,6 +45,8 @@ class SweepResult:
     tabs_deleted: int
     refs: tuple[str, ...]
     more: bool = False
+    receipts_deleted: int = 0
+    gate_log_refs: tuple[str, ...] = ()
 
 
 def sweep(session: Session, *, now: datetime, drop_ref: Callable[[str], None]) -> SweepResult:
@@ -62,6 +66,7 @@ def sweep(session: Session, *, now: datetime, drop_ref: Callable[[str], None]) -
     approvals = _trim_approvals(session, now)
     checkpoints = _trim_checkpoints(session, _keep(session), dropped)
     tabs = _trim_closed_tabs(session, now, dropped)
+    receipts, gate_logs = trim_gate_receipts(session, now)
     session.flush()
     return SweepResult(
         events_deleted=events,
@@ -70,7 +75,9 @@ def sweep(session: Session, *, now: datetime, drop_ref: Callable[[str], None]) -
         checkpoints_deleted=checkpoints,
         tabs_deleted=tabs,
         refs=tuple(refs),
-        more=_PORTION in {quota, approvals} or events >= _PORTION,
+        more=_PORTION in {quota, approvals, receipts} or events >= _PORTION,
+        receipts_deleted=receipts,
+        gate_log_refs=gate_logs,
     )
 
 
@@ -155,3 +162,57 @@ def _queue_ref(session: Session, ref: str) -> None:
     ).where(Checkpoint.git_ref == ref).limit(1))
     if repo is not None and session.get(GitRefDeletion, (repo, ref)) is None:
         session.add(GitRefDeletion(repo_path=repo, git_ref=ref))
+
+
+
+def trim_gate_receipts(session: Session, now: datetime) -> tuple[int, tuple[str, ...]]:
+    """Remove old receipts, preserving the newest per (node, tier), including ties.
+
+    Return unreferenced logs for deletion only after the writer has committed.
+    Attempts and blocks remain durable audit history.
+    """
+    if now.tzinfo is None:
+        message = "cleanup clock must be timezone-aware"
+        raise ValueError(message)
+    newer = aliased(GateReceipt)
+    has_newer = (
+        select(newer.receipt_hash)
+        .where(
+            newer.node_id == GateReceipt.node_id,
+            newer.tier == GateReceipt.tier,
+            (newer.created_at > GateReceipt.created_at)
+            | ((newer.created_at == GateReceipt.created_at) & (newer.receipt_hash > GateReceipt.receipt_hash)),
+        )
+        .exists()
+    )
+    chosen = (
+        select(GateReceipt.receipt_hash)
+        .where(
+            GateReceipt.created_at < now - timedelta(days=30),
+            has_newer,
+        )
+        .limit(_PORTION)
+    )
+    removed = (
+        session.execute(
+            delete(GateReceipt)
+            .where(GateReceipt.receipt_hash.in_(chosen))
+            .returning(
+                GateReceipt.log_ref,
+            )
+        )
+        .scalars()
+        .all()
+    )
+    candidates = {ref for ref in removed if ref is not None}
+    retained = set(session.scalars(select(GateReceipt.log_ref).where(GateReceipt.log_ref.in_(candidates))))
+    return len(removed), tuple(sorted(candidates - retained))
+
+
+def remove_gate_logs(log_refs: tuple[str, ...], log_root: Path) -> None:
+    """Unlink committed, unreferenced gate logs confined to the configured directory."""
+    root = log_root.resolve()
+    for ref in log_refs:
+        path = Path(ref)
+        if path.suffix == ".log" and path.resolve().parent == root:
+            path.unlink(missing_ok=True)
