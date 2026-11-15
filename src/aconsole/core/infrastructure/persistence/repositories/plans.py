@@ -123,6 +123,10 @@ def _save_node(session: Session, plan: StoredPlan, node: StoredNode) -> None:
     row.title = node.title
     row.objective = node.objective
     row.test_cmd = node.test_cmd
+    row.level = node.level
+    row.pipeline = node.pipeline
+    row.invariants = node.invariants
+    row.gate_profile = node.gate_profile
     row.status = NodeStatus(node.status)
     row.owner_agent = None if node.owner is None else AgentKind(node.owner)
     row.paths = list(node.paths)
@@ -232,6 +236,10 @@ def _stored_node(links: _Links, row: PlanNode, keys: dict[str, str]) -> StoredNo
         title=row.title,
         objective=row.objective,
         test_cmd=row.test_cmd,
+        level=row.level,
+        pipeline=row.pipeline,
+        invariants=row.invariants,
+        gate_profile=row.gate_profile,
         status=row.status.value,
         owner=None if row.owner_agent is None else row.owner_agent.value,
         paths=tuple(row.paths),

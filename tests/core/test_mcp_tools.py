@@ -22,20 +22,22 @@ if TYPE_CHECKING:
 _HINT = "open a tab and pass Authorization: Bearer <tab token>"
 _READ = frozenset({"plan_get", "plan_ready", "ctx_get", "kb_impact", "plan_list"})
 _IDEMPOTENT = frozenset({"plan_create", "plan_add_nodes", "node_attach"})
-_TOOLS = frozenset({
-    "plan_create",
-    "plan_add_nodes",
-    "plan_get",
-    "plan_ready",
-    "node_claim",
-    "node_update",
-    "node_attach",
-    "ctx_get",
-    "kb_add",
-    "kb_impact",
-    "handover",
-    "plan_list",
-})
+_TOOLS = frozenset(
+    {
+        "plan_create",
+        "plan_add_nodes",
+        "plan_get",
+        "plan_ready",
+        "node_claim",
+        "node_update",
+        "node_attach",
+        "ctx_get",
+        "kb_add",
+        "kb_impact",
+        "handover",
+        "plan_list",
+    }
+)
 _ERROR_ARGS: dict[str, dict[str, object]] = {
     "plan_create": {"title": "Plan", "goal": "Ship"},
     "plan_add_nodes": {"plan_id": "plan-1", "nodes": []},
@@ -422,8 +424,65 @@ def test_parent_cycle_is_not_saved() -> None:
     ctx = TabContext(tab_id="t", project_id="p", worktree=None, agent="codex")
     created = board.create(ctx, "Plan", "goal", [NodeIn(key="R-0", title="Root", objective="do")])
     with pytest.raises(_ToolError):
-        board.add_nodes(ctx, created.plan_id, [
-            NodeIn(key="A-1", title="Alpha", objective="do", parent="B-1"),
-            NodeIn(key="B-1", title="Beta", objective="do", parent="A-1"),
-        ])
+        board.add_nodes(
+            ctx,
+            created.plan_id,
+            [
+                NodeIn(key="A-1", title="Alpha", objective="do", parent="B-1"),
+                NodeIn(key="B-1", title="Beta", objective="do", parent="A-1"),
+            ],
+        )
     assert tuple(board._plans[created.plan_id].meta) == ("R-0",)
+
+
+def test_mcp_hdag_scope_rejection_is_atomic() -> None:
+    asyncio.run(_hdag_scope())
+
+
+async def _hdag_scope() -> None:
+    board, server = _server(_Clock(), "tab-a")
+    async with Client(server) as client:
+        created = await _call(
+            client,
+            "plan_create",
+            {
+                "title": "H-DAG",
+                "goal": "Ship",
+                "nodes": [
+                    {
+                        **_node("CORE-0", paths=["src/**"]),
+                        "level": 0,
+                        "invariants": "Pure domain",
+                        "gate_profile": {"tier3": ["pytest"]},
+                    },
+                ],
+            },
+        )
+        plan_id = created["plan_id"]
+        ready = await _call(client, "plan_ready", {"plan_id": plan_id})
+        assert ready["nodes"] == []
+        rejected = await client.call_tool(
+            "plan_add_nodes",
+            {
+                "plan_id": plan_id,
+                "nodes": [
+                    {**_node("BAD-1", paths=["tests/outside.py"]), "parent": "CORE-0", "pipeline": True},
+                ],
+            },
+        )
+        error = _error(rejected)
+        assert error["reason"] == "NODE_CONTRACT"
+        assert error["code"] == 4013
+        assert len(next(iter(board._plans.values())).meta) == 1
+        await _call(
+            client,
+            "plan_add_nodes",
+            {
+                "plan_id": plan_id,
+                "nodes": [
+                    {**_node("CORE-1", paths=["src/core.py"]), "parent": "CORE-0", "pipeline": True},
+                ],
+            },
+        )
+        ready = await _call(client, "plan_ready", {"plan_id": plan_id})
+        assert [node["key"] for node in _nodes(ready)] == ["CORE-1"]

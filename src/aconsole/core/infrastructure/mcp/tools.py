@@ -78,6 +78,10 @@ class NodeIn(_Frozen):
     owner_agent: Literal["claude", "codex"] | None = None
     paths: list[_ItemText] = Field(default_factory=list, max_length=100)
     acceptance: list[_ItemText] = Field(default_factory=list, max_length=100)
+    level: Literal[0, 1] = 1
+    pipeline: bool = False
+    invariants: _ItemText | None = None
+    gate_profile: dict[str, object] | None = None
     test_cmd: _ItemText | None = None
     review_required: bool = False
     output_format: _ItemText | None = None
@@ -1227,6 +1231,10 @@ def _stored_node(stored: _Stored, meta: _Meta, layer: int, now: datetime) -> Sto
         parent=meta.parent,
         related=meta.related,
         test_cmd=meta.test_cmd,
+        level=node.level,
+        pipeline=node.pipeline,
+        invariants=node.invariants,
+        gate_profile=None if node.gate_profile is None else dict(node.gate_profile),
         artifacts=tuple(
             StoredArtifact(id=artifact_id, kind=kind, ref=ref) for (kind, ref), artifact_id in meta.artifacts.items()
         ),
@@ -1271,6 +1279,10 @@ def _restored(saved: StoredPlan, *, checked_completion: bool = False) -> _Stored
                 created_at=item.created_at,
                 status=_after_restart(item),
                 paths=item.paths,
+                level=item.level,
+                pipeline=item.pipeline,
+                invariants=item.invariants,
+                gate_profile=item.gate_profile,
                 review_required=item.review_required,
                 tab_id=item.tab_id,
                 lease_id=item.lease_id,
@@ -1357,6 +1369,10 @@ def _spec(spec: NodeIn, created_at: datetime) -> NodeSpec:
         parent=spec.parent,
         related=tuple(spec.related),
         paths=tuple(spec.paths),
+        level=spec.level,
+        pipeline=spec.pipeline,
+        invariants=spec.invariants,
+        gate_profile=spec.gate_profile,
         review_required=spec.review_required,
     )
 
@@ -1530,6 +1546,7 @@ def _git(worktree: Path | None, *args: str) -> str:
 
 
 _CODES: dict[str, int] = {
+    "NODE_CONTRACT": 4013,
     "RESPONSE_TOO_LARGE": -32000,
     "INTERNAL_ERROR": -32603,
     "INGEST_UNAUTHORIZED": 1001,

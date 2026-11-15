@@ -102,6 +102,77 @@ def test_one_bad_job_does_not_take_its_batch_with_it(tmp_path: Path) -> None:
     assert done.count("good") >= 3
 
 
+def test_hdag_contract_and_readiness_survive_restart(tmp_path: Path) -> None:
+    writer = _writer(tmp_path)
+    try:
+
+        def seed(session: Session) -> None:
+            session.add(Project(id="p", root_path="/r", name="r", languages=[], created_at=_NOW))
+
+        _ = writer.call(seed)
+        board = PlanBoard()
+        board.use_store(PlanDatabase(writer))
+        ctx = TabContext(tab_id="t1", project_id="p", worktree=None, agent="claude")
+        created = board.create(
+            ctx,
+            "H-DAG",
+            "goal",
+            [
+                NodeIn(
+                    key="CORE-0",
+                    title="Core",
+                    objective="direction",
+                    level=0,
+                    paths=["src/**"],
+                    invariants="Pure domain",
+                    gate_profile={"tier3": ["pytest"]},
+                ),
+                NodeIn(
+                    key="CORE-1",
+                    title="Module",
+                    objective="implement",
+                    parent="CORE-0",
+                    pipeline=True,
+                    paths=["src/core.py"],
+                    acceptance=["works"],
+                    test_cmd="pytest",
+                ),
+            ],
+        )
+        assert [node.key for node in board.ready(ctx, created.plan_id, 10).nodes] == ["CORE-1"]
+
+        fresh = PlanBoard()
+        fresh.use_store(PlanDatabase(writer))
+        assert [node.key for node in fresh.ready(ctx, created.plan_id, 10).nodes] == ["CORE-1"]
+        stored = PlanDatabase(writer).load()[0]
+        direction = next(node for node in stored.nodes if node.key == "CORE-0")
+        module = next(node for node in stored.nodes if node.key == "CORE-1")
+        assert direction.level == 0
+        assert direction.invariants == "Pure domain"
+        assert direction.gate_profile == {"tier3": ["pytest"]}
+        assert module.pipeline is True
+        assert module.parent == "CORE-0"
+
+        with pytest.raises(tools._ToolError, match="NODE_CONTRACT"):
+            fresh.add_nodes(
+                ctx,
+                created.plan_id,
+                [
+                    NodeIn(
+                        key="BAD-1",
+                        title="Outside",
+                        objective="reject",
+                        parent="CORE-0",
+                        pipeline=True,
+                        paths=["tests/outside.py"],
+                    ),
+                ],
+            )
+        assert len(PlanDatabase(writer).load()[0].nodes) == 2
+    finally:
+        writer.stop()
+
+
 def test_a_save_leaves_rows_that_did_not_change_alone(tmp_path: Path) -> None:
     writer = _writer(tmp_path)
     statements: list[str] = []

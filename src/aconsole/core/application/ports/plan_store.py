@@ -45,6 +45,10 @@ class StoredNode:
     parent: str | None
     related: tuple[str, ...]
     artifacts: tuple[StoredArtifact, ...]
+    level: int = 1
+    pipeline: bool = False
+    invariants: str | None = None
+    gate_profile: dict[str, object] | None = None
     test_cmd: str | None = None
 
 
