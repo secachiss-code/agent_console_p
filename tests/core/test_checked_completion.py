@@ -35,7 +35,7 @@ if TYPE_CHECKING:
 def test_checked_completion_requires_fresh_evidence(*, verify_first: bool, evidence: str | None) -> None:
     clock = _Clock()
     plan = Plan(checked_completion=True)
-    plan.add(NodeSpec(key="A-1", created_at=clock(), review_required=True, paths=("src/a.py",)))
+    plan.add(NodeSpec(key="A-1", created_at=clock(), paths=("src/a.py",)))
     plan.add(NodeSpec(key="B-1", created_at=clock(), depends_on=("A-1",), paths=("src/a.py",)))
     claimed = plan.claim("A-1", tab_id="tab-a", at=clock())
     if verify_first:
@@ -62,7 +62,7 @@ def test_checked_completion_requires_fresh_evidence(*, verify_first: bool, evide
 def test_checked_completion_expired_verification_returns_for_rechecking() -> None:
     clock = _Clock()
     plan = Plan(checked_completion=True)
-    plan.add(NodeSpec(key="A-1", created_at=clock(), review_required=True))
+    plan.add(NodeSpec(key="A-1", created_at=clock(), review_required=False))
     claimed = plan.claim("A-1", tab_id="tab-a", at=clock())
     plan.transition(Move(
         key="A-1", to=NodeStatus.VERIFYING, role=Role.AGENT, at=clock(),
@@ -148,7 +148,7 @@ def test_checked_completion_survives_failed_write_rollback() -> None:
     board = PlanBoard(now=clock, checked_completion=True)
     board.use_store(store)
     made = board.create(_context("tab-a"), "Rollback", "goal", [
-        NodeIn(key="A-1", title="First", objective="do", review_required=True),
+        NodeIn(key="A-1", title="First", objective="do", review_required=False),
     ])
     node_id = made.nodes[0].node_id
     claim = board.claim(_context("tab-a"), node_id)
@@ -189,7 +189,7 @@ def test_daemon_checked_completion_updates_live_plan_count_and_survives_restart(
                 return _content(result)
 
             made = await call("plan_create", {"title": "Checked", "goal": "goal", "nodes": [{
-                "key": "A-1", "title": "First", "objective": "do", "review_required": True,
+                "key": "A-1", "title": "First", "objective": "do", "review_required": False,
             }]})
             plan_id = made["plan_id"]
             assert isinstance(plan_id, str)
@@ -216,3 +216,58 @@ def test_daemon_checked_completion_updates_live_plan_count_and_survives_restart(
             await _stop(again, second_task, second_client)
 
     asyncio.run(scenario())
+
+
+@pytest.mark.parametrize("verify_first", [False, True])
+@pytest.mark.parametrize("evidence", [None, "checks passed"])
+def test_checked_completion_cannot_bypass_human_review(*, verify_first: bool, evidence: str | None) -> None:
+    clock = _Clock()
+    plan = Plan(checked_completion=True)
+    plan.add(NodeSpec(key="A-1", created_at=clock(), review_required=True))
+    plan.add(NodeSpec(key="B-1", created_at=clock(), depends_on=("A-1",)))
+    claimed = plan.claim("A-1", tab_id="tab-a", at=clock())
+    if verify_first:
+        plan.transition(Move(
+            key="A-1", to=NodeStatus.VERIFYING, role=Role.AGENT, at=clock(),
+            fence=claimed.fence, evidence="checks passed",
+        ))
+    before = plan.get("A-1")
+    with pytest.raises(DomainError, match="NODE_TRANSITION_INVALID") as failure:
+        plan.transition(Move(
+            key="A-1", to=NodeStatus.DONE, role=Role.AGENT, at=clock(),
+            fence=claimed.fence, evidence=evidence,
+        ))
+    assert "done" not in failure.value.extra
+    assert plan.get("A-1") == before
+    assert not plan.ready("B-1")
+    if not verify_first:
+        plan.transition(Move(
+            key="A-1", to=NodeStatus.VERIFYING, role=Role.AGENT, at=clock(),
+            fence=claimed.fence, evidence="checks passed",
+        ))
+    reviewed = plan.transition(Move(
+        key="A-1", to=NodeStatus.DONE, role=Role.HUMAN, at=clock(), fence=claimed.fence,
+    ))
+    assert reviewed.status is NodeStatus.DONE
+    assert plan.ready("B-1")
+
+
+def test_review_guard_survives_board_restart() -> None:
+    from aconsole.core.infrastructure.mcp.tools import _ToolError
+
+    clock = _Clock()
+    store = _Store()
+    original = PlanBoard(now=clock, checked_completion=True)
+    original.use_store(store)
+    made = original.create(_context("tab-a"), "Review", "goal", [
+        NodeIn(key="A-1", title="First", objective="do", review_required=True),
+    ])
+    claim = original.claim(_context("tab-a"), made.nodes[0].node_id)
+    original.update(_context("tab-a"), made.nodes[0].node_id, claim.fence, "verifying", None, "checks passed")
+    board = PlanBoard(now=clock, checked_completion=True)
+    board.use_store(store)
+    with pytest.raises(_ToolError):
+        board.update(_context("tab-a"), made.nodes[0].node_id, claim.fence, "done", None, "checks passed")
+    assert board.views()[0].done == 0
+    assert store.saved is not None
+    assert store.saved.nodes[0].status == "verifying"

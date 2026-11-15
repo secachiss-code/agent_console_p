@@ -560,7 +560,7 @@ class Plan:
 
     def _rule(self, source: NodeStatus, target: NodeStatus, role: Role) -> _Rule | None:
         if self._checked_completion and role is Role.AGENT and source in _LEASED and target is NodeStatus.DONE:
-            return _both(evidence=True)
+            return _both(evidence=True, review_blocks=True)
         return _RULES.get((source, target))
 
     def _check_rule(self, node: Node, move: Move) -> None:
