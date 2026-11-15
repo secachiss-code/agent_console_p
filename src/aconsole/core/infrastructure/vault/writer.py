@@ -22,6 +22,7 @@ _USER_SECTIONS = frozenset({"Цель"})
 _TTL = timedelta(seconds=10)
 _DIGEST = 32
 _FENCES = 3
+_MAX_ATTEMPTS = 4
 
 
 class UserSectionError(Exception):
@@ -169,6 +170,27 @@ def append_under(text: str, heading: str, line: str) -> str:
     if section and not section.endswith("\n"):
         section = f"{section}\n"
     return f"{head}{section}{line}\n{tail}"
+
+
+def update_attempt(text: str, attempt_no: int, line: str) -> str:
+    """Upsert one attempt line, preserving the rest of the user-owned note body."""
+    if not 1 <= attempt_no <= _MAX_ATTEMPTS or "\n" in line or "\r" in line:
+        message = "attempt journal requires one line and an attempt number in 1..4"
+        raise ValueError(message)
+    marker = "## Попытки\n"
+    start = text.find(marker)
+    if start >= 0:
+        body_at = start + len(marker)
+        end = text.find("\n## ", body_at)
+        end = len(text) if end < 0 else end
+        section = text[body_at:end]
+        prefix = f"- {attempt_no}/4 · "
+        lines = section.splitlines(keepends=True)
+        for index, old in enumerate(lines):
+            if old.startswith(prefix):
+                lines[index] = line + ("\n" if old.endswith("\n") else "")
+                return text[:body_at] + "".join(lines) + text[end:]
+    return append_under(text, "Попытки", line)
 
 
 class VaultWriter:

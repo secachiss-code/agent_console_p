@@ -19,7 +19,8 @@ from watchdog.observers import Observer
 from watchdog.observers.api import BaseObserver
 
 from aconsole.core.domain.vault_sync import Note, Owners, merge
-from aconsole.core.infrastructure.vault.writer import VaultWriter, dump_front, load_front, split_note
+from aconsole.core.infrastructure.vault.canvas import CanvasHistory, CanvasNode, render_canvas
+from aconsole.core.infrastructure.vault.writer import VaultWriter, dump_front, load_front, split_note, update_attempt
 
 _LOG = logging.getLogger(__name__)
 _PLANS: Final = "plans"
@@ -40,6 +41,9 @@ class NodeNote:
     key: str
     note: Note
     owners: Owners
+    node_id: str = ""
+    level: int = 1
+    parent: str | None = None
 
 
 class NoteBoard(Protocol):
@@ -77,12 +81,17 @@ class VaultSync:
         self._synced: dict[str, Note] = {} if bases is None else bases.load()
         self._root: Path | None = None
         self._observer: _Watch | None = None
+        self._history: CanvasHistory | None = None
         self.on_edit: Callable[[str], None] | None = None
 
     def use_bases(self, bases: BaseStore) -> None:
         """The store came up after this object did."""
         self._bases = bases
         self._synced = bases.load()
+
+    def use_history(self, history: CanvasHistory) -> None:
+        """Attach durable positions and attempt history during bootstrap."""
+        self._history = history
 
     @property
     def root(self) -> Path | None:
@@ -139,8 +148,26 @@ class VaultSync:
         """Bring every note of the plan and the board together."""
         if self._root is None:
             return
-        for node in self._board.node_notes(plan_id):
+        nodes = self._board.node_notes(plan_id)
+        self._publish_canvas(plan_id, nodes)
+        for node in nodes:
             self._sync_node(plan_id, node)
+        if self._history is not None:
+            for attempt in self._history.attempts(plan_id):
+                ref = self.note_ref(plan_id, attempt.key)
+                path = None if ref is None else self.resolve(ref)
+                if path is not None:
+                    text = path.read_text(encoding="utf-8")
+                    _ = self._writer.write(path, update_attempt(text, attempt.attempt_no, attempt.render()))
+
+    def _publish_canvas(self, plan_id: str, nodes: tuple[NodeNote, ...]) -> None:
+        canvas = tuple(CanvasNode(id=node.node_id or node.key, key=node.key, title=node.note.title,
+                                  status=node.note.status, level=node.level, parent=node.parent,
+                                  depends_on=node.note.depends_on) for node in nodes)
+        positions = None if self._history is None else self._history.positions(plan_id)
+        text = render_canvas(plan_id, canvas, positions)
+        path = self._path(f"{_PLANS}/{plan_id}/_plan.canvas")
+        _ = self._writer.write(path, text)
 
     def _sync_node(self, plan_id: str, node: NodeNote) -> None:
         ref = f"{_PLANS}/{plan_id}/{node.key}{_NOTE}"
@@ -172,7 +199,11 @@ class VaultSync:
         if root is None:
             message = "no vault"
             raise RuntimeError(message)
-        return root / ref
+        path = (root / ref).resolve()
+        if not path.is_relative_to(root.resolve()):
+            message = "note reference leaves the vault"
+            raise ValueError(message)
+        return path
 
     def _heard(self, path: Path) -> None:
         """The watcher's thread. A file the core itself just wrote is not an edit."""
