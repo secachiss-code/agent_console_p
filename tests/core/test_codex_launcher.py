@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import re
 import stat
+from dataclasses import replace
 from pathlib import Path
 
 import msgspec
@@ -31,6 +32,26 @@ _STATE_PAIR = re.compile(r'"([^"]+)" = \{ trusted_hash = "(sha256:[0-9a-f]{64})"
 
 def _tab(home: Path) -> CodexTab:
     return CodexTab(agent_home=home, tab_id=_TAB, port=_PORT, token=_MARKER)
+
+
+def test_codex_launcher_preserves_model_with_trusted_hooks_and_probe(tmp_path: Path) -> None:
+    launcher = CodexLauncher()
+    tab = replace(_tab(tmp_path), model="provider/model-v1")
+    trust = HookTrustCache()
+    trust.load((_PROBES / "hooks-list.jsonl").read_bytes())
+    baseline = launcher.launch(_tab(tmp_path), trust)
+    chosen = launcher.launch(tab, trust)
+    assert chosen.argv == (*baseline.argv, "--model", "provider/model-v1")
+    probe = launcher.probe(tab)
+    assert probe.argv[probe.argv.index("--model") + 1] == tab.model
+    assert chosen.env == baseline.env
+
+
+@pytest.mark.parametrize("model", ["", " ", "--help", "x" * 65, "model\nother"])
+def test_codex_launcher_rejects_invalid_model_before_writing(tmp_path: Path, model: str) -> None:
+    with pytest.raises(ValueError, match="invalid model"):
+        CodexLauncher().launch(replace(_tab(tmp_path), model=model), HookTrustCache())
+    assert not (tmp_path / ".aconsole").exists()
 
 
 def _mode(path: Path) -> int:

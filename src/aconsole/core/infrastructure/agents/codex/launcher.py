@@ -80,6 +80,7 @@ class CodexTab:
     port: int
     token: str
     policy: ApprovalPolicyChoice = field(default_factory=ApprovalPolicyChoice)
+    model: str | None = None
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -120,6 +121,9 @@ class CodexLauncher:
         _require_tab(tab.tab_id)
         _require_port(tab.port)
         _require_token(tab.token)
+        if tab.model is not None and re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._:/-]{0,63}", tab.model) is None:
+            message = "invalid model id"
+            raise ValueError(message)
         bin_dir = tab.agent_home / ".aconsole" / "bin"
         _private_dir(tab.agent_home / ".aconsole")
         _private_dir(bin_dir)
@@ -131,7 +135,8 @@ class CodexLauncher:
         _atomic_write(notify, _NOTIFY.encode("utf-8"), _SCRIPT_MODE)
         env = {_ENV_PORT: str(tab.port), _ENV_TAB: tab.tab_id, _ENV_AUTH: tab.token}
         return CodexLaunch(
-            argv=_argv(tab.port, hook, notify, trust, tab.policy),
+            argv=_argv(tab.port, hook, notify, trust, tab.policy)
+            + (() if tab.model is None else ("--model", tab.model)),
             env=env,
             hook_path=hook,
             notify_path=notify,
@@ -192,7 +197,11 @@ def _hook_command(hook: Path) -> str:
 
 
 def _argv(
-    port: int, hook: Path, notify: Path, trust: HookTrustCache, policy: ApprovalPolicyChoice,
+    port: int,
+    hook: Path,
+    notify: Path,
+    trust: HookTrustCache,
+    policy: ApprovalPolicyChoice,
 ) -> tuple[str, ...]:
     command = _hook_command(hook)
     trusted = _trusted_hooks(trust)

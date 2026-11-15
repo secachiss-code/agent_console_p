@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 import stat
+from dataclasses import replace
 from pathlib import Path
 
 import pytest
@@ -19,6 +20,20 @@ _TAB = "tab-1"
 
 def _tab(home: Path, *, tab_id: str = _TAB, port: int = _PORT, token: str = _MARKER) -> ClaudeTab:
     return ClaudeTab(agent_home=home, tab_id=tab_id, port=port, token=token)
+
+
+def test_claude_launcher_passes_model_as_one_argument(tmp_path: Path) -> None:
+    baseline = ClaudeLauncher().launch(_tab(tmp_path))
+    chosen = ClaudeLauncher().launch(replace(_tab(tmp_path), model="provider/model-v1"))
+    assert chosen.argv == (*baseline.argv, "--model", "provider/model-v1")
+    assert chosen.env == baseline.env
+
+
+@pytest.mark.parametrize("model", ["", " ", "--help", "x" * 65, "model\nother"])
+def test_claude_launcher_rejects_invalid_model_before_writing(tmp_path: Path, model: str) -> None:
+    with pytest.raises(ValueError, match="invalid model"):
+        ClaudeLauncher().launch(replace(_tab(tmp_path), model=model))
+    assert not (tmp_path / ".aconsole").exists()
 
 
 def _mode(path: Path) -> int:

@@ -82,6 +82,7 @@ class ClaudeTab:
     port: int
     token: str
     policy: ApprovalPolicyChoice = field(default_factory=ApprovalPolicyChoice)
+    model: str | None = None
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -104,6 +105,9 @@ class ClaudeLauncher:
         _require_tab(tab.tab_id)
         _require_port(tab.port)
         _require_token(tab.token)
+        if tab.model is not None and re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._:/-]{0,63}", tab.model) is None:
+            message = "invalid model id"
+            raise ValueError(message)
         root = tab.agent_home / ".aconsole"
         run = root / "run"
         tab_dir = run / tab.tab_id
@@ -120,7 +124,8 @@ class ClaudeLauncher:
         _atomic_write(mcp, _mcp_payload(tab.port), _FILE_MODE)
         env = {_ENV_PORT: str(tab.port), _ENV_TAB: tab.tab_id, _ENV_AUTH: tab.token}
         return ClaudeLaunch(
-            argv=("claude", "--settings", str(settings), "--mcp-config", str(mcp)),
+            argv=("claude", "--settings", str(settings), "--mcp-config", str(mcp))
+            + (() if tab.model is None else ("--model", tab.model)),
             env=env,
             settings_path=settings,
             script_path=script,
@@ -183,11 +188,15 @@ def _settings_payload(port: int, tab_id: str, script: Path, policy: ApprovalPoli
 
 def _mcp_payload(port: int) -> bytes:
     # Claude expands the token from its tab environment. The secret never enters a file or argv here.
-    document = {"mcpServers": {"aconsole": {
-        "type": "http",
-        "url": f"http://127.0.0.1:{port}/mcp",
-        "headers": {"Authorization": _BEARER},
-    }}}
+    document = {
+        "mcpServers": {
+            "aconsole": {
+                "type": "http",
+                "url": f"http://127.0.0.1:{port}/mcp",
+                "headers": {"Authorization": _BEARER},
+            }
+        }
+    }
     return json.dumps(document, indent=2).encode("utf-8") + b"\n"
 
 
