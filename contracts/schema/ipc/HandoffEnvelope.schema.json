@@ -1,0 +1,106 @@
+{
+  "$defs": {
+    "HandoffEnvelope": {
+      "additionalProperties": false,
+      "properties": {
+        "attempt": {
+          "maximum": 4,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "compact_verdict": {
+          "anyOf": [
+            {
+              "maxLength": 500,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "contract_hash": {
+          "type": "string"
+        },
+        "diff_stat": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "head_block_hash": {
+          "type": "string"
+        },
+        "max_attempts": {
+          "maximum": 4,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "next": {
+          "maxLength": 200,
+          "type": "string"
+        },
+        "node": {
+          "type": "string"
+        },
+        "remaining_items": {
+          "default": [],
+          "items": {
+            "maxLength": 160,
+            "type": "string"
+          },
+          "maxItems": 5,
+          "type": "array"
+        },
+        "scope": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "step": {
+          "enum": [
+            "patch",
+            "spec",
+            "test",
+            "verify"
+          ]
+        },
+        "symbols": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 12,
+          "type": "array"
+        },
+        "v": {
+          "default": 1,
+          "enum": [
+            1
+          ]
+        }
+      },
+      "required": [
+        "node",
+        "step",
+        "attempt",
+        "max_attempts",
+        "contract_hash",
+        "head_block_hash",
+        "scope",
+        "next"
+      ],
+      "title": "HandoffEnvelope",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/HandoffEnvelope",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

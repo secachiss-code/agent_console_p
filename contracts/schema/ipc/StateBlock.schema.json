@@ -1,0 +1,128 @@
+{
+  "$defs": {
+    "StateBlock": {
+      "additionalProperties": false,
+      "properties": {
+        "affected_symbols": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "attempt": {
+          "maximum": 4,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "contract_hash": {
+          "type": "string"
+        },
+        "delta_ref": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "delta_sha256": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "diff_stat": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "node_id": {
+          "type": "string"
+        },
+        "prev_block_hash": {
+          "type": "string"
+        },
+        "seq": {
+          "maximum": 4,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "step_type": {
+          "enum": [
+            "patch",
+            "spec",
+            "test",
+            "verify"
+          ]
+        },
+        "test_exit_code": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "token_cost_usd": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "v": {
+          "default": 1,
+          "enum": [
+            1
+          ]
+        },
+        "verification_receipt_hash": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "node_id",
+        "attempt",
+        "seq",
+        "step_type",
+        "prev_block_hash",
+        "contract_hash"
+      ],
+      "title": "StateBlock",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/StateBlock",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

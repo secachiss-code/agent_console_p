@@ -241,6 +241,7 @@ from aconsole.contracts.ipc import (
 from aconsole.contracts.methods import (
     Method,
 )
+from aconsole.contracts.pipeline import HandoffEnvelope, StateBlock
 from aconsole.contracts.settings import (
     Settings,
     SettingsPatch,
@@ -270,6 +271,8 @@ from aconsole.contracts.work_sessions import (
 )
 
 STRUCTS: tuple[type[msgspec.Struct], ...] = (
+    StateBlock,
+    HandoffEnvelope,
     WorkSessionResultParams,
     WorkSessionIntegratePreviewParams,
     WorkSessionIntegrateParams,
