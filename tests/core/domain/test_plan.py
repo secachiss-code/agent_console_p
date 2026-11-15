@@ -374,3 +374,25 @@ def test_a_person_sends_back_a_node_on_verification_past_its_lease() -> None:
     assert failed.status is NodeStatus.FAILED
     back = plan.transition(Move(key="N-1", to=NodeStatus.PENDING, role=Role.HUMAN, at=later))
     assert back.status is NodeStatus.PENDING
+
+
+def test_batch_containment_and_blocking_are_independent() -> None:
+    plan = Plan()
+    plan.add_many((
+        NodeSpec(key="CORE", created_at=AT, depends_on=("task",)),
+        NodeSpec(key="task", created_at=AT, parent="CORE", related=("CORE",)),
+    ))
+    assert plan.unmet_blockers("CORE") == ("task",)
+    assert plan.ready("task")
+    assert plan.parent_cycle_path() is None
+
+
+def test_parent_cycle_rejects_entire_batch() -> None:
+    plan = Plan()
+    plan.add(NodeSpec(key="existing", created_at=AT))
+    with pytest.raises(DomainError, match="PLAN_CYCLE"):
+        plan.add_many((
+            NodeSpec(key="a", created_at=AT, parent="b"),
+            NodeSpec(key="b", created_at=AT, parent="a"),
+        ))
+    assert plan.kahn() == ("existing",)

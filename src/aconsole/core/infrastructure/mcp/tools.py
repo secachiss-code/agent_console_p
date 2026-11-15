@@ -312,6 +312,7 @@ class _Meta:
     output_format: str | None
     parent: str | None
     related: tuple[str, ...]
+    test_cmd: str | None = None
     artifacts: dict[tuple[str, str], str] = field(default_factory=dict)
 
 
@@ -988,48 +989,22 @@ class PlanBoard:
         if cycle is not None:
             _stop("PLAN_CYCLE", "cycle " + " -> ".join(cycle))
         now = self._now()
+        stored.dag.add_many(tuple(_spec(spec, now) for spec in fresh))
         for spec in fresh:
-            _ = stored.dag.add(
-                NodeSpec(
-                    key=spec.key,
-                    created_at=now,
-                    paths=tuple(spec.paths),
-                    review_required=spec.review_required,
-                )
-            )
-            stored.deps[spec.key] = ()
-            stored.meta[spec.key] = _meta(self._id("node"), spec)
-        for spec in fresh:
-            for dep in spec.depends_on:
-                stored.dag.depend(spec.key, dep)
             stored.deps[spec.key] = tuple(spec.depends_on)
+            stored.meta[spec.key] = _meta(self._id("node"), spec)
         stored.updated_at = now
         return [NodeRef(key=spec.key, node_id=stored.meta[spec.key].node_id) for spec in fresh]
 
     def _preview(self, stored: _Stored, fresh: list[NodeIn]) -> tuple[str, ...] | None:
         _require_present(stored, fresh)
-        scratch = Plan()
-        for key in stored.dag.kahn() or ():
-            node = stored.dag.get(key)
-            _ = scratch.add(
-                NodeSpec(
-                    key=key,
-                    created_at=node.created_at,
-                    depends_on=stored.deps[key],
-                    paths=node.paths,
-                    review_required=node.review_required,
-                )
-            )
-        for spec in fresh:
-            _ = scratch.add(_spec(spec, self._now()))
-        for spec in fresh:
-            for dep in spec.depends_on:
-                try:
-                    scratch.depend(spec.key, dep)
-                except DomainError as exc:
-                    if exc.name == "PLAN_CYCLE":
-                        return exc.extra
-                    _domain(exc)
+        scratch = _restored(self._state(stored)).dag
+        try:
+            scratch.add_many(tuple(_spec(spec, self._now()) for spec in fresh))
+        except DomainError as exc:
+            if exc.name == "PLAN_CYCLE":
+                return exc.extra
+            _domain(exc)
         return None
 
     def _ctx(self, ctx: TabContext, *, node_id: str | None, query: str | None, max_items: int) -> CtxResult:
@@ -1251,6 +1226,7 @@ def _stored_node(stored: _Stored, meta: _Meta, layer: int, now: datetime) -> Sto
         depends_on=stored.deps.get(meta.key, ()),
         parent=meta.parent,
         related=meta.related,
+        test_cmd=meta.test_cmd,
         artifacts=tuple(
             StoredArtifact(id=artifact_id, kind=kind, ref=ref) for (kind, ref), artifact_id in meta.artifacts.items()
         ),
@@ -1320,6 +1296,7 @@ def _restored(saved: StoredPlan, *, checked_completion: bool = False) -> _Stored
             output_format=item.output_format,
             parent=item.parent,
             related=item.related,
+            test_cmd=item.test_cmd,
             artifacts={(artifact.kind, artifact.ref): artifact.id for artifact in item.artifacts},
         )
     return _Stored(
@@ -1361,6 +1338,7 @@ def _require_present(stored: _Stored, fresh: list[NodeIn]) -> None:
     incoming = {spec.key for spec in fresh}
     for spec in fresh:
         _known(spec.depends_on, known, incoming, "depends_on")
+        _known(spec.related, known, incoming, "related")
         if spec.parent is not None:
             _known((spec.parent,), known, incoming, "parent")
 
@@ -1375,6 +1353,9 @@ def _spec(spec: NodeIn, created_at: datetime) -> NodeSpec:
     return NodeSpec(
         key=spec.key,
         created_at=created_at,
+        depends_on=tuple(spec.depends_on),
+        parent=spec.parent,
+        related=tuple(spec.related),
         paths=tuple(spec.paths),
         review_required=spec.review_required,
     )
@@ -1393,6 +1374,7 @@ def _meta(node_id: str, spec: NodeIn) -> _Meta:
         output_format=spec.output_format,
         parent=spec.parent,
         related=tuple(spec.related),
+        test_cmd=spec.test_cmd,
     )
 
 

@@ -321,29 +321,56 @@ class Plan:
         self._related: dict[str, tuple[str, ...]] = {}
 
     def add(self, spec: NodeSpec) -> Node:
-        if spec.key in self._nodes:
-            message = f"duplicate node {spec.key}"
-            raise ValueError(message)
-        self._require_known(spec.depends_on)
-        if spec.parent is not None:
-            self._require_known((spec.parent,))
-        self._require_known(spec.related)
-        self._nodes[spec.key] = Node(
-            key=spec.key,
-            created_at=spec.created_at,
-            paths=spec.paths,
-            review_required=spec.review_required,
-            user_moved=spec.user_moved,
-            pin=spec.pin,
-        )
-        self._blockers[spec.key] = spec.depends_on
-        self._parents[spec.key] = spec.parent
-        self._related[spec.key] = spec.related
-        cycle = self.cycle_path()
-        if cycle is not None:
-            self._drop(spec.key)
-            raise _fail(_CYCLE, "PLAN_CYCLE", cycle)
+        self.add_many((spec,))
         return self._nodes[spec.key]
+
+    def add_many(self, specs: tuple[NodeSpec, ...]) -> None:
+        """Insert a complete batch atomically, including forward references."""
+        scratch = Plan()
+        scratch._nodes = self._nodes.copy()
+        scratch._blockers = self._blockers.copy()
+        scratch._parents = self._parents.copy()
+        scratch._related = self._related.copy()
+        for spec in specs:
+            if spec.key in scratch._nodes:
+                message = f"duplicate node {spec.key}"
+                raise ValueError(message)
+            scratch.restore(
+                Node(
+                    key=spec.key,
+                    created_at=spec.created_at,
+                    paths=spec.paths,
+                    review_required=spec.review_required,
+                    user_moved=spec.user_moved,
+                    pin=spec.pin,
+                ),
+                depends_on=spec.depends_on, parent=spec.parent, related=spec.related,
+            )
+        for spec in specs:
+            scratch._require_known(spec.depends_on + spec.related)
+            if spec.parent is not None:
+                scratch._require_known((spec.parent,))
+        cycle = scratch.cycle_path() or scratch.parent_cycle_path()
+        if cycle is not None:
+            raise _fail(_CYCLE, "PLAN_CYCLE", cycle)
+        self._nodes = scratch._nodes
+        self._blockers = scratch._blockers
+        self._parents = scratch._parents
+        self._related = scratch._related
+
+    def parent_cycle_path(self) -> tuple[str, ...] | None:
+        """Containment is acyclic independently of blocking edges."""
+        checked: set[str] = set()
+        for key in self._parents:
+            chain: list[str] = []
+            current: str | None = key
+            while current is not None and current not in checked:
+                if current in chain:
+                    return (*chain[chain.index(current):], current)
+                chain.append(current)
+                current = self._parents.get(current)
+            checked.update(chain)
+        return None
 
     def restore(
         self,

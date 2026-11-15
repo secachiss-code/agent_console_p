@@ -122,6 +122,7 @@ def _save_node(session: Session, plan: StoredPlan, node: StoredNode) -> None:
         session.add(row)
     row.title = node.title
     row.objective = node.objective
+    row.test_cmd = node.test_cmd
     row.status = NodeStatus(node.status)
     row.owner_agent = None if node.owner is None else AgentKind(node.owner)
     row.paths = list(node.paths)
@@ -230,6 +231,7 @@ def _stored_node(links: _Links, row: PlanNode, keys: dict[str, str]) -> StoredNo
         key=row.node_key,
         title=row.title,
         objective=row.objective,
+        test_cmd=row.test_cmd,
         status=row.status.value,
         owner=None if row.owner_agent is None else row.owner_agent.value,
         paths=tuple(row.paths),

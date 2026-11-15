@@ -45,6 +45,7 @@ class StoredNode:
     parent: str | None
     related: tuple[str, ...]
     artifacts: tuple[StoredArtifact, ...]
+    test_cmd: str | None = None
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)

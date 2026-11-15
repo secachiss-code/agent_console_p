@@ -120,7 +120,7 @@ def test_a_save_leaves_rows_that_did_not_change_alone(tmp_path: Path) -> None:
             "Plan",
             "goal",
             [
-                NodeIn(key="N-01", title="One", objective="do"),
+                NodeIn(key="N-01", title="One", objective="do", test_cmd="pytest tests/core"),
                 NodeIn(key="N-02", title="Two", objective="do", depends_on=["N-01"]),
             ],
         )
@@ -128,9 +128,11 @@ def test_a_save_leaves_rows_that_did_not_change_alone(tmp_path: Path) -> None:
         _ = board.set_node_status(created.nodes[1].node_id, "cancelled", None)
         assert not [text for text in statements if "plan_edges" in text and not text.startswith("SELECT")]
 
+        assert PlanDatabase(writer).load()[0].nodes[0].test_cmd == "pytest tests/core"
         fresh = PlanBoard()
         statements.clear()
         fresh.use_store(PlanDatabase(writer))
+        assert fresh._plans[created.plan_id].meta["N-01"].test_cmd == "pytest tests/core"
         assert len([text for text in statements if "FROM plan_edges" in text]) == 1
         assert [view.nodes[1].depends_on for view in fresh.views()] == [(created.nodes[0].node_id,)]
     finally:

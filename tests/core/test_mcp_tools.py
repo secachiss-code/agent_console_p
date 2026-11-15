@@ -411,3 +411,19 @@ async def _counted() -> None:
         ("tab-a", len(_text(created).encode())),
         ("tab-a", len(_text(failed).encode())),
     ]
+
+
+def test_parent_cycle_is_not_saved() -> None:
+    import pytest
+
+    from aconsole.core.infrastructure.mcp.tools import NodeIn, _ToolError
+
+    board = PlanBoard()
+    ctx = TabContext(tab_id="t", project_id="p", worktree=None, agent="codex")
+    created = board.create(ctx, "Plan", "goal", [NodeIn(key="R-0", title="Root", objective="do")])
+    with pytest.raises(_ToolError):
+        board.add_nodes(ctx, created.plan_id, [
+            NodeIn(key="A-1", title="Alpha", objective="do", parent="B-1"),
+            NodeIn(key="B-1", title="Beta", objective="do", parent="A-1"),
+        ])
+    assert tuple(board._plans[created.plan_id].meta) == ("R-0",)
