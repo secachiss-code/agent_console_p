@@ -364,6 +364,8 @@ def _upsert_tab(
                 session_cost_usd=None,
                 agent_session_id=tab.session,
                 fork_pending=tab.fork_pending,
+                mode=tab.mode,
+                model=tab.model,
                 closed_at=None,
                 created_at=tab.created_at,
                 updated_at=tab.since,
@@ -383,6 +385,8 @@ def _upsert_tab(
     row.plan_node_id = node_id
     row.agent_session_id = tab.session
     row.fork_pending = tab.fork_pending
+    row.mode = tab.mode
+    row.model = tab.model
     row.closed_at = None
     row.updated_at = tab.since
 
@@ -417,6 +421,8 @@ def _stored(session: Session, row: Tab) -> StoredTab | None:
         plan_node=row.plan_node_id,
         session=row.agent_session_id,
         fork_pending=row.fork_pending,
+        mode=row.mode,
+        model=row.model,
         work_session_id=row.work_session_id,
         isolated=row.isolated,
     )

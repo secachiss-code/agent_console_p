@@ -26,6 +26,7 @@ from aconsole.contracts.app import (
     ExitedParams,
     FocusParams,
     OpenTabParams,
+    PlanView,
     PreparedImagePaste,
     PrepareImagePasteParams,
     ProjectAddParams,
@@ -157,6 +158,11 @@ def _launch_command(agent: AgentKind, session: str | None, *, fork: bool) -> tup
             raise TabRequestError(_UNAVAILABLE)
         return ("agent",)
     return (agent.value,)
+
+
+def _validate_planning_tab(params: OpenTabParams) -> None:
+    if params.mode == "plan" and params.agent not in {AgentKind.CLAUDE, AgentKind.CODEX}:
+        raise TabRequestError(_UNAVAILABLE)
 
 
 def _require_fork(agent: AgentKind) -> None:
@@ -364,6 +370,8 @@ class _Tab:
     mcp_bytes: int = 0
     mcp_calls: int = 0
     mcp_told: int = 0
+    plan_mode: Literal["plan", "execute"] = "execute"
+    model: str | None = None
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -414,6 +422,8 @@ def _by_order(tab: _Tab) -> tuple[int, str]:
 @final
 class TabService:
     """In-memory tabs. One shared instance serves every IPC connection."""
+
+    plan_context: Callable[[str], tuple[PlanView, ...]] | None = None
 
     def __init__(
         self,
@@ -1112,6 +1122,7 @@ class TabService:
 
     def open_tab(self, params: OpenTabParams) -> TabView:
         """Create the tab and, when asked, the worktree. The process stays stopped."""
+        _validate_planning_tab(params)
         project = self._projects.get(str(params.project_id))
         if project is None:
             raise TabRequestError(_PROJECT)
@@ -1176,6 +1187,8 @@ class TabService:
             pid=None,
             work_session_id=session.id,
             isolated=params.isolated,
+            plan_mode=params.mode,
+            model=params.model,
         )
         self._tabs[tab_id] = tab
         try:
@@ -1193,6 +1206,9 @@ class TabService:
             return self._launch_spec(tab)
 
     def _launch_spec(self, tab: _Tab) -> TerminalLaunchSpec:
+        if tab.plan_mode == "plan" and not tab.model:
+            message = "a planning tab requires a model id"
+            raise ValueError(message)
         self._require_written_session(tab)
         self._require_session_launch(tab)
         self._ports.ensure_container(tab.container)
@@ -1217,6 +1233,10 @@ class TabService:
         if wired is not None:
             # The session flags follow the agent's own: `claude --settings f --resume s`, `codex -c x resume s`.
             command = (*wired, *command[_ONE:])
+        if tab.model is not None:
+            command = (*command, "--model", tab.model)
+        if tab.plan_mode == "plan" and tab.session is None:
+            command = (*command, self._planning_prompt(tab))
         # Hooks run inside the container: they need the tab, its ingest token, and the ingest port (INGEST_HTTP §1).
         inner = {
             _ENV_TAB: tab.id,
@@ -1235,6 +1255,19 @@ class TabService:
             env[_ENV_SCREEN] = "1"
         argv = (self._ports.python_bin(), *_SIDECAR, *podman)
         return TerminalLaunchSpec(argv=argv, env=env, cwd=tab.worktree, scrollback_lines=_SCROLLBACK, title=tab.title)
+
+    def _planning_prompt(self, tab: _Tab) -> str:
+        plans = () if self.plan_context is None else self.plan_context(tab.project_id)
+        context = msgspec.json.encode(plans).decode()
+        return (
+            f"Adapt the application plan. Goal: {tab.title}.\nCurrent plans and nodes: {context}\n"
+            "Contract schema: key, title, objective, paths[], acceptance[], test_cmd, "
+            "depends_on[], parent, related[], boundaries, output_format, review_required, "
+            "level (0 or 1), pipeline. L0 provides invariants and gate_profile; pipeline L1 "
+            "requires an L0 parent and paths contained in its scope. L2 steps are spec, patch, "
+            "test, verify inside L1, without new graph nodes. Prepare changes for human review. "
+            "Only a human may freeze, apply a change request, unblock a node or close L0."
+        )
 
     def _require_session_launch(self, tab: _Tab) -> None:
         if tab.work_session_id is None:
@@ -1466,6 +1499,8 @@ class TabService:
             pid=None,
             work_session_id=tab.work_session_id if not created else None,
             isolated=tab.isolated if not created else False,
+            plan_mode=tab.plan_mode,
+            model=tab.model,
         )
         self._tabs[tab_id] = copy
         new_session = copy.work_session_id is None
@@ -1714,6 +1749,8 @@ class TabService:
             pid=None,
             work_session_id=saved.work_session_id,
             isolated=saved.isolated,
+            plan_mode="plan" if saved.mode == "plan" else "execute",
+            model=saved.model,
             needs_process_check=True,
         )
 
@@ -1754,6 +1791,8 @@ class TabService:
             plan_node=tab.plan_node,
             session=tab.session,
             fork_pending=tab.fork,
+            mode=tab.plan_mode,
+            model=tab.model,
             work_session_id=tab.work_session_id,
             isolated=tab.isolated,
         )
@@ -1788,6 +1827,8 @@ class TabService:
             started=tab.running,
             mcp_bytes=tab.mcp_bytes or None,
             mcp_calls=tab.mcp_calls or None,
+            mode=tab.plan_mode,
+            model=tab.model,
             work_session_title=(None if tab.work_session_id is None else
                 self.work_sessions.require(tab.project_id, tab.work_session_id).title),
             work_session_id=tab.work_session_id,

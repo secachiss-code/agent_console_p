@@ -2041,3 +2041,15 @@ msgstr "Codex 0.169: новые сессии с проверенными hooks �
 
 msgid "prefs.harness_cursor_policy_unavailable"
 msgstr "Cursor 2026.11.13: выполнение инструментов и failClosed в локальных пробах не подтверждены. «Спрашивать» использует нативные запросы Cursor. «Разрешать» и «Запрещать» недоступны: запуск остановится с объяснением, вместо игнорирования выбранного режима."
+
+msgid "tabs.new.mode"
+msgstr "Режим"
+
+msgid "tabs.new.execute"
+msgstr "Выполнить задачу"
+
+msgid "tabs.new.plan"
+msgstr "Адаптировать план"
+
+msgid "tabs.new.model"
+msgstr "Идентификатор модели"

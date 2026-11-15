@@ -57,6 +57,15 @@ class NewTabDialog(Adw.Dialog):
         group = Adw.PreferencesGroup()
         group.add(self.project_row)
         group.add(self.agent_row)
+        self.mode_row: Adw.ComboRow = Adw.ComboRow(
+            title=translate("tabs.new.mode"),
+            model=Gtk.StringList.new([translate("tabs.new.execute"), translate("tabs.new.plan")]),
+        )
+        self.model_row: Adw.EntryRow = Adw.EntryRow(title=translate("tabs.new.model"), visible=False)
+        group.add(self.mode_row)
+        group.add(self.model_row)
+        _ = self.mode_row.connect("notify::selected", self._workspace_changed)
+        _ = self.model_row.connect("changed", self._workspace_changed)
         self.native_session_row: Adw.ComboRow = Adw.ComboRow(
             title=translate("tabs.new.cli_session"), model=Gtk.StringList.new([translate("tabs.new.cli_new")]),
         )
@@ -158,7 +167,16 @@ class NewTabDialog(Adw.Dialog):
             text = self._sessions[session_index - 1].worktree
             self.location.set_label(text)
         has_path = has_session or not existing or bool(self.existing_path.get_text().strip())
-        self.open_button.set_sensitive(bool(project and self._agents and has_path) and not self._opening)
+        planning = self.mode_row.get_selected() == 1
+        self.model_row.set_visible(planning)
+        agent_index = self.agent_row.get_selected()
+        agent = self._agents[agent_index] if agent_index < len(self._agents) else None
+        planning_ok = not planning or (
+            agent is not None and agent.kind.value in {"claude", "codex"} and bool(self.model_row.get_text().strip())
+        )
+        self.open_button.set_sensitive(
+            bool(project and self._agents and has_path and planning_ok) and not self._opening,
+        )
 
     def _refresh_native(self, project: ProjectView | None) -> None:
         index = self.agent_row.get_selected()
@@ -298,6 +316,8 @@ class NewTabDialog(Adw.Dialog):
                 work_session_id=None if session is None else session.id,
                 isolated=session is not None and self.isolated_row.get_active(),
                 title=self.task_title.get_text().strip() or None if session is None else None,
+                mode="plan" if self.mode_row.get_selected() == 1 else "execute",
+                model=self.model_row.get_text().strip() or None if self.mode_row.get_selected() == 1 else None,
             )
         except Exception as error:  # noqa: BLE001 -- not a repository: say so and keep the dialog
             self._on_error(translate("tabs.new.error").format(error=error))

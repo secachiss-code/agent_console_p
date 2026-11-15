@@ -2029,3 +2029,15 @@ msgstr "Codex 0.169: new sessions with verified hooks apply modes. Full approval
 
 msgid "prefs.harness_cursor_policy_unavailable"
 msgstr "Cursor 2026.11.13: local probes did not confirm tool execution or failClosed. Ask uses native Cursor permissions. Allow and Deny are unavailable: launch stops with an explanation instead of ignoring the selected mode."
+
+msgid "tabs.new.mode"
+msgstr "Mode"
+
+msgid "tabs.new.execute"
+msgstr "Execute a task"
+
+msgid "tabs.new.plan"
+msgstr "Adapt plan"
+
+msgid "tabs.new.model"
+msgstr "Model ID"

@@ -50,6 +50,8 @@ class StoredTab:
     work_session_id: str | None = None
     isolated: bool = False
     fork_pending: bool = False
+    mode: str = "execute"
+    model: str | None = None
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)

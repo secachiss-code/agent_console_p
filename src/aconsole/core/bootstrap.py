@@ -1402,6 +1402,7 @@ class Daemon:
         self.review.checkpoints.protected_ref = checkpoints.is_session_ref
         await asyncio.to_thread(self._plans.use_store, PlanDatabase(writer))
         self._plans.use_attempts(AttemptDatabase(writer))
+        self.tabs.plan_context = self._plans.views
         restored_plans = await asyncio.to_thread(self._plans.views)
         with self._palette_plan_lock:
             self._palette_plans.update((str(plan.id), plan) for plan in restored_plans)

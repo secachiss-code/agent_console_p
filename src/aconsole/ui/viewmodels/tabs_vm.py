@@ -194,6 +194,7 @@ class TabsViewModel:
         work_session_id: str | None = None, isolated: bool = False, title: str | None = None,
         resume_session: str | None = None,
         base_branch: str | None = None, plan_node: NodeId | None = None,
+        mode: Literal["plan", "execute"] = "execute", model: str | None = None,
     ) -> TabView:
         return await self.client.request(
             "tab/open",
@@ -201,6 +202,7 @@ class TabsViewModel:
                 project_id=project_id, agent=agent, workspace=workspace, existing_worktree=existing_worktree,
                 work_session_id=work_session_id, isolated=isolated, title=title, resume_session=resume_session,
                 base_branch=base_branch, plan_node=plan_node,
+                mode=mode, model=model,
             ),
             TabView,
         )

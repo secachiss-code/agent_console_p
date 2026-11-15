@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 import msgspec
 import pytest
 
-from aconsole.contracts.app import AppliedResult, EmptyResult, SessionListResult
+from aconsole.contracts.app import AppliedResult, EmptyResult, OpenTabParams, SessionListResult
 from aconsole.contracts.common import ApprovalDecision, WorkspaceMode
 from aconsole.contracts.work_sessions import WorkSessionListResult
 from aconsole.core.infrastructure.fake.scenarios import demo_snapshot
@@ -109,6 +109,40 @@ def test_project_removal_is_disabled_with_tabs_and_reports_server_refusal() -> N
         assert "project gained a tab" in bar.error_label.get_label()
         assert bar._selected() == project
         assert bar.remove_button.get_sensitive()
+        await client.close()
+
+    _run_ui(scenario)
+
+
+def test_planning_requires_model_and_passes_identity_to_core() -> None:
+    async def scenario(app: _TabsTestApp) -> None:
+        client, tabs = _model(demo_snapshot())
+        calls: list[OpenTabParams] = []
+
+        async def request(method: str, params: msgspec.Struct, _result: type[msgspec.Struct]) -> msgspec.Struct:
+            if method == "workSession/list":
+                return WorkSessionListResult(sessions=())
+            if method == "session/list":
+                return SessionListResult(sessions=())
+            assert method == "tab/open"
+            assert isinstance(params, OpenTabParams)
+            calls.append(params)
+            return demo_snapshot().tabs[0]
+
+        client.request = request
+        dialog = NewTabDialog(tabs, lambda _tab: None, lambda _error: None)
+        assert app.window is not None
+        dialog.present(app.window)
+        dialog.agent_row.set_selected(next(i for i, agent in enumerate(dialog._agents) if agent.kind.value == "codex"))
+        dialog.mode_row.set_selected(1)
+        assert dialog.model_row.get_visible()
+        assert not dialog.open_button.get_sensitive()
+        dialog.model_row.set_text("explicit-model")
+        assert dialog.open_button.get_sensitive()
+        dialog.open_button.emit("clicked")
+        await _until(lambda: bool(calls))
+        assert calls[0].mode == "plan"
+        assert calls[0].model == "explicit-model"
         await client.close()
 
     _run_ui(scenario)

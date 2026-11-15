@@ -128,6 +128,8 @@ class TabView(msgspec.Struct, frozen=True, kw_only=True):
     work_session_id: str | None = None
     isolated: bool = False
     work_session_title: str | None = None
+    mode: Literal["plan", "execute"] = "execute"
+    model: str | None = None
 
 
 class CommandDetail(msgspec.Struct, frozen=True, kw_only=True, tag="command", tag_field="type"):
@@ -299,6 +301,13 @@ class OpenTabParams(msgspec.Struct, frozen=True, kw_only=True):
     start_now: bool = True
     work_session_id: str | None = None
     isolated: bool = False
+    mode: Literal["plan", "execute"] = "execute"
+    model: Annotated[str, Meta(min_length=1, max_length=64, pattern=r"^[A-Za-z0-9][A-Za-z0-9._:/-]*$")] | None = None
+
+    def __post_init__(self) -> None:
+        if self.mode == "plan" and (self.model is None or not self.model.strip()):
+            message = "a planning tab requires a model id"
+            raise ValueError(message)
 
 
 class StartedParams(msgspec.Struct, frozen=True, kw_only=True):
