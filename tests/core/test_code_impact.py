@@ -192,23 +192,8 @@ def test_persistent_cte_matches_memory_layers_and_is_used_by_mcp(
 
         index = CodeGraphIndex(_Runner(ExtractorRun(graph=None, error=None)), lambda _p: tmp_path, store=store)
 
-        class StoredIndex:
-            # Model the public getter pending addition to CodeGraphIndex's scope.
-            @property
-            def store(self) -> CodeGraphDatabase:
-                return store
-
-            def graph(self, project_id: str) -> ExtractorGraph:
-                return index.graph(project_id)
-
-            def resolve(self, project_id: str, target: str) -> str | None:
-                return index.resolve(project_id, target)
-
-            def dependents(self, project_id: str, kinds: frozenset[str] | None = None) -> dict[str, tuple[str, ...]]:
-                return index.dependents(project_id, kinds)
-
         board = PlanBoard()
-        board.code_graph = StoredIndex()
+        board.code_graph = index
         ctx = TabContext(tab_id="t", project_id="p", worktree=None, agent="codex")
         from aconsole.core.infrastructure.mcp.tools import impact_layers
 

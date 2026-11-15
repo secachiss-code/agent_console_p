@@ -70,6 +70,11 @@ class CodeGraphIndex:
         self._lock: threading.Lock = threading.Lock()
         self._builds: dict[Path, threading.Lock] = {}
 
+    @property
+    def store(self) -> GraphStore | None:
+        """The persistence adapter attached during bootstrap."""
+        return self._store
+
     def use_store(self, store: GraphStore) -> None:
         """Attach durable graph storage during startup and rebuild prior cached snapshots."""
         with self._lock:

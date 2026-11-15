@@ -144,8 +144,8 @@ def use_fake_tabs(daemon: Daemon, root: Path) -> FakeTabPorts:
 
 
 async def wait_for_socket(path: Path) -> None:
-    """Poll until the daemon has bound its socket. Fails after about a second."""
-    for _ in range(100):
+    """Wait for startup, including migrations of a fresh database on a cold runner."""
+    for _ in range(1000):
         if await asyncio.to_thread(path.exists):
             return
         await asyncio.sleep(0.01)
