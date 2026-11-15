@@ -107,6 +107,14 @@ class GitDiff:
         fresh = tuple(path for path in self._untracked(repo) if path not in known)
         return DiffSummary(base=spec, head=_WORKTREE, files=(*files, *self._untracked_stats(repo, fresh)))
 
+    def changed_paths(self, repo: Path, base_oid: str) -> tuple[str, ...]:
+        """All names since attempt start, including both rename sides and untracked files."""
+        if re.fullmatch(r"(?:[0-9a-fA-F]{40}|[0-9a-fA-F]{64})", base_oid) is None:
+            message = "scope base must be a full object id"
+            raise DiffReadError(message, too_large=False, files=0, byte_count=0)
+        tracked = self._stdout(repo, ("--name-only", "-z", "--no-renames", base_oid, "--"))
+        return tuple(sorted({*(path for path in tracked.split("\0") if path), *self._untracked(repo)}))
+
     def file(self, repo: Path, path: str, base: str | None, max_lines: int) -> DiffFileText:
         if path in self._untracked(repo):
             return self._untracked_text(repo, path, max_lines)

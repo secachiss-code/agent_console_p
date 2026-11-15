@@ -2,6 +2,7 @@
 
 import logging
 from datetime import UTC, datetime, timedelta
+from pathlib import Path
 from secrets import token_bytes, token_urlsafe
 
 import msgspec
@@ -16,6 +17,7 @@ from aconsole.core.domain.clock import Clock
 from aconsole.core.domain.ids import new_ulid
 from aconsole.core.domain.risk import RiskTag as DomainRiskTag
 from aconsole.core.domain.risk import classify, classify_write_paths
+from aconsole.core.domain.scope import check_scope
 from aconsole.core.infrastructure.http.permission_details import permission_detail
 from aconsole.core.infrastructure.http.problem import HttpResponse, empty_json, json_response
 from aconsole.core.infrastructure.http.routes import IngestItem
@@ -67,9 +69,11 @@ def _preflight(
 async def handle_permission(  # noqa: PLR0913 -- policy and presentation are independent inputs
     item: IngestItem, service: ApprovalHold, *, hold_seconds: int, worktree: str,
     choice: ApprovalPolicyChoice = _ASK, inline: bool = True,
+    scope_paths: tuple[str, ...] | None = None,
 ) -> HttpResponse:
     hook = msgspec.json.decode(item.body, type=_Permission)
     detail = permission_detail(hook.tool_name, hook.tool_input)
+    scope_denial = _scope_denial(hook, detail, scope_paths, worktree)
     command = detail.command if isinstance(detail, CommandDetail) else ""
     at = datetime.now(UTC)
     expiry = at + timedelta(seconds=hold_seconds)
@@ -94,6 +98,7 @@ async def handle_permission(  # noqa: PLR0913 -- policy and presentation are ind
         risk=frozenset(RiskTag(tag.value) for tag in risk), requested_at=at, expires_at=expiry,
         allow_tab_session=bool(command))
     policy, immediate = _preflight(item, hook, choice, verdict(choice, risk), inline=inline)
+    immediate = scope_denial or immediate
     if immediate is not None:
         return immediate
     if policy is PolicyVerdict.ASK and not inline:
@@ -120,3 +125,28 @@ async def handle_permission(  # noqa: PLR0913 -- policy and presentation are ind
     response = HookResponse(hook_specific_output=HookSpecificOutput(hook_event_name="PermissionRequest",
         decision=PermissionDecision(behavior=behavior, message=message)))
     return json_response(msgspec.json.encode(response))
+
+
+def _scope_denial(
+    hook: _Permission, detail: ApprovalDetail, paths: tuple[str, ...] | None, worktree: str,
+) -> HttpResponse | None:
+    if paths is None or hook.hook_event_name != "PreToolUse" or hook.tool_name not in {"Write", "Edit", "MultiEdit"}:
+        return None
+    changed = tuple(_scope_path(path, cwd=hook.cwd or worktree, worktree=worktree)
+        for path in detail.files) if isinstance(detail, EditDetail) else ("/unreadable-write-path",)
+    checked = check_scope(paths, changed)
+    if not checked.violations:
+        return None
+    return json_response(msgspec.json.encode({"hookSpecificOutput": {
+        "hookEventName": "PreToolUse", "permissionDecision": "deny",
+        "permissionDecisionReason": "SCOPE_VIOLATION: " + ", ".join(checked.violations),
+    }}))
+
+
+def _scope_path(path: str, *, cwd: str, worktree: str) -> str:
+    try:
+        root = Path(worktree).resolve()
+        target = Path(path) if Path(path).is_absolute() else Path(cwd) / path
+        return target.resolve().relative_to(root).as_posix()
+    except (ValueError, OSError, RuntimeError):
+        return "/outside-worktree"
