@@ -657,7 +657,11 @@ class PlanBoard:
             nodes=nodes,
             done=done,
             total=len(nodes),
-            canvas=None,
+            canvas=(
+                NoteRef(f"plans/{stored.plan_id}/_plan.canvas")
+                if self.note_ref(stored.plan_id, "_plan") is not None
+                else None
+            ),
             updated_at=stored.updated_at,
         )
 
@@ -1269,7 +1273,7 @@ def _node_note(stored: _Stored, meta: _Meta, graph: Owners) -> NodeNote:
         objective=meta.objective,
     )
     owners = replace(graph, node_key=meta.key, leased_by_other=node.lease_expires_at is not None)
-    return NodeNote(key=meta.key, note=note, owners=owners)
+    return NodeNote(key=meta.key, note=note, owners=owners, node_id=meta.node_id, level=node.level, parent=meta.parent)
 
 
 def _after_restart(item: StoredNode) -> NodeStatus:

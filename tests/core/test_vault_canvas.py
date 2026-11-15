@@ -13,6 +13,7 @@ import pytest
 from sqlalchemy import select
 
 from aconsole.core.domain.vault_sync import Note, Owners
+from aconsole.core.infrastructure.mcp.tools import NodeIn, PlanBoard, TabContext
 from aconsole.core.infrastructure.persistence.engine import migrate, write_engine
 from aconsole.core.infrastructure.persistence.models import CanvasPosition, NodeAttempt
 from aconsole.core.infrastructure.persistence.repositories.attempts import AttemptDatabase
@@ -107,6 +108,37 @@ def test_legacy_nodes_and_empty_plan_are_valid() -> None:
     data = json.loads(render_canvas("plan", legacy))
     jsonschema.validate(data, _SCHEMA)
     assert data["nodes"][0]["type"] == "file"
+
+
+def test_actual_board_projects_level_parent_and_canvas_link(tmp_path: Path) -> None:
+    board = PlanBoard()
+    ctx = TabContext(tab_id="t", project_id="p", worktree=None, agent="codex")
+    created = board.create(
+        ctx,
+        "Plan",
+        "goal",
+        [
+            NodeIn(key="CORE-0", title="Core", objective="direction", level=0),
+            NodeIn(key="CORE-1", title="Module", objective="module", level=1, parent="CORE-0"),
+        ],
+    )
+    sync = VaultSync(board)
+    board.note_ref = sync.note_ref
+    sync.use_root(tmp_path)
+    try:
+        sync.publish(created.plan_id)
+        notes = board.node_notes(created.plan_id)
+        assert notes[0].level == 0
+        assert notes[1].parent == "CORE-0"
+        view = board.view(created.plan_id)
+        assert view is not None
+        assert str(view.canvas) == f"plans/{created.plan_id}/_plan.canvas"
+        data = json.loads((tmp_path / str(view.canvas)).read_text())
+        jsonschema.validate(data, _SCHEMA)
+        assert [node["type"] for node in data["nodes"]] == ["group", "file"]
+        assert {node["id"] for node in data["nodes"]} == {str(node.id) for node in view.nodes}
+    finally:
+        sync.stop()
 
 
 @pytest.mark.parametrize("bad", ["../escape", "/root", "..", ".", "", "x\\y", "x\x00y"])

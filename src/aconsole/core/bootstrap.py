@@ -121,6 +121,7 @@ from aconsole.core.infrastructure.persistence.startup import prepare_database, s
 from aconsole.core.infrastructure.persistence.writer import Writer
 from aconsole.core.infrastructure.setup_checks import HostSetupFixes, HostSetupProbe, SetupTokens
 from aconsole.core.infrastructure.tabs import HostAgents, HostRepos, HostTabs
+from aconsole.core.infrastructure.vault.canvas import CanvasHistory
 from aconsole.core.infrastructure.vault.sync import VaultSync
 lazy from aconsole.contracts.git import FactReviewView
 lazy from aconsole.core.application.ports.knowledge_store import StoredFact
@@ -1404,6 +1405,7 @@ class Daemon:
         await asyncio.to_thread(self._plans.use_knowledge, KnowledgeDatabase(writer))
         self.knowledge.code_graph.use_store(CodeGraphDatabase(writer))
         await asyncio.to_thread(self.vault.use_bases, VaultFileDatabase(writer))
+        self.vault.use_history(CanvasHistory(writer=writer))
         self.tabs.use_store(store)
         self.tabs.use_projects(self._catalog, store)
         policy = ApprovalPolicyBook()
