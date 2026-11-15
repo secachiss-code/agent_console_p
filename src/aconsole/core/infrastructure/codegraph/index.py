@@ -28,6 +28,12 @@ class Runner(Protocol):
     def run(self, language: str, path: str, *, cwd: Path | None = None) -> ExtractorRun: ...
 
 
+class GraphStore(Protocol):
+    def sync(self, project_id: str, graph: ExtractorGraph) -> None:
+        """Commit a graph snapshot before it is published to callers."""
+        ...
+
+
 @dataclass(frozen=True, slots=True)
 class _Cached:
     graph: ExtractorGraph
@@ -41,7 +47,7 @@ class _Cached:
 class CodeGraphIndex:
     """One graph per project root, kept a few minutes: building one can take a minute."""
 
-    def __init__(
+    def __init__(  # noqa: PLR0913 -- optional persistence extends the existing index configuration
         self,
         runner: Runner,
         root_of: Callable[[str], Path | None],
@@ -49,7 +55,9 @@ class CodeGraphIndex:
         clock: Callable[[], float] = time.monotonic,
         ttl_s: float = _TTL_S,
         languages: Callable[[], frozenset[str]] | None = None,
+        store: GraphStore | None = None,
     ) -> None:
+        self._store = store
         self._runner: Runner = runner
         self._root_of: Callable[[str], Path | None] = root_of
         self._clock: Callable[[], float] = clock
@@ -58,9 +66,16 @@ class CodeGraphIndex:
             lambda: frozenset({"python", "rust", "typescript", "csharp"})
         )
         self._cached_languages: dict[Path, frozenset[str]] = {}
-        self._cache: dict[Path, _Cached] = {}
+        self._cache: dict[tuple[Path, str], _Cached] = {}
         self._lock: threading.Lock = threading.Lock()
         self._builds: dict[Path, threading.Lock] = {}
+
+    def use_store(self, store: GraphStore) -> None:
+        """Attach durable graph storage during startup and rebuild prior cached snapshots."""
+        with self._lock:
+            self._store = store
+            self._cache.clear()
+            self._cached_languages.clear()
 
     def graph(self, project_id: str) -> ExtractorGraph:
         return self._cached(project_id).graph
@@ -75,12 +90,14 @@ class CodeGraphIndex:
         # Callers that ask while a graph is being built wait for it instead of building their own.
         with building:
             with self._lock:
-                found = self._cache.get(root)
+                found = self._cache.get((root, project_id))
                 if found is not None and self._clock() < found.until and self._cached_languages.get(root) == enabled:
                     return found
             built = _indexed(self._build(root, enabled), self._clock() + self._ttl_s)
+            if self._store is not None:
+                self._store.sync(project_id, built.graph)
             with self._lock:
-                self._cache[root] = built
+                self._cache[(root, project_id)] = built
                 self._cached_languages[root] = enabled
             return built
 

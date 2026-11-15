@@ -15,6 +15,8 @@ if TYPE_CHECKING:
 
     import pytest
 
+    from aconsole.core.infrastructure.codegraph.protocol import ExtractorGraph
+
 
 def _project(tmp_path: Path) -> Path:
     (tmp_path / "pyproject.toml").write_text("")
@@ -70,3 +72,46 @@ def test_language_changes_invalidate_cached_graphs_immediately(tmp_path: Path) -
     assert index.dependents("p") == {}
     enabled[0] = frozenset({"python"})
     assert index.graph("p") == first
+
+
+def test_each_rebuild_is_persisted_before_publication(tmp_path: Path) -> None:
+
+    class Store:
+        def __init__(self) -> None:
+            self.saved: list[tuple[str, ExtractorGraph]] = []
+
+        def sync(self, project_id: str, graph: ExtractorGraph) -> None:
+            self.saved.append((project_id, graph))
+
+    store = Store()
+    clock = [0.0]
+    index = CodeGraphIndex(runner=object(), root_of=lambda _: _project_root, store=store,
+                           clock=lambda: clock[0], ttl_s=1)  # pyright: ignore[reportArgumentType]
+    _project_root = _project(tmp_path)
+    first = index.graph("p")
+    assert store.saved == [("p", first)]
+    assert index.graph("p") is first
+    assert len(store.saved) == 1
+    clock[0] = 2
+    (tmp_path / "a.py").write_text("")
+    second = index.graph("p")
+    assert store.saved == [("p", first), ("p", second)]
+    assert not second.edges
+
+
+def test_failed_sync_is_retried_instead_of_cached(tmp_path: Path) -> None:
+    import pytest
+
+    class Store:
+        def sync(self, _project_id: str, _graph: object) -> None:
+            message = "database unavailable"
+            raise ValueError(message)
+
+    index = _index(_project(tmp_path))
+    first = index.graph("p")
+    index.use_store(Store())
+    for _ in range(2):
+        with pytest.raises(ValueError, match="database unavailable"):
+            index.graph("p")
+    assert first.nodes
+    assert not index._cache

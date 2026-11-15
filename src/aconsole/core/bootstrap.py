@@ -106,6 +106,7 @@ from aconsole.core.infrastructure.persistence.engine import checkpoint_wal, writ
 from aconsole.core.infrastructure.persistence.models import ApprovalStatus
 from aconsole.core.infrastructure.persistence.repositories.catalog import ApprovalRecord, ApprovalRepository
 from aconsole.core.infrastructure.persistence.repositories.checkpoints import CheckpointDatabase
+from aconsole.core.infrastructure.persistence.repositories.code_graph import CodeGraphDatabase
 from aconsole.core.infrastructure.persistence.repositories.git_operations import GitOperationDatabase
 from aconsole.core.infrastructure.persistence.repositories.knowledge import KnowledgeDatabase
 from aconsole.core.infrastructure.persistence.repositories.plans import PlanDatabase
@@ -1401,6 +1402,7 @@ class Daemon:
         with self._palette_plan_lock:
             self._palette_plans.update((str(plan.id), plan) for plan in restored_plans)
         await asyncio.to_thread(self._plans.use_knowledge, KnowledgeDatabase(writer))
+        self.knowledge.code_graph.use_store(CodeGraphDatabase(writer))
         await asyncio.to_thread(self.vault.use_bases, VaultFileDatabase(writer))
         self.tabs.use_store(store)
         self.tabs.use_projects(self._catalog, store)

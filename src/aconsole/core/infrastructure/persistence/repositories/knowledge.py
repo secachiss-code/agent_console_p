@@ -85,9 +85,14 @@ def save_fact(session: Session, fact: StoredFact, supersedes: str | None) -> Non
             session.add(KbEdge(src_id=fact.id, dst_id=supersedes, kind=KbEdgeKind.SUPERSEDES, origin=_ORIGIN))
 
 
+def code_ref_id(project_id: str, ref: str) -> str:
+    """Shared module identity for agent references and persisted extractor graphs."""
+    digest = hashlib.sha256(f"{project_id}\0{ref}".encode()).hexdigest()[:32]
+    return f"{_REF_PREFIX}{digest}"
+
+
 def _ref_node(session: Session, fact: StoredFact, ref: str) -> str:
-    digest = hashlib.sha256(f"{fact.project_id}\0{ref}".encode()).hexdigest()[:32]
-    node_id = f"{_REF_PREFIX}{digest}"
+    node_id = code_ref_id(fact.project_id, ref)
     if session.get(KbNode, node_id) is None:
         session.add(
             KbNode(
