@@ -104,6 +104,7 @@ from aconsole.core.infrastructure.mcp.tools import PlanBoard, TabContext
 from aconsole.core.infrastructure.persistence.cleanup import SweepResult, sweep
 from aconsole.core.infrastructure.persistence.engine import checkpoint_wal, write_engine
 from aconsole.core.infrastructure.persistence.models import ApprovalStatus
+from aconsole.core.infrastructure.persistence.repositories.attempts import AttemptDatabase
 from aconsole.core.infrastructure.persistence.repositories.catalog import ApprovalRecord, ApprovalRepository
 from aconsole.core.infrastructure.persistence.repositories.checkpoints import CheckpointDatabase
 from aconsole.core.infrastructure.persistence.repositories.code_graph import CodeGraphDatabase
@@ -900,6 +901,7 @@ class Daemon:
             item, self.approvals, hold_seconds=settings.approval_hold_seconds, worktree=worktree,
             choice=choice,
             inline=inline,
+            scope_paths=self._plans.scope_for_tab(item.tab_id, self._permission_projects.get(item.tab_id)),
         )
 
     def _has_approval_ui(self) -> bool:
@@ -1399,6 +1401,7 @@ class Daemon:
         self.review.checkpoints.use_journal(checkpoints)
         self.review.checkpoints.protected_ref = checkpoints.is_session_ref
         await asyncio.to_thread(self._plans.use_store, PlanDatabase(writer))
+        self._plans.use_attempts(AttemptDatabase(writer))
         restored_plans = await asyncio.to_thread(self._plans.views)
         with self._palette_plan_lock:
             self._palette_plans.update((str(plan.id), plan) for plan in restored_plans)

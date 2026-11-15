@@ -190,7 +190,7 @@ class HostAgentCommands:
         if kind is AgentKind.OPENCODE and self._opencode_policy_tabs:
             return names | {"approval_policy_static"}
         if kind is AgentKind.CODEX and self._codex_ready:
-            return names | {"hooks", "approvals", "checkpoints", "approval_policy_codex"}
+            return names | {"hooks", "approvals", "checkpoints", "approval_policy_codex", "pre_write_scope_guard"}
         return names
 
     def release(self, agent: AgentKind, tab_id: str, container: str) -> None:

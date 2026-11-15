@@ -38,9 +38,12 @@ from aconsole.core.application.ports.plan_store import (
 )
 from aconsole.core.domain.errors import DomainError
 from aconsole.core.domain.plan import Move, Node, NodeSpec, NodeStatus, Plan, Role, after_merge
+from aconsole.core.domain.scope import check_scope
 from aconsole.core.domain.vault_sync import Note as VaultNote
 from aconsole.core.domain.vault_sync import Owners, resolve_ref
+from aconsole.core.infrastructure.git.diff import GitDiff
 from aconsole.core.infrastructure.git.runner import GitRunner
+from aconsole.core.infrastructure.persistence.repositories.attempts import AttemptDatabase
 from aconsole.core.infrastructure.persistence.repositories.code_graph import persistent_impact
 from aconsole.core.infrastructure.vault.sync import NodeNote
 
@@ -379,6 +382,7 @@ class PlanBoard:
         self._handovers: dict[str, _Handover] = {}
         self._store: PlanStore | None = None
         self._saved: dict[str, StoredPlan] = {}
+        self._attempts: AttemptDatabase | None = None
         self._knowledge: KnowledgeStore | None = None
         self.on_changed: Callable[[PlanView], None] | None = None
         self.note_ref: Callable[[str, str], str | None] = lambda _plan, _key: None
@@ -504,6 +508,42 @@ class PlanBoard:
                 self._commit(stored)
             except _ToolError as exc:
                 raise StoreWriteError(str(exc)) from exc
+
+    def use_attempts(self, attempts: AttemptDatabase) -> None:
+        self._attempts = attempts
+
+    def scope_for_tab(self, tab_id: str, project_id: str | None) -> tuple[str, ...] | None:
+        with self._lock:
+            found = self._merged_node(None, tab_id)
+            if found is None or found[0].project_id != project_id:
+                return None
+            stored, meta = found
+            node = stored.dag.get(meta.key)
+            if node.lease_expires_at is None or node.lease_expires_at <= self._now():
+                return None
+            return node.paths
+
+    def assert_scope(self, ctx: TabContext, node_id: str) -> None:
+        """Delegate the submitted delta to the domain scope rule before advancing L2."""
+        with self._lock:
+            stored, meta = self._node(ctx, node_id)
+            current = stored.dag.get(meta.key)
+            if current.tab_id != ctx.tab_id:
+                _stop("LEASE_HELD", "the active lease belongs to another tab")
+            self._verify_scope(ctx, stored, meta)
+
+    def _verify_scope(self, ctx: TabContext, stored: _Stored, meta: _Meta) -> None:
+        current = stored.dag.get(meta.key)
+        if not current.pipeline:
+            return
+        history = () if self._attempts is None else self._attempts.attempts(meta.node_id)
+        if not history or ctx.worktree is None:
+            raise DomainError(code=4015, name="SCOPE_VIOLATION", retryable=False)
+        checked = check_scope(current.paths, GitDiff().changed_paths(ctx.worktree, history[-1].base_oid))
+        if checked.review_required and not current.review_required:
+            stored.dag.edit(meta.key, paths=current.paths, review_required=True)
+            self._commit(stored)
+        checked.require_allowed()
 
     def node_held_by(self, tab_id: str) -> str | None:
         with self._lock:
@@ -823,6 +863,11 @@ class PlanBoard:
                         _stop("LEASE_STALE_FENCE", "a heartbeat requires the fence from node_claim")
                     node = stored.dag.heartbeat(meta.key, fence=fence, at=now)
                 else:
+                    if current.pipeline and status in {"verifying", "done"}:
+                        if fence is None:
+                            _stop("LEASE_STALE_FENCE", "a scope check requires the active fence")
+                        _ = stored.dag.heartbeat(meta.key, fence=fence, at=now)
+                        self._verify_scope(ctx, stored, meta)
                     node = stored.dag.transition(
                         Move(
                             key=meta.key,
@@ -1577,6 +1622,7 @@ _CODES: dict[str, int] = {
     "LEASE_EXPIRED": 4008,
     "NODE_EVIDENCE_REQUIRED": 4009,
     "PATHS_OVERLAP": 4010,
+    "SCOPE_VIOLATION": 4015,
     "NOTE_NOT_FOUND": 5005,
     "IMPACT_TARGET_UNKNOWN": 5007,
 }
