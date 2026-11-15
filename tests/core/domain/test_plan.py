@@ -346,8 +346,12 @@ def test_a_node_on_verification_waits_for_a_person_past_its_lease() -> None:
     claimed = plan.claim("N-1", tab_id="tab", at=AT)
     plan.transition(
         Move(
-            key="N-1", to=NodeStatus.VERIFYING, role=Role.AGENT, at=AT + timedelta(seconds=1),
-            fence=claimed.fence, evidence="shipped",
+            key="N-1",
+            to=NodeStatus.VERIFYING,
+            role=Role.AGENT,
+            at=AT + timedelta(seconds=1),
+            fence=claimed.fence,
+            evidence="shipped",
         )
     )
     later = AT + timedelta(days=3)
@@ -363,8 +367,12 @@ def test_a_person_sends_back_a_node_on_verification_past_its_lease() -> None:
     claimed = plan.claim("N-1", tab_id="tab", at=AT)
     plan.transition(
         Move(
-            key="N-1", to=NodeStatus.VERIFYING, role=Role.AGENT, at=AT + timedelta(seconds=1),
-            fence=claimed.fence, evidence="shipped",
+            key="N-1",
+            to=NodeStatus.VERIFYING,
+            role=Role.AGENT,
+            at=AT + timedelta(seconds=1),
+            fence=claimed.fence,
+            evidence="shipped",
         )
     )
     later = AT + timedelta(days=3)
@@ -378,10 +386,12 @@ def test_a_person_sends_back_a_node_on_verification_past_its_lease() -> None:
 
 def test_batch_containment_and_blocking_are_independent() -> None:
     plan = Plan()
-    plan.add_many((
-        NodeSpec(key="CORE", created_at=AT, depends_on=("task",)),
-        NodeSpec(key="task", created_at=AT, parent="CORE", related=("CORE",)),
-    ))
+    plan.add_many(
+        (
+            NodeSpec(key="CORE", created_at=AT, depends_on=("task",)),
+            NodeSpec(key="task", created_at=AT, parent="CORE", related=("CORE",)),
+        )
+    )
     assert plan.unmet_blockers("CORE") == ("task",)
     assert plan.ready("task")
     assert plan.parent_cycle_path() is None
@@ -391,8 +401,19 @@ def test_parent_cycle_rejects_entire_batch() -> None:
     plan = Plan()
     plan.add(NodeSpec(key="existing", created_at=AT))
     with pytest.raises(DomainError, match="PLAN_CYCLE"):
-        plan.add_many((
-            NodeSpec(key="a", created_at=AT, parent="b"),
-            NodeSpec(key="b", created_at=AT, parent="a"),
-        ))
+        plan.add_many(
+            (
+                NodeSpec(key="a", created_at=AT, parent="b"),
+                NodeSpec(key="b", created_at=AT, parent="a"),
+            )
+        )
     assert plan.kahn() == ("existing",)
+
+
+def test_direction_is_never_ready_or_claimable() -> None:
+    plan = Plan()
+    plan.add(NodeSpec(key="CORE-0", created_at=AT, level=0))
+    assert not plan.ready("CORE-0")
+    with pytest.raises(DomainError, match="NODE_NOT_READY"):
+        plan.claim("CORE-0", tab_id="tab", at=AT)
+    assert plan.get("CORE-0").fence == 0

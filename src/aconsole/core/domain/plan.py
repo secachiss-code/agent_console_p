@@ -1,10 +1,12 @@
 """Plan DAG: status rules, leases, path overlap, priority, and layout."""
 
+from collections.abc import Mapping
 from dataclasses import dataclass, replace
 from datetime import datetime, timedelta
 from enum import StrEnum
 
 from aconsole.core.domain.errors import DomainError
+from aconsole.core.domain.plan_admission import admission_warnings, validate_contract
 
 _LEASE = timedelta(minutes=15)
 _NOT_FOUND = 4002
@@ -117,6 +119,10 @@ class NodeSpec:
     parent: str | None = None
     related: tuple[str, ...] = ()
     paths: tuple[str, ...] = ()
+    level: int = 1
+    pipeline: bool = False
+    invariants: str | None = None
+    gate_profile: Mapping[str, object] | None = None
     review_required: bool = False
     user_moved: bool = False
     pin: int | None = None
@@ -128,6 +134,10 @@ class Node:
     created_at: datetime
     status: NodeStatus = NodeStatus.PENDING
     paths: tuple[str, ...] = ()
+    level: int = 1
+    pipeline: bool = False
+    invariants: str | None = None
+    gate_profile: Mapping[str, object] | None = None
     review_required: bool = False
     user_moved: bool = False
     pin: int | None = None
@@ -340,11 +350,17 @@ class Plan:
                     key=spec.key,
                     created_at=spec.created_at,
                     paths=spec.paths,
+                    level=spec.level,
+                    pipeline=spec.pipeline,
+                    invariants=spec.invariants,
+                    gate_profile=spec.gate_profile,
                     review_required=spec.review_required,
                     user_moved=spec.user_moved,
                     pin=spec.pin,
                 ),
-                depends_on=spec.depends_on, parent=spec.parent, related=spec.related,
+                depends_on=spec.depends_on,
+                parent=spec.parent,
+                related=spec.related,
             )
         for spec in specs:
             scratch._require_known(spec.depends_on + spec.related)
@@ -353,10 +369,17 @@ class Plan:
         cycle = scratch.cycle_path() or scratch.parent_cycle_path()
         if cycle is not None:
             raise _fail(_CYCLE, "PLAN_CYCLE", cycle)
+        for node in scratch._nodes.values():
+            parent_key = scratch._parents[node.key]
+            validate_contract(node, scratch._nodes.get(parent_key) if parent_key is not None else None)
         self._nodes = scratch._nodes
         self._blockers = scratch._blockers
         self._parents = scratch._parents
         self._related = scratch._related
+
+    def admission_warnings(self) -> tuple[str, ...]:
+        """Advisory sizing only; small and legacy plans remain admissible."""
+        return admission_warnings(tuple(self._nodes.values()))
 
     def parent_cycle_path(self) -> tuple[str, ...] | None:
         """Containment is acyclic independently of blocking edges."""
@@ -366,7 +389,7 @@ class Plan:
             current: str | None = key
             while current is not None and current not in checked:
                 if current in chain:
-                    return (*chain[chain.index(current):], current)
+                    return (*chain[chain.index(current) :], current)
                 chain.append(current)
                 current = self._parents.get(current)
             checked.update(chain)
@@ -399,7 +422,13 @@ class Plan:
 
     def edit(self, key: str, *, paths: tuple[str, ...], review_required: bool) -> None:
         """Fields a person may change without moving the node."""
-        self._nodes[key] = replace(self.get(key), paths=paths, review_required=review_required)
+        node = replace(self.get(key), paths=paths, review_required=review_required)
+        parent_key = self._parents[key]
+        validate_contract(node, self._nodes.get(parent_key) if parent_key is not None else None)
+        for child_key, child_parent in self._parents.items():
+            if child_parent == key:
+                validate_contract(self._nodes[child_key], node)
+        self._nodes[key] = node
 
     def depend(self, key: str, on: str) -> None:
         _ = self.get(key)
@@ -426,7 +455,8 @@ class Plan:
     def ready(self, key: str) -> bool:
         node = self.get(key)
         return (
-            node.status is NodeStatus.PENDING
+            node.level == 1
+            and node.status is NodeStatus.PENDING
             and not self.unmet_blockers(key)
             and self._path_blocker(node, None) is None
         )
@@ -588,6 +618,8 @@ class Plan:
         return frozenset(found)
 
     def _check_claim(self, node: Node, move: Move) -> None:
+        if node.level == 0:
+            raise _fail(_NOT_READY, "NODE_NOT_READY", ("L0",))
         if move.tab_id is None:
             message = "claim requires tab_id"
             raise ValueError(message)
