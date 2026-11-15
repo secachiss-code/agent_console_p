@@ -1,0 +1,13 @@
+"""Disposable context cache. Losing it resends context and never resets audit state."""
+
+from typing import Protocol
+
+
+class ScratchStore(Protocol):
+    def prefix_get(self, plan_id: str, direction_key: str, manifest_sha256: str) -> str | None: ...
+
+    def prefix_put(self, plan_id: str, direction_key: str, manifest_sha256: str, prefix: str) -> None: ...
+
+    def prefix_seen(self, tab_id: str, agent_session_id: str, prefix_sha256: str) -> bool: ...
+
+    def prefix_mark_seen(self, tab_id: str, agent_session_id: str, prefix_sha256: str) -> None: ...
