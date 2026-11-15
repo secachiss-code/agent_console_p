@@ -41,6 +41,7 @@ from aconsole.core.domain.plan import Move, Node, NodeSpec, NodeStatus, Plan, Ro
 from aconsole.core.domain.vault_sync import Note as VaultNote
 from aconsole.core.domain.vault_sync import Owners, resolve_ref
 from aconsole.core.infrastructure.git.runner import GitRunner
+from aconsole.core.infrastructure.persistence.repositories.code_graph import persistent_impact
 from aconsole.core.infrastructure.vault.sync import NodeNote
 
 _LOG = logging.getLogger(__name__)
@@ -925,6 +926,17 @@ class PlanBoard:
 
     def impact(self, ctx: TabContext, target: str, hops: int, limit: int, kinds: list[str] | None) -> Impact:
         _require_tab(ctx)
+        with self._lock:
+            facts = self._target(ctx.project_id, target) is not None or bool(self._edges(ctx.project_id, kinds))
+        if not facts:
+            saved = persistent_impact(
+                self.code_graph, ctx.project_id, target, hops, limit, None if kinds is None else frozenset(kinds)
+            )
+            if saved is not None:
+                layers, truncated = saved
+                return Impact(
+                    layers=layers, truncated=truncated, canvas_note="aconsole://note/impact" if truncated else ""
+                )
         # Outside the lock: building a graph can take a minute, and plans must keep moving.
         code_start, code_edges = self._code(ctx.project_id, target, kinds)
         with self._lock:
