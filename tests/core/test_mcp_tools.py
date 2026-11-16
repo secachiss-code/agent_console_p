@@ -22,7 +22,7 @@ if TYPE_CHECKING:
 
 _HINT = "open a tab and pass Authorization: Bearer <tab token>"
 _READ = frozenset({"plan_get", "plan_ready", "ctx_get", "kb_impact", "plan_list"})
-_IDEMPOTENT = frozenset({"plan_create", "plan_add_nodes", "node_attach", "step_begin", "step_submit", "step_reset"})
+_IDEMPOTENT = frozenset({"node_escalate", "plan_create", "plan_add_nodes", "node_attach", "step_begin", "step_submit", "step_reset"})
 _TOOLS = frozenset(
     {
         "plan_create",
@@ -37,13 +37,14 @@ _TOOLS = frozenset(
         "kb_impact",
         "handover",
         "plan_list",
-        "step_begin", "step_submit", "step_reset", "gate_run",
+        "step_begin", "step_submit", "step_reset", "gate_run", "node_escalate",
     }
 )
 _ERROR_ARGS: dict[str, dict[str, object]] = {
     "step_begin": {"node_id": "node-1", "fence": 0},
     "step_submit": {"node_id": "node-1", "fence": 0, "step": "spec"},
     "step_reset": {"node_id": "node-1", "fence": 0},
+    "node_escalate": {"node_id": "node-1", "fence": 1, "reason": "Review"},
     "gate_run": {"node_id": "node-1", "fence": 0, "tier": "micro"},
     "plan_create": {"title": "Plan", "goal": "Ship"},
     "plan_add_nodes": {"plan_id": "plan-1", "nodes": []},

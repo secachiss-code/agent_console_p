@@ -32,7 +32,9 @@ from aconsole.contracts.app import (
     PaletteItemsResult,
     PaletteQuery,
     PlanApplyChangeParams,
+    PlanDecideParams,
     PlanIdParams,
+    PlanInboxResult,
     PlanListParams,
     PlanListResult,
     PlanNodeView,
@@ -256,6 +258,12 @@ class TypedFacade(Facade):
 
     async def plan_get(self, params: PlanIdParams) -> PlanView:
         return await self.typed("plan/get", params, PlanView)
+
+    async def plan_inbox(self, params: PlanIdParams) -> PlanInboxResult:
+        return await self.typed("plan/inbox", params, PlanInboxResult)
+
+    async def plan_decide(self, params: PlanDecideParams) -> PlanView:
+        return await self.typed("plan/decide", params, PlanView)
 
     async def plan_freeze(self, params: PlanIdParams) -> PlanView:
         return await self.typed("plan/freeze", params, PlanView)

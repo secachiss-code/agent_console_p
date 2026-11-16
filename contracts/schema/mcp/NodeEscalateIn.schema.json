@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "fence": {
+      "title": "Fence",
+      "type": "integer"
+    },
+    "kind": {
+      "default": "replan",
+      "maxLength": 32,
+      "minLength": 1,
+      "title": "Kind",
+      "type": "string"
+    },
+    "node_id": {
+      "title": "Node Id",
+      "type": "string"
+    },
+    "reason": {
+      "maxLength": 2000,
+      "minLength": 1,
+      "title": "Reason",
+      "type": "string"
+    }
+  },
+  "required": [
+    "node_id",
+    "fence",
+    "reason"
+  ],
+  "title": "NodeEscalateIn",
+  "type": "object"
+}

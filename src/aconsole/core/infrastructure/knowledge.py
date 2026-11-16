@@ -12,11 +12,15 @@ from aconsole.contracts.app import (
     NoteUriParams,
     NoteUriResult,
     PlanApplyChangeParams,
+    PlanDecideParams,
     PlanIdParams,
+    PlanInboxEntry,
+    PlanInboxResult,
     PlanListParams,
     PlanListResult,
     SetNodeStatusParams,
 )
+from aconsole.contracts.common import NodeId, PlanId
 from aconsole.core.application.ports.plan_store import StoredPlan
 from aconsole.core.domain.errors import DomainError
 from aconsole.core.domain.scope import check_scope
@@ -25,7 +29,9 @@ from aconsole.core.infrastructure.mcp.tools import PlanBoard, impact_layers
 from aconsole.core.infrastructure.persistence.repositories.code_graph import persistent_impact
 from aconsole.core.infrastructure.vault.sync import VaultSync
 
-PLAN_METHODS: Final = frozenset({"plan/list", "plan/get", "plan/setNodeStatus", "plan/freeze", "plan/applyChange"})
+PLAN_METHODS: Final = frozenset(
+    {"plan/inbox", "plan/decide", "plan/list", "plan/get", "plan/setNodeStatus", "plan/freeze", "plan/applyChange"}
+)
 KNOWLEDGE_METHODS: Final = PLAN_METHODS | {"knowledge/noteUri", "knowledge/impact"}
 _IMPACT_LIMIT: Final = 200
 _IMPACT_UNKNOWN: Final = 5007
@@ -48,6 +54,8 @@ class KnowledgeService:
         return self._note_uri(msgspec.json.decode(raw, type=NoteUriParams))
 
     def _plan(self, method: str, raw: bytes) -> msgspec.Struct:
+        if method in {"plan/inbox", "plan/decide"}:
+            return self._review(method, raw)
         if method == "plan/list":
             listed = msgspec.json.decode(raw, type=PlanListParams)
             plans = self.board.views(str(listed.project_id), active_only=listed.status == "active")
@@ -66,6 +74,32 @@ class KnowledgeService:
             return self.board.apply_change(str(change.plan_id), change.change_id, self._radii)
         moved = msgspec.json.decode(raw, type=SetNodeStatusParams)
         return self.board.set_node_status(str(moved.node_id), moved.status.value, moved.note)
+
+    def _review(self, method: str, raw: bytes) -> msgspec.Struct:
+        if method == "plan/decide":
+            decision = msgspec.json.decode(raw, type=PlanDecideParams)
+            if decision.decision == "apply":
+                return self.board.apply_change(str(decision.plan_id), decision.request_id, self._radii)
+            return self.board.decide(str(decision.plan_id), decision.request_id, decision.decision, decision.note)
+        wanted = msgspec.json.decode(raw, type=PlanIdParams)
+        plan = self.board.export_plan(str(wanted.plan_id))
+        return PlanInboxResult(
+            entries=tuple(
+                PlanInboxEntry(
+                    id=entry.id,
+                    plan_id=PlanId(entry.plan_id),
+                    node_id=None if entry.node_id is None else NodeId(entry.node_id),
+                    kind=entry.kind,
+                    body=entry.body,
+                    status=entry.status,
+                    payload_json=msgspec.json.encode(entry.payload).decode(),
+                    created_at=entry.created_at or plan.created_at,
+                    decided_at=entry.decided_at,
+                    decided_by=entry.decided_by,
+                )
+                for entry in self.board.inbox(plan.id)
+            )
+        )
 
     def vault_ok(self) -> bool:
         return self.vault.root is not None

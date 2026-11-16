@@ -89,6 +89,22 @@ class StoredPlanChange:
     status: str
     payload: dict[str, object]
     node_id: str | None = None
+    body: str = ""
+    created_at: datetime | None = None
+    decided_at: datetime | None = None
+    decided_by: str | None = None
+    tab_id: str | None = None
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class StoredPlanDecision:
+    id: str
+    request_id: str | None
+    node_id: str | None
+    action: str
+    note: str
+    at: datetime
+    decided_by: str = "human"
 
 
 @runtime_checkable
@@ -98,3 +114,10 @@ class PlanChangeStore(PlanStore, Protocol):
     def save_change(self, plan: StoredPlan, change_id: str) -> None:
         """Save the plan and human decision in one transaction, only while the request is open."""
         ...
+
+
+@runtime_checkable
+class PlanInboxStore(PlanChangeStore, Protocol):
+    def inbox(self, plan_id: str) -> tuple[StoredPlanChange, ...]: ...
+    def save_attention(self, plan: StoredPlan, entry: StoredPlanChange) -> None: ...
+    def save_decision(self, plan: StoredPlan, decision: StoredPlanDecision) -> None: ...

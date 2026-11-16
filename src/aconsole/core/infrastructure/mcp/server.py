@@ -106,7 +106,9 @@ class _LeanServer(MCPServer):
         if active(self.tab_context).mode == "execute":
             listed = [tool for tool in listed if tool.name not in {"plan_create", "plan_add_nodes", "change_propose"}]
         if active(self.tab_context).mode == "plan":
-            listed = [tool for tool in listed if tool.name not in {"step_submit", "step_reset", "gate_run"}]
+            listed = [
+                tool for tool in listed if tool.name not in {"step_submit", "step_reset", "gate_run", "node_escalate"}
+            ]
         return [tool.model_copy(update={"input_schema": lean_schema(tool.input_schema)}) for tool in listed]
 
 
@@ -322,6 +324,15 @@ def _register(  # noqa: C901 -- one nested function per MCP tool
         """Run a kernel gate or reuse its fresh receipt."""
         return board.pipeline_step(active(context), "gate", node_id, fence, tier=tier)
 
+    def node_escalate(
+        node_id: _Id,
+        fence: int,
+        reason: Annotated[str, Field(min_length=1, max_length=2000)],
+        kind: Annotated[str, Field(min_length=1, max_length=32)] = "replan",
+    ) -> PipelineReply:
+        """Block a node and request a human decision without adding vertices."""
+        return board.pipeline_step(active(context), "escalate", node_id, fence, kind=kind, reason=reason)
+
     def node_update(
         node_id: _Id,
         fence: int | None = None,
@@ -409,6 +420,7 @@ def _register(  # noqa: C901 -- one nested function per MCP tool
         (step_submit, "Submit an L2 step", _IDEMPOTENT),
         (step_reset, "Restore scope files", _IDEMPOTENT),
         (gate_run, "Run a verification gate", _WRITE),
+        (node_escalate, "Request a human plan decision", _IDEMPOTENT),
         (node_update, "Update a node or extend its lease", _WRITE),
         (node_attach, "Attach an artifact", _IDEMPOTENT),
         (ctx_get, "Read knowledge", _READ),

@@ -1,0 +1,92 @@
+{
+  "$defs": {
+    "PlanInboxEntry": {
+      "properties": {
+        "body": {
+          "type": "string"
+        },
+        "created_at": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "decided_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "decided_by": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "id": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "node_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "payload_json": {
+          "type": "string"
+        },
+        "plan_id": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "plan_id",
+        "node_id",
+        "kind",
+        "body",
+        "status",
+        "payload_json",
+        "created_at"
+      ],
+      "title": "PlanInboxEntry",
+      "type": "object"
+    },
+    "PlanInboxResult": {
+      "properties": {
+        "entries": {
+          "items": {
+            "$ref": "#/$defs/PlanInboxEntry"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "entries"
+      ],
+      "title": "PlanInboxResult",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/PlanInboxResult",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

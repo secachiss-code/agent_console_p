@@ -49,7 +49,10 @@ from aconsole.contracts.app import (
     PaletteItemsResult,
     PaletteQuery,
     PlanApplyChangeParams,
+    PlanDecideParams,
     PlanIdParams,
+    PlanInboxEntry,
+    PlanInboxResult,
     PlanListParams,
     PlanListResult,
     PlanNodeView,
@@ -279,21 +282,18 @@ STRUCTS: tuple[type[msgspec.Struct], ...] = (
     WorkSessionIntegratePreviewParams,
     WorkSessionIntegrateParams,
     WorkSessionCleanupWorkerParams,
-
     WorkSessionHandoffParams,
     WorkSessionHistoryResult,
     WorkSessionRestoreParams,
     WorkSessionRestorePreview,
     WorkSessionRestorePreviewParams,
     WorkSessionSnapshotView,
-
     WorkSessionView,
     WorkSessionCreateParams,
     WorkSessionParams,
     WorkSessionListParams,
     WorkSessionListResult,
     WorkSessionRenameParams,
-
     MergeProbeView,
     WorktreeGitState,
     BranchView,
@@ -374,7 +374,10 @@ STRUCTS: tuple[type[msgspec.Struct], ...] = (
     PaletteItemsResult,
     PaletteQuery,
     PlanIdParams,
+    PlanInboxEntry,
     PlanApplyChangeParams,
+    PlanDecideParams,
+    PlanInboxResult,
     PlanListParams,
     PlanListResult,
     PlanNodeView,
@@ -527,4 +530,3 @@ STRUCTS: tuple[type[msgspec.Struct], ...] = (
     CanvasNode,
     TaskNote,
 )
-

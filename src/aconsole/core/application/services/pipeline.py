@@ -63,6 +63,7 @@ class Attempt:
 class PipelineBook(Protocol):
     def contract(self, actor: PipelineActor, node_id: str, fence: int) -> PipelineContract: ...
     def scope(self, actor: PipelineActor, node_id: str, fence: int) -> None: ...
+    def escalate(self, actor: PipelineActor, node_id: str, fence: int, kind: str, reason: str) -> str: ...
     def exhausted(self, actor: PipelineActor, node_id: str, fence: int) -> None: ...
 
 
@@ -263,6 +264,14 @@ class PipelineService:
         # The attempt stays running until Tier 2 accepts the completed L2 chain.
         self._scratch.record(contract, actor, advanced)
         return _submitted(block, advanced)
+
+    def escalate(self, actor: PipelineActor, node_id: str, fence: int, kind: str, reason: str) -> dict[str, object]:
+        _execute(actor)
+        if not kind.strip() or not reason.strip():
+            raise DomainError(code=4013, name="NODE_CONTRACT", retryable=False)
+        with self._lock(node_id):
+            request_id = self._book.escalate(actor, node_id, fence, kind.strip(), reason.strip())
+            return {"status": "blocked", "request_id": request_id, "reason": "REPLAN_INTERRUPT"}
 
     def reset(self, actor: PipelineActor, node_id: str, fence: int) -> dict[str, object]:
         with self._lock(node_id):

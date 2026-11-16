@@ -1,0 +1,43 @@
+{
+  "$defs": {
+    "PlanDecideParams": {
+      "additionalProperties": false,
+      "properties": {
+        "decision": {
+          "enum": [
+            "apply",
+            "cancel",
+            "reject",
+            "unblock"
+          ]
+        },
+        "note": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "plan_id": {
+          "type": "string"
+        },
+        "request_id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "plan_id",
+        "request_id",
+        "decision"
+      ],
+      "title": "PlanDecideParams",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/PlanDecideParams",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

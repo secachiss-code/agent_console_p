@@ -198,6 +198,30 @@ class PlanView(msgspec.Struct, frozen=True, kw_only=True):
     warnings: tuple[str, ...] = ()
 
 
+class PlanInboxEntry(msgspec.Struct, frozen=True, kw_only=True):
+    id: str
+    plan_id: PlanId
+    node_id: NodeId | None
+    kind: str
+    body: str
+    status: str
+    payload_json: str
+    created_at: AwareDatetime
+    decided_at: AwareDatetime | None = None
+    decided_by: str | None = None
+
+
+class PlanInboxResult(msgspec.Struct, frozen=True, kw_only=True):
+    entries: tuple[PlanInboxEntry, ...]
+
+
+class PlanDecideParams(msgspec.Struct, frozen=True, kw_only=True, forbid_unknown_fields=True):
+    plan_id: PlanId
+    request_id: str
+    decision: Literal["unblock", "cancel", "reject", "apply"]
+    note: str | None = None
+
+
 class PlanApplyChangeParams(msgspec.Struct, frozen=True, kw_only=True):
     plan_id: PlanId
     change_id: str

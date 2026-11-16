@@ -361,6 +361,10 @@ def test_failed_micro_gate_consumes_durable_budget_without_fifth_attempt(pipelin
     assert state.nodes[1].status == "blocked"
     assert len(state.nodes) == 2
     assert attention == [(pipeline.plan, pipeline.node, "replan", "ATTEMPTS_EXHAUSTED")]
+    inbox = pipeline.board.inbox(pipeline.plan)
+    assert len(inbox) == 1
+    assert inbox[0].body == "ATTEMPTS_EXHAUSTED"
+    assert inbox[0].payload["kind"] == "attempts"
     assert "VALUE = 5" in (pipeline.repo / "src/a.py").read_text()
 
 

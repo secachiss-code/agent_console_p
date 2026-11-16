@@ -13,7 +13,7 @@ from tests.core.test_mcp_tools import _call, _Clock, _error, _node, _node_id, _s
 
 def test_mcp_retry_released_failed_node_without_fence() -> None:
     async def scenario() -> None:
-        _board, server = _server(_Clock(), "tab-a")
+        board, server = _server(_Clock(), "tab-a")
         async with Client(server) as client:
             created = await _call(client, "plan_create", {
                 "title": "Retry", "goal": "Ship", "nodes": [_node("A-1")],
@@ -28,9 +28,12 @@ def test_mcp_retry_released_failed_node_without_fence() -> None:
                 "node_id": node_id, "fence": first["fence"], "status": "pending",
             })
             assert stale.is_error is True
-            assert _error(stale)["reason"] == "LEASE_STALE_FENCE"
-            pending = await _call(client, "node_update", {"node_id": node_id, "status": "pending"})
-            assert pending["status"] == "pending"
+            assert _error(stale)["reason"] == "NODE_TRANSITION_INVALID"
+            denied = await client.call_tool("node_update", {"node_id": node_id, "status": "pending"})
+            assert denied.is_error is True
+            assert _error(denied)["reason"] == "NODE_TRANSITION_INVALID"
+            pending = board.set_node_status(node_id, "pending", "Reviewed retry")
+            assert pending.status.value == "pending"
             second = await _call(client, "node_claim", {"node_id": node_id})
             assert first["fence"] == 1
             assert second["fence"] == 2
@@ -123,8 +126,8 @@ def test_mcp_retry_keeps_project_isolation() -> None:
             result = await foreign.call_tool("node_update", {"node_id": node_id, "status": "pending"})
             assert result.is_error is True
             assert _error(result)["reason"] == "NODE_NOT_FOUND"
-            pending = await _call(owner, "node_update", {"node_id": node_id, "status": "pending"})
-            assert pending["status"] == "pending"
+            pending = board.set_node_status(node_id, "pending", "Reviewed retry")
+            assert pending.status.value == "pending"
 
     asyncio.run(scenario())
 

@@ -17,6 +17,7 @@ from aconsole.core.application.ports.plan_store import (
     StoredNode,
     StoredPlan,
     StoredPlanChange,
+    StoredPlanDecision,
     StoreWriteError,
 )
 from aconsole.core.application.services.plan_lifecycle import topology_contract
@@ -79,11 +80,88 @@ class PlanDatabase:
         def read(session: Session) -> None:
             row = session.get(PlanInbox, change_id)
             if row is not None:
-                found.append(StoredPlanChange(id=row.id, plan_id=row.plan_id, kind=row.kind,
-                                              status=row.status, payload=dict(row.payload), node_id=row.node_id))
+                found.append(_stored_inbox(row))
 
         _ = self._writer.call(read)
         return found[0] if found else None
+
+    def inbox(self, plan_id: str) -> tuple[StoredPlanChange, ...]:
+        found: list[StoredPlanChange] = []
+
+        def read(session: Session) -> None:
+            found.extend(
+                _stored_inbox(row)
+                for row in session.scalars(
+                    select(PlanInbox)
+                    .where(
+                        PlanInbox.plan_id == plan_id,
+                        PlanInbox.status == "open",
+                    )
+                    .order_by(PlanInbox.created_at, PlanInbox.id)
+                )
+            )
+
+        _ = self._writer.call(read)
+        return tuple(found)
+
+    def save_attention(self, plan: StoredPlan, entry: StoredPlanChange) -> None:
+        def write(session: Session) -> None:
+            if entry.plan_id != plan.id or session.get(PlanInbox, entry.id) is not None:
+                message = "attention request does not match a new inbox record"
+                raise StoreWriteError(message)
+            save_plan(session, plan)
+            known_tab = entry.tab_id is not None and session.get(Tab, entry.tab_id) is not None
+            session.add(
+                PlanInbox(
+                    id=entry.id,
+                    plan_id=plan.id,
+                    node_id=entry.node_id,
+                    kind=entry.kind,
+                    body=entry.body,
+                    payload=entry.payload,
+                    status="open",
+                    tab_id=entry.tab_id if known_tab else None,
+                    created_at=entry.created_at or plan.updated_at,
+                )
+            )
+
+        try:
+            _ = self._writer.call(write)
+        except (SQLAlchemyError, TimeoutError) as exc:
+            raise StoreWriteError(str(exc)) from exc
+
+    def save_decision(self, plan: StoredPlan, decision: StoredPlanDecision) -> None:
+        def write(session: Session) -> None:
+            if decision.decided_by != "human":
+                message = "only a human may decide an inbox request"
+                raise StoreWriteError(message)
+            row = None if decision.request_id is None else session.get(PlanInbox, decision.request_id)
+            if decision.request_id is not None and (
+                row is None or row.plan_id != plan.id or row.status != "open" or row.node_id != decision.node_id
+            ):
+                message = "inbox request changed before the decision"
+                raise StoreWriteError(message)
+            if row is None:
+                row = PlanInbox(
+                    id=decision.id,
+                    plan_id=plan.id,
+                    node_id=decision.node_id,
+                    kind="human",
+                    body=decision.note,
+                    payload={},
+                    created_at=decision.at,
+                )
+                session.add(row)
+            save_plan(session, plan)
+            row.status = "rejected" if decision.action == "reject" else "applied"
+            row.decided_by = "human"
+            row.decided_at = decision.at
+            row.payload = {**row.payload, "decision": decision.action, "decision_note": decision.note}
+
+        try:
+            _ = self._writer.call(write)
+        except (SQLAlchemyError, TimeoutError) as exc:
+            raise StoreWriteError(str(exc)) from exc
 
     def save_change(self, plan: StoredPlan, change_id: str) -> None:
         def write(session: Session) -> None:
@@ -102,6 +180,22 @@ class PlanDatabase:
             raise StoreWriteError(str(exc)) from exc
 
 
+def _stored_inbox(row: PlanInbox) -> StoredPlanChange:
+    return StoredPlanChange(
+        id=row.id,
+        plan_id=row.plan_id,
+        kind=row.kind,
+        status=row.status,
+        payload=dict(row.payload),
+        node_id=row.node_id,
+        body=row.body,
+        tab_id=row.tab_id,
+        created_at=_aware(row.created_at),
+        decided_by=row.decided_by,
+        decided_at=None if row.decided_at is None else _aware(row.decided_at),
+    )
+
+
 def save_plan(session: Session, plan: StoredPlan) -> None:
     """Upsert one plan. A plan outside any added project has nowhere to live and stays in memory."""
     if session.get(Project, plan.project_id) is None:
@@ -118,11 +212,19 @@ def save_plan(session: Session, plan: StoredPlan) -> None:
     if plan.topology is not None:
         topology = plan.topology
         if topology.phase == "frozen" and row.phase != "frozen":
-            session.add(PlanInbox(
-                id=uuid4().hex[:26], plan_id=plan.id, kind="human", body="Plan frozen",
-                payload={"action": "freeze", "revision_no": topology.revision_no}, status="applied",
-                created_at=plan.updated_at, decided_at=plan.updated_at, decided_by="human",
-            ))
+            session.add(
+                PlanInbox(
+                    id=uuid4().hex[:26],
+                    plan_id=plan.id,
+                    kind="human",
+                    body="Plan frozen",
+                    payload={"action": "freeze", "revision_no": topology.revision_no},
+                    status="applied",
+                    created_at=plan.updated_at,
+                    decided_at=plan.updated_at,
+                    decided_by="human",
+                )
+            )
         row.phase = topology.phase
         row.revision_no = topology.revision_no
         row.frozen_at = topology.frozen_at
@@ -161,14 +263,21 @@ def load_plans(session: Session) -> tuple[StoredPlan, ...]:
                     phase="completed" if row.phase == "completed" else "frozen" if row.phase == "frozen" else "draft",
                     revision_no=row.revision_no,
                     frozen_at=None if row.frozen_at is None else _aware(row.frozen_at),
-                    baseline_nodes=row.baseline_nodes, gross_added=row.gross_added,
+                    baseline_nodes=row.baseline_nodes,
+                    gross_added=row.gross_added,
                     gates_sha256=row.gates_sha256,
                     contract_hashes=tuple((node.key, node.contract_sha256) for node in nodes if node.contract_sha256),
                     baseline_children=tuple((node.key, node.baseline_children) for node in nodes),
-                    applied_changes=tuple(session.scalars(select(PlanInbox.id).where(
-                        PlanInbox.plan_id == row.id, PlanInbox.status == "applied",
-                        PlanInbox.decided_by == "human", PlanInbox.kind.in_(("add", "split")),
-                    )).all()),
+                    applied_changes=tuple(
+                        session.scalars(
+                            select(PlanInbox.id).where(
+                                PlanInbox.plan_id == row.id,
+                                PlanInbox.status == "applied",
+                                PlanInbox.decided_by == "human",
+                                PlanInbox.kind.in_(("add", "split")),
+                            )
+                        ).all()
+                    ),
                 ),
             )
         )

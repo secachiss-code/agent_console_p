@@ -48,11 +48,11 @@ SPEC: dict[NodeStatus, dict[NodeStatus, str]] = {
         NodeStatus.CANCELLED: HUMAN,
     },
     NodeStatus.BLOCKED: {
-        NodeStatus.PENDING: BOTH,
+        NodeStatus.PENDING: HUMAN,
         NodeStatus.CANCELLED: HUMAN,
     },
     NodeStatus.FAILED: {
-        NodeStatus.PENDING: BOTH,
+        NodeStatus.PENDING: HUMAN,
         NodeStatus.CANCELLED: HUMAN,
     },
     NodeStatus.DONE: {NodeStatus.PENDING: HUMAN},

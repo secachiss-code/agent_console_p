@@ -20,6 +20,7 @@ from dataclasses import dataclass, field, replace
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Annotated, ClassVar, Literal, NoReturn, Protocol
+from uuid import uuid4
 
 import pydantic_core
 from mcp.types import CallToolResult, TextContent
@@ -33,10 +34,13 @@ from aconsole.core.application.ports.git_repo import GitCommandError
 from aconsole.core.application.ports.knowledge_store import KnowledgeStore, StoredFact, StoredHandover
 from aconsole.core.application.ports.plan_store import (
     PlanChangeStore,
+    PlanInboxStore,
     PlanStore,
     StoredArtifact,
     StoredNode,
     StoredPlan,
+    StoredPlanChange,
+    StoredPlanDecision,
     StoreWriteError,
 )
 from aconsole.core.application.services.context_shaper import DirectionContext, LeaseTail, ModuleContext
@@ -48,6 +52,7 @@ from aconsole.core.application.services.plan_lifecycle import (
     topology_contract,
     topology_for,
 )
+from aconsole.core.application.services.plan_review import review_move
 from aconsole.core.domain.errors import DomainError
 from aconsole.core.domain.pipeline import Step
 from aconsole.core.domain.plan import Move, Node, NodeSpec, NodeStatus, Plan, Role, after_merge
@@ -414,6 +419,7 @@ class PlanBoard:
         self.pipeline: PipelineService | None = None
         self.pipeline_actor: Callable[[str], PipelineActor] | None = None
         self.on_attention: Callable[[str, str, str, str], None] | None = None
+        self._memory_inbox: dict[str, StoredPlanChange] = {}
         self._knowledge: KnowledgeStore | None = None
         self.on_changed: Callable[[PlanView], None] | None = None
         self.note_ref: Callable[[str, str], str | None] = lambda _plan, _key: None
@@ -551,6 +557,14 @@ class PlanBoard:
             stored, meta = self._find_node(node_id)
             now = self._now()
             target = NodeStatus(status)
+            current = stored.dag.get(meta.key)
+            if current.status in {NodeStatus.BLOCKED, NodeStatus.FAILED} and target is NodeStatus.PENDING:
+                request = next((entry for entry in self.inbox(stored.plan_id) if entry.node_id == node_id), None)
+                synthetic = request or StoredPlanChange(
+                    id="", plan_id=stored.plan_id, node_id=node_id, kind="human", status="open", payload={}
+                )
+                view = self._decide(stored, synthetic, "unblock", note, "human")
+                return next(node for node in view.nodes if str(node.id) == node_id)
             if stored.dag.get(meta.key).pipeline and target is NodeStatus.DONE:
                 raise DomainError(code=4018, name="GATE_RECEIPT_REQUIRED", retryable=False)
             _ = stored.dag.transition(
@@ -568,6 +582,116 @@ class PlanBoard:
             self._commit(stored)
             view = self._view(stored)
             return next(item for item in view.nodes if str(item.id) == node_id)
+
+    def inbox(self, plan_id: str) -> tuple[StoredPlanChange, ...]:
+        with self._lock:
+            _ = self.export_plan(plan_id)
+            if isinstance(self._store, PlanInboxStore):
+                return self._store.inbox(plan_id)
+            return tuple(
+                entry for entry in self._memory_inbox.values() if entry.plan_id == plan_id and entry.status == "open"
+            )
+
+    def decide(
+        self, plan_id: str, request_id: str, action: str, note: str | None, *, decided_by: str = "human"
+    ) -> PlanView:
+        with self._lock:
+            _ = self.export_plan(plan_id)
+            request = (
+                self._store.load_change(request_id)
+                if isinstance(self._store, PlanInboxStore)
+                else self._memory_inbox.get(request_id)
+            )
+            return self._decide(self._plans[plan_id], request, action, note, decided_by)
+
+    def _decide(
+        self, stored: _Stored, request: StoredPlanChange | None, action: str, note: str | None, decided_by: str
+    ) -> PlanView:
+        before = self._state(stored)
+        move = review_move(before, request, action=action, note=note, decided_by=decided_by)
+        if move.replay:
+            return self._view(stored)
+        candidate = _restored(before, checked_completion=self._checked_completion)
+        if move.target is not None:
+            meta = next(meta for meta in candidate.meta.values() if meta.node_id == move.node_id)
+            node = candidate.dag.get(meta.key)
+            _ = candidate.dag.transition(
+                Move(
+                    key=meta.key,
+                    to=NodeStatus(move.target),
+                    role=Role.HUMAN,
+                    at=self._now(),
+                    note=move.note,
+                    evidence=move.note,
+                    fence=node.fence if node.lease_expires_at is not None else None,
+                )
+            )
+        decision = StoredPlanDecision(
+            id=uuid4().hex[:26],
+            request_id=request.id if request and request.id else None,
+            node_id=move.node_id,
+            action=action,
+            note=move.note,
+            at=self._now(),
+            decided_by=decided_by,
+        )
+        self._plans[stored.plan_id] = candidate
+        self._commit(candidate, decision=decision)
+        return self._view(candidate)
+
+    def escalate(self, actor: PipelineActor, node_id: str, fence: int, kind: str, reason: str) -> str:
+        with self._lock:
+            ctx = _actor_context(actor)
+            stored, meta = self._node(ctx, node_id)
+            node = stored.dag.get(meta.key)
+            if node.status is NodeStatus.BLOCKED and node.fence == fence:
+                replay = next(
+                    (
+                        entry
+                        for entry in self.inbox(stored.plan_id)
+                        if entry.node_id == node_id
+                        and entry.body == reason
+                        and entry.payload.get("source_tab_id") == actor.tab_id
+                        and entry.payload.get("kind") == kind
+                    ),
+                    None,
+                )
+                if replay is not None:
+                    return replay.id
+            if node.tab_id != actor.tab_id:
+                _stop("LEASE_HELD", "only the active executor may escalate this node")
+            try:
+                _ = stored.dag.transition(
+                    Move(
+                        key=meta.key,
+                        to=NodeStatus.BLOCKED,
+                        role=Role.AGENT,
+                        at=self._now(),
+                        fence=fence,
+                        tab_id=actor.tab_id,
+                        note=reason,
+                    )
+                )
+            except DomainError as exc:
+                _domain(exc)
+            entry = self._attention(stored, meta, actor.tab_id, kind, reason)
+            self._commit(stored, attention=entry)
+            return entry.id
+
+    def _attention(
+        self, stored: _Stored, meta: _Meta, tab_id: str, kind: str, reason: str
+    ) -> StoredPlanChange:
+        return StoredPlanChange(
+            id=uuid4().hex[:26],
+            plan_id=stored.plan_id,
+            node_id=meta.node_id,
+            tab_id=tab_id,
+            kind="replan",
+            body=reason,
+            status="open",
+            created_at=self._now(),
+            payload={"kind": kind, "fence": stored.dag.get(meta.key).fence, "source_tab_id": tab_id},
+        )
 
     def record_merge(self, *, node_id: str | None, tab_id: str | None, oid: str) -> None:
         """Keep the merged commit on its node, and move the node only as far as its own rules allow.
@@ -676,13 +800,9 @@ class PlanBoard:
         self.assert_scope(_actor_context(actor), node_id)
 
     def exhausted(self, actor: PipelineActor, node_id: str, fence: int) -> None:
-        _ = self.update(_actor_context(actor), node_id, fence, "blocked", "ATTEMPTS_EXHAUSTED", None)
-        if self.on_attention is not None:
-            with self._lock:
-                stored, _meta = self._node(_actor_context(actor), node_id)
-                self.on_attention(stored.plan_id, node_id, "replan", "ATTEMPTS_EXHAUSTED")
+        _ = self.escalate(actor, node_id, fence, "attempts", "ATTEMPTS_EXHAUSTED")
 
-    def pipeline_step(  # noqa: PLR0913 -- common dispatcher for four pipeline tool signatures
+    def pipeline_step(  # noqa: PLR0913, C901 -- common dispatcher for pipeline tool signatures
         self,
         ctx: TabContext,
         action: str,
@@ -693,6 +813,8 @@ class PlanBoard:
         symbols: tuple[str, ...] = (),
         tier: str = "micro",
         note: str | None = None,
+        kind: str = "replan",
+        reason: str = "",
     ) -> PipelineReply:
         _require_tab(ctx)
         if self.pipeline is None or self.pipeline_actor is None:
@@ -705,6 +827,8 @@ class PlanBoard:
                 body = self.pipeline.begin(actor, node_id, fence)
             elif action == "submit":
                 body = self.pipeline.submit(actor, node_id, fence, step, symbols)
+            elif action == "escalate":
+                body = self.pipeline.escalate(actor, node_id, fence, kind, reason)
             elif action == "reset":
                 body = self.pipeline.reset(actor, node_id, fence)
             else:
@@ -820,6 +944,10 @@ class PlanBoard:
             if stored is None or meta is None:
                 return
             require_note_contract(self._state(stored), key, note)
+            if stored.dag.get(key).status in {NodeStatus.BLOCKED, NodeStatus.FAILED} and note.status == "pending":
+                _ = self.set_node_status(meta.node_id, "pending", "Unblocked through vault note")
+                stored = self._plans[plan_id]
+                meta = stored.meta[key]
             meta.title = note.title
             meta.objective = note.objective
             meta.acceptance = note.acceptance
@@ -858,13 +986,24 @@ class PlanBoard:
                     return stored, meta
         raise DomainError(code=_NODE_NOT_FOUND, name="NODE_NOT_FOUND", retryable=False, extra=(node_id,))
 
-    def _commit(self, stored: _Stored, *, change_id: str | None = None) -> None:
+    def _commit(
+        self,
+        stored: _Stored,
+        *,
+        change_id: str | None = None,
+        attention: StoredPlanChange | None = None,
+        decision: StoredPlanDecision | None = None,
+    ) -> None:
         """Every change goes through here: the store, then whoever shows plans."""
         stored.updated_at = self._now()
         if self._store is not None:
             state = self._state(stored)
             try:
-                if change_id is not None and isinstance(self._store, PlanChangeStore):
+                if attention is not None and isinstance(self._store, PlanInboxStore):
+                    self._store.save_attention(state, attention)
+                elif decision is not None and isinstance(self._store, PlanInboxStore):
+                    self._store.save_decision(state, decision)
+                elif change_id is not None and isinstance(self._store, PlanChangeStore):
                     self._store.save_change(state, change_id)
                 else:
                     self._store.save(state)
@@ -872,8 +1011,21 @@ class PlanBoard:
                 self._forget_unsaved(stored.plan_id)
                 _stop("INTERNAL_ERROR", str(exc))
             self._saved[state.id] = state
+        if attention is not None:
+            self._memory_inbox[attention.id] = attention
+        if decision is not None and decision.request_id in self._memory_inbox:
+            entry = self._memory_inbox[decision.request_id]
+            self._memory_inbox[entry.id] = replace(
+                entry,
+                status="rejected" if decision.action == "reject" else "applied",
+                decided_by="human",
+                decided_at=decision.at,
+                payload={**entry.payload, "decision": decision.action, "decision_note": decision.note},
+            )
         if self.on_changed is not None:
             self.on_changed(self._view(stored))
+        if attention is not None and self.on_attention is not None:
+            self.on_attention(stored.plan_id, attention.node_id or "", "replan", attention.body)
 
     def _forget_unsaved(self, plan_id: str) -> None:
         """Back to what the store holds, so that memory never promises more than a restart would keep."""
@@ -1110,7 +1262,11 @@ class PlanBoard:
                 _domain(exc)
             except ValueError:
                 _stop("NODE_TRANSITION_INVALID", f"{status} is not a node status")
-            self._commit(stored)
+            attention = (
+                self._attention(stored, meta, ctx.tab_id, "replan", note or "Node blocked")
+                if status == "blocked" and current.status is not NodeStatus.BLOCKED else None
+            )
+            self._commit(stored, attention=attention)
             return Updated(status=node.status.value, expires_at=_optional_stamp(node.lease_expires_at))
 
     def attach(  # noqa: PLR0913, PLR0917 -- kind and ref identify the artifact

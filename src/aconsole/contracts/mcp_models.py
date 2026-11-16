@@ -34,6 +34,11 @@ class StepBeginIn(BaseModel):
     fence: int
 
 
+class NodeEscalateIn(StepBeginIn):
+    kind: str = Field(default="replan", min_length=1, max_length=32)
+    reason: str = Field(min_length=1, max_length=2000)
+
+
 class StepSubmitIn(StepBeginIn):
     step: Literal["spec", "patch", "test", "verify"]
     affected_symbols: tuple[str, ...] = Field(default=(), max_length=12)
