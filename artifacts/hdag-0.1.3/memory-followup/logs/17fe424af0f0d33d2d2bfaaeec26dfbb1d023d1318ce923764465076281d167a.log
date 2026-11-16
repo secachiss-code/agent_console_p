@@ -1,0 +1,5 @@
+In /home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/_editable_impl_aconsole.pth: /home/sas/Projects/sp_aconsole_prototype/src does not exist; skipping sys.path append
+/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/e9b422b1e208b10f/.aconsole-dev/hdag-live/workspace/src/retry.py
+  /home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/e9b422b1e208b10f/.aconsole-dev/hdag-live/workspace/src/retry.py:2:12 - error: Type "Literal['invalid']" is not assignable to return type "int"
+    "Literal['invalid']" is not assignable to "int" (reportReturnType)
+1 error, 0 warnings, 0 notes

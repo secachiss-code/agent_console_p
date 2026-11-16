@@ -1,0 +1,10 @@
+In /opt/aconsole/ui/lib/python3.15/site-packages/_editable_impl_aconsole.pth: /home/sas/Projects/sp_aconsole_prototype/src does not exist; skipping sys.path append
+Collected 0 items to run in parallel
+.....                                                                    [100%]
+=============================== warnings summary ===============================
+../../../../../../../../../../../opt/aconsole/ui/lib/python3.15/site-packages/_pytest/cacheprovider.py:469
+  /opt/aconsole/ui/lib/python3.15/site-packages/_pytest/cacheprovider.py:469: PytestCacheWarning: cache could not write path /home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/e9b422b1e208b10f/.aconsole-dev/hdag-live/workspace/.pytest_cache/v/cache/nodeids: [Errno 30] Read-only file system: '/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/e9b422b1e208b10f/.aconsole-dev/hdag-live/workspace/.pytest_cache/v/cache/nodeids'
+    config.cache.set("cache/nodeids", sorted(self.cached_nodeids))
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+5 passed, 1 warning in 0.02s
