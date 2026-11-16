@@ -1090,7 +1090,15 @@ class PlanBoard:
     def _view(self, stored: _Stored) -> PlanView:
         layers = {key: layer for key, layer, _position in stored.dag.layout()}
         now = self._now()
-        nodes = tuple(self._node_view(stored, meta, layers.get(meta.key, 0), now) for meta in stored.meta.values())
+        attempts = (
+            {}
+            if self._attempts is None
+            else self._attempts.summaries(tuple(meta.node_id for meta in stored.meta.values()))
+        )
+        nodes = tuple(
+            self._node_view(stored, meta, layers.get(meta.key, 0), now, attempts.get(meta.node_id))
+            for meta in stored.meta.values()
+        )
         done = sum(node.status is NodeStatusView.DONE for node in nodes)
         return PlanView(
             id=PlanId(stored.plan_id),
@@ -1115,7 +1123,10 @@ class PlanBoard:
             else (),
         )
 
-    def _node_view(self, stored: _Stored, meta: _Meta, layer: int, now: datetime) -> PlanNodeView:
+    def _node_view(
+        self, stored: _Stored, meta: _Meta, layer: int, now: datetime, attempt: tuple[int, str | None] | None = None
+    ) -> PlanNodeView:
+
         node = stored.dag.get(meta.key)
         by_key = {item.key: item.node_id for item in stored.meta.values()}
         note = self.note_ref(stored.plan_id, meta.key)
@@ -1133,6 +1144,12 @@ class PlanBoard:
             lease_expires_at=node.lease_expires_at,
             note=None if note is None else NoteRef(note),
             evidence=node.evidence if node.status is NodeStatus.VERIFYING else None,
+            level=0 if node.level == 0 else 1,
+            parent=NodeId(by_key[meta.parent]) if meta.parent in by_key else None,
+            pipeline=node.pipeline,
+            attempt_no=0 if attempt is None else attempt[0],
+            max_attempts=meta.max_attempts,
+            last_verdict=None if attempt is None else attempt[1],
         )
 
     def create(self, ctx: TabContext, title: str, goal: str, nodes: list[NodeIn]) -> PlanCreated:

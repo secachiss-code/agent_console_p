@@ -112,7 +112,7 @@ button.ac-quota-group-open { background-color: alpha(@accent_bg_color, 0.18); }
 .ac-plan-node:hover { background-image: linear-gradient(alpha(@window_fg_color, 0.09), alpha(@window_fg_color, 0.09)); box-shadow: inset 0 0 0 1px alpha(@window_fg_color, 0.18), 0 3px 8px alpha(black, 0.10); }
 .ac-plan-node:focus-visible { outline: 2px solid @accent_color; outline-offset: 1px; }
 .ac-plan-done { color: @ac_success_text; background-image: linear-gradient(alpha(@success_color, 0.12), alpha(@success_color, 0.12)); box-shadow: inset 0 0 0 1px alpha(@success_color, 0.3), 0 1px 2px alpha(black, 0.06); }
-.ac-plan-in_progress, .ac-plan-verifying { color: @ac_warning_text; background-image: linear-gradient(alpha(@warning_color, 0.12), alpha(@warning_color, 0.12)); box-shadow: inset 0 0 0 1px alpha(@warning_color, 0.36), 0 1px 2px alpha(black, 0.06); }
+.ac-plan-in_progress, .ac-plan-verifying, .ac-plan-blocked { color: @ac_warning_text; background-image: linear-gradient(alpha(@warning_color, 0.12), alpha(@warning_color, 0.12)); box-shadow: inset 0 0 0 1px alpha(@warning_color, 0.36), 0 1px 2px alpha(black, 0.06); }
 .ac-plan-failed { color: @ac_error_text; background-image: linear-gradient(alpha(@error_color, 0.12), alpha(@error_color, 0.12)); box-shadow: inset 0 0 0 1px alpha(@error_color, 0.36), 0 1px 2px alpha(black, 0.06); }
 .ac-plan-ready { color: @accent_color; box-shadow: 0 1px 2px alpha(black, 0.06); border: 1px dashed alpha(@accent_color, 0.65); }
 

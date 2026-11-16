@@ -2053,3 +2053,36 @@ msgstr "Адаптировать план"
 
 msgid "tabs.new.model"
 msgstr "Идентификатор модели"
+
+msgid "plan.phase.draft"
+msgstr "Черновик"
+
+msgid "plan.phase.frozen"
+msgstr "Заморожен"
+
+msgid "plan.phase.completed"
+msgstr "Завершён"
+
+msgid "plan.freeze"
+msgstr "Заморозить"
+
+msgid "plan.attempt"
+msgstr "Попытка {number}/{maximum}"
+
+msgid "plan.attention"
+msgstr "Требует внимания"
+
+msgid "plan.review_note"
+msgstr "Заметка для снятия блокировки"
+
+msgid "plan.apply"
+msgstr "Применить"
+
+msgid "plan.unblock"
+msgstr "Разблокировать"
+
+msgid "plan.cancel"
+msgstr "Отменить узел"
+
+msgid "plan.reject"
+msgstr "Отклонить запрос"

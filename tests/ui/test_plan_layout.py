@@ -12,9 +12,7 @@ if TYPE_CHECKING:
     from aconsole.contracts.app import PlanNodeView
 
 
-def _node(
-    node_id: str, key: str, layer: int, depends_on: tuple[str, ...] = ()
-) -> PlanNodeView:
+def _node(node_id: str, key: str, layer: int, depends_on: tuple[str, ...] = ()) -> PlanNodeView:
     from aconsole.contracts.common import NodeId
     from aconsole.core.infrastructure.fake.scenarios import demo_snapshot
 
@@ -106,8 +104,7 @@ def test_shown_nodes_preserve_every_input_node_in_order() -> None:
     from aconsole.ui.viewmodels.logic.plan_layout import shown_nodes
 
     nodes = [
-        msgspec.structs.replace(_node(f"id-{index}", f"N-{index}", 0), status=NodeStatus.PENDING)
-        for index in range(40)
+        msgspec.structs.replace(_node(f"id-{index}", f"N-{index}", 0), status=NodeStatus.PENDING) for index in range(40)
     ]
     nodes[-1] = msgspec.structs.replace(nodes[-1], status=NodeStatus.VERIFYING)
     shown = shown_nodes(nodes)
@@ -145,3 +142,18 @@ def test_large_plan_keeps_all_nodes_and_dependency_endpoints_visible() -> None:
     assert nodes[71].depends_on == (nodes[0].id,)
     assert nodes[0].id in visible_ids
     assert nodes[71].id in visible_ids
+
+
+def test_hdag_direction_columns_exclude_groups_and_keep_modules() -> None:
+    from aconsole.ui.viewmodels.logic.plan_layout import layout_plan, shown_nodes
+
+    core = msgspec.structs.replace(_node("core", "CORE-0", 0), level=0)
+    qa = msgspec.structs.replace(_node("qa", "QA-0", 0), level=0)
+    first = msgspec.structs.replace(_node("a", "CORE-1", 1), parent=core.id)
+    second = msgspec.structs.replace(_node("b", "QA-1", 1), parent=qa.id)
+    nodes = (qa, second, core, first)
+    assert shown_nodes(nodes) == (second, first)
+    positions = {item.node_id: item for item in layout_plan(nodes)}
+    assert set(positions) == {first.id, second.id}
+    assert positions[first.id].x < positions[second.id].x
+    assert positions[first.id].y == positions[second.id].y

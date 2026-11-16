@@ -366,6 +366,13 @@ def test_failed_micro_gate_consumes_durable_budget_without_fifth_attempt(pipelin
     assert len(inbox) == 1
     assert inbox[0].body == "ATTEMPTS_EXHAUSTED"
     assert inbox[0].payload["kind"] == "attempts"
+    view = pipeline.board.view(pipeline.plan)
+    assert view is not None
+    assert view.nodes[0].level == 0
+    assert view.nodes[1].parent == view.nodes[0].id
+    assert view.nodes[1].pipeline
+    assert view.nodes[1].attempt_no == 4
+    assert view.nodes[1].last_verdict == history[-1].compact_verdict
     assert "VALUE = 5" in (pipeline.repo / "src/a.py").read_text()
 
 

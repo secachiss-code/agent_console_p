@@ -15,6 +15,7 @@ from aconsole.contracts.app import (
     ChecksResult,
     DiffSummaryResult,
     PaletteItemsResult,
+    PlanIdParams,
     SubscribeParams,
     SubscribeResult,
     TerminalLaunchSpec,
@@ -40,7 +41,7 @@ from aconsole.contracts.methods import METHODS
 from aconsole.core.__main__ import main as core_main
 from aconsole.core.__main__ import socket_from
 from aconsole.core.infrastructure.fake.results import covers_methods, result_type
-from aconsole.core.infrastructure.fake.scenarios import APP_EVENT_TYPES
+from aconsole.core.infrastructure.fake.scenarios import APP_EVENT_TYPES, demo_snapshot
 from aconsole.core.infrastructure.fake.server import FakeCore, load_script
 from aconsole.devcli.client import collect_event_types, fetch_snapshot, main, request_frame
 
@@ -128,7 +129,8 @@ def test_fake_methods_return_the_result_type() -> None:
     core, path = _core("demo")
     try:
         for method in METHODS:
-            frame = request_frame(path, method.name)
+            params = PlanIdParams(plan_id=demo_snapshot().plans[0].id) if method.name == "plan/freeze" else None
+            frame = request_frame(path, method.name, params)
             assert isinstance(frame, ResponseOk), method.name
             kind = result_type(method.name)
             assert kind is not None

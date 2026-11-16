@@ -474,6 +474,10 @@
     },
     "PlanNodeView": {
       "properties": {
+        "attempt_no": {
+          "default": 0,
+          "type": "integer"
+        },
         "depends_on": {
           "items": {
             "type": "string"
@@ -497,6 +501,17 @@
         "key": {
           "type": "string"
         },
+        "last_verdict": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
         "layer": {
           "type": "integer"
         },
@@ -510,6 +525,17 @@
               "type": "null"
             }
           ]
+        },
+        "level": {
+          "default": 1,
+          "enum": [
+            0,
+            1
+          ]
+        },
+        "max_attempts": {
+          "default": 4,
+          "type": "integer"
         },
         "note": {
           "anyOf": [
@@ -530,6 +556,21 @@
               "type": "null"
             }
           ]
+        },
+        "parent": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "pipeline": {
+          "default": false,
+          "type": "boolean"
         },
         "priority": {
           "type": "number"

@@ -2041,3 +2041,36 @@ msgstr "Adapt plan"
 
 msgid "tabs.new.model"
 msgstr "Model ID"
+
+msgid "plan.phase.draft"
+msgstr "Draft"
+
+msgid "plan.phase.frozen"
+msgstr "Frozen"
+
+msgid "plan.phase.completed"
+msgstr "Completed"
+
+msgid "plan.freeze"
+msgstr "Freeze"
+
+msgid "plan.attempt"
+msgstr "Attempt {number}/{maximum}"
+
+msgid "plan.attention"
+msgstr "Needs attention"
+
+msgid "plan.review_note"
+msgstr "Note required to unblock"
+
+msgid "plan.apply"
+msgstr "Apply"
+
+msgid "plan.unblock"
+msgstr "Unblock"
+
+msgid "plan.cancel"
+msgstr "Cancel node"
+
+msgid "plan.reject"
+msgstr "Reject request"

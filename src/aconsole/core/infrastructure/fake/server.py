@@ -13,13 +13,14 @@ from aconsole.contracts.app import (
     ChecksResult,
     EmptyParams,
     PaletteItemsResult,
+    PlanIdParams,
     SettingsUpdateParams,
     SnapshotChunkParams,
     SnapshotResult,
     SubscribeResult,
 )
 from aconsole.contracts.errors import ApprovalExpiredDetails, ErrorObject, MethodNotFoundDetails, error_by_name
-from aconsole.contracts.events import ResyncRequired, UiEvent
+from aconsole.contracts.events import PlanUpdated, ResyncRequired, UiEvent
 from aconsole.contracts.ipc import (
     CancelParams,
     EventEnvelope,
@@ -293,6 +294,7 @@ class _Session:
     encoder: msgspec.json.Encoder
     _ring: tuple[EventEnvelope, ...] | None
     _settings: Settings
+    _subscribed: bool
 
     def __init__(self, script: Script, started: float, drop_after_s: float, *, gap: bool) -> None:
         self.script = script
@@ -300,6 +302,7 @@ class _Session:
         self.drop_after_s = drop_after_s
         self.gap = gap
         self.handshake = False
+        self._subscribed = False
         self.error_index = 0
         self.router = EventRouter()
         self.encoder = msgspec.json.Encoder()
@@ -338,6 +341,8 @@ class _Session:
         return self.gap and request.method in {"app/snapshot", "events/subscribe"}
 
     def _dispatch(self, request: Request) -> tuple[bytes, ...]:
+        if request.method == "plan/freeze":
+            return self._freeze_plan(request)
         if request.method == "app/snapshotChunk":
             return self._snapshot_chunk(request)
         if request.method == "events/subscribe":
@@ -349,6 +354,31 @@ class _Session:
             missing = named_error("METHOD_NOT_FOUND", MethodNotFoundDetails(method=request.method))
             return (self._error(request.id, missing),)
         return (self._ok(request.id, built),)
+
+    def _freeze_plan(self, request: Request) -> tuple[bytes, ...]:
+        try:
+            wanted = msgspec.json.decode(request.params, type=PlanIdParams)
+        except msgspec.DecodeError:
+            return (self._error(request.id, named_error("INVALID_PARAMS")),)
+        snapshot = self.script.snapshot.snapshot
+        plan = next((plan for plan in snapshot.plans if plan.id == wanted.plan_id), None)
+        if plan is None:
+            return (self._error(request.id, named_error("PLAN_NOT_FOUND")),)
+        ring = self._events()
+        frozen = msgspec.structs.replace(plan, phase="frozen")
+        self.script = replace(
+            self.script,
+            snapshot=msgspec.structs.replace(
+                self.script.snapshot,
+                snapshot=msgspec.structs.replace(
+                    snapshot, plans=tuple(frozen if item.id == plan.id else item for item in snapshot.plans)
+                ),
+            ),
+        )
+        events = (*self.router.publish(PlanUpdated(plan=frozen), AT), *self.router.flush(AT))
+        self._ring = (*ring, *events)
+        frames = tuple(self._event(event) for event in events) if self._subscribed else ()
+        return (*frames, self._ok(request.id, frozen))
 
     def _snapshot_chunk(self, request: Request) -> tuple[bytes, ...]:
         try:
@@ -418,7 +448,7 @@ class _Session:
             server_version="0.0.0",
             server_pid=os.getpid(),
             session_id="01JB2Z00000000000000000099",
-            capabilities=frozenset({"events.v1", "work_sessions.v1", "snapshot.chunks.v1"}),
+            capabilities=frozenset({"events.v1", "work_sessions.v1", "snapshot.chunks.v1", "hdag.v1"}),
             limits=ProtocolLimits(),
         )
 
@@ -446,6 +476,7 @@ class _Session:
         return built
 
     def _subscribe(self, request: Request) -> tuple[bytes, ...]:
+        self._subscribed = True
         after_seq = _after_seq(request)
         ring = self._events()
         current = _ring_end(ring)

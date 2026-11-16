@@ -160,6 +160,18 @@ class AttemptDatabase:
         _ = self._writer.call(write)
         return digest
 
+    def summaries(self, node_ids: tuple[str, ...]) -> dict[str, tuple[int, str | None]]:
+        found: dict[str, tuple[int, str | None]] = {}
+
+        def read(session: Session) -> None:
+            for row in session.scalars(
+                select(NodeAttempt).where(NodeAttempt.node_id.in_(node_ids)).order_by(NodeAttempt.attempt_no.desc())
+            ):
+                _ = found.setdefault(row.node_id, (row.attempt_no, row.compact_verdict))
+
+        _ = self._writer.call(read)
+        return found
+
     def blocks(self, attempt_id: str) -> tuple[NodeStepBlock, ...]:
         found: list[NodeStepBlock] = []
 

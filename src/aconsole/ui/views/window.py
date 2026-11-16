@@ -17,7 +17,10 @@ from aconsole.contracts.app import (  # noqa: E402
     EmptyParams,
     EmptyResult,
     PaletteQuery,
+    PlanDecideParams,
+    PlanIdParams,
     PlanNodeView,
+    PlanView,
     QuitCheckResult,
     SetNodeStatusParams,
     TabIdParams,
@@ -378,6 +381,9 @@ class MainWindow(Adw.ApplicationWindow):
                     self._open_plan(plan.id)
             else:
                 self._show_selected_terminal()
+        if self.plan_page is not None:
+            self.plan_page.set_inbox(self._summary_vm.inbox)
+            self.plan_page.set_inbox_error(self._summary_vm.inbox_error)
         self.plan_section.set_detail(f"{plan.done}/{plan.total}" if plan is not None else "")
         self.quota_card.tabs = self._summary_vm.tabs
         self.quota_card.set_accounts(self._summary_vm.accounts)
@@ -393,8 +399,42 @@ class MainWindow(Adw.ApplicationWindow):
     def _open_plan(self, plan_id: PlanId) -> None:
         plan = self._summary_vm.plan
         if plan is not None and plan.id == plan_id:
-            self.plan_page = PlanGraph(plan, self._close_plan, self._select_tab, self._decide_node)
+            self.plan_page = PlanGraph(plan, self._close_plan, self._select_tab, self._decide_node,
+                                       on_freeze=self._freeze_plan, on_review=self._review_plan)
+            self.plan_page.set_inbox(self._summary_vm.inbox)
+            self._summary_vm.refresh_inbox()
             self.content_view.set_content(self.plan_page)
+
+    def _freeze_plan(self, plan_id: PlanId) -> None:
+        _ = spawn_task(self._freeze(plan_id, self.plan_page))
+
+    async def _freeze(self, plan_id: PlanId, page: PlanGraph | None) -> None:
+        try:
+            result = await self.tabs.client.request("plan/freeze", PlanIdParams(plan_id=plan_id), PlanView)
+            if page is not None:
+                _ = page.update(result)
+        except Exception as error:  # noqa: BLE001 -- core refusal is displayed to the person
+            self._tab_error(translate("plan.decision_error").format(error=error))
+        finally:
+            if page is not None:
+                page.freeze_finished()
+
+    def _review_plan(self, request_id: str, decision: str, note: str) -> None:
+        if self.plan_page is None:
+            return
+        if decision == "unblock" or decision == "cancel" or decision == "reject" or decision == "apply":  # noqa: PLR1714 -- narrow the validated decision literal
+            params = PlanDecideParams(plan_id=self.plan_page.plan.id, request_id=request_id,
+                                      decision=decision, note=note)
+            _ = spawn_task(self._review_request(params, self.plan_page))
+
+    async def _review_request(self, params: PlanDecideParams, page: PlanGraph) -> None:
+        try:
+            _ = await self.tabs.client.request("plan/decide", params, PlanView)
+            self._summary_vm.refresh_inbox()
+        except Exception as error:  # noqa: BLE001 -- preserve the request and entered note on refusal
+            self._tab_error(translate("plan.decision_error").format(error=error))
+        finally:
+            page.review_finished(params.request_id)
 
     def _decide_node(self, node_id: NodeId, accept: bool) -> None:  # noqa: FBT001 -- the plan page's callback
         _ = spawn_task(self._set_node_decision(node_id, accept=accept, page=self.plan_page))

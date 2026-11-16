@@ -17,7 +17,8 @@ class PlanCard(Gtk.Button):
         """Under a `SummarySection` the section says "Plan", so the card starts with the plan's name."""
         super().__init__()
         self.update_property(
-            [Gtk.AccessibleProperty.LABEL], [GObject.Value(GObject.TYPE_STRING, translate("plan.card.title"))],
+            [Gtk.AccessibleProperty.LABEL],
+            [GObject.Value(GObject.TYPE_STRING, translate("plan.card.title"))],
         )
         self.add_css_class("flat")
         self.add_css_class("ac-summary-section")
@@ -26,7 +27,9 @@ class PlanCard(Gtk.Button):
         self._plan: PlanView | None = None
         box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
         self.title_label: Gtk.Label = Gtk.Label(
-            xalign=1 if with_heading else 0, hexpand=True, ellipsize=Pango.EllipsizeMode.END,
+            xalign=1 if with_heading else 0,
+            hexpand=True,
+            ellipsize=Pango.EllipsizeMode.END,
         )
         self.title_label.add_css_class("ac-summary-name")
         if with_heading:
@@ -64,15 +67,30 @@ class PlanCard(Gtk.Button):
             self.progress_bar.set_fraction(0)
             self.detail_label.set_label(translate("plan.empty"))
         else:
-            self.progress_label.set_label(translate("plan.card.progress").format(done=plan.done, total=plan.total))
+            self.progress_label.set_label(
+                translate("plan.card.progress").format(done=plan.done, total=plan.total)
+                + " · "
+                + translate(f"plan.phase.{plan.phase}")
+            )
             self.progress_bar.set_fraction(min(1, max(0, plan.done / plan.total)) if plan.total else 0)
             ready = ", ".join(node.key for node in plan.nodes if node.ready)
             self.detail_label.set_label(translate("plan.ready").format(nodes=ready) if ready else plan.goal)
         self.set_tooltip_text(self.detail_label.get_label())
         self.update_property(
             [Gtk.AccessibleProperty.LABEL],
-            [GObject.Value(GObject.TYPE_STRING, ": ".join((translate("plan.card.title"),
-                self.title_label.get_label(), self.progress_label.get_label(), self.detail_label.get_label())))],
+            [
+                GObject.Value(
+                    GObject.TYPE_STRING,
+                    ": ".join(
+                        (
+                            translate("plan.card.title"),
+                            self.title_label.get_label(),
+                            self.progress_label.get_label(),
+                            self.detail_label.get_label(),
+                        )
+                    ),
+                )
+            ],
         )
 
     def _activate(self, _button: Gtk.Button) -> None:

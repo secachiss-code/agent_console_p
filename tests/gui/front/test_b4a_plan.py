@@ -34,8 +34,7 @@ def _demo_plan() -> PlanView:
     snapshot = demo_snapshot()
     assert snapshot.active_project is not None
     return next(
-        plan for plan in snapshot.plans
-        if plan.project_id == snapshot.active_project and plan.status == "active"
+        plan for plan in snapshot.plans if plan.project_id == snapshot.active_project and plan.status == "active"
     )
 
 
@@ -209,20 +208,30 @@ def test_b4a_plan_graph_shows_all_nodes_and_emphasizes_hovered_node_neighbors() 
         assert len(PlanGraph(large_plan, lambda: None).node_buttons) == len(nodes)
 
         neighbor_source = msgspec.structs.replace(
-            nodes[0], id=NodeId("neighbor-source"), key="N-source", title="Source",
-            layer=0, depends_on=(),
+            nodes[0],
+            id=NodeId("neighbor-source"),
+            key="N-source",
+            title="Source",
+            layer=0,
+            depends_on=(),
         )
         connected = msgspec.structs.replace(
-            nodes[1], id=NodeId("connected"), key="N-connected", title="Connected",
-            layer=1, depends_on=(neighbor_source.id,),
+            nodes[1],
+            id=NodeId("connected"),
+            key="N-connected",
+            title="Connected",
+            layer=1,
+            depends_on=(neighbor_source.id,),
         )
         unrelated = msgspec.structs.replace(
-            nodes[2], id=NodeId("unrelated"), key="N-unrelated", title="Unrelated",
-            layer=1, depends_on=(),
+            nodes[2],
+            id=NodeId("unrelated"),
+            key="N-unrelated",
+            title="Unrelated",
+            layer=1,
+            depends_on=(),
         )
-        hover_plan = msgspec.structs.replace(
-            plan, nodes=(neighbor_source, connected, unrelated), total=3
-        )
+        hover_plan = msgspec.structs.replace(plan, nodes=(neighbor_source, connected, unrelated), total=3)
         graph = PlanGraph(hover_plan, lambda: None)
         graph.set_hovered(connected.id)
         details = graph.details_label.get_text()
@@ -384,3 +393,136 @@ def test_heartbeat_keeps_plan_buttons_and_selection() -> None:
         assert not graph.update(msgspec.structs.replace(updated, nodes=(topology, *plan.nodes[1:])))
 
     _in_gtk_context(check)
+
+
+def _hdag_plan() -> PlanView:
+    from aconsole.contracts.common import NodeId
+
+    plan = _demo_plan()
+    base = plan.nodes[0]
+    core = msgspec.structs.replace(base, id=NodeId("core"), key="CORE-0", title="Конвейер", level=0, depends_on=())
+    qa = msgspec.structs.replace(base, id=NodeId("qa"), key="QA-0", title="Проверки", level=0, depends_on=())
+    modules = tuple(
+        msgspec.structs.replace(
+            base,
+            id=NodeId(f"module-{i}"),
+            key=f"{prefix}-{i}",
+            title=title,
+            level=1,
+            parent=parent,
+            pipeline=True,
+            status=status,
+            layer=i,
+            depends_on=(),
+            attempt_no=attempt,
+            last_verdict=verdict,
+        )
+        for i, prefix, title, parent, status, attempt, verdict in (
+            (
+                1,
+                "CORE",
+                "Контракт модуля",
+                core.id,
+                NodeStatus.BLOCKED,
+                2,
+                "1 passed, 1 failed: acceptance needs review",
+            ),
+            (2, "CORE", "Передача контекста", core.id, NodeStatus.VERIFYING, 1, "2 passed, 0 failed"),
+            (3, "QA", "Радиус проверки", qa.id, NodeStatus.IN_PROGRESS, 1, None),
+            (4, "QA", "Квитанции", qa.id, NodeStatus.DONE, 1, "2 passed, 0 failed"),
+        )
+    )
+    return msgspec.structs.replace(
+        plan, title="AConsole · Детерминированный конвейер", nodes=(core, qa, *modules), done=1, total=6, phase="draft"
+    )
+
+
+def test_hdag_groups_freeze_and_inbox_actions() -> None:
+    from aconsole.contracts.app import PlanInboxEntry
+
+    plan = _hdag_plan()
+
+    def check() -> None:
+        frozen: list[PlanId] = []
+        reviewed: list[tuple[str, str, str]] = []
+        graph = PlanGraph(
+            plan,
+            lambda: None,
+            on_freeze=frozen.append,
+            on_review=lambda request, action, note: reviewed.append((request, action, note)),
+        )
+        assert set(graph.node_buttons) == {node.id for node in plan.nodes if node.level == 1}
+        graph.freeze_button.emit("clicked")
+        graph.freeze_button.emit("clicked")
+        assert frozen == [plan.id]
+        assert graph.update(msgspec.structs.replace(plan, phase="frozen"))
+        assert not graph.freeze_button.get_visible()
+        request = PlanInboxEntry(
+            id="request-1",
+            plan_id=plan.id,
+            node_id=plan.nodes[2].id,
+            kind="replan",
+            body="Уточнить критерий приёмки",
+            status="open",
+            payload_json="{}",
+            created_at=plan.updated_at,
+        )
+        graph.set_inbox((request,))
+        assert len(graph.node_buttons) == 4
+        assert graph.inbox_scroll.get_visible()
+        row = graph.inbox_list.get_last_child()
+        assert isinstance(row, Gtk.Box)
+        note = row.get_first_child().get_next_sibling()
+        assert isinstance(note, Gtk.Entry)
+        actions = graph._review_actions[request.id]
+        unblock = actions.get_first_child()
+        assert isinstance(unblock, Gtk.Button)
+        unblock.emit("clicked")
+        assert reviewed == []
+        note.set_text("Критерий уточнён")
+        unblock.emit("clicked")
+        unblock.emit("clicked")
+        assert reviewed == [(request.id, "unblock", "Критерий уточнён")]
+        graph.review_finished(request.id)
+        assert actions.get_sensitive()
+        assert note.get_text() == "Критерий уточнён"
+
+    _in_gtk_context(check)
+
+
+def test_freeze_button_calls_rpc_and_shows_frozen_phase(running_app: str) -> None:
+    import asyncio
+
+    failures: list[BaseException] = []
+
+    class _FreezeApp(AConsoleApp):
+        def do_activate(self) -> None:
+            super().do_activate()
+            _ = spawn_task(self._check_freeze())
+
+        async def _check_freeze(self) -> None:
+            async def check() -> None:
+                while self.window is None:  # noqa: ASYNC110 -- GTK window creation has no awaitable notification
+                    await asyncio.sleep(0.01)
+                window = self.window
+                plan = window._summary_vm.plan
+                assert plan is not None
+                window._open_plan(plan.id)
+                page = window.plan_page
+                assert page is not None
+                assert page.freeze_button.get_visible()
+                page.freeze_button.emit("clicked")
+                while page.plan.phase != "frozen":  # noqa: ASYNC110 -- wait for the native widget RPC update
+                    await asyncio.sleep(0.01)
+                assert not page.freeze_button.get_visible()
+
+            try:
+                await asyncio.wait_for(check(), timeout=10)
+            except BaseException as error:  # noqa: BLE001 -- retain GTK task failures for pytest
+                failures.append(error)
+            finally:
+                await self._finish()
+
+    app = _FreezeApp(CoreClient(running_app))
+    assert run_app(lambda: app, ["aconsole-freeze-test"]) == 0
+    assert failures == []

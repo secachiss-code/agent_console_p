@@ -560,14 +560,14 @@ class _MicroAudit:
                         created_at=datetime.now(UTC),
                     )
                 )
+            attempt = session.get(NodeAttempt, self.attempt.id)
+            if attempt is None or attempt.status != "running":
+                message = "gate verdict has no running attempt"
+                raise ValueError(message)
+            attempt.compact_verdict = receipt.compact_verdict
             if not receipt.passed or self.tier == "blast":
-                attempt = session.get(NodeAttempt, self.attempt.id)
-                if attempt is None or attempt.status != "running":
-                    message = "gate failure has no running attempt"
-                    raise ValueError(message)
                 attempt.status = "passed" if receipt.passed else "failed"
                 attempt.finished_at = datetime.now(UTC)
-                attempt.compact_verdict = receipt.compact_verdict
 
         _ = self.storage.writer.call(write)
 
