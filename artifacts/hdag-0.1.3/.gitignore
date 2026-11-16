@@ -1,0 +1,4 @@
+# Keep the gate logs referenced by receipt manifests as reviewable evidence.
+!acceptance/logs/*.log
+!memory-followup/logs/*.log
+!memory-followup/ui-tests/pytest.log
