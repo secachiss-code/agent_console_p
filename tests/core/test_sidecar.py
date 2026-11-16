@@ -181,6 +181,26 @@ def test_sidecar_signals_and_split_markers() -> None:
     assert _value_error(4, _NOW) == "frame timeout must be positive"
 
 
+@pytest.mark.parametrize("chunk_size", [1, 7, 65536])
+def test_repeated_signals_keep_order_and_output_across_reads(chunk_size: int) -> None:
+    framer = Framer()
+    ordinary = b"text\x1b]8;;https://example.test\x1b\\link\x1b]8;;\x1b\\"
+    unit = b"\x1b]0;title\x07" + ordinary + b"\x1b]9;4;1;40\x07"
+    payload = unit * 20 + b"\x1b]0;changed\x07"
+    output = bytearray()
+    signals: list[Signal] = []
+    for offset in range(0, len(payload), chunk_size):
+        output.extend(framer.feed(payload[offset : offset + chunk_size], _NOW))
+        signals.extend(framer.take_signals())
+    output.extend(framer.finish())
+    signals.extend(framer.take_signals())
+    assert output == ordinary * 20
+    assert signals == [
+        Signal(kind="osc_title", text="title"),
+        Signal(kind="osc9_4_progress", text="value", progress=40),
+    ] * 20 + [Signal(kind="osc_title", text="changed")]
+
+
 def test_sidecar_frame_latency_is_under_five_milliseconds() -> None:
     framer = Framer()
     payload = _BSU + (b"x" * _BENCH_BYTES) + _ESU

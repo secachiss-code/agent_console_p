@@ -42,13 +42,16 @@ _WITH_VALUE: Final = frozenset({1, 2, 4})
 Kind = Literal["bell", "osc_title", "osc9_notify", "osc777_notify", "osc9_4_progress"]
 
 
-@dataclass(frozen=True, kw_only=True)
+@dataclass(frozen=True, kw_only=True, slots=True)
 class Signal:
     """One terminal signal pulled out of the byte stream."""
 
     kind: Kind
     text: str | None = None
     progress: int | None = None
+
+
+_BELL_SIGNAL: Final = Signal(kind="bell")
 
 
 @final
@@ -118,19 +121,22 @@ class Framer:
         if _BSU in data or _ESU in data or data.endswith(_PREFIXES):
             return None
         signals: list[Signal] = []
+        # Signals are immutable; repeated titles in one read can share their decoded value.
+        # Keep this cache local so terminal text is released when the read finishes.
+        decoded: dict[bytes, Signal] = {}
         complete = True
 
         def replace(match: re.Match[bytes]) -> bytes:
             nonlocal complete
             raw = match.group()
             if raw == b"\x07":
-                signals.append(Signal(kind="bell"))
+                signals.append(_BELL_SIGNAL)
                 return b""
             if not raw.endswith((b"\x07", _ST)):
                 complete = False
                 return raw
             if raw.startswith(_OWN_OSC):
-                signal = _signal_from_osc(raw)
+                signal = _cached_signal(raw, decoded)
                 if signal is not None:
                     signals.append(signal)
                 return b""
@@ -169,7 +175,7 @@ class Framer:
             if found > plain:
                 self._emit(data[plain:found], out)
             if data[found] == _BEL:
-                self._signals.append(Signal(kind="bell"))
+                self._signals.append(_BELL_SIGNAL)
                 pos = found + _ONE
                 plain = pos
                 continue
@@ -333,23 +339,25 @@ def _osc_end(data: bytearray, start: int) -> int | None:
     return st + len(_ST)
 
 
+def _cached_signal(osc: bytes, decoded: dict[bytes, Signal]) -> Signal | None:
+    signal = decoded.get(osc)
+    if signal is None:
+        signal = _signal_from_osc(osc)
+        if signal is not None:
+            decoded[osc] = signal
+    return signal
+
+
 def _signal_from_osc(osc: bytes) -> Signal | None:
-    body = osc[len(_OSC) :]
-    if body.endswith(_ST):
-        body = body[: -len(_ST)]
-    elif body.endswith(bytes((_BEL,))):
-        body = body[:-1]
-    if not body.startswith((b"0;", b"2;", b"9;", b"777;")):
-        return None
-    text = body.decode("utf-8", errors="replace")
-    if text.startswith(("0;", "2;")):
-        return Signal(kind="osc_title", text=text[2:][:_TEXT])
-    if text.startswith("9;4;"):
-        return _progress(text[4:])
-    if text.startswith("9;"):
-        return Signal(kind="osc9_notify", text=text[2:][:_TEXT])
-    if text.startswith("777;"):
-        return Signal(kind="osc777_notify", text=text[4:][:_TEXT])
+    end = -len(_ST) if osc.endswith(_ST) else -_ONE if osc.endswith(b"\x07") else len(osc)
+    if osc.startswith((b"\x1b]0;", b"\x1b]2;")):
+        return Signal(kind="osc_title", text=osc[4:end].decode("utf-8", errors="replace")[:_TEXT])
+    if osc.startswith(b"\x1b]9;4;"):
+        return _progress(osc[6:end].decode("utf-8", errors="replace"))
+    if osc.startswith(b"\x1b]9;"):
+        return Signal(kind="osc9_notify", text=osc[4:end].decode("utf-8", errors="replace")[:_TEXT])
+    if osc.startswith(b"\x1b]777;"):
+        return Signal(kind="osc777_notify", text=osc[6:end].decode("utf-8", errors="replace")[:_TEXT])
     return None
 
 
