@@ -1,0 +1,5 @@
+{"stage": "start", "rss": 15.9375, "pss": 14.4326171875, "private": 14.140625, "objects": 10126, "modules": 71}
+{"stage": "aconsole.core.bootstrap", "rss": 130.45703125, "pss": 128.9521484375, "private": 128.66015625, "objects": 228342, "modules": 979}
+{"stage": "before_gc", "rss": 133.83203125, "pss": 132.3271484375, "private": 132.03515625, "objects": 228341, "modules": 979}
+collected 1485
+{"stage": "after_gc", "rss": 132.19921875, "pss": 130.6943359375, "private": 130.40234375, "objects": 220350, "modules": 979}

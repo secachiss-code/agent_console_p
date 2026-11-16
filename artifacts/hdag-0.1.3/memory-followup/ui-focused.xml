@@ -1,0 +1,762 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="13" skipped="0" tests="42" time="34.788" timestamp="2026-11-16T15:42:28.231565+03:00" hostname="somovasnbook14"><testcase classname="tests.gui.front.test_rendering" name="test_default_avoids_gpu_driver_probe" time="0.003" /><testcase classname="tests.gui.front.test_rendering" name="test_explicit_accelerated_renderer_is_preserved" time="0.001" /><testcase classname="tests.gui.front.test_rendering" name="test_explicit_debug_flags_are_preserved" time="0.001" /><testcase classname="tests.gui.front.test_rendering" name="test_repeated_configuration_is_stable" time="0.001" /><testcase classname="tests.gui.front.test_widget_memory" name="test_closed_terminal_pages_are_collected" time="0.747" /><testcase classname="tests.gui.front.test_widget_memory" name="test_disposed_tab_rows_are_collected" time="0.183" /><testcase classname="tests.gui.front.test_preferences_drafts" name="test_closing_dirty_preferences_can_cancel_or_discard" time="2.359"><failure message="AssertionError: AssertionError('GTK wait failed at 91')&#10;assert AssertionError('GTK wait failed at 91') is None&#10; +  where AssertionError('GTK wait failed at 91') = &lt;test_b2_tabs._TabsTestApp object at 0x7191f63be800 (tests+gui+front+test_b2_tabs+_TabsTestApp at 0x2068f310)&gt;.error">def test_closing_dirty_preferences_can_cancel_or_discard() -&gt; None:
+        async def scenario(app: _TabsTestApp) -&gt; None:
+            client, _tabs = _model(demo_snapshot())
+            settings = Settings(rev=1, vault_path="", worktrees_dir="")
+
+            async def request(_method: str, _params: msgspec.Struct, _result: type[msgspec.Struct]) -&gt; msgspec.Struct:
+                return settings
+
+            client.request = request
+            dialog = PreferencesDialog(PreferencesViewModel(client))
+            assert app.window is not None
+            app.window.set_default_size(800, 800)
+            app.window.present()
+            dialog.open(app.window)
+            await _until(lambda: not dialog.loading)
+            await _until(dialog.get_mapped)
+            dialog.font_entry.set_text("Draft font")
+            quitting = AConsoleApp(client)
+            quitting.window = app.window
+            app.window.preferences_dialog = dialog
+            quitting._close_now(app.window)
+            assert app.window.get_visible(), "application exit must not silently lose the draft"
+            assert dialog._active
+            prompt = dialog._close_prompt
+            assert prompt is not None
+            await _answer(prompt, "cancel")
+            await _until(lambda: dialog._close_prompt is None)
+            assert dialog.font_entry.get_text() == "Draft font"
+            dialog.close()
+            prompt = dialog._close_prompt
+            assert prompt is not None
+            await _answer(prompt, "discard")
+            await _until(lambda: not dialog._active)
+            await client.close()
+
+&gt;       _run_ui(scenario)
+
+tests/gui/front/test_preferences_drafts.py:94:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+scenario = &lt;function test_closing_dirty_preferences_can_cancel_or_discard.&lt;locals&gt;.scenario at 0x7191f9e8dc70&gt;
+
+    def _run_ui(scenario: Callable[[_TabsTestApp], Awaitable[None]]) -&gt; None:
+        app = _TabsTestApp(scenario)
+        assert run_app(lambda: app, ["aconsole-b2-tabs-test"]) == 0
+&gt;       assert app.error is None, repr(app.error)
+E       AssertionError: AssertionError('GTK wait failed at 91')
+E       assert AssertionError('GTK wait failed at 91') is None
+E        +  where AssertionError('GTK wait failed at 91') = &lt;test_b2_tabs._TabsTestApp object at 0x7191f63be800 (tests+gui+front+test_b2_tabs+_TabsTestApp at 0x2068f310)&gt;.error
+
+tests/gui/front/test_b2_tabs.py:67: AssertionError</failure></testcase><testcase classname="tests.gui.front.test_preferences_drafts" name="test_preferences_close_before_first_frame[clean]" time="2.095"><failure message="AssertionError: AssertionError('GTK wait failed at 153')&#10;assert AssertionError('GTK wait failed at 153') is None&#10; +  where AssertionError('GTK wait failed at 153') = &lt;test_b2_tabs._TabsTestApp object at 0x7191f4757fc0 (tests+gui+front+test_b2_tabs+_TabsTestApp at 0x20a10d70)&gt;.error">decision = 'clean'
+
+    @pytest.mark.parametrize("decision", ["clean", "discard", "save", "clean-edited", "save-edited"])
+    def test_preferences_close_before_first_frame(decision: str) -&gt; None:
+        async def scenario(app: _TabsTestApp) -&gt; None:
+            client, _tabs = _model(demo_snapshot())
+            settings = Settings(rev=1, vault_path="", worktrees_dir="")
+            patches: list[SettingsPatch] = []
+            action = decision.split("-", maxsplit=1)[0]
+
+            async def request(method: str, params: msgspec.Struct, _result: type[msgspec.Struct]) -&gt; msgspec.Struct:
+                nonlocal settings
+                if method == "settings/update":
+                    assert isinstance(params, SettingsUpdateParams)
+                    patches.append(params.patch)
+                    settings = commit_settings(settings, params.patch)
+                return settings
+
+            client.request = request
+            dialog = PreferencesDialog(PreferencesViewModel(client))
+            assert app.window is not None
+            app.window.set_default_size(800, 800)
+            app.window.present()
+            dialog.open(app.window)
+            # Deliver a confirmed close before GTK's opening frame callbacks run.
+            assert dialog.get_width() == 0
+            if action == "clean":
+                dialog.close()
+            else:
+                assert dialog.worker is not None
+                await dialog.worker
+                dialog.font_entry.set_text("Early draft")
+                dialog.close()
+                prompt = dialog._close_prompt
+                assert prompt is not None
+                await _answer(prompt, action)
+            if decision.endswith("-edited"):
+                assert dialog.worker is not None
+                await dialog.worker
+                assert dialog._close_tick_id != 0
+                dialog.font_entry.set_text("Later draft")
+                await _until(lambda: dialog._close_tick_id == 0)
+                assert dialog._active
+                assert dialog.font_entry.get_text() == "Later draft"
+                dialog.close()
+                prompt = dialog._close_prompt
+                assert prompt is not None
+                await _answer(prompt, "discard")
+            await _until(lambda: not dialog._active)
+            await _until(lambda: not dialog.get_mapped())
+            assert dialog._unsubscribe is None
+            assert bool(patches) == (action == "save")
+            assert settings.terminal_font == ("Early draft" if action == "save" else None)
+            await _check_reopened_close(dialog, app.window)
+            await client.close()
+
+&gt;       _run_ui(scenario)
+
+tests/gui/front/test_preferences_drafts.py:161:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+scenario = &lt;function test_preferences_close_before_first_frame.&lt;locals&gt;.scenario at 0x7191f6253b60&gt;
+
+    def _run_ui(scenario: Callable[[_TabsTestApp], Awaitable[None]]) -&gt; None:
+        app = _TabsTestApp(scenario)
+        assert run_app(lambda: app, ["aconsole-b2-tabs-test"]) == 0
+&gt;       assert app.error is None, repr(app.error)
+E       AssertionError: AssertionError('GTK wait failed at 153')
+E       assert AssertionError('GTK wait failed at 153') is None
+E        +  where AssertionError('GTK wait failed at 153') = &lt;test_b2_tabs._TabsTestApp object at 0x7191f4757fc0 (tests+gui+front+test_b2_tabs+_TabsTestApp at 0x20a10d70)&gt;.error
+
+tests/gui/front/test_b2_tabs.py:67: AssertionError</failure></testcase><testcase classname="tests.gui.front.test_preferences_drafts" name="test_preferences_close_before_first_frame[discard]" time="2.099"><failure message="AssertionError: AssertionError('GTK wait failed at 153')&#10;assert AssertionError('GTK wait failed at 153') is None&#10; +  where AssertionError('GTK wait failed at 153') = &lt;test_b2_tabs._TabsTestApp object at 0x7191f632c280 (tests+gui+front+test_b2_tabs+_TabsTestApp at 0x211b0cd0)&gt;.error">decision = 'discard'
+
+    @pytest.mark.parametrize("decision", ["clean", "discard", "save", "clean-edited", "save-edited"])
+    def test_preferences_close_before_first_frame(decision: str) -&gt; None:
+        async def scenario(app: _TabsTestApp) -&gt; None:
+            client, _tabs = _model(demo_snapshot())
+            settings = Settings(rev=1, vault_path="", worktrees_dir="")
+            patches: list[SettingsPatch] = []
+            action = decision.split("-", maxsplit=1)[0]
+
+            async def request(method: str, params: msgspec.Struct, _result: type[msgspec.Struct]) -&gt; msgspec.Struct:
+                nonlocal settings
+                if method == "settings/update":
+                    assert isinstance(params, SettingsUpdateParams)
+                    patches.append(params.patch)
+                    settings = commit_settings(settings, params.patch)
+                return settings
+
+            client.request = request
+            dialog = PreferencesDialog(PreferencesViewModel(client))
+            assert app.window is not None
+            app.window.set_default_size(800, 800)
+            app.window.present()
+            dialog.open(app.window)
+            # Deliver a confirmed close before GTK's opening frame callbacks run.
+            assert dialog.get_width() == 0
+            if action == "clean":
+                dialog.close()
+            else:
+                assert dialog.worker is not None
+                await dialog.worker
+                dialog.font_entry.set_text("Early draft")
+                dialog.close()
+                prompt = dialog._close_prompt
+                assert prompt is not None
+                await _answer(prompt, action)
+            if decision.endswith("-edited"):
+                assert dialog.worker is not None
+                await dialog.worker
+                assert dialog._close_tick_id != 0
+                dialog.font_entry.set_text("Later draft")
+                await _until(lambda: dialog._close_tick_id == 0)
+                assert dialog._active
+                assert dialog.font_entry.get_text() == "Later draft"
+                dialog.close()
+                prompt = dialog._close_prompt
+                assert prompt is not None
+                await _answer(prompt, "discard")
+            await _until(lambda: not dialog._active)
+            await _until(lambda: not dialog.get_mapped())
+            assert dialog._unsubscribe is None
+            assert bool(patches) == (action == "save")
+            assert settings.terminal_font == ("Early draft" if action == "save" else None)
+            await _check_reopened_close(dialog, app.window)
+            await client.close()
+
+&gt;       _run_ui(scenario)
+
+tests/gui/front/test_preferences_drafts.py:161:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+scenario = &lt;function test_preferences_close_before_first_frame.&lt;locals&gt;.scenario at 0x7191f62147d0&gt;
+
+    def _run_ui(scenario: Callable[[_TabsTestApp], Awaitable[None]]) -&gt; None:
+        app = _TabsTestApp(scenario)
+        assert run_app(lambda: app, ["aconsole-b2-tabs-test"]) == 0
+&gt;       assert app.error is None, repr(app.error)
+E       AssertionError: AssertionError('GTK wait failed at 153')
+E       assert AssertionError('GTK wait failed at 153') is None
+E        +  where AssertionError('GTK wait failed at 153') = &lt;test_b2_tabs._TabsTestApp object at 0x7191f632c280 (tests+gui+front+test_b2_tabs+_TabsTestApp at 0x211b0cd0)&gt;.error
+
+tests/gui/front/test_b2_tabs.py:67: AssertionError</failure></testcase><testcase classname="tests.gui.front.test_preferences_drafts" name="test_preferences_close_before_first_frame[save]" time="2.097"><failure message="AssertionError: AssertionError('GTK wait failed at 153')&#10;assert AssertionError('GTK wait failed at 153') is None&#10; +  where AssertionError('GTK wait failed at 153') = &lt;test_b2_tabs._TabsTestApp object at 0x7191f472d680 (tests+gui+front+test_b2_tabs+_TabsTestApp at 0x2176c400)&gt;.error">decision = 'save'
+
+    @pytest.mark.parametrize("decision", ["clean", "discard", "save", "clean-edited", "save-edited"])
+    def test_preferences_close_before_first_frame(decision: str) -&gt; None:
+        async def scenario(app: _TabsTestApp) -&gt; None:
+            client, _tabs = _model(demo_snapshot())
+            settings = Settings(rev=1, vault_path="", worktrees_dir="")
+            patches: list[SettingsPatch] = []
+            action = decision.split("-", maxsplit=1)[0]
+
+            async def request(method: str, params: msgspec.Struct, _result: type[msgspec.Struct]) -&gt; msgspec.Struct:
+                nonlocal settings
+                if method == "settings/update":
+                    assert isinstance(params, SettingsUpdateParams)
+                    patches.append(params.patch)
+                    settings = commit_settings(settings, params.patch)
+                return settings
+
+            client.request = request
+            dialog = PreferencesDialog(PreferencesViewModel(client))
+            assert app.window is not None
+            app.window.set_default_size(800, 800)
+            app.window.present()
+            dialog.open(app.window)
+            # Deliver a confirmed close before GTK's opening frame callbacks run.
+            assert dialog.get_width() == 0
+            if action == "clean":
+                dialog.close()
+            else:
+                assert dialog.worker is not None
+                await dialog.worker
+                dialog.font_entry.set_text("Early draft")
+                dialog.close()
+                prompt = dialog._close_prompt
+                assert prompt is not None
+                await _answer(prompt, action)
+            if decision.endswith("-edited"):
+                assert dialog.worker is not None
+                await dialog.worker
+                assert dialog._close_tick_id != 0
+                dialog.font_entry.set_text("Later draft")
+                await _until(lambda: dialog._close_tick_id == 0)
+                assert dialog._active
+                assert dialog.font_entry.get_text() == "Later draft"
+                dialog.close()
+                prompt = dialog._close_prompt
+                assert prompt is not None
+                await _answer(prompt, "discard")
+            await _until(lambda: not dialog._active)
+            await _until(lambda: not dialog.get_mapped())
+            assert dialog._unsubscribe is None
+            assert bool(patches) == (action == "save")
+            assert settings.terminal_font == ("Early draft" if action == "save" else None)
+            await _check_reopened_close(dialog, app.window)
+            await client.close()
+
+&gt;       _run_ui(scenario)
+
+tests/gui/front/test_preferences_drafts.py:161:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+scenario = &lt;function test_preferences_close_before_first_frame.&lt;locals&gt;.scenario at 0x7191f6214880&gt;
+
+    def _run_ui(scenario: Callable[[_TabsTestApp], Awaitable[None]]) -&gt; None:
+        app = _TabsTestApp(scenario)
+        assert run_app(lambda: app, ["aconsole-b2-tabs-test"]) == 0
+&gt;       assert app.error is None, repr(app.error)
+E       AssertionError: AssertionError('GTK wait failed at 153')
+E       assert AssertionError('GTK wait failed at 153') is None
+E        +  where AssertionError('GTK wait failed at 153') = &lt;test_b2_tabs._TabsTestApp object at 0x7191f472d680 (tests+gui+front+test_b2_tabs+_TabsTestApp at 0x2176c400)&gt;.error
+
+tests/gui/front/test_b2_tabs.py:67: AssertionError</failure></testcase><testcase classname="tests.gui.front.test_preferences_drafts" name="test_preferences_close_before_first_frame[clean-edited]" time="2.109"><failure message="AssertionError: AssertionError('GTK wait failed at 146')&#10;assert AssertionError('GTK wait failed at 146') is None&#10; +  where AssertionError('GTK wait failed at 146') = &lt;test_b2_tabs._TabsTestApp object at 0x7191f6177940 (tests+gui+front+test_b2_tabs+_TabsTestApp at 0x220219f0)&gt;.error">decision = 'clean-edited'
+
+    @pytest.mark.parametrize("decision", ["clean", "discard", "save", "clean-edited", "save-edited"])
+    def test_preferences_close_before_first_frame(decision: str) -&gt; None:
+        async def scenario(app: _TabsTestApp) -&gt; None:
+            client, _tabs = _model(demo_snapshot())
+            settings = Settings(rev=1, vault_path="", worktrees_dir="")
+            patches: list[SettingsPatch] = []
+            action = decision.split("-", maxsplit=1)[0]
+
+            async def request(method: str, params: msgspec.Struct, _result: type[msgspec.Struct]) -&gt; msgspec.Struct:
+                nonlocal settings
+                if method == "settings/update":
+                    assert isinstance(params, SettingsUpdateParams)
+                    patches.append(params.patch)
+                    settings = commit_settings(settings, params.patch)
+                return settings
+
+            client.request = request
+            dialog = PreferencesDialog(PreferencesViewModel(client))
+            assert app.window is not None
+            app.window.set_default_size(800, 800)
+            app.window.present()
+            dialog.open(app.window)
+            # Deliver a confirmed close before GTK's opening frame callbacks run.
+            assert dialog.get_width() == 0
+            if action == "clean":
+                dialog.close()
+            else:
+                assert dialog.worker is not None
+                await dialog.worker
+                dialog.font_entry.set_text("Early draft")
+                dialog.close()
+                prompt = dialog._close_prompt
+                assert prompt is not None
+                await _answer(prompt, action)
+            if decision.endswith("-edited"):
+                assert dialog.worker is not None
+                await dialog.worker
+                assert dialog._close_tick_id != 0
+                dialog.font_entry.set_text("Later draft")
+                await _until(lambda: dialog._close_tick_id == 0)
+                assert dialog._active
+                assert dialog.font_entry.get_text() == "Later draft"
+                dialog.close()
+                prompt = dialog._close_prompt
+                assert prompt is not None
+                await _answer(prompt, "discard")
+            await _until(lambda: not dialog._active)
+            await _until(lambda: not dialog.get_mapped())
+            assert dialog._unsubscribe is None
+            assert bool(patches) == (action == "save")
+            assert settings.terminal_font == ("Early draft" if action == "save" else None)
+            await _check_reopened_close(dialog, app.window)
+            await client.close()
+
+&gt;       _run_ui(scenario)
+
+tests/gui/front/test_preferences_drafts.py:161:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+scenario = &lt;function test_preferences_close_before_first_frame.&lt;locals&gt;.scenario at 0x7191f6215430&gt;
+
+    def _run_ui(scenario: Callable[[_TabsTestApp], Awaitable[None]]) -&gt; None:
+        app = _TabsTestApp(scenario)
+        assert run_app(lambda: app, ["aconsole-b2-tabs-test"]) == 0
+&gt;       assert app.error is None, repr(app.error)
+E       AssertionError: AssertionError('GTK wait failed at 146')
+E       assert AssertionError('GTK wait failed at 146') is None
+E        +  where AssertionError('GTK wait failed at 146') = &lt;test_b2_tabs._TabsTestApp object at 0x7191f6177940 (tests+gui+front+test_b2_tabs+_TabsTestApp at 0x220219f0)&gt;.error
+
+tests/gui/front/test_b2_tabs.py:67: AssertionError</failure></testcase><testcase classname="tests.gui.front.test_preferences_drafts" name="test_preferences_close_before_first_frame[save-edited]" time="2.108"><failure message="AssertionError: AssertionError('GTK wait failed at 146')&#10;assert AssertionError('GTK wait failed at 146') is None&#10; +  where AssertionError('GTK wait failed at 146') = &lt;test_b2_tabs._TabsTestApp object at 0x7191f46d6d80 (tests+gui+front+test_b2_tabs+_TabsTestApp at 0x22957120)&gt;.error">decision = 'save-edited'
+
+    @pytest.mark.parametrize("decision", ["clean", "discard", "save", "clean-edited", "save-edited"])
+    def test_preferences_close_before_first_frame(decision: str) -&gt; None:
+        async def scenario(app: _TabsTestApp) -&gt; None:
+            client, _tabs = _model(demo_snapshot())
+            settings = Settings(rev=1, vault_path="", worktrees_dir="")
+            patches: list[SettingsPatch] = []
+            action = decision.split("-", maxsplit=1)[0]
+
+            async def request(method: str, params: msgspec.Struct, _result: type[msgspec.Struct]) -&gt; msgspec.Struct:
+                nonlocal settings
+                if method == "settings/update":
+                    assert isinstance(params, SettingsUpdateParams)
+                    patches.append(params.patch)
+                    settings = commit_settings(settings, params.patch)
+                return settings
+
+            client.request = request
+            dialog = PreferencesDialog(PreferencesViewModel(client))
+            assert app.window is not None
+            app.window.set_default_size(800, 800)
+            app.window.present()
+            dialog.open(app.window)
+            # Deliver a confirmed close before GTK's opening frame callbacks run.
+            assert dialog.get_width() == 0
+            if action == "clean":
+                dialog.close()
+            else:
+                assert dialog.worker is not None
+                await dialog.worker
+                dialog.font_entry.set_text("Early draft")
+                dialog.close()
+                prompt = dialog._close_prompt
+                assert prompt is not None
+                await _answer(prompt, action)
+            if decision.endswith("-edited"):
+                assert dialog.worker is not None
+                await dialog.worker
+                assert dialog._close_tick_id != 0
+                dialog.font_entry.set_text("Later draft")
+                await _until(lambda: dialog._close_tick_id == 0)
+                assert dialog._active
+                assert dialog.font_entry.get_text() == "Later draft"
+                dialog.close()
+                prompt = dialog._close_prompt
+                assert prompt is not None
+                await _answer(prompt, "discard")
+            await _until(lambda: not dialog._active)
+            await _until(lambda: not dialog.get_mapped())
+            assert dialog._unsubscribe is None
+            assert bool(patches) == (action == "save")
+            assert settings.terminal_font == ("Early draft" if action == "save" else None)
+            await _check_reopened_close(dialog, app.window)
+            await client.close()
+
+&gt;       _run_ui(scenario)
+
+tests/gui/front/test_preferences_drafts.py:161:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+scenario = &lt;function test_preferences_close_before_first_frame.&lt;locals&gt;.scenario at 0x7191f6216b90&gt;
+
+    def _run_ui(scenario: Callable[[_TabsTestApp], Awaitable[None]]) -&gt; None:
+        app = _TabsTestApp(scenario)
+        assert run_app(lambda: app, ["aconsole-b2-tabs-test"]) == 0
+&gt;       assert app.error is None, repr(app.error)
+E       AssertionError: AssertionError('GTK wait failed at 146')
+E       assert AssertionError('GTK wait failed at 146') is None
+E        +  where AssertionError('GTK wait failed at 146') = &lt;test_b2_tabs._TabsTestApp object at 0x7191f46d6d80 (tests+gui+front+test_b2_tabs+_TabsTestApp at 0x22957120)&gt;.error
+
+tests/gui/front/test_b2_tabs.py:67: AssertionError</failure></testcase><testcase classname="tests.gui.front.test_preferences_drafts" name="test_hiding_parent_cancels_pending_preferences_close" time="2.213"><failure message="AssertionError: AssertionError('GTK wait failed at 102')&#10;assert AssertionError('GTK wait failed at 102') is None&#10; +  where AssertionError('GTK wait failed at 102') = &lt;test_b2_tabs._TabsTestApp object at 0x7191f616b480 (tests+gui+front+test_b2_tabs+_TabsTestApp at 0x20bc5610)&gt;.error">def test_hiding_parent_cancels_pending_preferences_close() -&gt; None:
+        async def scenario(app: _TabsTestApp) -&gt; None:
+            client, _tabs = _model(demo_snapshot())
+
+            async def request(_method: str, _params: msgspec.Struct, _result: type[msgspec.Struct]) -&gt; msgspec.Struct:
+                return Settings(rev=1, vault_path="", worktrees_dir="")
+
+            client.request = request
+            dialog = PreferencesDialog(PreferencesViewModel(client))
+            assert app.window is not None
+            app.window.present()
+            dialog.open(app.window)
+            dialog.close()
+            assert dialog._close_tick_id != 0
+            app.window.set_visible(False)
+            assert dialog._close_tick_id == 0
+            app.window.present()
+            await _check_reopened_close(dialog, app.window)
+            await client.close()
+
+&gt;       _run_ui(scenario)
+
+tests/gui/front/test_preferences_drafts.py:184:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+scenario = &lt;function test_hiding_parent_cancels_pending_preferences_close.&lt;locals&gt;.scenario at 0x7191f6215e80&gt;
+
+    def _run_ui(scenario: Callable[[_TabsTestApp], Awaitable[None]]) -&gt; None:
+        app = _TabsTestApp(scenario)
+        assert run_app(lambda: app, ["aconsole-b2-tabs-test"]) == 0
+&gt;       assert app.error is None, repr(app.error)
+E       AssertionError: AssertionError('GTK wait failed at 102')
+E       assert AssertionError('GTK wait failed at 102') is None
+E        +  where AssertionError('GTK wait failed at 102') = &lt;test_b2_tabs._TabsTestApp object at 0x7191f616b480 (tests+gui+front+test_b2_tabs+_TabsTestApp at 0x20bc5610)&gt;.error
+
+tests/gui/front/test_b2_tabs.py:67: AssertionError</failure></testcase><testcase classname="tests.gui.front.test_preferences_drafts" name="test_close_save_failure_retains_draft_and_late_save_cannot_claim_new_edits_saved" time="2.276"><failure message="AssertionError: AssertionError('GTK wait failed at 241')&#10;assert AssertionError('GTK wait failed at 241') is None&#10; +  where AssertionError('GTK wait failed at 241') = &lt;test_b2_tabs._TabsTestApp object at 0x7191f6180380 (tests+gui+front+test_b2_tabs+_TabsTestApp at 0x2294daf0)&gt;.error">def test_close_save_failure_retains_draft_and_late_save_cannot_claim_new_edits_saved() -&gt; None:  # noqa: PLR0915 -- failure, late response, then confirmed close
+        async def scenario(app: _TabsTestApp) -&gt; None:
+            client, _tabs = _model(demo_snapshot())
+            settings = Settings(rev=1, vault_path="", worktrees_dir="")
+            pending = asyncio.get_running_loop().create_future()
+            patches = []
+
+            async def request(method: str, params: msgspec.Struct, _result: type[msgspec.Struct]) -&gt; msgspec.Struct:
+                if method == "settings/get":
+                    return settings
+                patches.append(params.patch)
+                return await pending
+
+            client.request = request
+            dialog = PreferencesDialog(PreferencesViewModel(client))
+            assert app.window is not None
+            app.window.set_default_size(800, 800)
+            app.window.present()
+            dialog.open(app.window)
+            await _until(lambda: not dialog.loading)
+            await _until(dialog.get_mapped)
+            dialog.font_entry.set_text("First draft")
+            dialog.close()
+            prompt = dialog._close_prompt
+            assert prompt is not None
+            await _answer(prompt, "save")
+            await _until(lambda: bool(patches))
+            pending.set_exception(RuntimeError("save failed"))
+            assert dialog.worker is not None
+            await dialog.worker
+            assert dialog._active
+            assert dialog.font_entry.get_text() == "First draft"
+            pending = asyncio.get_running_loop().create_future()
+            dialog.close()
+            prompt = dialog._close_prompt
+            assert prompt is not None
+            await _answer(prompt, "save")
+            await _until(lambda: len(patches) == 2)
+            dialog.font_entry.set_text("Newer draft")
+            pending.set_result(commit_settings(settings, patches[-1]))
+            assert dialog.worker is not None
+            await dialog.worker
+            assert dialog._active
+            assert dialog.font_entry.get_text() == "Newer draft"
+            assert dialog._changes(dialog.viewmodel.settings) == SettingsPatch(terminal_font="Newer draft")
+            pending = asyncio.get_running_loop().create_future()
+            dialog.close()
+            prompt = dialog._close_prompt
+            assert prompt is not None
+            await _answer(prompt, "save")
+            await _until(lambda: len(patches) == 3)
+            pending.set_result(commit_settings(dialog.viewmodel.settings, patches[-1]))
+            assert dialog.worker is not None
+            await dialog.worker
+            await _until(lambda: not dialog._active)
+            await client.close()
+
+&gt;       _run_ui(scenario)
+
+tests/gui/front/test_preferences_drafts.py:244:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+scenario = &lt;function test_close_save_failure_retains_draft_and_late_save_cannot_claim_new_edits_saved.&lt;locals&gt;.scenario at 0x7191f6215c70&gt;
+
+    def _run_ui(scenario: Callable[[_TabsTestApp], Awaitable[None]]) -&gt; None:
+        app = _TabsTestApp(scenario)
+        assert run_app(lambda: app, ["aconsole-b2-tabs-test"]) == 0
+&gt;       assert app.error is None, repr(app.error)
+E       AssertionError: AssertionError('GTK wait failed at 241')
+E       assert AssertionError('GTK wait failed at 241') is None
+E        +  where AssertionError('GTK wait failed at 241') = &lt;test_b2_tabs._TabsTestApp object at 0x7191f6180380 (tests+gui+front+test_b2_tabs+_TabsTestApp at 0x2294daf0)&gt;.error
+
+tests/gui/front/test_b2_tabs.py:67: AssertionError</failure></testcase><testcase classname="tests.gui.front.test_preferences_drafts" name="test_custom_quota_thresholds_update_sidebar_and_open_details" time="0.038" /><testcase classname="tests.gui.front.test_preferences_drafts" name="test_saved_approval_policy_is_clean_on_close[ask-False]" time="2.182"><failure message="AssertionError: AssertionError('GTK wait failed at 299')&#10;assert AssertionError('GTK wait failed at 299') is None&#10; +  where AssertionError('GTK wait failed at 299') = &lt;test_b2_tabs._TabsTestApp object at 0x7191f45b1580 (tests+gui+front+test_b2_tabs+_TabsTestApp at 0x23cf4a60)&gt;.error">policy = 'ask', dangerous = False
+
+    @pytest.mark.parametrize(("policy", "dangerous"), [("ask", False), ("allow", False), ("allow", True), ("deny", False)])
+    def test_saved_approval_policy_is_clean_on_close(policy: str, *, dangerous: bool) -&gt; None:
+        async def scenario(app: _TabsTestApp) -&gt; None:
+            client, _tabs = _model(demo_snapshot())
+            settings = Settings(rev=1, vault_path="", worktrees_dir="")
+
+            async def request(method: str, params: msgspec.Struct, _result: type[msgspec.Struct]) -&gt; msgspec.Struct:
+                nonlocal settings
+                if method == "settings/update":
+                    settings = commit_settings(settings, params.patch)
+                return settings
+
+            client.request = request
+            dialog = PreferencesDialog(PreferencesViewModel(client))
+            assert app.window is not None
+            app.window.present()
+            dialog.open(app.window)
+            await _until(lambda: not dialog.loading)
+            dialog.policy.set_selected(("ask", "allow", "deny").index(policy))
+            if dangerous:
+                dialog._dangerous_answered(None, "allow")
+            dialog.save()
+            assert dialog.worker is not None
+            await dialog.worker
+            assert dialog._shown == settings
+            assert dialog._changes(settings) == SettingsPatch()
+            assert not dialog.protect_close()
+            dialog.close()
+            await _until(lambda: not dialog._active)
+            assert dialog._close_prompt is None
+            await client.close()
+
+&gt;       _run_ui(scenario)
+
+tests/gui/front/test_preferences_drafts.py:303:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+scenario = &lt;function test_saved_approval_policy_is_clean_on_close.&lt;locals&gt;.scenario at 0x7191f6217ed0&gt;
+
+    def _run_ui(scenario: Callable[[_TabsTestApp], Awaitable[None]]) -&gt; None:
+        app = _TabsTestApp(scenario)
+        assert run_app(lambda: app, ["aconsole-b2-tabs-test"]) == 0
+&gt;       assert app.error is None, repr(app.error)
+E       AssertionError: AssertionError('GTK wait failed at 299')
+E       assert AssertionError('GTK wait failed at 299') is None
+E        +  where AssertionError('GTK wait failed at 299') = &lt;test_b2_tabs._TabsTestApp object at 0x7191f45b1580 (tests+gui+front+test_b2_tabs+_TabsTestApp at 0x23cf4a60)&gt;.error
+
+tests/gui/front/test_b2_tabs.py:67: AssertionError</failure></testcase><testcase classname="tests.gui.front.test_preferences_drafts" name="test_saved_approval_policy_is_clean_on_close[allow-False]" time="2.219"><failure message="AssertionError: AssertionError('GTK wait failed at 299')&#10;assert AssertionError('GTK wait failed at 299') is None&#10; +  where AssertionError('GTK wait failed at 299') = &lt;test_b2_tabs._TabsTestApp object at 0x7191f45e4a00 (tests+gui+front+test_b2_tabs+_TabsTestApp at 0x23d39f90)&gt;.error">policy = 'allow', dangerous = False
+
+    @pytest.mark.parametrize(("policy", "dangerous"), [("ask", False), ("allow", False), ("allow", True), ("deny", False)])
+    def test_saved_approval_policy_is_clean_on_close(policy: str, *, dangerous: bool) -&gt; None:
+        async def scenario(app: _TabsTestApp) -&gt; None:
+            client, _tabs = _model(demo_snapshot())
+            settings = Settings(rev=1, vault_path="", worktrees_dir="")
+
+            async def request(method: str, params: msgspec.Struct, _result: type[msgspec.Struct]) -&gt; msgspec.Struct:
+                nonlocal settings
+                if method == "settings/update":
+                    settings = commit_settings(settings, params.patch)
+                return settings
+
+            client.request = request
+            dialog = PreferencesDialog(PreferencesViewModel(client))
+            assert app.window is not None
+            app.window.present()
+            dialog.open(app.window)
+            await _until(lambda: not dialog.loading)
+            dialog.policy.set_selected(("ask", "allow", "deny").index(policy))
+            if dangerous:
+                dialog._dangerous_answered(None, "allow")
+            dialog.save()
+            assert dialog.worker is not None
+            await dialog.worker
+            assert dialog._shown == settings
+            assert dialog._changes(settings) == SettingsPatch()
+            assert not dialog.protect_close()
+            dialog.close()
+            await _until(lambda: not dialog._active)
+            assert dialog._close_prompt is None
+            await client.close()
+
+&gt;       _run_ui(scenario)
+
+tests/gui/front/test_preferences_drafts.py:303:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+scenario = &lt;function test_saved_approval_policy_is_clean_on_close.&lt;locals&gt;.scenario at 0x7191f45ece00&gt;
+
+    def _run_ui(scenario: Callable[[_TabsTestApp], Awaitable[None]]) -&gt; None:
+        app = _TabsTestApp(scenario)
+        assert run_app(lambda: app, ["aconsole-b2-tabs-test"]) == 0
+&gt;       assert app.error is None, repr(app.error)
+E       AssertionError: AssertionError('GTK wait failed at 299')
+E       assert AssertionError('GTK wait failed at 299') is None
+E        +  where AssertionError('GTK wait failed at 299') = &lt;test_b2_tabs._TabsTestApp object at 0x7191f45e4a00 (tests+gui+front+test_b2_tabs+_TabsTestApp at 0x23d39f90)&gt;.error
+
+tests/gui/front/test_b2_tabs.py:67: AssertionError</failure></testcase><testcase classname="tests.gui.front.test_preferences_drafts" name="test_saved_approval_policy_is_clean_on_close[allow-True]" time="2.198"><failure message="AssertionError: AssertionError('GTK wait failed at 299')&#10;assert AssertionError('GTK wait failed at 299') is None&#10; +  where AssertionError('GTK wait failed at 299') = &lt;test_b2_tabs._TabsTestApp object at 0x7191f472a9c0 (tests+gui+front+test_b2_tabs+_TabsTestApp at 0x24973f60)&gt;.error">policy = 'allow', dangerous = True
+
+    @pytest.mark.parametrize(("policy", "dangerous"), [("ask", False), ("allow", False), ("allow", True), ("deny", False)])
+    def test_saved_approval_policy_is_clean_on_close(policy: str, *, dangerous: bool) -&gt; None:
+        async def scenario(app: _TabsTestApp) -&gt; None:
+            client, _tabs = _model(demo_snapshot())
+            settings = Settings(rev=1, vault_path="", worktrees_dir="")
+
+            async def request(method: str, params: msgspec.Struct, _result: type[msgspec.Struct]) -&gt; msgspec.Struct:
+                nonlocal settings
+                if method == "settings/update":
+                    settings = commit_settings(settings, params.patch)
+                return settings
+
+            client.request = request
+            dialog = PreferencesDialog(PreferencesViewModel(client))
+            assert app.window is not None
+            app.window.present()
+            dialog.open(app.window)
+            await _until(lambda: not dialog.loading)
+            dialog.policy.set_selected(("ask", "allow", "deny").index(policy))
+            if dangerous:
+                dialog._dangerous_answered(None, "allow")
+            dialog.save()
+            assert dialog.worker is not None
+            await dialog.worker
+            assert dialog._shown == settings
+            assert dialog._changes(settings) == SettingsPatch()
+            assert not dialog.protect_close()
+            dialog.close()
+            await _until(lambda: not dialog._active)
+            assert dialog._close_prompt is None
+            await client.close()
+
+&gt;       _run_ui(scenario)
+
+tests/gui/front/test_preferences_drafts.py:303:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+scenario = &lt;function test_saved_approval_policy_is_clean_on_close.&lt;locals&gt;.scenario at 0x7191f45eda60&gt;
+
+    def _run_ui(scenario: Callable[[_TabsTestApp], Awaitable[None]]) -&gt; None:
+        app = _TabsTestApp(scenario)
+        assert run_app(lambda: app, ["aconsole-b2-tabs-test"]) == 0
+&gt;       assert app.error is None, repr(app.error)
+E       AssertionError: AssertionError('GTK wait failed at 299')
+E       assert AssertionError('GTK wait failed at 299') is None
+E        +  where AssertionError('GTK wait failed at 299') = &lt;test_b2_tabs._TabsTestApp object at 0x7191f472a9c0 (tests+gui+front+test_b2_tabs+_TabsTestApp at 0x24973f60)&gt;.error
+
+tests/gui/front/test_b2_tabs.py:67: AssertionError</failure></testcase><testcase classname="tests.gui.front.test_preferences_drafts" name="test_saved_approval_policy_is_clean_on_close[deny-False]" time="2.192"><failure message="AssertionError: AssertionError('GTK wait failed at 299')&#10;assert AssertionError('GTK wait failed at 299') is None&#10; +  where AssertionError('GTK wait failed at 299') = &lt;test_b2_tabs._TabsTestApp object at 0x7191f4747bc0 (tests+gui+front+test_b2_tabs+_TabsTestApp at 0x24dd9bf0)&gt;.error">policy = 'deny', dangerous = False
+
+    @pytest.mark.parametrize(("policy", "dangerous"), [("ask", False), ("allow", False), ("allow", True), ("deny", False)])
+    def test_saved_approval_policy_is_clean_on_close(policy: str, *, dangerous: bool) -&gt; None:
+        async def scenario(app: _TabsTestApp) -&gt; None:
+            client, _tabs = _model(demo_snapshot())
+            settings = Settings(rev=1, vault_path="", worktrees_dir="")
+
+            async def request(method: str, params: msgspec.Struct, _result: type[msgspec.Struct]) -&gt; msgspec.Struct:
+                nonlocal settings
+                if method == "settings/update":
+                    settings = commit_settings(settings, params.patch)
+                return settings
+
+            client.request = request
+            dialog = PreferencesDialog(PreferencesViewModel(client))
+            assert app.window is not None
+            app.window.present()
+            dialog.open(app.window)
+            await _until(lambda: not dialog.loading)
+            dialog.policy.set_selected(("ask", "allow", "deny").index(policy))
+            if dangerous:
+                dialog._dangerous_answered(None, "allow")
+            dialog.save()
+            assert dialog.worker is not None
+            await dialog.worker
+            assert dialog._shown == settings
+            assert dialog._changes(settings) == SettingsPatch()
+            assert not dialog.protect_close()
+            dialog.close()
+            await _until(lambda: not dialog._active)
+            assert dialog._close_prompt is None
+            await client.close()
+
+&gt;       _run_ui(scenario)
+
+tests/gui/front/test_preferences_drafts.py:303:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+scenario = &lt;function test_saved_approval_policy_is_clean_on_close.&lt;locals&gt;.scenario at 0x7191f45ee8d0&gt;
+
+    def _run_ui(scenario: Callable[[_TabsTestApp], Awaitable[None]]) -&gt; None:
+        app = _TabsTestApp(scenario)
+        assert run_app(lambda: app, ["aconsole-b2-tabs-test"]) == 0
+&gt;       assert app.error is None, repr(app.error)
+E       AssertionError: AssertionError('GTK wait failed at 299')
+E       assert AssertionError('GTK wait failed at 299') is None
+E        +  where AssertionError('GTK wait failed at 299') = &lt;test_b2_tabs._TabsTestApp object at 0x7191f4747bc0 (tests+gui+front+test_b2_tabs+_TabsTestApp at 0x24dd9bf0)&gt;.error
+
+tests/gui/front/test_b2_tabs.py:67: AssertionError</failure></testcase><testcase classname="tests.gui.front.test_preferences_drafts" name="test_saved_project_policy_uses_rpc_confirmation_before_snapshot_event" time="2.189"><failure message="AssertionError: AssertionError('GTK wait failed at 340')&#10;assert AssertionError('GTK wait failed at 340') is None&#10; +  where AssertionError('GTK wait failed at 340') = &lt;test_b2_tabs._TabsTestApp object at 0x7191f62cfa40 (tests+gui+front+test_b2_tabs+_TabsTestApp at 0x232f31b0)&gt;.error">def test_saved_project_policy_uses_rpc_confirmation_before_snapshot_event() -&gt; None:
+        async def scenario(app: _TabsTestApp) -&gt; None:
+            from aconsole.contracts.app import ProjectApprovalPolicyParams
+
+            client, _tabs = _model(demo_snapshot())
+            settings = Settings(rev=1, vault_path="", worktrees_dir="")
+            viewmodel = PreferencesViewModel(client)
+            project = viewmodel.active_project()
+            assert project is not None
+
+            async def request(method: str, params: msgspec.Struct, _result: type[msgspec.Struct]) -&gt; msgspec.Struct:
+                if method == "project/setApprovalPolicy":
+                    assert isinstance(params, ProjectApprovalPolicyParams)
+                    return msgspec.structs.replace(project, approval_policy=params.approval_policy,
+                                                   approval_dangerous=params.approval_dangerous)
+                return settings
+
+            client.request = request
+            dialog = PreferencesDialog(viewmodel)
+            assert app.window is not None
+            app.window.present()
+            dialog.open(app.window)
+            await _until(lambda: not dialog.loading)
+            dialog.project_policy.set_selected(2)
+            assert dialog.protect_close(), "a project draft must protect application exit"
+            prompt = dialog._close_prompt
+            assert prompt is not None
+            await _answer(prompt, "cancel")
+            dialog.save()
+            assert dialog.worker is not None
+            await dialog.worker
+            assert dialog._project_params() is None, "the returned project is a confirmed saved baseline"
+            assert not dialog.protect_close()
+            dialog.close()
+            await _until(lambda: not dialog._active)
+            assert dialog._close_prompt is None
+            await client.close()
+
+&gt;       _run_ui(scenario)
+
+tests/gui/front/test_preferences_drafts.py:344:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+scenario = &lt;function test_saved_project_policy_uses_rpc_confirmation_before_snapshot_event.&lt;locals&gt;.scenario at 0x7191f6214eb0&gt;
+
+    def _run_ui(scenario: Callable[[_TabsTestApp], Awaitable[None]]) -&gt; None:
+        app = _TabsTestApp(scenario)
+        assert run_app(lambda: app, ["aconsole-b2-tabs-test"]) == 0
+&gt;       assert app.error is None, repr(app.error)
+E       AssertionError: AssertionError('GTK wait failed at 340')
+E       assert AssertionError('GTK wait failed at 340') is None
+E        +  where AssertionError('GTK wait failed at 340') = &lt;test_b2_tabs._TabsTestApp object at 0x7191f62cfa40 (tests+gui+front+test_b2_tabs+_TabsTestApp at 0x232f31b0)&gt;.error
+
+tests/gui/front/test_b2_tabs.py:67: AssertionError</failure></testcase><testcase classname="tests.gui.front.test_approval_alerts" name="test_a_request_in_an_inactive_window_rings_once_with_the_tab" time="0.002" /><testcase classname="tests.gui.front.test_approval_alerts" name="test_an_active_window_does_not_ring" time="0.001" /><testcase classname="tests.gui.front.test_approval_alerts" name="test_notification_policy_always_never_and_live_change" time="0.002" /><testcase classname="tests.gui.front.test_approval_alerts" name="test_an_inactive_tab_rings_in_an_active_window" time="0.001" /><testcase classname="tests.gui.front.test_approval_alerts" name="test_switching_to_a_notified_tab_withdraws_without_repeating_its_episode" time="0.002" /><testcase classname="tests.gui.front.test_approval_alerts" name="test_an_active_window_without_a_selected_tab_does_not_hide_requests" time="0.001" /><testcase classname="tests.gui.front.test_approval_alerts" name="test_a_decision_withdraws_and_the_next_request_is_a_new_episode" time="0.002" /><testcase classname="tests.gui.front.test_approval_alerts" name="test_coming_back_withdraws_and_leaving_again_does_not_ring_again" time="0.002" /><testcase classname="tests.gui.front.test_approval_alerts" name="test_leaving_a_window_with_an_open_request_rings_once" time="0.001" /><testcase classname="tests.gui.front.test_approval_alerts" name="test_each_tab_has_its_own_episode_and_only_the_decided_one_goes" time="0.001" /><testcase classname="tests.gui.front.test_approval_alerts" name="test_a_tab_title_that_is_unknown_still_rings" time="0.001" /><testcase classname="tests.gui.front.test_approval_alerts" name="test_a_closing_window_takes_its_notifications_along" time="0.001" /><testcase classname="tests.gui.front.test_approval_alerts" name="test_the_notification_does_not_show_the_command" time="0.002" /><testcase classname="tests.gui.front.test_approval_alerts" name="test_the_window_rings_withdraws_and_a_click_opens_the_tab[waiting]" time="0.726" /><testcase classname="tests.gui.front.test_approval_alerts" name="test_opening_waits_for_focus_but_background_requests_still_ring[waiting-focus]" time="0.353" /><testcase classname="tests.gui.front.test_approval_alerts" name="test_opening_waits_for_focus_but_background_requests_still_ring[waiting-unfocused]" time="0.316" /><testcase classname="tests.gui.front.test_approval_alerts" name="test_opening_waits_for_focus_but_background_requests_still_ring[waiting-deadline]" time="0.825" /><testcase classname="tests.gui.front.test_approval_alerts" name="test_opening_waits_for_focus_but_background_requests_still_ring[waiting-resolved]" time="0.334" /><testcase classname="tests.gui.front.test_approval_alerts" name="test_opening_waits_for_focus_but_background_requests_still_ring[waiting-unmap]" time="0.456" /><testcase classname="tests.gui.front.test_approval_alerts" name="test_opening_waits_for_focus_but_background_requests_still_ring[waiting-destroy]" time="0.366" /><testcase classname="tests.gui.front.test_approval_alerts" name="test_opening_waits_for_focus_but_background_requests_still_ring[waiting-remap]" time="1.004" /><testcase classname="tests.gui.front.test_window_badge_lifecycle" name="test_badge_timer_stops_on_disposal_and_cannot_restart_on_remap" time="0.292" /></testsuite></testsuites>

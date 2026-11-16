@@ -6,11 +6,11 @@ import sqlite3
 from dataclasses import dataclass
 from pathlib import Path
 
-from alembic import command
-from alembic.config import Config
 from sqlalchemy import Connection, create_engine, event
 from sqlalchemy.engine import Engine
 from sqlalchemy.pool import QueuePool
+lazy from alembic import command
+lazy from alembic.config import Config
 
 from aconsole.core.infrastructure.persistence.cache.schema import CACHE_SCHEMA
 

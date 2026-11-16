@@ -264,6 +264,9 @@ class HostTabs:
         return ContainerGateRunner(podman=self._podman, container=container, user=self._user,
                                    worktree=worktree, profile=profile)
 
+    def gate_environment(self, container: str, worktree: str, image: str) -> str:
+        return self._podman.gate_environment(container, worktree, expected_image=image)
+
     def agent_home(self, name: str) -> Path | None:
         """The directory HOME names in the container. Distrobox binds it at the same path here."""
         cached = self._homes.get(name)

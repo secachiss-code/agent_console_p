@@ -1,0 +1,410 @@
+{
+  "case": "identity",
+  "complete": true,
+  "events": [
+    {
+      "transport": "mcp-http",
+      "tool": "plan_create",
+      "arguments": {
+        "title": "Forbidden",
+        "goal": "Forbidden"
+      },
+      "response": {
+        "error": {
+          "code": 4012,
+          "reason": "PLAN_ROLE",
+          "message": "PLAN_ROLE: graph changes require a planning tab",
+          "hint": "call plan_get and retry the last legal step"
+        }
+      },
+      "is_error": true
+    },
+    {
+      "transport": "mcp-http",
+      "tool": "node_claim",
+      "arguments": {
+        "node_id": "node-5"
+      },
+      "response": {
+        "lease_id": "plan-1:ACC-3:1",
+        "fence": 1,
+        "expires_at": "2026-11-16T12:11:52.332956+00:00",
+        "brief": {
+          "objective": "Выполнить сценарий в отдельном приёмочном проекте; сохранять evidence.",
+          "acceptance": [
+            "Незарегистрированный UI PID, отключённый UI и повторно выданный PID отклоняются.",
+            "Новый image/container ID и смена окружения во время проверки не наследуют зелёную квитанцию.",
+            "Старый fence и изменение checkout не позволяют завершить модуль; запуска на хосте нет."
+          ],
+          "paths": [
+            "src/identity.py",
+            "tests/test_identity.py",
+            "evidence/identity/**"
+          ],
+          "boundaries": "Не менять продуктовую ветку, бюджеты и глобальные правила проверок. При блокере — inbox, без новых вершин."
+        },
+        "context": {
+          "items": [],
+          "truncated": false,
+          "verified_commit": "1ec4ba6446bc646c97ecd9c99e4c2724d2a5e6ad"
+        }
+      },
+      "is_error": false
+    },
+    {
+      "transport": "mcp-http",
+      "tool": "step_begin",
+      "arguments": {
+        "node_id": "node-5",
+        "fence": 1
+      },
+      "response": {
+        "direction_prefix": "{\"direction\":\"ACC-0\",\"gate_profile\":{\"direction\":[[\"/opt/aconsole/ui/bin/python\",\"-m\",\"pytest\",\"tests\"]],\"environment\":{\"container\":\"aconsole-acc-gate-ba2a407ac5\",\"image\":\"f4147a4165dbe6b85c65b0c7b0de4858bc9114466edabf2132f333861102eb70\"},\"micro\":{\"fix\":[\"/opt/aconsole/core/bin/ruff\",\"check\",\"--fix\"],\"format\":[\"/opt/aconsole/core/bin/ruff\",\"format\"],\"lint\":[\"/opt/aconsole/core/bin/ruff\",\"check\"],\"tests\":[\"/opt/aconsole/core/bin/python\",\"-m\",\"pytest\"],\"types\":[\"/opt/aconsole/core/bin/basedpyright\"]}},\"invariants\":\"Фиксированные 5 вершин; L2 не создаёт узлы; квитанции создаёт ядро; закрытие L0 — человеком.\",\"scope\":[\"evidence/**\",\"src/**\",\"tests/**\"],\"skeletons\":[[\"src/identity.py\",\"def value() -> int:\\n    ...\"],[\"src/resources.py\",\"def value() -> int:\\n    ...\"],[\"src/retry.py\",\"def value() -> int:\\n    ...\"],[\"src/success.py\",\"def value() -> int:\\n    ...\"],[\"tests/test_identity.py\",\"def test_value() -> None:\\n    ...\"],[\"tests/test_resources.py\",\"def test_value() -> None:\\n    ...\"],[\"tests/test_retry.py\",\"def test_value() -> None:\\n    ...\"],[\"tests/test_success.py\",\"def test_value() -> None:\\n    ...\"]]}",
+        "prefix_sha256": "47097142d59b8e518341e3909870131599b61b67089a24c428e32fee16b4b2ec",
+        "contract": "{\"acceptance\":[\"Незарегистрированный UI PID, отключённый UI и повторно выданный PID отклоняются.\",\"Новый image/container ID и смена окружения во время проверки не наследуют зелёную квитанцию.\",\"Старый fence и изменение checkout не позволяют завершить модуль; запуска на хосте нет.\"],\"blast_radius\":[],\"boundaries\":\"Не менять продуктовую ветку, бюджеты и глобальные правила проверок. При блокере — inbox, без новых вершин.\",\"contract_sha256\":\"41768c004b9f730fde12a1ad993567c4e536bc9696cefc639d9bbd8816bb225c\",\"direction_key\":\"ACC-0\",\"key\":\"ACC-3\",\"objective\":\"Выполнить сценарий в отдельном приёмочном проекте; сохранять evidence.\",\"output_format\":null,\"paths\":[\"src/identity.py\",\"tests/test_identity.py\",\"evidence/identity/**\"],\"test_cmd\":\"/opt/aconsole/core/bin/python -m pytest tests/test_identity.py\"}",
+        "handoff": "{\"attempt\":1,\"compact_verdict\":null,\"contract_hash\":\"41768c004b9f730fde12a1ad993567c4e536bc9696cefc639d9bbd8816bb225c\",\"diff_stat\":null,\"head_block_hash\":\"fa3fa625875fc3dd8dda4f578496dcd0d11dd8a92d29c825c9555b5648358413\",\"max_attempts\":4,\"next\":\"Complete the spec step.\",\"node\":\"ACC-3\",\"remaining_items\":[],\"scope\":[\"src/identity.py\",\"tests/test_identity.py\",\"evidence/identity/**\"],\"step\":\"spec\",\"symbols\":[],\"v\":1}",
+        "file_slice": "src/identity.py\n1: def value() -> int:\n2:     return 0",
+        "lease_id": "plan-1:ACC-3:1",
+        "fence": 1,
+        "expires_at": "2026-11-16T12:11:52.401279+00:00"
+      },
+      "is_error": false
+    },
+    {
+      "transport": "mcp-http",
+      "tool": "step_submit",
+      "arguments": {
+        "node_id": "node-5",
+        "fence": 0,
+        "step": "spec"
+      },
+      "response": {
+        "error": {
+          "code": 4007,
+          "reason": "LEASE_STALE_FENCE",
+          "message": "LEASE_STALE_FENCE: LEASE_STALE_FENCE 1",
+          "hint": "call plan_get for the current fence, then retry node_update"
+        }
+      },
+      "is_error": true
+    },
+    {
+      "transport": "mcp-http",
+      "tool": "step_submit",
+      "arguments": {
+        "node_id": "node-5",
+        "fence": 1,
+        "step": "spec"
+      },
+      "response": {
+        "block_hash": "a28a99b12ebdc78444b84ee969bc105191fc4699926e30ae034807b82ffb0426",
+        "step": "spec",
+        "attempt": 1,
+        "next_step": "patch",
+        "receipt_hash": null,
+        "passed": true
+      },
+      "is_error": false
+    },
+    {
+      "transport": "mcp-http",
+      "tool": "step_submit",
+      "arguments": {
+        "node_id": "node-5",
+        "fence": 1,
+        "step": "patch"
+      },
+      "response": {
+        "error": {
+          "code": 4015,
+          "reason": "SCOPE_VIOLATION",
+          "message": "SCOPE_VIOLATION: SCOPE_VIOLATION outside.txt",
+          "hint": "call plan_get and retry the last legal step"
+        }
+      },
+      "is_error": true
+    },
+    {
+      "transport": "mcp-http",
+      "tool": "step_submit",
+      "arguments": {
+        "node_id": "node-5",
+        "fence": 1,
+        "step": "patch"
+      },
+      "response": {
+        "block_hash": "f9cb95c0c9fd0a55875899d1c29bbdb1e4c9cbc1c879a101eb6c60e1929a49c5",
+        "step": "patch",
+        "attempt": 1,
+        "next_step": "test",
+        "receipt_hash": null,
+        "passed": true
+      },
+      "is_error": false
+    },
+    {
+      "transport": "mcp-http",
+      "tool": "step_submit",
+      "arguments": {
+        "node_id": "node-5",
+        "fence": 1,
+        "step": "test"
+      },
+      "response": {
+        "block_hash": "7305f3768c1878f1660f4068ce7e010de217c9a2abdab60671c60641c96a2da1",
+        "step": "test",
+        "attempt": 1,
+        "next_step": "verify",
+        "receipt_hash": null,
+        "passed": true
+      },
+      "is_error": false
+    },
+    {
+      "transport": "mcp-http",
+      "tool": "step_submit",
+      "arguments": {
+        "node_id": "node-5",
+        "fence": 1,
+        "step": "verify"
+      },
+      "response": {
+        "block_hash": "639a9ee3ec9858295160c4dce61d4d35f09362400ff68a239e9cc99dcffff497",
+        "step": "verify",
+        "attempt": 1,
+        "next_step": null,
+        "receipt_hash": "ce360b956d27202fa0b8adad1e019342e594148caca318d98642c61ae5b4e081",
+        "passed": true
+      },
+      "is_error": false
+    },
+    {
+      "transport": "mcp-http",
+      "tool": "gate_run",
+      "arguments": {
+        "node_id": "node-5",
+        "fence": 1,
+        "tier": "blast"
+      },
+      "response": {
+        "error": {
+          "code": 4018,
+          "reason": "GATE_RECEIPT_REQUIRED",
+          "message": "GATE_RECEIPT_REQUIRED: GATE_RECEIPT_REQUIRED",
+          "hint": "call plan_get and retry the last legal step"
+        }
+      },
+      "is_error": true
+    },
+    {
+      "transport": "mcp-http",
+      "tool": "node_update",
+      "arguments": {
+        "node_id": "node-5",
+        "fence": 1,
+        "status": "done",
+        "evidence": "forged green"
+      },
+      "response": {
+        "error": {
+          "code": 4018,
+          "reason": "GATE_RECEIPT_REQUIRED",
+          "message": "GATE_RECEIPT_REQUIRED: GATE_RECEIPT_REQUIRED",
+          "hint": "call plan_get and retry the last legal step"
+        }
+      },
+      "is_error": true
+    },
+    {
+      "transport": "mcp-http",
+      "tool": "gate_run",
+      "arguments": {
+        "node_id": "node-5",
+        "fence": 1,
+        "tier": "blast"
+      },
+      "response": {
+        "passed": true,
+        "receipt_hash": "1d850c14967643fd701589df0cf929431c750dc80bd11cdd354630d9af0ae7dc",
+        "state_hash": "7b039e56f374b5767506c124d187b0a9bcf3e957e622929e3de5cead6d6087c1",
+        "cached": false,
+        "exhausted": false,
+        "verdict": "2 passed, 0 failed"
+      },
+      "is_error": false
+    },
+    {
+      "transport": "mcp-http",
+      "tool": "gate_run",
+      "arguments": {
+        "node_id": "node-5",
+        "fence": 1,
+        "tier": "blast"
+      },
+      "response": {
+        "passed": true,
+        "receipt_hash": "1d850c14967643fd701589df0cf929431c750dc80bd11cdd354630d9af0ae7dc",
+        "state_hash": "7b039e56f374b5767506c124d187b0a9bcf3e957e622929e3de5cead6d6087c1",
+        "cached": true,
+        "exhausted": false,
+        "verdict": "2 passed, 0 failed"
+      },
+      "is_error": false
+    },
+    {
+      "transport": "mcp-http",
+      "tool": "node_update",
+      "arguments": {
+        "node_id": "node-5",
+        "fence": 1,
+        "status": "done",
+        "evidence": "1d850c14967643fd701589df0cf929431c750dc80bd11cdd354630d9af0ae7dc"
+      },
+      "response": {
+        "status": "done"
+      },
+      "is_error": false
+    },
+    {
+      "transport": "human-ipc",
+      "method": "plan/get",
+      "response": {
+        "kind": "result",
+        "jsonrpc": "2.0",
+        "id": 2,
+        "result": {
+          "id": "plan-1",
+          "project_id": "hdag-acceptance",
+          "title": "0.1.3 — отдельная приёмка H-DAG",
+          "goal": "Небольшой H-DAG: 1 L0 + 4 pipeline L1, L2 без вершин. До заморозки подготовить реальный sealed image и записать environment.container/image в профиль L0. Не использовать вымышленный digest. Порог памяти не менять. Выпускной gate продукта и отложенный пункт 4 остаются отдельным условием выпуска.",
+          "status": "active",
+          "nodes": [
+            {
+              "id": "node-2",
+              "key": "ACC-0",
+              "title": "Приёмка H-DAG в отдельном проекте",
+              "status": "pending",
+              "ready": false,
+              "layer": 3,
+              "priority": 0.00017624207835648147,
+              "depends_on": [
+                "node-4",
+                "node-5",
+                "node-6",
+                "node-3"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null,
+              "level": 0,
+              "parent": null,
+              "pipeline": false,
+              "attempt_no": 0,
+              "max_attempts": 4,
+              "last_verdict": null
+            },
+            {
+              "id": "node-3",
+              "key": "ACC-1",
+              "title": "Живой успешный проход L2",
+              "status": "done",
+              "ready": false,
+              "layer": 0,
+              "priority": 0.3001762420783565,
+              "depends_on": [],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null,
+              "level": 1,
+              "parent": "node-2",
+              "pipeline": true,
+              "attempt_no": 1,
+              "max_attempts": 4,
+              "last_verdict": "2 passed, 0 failed"
+            },
+            {
+              "id": "node-4",
+              "key": "ACC-2",
+              "title": "Провалы и решение человека",
+              "status": "cancelled",
+              "ready": false,
+              "layer": 1,
+              "priority": 0.2001762420783565,
+              "depends_on": [
+                "node-3"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null,
+              "level": 1,
+              "parent": "node-2",
+              "pipeline": true,
+              "attempt_no": 4,
+              "max_attempts": 4,
+              "last_verdict": "3 passed, 1 failed\n/opt/aconsole/core/bin/basedpyright: /home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/e9b422b1e208b10f/.aconsole-dev/hdag-live/workspace/src/retr"
+            },
+            {
+              "id": "node-5",
+              "key": "ACC-3",
+              "title": "Недействительные квитанции",
+              "status": "done",
+              "ready": false,
+              "layer": 1,
+              "priority": 0.2001762420783565,
+              "depends_on": [
+                "node-3"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null,
+              "level": 1,
+              "parent": "node-2",
+              "pipeline": true,
+              "attempt_no": 1,
+              "max_attempts": 4,
+              "last_verdict": "2 passed, 0 failed"
+            },
+            {
+              "id": "node-6",
+              "key": "ACC-4",
+              "title": "Ресурсы и закрытие направления",
+              "status": "pending",
+              "ready": false,
+              "layer": 2,
+              "priority": 1.1001762420783565,
+              "depends_on": [
+                "node-5",
+                "node-4"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null,
+              "level": 1,
+              "parent": "node-2",
+              "pipeline": true,
+              "attempt_no": 0,
+              "max_attempts": 4,
+              "last_verdict": null
+            }
+          ],
+          "done": 2,
+          "total": 5,
+          "canvas": null,
+          "updated_at": "2026-11-16T11:57:09.374334Z",
+          "phase": "frozen",
+          "warnings": []
+        }
+      }
+    }
+  ]
+}

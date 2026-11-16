@@ -1,0 +1,5 @@
+{
+  "scope": "before/current migration-worker wiring on top of existing uncommitted bootstrap",
+  "unchanged": true,
+  "diagnostics": []
+}

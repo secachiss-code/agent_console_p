@@ -36,7 +36,7 @@ def _section_compare(first: object, second: object, _data: object = None) -> Gtk
 
 
 class TabSidebar(Gtk.Stack):
-    def __init__(self, tabs: TabsViewModel) -> None:
+    def __init__(self, tabs: TabsViewModel) -> None:  # noqa: PLR0915 -- assemble the sidebar and its row lifecycle
         super().__init__()
         self.tabs: TabsViewModel = tabs
         self.pending_reorder: asyncio.Task[None] | None = None
@@ -60,6 +60,7 @@ class TabSidebar(Gtk.Stack):
         _ = factory.connect("setup", self._row_setup)
         _ = factory.connect("bind", self._row_bind)
         _ = factory.connect("unbind", self._row_unbind)
+        _ = factory.connect("teardown", self._row_teardown)
         self.tab_list: Gtk.ListView = Gtk.ListView(model=self.selection, factory=factory)
         self.tab_list.add_css_class("navigation-sidebar")
         self.tab_list.add_css_class("ac-tabs")
@@ -165,13 +166,13 @@ class TabSidebar(Gtk.Stack):
         row.on_move = self.move_tab
         source = Gtk.DragSource()
         source.set_actions(Gdk.DragAction.MOVE)
-        _ = source.connect("prepare", self._drag_prepare, row)
+        row.connections.connect(source, "prepare", self._drag_prepare, row)
         row.add_controller(source)
         target = Gtk.DropTarget.new(str, Gdk.DragAction.MOVE)
-        _ = target.connect("drop", self._drop, row)
+        row.connections.connect(target, "drop", self._drop, row)
         row.add_controller(target)
         press = Gtk.GestureClick()
-        _ = press.connect("released", self._row_pressed)
+        row.connections.connect(press, "released", self._row_pressed)
         row.add_controller(press)
         item.set_child(row)
 
@@ -180,6 +181,10 @@ class TabSidebar(Gtk.Stack):
             self.on_row_pressed()
 
     def _row_bind(self, _factory: Gtk.SignalListItemFactory, item: Gtk.ListItem) -> None:
+        # Unbind releases callbacks and controllers instead of keeping detached rows
+        # alive in GTK's item pool. Rebinding gets a fresh presentation.
+        if item.get_child() is None:
+            self._row_setup(_factory, item)
         row, model = item.get_child(), item.get_item()
         if isinstance(row, TabRow) and isinstance(model, TabItem):
             row.bind_item(model)
@@ -187,7 +192,8 @@ class TabSidebar(Gtk.Stack):
     def _row_unbind(self, _factory: Gtk.SignalListItemFactory, item: Gtk.ListItem) -> None:
         row = item.get_child()
         if isinstance(row, TabRow):
-            row.unbind_item()
+            row.close()
+        item.set_child(None)
 
     def _header_setup(self, _factory: Gtk.SignalListItemFactory, header: Gtk.ListHeader) -> None:
         label = Gtk.Label(xalign=0)
@@ -264,3 +270,9 @@ class TabSidebar(Gtk.Stack):
             _LOG.warning("Could not finish reordering tabs", exc_info=True)
             if self.on_error is not None:
                 self.on_error(translate("tabs.reorder_error"))
+
+    def _row_teardown(self, _factory: Gtk.SignalListItemFactory, item: Gtk.ListItem) -> None:
+        row = item.get_child()
+        if isinstance(row, TabRow):
+            row.close()
+        item.set_child(None)

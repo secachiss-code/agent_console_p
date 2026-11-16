@@ -1,0 +1,7 @@
+{
+  "case": "new database migrations; transient child only",
+  "peak_worker_rss_mib": 86.875,
+  "samples": 360,
+  "duration_seconds": 1.978945365997788,
+  "returncode": 0
+}

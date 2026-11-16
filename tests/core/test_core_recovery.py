@@ -35,6 +35,7 @@ from tests.core.test_wire import (
     _post_hook,
     _stop,
 )
+from tests.mcp_names import EXECUTOR_TOOLS
 
 
 async def _restored(client: CoreClient, previous: int, tab_id: str) -> None:
@@ -149,7 +150,7 @@ def test_restart_keeps_the_endpoint_and_token_without_relaunching_a_tab(
             }, spec.env)
             await asyncio.to_thread(mcp.start)
             listed = await asyncio.to_thread(mcp.request, "tools/list", {})
-            assert len(listed["tools"]) == 12
+            assert {tool["name"] for tool in listed["tools"]} == EXECUTOR_TOOLS
             again = await client.call("tab/launchSpec", TabIdParams(tab_id=tab.id), TerminalLaunchSpec)
             assert again.env["ACONSOLE_TAB_TOKEN"] != spec.env["ACONSOLE_TAB_TOKEN"]
             header = "Bearer " + spec.env["ACONSOLE_TAB_TOKEN"]

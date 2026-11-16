@@ -12,6 +12,7 @@ from aconsole.core.infrastructure.containers.podman import ContainerError, Podma
 
 _OUTPUT_LIMIT = 1024 * 1024
 _TIMEOUTS = {1: 120, 2: 900, 3: 900}
+_DIRECTION_TIER = 3
 _UNAVAILABLE = "GATE_RUNNER_UNAVAILABLE"
 
 
@@ -57,6 +58,7 @@ class ContainerGateRunner:
             inspected = self._podman.inspect(self._container)
             if not inspected.running:
                 raise GateRunnerUnavailableError(_UNAVAILABLE)
+            sealed = self._podman.gate_environment(inspected.ident, self._worktree) if tier == _DIRECTION_TIER else None
             command = self._podman.pipe_argv(
                 inspected.ident,
                 self._user,
@@ -65,6 +67,10 @@ class ContainerGateRunner:
                     "-i",
                     "PATH=/usr/local/bin:/usr/bin:/bin",
                     "LANG=C.UTF-8",
+                    "PYTHONNOUSERSITE=1",
+                    "PYTHONDONTWRITEBYTECODE=1",
+                    "XDG_CACHE_HOME=/tmp/aconsole-gates/cache",
+                    "RUFF_CACHE_DIR=/tmp/aconsole-gates/ruff",
                     "/usr/bin/timeout",
                     "--signal=TERM",
                     "--kill-after=5s",
@@ -91,6 +97,8 @@ class ContainerGateRunner:
                 )
                 log_path = Path(log.name)
             duration = int((time.monotonic() - started) * 1000)
+            if sealed is not None and sealed != self._podman.gate_environment(inspected.ident, self._worktree):
+                raise GateRunnerUnavailableError(_UNAVAILABLE)
             if completed.returncode in {125, 126, 127}:
                 raise GateRunnerUnavailableError(_UNAVAILABLE)
             with log_path.open("rb") as output:

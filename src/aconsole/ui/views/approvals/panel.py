@@ -23,6 +23,7 @@ from aconsole.contracts.app import ApprovalView, CommandDetail, EditDetail  # no
 from aconsole.contracts.common import ApprovalDecision, ApprovalId, ApprovalScope, RiskTag, TabId  # noqa: E402
 from aconsole.ui.bootstrap import spawn_task  # noqa: E402
 from aconsole.ui.client.core_client import CoreCallError  # noqa: E402
+from aconsole.ui.signals import SignalConnections  # noqa: E402
 from aconsole.ui.style import SPACE  # noqa: E402
 from aconsole.ui.viewmodels.approvals_vm import CLOSED_CODES, ApprovalsViewModel, is_risky, safe_text, time_left  # noqa: E402
 from aconsole.ui.viewmodels.logic.quota_fmt import agent_name  # noqa: E402
@@ -144,6 +145,7 @@ class ApprovalCard(Gtk.Box):
         super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=SPACE["sm"])
         self.add_css_class("ac-attention-card")
         self.add_css_class("ac-approval-body")
+        self._signals: SignalConnections = SignalConnections()
         self.view: ApprovalView = view
         self.busy: bool = False
         self._panel: ApprovalPanel = panel
@@ -205,6 +207,10 @@ class ApprovalCard(Gtk.Box):
         if self._allow_timer is not None:
             _ = GLib.source_remove(self._allow_timer)
             self._allow_timer = None
+
+    def close(self) -> None:
+        self.stop()
+        self._signals.close()
 
     def _heading(self, tab_title: str) -> Gtk.Box:
         heading = Gtk.Box(spacing=SPACE["lg"])
@@ -298,15 +304,15 @@ class ApprovalCard(Gtk.Box):
             label=translate("approvals.release"), tooltip_text=translate("approvals.release_tip"),
         )
         self.release_button.add_css_class("flat")
-        _ = self.release_button.connect("clicked", self._release)
+        self._signals.connect(self.release_button, "clicked", self._release)
         self.deny_button: Gtk.Button = Gtk.Button(label=translate("approvals.deny"))
         self.deny_button.add_css_class("destructive-action")
-        _ = self.deny_button.connect("clicked", self._deny)
+        self._signals.connect(self.deny_button, "clicked", self._deny)
         self.allow_button: Gtk.Button = Gtk.Button(label=translate("approvals.allow"))
         # Never the default on a risky request: nothing should invite pressing it without reading.
         if not is_risky(self.view):
             self.allow_button.add_css_class("suggested-action")
-        _ = self.allow_button.connect("clicked", self._allow)
+        self._signals.connect(self.allow_button, "clicked", self._allow)
         for button in (self.release_button, self.deny_button, self.allow_button):
             row.append(button)
         return row
@@ -384,7 +390,7 @@ class ApprovalPanel(Gtk.Box):
         focused_card = None if focused is None else self.cards[focused]
         shown_at = 0 if self.shown not in self.cards or self.shown is None else self.cards.index(self.shown)
         for card in [card for card in self.cards if card.view.id not in wanted_ids]:
-            card.stop()
+            card.close()
             self.stack.remove(card)
             self.cards.remove(card)
         known = {card.view.id for card in self.cards}

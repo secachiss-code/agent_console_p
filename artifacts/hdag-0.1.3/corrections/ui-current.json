@@ -1,0 +1,1580 @@
+{
+  "component": "ui",
+  "revision": "8ba2a1d22c40b3d38f7180e8dbff8d6d9714650e",
+  "source_sha256": "986516157648db268fc8f93183e7dcce43b3d0b60e99b5f073761d7d8ff36be2",
+  "complete": true,
+  "python": "3.15.1 (main, Oct 21 2026, 17:48:50) [Clang 23.1.3 ]",
+  "renderer": "default",
+  "scenario": "isolated component baseline; inactive/demo tabs, no live agents",
+  "samples": [
+    {
+      "phase": "cycle-1-tabs-0",
+      "tabs": 0,
+      "time": 22335.125996713,
+      "process": {
+        "pid": 138133,
+        "start_ticks": 2233277,
+        "boot_id": "aa745c0a-0aea-4ccc-8614-3e074397a214"
+      },
+      "rss_mib": 188.703125,
+      "pss_mib": 93.7646484375,
+      "private_mib": 79.98046875,
+      "tracked_objects": 39514,
+      "top_object_types": [
+        [
+          "builtins.function",
+          8444
+        ],
+        [
+          "builtins.dict",
+          6646
+        ],
+        [
+          "builtins.tuple",
+          5228
+        ],
+        [
+          "weakref.ReferenceType",
+          2153
+        ],
+        [
+          "builtins.builtin_function_or_method",
+          1750
+        ],
+        [
+          "builtins.method_descriptor",
+          1653
+        ],
+        [
+          "builtins.member_descriptor",
+          1590
+        ],
+        [
+          "builtins.wrapper_descriptor",
+          1582
+        ],
+        [
+          "builtins.cell",
+          1265
+        ],
+        [
+          "builtins.list",
+          1088
+        ],
+        [
+          "builtins.type",
+          860
+        ],
+        [
+          "builtins.property",
+          508
+        ],
+        [
+          "_frozen_importlib.ModuleSpec",
+          406
+        ],
+        [
+          "builtins.getset_descriptor",
+          402
+        ],
+        [
+          "builtins.classmethod",
+          397
+        ]
+      ],
+      "retained_terminal_pages": 0,
+      "aconsole_objects": {
+        "aconsole.core.infrastructure.process_metrics.ProcessIdentity": 1,
+        "aconsole.contracts.common.ApprovalScope": 2,
+        "aconsole.contracts.common.AgentKind": 5,
+        "aconsole.contracts.common.ApprovalDecision": 2,
+        "aconsole.contracts.common.NodeStatus": 7,
+        "aconsole.contracts.common.PaletteKind": 8,
+        "aconsole.contracts.common.QuotaLevel": 4,
+        "aconsole.contracts.common.RiskTag": 6,
+        "aconsole.contracts.common.TabStatus": 8,
+        "aconsole.contracts.common.WorkspaceMode": 3,
+        "aconsole.contracts.common.EdgeKind": 3,
+        "aconsole.contracts.common.ClientRole": 3,
+        "aconsole.ui.views.sidebar.quota_row.WindowLine": 4,
+        "aconsole.ui.viewmodels.logic.keymap.BindingSpec": 70,
+        "aconsole.ui.client.core_client.CoreClient": 1,
+        "aconsole.ui.client.store.CoreStore": 1,
+        "aconsole.ui.views.window.MainWindow": 1,
+        "aconsole.ui.viewmodels.app_vm.AppViewModel": 1,
+        "aconsole.ui.viewmodels.setup_vm.PreferencesViewModel": 1,
+        "aconsole.ui.views.shortcuts.ShortcutManager": 1,
+        "aconsole.ui.views.tabs.sidebar.TabSidebar": 1,
+        "aconsole.ui.viewmodels.sidebar_vm.SidebarSummaryViewModel": 1,
+        "aconsole.ui.views.tabs.project_bar.ProjectBar": 1,
+        "aconsole.ui.views.sidebar.plan_card.PlanCard": 1,
+        "aconsole.ui.views.sidebar.quota_card.QuotaCard": 1,
+        "aconsole.ui.views.sidebar.git_card.GitCard": 1,
+        "aconsole.ui.views.sidebar.section.SummarySection": 3,
+        "aconsole.contracts.app.AccountView": 2,
+        "aconsole.contracts.app.ApprovalView": 2,
+        "aconsole.contracts.app.PlanView": 1,
+        "aconsole.ui.client.ui_state.UiState": 1,
+        "aconsole.contracts.app.EditDetail": 1,
+        "aconsole.contracts.app.QuotaWindowView": 4,
+        "aconsole.contracts.app.PlanNodeView": 8,
+        "aconsole.ui.viewmodels.approvals_vm.ApprovalsViewModel": 1,
+        "aconsole.contracts.app.AppSnapshot": 2,
+        "aconsole.ui.viewmodels.tabs_vm.TabsViewModel": 1,
+        "aconsole.contracts.settings.Settings": 1,
+        "aconsole.ui.views.approvals.panel.ApprovalPanel": 1,
+        "aconsole.ui.viewmodels.approval_alerts.ApprovalAlerts": 1,
+        "aconsole.ui.views.sidebar.quota_row.AccountLine": 2,
+        "aconsole.ui.viewmodels.git_vm.GitSummary": 1,
+        "aconsole.ui.viewmodels.tabs_vm.TabListStore": 1,
+        "aconsole.contracts.app.ProjectView": 2,
+        "aconsole.contracts.app.AgentInfo": 2,
+        "aconsole.ui.viewmodels.approval_alerts._Episode": 1,
+        "aconsole.contracts.app.TabView": 5
+      }
+    },
+    {
+      "phase": "cycle-1-tabs-1",
+      "tabs": 1,
+      "time": 22336.432482195,
+      "process": {
+        "pid": 138133,
+        "start_ticks": 2233277,
+        "boot_id": "aa745c0a-0aea-4ccc-8614-3e074397a214"
+      },
+      "rss_mib": 192.53125,
+      "pss_mib": 95.421875,
+      "private_mib": 81.0703125,
+      "tracked_objects": 39949,
+      "top_object_types": [
+        [
+          "builtins.function",
+          8449
+        ],
+        [
+          "builtins.dict",
+          6782
+        ],
+        [
+          "builtins.tuple",
+          5289
+        ],
+        [
+          "weakref.ReferenceType",
+          2172
+        ],
+        [
+          "builtins.builtin_function_or_method",
+          1771
+        ],
+        [
+          "builtins.method_descriptor",
+          1653
+        ],
+        [
+          "builtins.member_descriptor",
+          1590
+        ],
+        [
+          "builtins.wrapper_descriptor",
+          1582
+        ],
+        [
+          "builtins.cell",
+          1268
+        ],
+        [
+          "builtins.list",
+          1097
+        ],
+        [
+          "builtins.type",
+          862
+        ],
+        [
+          "builtins.property",
+          516
+        ],
+        [
+          "_frozen_importlib.ModuleSpec",
+          406
+        ],
+        [
+          "builtins.getset_descriptor",
+          402
+        ],
+        [
+          "builtins.classmethod",
+          399
+        ]
+      ],
+      "retained_terminal_pages": 1,
+      "aconsole_objects": {
+        "aconsole.core.infrastructure.process_metrics.ProcessIdentity": 1,
+        "aconsole.contracts.common.ApprovalScope": 2,
+        "aconsole.contracts.common.AgentKind": 5,
+        "aconsole.contracts.common.ApprovalDecision": 2,
+        "aconsole.contracts.common.NodeStatus": 7,
+        "aconsole.contracts.common.PaletteKind": 8,
+        "aconsole.contracts.common.QuotaLevel": 4,
+        "aconsole.contracts.common.RiskTag": 6,
+        "aconsole.contracts.common.TabStatus": 8,
+        "aconsole.contracts.common.WorkspaceMode": 3,
+        "aconsole.contracts.common.EdgeKind": 3,
+        "aconsole.contracts.common.ClientRole": 3,
+        "aconsole.ui.views.sidebar.quota_row.WindowLine": 4,
+        "aconsole.ui.viewmodels.logic.keymap.BindingSpec": 70,
+        "aconsole.ui.client.core_client.CoreClient": 1,
+        "aconsole.ui.client.store.CoreStore": 1,
+        "aconsole.ui.views.window.MainWindow": 1,
+        "aconsole.ui.viewmodels.app_vm.AppViewModel": 1,
+        "aconsole.ui.viewmodels.setup_vm.PreferencesViewModel": 1,
+        "aconsole.ui.views.shortcuts.ShortcutManager": 1,
+        "aconsole.ui.views.tabs.sidebar.TabSidebar": 1,
+        "aconsole.ui.viewmodels.sidebar_vm.SidebarSummaryViewModel": 1,
+        "aconsole.ui.views.tabs.project_bar.ProjectBar": 1,
+        "aconsole.ui.views.sidebar.plan_card.PlanCard": 1,
+        "aconsole.ui.views.sidebar.quota_card.QuotaCard": 1,
+        "aconsole.ui.views.sidebar.git_card.GitCard": 1,
+        "aconsole.ui.views.sidebar.section.SummarySection": 3,
+        "aconsole.contracts.app.AccountView": 2,
+        "aconsole.contracts.app.ApprovalView": 2,
+        "aconsole.contracts.app.PlanView": 1,
+        "aconsole.ui.client.ui_state.UiState": 1,
+        "aconsole.contracts.app.EditDetail": 1,
+        "aconsole.contracts.app.QuotaWindowView": 4,
+        "aconsole.contracts.app.PlanNodeView": 8,
+        "aconsole.ui.viewmodels.approvals_vm.ApprovalsViewModel": 1,
+        "aconsole.ui.viewmodels.tabs_vm.TabsViewModel": 1,
+        "aconsole.ui.views.approvals.panel.ApprovalPanel": 1,
+        "aconsole.ui.viewmodels.approval_alerts.ApprovalAlerts": 1,
+        "aconsole.ui.views.sidebar.quota_row.AccountLine": 2,
+        "aconsole.contracts.app.AppSnapshot": 2,
+        "aconsole.ui.viewmodels.tabs_vm.TabListStore": 1,
+        "aconsole.contracts.app.ProjectView": 2,
+        "aconsole.contracts.app.AgentInfo": 2,
+        "aconsole.ui.viewmodels.approval_alerts._Episode": 1,
+        "aconsole.contracts.app.TabView": 5,
+        "aconsole.ui.signals.SignalConnections": 5,
+        "aconsole.ui.views.terminal.page.TerminalPage": 1,
+        "aconsole.ui.viewmodels.terminal_vm.TerminalViewModel": 1,
+        "aconsole.ui.views.terminal.palette.TerminalPaletteBinding": 1,
+        "aconsole.ui.views.terminal.session.TerminalSession": 1,
+        "aconsole.ui.views.terminal.search.TerminalSearchBar": 1,
+        "aconsole.ui.views.terminal.clipboard.TerminalClipboard": 1,
+        "aconsole.ui.views.approvals.panel.ApprovalCard": 2,
+        "aconsole.ui.viewmodels.git_vm.GitSummary": 1,
+        "aconsole.contracts.settings.Settings": 1,
+        "aconsole.ui.viewmodels.tabs_vm.TabItem": 1,
+        "aconsole.ui.views.tabs.row.TabRow": 1
+      }
+    },
+    {
+      "phase": "cycle-1-tabs-5",
+      "tabs": 5,
+      "time": 22337.8421633,
+      "process": {
+        "pid": 138133,
+        "start_ticks": 2233277,
+        "boot_id": "aa745c0a-0aea-4ccc-8614-3e074397a214"
+      },
+      "rss_mib": 195.61328125,
+      "pss_mib": 98.337890625,
+      "private_mib": 84.05078125,
+      "tracked_objects": 40838,
+      "top_object_types": [
+        [
+          "builtins.function",
+          8469
+        ],
+        [
+          "builtins.dict",
+          7015
+        ],
+        [
+          "builtins.tuple",
+          5470
+        ],
+        [
+          "weakref.ReferenceType",
+          2176
+        ],
+        [
+          "builtins.builtin_function_or_method",
+          1771
+        ],
+        [
+          "builtins.method_descriptor",
+          1653
+        ],
+        [
+          "builtins.member_descriptor",
+          1590
+        ],
+        [
+          "builtins.wrapper_descriptor",
+          1582
+        ],
+        [
+          "builtins.cell",
+          1280
+        ],
+        [
+          "builtins.list",
+          1108
+        ],
+        [
+          "builtins.type",
+          862
+        ],
+        [
+          "builtins.property",
+          516
+        ],
+        [
+          "_frozen_importlib.ModuleSpec",
+          406
+        ],
+        [
+          "builtins.getset_descriptor",
+          402
+        ],
+        [
+          "builtins.classmethod",
+          399
+        ]
+      ],
+      "retained_terminal_pages": 5,
+      "aconsole_objects": {
+        "aconsole.core.infrastructure.process_metrics.ProcessIdentity": 1,
+        "aconsole.contracts.common.ApprovalScope": 2,
+        "aconsole.contracts.common.AgentKind": 5,
+        "aconsole.contracts.common.ApprovalDecision": 2,
+        "aconsole.contracts.common.NodeStatus": 7,
+        "aconsole.contracts.common.PaletteKind": 8,
+        "aconsole.contracts.common.QuotaLevel": 4,
+        "aconsole.contracts.common.RiskTag": 6,
+        "aconsole.contracts.common.TabStatus": 8,
+        "aconsole.contracts.common.WorkspaceMode": 3,
+        "aconsole.contracts.common.EdgeKind": 3,
+        "aconsole.contracts.common.ClientRole": 3,
+        "aconsole.ui.views.sidebar.quota_row.WindowLine": 4,
+        "aconsole.ui.viewmodels.logic.keymap.BindingSpec": 70,
+        "aconsole.ui.client.core_client.CoreClient": 1,
+        "aconsole.ui.client.store.CoreStore": 1,
+        "aconsole.ui.views.window.MainWindow": 1,
+        "aconsole.ui.viewmodels.app_vm.AppViewModel": 1,
+        "aconsole.ui.viewmodels.setup_vm.PreferencesViewModel": 1,
+        "aconsole.ui.views.shortcuts.ShortcutManager": 1,
+        "aconsole.ui.views.tabs.sidebar.TabSidebar": 1,
+        "aconsole.ui.viewmodels.sidebar_vm.SidebarSummaryViewModel": 1,
+        "aconsole.ui.views.tabs.project_bar.ProjectBar": 1,
+        "aconsole.ui.views.sidebar.plan_card.PlanCard": 1,
+        "aconsole.ui.views.sidebar.quota_card.QuotaCard": 1,
+        "aconsole.ui.views.sidebar.git_card.GitCard": 1,
+        "aconsole.ui.views.sidebar.section.SummarySection": 3,
+        "aconsole.contracts.app.AccountView": 2,
+        "aconsole.contracts.app.ApprovalView": 2,
+        "aconsole.contracts.app.PlanView": 1,
+        "aconsole.ui.client.ui_state.UiState": 1,
+        "aconsole.contracts.app.EditDetail": 1,
+        "aconsole.contracts.app.QuotaWindowView": 4,
+        "aconsole.contracts.app.PlanNodeView": 8,
+        "aconsole.ui.viewmodels.approvals_vm.ApprovalsViewModel": 1,
+        "aconsole.ui.viewmodels.tabs_vm.TabsViewModel": 1,
+        "aconsole.ui.views.approvals.panel.ApprovalPanel": 1,
+        "aconsole.ui.viewmodels.approval_alerts.ApprovalAlerts": 1,
+        "aconsole.ui.views.sidebar.quota_row.AccountLine": 2,
+        "aconsole.contracts.app.AppSnapshot": 2,
+        "aconsole.ui.viewmodels.tabs_vm.TabListStore": 1,
+        "aconsole.contracts.app.ProjectView": 2,
+        "aconsole.contracts.app.AgentInfo": 2,
+        "aconsole.ui.viewmodels.approval_alerts._Episode": 1,
+        "aconsole.contracts.app.TabView": 5,
+        "aconsole.ui.views.terminal.page.TerminalPage": 5,
+        "aconsole.ui.signals.SignalConnections": 15,
+        "aconsole.ui.viewmodels.terminal_vm.TerminalViewModel": 5,
+        "aconsole.ui.views.terminal.palette.TerminalPaletteBinding": 5,
+        "aconsole.ui.views.terminal.session.TerminalSession": 5,
+        "aconsole.ui.views.terminal.search.TerminalSearchBar": 5,
+        "aconsole.ui.views.terminal.clipboard.TerminalClipboard": 5,
+        "aconsole.ui.viewmodels.git_vm.GitSummary": 1,
+        "aconsole.contracts.settings.Settings": 1,
+        "aconsole.ui.viewmodels.tabs_vm.TabItem": 5,
+        "aconsole.ui.views.tabs.row.TabRow": 5
+      }
+    },
+    {
+      "phase": "cycle-1-tabs-0",
+      "tabs": 0,
+      "time": 22338.926193851,
+      "process": {
+        "pid": 138133,
+        "start_ticks": 2233277,
+        "boot_id": "aa745c0a-0aea-4ccc-8614-3e074397a214"
+      },
+      "rss_mib": 196.109375,
+      "pss_mib": 98.78515625,
+      "private_mib": 84.5,
+      "tracked_objects": 39645,
+      "top_object_types": [
+        [
+          "builtins.function",
+          8444
+        ],
+        [
+          "builtins.dict",
+          6687
+        ],
+        [
+          "builtins.tuple",
+          5235
+        ],
+        [
+          "weakref.ReferenceType",
+          2171
+        ],
+        [
+          "builtins.builtin_function_or_method",
+          1771
+        ],
+        [
+          "builtins.method_descriptor",
+          1653
+        ],
+        [
+          "builtins.member_descriptor",
+          1590
+        ],
+        [
+          "builtins.wrapper_descriptor",
+          1582
+        ],
+        [
+          "builtins.cell",
+          1265
+        ],
+        [
+          "builtins.list",
+          1094
+        ],
+        [
+          "builtins.type",
+          862
+        ],
+        [
+          "builtins.property",
+          516
+        ],
+        [
+          "_frozen_importlib.ModuleSpec",
+          406
+        ],
+        [
+          "builtins.getset_descriptor",
+          402
+        ],
+        [
+          "builtins.classmethod",
+          399
+        ]
+      ],
+      "retained_terminal_pages": 0,
+      "aconsole_objects": {
+        "aconsole.core.infrastructure.process_metrics.ProcessIdentity": 1,
+        "aconsole.contracts.common.ApprovalScope": 2,
+        "aconsole.contracts.common.AgentKind": 5,
+        "aconsole.contracts.common.ApprovalDecision": 2,
+        "aconsole.contracts.common.NodeStatus": 7,
+        "aconsole.contracts.common.PaletteKind": 8,
+        "aconsole.contracts.common.QuotaLevel": 4,
+        "aconsole.contracts.common.RiskTag": 6,
+        "aconsole.contracts.common.TabStatus": 8,
+        "aconsole.contracts.common.WorkspaceMode": 3,
+        "aconsole.contracts.common.EdgeKind": 3,
+        "aconsole.contracts.common.ClientRole": 3,
+        "aconsole.ui.views.sidebar.quota_row.WindowLine": 4,
+        "aconsole.ui.viewmodels.logic.keymap.BindingSpec": 70,
+        "aconsole.ui.client.core_client.CoreClient": 1,
+        "aconsole.ui.client.store.CoreStore": 1,
+        "aconsole.ui.views.window.MainWindow": 1,
+        "aconsole.ui.viewmodels.app_vm.AppViewModel": 1,
+        "aconsole.ui.viewmodels.setup_vm.PreferencesViewModel": 1,
+        "aconsole.ui.views.shortcuts.ShortcutManager": 1,
+        "aconsole.ui.views.tabs.sidebar.TabSidebar": 1,
+        "aconsole.ui.viewmodels.sidebar_vm.SidebarSummaryViewModel": 1,
+        "aconsole.ui.views.tabs.project_bar.ProjectBar": 1,
+        "aconsole.ui.views.sidebar.plan_card.PlanCard": 1,
+        "aconsole.ui.views.sidebar.quota_card.QuotaCard": 1,
+        "aconsole.ui.views.sidebar.git_card.GitCard": 1,
+        "aconsole.ui.views.sidebar.section.SummarySection": 3,
+        "aconsole.contracts.app.AccountView": 2,
+        "aconsole.contracts.app.ApprovalView": 2,
+        "aconsole.contracts.app.PlanView": 1,
+        "aconsole.ui.client.ui_state.UiState": 1,
+        "aconsole.contracts.app.EditDetail": 1,
+        "aconsole.contracts.app.QuotaWindowView": 4,
+        "aconsole.contracts.app.PlanNodeView": 8,
+        "aconsole.ui.viewmodels.approvals_vm.ApprovalsViewModel": 1,
+        "aconsole.ui.viewmodels.tabs_vm.TabsViewModel": 1,
+        "aconsole.ui.views.approvals.panel.ApprovalPanel": 1,
+        "aconsole.ui.viewmodels.approval_alerts.ApprovalAlerts": 1,
+        "aconsole.ui.views.sidebar.quota_row.AccountLine": 2,
+        "aconsole.contracts.app.AppSnapshot": 2,
+        "aconsole.ui.viewmodels.tabs_vm.TabListStore": 1,
+        "aconsole.contracts.app.ProjectView": 2,
+        "aconsole.contracts.app.AgentInfo": 2,
+        "aconsole.ui.viewmodels.approval_alerts._Episode": 1,
+        "aconsole.contracts.app.TabView": 5,
+        "aconsole.ui.viewmodels.git_vm.GitSummary": 1,
+        "aconsole.contracts.settings.Settings": 1
+      }
+    },
+    {
+      "phase": "cycle-2-tabs-0",
+      "tabs": 0,
+      "time": 22339.990964534,
+      "process": {
+        "pid": 138133,
+        "start_ticks": 2233277,
+        "boot_id": "aa745c0a-0aea-4ccc-8614-3e074397a214"
+      },
+      "rss_mib": 196.15234375,
+      "pss_mib": 98.8134765625,
+      "private_mib": 84.54296875,
+      "tracked_objects": 39649,
+      "top_object_types": [
+        [
+          "builtins.function",
+          8444
+        ],
+        [
+          "builtins.dict",
+          6690
+        ],
+        [
+          "builtins.tuple",
+          5235
+        ],
+        [
+          "weakref.ReferenceType",
+          2171
+        ],
+        [
+          "builtins.builtin_function_or_method",
+          1771
+        ],
+        [
+          "builtins.method_descriptor",
+          1653
+        ],
+        [
+          "builtins.member_descriptor",
+          1590
+        ],
+        [
+          "builtins.wrapper_descriptor",
+          1582
+        ],
+        [
+          "builtins.cell",
+          1265
+        ],
+        [
+          "builtins.list",
+          1095
+        ],
+        [
+          "builtins.type",
+          862
+        ],
+        [
+          "builtins.property",
+          516
+        ],
+        [
+          "_frozen_importlib.ModuleSpec",
+          406
+        ],
+        [
+          "builtins.getset_descriptor",
+          402
+        ],
+        [
+          "builtins.classmethod",
+          399
+        ]
+      ],
+      "retained_terminal_pages": 0,
+      "aconsole_objects": {
+        "aconsole.core.infrastructure.process_metrics.ProcessIdentity": 1,
+        "aconsole.contracts.common.ApprovalScope": 2,
+        "aconsole.contracts.common.AgentKind": 5,
+        "aconsole.contracts.common.ApprovalDecision": 2,
+        "aconsole.contracts.common.NodeStatus": 7,
+        "aconsole.contracts.common.PaletteKind": 8,
+        "aconsole.contracts.common.QuotaLevel": 4,
+        "aconsole.contracts.common.RiskTag": 6,
+        "aconsole.contracts.common.TabStatus": 8,
+        "aconsole.contracts.common.WorkspaceMode": 3,
+        "aconsole.contracts.common.EdgeKind": 3,
+        "aconsole.contracts.common.ClientRole": 3,
+        "aconsole.ui.views.sidebar.quota_row.WindowLine": 4,
+        "aconsole.ui.viewmodels.logic.keymap.BindingSpec": 70,
+        "aconsole.ui.client.core_client.CoreClient": 1,
+        "aconsole.ui.client.store.CoreStore": 1,
+        "aconsole.ui.views.window.MainWindow": 1,
+        "aconsole.ui.viewmodels.app_vm.AppViewModel": 1,
+        "aconsole.ui.viewmodels.setup_vm.PreferencesViewModel": 1,
+        "aconsole.ui.views.shortcuts.ShortcutManager": 1,
+        "aconsole.ui.views.tabs.sidebar.TabSidebar": 1,
+        "aconsole.ui.viewmodels.sidebar_vm.SidebarSummaryViewModel": 1,
+        "aconsole.ui.views.tabs.project_bar.ProjectBar": 1,
+        "aconsole.ui.views.sidebar.plan_card.PlanCard": 1,
+        "aconsole.ui.views.sidebar.quota_card.QuotaCard": 1,
+        "aconsole.ui.views.sidebar.git_card.GitCard": 1,
+        "aconsole.ui.views.sidebar.section.SummarySection": 3,
+        "aconsole.contracts.app.AccountView": 2,
+        "aconsole.contracts.app.ApprovalView": 2,
+        "aconsole.contracts.app.PlanView": 1,
+        "aconsole.ui.client.ui_state.UiState": 1,
+        "aconsole.contracts.app.EditDetail": 1,
+        "aconsole.contracts.app.QuotaWindowView": 4,
+        "aconsole.contracts.app.PlanNodeView": 8,
+        "aconsole.ui.viewmodels.approvals_vm.ApprovalsViewModel": 1,
+        "aconsole.ui.viewmodels.tabs_vm.TabsViewModel": 1,
+        "aconsole.ui.views.approvals.panel.ApprovalPanel": 1,
+        "aconsole.ui.viewmodels.approval_alerts.ApprovalAlerts": 1,
+        "aconsole.ui.views.sidebar.quota_row.AccountLine": 2,
+        "aconsole.contracts.app.AppSnapshot": 2,
+        "aconsole.ui.viewmodels.tabs_vm.TabListStore": 1,
+        "aconsole.contracts.app.ProjectView": 2,
+        "aconsole.contracts.app.AgentInfo": 2,
+        "aconsole.ui.viewmodels.approval_alerts._Episode": 1,
+        "aconsole.contracts.app.TabView": 5,
+        "aconsole.ui.viewmodels.git_vm.GitSummary": 1,
+        "aconsole.contracts.settings.Settings": 1
+      }
+    },
+    {
+      "phase": "cycle-2-tabs-1",
+      "tabs": 1,
+      "time": 22341.076123367,
+      "process": {
+        "pid": 138133,
+        "start_ticks": 2233277,
+        "boot_id": "aa745c0a-0aea-4ccc-8614-3e074397a214"
+      },
+      "rss_mib": 196.16015625,
+      "pss_mib": 98.8408203125,
+      "private_mib": 84.58984375,
+      "tracked_objects": 39965,
+      "top_object_types": [
+        [
+          "builtins.function",
+          8449
+        ],
+        [
+          "builtins.dict",
+          6794
+        ],
+        [
+          "builtins.tuple",
+          5289
+        ],
+        [
+          "weakref.ReferenceType",
+          2172
+        ],
+        [
+          "builtins.builtin_function_or_method",
+          1771
+        ],
+        [
+          "builtins.method_descriptor",
+          1653
+        ],
+        [
+          "builtins.member_descriptor",
+          1590
+        ],
+        [
+          "builtins.wrapper_descriptor",
+          1582
+        ],
+        [
+          "builtins.cell",
+          1268
+        ],
+        [
+          "builtins.list",
+          1101
+        ],
+        [
+          "builtins.type",
+          862
+        ],
+        [
+          "builtins.property",
+          516
+        ],
+        [
+          "_frozen_importlib.ModuleSpec",
+          406
+        ],
+        [
+          "builtins.getset_descriptor",
+          402
+        ],
+        [
+          "builtins.classmethod",
+          399
+        ]
+      ],
+      "retained_terminal_pages": 1,
+      "aconsole_objects": {
+        "aconsole.core.infrastructure.process_metrics.ProcessIdentity": 1,
+        "aconsole.contracts.common.ApprovalScope": 2,
+        "aconsole.contracts.common.AgentKind": 5,
+        "aconsole.contracts.common.ApprovalDecision": 2,
+        "aconsole.contracts.common.NodeStatus": 7,
+        "aconsole.contracts.common.PaletteKind": 8,
+        "aconsole.contracts.common.QuotaLevel": 4,
+        "aconsole.contracts.common.RiskTag": 6,
+        "aconsole.contracts.common.TabStatus": 8,
+        "aconsole.contracts.common.WorkspaceMode": 3,
+        "aconsole.contracts.common.EdgeKind": 3,
+        "aconsole.contracts.common.ClientRole": 3,
+        "aconsole.ui.views.sidebar.quota_row.WindowLine": 4,
+        "aconsole.ui.viewmodels.logic.keymap.BindingSpec": 70,
+        "aconsole.ui.client.core_client.CoreClient": 1,
+        "aconsole.ui.client.store.CoreStore": 1,
+        "aconsole.ui.views.window.MainWindow": 1,
+        "aconsole.ui.viewmodels.app_vm.AppViewModel": 1,
+        "aconsole.ui.viewmodels.setup_vm.PreferencesViewModel": 1,
+        "aconsole.ui.views.shortcuts.ShortcutManager": 1,
+        "aconsole.ui.views.tabs.sidebar.TabSidebar": 1,
+        "aconsole.ui.viewmodels.sidebar_vm.SidebarSummaryViewModel": 1,
+        "aconsole.ui.views.tabs.project_bar.ProjectBar": 1,
+        "aconsole.ui.views.sidebar.plan_card.PlanCard": 1,
+        "aconsole.ui.views.sidebar.quota_card.QuotaCard": 1,
+        "aconsole.ui.views.sidebar.git_card.GitCard": 1,
+        "aconsole.ui.views.sidebar.section.SummarySection": 3,
+        "aconsole.contracts.app.AccountView": 2,
+        "aconsole.contracts.app.ApprovalView": 2,
+        "aconsole.contracts.app.PlanView": 1,
+        "aconsole.ui.client.ui_state.UiState": 1,
+        "aconsole.contracts.app.EditDetail": 1,
+        "aconsole.contracts.app.QuotaWindowView": 4,
+        "aconsole.contracts.app.PlanNodeView": 8,
+        "aconsole.ui.viewmodels.approvals_vm.ApprovalsViewModel": 1,
+        "aconsole.ui.viewmodels.tabs_vm.TabsViewModel": 1,
+        "aconsole.ui.views.approvals.panel.ApprovalPanel": 1,
+        "aconsole.ui.viewmodels.approval_alerts.ApprovalAlerts": 1,
+        "aconsole.ui.views.sidebar.quota_row.AccountLine": 2,
+        "aconsole.contracts.app.AppSnapshot": 2,
+        "aconsole.ui.viewmodels.tabs_vm.TabListStore": 1,
+        "aconsole.contracts.app.ProjectView": 2,
+        "aconsole.contracts.app.AgentInfo": 2,
+        "aconsole.ui.viewmodels.approval_alerts._Episode": 1,
+        "aconsole.contracts.app.TabView": 5,
+        "aconsole.ui.viewmodels.git_vm.GitSummary": 1,
+        "aconsole.ui.signals.SignalConnections": 5,
+        "aconsole.ui.views.terminal.page.TerminalPage": 1,
+        "aconsole.ui.viewmodels.terminal_vm.TerminalViewModel": 1,
+        "aconsole.ui.views.terminal.palette.TerminalPaletteBinding": 1,
+        "aconsole.ui.views.terminal.session.TerminalSession": 1,
+        "aconsole.ui.views.terminal.search.TerminalSearchBar": 1,
+        "aconsole.ui.views.terminal.clipboard.TerminalClipboard": 1,
+        "aconsole.ui.views.approvals.panel.ApprovalCard": 2,
+        "aconsole.contracts.settings.Settings": 1,
+        "aconsole.ui.viewmodels.tabs_vm.TabItem": 1,
+        "aconsole.ui.views.tabs.row.TabRow": 1
+      }
+    },
+    {
+      "phase": "cycle-2-tabs-5",
+      "tabs": 5,
+      "time": 22342.455655213,
+      "process": {
+        "pid": 138133,
+        "start_ticks": 2233277,
+        "boot_id": "aa745c0a-0aea-4ccc-8614-3e074397a214"
+      },
+      "rss_mib": 198.421875,
+      "pss_mib": 101.099609375,
+      "private_mib": 86.8515625,
+      "tracked_objects": 40854,
+      "top_object_types": [
+        [
+          "builtins.function",
+          8469
+        ],
+        [
+          "builtins.dict",
+          7027
+        ],
+        [
+          "builtins.tuple",
+          5470
+        ],
+        [
+          "weakref.ReferenceType",
+          2176
+        ],
+        [
+          "builtins.builtin_function_or_method",
+          1771
+        ],
+        [
+          "builtins.method_descriptor",
+          1653
+        ],
+        [
+          "builtins.member_descriptor",
+          1590
+        ],
+        [
+          "builtins.wrapper_descriptor",
+          1582
+        ],
+        [
+          "builtins.cell",
+          1280
+        ],
+        [
+          "builtins.list",
+          1112
+        ],
+        [
+          "builtins.type",
+          862
+        ],
+        [
+          "builtins.property",
+          516
+        ],
+        [
+          "_frozen_importlib.ModuleSpec",
+          406
+        ],
+        [
+          "builtins.getset_descriptor",
+          402
+        ],
+        [
+          "builtins.classmethod",
+          399
+        ]
+      ],
+      "retained_terminal_pages": 5,
+      "aconsole_objects": {
+        "aconsole.core.infrastructure.process_metrics.ProcessIdentity": 1,
+        "aconsole.contracts.common.ApprovalScope": 2,
+        "aconsole.contracts.common.AgentKind": 5,
+        "aconsole.contracts.common.ApprovalDecision": 2,
+        "aconsole.contracts.common.NodeStatus": 7,
+        "aconsole.contracts.common.PaletteKind": 8,
+        "aconsole.contracts.common.QuotaLevel": 4,
+        "aconsole.contracts.common.RiskTag": 6,
+        "aconsole.contracts.common.TabStatus": 8,
+        "aconsole.contracts.common.WorkspaceMode": 3,
+        "aconsole.contracts.common.EdgeKind": 3,
+        "aconsole.contracts.common.ClientRole": 3,
+        "aconsole.ui.views.sidebar.quota_row.WindowLine": 4,
+        "aconsole.ui.viewmodels.logic.keymap.BindingSpec": 70,
+        "aconsole.ui.client.core_client.CoreClient": 1,
+        "aconsole.ui.client.store.CoreStore": 1,
+        "aconsole.ui.views.window.MainWindow": 1,
+        "aconsole.ui.viewmodels.app_vm.AppViewModel": 1,
+        "aconsole.ui.viewmodels.setup_vm.PreferencesViewModel": 1,
+        "aconsole.ui.views.shortcuts.ShortcutManager": 1,
+        "aconsole.ui.views.tabs.sidebar.TabSidebar": 1,
+        "aconsole.ui.viewmodels.sidebar_vm.SidebarSummaryViewModel": 1,
+        "aconsole.ui.views.tabs.project_bar.ProjectBar": 1,
+        "aconsole.ui.views.sidebar.plan_card.PlanCard": 1,
+        "aconsole.ui.views.sidebar.quota_card.QuotaCard": 1,
+        "aconsole.ui.views.sidebar.git_card.GitCard": 1,
+        "aconsole.ui.views.sidebar.section.SummarySection": 3,
+        "aconsole.contracts.app.AccountView": 2,
+        "aconsole.contracts.app.ApprovalView": 2,
+        "aconsole.contracts.app.PlanView": 1,
+        "aconsole.ui.client.ui_state.UiState": 1,
+        "aconsole.contracts.app.EditDetail": 1,
+        "aconsole.contracts.app.QuotaWindowView": 4,
+        "aconsole.contracts.app.PlanNodeView": 8,
+        "aconsole.ui.viewmodels.approvals_vm.ApprovalsViewModel": 1,
+        "aconsole.ui.viewmodels.tabs_vm.TabsViewModel": 1,
+        "aconsole.ui.views.approvals.panel.ApprovalPanel": 1,
+        "aconsole.ui.viewmodels.approval_alerts.ApprovalAlerts": 1,
+        "aconsole.ui.views.sidebar.quota_row.AccountLine": 2,
+        "aconsole.contracts.app.AppSnapshot": 2,
+        "aconsole.ui.viewmodels.tabs_vm.TabListStore": 1,
+        "aconsole.contracts.app.ProjectView": 2,
+        "aconsole.contracts.app.AgentInfo": 2,
+        "aconsole.ui.viewmodels.approval_alerts._Episode": 1,
+        "aconsole.contracts.app.TabView": 5,
+        "aconsole.ui.viewmodels.git_vm.GitSummary": 1,
+        "aconsole.ui.views.terminal.page.TerminalPage": 5,
+        "aconsole.ui.signals.SignalConnections": 15,
+        "aconsole.ui.viewmodels.terminal_vm.TerminalViewModel": 5,
+        "aconsole.ui.views.terminal.palette.TerminalPaletteBinding": 5,
+        "aconsole.ui.views.terminal.session.TerminalSession": 5,
+        "aconsole.ui.views.terminal.search.TerminalSearchBar": 5,
+        "aconsole.ui.views.terminal.clipboard.TerminalClipboard": 5,
+        "aconsole.contracts.settings.Settings": 1,
+        "aconsole.ui.viewmodels.tabs_vm.TabItem": 5,
+        "aconsole.ui.views.tabs.row.TabRow": 5
+      }
+    },
+    {
+      "phase": "cycle-2-tabs-0",
+      "tabs": 0,
+      "time": 22343.548755793,
+      "process": {
+        "pid": 138133,
+        "start_ticks": 2233277,
+        "boot_id": "aa745c0a-0aea-4ccc-8614-3e074397a214"
+      },
+      "rss_mib": 198.42578125,
+      "pss_mib": 101.095703125,
+      "private_mib": 86.8515625,
+      "tracked_objects": 39661,
+      "top_object_types": [
+        [
+          "builtins.function",
+          8444
+        ],
+        [
+          "builtins.dict",
+          6699
+        ],
+        [
+          "builtins.tuple",
+          5235
+        ],
+        [
+          "weakref.ReferenceType",
+          2171
+        ],
+        [
+          "builtins.builtin_function_or_method",
+          1771
+        ],
+        [
+          "builtins.method_descriptor",
+          1653
+        ],
+        [
+          "builtins.member_descriptor",
+          1590
+        ],
+        [
+          "builtins.wrapper_descriptor",
+          1582
+        ],
+        [
+          "builtins.cell",
+          1265
+        ],
+        [
+          "builtins.list",
+          1098
+        ],
+        [
+          "builtins.type",
+          862
+        ],
+        [
+          "builtins.property",
+          516
+        ],
+        [
+          "_frozen_importlib.ModuleSpec",
+          406
+        ],
+        [
+          "builtins.getset_descriptor",
+          402
+        ],
+        [
+          "builtins.classmethod",
+          399
+        ]
+      ],
+      "retained_terminal_pages": 0,
+      "aconsole_objects": {
+        "aconsole.core.infrastructure.process_metrics.ProcessIdentity": 1,
+        "aconsole.contracts.common.ApprovalScope": 2,
+        "aconsole.contracts.common.AgentKind": 5,
+        "aconsole.contracts.common.ApprovalDecision": 2,
+        "aconsole.contracts.common.NodeStatus": 7,
+        "aconsole.contracts.common.PaletteKind": 8,
+        "aconsole.contracts.common.QuotaLevel": 4,
+        "aconsole.contracts.common.RiskTag": 6,
+        "aconsole.contracts.common.TabStatus": 8,
+        "aconsole.contracts.common.WorkspaceMode": 3,
+        "aconsole.contracts.common.EdgeKind": 3,
+        "aconsole.contracts.common.ClientRole": 3,
+        "aconsole.ui.views.sidebar.quota_row.WindowLine": 4,
+        "aconsole.ui.viewmodels.logic.keymap.BindingSpec": 70,
+        "aconsole.ui.client.core_client.CoreClient": 1,
+        "aconsole.ui.client.store.CoreStore": 1,
+        "aconsole.ui.views.window.MainWindow": 1,
+        "aconsole.ui.viewmodels.app_vm.AppViewModel": 1,
+        "aconsole.ui.viewmodels.setup_vm.PreferencesViewModel": 1,
+        "aconsole.ui.views.shortcuts.ShortcutManager": 1,
+        "aconsole.ui.views.tabs.sidebar.TabSidebar": 1,
+        "aconsole.ui.viewmodels.sidebar_vm.SidebarSummaryViewModel": 1,
+        "aconsole.ui.views.tabs.project_bar.ProjectBar": 1,
+        "aconsole.ui.views.sidebar.plan_card.PlanCard": 1,
+        "aconsole.ui.views.sidebar.quota_card.QuotaCard": 1,
+        "aconsole.ui.views.sidebar.git_card.GitCard": 1,
+        "aconsole.ui.views.sidebar.section.SummarySection": 3,
+        "aconsole.contracts.app.AccountView": 2,
+        "aconsole.contracts.app.ApprovalView": 2,
+        "aconsole.contracts.app.PlanView": 1,
+        "aconsole.ui.client.ui_state.UiState": 1,
+        "aconsole.contracts.app.EditDetail": 1,
+        "aconsole.contracts.app.QuotaWindowView": 4,
+        "aconsole.contracts.app.PlanNodeView": 8,
+        "aconsole.ui.viewmodels.approvals_vm.ApprovalsViewModel": 1,
+        "aconsole.ui.viewmodels.tabs_vm.TabsViewModel": 1,
+        "aconsole.ui.views.approvals.panel.ApprovalPanel": 1,
+        "aconsole.ui.viewmodels.approval_alerts.ApprovalAlerts": 1,
+        "aconsole.ui.views.sidebar.quota_row.AccountLine": 2,
+        "aconsole.contracts.app.AppSnapshot": 2,
+        "aconsole.ui.viewmodels.tabs_vm.TabListStore": 1,
+        "aconsole.contracts.app.ProjectView": 2,
+        "aconsole.contracts.app.AgentInfo": 2,
+        "aconsole.ui.viewmodels.approval_alerts._Episode": 1,
+        "aconsole.contracts.app.TabView": 5,
+        "aconsole.ui.viewmodels.git_vm.GitSummary": 1,
+        "aconsole.contracts.settings.Settings": 1
+      }
+    },
+    {
+      "phase": "cycle-3-tabs-0",
+      "tabs": 0,
+      "time": 22344.618583799,
+      "process": {
+        "pid": 138133,
+        "start_ticks": 2233277,
+        "boot_id": "aa745c0a-0aea-4ccc-8614-3e074397a214"
+      },
+      "rss_mib": 198.4296875,
+      "pss_mib": 101.099609375,
+      "private_mib": 86.85546875,
+      "tracked_objects": 39665,
+      "top_object_types": [
+        [
+          "builtins.function",
+          8444
+        ],
+        [
+          "builtins.dict",
+          6702
+        ],
+        [
+          "builtins.tuple",
+          5235
+        ],
+        [
+          "weakref.ReferenceType",
+          2171
+        ],
+        [
+          "builtins.builtin_function_or_method",
+          1771
+        ],
+        [
+          "builtins.method_descriptor",
+          1653
+        ],
+        [
+          "builtins.member_descriptor",
+          1590
+        ],
+        [
+          "builtins.wrapper_descriptor",
+          1582
+        ],
+        [
+          "builtins.cell",
+          1265
+        ],
+        [
+          "builtins.list",
+          1099
+        ],
+        [
+          "builtins.type",
+          862
+        ],
+        [
+          "builtins.property",
+          516
+        ],
+        [
+          "_frozen_importlib.ModuleSpec",
+          406
+        ],
+        [
+          "builtins.getset_descriptor",
+          402
+        ],
+        [
+          "builtins.classmethod",
+          399
+        ]
+      ],
+      "retained_terminal_pages": 0,
+      "aconsole_objects": {
+        "aconsole.core.infrastructure.process_metrics.ProcessIdentity": 1,
+        "aconsole.contracts.common.ApprovalScope": 2,
+        "aconsole.contracts.common.AgentKind": 5,
+        "aconsole.contracts.common.ApprovalDecision": 2,
+        "aconsole.contracts.common.NodeStatus": 7,
+        "aconsole.contracts.common.PaletteKind": 8,
+        "aconsole.contracts.common.QuotaLevel": 4,
+        "aconsole.contracts.common.RiskTag": 6,
+        "aconsole.contracts.common.TabStatus": 8,
+        "aconsole.contracts.common.WorkspaceMode": 3,
+        "aconsole.contracts.common.EdgeKind": 3,
+        "aconsole.contracts.common.ClientRole": 3,
+        "aconsole.ui.views.sidebar.quota_row.WindowLine": 4,
+        "aconsole.ui.viewmodels.logic.keymap.BindingSpec": 70,
+        "aconsole.ui.client.core_client.CoreClient": 1,
+        "aconsole.ui.client.store.CoreStore": 1,
+        "aconsole.ui.views.window.MainWindow": 1,
+        "aconsole.ui.viewmodels.app_vm.AppViewModel": 1,
+        "aconsole.ui.viewmodels.setup_vm.PreferencesViewModel": 1,
+        "aconsole.ui.views.shortcuts.ShortcutManager": 1,
+        "aconsole.ui.views.tabs.sidebar.TabSidebar": 1,
+        "aconsole.ui.viewmodels.sidebar_vm.SidebarSummaryViewModel": 1,
+        "aconsole.ui.views.tabs.project_bar.ProjectBar": 1,
+        "aconsole.ui.views.sidebar.plan_card.PlanCard": 1,
+        "aconsole.ui.views.sidebar.quota_card.QuotaCard": 1,
+        "aconsole.ui.views.sidebar.git_card.GitCard": 1,
+        "aconsole.ui.views.sidebar.section.SummarySection": 3,
+        "aconsole.contracts.app.AccountView": 2,
+        "aconsole.contracts.app.ApprovalView": 2,
+        "aconsole.contracts.app.PlanView": 1,
+        "aconsole.ui.client.ui_state.UiState": 1,
+        "aconsole.contracts.app.EditDetail": 1,
+        "aconsole.contracts.app.QuotaWindowView": 4,
+        "aconsole.contracts.app.PlanNodeView": 8,
+        "aconsole.ui.viewmodels.approvals_vm.ApprovalsViewModel": 1,
+        "aconsole.ui.viewmodels.tabs_vm.TabsViewModel": 1,
+        "aconsole.ui.views.approvals.panel.ApprovalPanel": 1,
+        "aconsole.ui.viewmodels.approval_alerts.ApprovalAlerts": 1,
+        "aconsole.ui.views.sidebar.quota_row.AccountLine": 2,
+        "aconsole.contracts.app.AppSnapshot": 2,
+        "aconsole.ui.viewmodels.tabs_vm.TabListStore": 1,
+        "aconsole.contracts.app.ProjectView": 2,
+        "aconsole.contracts.app.AgentInfo": 2,
+        "aconsole.ui.viewmodels.approval_alerts._Episode": 1,
+        "aconsole.contracts.app.TabView": 5,
+        "aconsole.ui.viewmodels.git_vm.GitSummary": 1,
+        "aconsole.contracts.settings.Settings": 1
+      }
+    },
+    {
+      "phase": "cycle-3-tabs-1",
+      "tabs": 1,
+      "time": 22345.7339318,
+      "process": {
+        "pid": 138133,
+        "start_ticks": 2233277,
+        "boot_id": "aa745c0a-0aea-4ccc-8614-3e074397a214"
+      },
+      "rss_mib": 198.43359375,
+      "pss_mib": 101.103515625,
+      "private_mib": 86.859375,
+      "tracked_objects": 39981,
+      "top_object_types": [
+        [
+          "builtins.function",
+          8449
+        ],
+        [
+          "builtins.dict",
+          6806
+        ],
+        [
+          "builtins.tuple",
+          5289
+        ],
+        [
+          "weakref.ReferenceType",
+          2172
+        ],
+        [
+          "builtins.builtin_function_or_method",
+          1771
+        ],
+        [
+          "builtins.method_descriptor",
+          1653
+        ],
+        [
+          "builtins.member_descriptor",
+          1590
+        ],
+        [
+          "builtins.wrapper_descriptor",
+          1582
+        ],
+        [
+          "builtins.cell",
+          1268
+        ],
+        [
+          "builtins.list",
+          1105
+        ],
+        [
+          "builtins.type",
+          862
+        ],
+        [
+          "builtins.property",
+          516
+        ],
+        [
+          "_frozen_importlib.ModuleSpec",
+          406
+        ],
+        [
+          "builtins.getset_descriptor",
+          402
+        ],
+        [
+          "builtins.classmethod",
+          399
+        ]
+      ],
+      "retained_terminal_pages": 1,
+      "aconsole_objects": {
+        "aconsole.core.infrastructure.process_metrics.ProcessIdentity": 1,
+        "aconsole.contracts.common.ApprovalScope": 2,
+        "aconsole.contracts.common.AgentKind": 5,
+        "aconsole.contracts.common.ApprovalDecision": 2,
+        "aconsole.contracts.common.NodeStatus": 7,
+        "aconsole.contracts.common.PaletteKind": 8,
+        "aconsole.contracts.common.QuotaLevel": 4,
+        "aconsole.contracts.common.RiskTag": 6,
+        "aconsole.contracts.common.TabStatus": 8,
+        "aconsole.contracts.common.WorkspaceMode": 3,
+        "aconsole.contracts.common.EdgeKind": 3,
+        "aconsole.contracts.common.ClientRole": 3,
+        "aconsole.ui.views.sidebar.quota_row.WindowLine": 4,
+        "aconsole.ui.viewmodels.logic.keymap.BindingSpec": 70,
+        "aconsole.ui.client.core_client.CoreClient": 1,
+        "aconsole.ui.client.store.CoreStore": 1,
+        "aconsole.ui.views.window.MainWindow": 1,
+        "aconsole.ui.viewmodels.app_vm.AppViewModel": 1,
+        "aconsole.ui.viewmodels.setup_vm.PreferencesViewModel": 1,
+        "aconsole.ui.views.shortcuts.ShortcutManager": 1,
+        "aconsole.ui.views.tabs.sidebar.TabSidebar": 1,
+        "aconsole.ui.viewmodels.sidebar_vm.SidebarSummaryViewModel": 1,
+        "aconsole.ui.views.tabs.project_bar.ProjectBar": 1,
+        "aconsole.ui.views.sidebar.plan_card.PlanCard": 1,
+        "aconsole.ui.views.sidebar.quota_card.QuotaCard": 1,
+        "aconsole.ui.views.sidebar.git_card.GitCard": 1,
+        "aconsole.ui.views.sidebar.section.SummarySection": 3,
+        "aconsole.contracts.app.AccountView": 2,
+        "aconsole.contracts.app.ApprovalView": 2,
+        "aconsole.contracts.app.PlanView": 1,
+        "aconsole.ui.client.ui_state.UiState": 1,
+        "aconsole.contracts.app.EditDetail": 1,
+        "aconsole.contracts.app.QuotaWindowView": 4,
+        "aconsole.contracts.app.PlanNodeView": 8,
+        "aconsole.ui.viewmodels.approvals_vm.ApprovalsViewModel": 1,
+        "aconsole.ui.viewmodels.tabs_vm.TabsViewModel": 1,
+        "aconsole.ui.views.approvals.panel.ApprovalPanel": 1,
+        "aconsole.ui.viewmodels.approval_alerts.ApprovalAlerts": 1,
+        "aconsole.ui.views.sidebar.quota_row.AccountLine": 2,
+        "aconsole.contracts.app.AppSnapshot": 2,
+        "aconsole.ui.viewmodels.tabs_vm.TabListStore": 1,
+        "aconsole.contracts.app.ProjectView": 2,
+        "aconsole.contracts.app.AgentInfo": 2,
+        "aconsole.ui.viewmodels.approval_alerts._Episode": 1,
+        "aconsole.contracts.app.TabView": 5,
+        "aconsole.ui.viewmodels.git_vm.GitSummary": 1,
+        "aconsole.ui.signals.SignalConnections": 5,
+        "aconsole.ui.views.terminal.page.TerminalPage": 1,
+        "aconsole.ui.viewmodels.terminal_vm.TerminalViewModel": 1,
+        "aconsole.ui.views.terminal.palette.TerminalPaletteBinding": 1,
+        "aconsole.ui.views.terminal.session.TerminalSession": 1,
+        "aconsole.ui.views.terminal.search.TerminalSearchBar": 1,
+        "aconsole.ui.views.terminal.clipboard.TerminalClipboard": 1,
+        "aconsole.ui.views.approvals.panel.ApprovalCard": 2,
+        "aconsole.contracts.settings.Settings": 1,
+        "aconsole.ui.viewmodels.tabs_vm.TabItem": 1,
+        "aconsole.ui.views.tabs.row.TabRow": 1
+      }
+    },
+    {
+      "phase": "cycle-3-tabs-5",
+      "tabs": 5,
+      "time": 22347.023729792,
+      "process": {
+        "pid": 138133,
+        "start_ticks": 2233277,
+        "boot_id": "aa745c0a-0aea-4ccc-8614-3e074397a214"
+      },
+      "rss_mib": 198.66015625,
+      "pss_mib": 101.330078125,
+      "private_mib": 87.0859375,
+      "tracked_objects": 40870,
+      "top_object_types": [
+        [
+          "builtins.function",
+          8469
+        ],
+        [
+          "builtins.dict",
+          7039
+        ],
+        [
+          "builtins.tuple",
+          5470
+        ],
+        [
+          "weakref.ReferenceType",
+          2176
+        ],
+        [
+          "builtins.builtin_function_or_method",
+          1771
+        ],
+        [
+          "builtins.method_descriptor",
+          1653
+        ],
+        [
+          "builtins.member_descriptor",
+          1590
+        ],
+        [
+          "builtins.wrapper_descriptor",
+          1582
+        ],
+        [
+          "builtins.cell",
+          1280
+        ],
+        [
+          "builtins.list",
+          1116
+        ],
+        [
+          "builtins.type",
+          862
+        ],
+        [
+          "builtins.property",
+          516
+        ],
+        [
+          "_frozen_importlib.ModuleSpec",
+          406
+        ],
+        [
+          "builtins.getset_descriptor",
+          402
+        ],
+        [
+          "builtins.classmethod",
+          399
+        ]
+      ],
+      "retained_terminal_pages": 5,
+      "aconsole_objects": {
+        "aconsole.core.infrastructure.process_metrics.ProcessIdentity": 1,
+        "aconsole.contracts.common.ApprovalScope": 2,
+        "aconsole.contracts.common.AgentKind": 5,
+        "aconsole.contracts.common.ApprovalDecision": 2,
+        "aconsole.contracts.common.NodeStatus": 7,
+        "aconsole.contracts.common.PaletteKind": 8,
+        "aconsole.contracts.common.QuotaLevel": 4,
+        "aconsole.contracts.common.RiskTag": 6,
+        "aconsole.contracts.common.TabStatus": 8,
+        "aconsole.contracts.common.WorkspaceMode": 3,
+        "aconsole.contracts.common.EdgeKind": 3,
+        "aconsole.contracts.common.ClientRole": 3,
+        "aconsole.ui.views.sidebar.quota_row.WindowLine": 4,
+        "aconsole.ui.viewmodels.logic.keymap.BindingSpec": 70,
+        "aconsole.ui.client.core_client.CoreClient": 1,
+        "aconsole.ui.client.store.CoreStore": 1,
+        "aconsole.ui.views.window.MainWindow": 1,
+        "aconsole.ui.viewmodels.app_vm.AppViewModel": 1,
+        "aconsole.ui.viewmodels.setup_vm.PreferencesViewModel": 1,
+        "aconsole.ui.views.shortcuts.ShortcutManager": 1,
+        "aconsole.ui.views.tabs.sidebar.TabSidebar": 1,
+        "aconsole.ui.viewmodels.sidebar_vm.SidebarSummaryViewModel": 1,
+        "aconsole.ui.views.tabs.project_bar.ProjectBar": 1,
+        "aconsole.ui.views.sidebar.plan_card.PlanCard": 1,
+        "aconsole.ui.views.sidebar.quota_card.QuotaCard": 1,
+        "aconsole.ui.views.sidebar.git_card.GitCard": 1,
+        "aconsole.ui.views.sidebar.section.SummarySection": 3,
+        "aconsole.contracts.app.AccountView": 2,
+        "aconsole.contracts.app.ApprovalView": 2,
+        "aconsole.contracts.app.PlanView": 1,
+        "aconsole.ui.client.ui_state.UiState": 1,
+        "aconsole.contracts.app.EditDetail": 1,
+        "aconsole.contracts.app.QuotaWindowView": 4,
+        "aconsole.contracts.app.PlanNodeView": 8,
+        "aconsole.ui.viewmodels.approvals_vm.ApprovalsViewModel": 1,
+        "aconsole.ui.viewmodels.tabs_vm.TabsViewModel": 1,
+        "aconsole.ui.views.approvals.panel.ApprovalPanel": 1,
+        "aconsole.ui.viewmodels.approval_alerts.ApprovalAlerts": 1,
+        "aconsole.ui.views.sidebar.quota_row.AccountLine": 2,
+        "aconsole.contracts.app.AppSnapshot": 2,
+        "aconsole.ui.viewmodels.tabs_vm.TabListStore": 1,
+        "aconsole.contracts.app.ProjectView": 2,
+        "aconsole.contracts.app.AgentInfo": 2,
+        "aconsole.ui.viewmodels.approval_alerts._Episode": 1,
+        "aconsole.contracts.app.TabView": 5,
+        "aconsole.ui.viewmodels.git_vm.GitSummary": 1,
+        "aconsole.ui.views.terminal.page.TerminalPage": 5,
+        "aconsole.ui.signals.SignalConnections": 15,
+        "aconsole.ui.viewmodels.terminal_vm.TerminalViewModel": 5,
+        "aconsole.ui.views.terminal.palette.TerminalPaletteBinding": 5,
+        "aconsole.ui.views.terminal.session.TerminalSession": 5,
+        "aconsole.ui.views.terminal.search.TerminalSearchBar": 5,
+        "aconsole.ui.views.terminal.clipboard.TerminalClipboard": 5,
+        "aconsole.contracts.settings.Settings": 1,
+        "aconsole.ui.viewmodels.tabs_vm.TabItem": 5,
+        "aconsole.ui.views.tabs.row.TabRow": 5
+      }
+    },
+    {
+      "phase": "cycle-3-tabs-0",
+      "tabs": 0,
+      "time": 22348.105874529,
+      "process": {
+        "pid": 138133,
+        "start_ticks": 2233277,
+        "boot_id": "aa745c0a-0aea-4ccc-8614-3e074397a214"
+      },
+      "rss_mib": 198.71484375,
+      "pss_mib": 101.384765625,
+      "private_mib": 87.140625,
+      "tracked_objects": 39677,
+      "top_object_types": [
+        [
+          "builtins.function",
+          8444
+        ],
+        [
+          "builtins.dict",
+          6711
+        ],
+        [
+          "builtins.tuple",
+          5235
+        ],
+        [
+          "weakref.ReferenceType",
+          2171
+        ],
+        [
+          "builtins.builtin_function_or_method",
+          1771
+        ],
+        [
+          "builtins.method_descriptor",
+          1653
+        ],
+        [
+          "builtins.member_descriptor",
+          1590
+        ],
+        [
+          "builtins.wrapper_descriptor",
+          1582
+        ],
+        [
+          "builtins.cell",
+          1265
+        ],
+        [
+          "builtins.list",
+          1102
+        ],
+        [
+          "builtins.type",
+          862
+        ],
+        [
+          "builtins.property",
+          516
+        ],
+        [
+          "_frozen_importlib.ModuleSpec",
+          406
+        ],
+        [
+          "builtins.getset_descriptor",
+          402
+        ],
+        [
+          "builtins.classmethod",
+          399
+        ]
+      ],
+      "retained_terminal_pages": 0,
+      "aconsole_objects": {
+        "aconsole.core.infrastructure.process_metrics.ProcessIdentity": 1,
+        "aconsole.contracts.common.ApprovalScope": 2,
+        "aconsole.contracts.common.AgentKind": 5,
+        "aconsole.contracts.common.ApprovalDecision": 2,
+        "aconsole.contracts.common.NodeStatus": 7,
+        "aconsole.contracts.common.PaletteKind": 8,
+        "aconsole.contracts.common.QuotaLevel": 4,
+        "aconsole.contracts.common.RiskTag": 6,
+        "aconsole.contracts.common.TabStatus": 8,
+        "aconsole.contracts.common.WorkspaceMode": 3,
+        "aconsole.contracts.common.EdgeKind": 3,
+        "aconsole.contracts.common.ClientRole": 3,
+        "aconsole.ui.views.sidebar.quota_row.WindowLine": 4,
+        "aconsole.ui.viewmodels.logic.keymap.BindingSpec": 70,
+        "aconsole.ui.client.core_client.CoreClient": 1,
+        "aconsole.ui.client.store.CoreStore": 1,
+        "aconsole.ui.views.window.MainWindow": 1,
+        "aconsole.ui.viewmodels.app_vm.AppViewModel": 1,
+        "aconsole.ui.viewmodels.setup_vm.PreferencesViewModel": 1,
+        "aconsole.ui.views.shortcuts.ShortcutManager": 1,
+        "aconsole.ui.views.tabs.sidebar.TabSidebar": 1,
+        "aconsole.ui.viewmodels.sidebar_vm.SidebarSummaryViewModel": 1,
+        "aconsole.ui.views.tabs.project_bar.ProjectBar": 1,
+        "aconsole.ui.views.sidebar.plan_card.PlanCard": 1,
+        "aconsole.ui.views.sidebar.quota_card.QuotaCard": 1,
+        "aconsole.ui.views.sidebar.git_card.GitCard": 1,
+        "aconsole.ui.views.sidebar.section.SummarySection": 3,
+        "aconsole.contracts.app.AccountView": 2,
+        "aconsole.contracts.app.ApprovalView": 2,
+        "aconsole.contracts.app.PlanView": 1,
+        "aconsole.ui.client.ui_state.UiState": 1,
+        "aconsole.contracts.app.EditDetail": 1,
+        "aconsole.contracts.app.QuotaWindowView": 4,
+        "aconsole.contracts.app.PlanNodeView": 8,
+        "aconsole.ui.viewmodels.approvals_vm.ApprovalsViewModel": 1,
+        "aconsole.ui.viewmodels.tabs_vm.TabsViewModel": 1,
+        "aconsole.ui.views.approvals.panel.ApprovalPanel": 1,
+        "aconsole.ui.viewmodels.approval_alerts.ApprovalAlerts": 1,
+        "aconsole.ui.views.sidebar.quota_row.AccountLine": 2,
+        "aconsole.contracts.app.AppSnapshot": 2,
+        "aconsole.ui.viewmodels.tabs_vm.TabListStore": 1,
+        "aconsole.contracts.app.ProjectView": 2,
+        "aconsole.contracts.app.AgentInfo": 2,
+        "aconsole.ui.viewmodels.approval_alerts._Episode": 1,
+        "aconsole.contracts.app.TabView": 5,
+        "aconsole.ui.viewmodels.git_vm.GitSummary": 1,
+        "aconsole.contracts.settings.Settings": 1
+      }
+    }
+  ]
+}

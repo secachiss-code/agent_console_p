@@ -1,0 +1,180 @@
+{
+  "title": "0.1.3 — отдельная приёмка H-DAG — ревизия 2",
+  "goal": "Проверить положительные приёмочные узлы и живой Tier 3. Негативная исчерпанная фикстура остаётся в первом плане; ACC-2 проверяет её неизменные доказательства. Лимиты RSS 120/150 МиБ сохраняются.",
+  "nodes": [
+    {
+      "key": "ACC-0",
+      "title": "Приёмка H-DAG в отдельном проекте",
+      "objective": "Проверить замороженные контракты на небольшом реальном CLI-сценарии. Только отдельный приёмочный repository.",
+      "depends_on": [
+        "ACC-1",
+        "ACC-2",
+        "ACC-3",
+        "ACC-4"
+      ],
+      "parent": null,
+      "related": [],
+      "owner_agent": null,
+      "paths": [
+        "src/**",
+        "tests/**",
+        "evidence/**"
+      ],
+      "acceptance": [
+        "Все четыре L1 завершены со свежими квитанциями.",
+        "Живой Tier 3 зелёный; числовые бюджеты не ослаблены."
+      ],
+      "level": 0,
+      "pipeline": false,
+      "invariants": "Фиксированные 5 вершин; L2 не создаёт узлы; квитанции создаёт ядро; закрытие L0 — человеком.",
+      "gate_profile": {
+        "micro": {
+          "format": [
+            "/opt/aconsole/core/bin/ruff",
+            "format"
+          ],
+          "fix": [
+            "/opt/aconsole/core/bin/ruff",
+            "check",
+            "--fix"
+          ],
+          "lint": [
+            "/opt/aconsole/core/bin/ruff",
+            "check"
+          ],
+          "types": [
+            "/opt/aconsole/core/bin/basedpyright"
+          ],
+          "tests": [
+            "/opt/aconsole/core/bin/python",
+            "-m",
+            "pytest"
+          ]
+        },
+        "direction": [
+          [
+            "/opt/aconsole/ui/bin/python",
+            "-m",
+            "pytest",
+            "tests"
+          ]
+        ],
+        "environment": {
+          "container": "aconsole-acc-gate-ba2a407ac5",
+          "image": "f4147a4165dbe6b85c65b0c7b0de4858bc9114466edabf2132f333861102eb70"
+        }
+      },
+      "test_cmd": null,
+      "review_required": true,
+      "output_format": null,
+      "boundaries": null
+    },
+    {
+      "key": "ACC-1",
+      "title": "Повторная проверка успешного pipeline",
+      "objective": "Выполнить сценарий в отдельном приёмочном проекте; сохранять evidence.",
+      "depends_on": [],
+      "parent": "ACC-0",
+      "related": [],
+      "owner_agent": null,
+      "paths": [
+        "src/success.py",
+        "tests/test_success.py",
+        "evidence/success/**"
+      ],
+      "acceptance": [
+        "Настоящие Tier 1/2 дают зелёные квитанции. Живой Codex CLI отдельно доказан первым прогоном; этот узел исполняется детерминированным MCP-драйвером."
+      ],
+      "level": 1,
+      "pipeline": true,
+      "invariants": null,
+      "gate_profile": null,
+      "test_cmd": "/opt/aconsole/core/bin/python -m pytest tests/test_success.py",
+      "review_required": false,
+      "output_format": null,
+      "boundaries": "Не менять продуктовую ветку, бюджеты и глобальные правила проверок. При блокере — inbox, без новых вершин."
+    },
+    {
+      "key": "ACC-2",
+      "title": "Проверить доказательства исчерпанной фикстуры",
+      "objective": "Выполнить сценарий в отдельном приёмочном проекте; сохранять evidence.",
+      "depends_on": [
+        "ACC-1"
+      ],
+      "parent": "ACC-0",
+      "related": [],
+      "owner_agent": null,
+      "paths": [
+        "src/retry.py",
+        "tests/test_retry.py",
+        "evidence/retry/**"
+      ],
+      "acceptance": [
+        "Тест проверяет SHA256 журналов первого плана и ATTEMPTS_EXHAUSTED до и после restart; четыре провала не повторяются в этом успешном узле."
+      ],
+      "level": 1,
+      "pipeline": true,
+      "invariants": null,
+      "gate_profile": null,
+      "test_cmd": "/opt/aconsole/core/bin/python -m pytest tests/test_retry.py",
+      "review_required": false,
+      "output_format": null,
+      "boundaries": "Не менять продуктовую ветку, бюджеты и глобальные правила проверок. При блокере — inbox, без новых вершин."
+    },
+    {
+      "key": "ACC-3",
+      "title": "Повторная проверка pipeline и квитанций",
+      "objective": "Выполнить сценарий в отдельном приёмочном проекте; сохранять evidence.",
+      "depends_on": [
+        "ACC-1"
+      ],
+      "parent": "ACC-0",
+      "related": [],
+      "owner_agent": null,
+      "paths": [
+        "src/identity.py",
+        "tests/test_identity.py",
+        "evidence/identity/**"
+      ],
+      "acceptance": [
+        "Настоящие Tier 1/2 дают зелёные квитанции. Защита старого fence, scope и дерева отдельно доказана первым прогоном."
+      ],
+      "level": 1,
+      "pipeline": true,
+      "invariants": null,
+      "gate_profile": null,
+      "test_cmd": "/opt/aconsole/core/bin/python -m pytest tests/test_identity.py",
+      "review_required": false,
+      "output_format": null,
+      "boundaries": "Не менять продуктовую ветку, бюджеты и глобальные правила проверок. При блокере — inbox, без новых вершин."
+    },
+    {
+      "key": "ACC-4",
+      "title": "Ресурсы и закрытие направления",
+      "objective": "Выполнить сценарий в отдельном приёмочном проекте; сохранять evidence.",
+      "depends_on": [
+        "ACC-2",
+        "ACC-3"
+      ],
+      "parent": "ACC-0",
+      "related": [],
+      "owner_agent": null,
+      "paths": [
+        "src/resources.py",
+        "tests/test_resources.py",
+        "evidence/resources/**"
+      ],
+      "acceptance": [
+        "Записаны реальные процессные идентичности и измерения пяти вкладок. Ресурсные лимиты проверяет L0 после завершения дочерних узлов; L1 не требует заранее зелёного L0."
+      ],
+      "level": 1,
+      "pipeline": true,
+      "invariants": null,
+      "gate_profile": null,
+      "test_cmd": "/opt/aconsole/core/bin/python -m pytest tests/test_resources.py",
+      "review_required": false,
+      "output_format": null,
+      "boundaries": "Не менять продуктовую ветку, бюджеты и глобальные правила проверок. При блокере — inbox, без новых вершин."
+    }
+  ]
+}

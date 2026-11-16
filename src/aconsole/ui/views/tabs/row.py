@@ -10,6 +10,7 @@ gi.require_version("Gtk", "4.0")
 from gi.repository import Gdk, Gio, GLib, GObject, Gtk, Pango  # noqa: E402
 
 from aconsole.ui.bootstrap import spawn_task  # noqa: E402
+from aconsole.ui.signals import SignalConnections  # noqa: E402
 from aconsole.ui.viewmodels.tabs_vm import MAX_TAB_TITLE_LENGTH, TabItem, TabsViewModel  # noqa: E402
 from aconsole.ui.views.review.messages import _ as review_text  # noqa: E402
 from aconsole.ui.views.tabs.messages import _ as translate  # noqa: E402
@@ -53,6 +54,7 @@ class TabRow(Gtk.Box):
     def __init__(self, tabs: TabsViewModel) -> None:
         super().__init__(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
         self.add_css_class("ac-tab-row")
+        self.connections: SignalConnections = SignalConnections()
         self.tabs: TabsViewModel = tabs
         self.on_move: Callable[[str, int], bool] | None = None
         self.tab_id: str | None = None
@@ -76,7 +78,7 @@ class TabRow(Gtk.Box):
         self.title_label.update_property(
             [Gtk.AccessibleProperty.LABEL], [GObject.Value(GObject.TYPE_STRING, translate("tabs.name"))],
         )
-        _ = self.title_label.connect("notify::editing", self._editing_changed)
+        self.connections.connect(self.title_label, "notify::editing", self._editing_changed)
         self.subtitle_label: Gtk.Label = Gtk.Label(xalign=0)
         self.subtitle_label.set_ellipsize(Pango.EllipsizeMode.END)
         self.subtitle_label.set_single_line_mode(True)
@@ -91,23 +93,23 @@ class TabRow(Gtk.Box):
         self._setup_actions()
         context = Gtk.GestureClick()
         context.set_button(3)
-        _ = context.connect("pressed", self._popup_menu)
+        self.connections.connect(context, "pressed", self._popup_menu)
         self.add_controller(context)
         self.context_keys: Gtk.EventControllerKey = Gtk.EventControllerKey()
-        _ = self.context_keys.connect("key-pressed", self._context_key)
+        self.connections.connect(self.context_keys, "key-pressed", self._context_key)
         self.add_controller(self.context_keys)
 
     def _setup_actions(self) -> None:
         actions = Gio.SimpleActionGroup()
         rename = Gio.SimpleAction.new("rename", None)
-        _ = rename.connect("activate", self._begin_rename)
+        self.connections.connect(rename, "activate", self._begin_rename)
         actions.add_action(rename)
         self._fork_action: Gio.SimpleAction = Gio.SimpleAction.new("fork", None)
-        _ = self._fork_action.connect("activate", self._fork)
+        self.connections.connect(self._fork_action, "activate", self._fork)
         actions.add_action(self._fork_action)
         for name, direction in (("move-up", -1), ("move-down", 1)):
             action = Gio.SimpleAction.new(name, None)
-            _ = action.connect("activate", self._move, direction)
+            self.connections.connect(action, "activate", self._move, direction)
             actions.add_action(action)
         self.insert_action_group("tab-row", actions)
 
@@ -297,3 +299,9 @@ class TabRow(Gtk.Box):
             await self.tabs.rename(tab_id, title)
         except Exception:  # noqa: BLE001 -- restore the authoritative title after a failed request
             self._render()
+
+    def close(self) -> None:
+        self.unbind_item()
+        self.connections.close()
+        self.insert_action_group("tab-row", None)
+        self.on_move = None

@@ -1,0 +1,11 @@
+{
+  "renderer": "CairoRenderer",
+  "requested": "cairo",
+  "frames": 120,
+  "cpu_seconds": 0.4580971779999998,
+  "p50_interval_ms": 16.776,
+  "p95_interval_ms": 25.162,
+  "rss_mib": 123.96484375,
+  "pss_mib": 63.7392578125,
+  "private_mib": 53.49609375
+}

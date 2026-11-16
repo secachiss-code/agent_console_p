@@ -1,0 +1,9 @@
+import tracemalloc,json,os
+from pathlib import Path
+tracemalloc.start(10)
+from aconsole.core.bootstrap import Daemon
+instance=Daemon(Path('/tmp/ac-import-probe-not-served.sock'))
+snapshot=tracemalloc.take_snapshot()
+rows=[]
+for stat in snapshot.statistics('filename')[:35]: rows.append({'file':str(stat.traceback[0].filename),'mib':stat.size/1024**2,'blocks':stat.count})
+print(json.dumps({'scope':'tracemalloc import + construct; no server, instrumented RSS is not a budget measurement','current_peak_bytes':tracemalloc.get_traced_memory(),'files':rows},indent=2))

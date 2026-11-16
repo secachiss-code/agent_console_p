@@ -17,6 +17,7 @@ from aconsole.contracts.common import TabId  # noqa: E402
 from aconsole.contracts.settings import Settings  # noqa: E402
 from aconsole.ui.bootstrap import spawn_task  # noqa: E402
 from aconsole.ui.client.core_client import CoreCallError, CoreClient  # noqa: E402
+from aconsole.ui.signals import SignalConnections  # noqa: E402
 from aconsole.ui.viewmodels.logic.fonts import font_families, pango_family  # noqa: E402
 from aconsole.ui.viewmodels.terminal_vm import TerminalViewModel  # noqa: E402
 from aconsole.ui.views.terminal.clipboard import TerminalClipboard  # noqa: E402
@@ -36,6 +37,7 @@ class TerminalPage(Gtk.Overlay):
         self.on_new: Callable[[], None] = on_new
         self._on_close: Callable[[str], None] = on_close
         self._closed: bool = False
+        self._signals: SignalConnections = SignalConnections()
         self._launch_failed: bool = False
         self.handoff_dialog: Adw.AlertDialog | None = None
         self._restart_task: asyncio.Task[None] | None = None
@@ -58,7 +60,7 @@ class TerminalPage(Gtk.Overlay):
         self.set_child(with_bar)
         keys = Gtk.EventControllerKey()
         keys.set_propagation_phase(Gtk.PropagationPhase.CAPTURE)
-        _ = keys.connect("key-pressed", self._key_pressed)
+        self._signals.connect(keys, "key-pressed", self._key_pressed)
         self.add_controller(keys)
         self.palette: TerminalPaletteBinding = TerminalPaletteBinding(self.terminal)
         self.session: TerminalSession = TerminalSession(self.terminal, self.viewmodel)
@@ -70,9 +72,9 @@ class TerminalPage(Gtk.Overlay):
             self, self.terminal, self.viewmodel.prepare_image, on_error or self._show_error,
         )
         focus = Gtk.EventControllerFocus()
-        _ = focus.connect("leave", self._cancel_clipboard)
+        self._signals.connect(focus, "leave", self._cancel_clipboard)
         terminal_widget.add_controller(focus)
-        _ = self.connect("unmap", self._cancel_clipboard)
+        self._signals.connect(self, "unmap", self._cancel_clipboard)
         self._setup_clipboard_menu()
 
     def _cancel_clipboard(self, _source: object) -> None:
@@ -135,7 +137,8 @@ class TerminalPage(Gtk.Overlay):
     def _setup_clipboard_menu(self) -> None:
         actions = Gio.SimpleActionGroup()
         self._copy_action: Gio.SimpleAction = Gio.SimpleAction.new("copy", None)
-        _ = self._copy_action.connect("activate", lambda *_args: self.terminal.copy_clipboard_format(Vte.Format.TEXT))
+        self._signals.connect(self._copy_action, "activate",
+                              lambda *_args: self.terminal.copy_clipboard_format(Vte.Format.TEXT))
         actions.add_action(self._copy_action)
         for name, callback in (
             ("paste", lambda: self._menu_paste(image_only=False)),
@@ -143,7 +146,7 @@ class TerminalPage(Gtk.Overlay):
             ("select", self.terminal.select_all),
         ):
             action = Gio.SimpleAction.new(name, None)
-            _ = action.connect("activate", partial(self._activate_clipboard, callback))
+            self._signals.connect(action, "activate", partial(self._activate_clipboard, callback))
             actions.add_action(action)
         self.insert_action_group("terminal", actions)
         menu = Gio.Menu()
@@ -153,7 +156,7 @@ class TerminalPage(Gtk.Overlay):
         self._clipboard_menu.set_parent(self)
         click = Gtk.GestureClick(button=3)
         click.set_propagation_phase(Gtk.PropagationPhase.CAPTURE)
-        _ = click.connect("pressed", self._clipboard_pressed)
+        self._signals.connect(click, "pressed", self._clipboard_pressed)
         self.add_controller(click)
 
     def _clipboard_pressed(self, gesture: Gtk.GestureClick, _count: int, x: float, y: float) -> None:
@@ -186,7 +189,7 @@ class TerminalPage(Gtk.Overlay):
         self.retry_button: Gtk.Button = Gtk.Button(label=translate("terminal.retry"), visible=False)
         self.retry_button.set_halign(Gtk.Align.CENTER)
         self.retry_button.set_valign(Gtk.Align.CENTER)
-        _ = self.retry_button.connect("clicked", self._retry_start)
+        self._signals.connect(self.retry_button, "clicked", self._retry_start)
         self.add_overlay(self.retry_button)
         self.ended_revealer: Gtk.Revealer = Gtk.Revealer(
             transition_type=Gtk.RevealerTransitionType.CROSSFADE, transition_duration=200,
@@ -206,7 +209,7 @@ class TerminalPage(Gtk.Overlay):
             if key == "terminal.resume":
                 self.resume_button: Gtk.Button = button
             button.add_css_class("suggested-action" if key == "terminal.resume" else "flat")
-            _ = button.connect("clicked", callback)
+            self._signals.connect(button, "clicked", callback)
             self.ended_actions.append(button)
         panel.append(self.ended_actions)
         self.ended_revealer.set_child(panel)
@@ -227,7 +230,7 @@ class TerminalPage(Gtk.Overlay):
         panel.append(Gtk.Label(label=translate("terminal.waiting_body"), wrap=True, max_width_chars=55))
         self.handoff_button: Gtk.Button = Gtk.Button(label=translate("terminal.handoff"))
         self.handoff_button.add_css_class("suggested-action")
-        _ = self.handoff_button.connect("clicked", self._confirm_handoff)
+        self._signals.connect(self.handoff_button, "clicked", self._confirm_handoff)
         panel.append(self.handoff_button)
         self.waiting_revealer.set_child(panel)
         self.add_overlay(self.waiting_revealer)
@@ -400,8 +403,11 @@ class TerminalPage(Gtk.Overlay):
         if self._closed:
             return
         self._closed = True
-        self.clipboard.closed = True
-        self.clipboard.cancel()
+        self.clipboard.close()
         self._clipboard_menu.unparent()
         _ = self.session.cancel_pending_spawn()
         self.palette.close()
+        self.search.close()
+        self._signals.close()
+        self.insert_action_group("terminal", None)
+        self.set_child(None)

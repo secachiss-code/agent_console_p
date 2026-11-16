@@ -1,0 +1,184 @@
+{
+  "scope": "tracemalloc import + construct; no server, instrumented RSS is not a budget measurement",
+  "current_peak_bytes": [
+    103643686,
+    128846563
+  ],
+  "files": [
+    {
+      "file": "<frozen importlib._bootstrap_external>",
+      "mib": 52.74945640563965,
+      "blocks": 388970
+    },
+    {
+      "file": "/home/sas/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/dataclasses.py",
+      "mib": 2.923525810241699,
+      "blocks": 24095
+    },
+    {
+      "file": "<frozen importlib._bootstrap>",
+      "mib": 2.8436765670776367,
+      "blocks": 21796
+    },
+    {
+      "file": "<frozen abc>",
+      "mib": 2.7442188262939453,
+      "blocks": 11058
+    },
+    {
+      "file": "/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/pydantic/fields.py",
+      "mib": 1.8591690063476562,
+      "blocks": 15129
+    },
+    {
+      "file": "/home/sas/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/typing.py",
+      "mib": 1.8033580780029297,
+      "blocks": 12929
+    },
+    {
+      "file": "/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/util/langhelpers.py",
+      "mib": 1.238011360168457,
+      "blocks": 6361
+    },
+    {
+      "file": "/home/sas/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/annotationlib.py",
+      "mib": 1.171229362487793,
+      "blocks": 9596
+    },
+    {
+      "file": "/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/pydantic/_internal/_model_construction.py",
+      "mib": 0.9330768585205078,
+      "blocks": 6096
+    },
+    {
+      "file": "<string>",
+      "mib": 0.92303466796875,
+      "blocks": 10454
+    },
+    {
+      "file": "/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/pydantic_core/core_schema.py",
+      "mib": 0.9031286239624023,
+      "blocks": 12339
+    },
+    {
+      "file": "/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/pygments/lexers/jvm.py",
+      "mib": 0.8901939392089844,
+      "blocks": 1490
+    },
+    {
+      "file": "/home/sas/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/inspect.py",
+      "mib": 0.8579216003417969,
+      "blocks": 775
+    },
+    {
+      "file": "/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/pydantic/_internal/_generate_schema.py",
+      "mib": 0.8272571563720703,
+      "blocks": 9707
+    },
+    {
+      "file": "/home/sas/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/enum.py",
+      "mib": 0.8073997497558594,
+      "blocks": 4368
+    },
+    {
+      "file": "/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/sql/base.py",
+      "mib": 0.6405954360961914,
+      "blocks": 6491
+    },
+    {
+      "file": "/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/sql/schema.py",
+      "mib": 0.5224590301513672,
+      "blocks": 3126
+    },
+    {
+      "file": "/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/sql/elements.py",
+      "mib": 0.4931964874267578,
+      "blocks": 3537
+    },
+    {
+      "file": "/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/pygments/lexer.py",
+      "mib": 0.4576759338378906,
+      "blocks": 2483
+    },
+    {
+      "file": "/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/pydantic/_internal/_config.py",
+      "mib": 0.4460306167602539,
+      "blocks": 4681
+    },
+    {
+      "file": "/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/event/base.py",
+      "mib": 0.4036216735839844,
+      "blocks": 3348
+    },
+    {
+      "file": "/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/event/attr.py",
+      "mib": 0.39834117889404297,
+      "blocks": 1909
+    },
+    {
+      "file": "/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/typing_inspection/introspection.py",
+      "mib": 0.39462852478027344,
+      "blocks": 1968
+    },
+    {
+      "file": "/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/sql/annotation.py",
+      "mib": 0.36263561248779297,
+      "blocks": 1793
+    },
+    {
+      "file": "/home/sas/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/collections/__init__.py",
+      "mib": 0.3554506301879883,
+      "blocks": 3260
+    },
+    {
+      "file": "/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/pydantic/json_schema.py",
+      "mib": 0.3466625213623047,
+      "blocks": 3790
+    },
+    {
+      "file": "/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/orm/mapper.py",
+      "mib": 0.30304718017578125,
+      "blocks": 1662
+    },
+    {
+      "file": "/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/sql/sqltypes.py",
+      "mib": 0.2907743453979492,
+      "blocks": 1517
+    },
+    {
+      "file": "/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/sql/selectable.py",
+      "mib": 0.27579212188720703,
+      "blocks": 1637
+    },
+    {
+      "file": "/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/e9b422b1e208b10f/src/aconsole/contracts/app.py",
+      "mib": 0.2418680191040039,
+      "blocks": 1661
+    },
+    {
+      "file": "/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/orm/properties.py",
+      "mib": 0.23121166229248047,
+      "blocks": 2348
+    },
+    {
+      "file": "/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/rich/cells.py",
+      "mib": 0.2238006591796875,
+      "blocks": 1331
+    },
+    {
+      "file": "/home/sas/.local/share/uv/python/cpython-3.15.1+freethreaded-linux-x86_64-gnu/lib/python3.15t/contextlib.py",
+      "mib": 0.2006549835205078,
+      "blocks": 1711
+    },
+    {
+      "file": "/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/pygments/lexers/lisp.py",
+      "mib": 0.19942855834960938,
+      "blocks": 683
+    },
+    {
+      "file": "/home/sas/Projects/sp_aconsole_prototype/.venv-core/lib/python3.15t/site-packages/sqlalchemy/sql/functions.py",
+      "mib": 0.1964130401611328,
+      "blocks": 853
+    }
+  ]
+}

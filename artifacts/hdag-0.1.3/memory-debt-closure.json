@@ -1,0 +1,1175 @@
+{
+  "complete": true,
+  "decision": "kb-703",
+  "debt": "TD-HDG-MEM-1",
+  "closure": "human acceptance with debt; not a technical PASS",
+  "events": [
+    {
+      "method": "plan/get",
+      "response": {
+        "kind": "result",
+        "jsonrpc": "2.0",
+        "id": 2,
+        "result": {
+          "id": "plan-636",
+          "project_id": "9fe226e18f76d5d2",
+          "title": "0.1.3 — Детерминированный конвейер (H-DAG)",
+          "goal": "Перевести доску планов AConsole с плоского DAG на трёхуровневый H-DAG. L0 — 6 направлений (CORE, DB, SEC, QA, APR, FE) с закреплёнными инвариантами и Tier 3 gate; узлы *-0 ждут свои L1 и закрываются человеком. L1 — 23 модульных контракта (paths, acceptance, test_cmd, радиус), parent — узел направления. L2 — шаги spec → patch → test → verify внутри узла L1, вершин графа не создают. Горячее состояние — cache.db в tmpfs, попытки, блоки и квитанции — aconsole.db. Проверки: Tier 1 на L2.4, Tier 2 (CTE blast radius) при закрытии L1, Tier 3 при закрытии L0. Исполнитель не добавляет узлы: при блокере — node_update blocked с заметкой. Источник истины: plans/0.1.3-hdag.md (база 7e1f397f). План поглощает plan-623. До CORE-1 test_cmd не сохраняется полем узла, поэтому команда проверки продублирована в objective.",
+          "status": "active",
+          "nodes": [
+            {
+              "id": "node-637",
+              "key": "CORE-0",
+              "title": "Закрыть направление CORE: домен и сценарии H-DAG",
+              "status": "pending",
+              "ready": true,
+              "layer": 5,
+              "priority": 0.017684801486805554,
+              "depends_on": [
+                "node-643",
+                "node-648",
+                "node-644",
+                "node-646",
+                "node-647",
+                "node-645"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null
+            },
+            {
+              "id": "node-638",
+              "key": "DB-0",
+              "title": "Закрыть направление DB: хранилище конвейера",
+              "status": "pending",
+              "ready": true,
+              "layer": 3,
+              "priority": 0.017684801486805554,
+              "depends_on": [
+                "node-649",
+                "node-653",
+                "node-650",
+                "node-652",
+                "node-651"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null
+            },
+            {
+              "id": "node-639",
+              "key": "SEC-0",
+              "title": "Закрыть направление SEC: границы исполнения",
+              "status": "pending",
+              "ready": true,
+              "layer": 5,
+              "priority": 0.017684801486805554,
+              "depends_on": [
+                "node-655",
+                "node-654",
+                "node-656"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null
+            },
+            {
+              "id": "node-640",
+              "key": "QA-0",
+              "title": "Закрыть направление QA: каскад проверок",
+              "status": "pending",
+              "ready": true,
+              "layer": 8,
+              "priority": 0.017684801486805554,
+              "depends_on": [
+                "node-659",
+                "node-658",
+                "node-657"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null
+            },
+            {
+              "id": "node-641",
+              "key": "APR-0",
+              "title": "Закрыть направление APR: решения человека",
+              "status": "pending",
+              "ready": true,
+              "layer": 6,
+              "priority": 0.017684801486805554,
+              "depends_on": [
+                "node-660",
+                "node-662",
+                "node-661"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null
+            },
+            {
+              "id": "node-642",
+              "key": "FE-0",
+              "title": "Закрыть направление FE: видимость плана",
+              "status": "pending",
+              "ready": true,
+              "layer": 7,
+              "priority": 0.017684801486805554,
+              "depends_on": [
+                "node-664",
+                "node-663",
+                "node-665"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null
+            },
+            {
+              "id": "node-643",
+              "key": "CORE-1",
+              "title": "Провести контракт узла в домен",
+              "status": "done",
+              "ready": false,
+              "layer": 0,
+              "priority": 0.3176848014868056,
+              "depends_on": [],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null
+            },
+            {
+              "id": "node-644",
+              "key": "CORE-2",
+              "title": "Ввести уровни L0/L1 и инварианты направлений",
+              "status": "done",
+              "ready": false,
+              "layer": 2,
+              "priority": 0.5176848014868055,
+              "depends_on": [
+                "node-649"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null
+            },
+            {
+              "id": "node-645",
+              "key": "CORE-3",
+              "title": "Заморозить топологию плана",
+              "status": "done",
+              "ready": false,
+              "layer": 3,
+              "priority": 0.4176848014868056,
+              "depends_on": [
+                "node-644"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null
+            },
+            {
+              "id": "node-646",
+              "key": "CORE-4",
+              "title": "Описать автомат конвейера L2 и StateBlock",
+              "status": "done",
+              "ready": false,
+              "layer": 1,
+              "priority": 0.4176848014868056,
+              "depends_on": [
+                "node-643"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null
+            },
+            {
+              "id": "node-647",
+              "key": "CORE-5",
+              "title": "Собрать конверт передачи и стабильный префикс",
+              "status": "done",
+              "ready": false,
+              "layer": 3,
+              "priority": 0.21768480148680558,
+              "depends_on": [
+                "node-646",
+                "node-651",
+                "node-644"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null
+            },
+            {
+              "id": "node-648",
+              "key": "CORE-6",
+              "title": "Выдать агенту шаги конвейера через MCP",
+              "status": "done",
+              "ready": false,
+              "layer": 4,
+              "priority": 0.4176848014868056,
+              "depends_on": [
+                "node-657",
+                "node-655",
+                "node-650",
+                "node-647"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null
+            },
+            {
+              "id": "node-649",
+              "key": "DB-1",
+              "title": "Добавить фазы плана, уровни узлов и роль вкладки",
+              "status": "done",
+              "ready": false,
+              "layer": 1,
+              "priority": 0.4176848014868056,
+              "depends_on": [
+                "node-643"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null
+            },
+            {
+              "id": "node-650",
+              "key": "DB-2",
+              "title": "Хранить попытки, блоки и квитанции",
+              "status": "done",
+              "ready": false,
+              "layer": 2,
+              "priority": 0.3176848014868056,
+              "depends_on": [
+                "node-649",
+                "node-646"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null
+            },
+            {
+              "id": "node-651",
+              "key": "DB-3",
+              "title": "Поднять оперативный кэш в tmpfs",
+              "status": "done",
+              "ready": false,
+              "layer": 0,
+              "priority": 0.3176848014868056,
+              "depends_on": [],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null
+            },
+            {
+              "id": "node-652",
+              "key": "DB-4",
+              "title": "Сохранять граф кода в kb_nodes/kb_edges",
+              "status": "done",
+              "ready": false,
+              "layer": 0,
+              "priority": 0.21768480148680558,
+              "depends_on": [],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null
+            },
+            {
+              "id": "node-653",
+              "key": "DB-5",
+              "title": "Считать радиус поражения рекурсивным CTE",
+              "status": "done",
+              "ready": false,
+              "layer": 1,
+              "priority": 0.21768480148680558,
+              "depends_on": [
+                "node-652"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null
+            },
+            {
+              "id": "node-654",
+              "key": "SEC-1",
+              "title": "Скрыть изменение графа от исполнителей",
+              "status": "done",
+              "ready": false,
+              "layer": 4,
+              "priority": 0.21768480148680558,
+              "depends_on": [
+                "node-663",
+                "node-645"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null
+            },
+            {
+              "id": "node-655",
+              "key": "SEC-2",
+              "title": "Сверять изменения узла с его paths",
+              "status": "done",
+              "ready": false,
+              "layer": 3,
+              "priority": 0.21768480148680558,
+              "depends_on": [
+                "node-644"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null
+            },
+            {
+              "id": "node-656",
+              "key": "SEC-3",
+              "title": "Исполнять проверки в контейнере вкладки",
+              "status": "done",
+              "ready": false,
+              "layer": 0,
+              "priority": 0.21768480148680558,
+              "depends_on": [],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null
+            },
+            {
+              "id": "node-657",
+              "key": "QA-1",
+              "title": "Реализовать Tier 1 Micro-Gate",
+              "status": "done",
+              "ready": false,
+              "layer": 2,
+              "priority": 0.3176848014868056,
+              "depends_on": [
+                "node-656",
+                "node-646",
+                "node-651"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null
+            },
+            {
+              "id": "node-658",
+              "key": "QA-2",
+              "title": "Реализовать Tier 2 Blast-Radius Gate",
+              "status": "done",
+              "ready": false,
+              "layer": 5,
+              "priority": 0.21768480148680558,
+              "depends_on": [
+                "node-648",
+                "node-657",
+                "node-653"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null
+            },
+            {
+              "id": "node-659",
+              "key": "QA-3",
+              "title": "Провести Tier 3 при закрытии направления",
+              "status": "done",
+              "ready": false,
+              "layer": 7,
+              "priority": 0.11768480148680556,
+              "depends_on": [
+                "node-658",
+                "node-664",
+                "node-654",
+                "node-665"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null
+            },
+            {
+              "id": "node-660",
+              "key": "APR-1",
+              "title": "Обработать REPLAN_INTERRUPT",
+              "status": "done",
+              "ready": false,
+              "layer": 5,
+              "priority": 0.21768480148680558,
+              "depends_on": [
+                "node-648",
+                "node-645"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null
+            },
+            {
+              "id": "node-661",
+              "key": "APR-2",
+              "title": "Заморозить план решением человека",
+              "status": "done",
+              "ready": false,
+              "layer": 4,
+              "priority": 0.21768480148680558,
+              "depends_on": [
+                "node-645"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null
+            },
+            {
+              "id": "node-662",
+              "key": "APR-3",
+              "title": "Запретить агенту обход review_required",
+              "status": "done",
+              "ready": false,
+              "layer": 0,
+              "priority": 0.21768480148680558,
+              "depends_on": [],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null
+            },
+            {
+              "id": "node-663",
+              "key": "FE-1",
+              "title": "Открыть вкладку планирования с моделью",
+              "status": "done",
+              "ready": false,
+              "layer": 2,
+              "priority": 0.21768480148680558,
+              "depends_on": [
+                "node-649",
+                "node-662"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null
+            },
+            {
+              "id": "node-664",
+              "key": "FE-2",
+              "title": "Показать уровни, фазу и попытки на странице плана",
+              "status": "done",
+              "ready": false,
+              "layer": 6,
+              "priority": 0.21768480148680558,
+              "depends_on": [
+                "node-661",
+                "node-648",
+                "node-660"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null
+            },
+            {
+              "id": "node-665",
+              "key": "FE-3",
+              "title": "Зеркалировать план в Obsidian .canvas и журнал попыток",
+              "status": "done",
+              "ready": false,
+              "layer": 3,
+              "priority": 0.21768480148680558,
+              "depends_on": [
+                "node-644",
+                "node-650"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null
+            }
+          ],
+          "done": 23,
+          "total": 29,
+          "canvas": null,
+          "updated_at": "2026-11-16T10:04:07.911422Z"
+        }
+      }
+    },
+    {
+      "method": "plan/setNodeStatus",
+      "response": {
+        "kind": "result",
+        "jsonrpc": "2.0",
+        "id": 2,
+        "result": {
+          "id": "node-638",
+          "key": "DB-0",
+          "title": "Закрыть направление DB: хранилище конвейера",
+          "status": "in_progress",
+          "ready": false,
+          "layer": 3,
+          "priority": 0.017684814439699072,
+          "depends_on": [
+            "node-649",
+            "node-653",
+            "node-650",
+            "node-652",
+            "node-651"
+          ],
+          "owner_agent": null,
+          "tab_id": null,
+          "lease_expires_at": "2026-11-16T16:02:32.057522Z",
+          "note": null,
+          "evidence": null
+        }
+      }
+    },
+    {
+      "method": "plan/setNodeStatus",
+      "response": {
+        "kind": "result",
+        "jsonrpc": "2.0",
+        "id": 2,
+        "result": {
+          "id": "node-638",
+          "key": "DB-0",
+          "title": "Закрыть направление DB: хранилище конвейера",
+          "status": "verifying",
+          "ready": false,
+          "layer": 3,
+          "priority": 0.017684843482175926,
+          "depends_on": [
+            "node-649",
+            "node-653",
+            "node-650",
+            "node-652",
+            "node-651"
+          ],
+          "owner_agent": null,
+          "tab_id": null,
+          "lease_expires_at": "2026-11-16T16:02:32.236079Z",
+          "note": null,
+          "evidence": "User acceptance 2026-11-16; decision kb-703. Transfer the unvalidated 120 MiB target and remaining core RSS 175.81 MiB to TD-HDG-MEM-1 in TECH_DEBT.md. Close DB-0 as accepted with documented debt, not a technical Tier 3 PASS. Preserve all red receipts, thresholds, full GUI/CLI and deferred Ruff release conditions. Other L0 nodes remain unchanged."
+        }
+      }
+    },
+    {
+      "method": "plan/setNodeStatus",
+      "response": {
+        "kind": "result",
+        "jsonrpc": "2.0",
+        "id": 2,
+        "result": {
+          "id": "node-638",
+          "key": "DB-0",
+          "title": "Закрыть направление DB: хранилище конвейера",
+          "status": "done",
+          "ready": false,
+          "layer": 3,
+          "priority": 0.017684854256712963,
+          "depends_on": [
+            "node-649",
+            "node-653",
+            "node-650",
+            "node-652",
+            "node-651"
+          ],
+          "owner_agent": null,
+          "tab_id": null,
+          "lease_expires_at": null,
+          "note": null,
+          "evidence": null
+        }
+      }
+    },
+    {
+      "method": "plan/get",
+      "response": {
+        "kind": "result",
+        "jsonrpc": "2.0",
+        "id": 2,
+        "result": {
+          "id": "plan-636",
+          "project_id": "9fe226e18f76d5d2",
+          "title": "0.1.3 — Детерминированный конвейер (H-DAG)",
+          "goal": "Перевести доску планов AConsole с плоского DAG на трёхуровневый H-DAG. L0 — 6 направлений (CORE, DB, SEC, QA, APR, FE) с закреплёнными инвариантами и Tier 3 gate; узлы *-0 ждут свои L1 и закрываются человеком. L1 — 23 модульных контракта (paths, acceptance, test_cmd, радиус), parent — узел направления. L2 — шаги spec → patch → test → verify внутри узла L1, вершин графа не создают. Горячее состояние — cache.db в tmpfs, попытки, блоки и квитанции — aconsole.db. Проверки: Tier 1 на L2.4, Tier 2 (CTE blast radius) при закрытии L1, Tier 3 при закрытии L0. Исполнитель не добавляет узлы: при блокере — node_update blocked с заметкой. Источник истины: plans/0.1.3-hdag.md (база 7e1f397f). План поглощает plan-623. До CORE-1 test_cmd не сохраняется полем узла, поэтому команда проверки продублирована в objective.",
+          "status": "active",
+          "nodes": [
+            {
+              "id": "node-637",
+              "key": "CORE-0",
+              "title": "Закрыть направление CORE: домен и сценарии H-DAG",
+              "status": "pending",
+              "ready": true,
+              "layer": 5,
+              "priority": 0.017684854561226853,
+              "depends_on": [
+                "node-643",
+                "node-648",
+                "node-644",
+                "node-646",
+                "node-647",
+                "node-645"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null
+            },
+            {
+              "id": "node-638",
+              "key": "DB-0",
+              "title": "Закрыть направление DB: хранилище конвейера",
+              "status": "done",
+              "ready": false,
+              "layer": 3,
+              "priority": 0.017684854561226853,
+              "depends_on": [
+                "node-649",
+                "node-653",
+                "node-650",
+                "node-652",
+                "node-651"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null
+            },
+            {
+              "id": "node-639",
+              "key": "SEC-0",
+              "title": "Закрыть направление SEC: границы исполнения",
+              "status": "pending",
+              "ready": true,
+              "layer": 5,
+              "priority": 0.017684854561226853,
+              "depends_on": [
+                "node-655",
+                "node-654",
+                "node-656"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null
+            },
+            {
+              "id": "node-640",
+              "key": "QA-0",
+              "title": "Закрыть направление QA: каскад проверок",
+              "status": "pending",
+              "ready": true,
+              "layer": 8,
+              "priority": 0.017684854561226853,
+              "depends_on": [
+                "node-659",
+                "node-658",
+                "node-657"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null
+            },
+            {
+              "id": "node-641",
+              "key": "APR-0",
+              "title": "Закрыть направление APR: решения человека",
+              "status": "pending",
+              "ready": true,
+              "layer": 6,
+              "priority": 0.017684854561226853,
+              "depends_on": [
+                "node-660",
+                "node-662",
+                "node-661"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null
+            },
+            {
+              "id": "node-642",
+              "key": "FE-0",
+              "title": "Закрыть направление FE: видимость плана",
+              "status": "pending",
+              "ready": true,
+              "layer": 7,
+              "priority": 0.017684854561226853,
+              "depends_on": [
+                "node-664",
+                "node-663",
+                "node-665"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null
+            },
+            {
+              "id": "node-643",
+              "key": "CORE-1",
+              "title": "Провести контракт узла в домен",
+              "status": "done",
+              "ready": false,
+              "layer": 0,
+              "priority": 0.3176848545612269,
+              "depends_on": [],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null
+            },
+            {
+              "id": "node-644",
+              "key": "CORE-2",
+              "title": "Ввести уровни L0/L1 и инварианты направлений",
+              "status": "done",
+              "ready": false,
+              "layer": 2,
+              "priority": 0.5176848545612268,
+              "depends_on": [
+                "node-649"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null
+            },
+            {
+              "id": "node-645",
+              "key": "CORE-3",
+              "title": "Заморозить топологию плана",
+              "status": "done",
+              "ready": false,
+              "layer": 3,
+              "priority": 0.4176848545612269,
+              "depends_on": [
+                "node-644"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null
+            },
+            {
+              "id": "node-646",
+              "key": "CORE-4",
+              "title": "Описать автомат конвейера L2 и StateBlock",
+              "status": "done",
+              "ready": false,
+              "layer": 1,
+              "priority": 0.4176848545612269,
+              "depends_on": [
+                "node-643"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null
+            },
+            {
+              "id": "node-647",
+              "key": "CORE-5",
+              "title": "Собрать конверт передачи и стабильный префикс",
+              "status": "done",
+              "ready": false,
+              "layer": 3,
+              "priority": 0.21768485456122685,
+              "depends_on": [
+                "node-646",
+                "node-651",
+                "node-644"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null
+            },
+            {
+              "id": "node-648",
+              "key": "CORE-6",
+              "title": "Выдать агенту шаги конвейера через MCP",
+              "status": "done",
+              "ready": false,
+              "layer": 4,
+              "priority": 0.4176848545612269,
+              "depends_on": [
+                "node-657",
+                "node-655",
+                "node-650",
+                "node-647"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null
+            },
+            {
+              "id": "node-649",
+              "key": "DB-1",
+              "title": "Добавить фазы плана, уровни узлов и роль вкладки",
+              "status": "done",
+              "ready": false,
+              "layer": 1,
+              "priority": 0.4176848545612269,
+              "depends_on": [
+                "node-643"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null
+            },
+            {
+              "id": "node-650",
+              "key": "DB-2",
+              "title": "Хранить попытки, блоки и квитанции",
+              "status": "done",
+              "ready": false,
+              "layer": 2,
+              "priority": 0.3176848545612269,
+              "depends_on": [
+                "node-649",
+                "node-646"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null
+            },
+            {
+              "id": "node-651",
+              "key": "DB-3",
+              "title": "Поднять оперативный кэш в tmpfs",
+              "status": "done",
+              "ready": false,
+              "layer": 0,
+              "priority": 0.3176848545612269,
+              "depends_on": [],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null
+            },
+            {
+              "id": "node-652",
+              "key": "DB-4",
+              "title": "Сохранять граф кода в kb_nodes/kb_edges",
+              "status": "done",
+              "ready": false,
+              "layer": 0,
+              "priority": 0.21768485456122685,
+              "depends_on": [],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null
+            },
+            {
+              "id": "node-653",
+              "key": "DB-5",
+              "title": "Считать радиус поражения рекурсивным CTE",
+              "status": "done",
+              "ready": false,
+              "layer": 1,
+              "priority": 0.21768485456122685,
+              "depends_on": [
+                "node-652"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null
+            },
+            {
+              "id": "node-654",
+              "key": "SEC-1",
+              "title": "Скрыть изменение графа от исполнителей",
+              "status": "done",
+              "ready": false,
+              "layer": 4,
+              "priority": 0.21768485456122685,
+              "depends_on": [
+                "node-663",
+                "node-645"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null
+            },
+            {
+              "id": "node-655",
+              "key": "SEC-2",
+              "title": "Сверять изменения узла с его paths",
+              "status": "done",
+              "ready": false,
+              "layer": 3,
+              "priority": 0.21768485456122685,
+              "depends_on": [
+                "node-644"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null
+            },
+            {
+              "id": "node-656",
+              "key": "SEC-3",
+              "title": "Исполнять проверки в контейнере вкладки",
+              "status": "done",
+              "ready": false,
+              "layer": 0,
+              "priority": 0.21768485456122685,
+              "depends_on": [],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null
+            },
+            {
+              "id": "node-657",
+              "key": "QA-1",
+              "title": "Реализовать Tier 1 Micro-Gate",
+              "status": "done",
+              "ready": false,
+              "layer": 2,
+              "priority": 0.3176848545612269,
+              "depends_on": [
+                "node-656",
+                "node-646",
+                "node-651"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null
+            },
+            {
+              "id": "node-658",
+              "key": "QA-2",
+              "title": "Реализовать Tier 2 Blast-Radius Gate",
+              "status": "done",
+              "ready": false,
+              "layer": 5,
+              "priority": 0.21768485456122685,
+              "depends_on": [
+                "node-648",
+                "node-657",
+                "node-653"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null
+            },
+            {
+              "id": "node-659",
+              "key": "QA-3",
+              "title": "Провести Tier 3 при закрытии направления",
+              "status": "done",
+              "ready": false,
+              "layer": 7,
+              "priority": 0.11768485456122686,
+              "depends_on": [
+                "node-658",
+                "node-664",
+                "node-654",
+                "node-665"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null
+            },
+            {
+              "id": "node-660",
+              "key": "APR-1",
+              "title": "Обработать REPLAN_INTERRUPT",
+              "status": "done",
+              "ready": false,
+              "layer": 5,
+              "priority": 0.21768485456122685,
+              "depends_on": [
+                "node-648",
+                "node-645"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null
+            },
+            {
+              "id": "node-661",
+              "key": "APR-2",
+              "title": "Заморозить план решением человека",
+              "status": "done",
+              "ready": false,
+              "layer": 4,
+              "priority": 0.21768485456122685,
+              "depends_on": [
+                "node-645"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null
+            },
+            {
+              "id": "node-662",
+              "key": "APR-3",
+              "title": "Запретить агенту обход review_required",
+              "status": "done",
+              "ready": false,
+              "layer": 0,
+              "priority": 0.21768485456122685,
+              "depends_on": [],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null
+            },
+            {
+              "id": "node-663",
+              "key": "FE-1",
+              "title": "Открыть вкладку планирования с моделью",
+              "status": "done",
+              "ready": false,
+              "layer": 2,
+              "priority": 0.21768485456122685,
+              "depends_on": [
+                "node-649",
+                "node-662"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null
+            },
+            {
+              "id": "node-664",
+              "key": "FE-2",
+              "title": "Показать уровни, фазу и попытки на странице плана",
+              "status": "done",
+              "ready": false,
+              "layer": 6,
+              "priority": 0.21768485456122685,
+              "depends_on": [
+                "node-661",
+                "node-648",
+                "node-660"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null
+            },
+            {
+              "id": "node-665",
+              "key": "FE-3",
+              "title": "Зеркалировать план в Obsidian .canvas и журнал попыток",
+              "status": "done",
+              "ready": false,
+              "layer": 3,
+              "priority": 0.21768485456122685,
+              "depends_on": [
+                "node-644",
+                "node-650"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null
+            }
+          ],
+          "done": 24,
+          "total": 29,
+          "canvas": null,
+          "updated_at": "2026-11-16T15:47:32.486391Z"
+        }
+      }
+    }
+  ]
+}

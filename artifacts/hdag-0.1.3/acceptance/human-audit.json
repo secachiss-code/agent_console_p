@@ -1,0 +1,171 @@
+[
+  {
+    "id": "3335ed5c9c834cdeb783e63348",
+    "plan_id": "plan-1",
+    "node_id": null,
+    "kind": "human",
+    "body": "Plan frozen",
+    "payload": {
+      "action": "freeze",
+      "revision_no": 1
+    },
+    "tab_id": null,
+    "status": "applied",
+    "created_at": "2026-11-16T11:36:01.417161+00:00",
+    "decided_at": "2026-11-16T11:36:01.417161+00:00",
+    "decided_by": "human"
+  },
+  {
+    "id": "9e7c4da6c9914d9898bb66165f",
+    "plan_id": "plan-1",
+    "node_id": "node-4",
+    "kind": "replan",
+    "body": "ATTEMPTS_EXHAUSTED",
+    "payload": {
+      "kind": "attempts",
+      "fence": 1,
+      "source_tab_id": "acc-2",
+      "decision": "unblock",
+      "decision_note": "Authorized acceptance review after restart; budget stays exhausted."
+    },
+    "tab_id": "acc-2",
+    "status": "applied",
+    "created_at": "2026-11-16T11:51:51.906434+00:00",
+    "decided_at": "2026-11-16T11:56:21.651990+00:00",
+    "decided_by": "human"
+  },
+  {
+    "id": "b093ad8119f440749531078586",
+    "plan_id": "plan-1",
+    "node_id": "node-4",
+    "kind": "replan",
+    "body": "ATTEMPTS_EXHAUSTED",
+    "payload": {
+      "kind": "attempts",
+      "fence": 2,
+      "source_tab_id": "acc-2",
+      "decision": "cancel",
+      "decision_note": "Negative fixture exhausted as intended; preserve its four failure receipts."
+    },
+    "tab_id": "acc-2",
+    "status": "applied",
+    "created_at": "2026-11-16T11:56:21.881382+00:00",
+    "decided_at": "2026-11-16T11:56:21.970835+00:00",
+    "decided_by": "human"
+  },
+  {
+    "id": "ea9af8738dc840e39616eb18e7",
+    "plan_id": "plan-7",
+    "node_id": null,
+    "kind": "human",
+    "body": "Plan frozen",
+    "payload": {
+      "action": "freeze",
+      "revision_no": 1
+    },
+    "tab_id": null,
+    "status": "applied",
+    "created_at": "2026-11-16T12:17:00.835703+00:00",
+    "decided_at": "2026-11-16T12:17:00.835703+00:00",
+    "decided_by": "human"
+  },
+  {
+    "id": "6924d69f6f4b42419fdd1fb140",
+    "plan_id": "plan-7",
+    "node_id": "node-8",
+    "kind": "human",
+    "body": "Direction gate failed: requires 5 tabs, core RSS <=120 MiB and UI RSS <=150 MiB",
+    "payload": {
+      "action": "direction_gate",
+      "tab_id": "acc-0",
+      "ui_pid": 373533,
+      "ui_process": {
+        "pid": 373533,
+        "start_ticks": 2650650,
+        "boot_id": "aa745c0a-0aea-4ccc-8614-3e074397a214"
+      },
+      "environment_image": "f4147a4165dbe6b85c65b0c7b0de4858bc9114466edabf2132f333861102eb70",
+      "environment_sha256": "cceb8988918b6c438aec515fe5b2c6ce187196178283d01d7437f6d557f9e337",
+      "receipt_hash": "65a9f9d1dfad819eb649aa367326e5b074a9ceee7066f2a658562d9682b1219f",
+      "metrics": {
+        "core_rss_mib": 199.1171875,
+        "ui_rss_mib": 202.95703125,
+        "tab_count": 5,
+        "cache_read_fraction": 0.9841575494797347,
+        "nodes_before": 5,
+        "nodes_after": 5
+      }
+    },
+    "tab_id": null,
+    "status": "applied",
+    "created_at": "2026-11-16T12:18:12.229575+00:00",
+    "decided_at": "2026-11-16T12:18:12.229575+00:00",
+    "decided_by": "human"
+  },
+  {
+    "id": "35cb5efcdf634558bdbade353c",
+    "plan_id": "plan-7",
+    "node_id": "node-8",
+    "kind": "human",
+    "body": "Direction gate failed: requires 5 tabs, core RSS <=120 MiB and UI RSS <=150 MiB",
+    "payload": {
+      "action": "direction_gate",
+      "tab_id": "acc-0",
+      "ui_pid": 385988,
+      "ui_process": {
+        "pid": 385988,
+        "start_ticks": 2683616,
+        "boot_id": "aa745c0a-0aea-4ccc-8614-3e074397a214"
+      },
+      "environment_image": "f4147a4165dbe6b85c65b0c7b0de4858bc9114466edabf2132f333861102eb70",
+      "environment_sha256": "cceb8988918b6c438aec515fe5b2c6ce187196178283d01d7437f6d557f9e337",
+      "receipt_hash": "65a9f9d1dfad819eb649aa367326e5b074a9ceee7066f2a658562d9682b1219f",
+      "metrics": {
+        "core_rss_mib": 200.30859375,
+        "ui_rss_mib": 195.49609375,
+        "tab_count": 5,
+        "cache_read_fraction": 0.9841609762490431,
+        "nodes_before": 5,
+        "nodes_after": 5
+      }
+    },
+    "tab_id": null,
+    "status": "applied",
+    "created_at": "2026-11-16T12:19:52.274504+00:00",
+    "decided_at": "2026-11-16T12:19:52.274504+00:00",
+    "decided_by": "human"
+  },
+  {
+    "id": "8162596324eb4a0b8124e62227",
+    "plan_id": "plan-7",
+    "node_id": "node-8",
+    "kind": "human",
+    "body": "Direction gate failed: requires 5 tabs, core RSS <=120 MiB and UI RSS <=150 MiB",
+    "payload": {
+      "action": "direction_gate",
+      "tab_id": "acc-0",
+      "ui_pid": 385988,
+      "ui_process": {
+        "pid": 385988,
+        "start_ticks": 2683616,
+        "boot_id": "aa745c0a-0aea-4ccc-8614-3e074397a214"
+      },
+      "environment_image": "f4147a4165dbe6b85c65b0c7b0de4858bc9114466edabf2132f333861102eb70",
+      "environment_sha256": "cceb8988918b6c438aec515fe5b2c6ce187196178283d01d7437f6d557f9e337",
+      "receipt_hash": "65a9f9d1dfad819eb649aa367326e5b074a9ceee7066f2a658562d9682b1219f",
+      "metrics": {
+        "core_rss_mib": 200.12890625,
+        "ui_rss_mib": 199.51953125,
+        "tab_count": 5,
+        "cache_read_fraction": 0.9841609762490431,
+        "nodes_before": 5,
+        "nodes_after": 5
+      }
+    },
+    "tab_id": null,
+    "status": "applied",
+    "created_at": "2026-11-16T12:20:08.346300+00:00",
+    "decided_at": "2026-11-16T12:20:08.346300+00:00",
+    "decided_by": "human"
+  }
+]

@@ -24,6 +24,7 @@ from tests.core.conftest import wait_for_socket
 from tests.core.test_approval_hold import _post_daemon_permission_hook
 from tests.core.test_approval_window import _gone, _held
 from tests.core.test_wire import _daemon, _git_repo, _open
+from tests.hdag_fixtures import planning_nodes
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -98,22 +99,24 @@ async def _exercise_http_plan(client: CoreClient, project: ProjectView, mcp: _Ht
         {
             "title": "HTTP plan",
             "goal": "Reach the UI",
-            "nodes": [
-                {"key": "WIRE-1", "title": "First task", "objective": "Prove the transport"},
-            ],
+            "nodes": planning_nodes("WIRE-1"),
         },
     )
     plan_id = PlanId(str(created["plan_id"]))
     facade = TypedFacade(client)
-    plan = await facade.plan_get(PlanIdParams(plan_id=plan_id))
+    plan = await facade.plan_freeze(PlanIdParams(plan_id=plan_id))
     assert plan.title == "HTTP plan"
-    assert len(plan.nodes) == 1
-    claimed = await asyncio.to_thread(mcp.tool, "node_claim", {"node_id": str(plan.nodes[0].id)})
+    assert len(plan.nodes) == 2
+    module = next(node for node in plan.nodes if node.key == "WIRE-1")
+    claimed = await asyncio.to_thread(mcp.tool, "node_claim", {"node_id": str(module.id)})
     assert claimed["fence"] == 1
     for _ in range(250):
         snapshot = client.store.snapshot
         if snapshot is not None and any(
-            item.id == plan_id and item.nodes[0].status is NodeStatus.IN_PROGRESS for item in snapshot.plans
+            item.id == plan_id and any(
+                node.id == module.id and node.status is NodeStatus.IN_PROGRESS for node in item.nodes
+            )
+            for item in snapshot.plans
         ):
             break
         await asyncio.sleep(0.02)
@@ -134,9 +137,9 @@ async def _assert_plan_survives_restart(tmp_path: Path, plan_id: PlanId) -> None
         restored = await TypedFacade(client).plan_get(PlanIdParams(plan_id=plan_id))
         assert restored.title == "HTTP plan"
         # A real persisted tab retains its unexpired lease across core restarts.
-        assert restored.nodes[0].status is NodeStatus.IN_PROGRESS
-        assert restored.nodes[0].key == "WIRE-1"
-        assert restored.nodes[0].lease_expires_at is not None
+        module = next(node for node in restored.nodes if node.key == "WIRE-1")
+        assert module.status is NodeStatus.IN_PROGRESS
+        assert module.lease_expires_at is not None
     finally:
         await client.close()
         daemon.request_stop()
@@ -164,7 +167,7 @@ def test_tab_hook_decision_and_http_mcp_plan_reach_the_ui(
             await client.connect()
             facade = TypedFacade(client)
             project = await facade.project_add(ProjectAddParams(root=str(repo)))
-            tab = await facade.tab_open(_open(project.id))
+            tab = await facade.tab_open(msgspec.structs.replace(_open(project.id), mode="plan", model="explicit-model"))
             spec = await facade.tab_launch_spec(TabIdParams(tab_id=tab.id))
             await client.pull_snapshot()
             assert client.store.snapshot is not None

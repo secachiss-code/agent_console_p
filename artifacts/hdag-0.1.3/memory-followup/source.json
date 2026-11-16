@@ -1,0 +1,7 @@
+{
+  "source_sha256": "8100ad3f62fa5a92b2ab4db1073bcc31163b6493a3edd8ca9ccb92918264ed6b",
+  "scope": "candidate source; uncommitted working tree",
+  "core_python": "3.15.1 free-threaded; GIL disabled",
+  "ui_renderer": "cairo",
+  "gate_image": "f4147a4165dbe6b85c65b0c7b0de4858bc9114466edabf2132f333861102eb70"
+}

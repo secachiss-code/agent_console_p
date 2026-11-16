@@ -1,0 +1,24 @@
+{
+  "command": [
+    "/home/sas/Projects/sp_aconsole_prototype/.venv-ui/bin/python",
+    "-m",
+    "pytest",
+    "-o",
+    "addopts=",
+    "-q",
+    "--junitxml=/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/e9b422b1e208b10f/artifacts/hdag-0.1.3/memory-followup/ui-tests/pytest.xml",
+    "tests/gui/front/test_rendering.py",
+    "tests/gui/front/test_b0_window.py",
+    "tests/gui/front/test_b1_keys.py",
+    "tests/gui/front/test_des3_visual.py",
+    "tests/gui/front/test_widget_memory.py",
+    "tests/gui/front/test_preferences_drafts.py",
+    "tests/gui/front/test_approval_alerts.py",
+    "tests/gui/front/test_window_badge_lifecycle.py"
+  ],
+  "display": ":0",
+  "gdk_backend": "x11",
+  "renderer_override": null,
+  "production_identity_changed": false,
+  "returncode": 1
+}

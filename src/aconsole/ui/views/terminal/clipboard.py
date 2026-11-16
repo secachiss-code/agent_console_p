@@ -22,10 +22,10 @@ class TerminalClipboard:
         self, page: Gtk.Widget, terminal: Vte.Terminal,
         prepare: Callable[[bytes], Awaitable[str]], error: Callable[[str], None],
     ) -> None:
-        self.page: Gtk.Widget = page
+        self.page: Gtk.Widget | None = page
         self.terminal: Vte.Terminal = terminal
         self.prepare: Callable[[bytes], Awaitable[str]] = prepare
-        self.error: Callable[[str], None] = error
+        self.error: Callable[[str], None] | None = error
         self.task: asyncio.Task[None] | None = None
         self.cancellable: Gio.Cancellable | None = None
         self.closed: bool = False
@@ -37,13 +37,16 @@ class TerminalClipboard:
             _ = self.task.cancel()
 
     def focused(self) -> bool:
-        root = self.page.get_root()
-        if self.closed or not self.page.get_mapped() or not isinstance(root, Gtk.Window) or not root.is_active():
+        page = self.page
+        if self.closed or page is None:
+            return False
+        root = page.get_root()
+        if not page.get_mapped() or not isinstance(root, Gtk.Window) or not root.is_active():
             return False
         focus = root.get_focus()
         terminal_focused = False
         while focus is not None:
-            if focus is self.page:
+            if focus is page:
                 return terminal_focused
             terminal_focused |= focus.has_css_class("ac-terminal")
             focus = focus.get_parent()
@@ -93,6 +96,8 @@ class TerminalClipboard:
 
     async def _paste(self, *, image_only: bool) -> None:
         try:
+            if self.page is None:
+                return
             clipboard = self.page.get_clipboard()
             formats = clipboard.get_formats()
             has_text = formats.contain_gtype(GObject.TYPE_STRING) or any(
@@ -114,5 +119,11 @@ class TerminalClipboard:
         except asyncio.CancelledError:
             raise
         except Exception as error:  # noqa: BLE001 -- clipboard owners may disappear during an async transfer
-            if self.focused():
+            if self.focused() and self.error is not None:
                 self.error(translate("clipboard.error").format(error=error))
+
+    def close(self) -> None:
+        self.closed = True
+        self.cancel()
+        self.page = None
+        self.error = None

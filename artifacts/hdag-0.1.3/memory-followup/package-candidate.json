@@ -1,0 +1,10 @@
+{
+  "method": "real Git temporary candidate index; shared index untouched",
+  "new_application_files": [
+    "src/aconsole/core/infrastructure/persistence/migration_worker.py",
+    "src/aconsole/core/infrastructure/process_metrics.py",
+    "src/aconsole/ui/rendering.py",
+    "src/aconsole/ui/signals.py"
+  ],
+  "returncode": 0
+}

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="3" time="0.139" timestamp="2026-11-16T18:15:17.960170+03:00" hostname="somovasnbook14"><testcase classname="tests.test_package" name="test_version_and_roots_import" time="0.042" /><testcase classname="tests.test_packaging" name="test_the_package_carries_what_runs_and_nothing_else" time="0.026" /><testcase classname="tests.test_packaging" name="test_package_includes_license_and_only_application_sources" time="0.007"><failure message="SystemExit: untracked application files would be omitted; add them to Git before building: src/aconsole/core/infrastructure/persistence/migration_worker.py, src/aconsole/core/infrastructure/process_metrics.py, src/aconsole/ui/rendering.py, src/aconsole/ui/signals.py">tmp_path = PosixPath('/tmp/pytest-of-sas/pytest-77/test_package_includes_license_0')
+
+    def test_package_includes_license_and_only_application_sources(tmp_path: Path) -&gt; None:
+        builder = _builder()
+        builder._share(tmp_path)
+        license_file = tmp_path / "usr/share/doc/aconsole/copyright"
+        assert license_file.read_bytes() == (_SCRIPT.parents[1] / "LICENSE").read_bytes()
+        site = tmp_path / "site"
+&gt;       builder._copy_app(site)
+
+tests/test_packaging.py:40:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+site = PosixPath('/tmp/pytest-of-sas/pytest-77/test_package_includes_license_0/site')
+
+    def _copy_app(site: Path) -&gt; None:
+        """Ship a tracked source manifest, refusing to silently omit new application files."""
+        untracked = subprocess.run(
+            ("git", "ls-files", "--others", "--exclude-standard", "-z", "--", "src/aconsole", "migrations"),  # noqa: S607 -- Git by name
+            cwd=ROOT, check=True, capture_output=True, text=True,
+        ).stdout
+        if untracked:
+            names = ", ".join(name for name in untracked.split("\0") if name)
+            message = f"untracked application files would be omitted; add them to Git before building: {names}"
+&gt;           raise SystemExit(message)
+E           SystemExit: untracked application files would be omitted; add them to Git before building: src/aconsole/core/infrastructure/persistence/migration_worker.py, src/aconsole/core/infrastructure/process_metrics.py, src/aconsole/ui/rendering.py, src/aconsole/ui/signals.py
+
+packaging/build_deb.py:148: SystemExit</failure></testcase></testsuite></testsuites>

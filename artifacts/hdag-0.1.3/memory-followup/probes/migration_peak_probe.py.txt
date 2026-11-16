@@ -1,0 +1,15 @@
+import json,subprocess,sys,tempfile,time
+from datetime import datetime,UTC
+from pathlib import Path
+with tempfile.TemporaryDirectory(prefix='ac-migration-peak-',dir='/tmp') as root:
+ cmd=[sys.executable,'-m','aconsole.core.infrastructure.persistence.migration_worker',str(Path(root)/'new.db'),datetime.now(UTC).isoformat()]
+ started=time.monotonic();p=subprocess.Popen(cmd,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True);peak=0;samples=0
+ while p.poll() is None:
+  try:
+   for line in Path(f'/proc/{p.pid}/status').read_text().splitlines():
+    if line.startswith('VmRSS:'): peak=max(peak,int(line.split()[1])/1024);samples+=1
+  except FileNotFoundError: pass
+  time.sleep(.005)
+ out,err=p.communicate()
+ assert p.returncode==0,err
+ Path(sys.argv[1]).write_text(json.dumps({'case':'new database migrations; transient child only','peak_worker_rss_mib':peak,'samples':samples,'duration_seconds':time.monotonic()-started,'returncode':p.returncode},indent=2)+'\n')

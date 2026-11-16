@@ -11,6 +11,7 @@ gi.require_version("Gtk", "4.0")
 gi.require_version("Vte", "3.91")
 from gi.repository import Gdk, GLib, Gtk, Vte  # noqa: E402
 
+from aconsole.ui.signals import SignalConnections  # noqa: E402
 from aconsole.ui.views.terminal.messages import _ as translate  # noqa: E402
 
 # VTE compiles search patterns with PCRE2 and requires MULTILINE.
@@ -22,20 +23,21 @@ _NOT_FOUND: Final = "error"
 class TerminalSearchBar(Gtk.Revealer):
     def __init__(self, terminal: Vte.Terminal, on_close: Callable[[], None]) -> None:
         super().__init__(transition_type=Gtk.RevealerTransitionType.SLIDE_DOWN, transition_duration=150)
+        self._signals: SignalConnections = SignalConnections()
         self._terminal: Vte.Terminal = terminal
-        self._on_close: Callable[[], None] = on_close
+        self._on_close: Callable[[], None] | None = on_close
         self.set_halign(Gtk.Align.END)
         self.set_valign(Gtk.Align.START)
         self.entry: Gtk.SearchEntry = Gtk.SearchEntry(placeholder_text=translate("terminal.search"))
         self.entry.set_width_chars(24)
-        _ = self.entry.connect("search-changed", self._changed)
-        _ = self.entry.connect("activate", self._next)
-        _ = self.entry.connect("next-match", self._next)
-        _ = self.entry.connect("previous-match", self._previous)
-        _ = self.entry.connect("stop-search", self._closed)
+        self._signals.connect(self.entry, "search-changed", self._changed)
+        self._signals.connect(self.entry, "activate", self._next)
+        self._signals.connect(self.entry, "next-match", self._next)
+        self._signals.connect(self.entry, "previous-match", self._previous)
+        self._signals.connect(self.entry, "stop-search", self._closed)
         keys = Gtk.EventControllerKey()
         keys.set_propagation_phase(Gtk.PropagationPhase.CAPTURE)
-        _ = keys.connect("key-pressed", self._key_pressed)
+        self._signals.connect(keys, "key-pressed", self._key_pressed)
         self.entry.add_controller(keys)
         box = Gtk.Box(spacing=4)
         box.add_css_class("ac-terminal-search")
@@ -48,7 +50,7 @@ class TerminalSearchBar(Gtk.Revealer):
             button = Gtk.Button(icon_name=icon, tooltip_text=translate(key))
             button.add_css_class("flat")
             button.update_property([Gtk.AccessibleProperty.LABEL], [translate(key)])
-            _ = button.connect("clicked", callback)
+            self._signals.connect(button, "clicked", callback)
             box.append(button)
         self.set_child(box)
         self.set_can_target(False)
@@ -111,10 +113,15 @@ class TerminalSearchBar(Gtk.Revealer):
         if terminal_widget.get_realized():
             self._terminal.search_set_regex(None, 0)
             self._terminal.unselect_all()
-        self._on_close()
+        if self._on_close is not None:
+            self._on_close()
 
     def _key_pressed(self, _keys: Gtk.EventControllerKey, keyval: int, _code: int, state: Gdk.ModifierType) -> bool:
         if keyval in {Gdk.KEY_Return, Gdk.KEY_KP_Enter} and state & Gdk.ModifierType.SHIFT_MASK:
             self._previous()
             return True
         return False
+
+    def close(self) -> None:
+        self._signals.close()
+        self._on_close = None

@@ -4,19 +4,45 @@ from __future__ import annotations
 
 import os
 import sqlite3
+import subprocess
+import sys
 from datetime import UTC, datetime
 from pathlib import Path
 
-from alembic.config import Config
-from alembic.runtime.migration import MigrationContext
-from alembic.script import ScriptDirectory
+import msgspec
 from sqlalchemy import create_engine
 from sqlalchemy.pool import NullPool
+lazy from alembic.config import Config
+lazy from alembic.runtime.migration import MigrationContext
+lazy from alembic.script import ScriptDirectory
 
 from aconsole.core.infrastructure.persistence.engine import MIGRATIONS, migrate
 
 _DIR_MODE = 0o700
 _KEEP_BACKUPS = 3
+_PREPARE_TIMEOUT_S = 120
+
+
+def prepare_database_isolated(path: Path, *, now: datetime) -> Path | None:
+    """Finish migrations before opening pools, then release their interpreter.
+
+    Alembic loads dialects, templates and syntax highlighters that the running
+    daemon never uses. The worker owns no service or pool after this call.
+    A failed or timed-out worker aborts startup; it never opens an old schema.
+    """
+    result = subprocess.run(  # noqa: S603 -- fixed module in the same installed interpreter; no shell
+        [sys.executable, "-m", "aconsole.core.infrastructure.persistence.migration_worker",
+         str(path), now.isoformat()],
+        check=True, capture_output=True, text=True, timeout=_PREPARE_TIMEOUT_S,
+        # An editable checkout need not be the worker's cwd. Resolve the same
+        # package as the parent, rather than another installed AConsole version.
+        env={**os.environ, "PYTHONPATH": os.pathsep.join(filter(None, (
+            str(Path(__file__).resolve().parents[4]), os.environ.get("PYTHONPATH", ""),
+        )))},
+    )
+    if result.stdout.strip() == "null":
+        return None
+    return Path(msgspec.json.decode(result.stdout, type=str))
 
 
 def default_database() -> Path:

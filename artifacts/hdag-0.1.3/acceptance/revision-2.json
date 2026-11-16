@@ -1,0 +1,1880 @@
+{
+  "case": "revision-2",
+  "complete": true,
+  "events": [
+    {
+      "transport": "mcp-http",
+      "tool": "plan_create",
+      "arguments": {
+        "title": "0.1.3 — отдельная приёмка H-DAG — ревизия 2",
+        "goal": "Проверить положительные приёмочные узлы и живой Tier 3. Негативная исчерпанная фикстура остаётся в первом плане; ACC-2 проверяет её неизменные доказательства. Лимиты RSS 120/150 МиБ сохраняются.",
+        "nodes": [
+          {
+            "key": "ACC-0",
+            "title": "Приёмка H-DAG в отдельном проекте",
+            "objective": "Проверить замороженные контракты на небольшом реальном CLI-сценарии. Только отдельный приёмочный repository.",
+            "depends_on": [
+              "ACC-1",
+              "ACC-2",
+              "ACC-3",
+              "ACC-4"
+            ],
+            "parent": null,
+            "related": [],
+            "owner_agent": null,
+            "paths": [
+              "src/**",
+              "tests/**",
+              "evidence/**"
+            ],
+            "acceptance": [
+              "Все четыре L1 завершены со свежими квитанциями.",
+              "Живой Tier 3 зелёный; числовые бюджеты не ослаблены."
+            ],
+            "level": 0,
+            "pipeline": false,
+            "invariants": "Фиксированные 5 вершин; L2 не создаёт узлы; квитанции создаёт ядро; закрытие L0 — человеком.",
+            "gate_profile": {
+              "micro": {
+                "format": [
+                  "/opt/aconsole/core/bin/ruff",
+                  "format"
+                ],
+                "fix": [
+                  "/opt/aconsole/core/bin/ruff",
+                  "check",
+                  "--fix"
+                ],
+                "lint": [
+                  "/opt/aconsole/core/bin/ruff",
+                  "check"
+                ],
+                "types": [
+                  "/opt/aconsole/core/bin/basedpyright"
+                ],
+                "tests": [
+                  "/opt/aconsole/core/bin/python",
+                  "-m",
+                  "pytest"
+                ]
+              },
+              "direction": [
+                [
+                  "/opt/aconsole/ui/bin/python",
+                  "-m",
+                  "pytest",
+                  "tests"
+                ]
+              ],
+              "environment": {
+                "container": "aconsole-acc-gate-ba2a407ac5",
+                "image": "f4147a4165dbe6b85c65b0c7b0de4858bc9114466edabf2132f333861102eb70"
+              }
+            },
+            "test_cmd": null,
+            "review_required": true,
+            "output_format": null,
+            "boundaries": null
+          },
+          {
+            "key": "ACC-1",
+            "title": "Повторная проверка успешного pipeline",
+            "objective": "Выполнить сценарий в отдельном приёмочном проекте; сохранять evidence.",
+            "depends_on": [],
+            "parent": "ACC-0",
+            "related": [],
+            "owner_agent": null,
+            "paths": [
+              "src/success.py",
+              "tests/test_success.py",
+              "evidence/success/**"
+            ],
+            "acceptance": [
+              "Настоящие Tier 1/2 дают зелёные квитанции. Живой Codex CLI отдельно доказан первым прогоном; этот узел исполняется детерминированным MCP-драйвером."
+            ],
+            "level": 1,
+            "pipeline": true,
+            "invariants": null,
+            "gate_profile": null,
+            "test_cmd": "/opt/aconsole/core/bin/python -m pytest tests/test_success.py",
+            "review_required": false,
+            "output_format": null,
+            "boundaries": "Не менять продуктовую ветку, бюджеты и глобальные правила проверок. При блокере — inbox, без новых вершин."
+          },
+          {
+            "key": "ACC-2",
+            "title": "Проверить доказательства исчерпанной фикстуры",
+            "objective": "Выполнить сценарий в отдельном приёмочном проекте; сохранять evidence.",
+            "depends_on": [
+              "ACC-1"
+            ],
+            "parent": "ACC-0",
+            "related": [],
+            "owner_agent": null,
+            "paths": [
+              "src/retry.py",
+              "tests/test_retry.py",
+              "evidence/retry/**"
+            ],
+            "acceptance": [
+              "Тест проверяет SHA256 журналов первого плана и ATTEMPTS_EXHAUSTED до и после restart; четыре провала не повторяются в этом успешном узле."
+            ],
+            "level": 1,
+            "pipeline": true,
+            "invariants": null,
+            "gate_profile": null,
+            "test_cmd": "/opt/aconsole/core/bin/python -m pytest tests/test_retry.py",
+            "review_required": false,
+            "output_format": null,
+            "boundaries": "Не менять продуктовую ветку, бюджеты и глобальные правила проверок. При блокере — inbox, без новых вершин."
+          },
+          {
+            "key": "ACC-3",
+            "title": "Повторная проверка pipeline и квитанций",
+            "objective": "Выполнить сценарий в отдельном приёмочном проекте; сохранять evidence.",
+            "depends_on": [
+              "ACC-1"
+            ],
+            "parent": "ACC-0",
+            "related": [],
+            "owner_agent": null,
+            "paths": [
+              "src/identity.py",
+              "tests/test_identity.py",
+              "evidence/identity/**"
+            ],
+            "acceptance": [
+              "Настоящие Tier 1/2 дают зелёные квитанции. Защита старого fence, scope и дерева отдельно доказана первым прогоном."
+            ],
+            "level": 1,
+            "pipeline": true,
+            "invariants": null,
+            "gate_profile": null,
+            "test_cmd": "/opt/aconsole/core/bin/python -m pytest tests/test_identity.py",
+            "review_required": false,
+            "output_format": null,
+            "boundaries": "Не менять продуктовую ветку, бюджеты и глобальные правила проверок. При блокере — inbox, без новых вершин."
+          },
+          {
+            "key": "ACC-4",
+            "title": "Ресурсы и закрытие направления",
+            "objective": "Выполнить сценарий в отдельном приёмочном проекте; сохранять evidence.",
+            "depends_on": [
+              "ACC-2",
+              "ACC-3"
+            ],
+            "parent": "ACC-0",
+            "related": [],
+            "owner_agent": null,
+            "paths": [
+              "src/resources.py",
+              "tests/test_resources.py",
+              "evidence/resources/**"
+            ],
+            "acceptance": [
+              "Записаны реальные процессные идентичности и измерения пяти вкладок. Ресурсные лимиты проверяет L0 после завершения дочерних узлов; L1 не требует заранее зелёного L0."
+            ],
+            "level": 1,
+            "pipeline": true,
+            "invariants": null,
+            "gate_profile": null,
+            "test_cmd": "/opt/aconsole/core/bin/python -m pytest tests/test_resources.py",
+            "review_required": false,
+            "output_format": null,
+            "boundaries": "Не менять продуктовую ветку, бюджеты и глобальные правила проверок. При блокере — inbox, без новых вершин."
+          }
+        ]
+      },
+      "response": {
+        "plan_id": "plan-7",
+        "nodes": [
+          {
+            "key": "ACC-0",
+            "node_id": "node-8"
+          },
+          {
+            "key": "ACC-1",
+            "node_id": "node-9"
+          },
+          {
+            "key": "ACC-2",
+            "node_id": "node-10"
+          },
+          {
+            "key": "ACC-3",
+            "node_id": "node-11"
+          },
+          {
+            "key": "ACC-4",
+            "node_id": "node-12"
+          }
+        ],
+        "canvas_note": "aconsole://plan/plan-7"
+      },
+      "is_error": false
+    },
+    {
+      "transport": "human-ipc",
+      "method": "plan/freeze",
+      "response": {
+        "kind": "result",
+        "jsonrpc": "2.0",
+        "id": 2,
+        "result": {
+          "id": "plan-7",
+          "project_id": "hdag-acceptance",
+          "title": "0.1.3 — отдельная приёмка H-DAG — ревизия 2",
+          "goal": "Проверить положительные приёмочные узлы и живой Tier 3. Негативная исчерпанная фикстура остаётся в первом плане; ACC-2 проверяет её неизменные доказательства. Лимиты RSS 120/150 МиБ сохраняются.",
+          "status": "active",
+          "nodes": [
+            {
+              "id": "node-8",
+              "key": "ACC-0",
+              "title": "Приёмка H-DAG в отдельном проекте",
+              "status": "pending",
+              "ready": false,
+              "layer": 3,
+              "priority": 2.222037037037037e-08,
+              "depends_on": [
+                "node-9",
+                "node-10",
+                "node-11",
+                "node-12"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null,
+              "level": 0,
+              "parent": null,
+              "pipeline": false,
+              "attempt_no": 0,
+              "max_attempts": 4,
+              "last_verdict": null
+            },
+            {
+              "id": "node-9",
+              "key": "ACC-1",
+              "title": "Повторная проверка успешного pipeline",
+              "status": "pending",
+              "ready": true,
+              "layer": 0,
+              "priority": 3.3000000222203703,
+              "depends_on": [],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null,
+              "level": 1,
+              "parent": "node-8",
+              "pipeline": true,
+              "attempt_no": 0,
+              "max_attempts": 4,
+              "last_verdict": null
+            },
+            {
+              "id": "node-10",
+              "key": "ACC-2",
+              "title": "Проверить доказательства исчерпанной фикстуры",
+              "status": "pending",
+              "ready": false,
+              "layer": 1,
+              "priority": 2.2000000222203706,
+              "depends_on": [
+                "node-9"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null,
+              "level": 1,
+              "parent": "node-8",
+              "pipeline": true,
+              "attempt_no": 0,
+              "max_attempts": 4,
+              "last_verdict": null
+            },
+            {
+              "id": "node-11",
+              "key": "ACC-3",
+              "title": "Повторная проверка pipeline и квитанций",
+              "status": "pending",
+              "ready": false,
+              "layer": 1,
+              "priority": 2.2000000222203706,
+              "depends_on": [
+                "node-9"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null,
+              "level": 1,
+              "parent": "node-8",
+              "pipeline": true,
+              "attempt_no": 0,
+              "max_attempts": 4,
+              "last_verdict": null
+            },
+            {
+              "id": "node-12",
+              "key": "ACC-4",
+              "title": "Ресурсы и закрытие направления",
+              "status": "pending",
+              "ready": false,
+              "layer": 2,
+              "priority": 1.1000000222203705,
+              "depends_on": [
+                "node-10",
+                "node-11"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null,
+              "level": 1,
+              "parent": "node-8",
+              "pipeline": true,
+              "attempt_no": 0,
+              "max_attempts": 4,
+              "last_verdict": null
+            }
+          ],
+          "done": 0,
+          "total": 5,
+          "canvas": null,
+          "updated_at": "2026-11-16T12:17:00.835703Z",
+          "phase": "frozen",
+          "warnings": []
+        }
+      }
+    },
+    {
+      "transport": "human-ipc",
+      "method": "plan/get",
+      "response": {
+        "kind": "result",
+        "jsonrpc": "2.0",
+        "id": 2,
+        "result": {
+          "id": "plan-7",
+          "project_id": "hdag-acceptance",
+          "title": "0.1.3 — отдельная приёмка H-DAG — ревизия 2",
+          "goal": "Проверить положительные приёмочные узлы и живой Tier 3. Негативная исчерпанная фикстура остаётся в первом плане; ACC-2 проверяет её неизменные доказательства. Лимиты RSS 120/150 МиБ сохраняются.",
+          "status": "active",
+          "nodes": [
+            {
+              "id": "node-8",
+              "key": "ACC-0",
+              "title": "Приёмка H-DAG в отдельном проекте",
+              "status": "pending",
+              "ready": false,
+              "layer": 3,
+              "priority": 2.252824074074074e-08,
+              "depends_on": [
+                "node-9",
+                "node-10",
+                "node-11",
+                "node-12"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null,
+              "level": 0,
+              "parent": null,
+              "pipeline": false,
+              "attempt_no": 0,
+              "max_attempts": 4,
+              "last_verdict": null
+            },
+            {
+              "id": "node-9",
+              "key": "ACC-1",
+              "title": "Повторная проверка успешного pipeline",
+              "status": "pending",
+              "ready": true,
+              "layer": 0,
+              "priority": 3.3000000225282404,
+              "depends_on": [],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null,
+              "level": 1,
+              "parent": "node-8",
+              "pipeline": true,
+              "attempt_no": 0,
+              "max_attempts": 4,
+              "last_verdict": null
+            },
+            {
+              "id": "node-10",
+              "key": "ACC-2",
+              "title": "Проверить доказательства исчерпанной фикстуры",
+              "status": "pending",
+              "ready": false,
+              "layer": 1,
+              "priority": 2.200000022528241,
+              "depends_on": [
+                "node-9"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null,
+              "level": 1,
+              "parent": "node-8",
+              "pipeline": true,
+              "attempt_no": 0,
+              "max_attempts": 4,
+              "last_verdict": null
+            },
+            {
+              "id": "node-11",
+              "key": "ACC-3",
+              "title": "Повторная проверка pipeline и квитанций",
+              "status": "pending",
+              "ready": false,
+              "layer": 1,
+              "priority": 2.200000022528241,
+              "depends_on": [
+                "node-9"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null,
+              "level": 1,
+              "parent": "node-8",
+              "pipeline": true,
+              "attempt_no": 0,
+              "max_attempts": 4,
+              "last_verdict": null
+            },
+            {
+              "id": "node-12",
+              "key": "ACC-4",
+              "title": "Ресурсы и закрытие направления",
+              "status": "pending",
+              "ready": false,
+              "layer": 2,
+              "priority": 1.100000022528241,
+              "depends_on": [
+                "node-10",
+                "node-11"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null,
+              "level": 1,
+              "parent": "node-8",
+              "pipeline": true,
+              "attempt_no": 0,
+              "max_attempts": 4,
+              "last_verdict": null
+            }
+          ],
+          "done": 0,
+          "total": 5,
+          "canvas": null,
+          "updated_at": "2026-11-16T12:17:00.835703Z",
+          "phase": "frozen",
+          "warnings": []
+        }
+      }
+    },
+    {
+      "transport": "mcp-http",
+      "tool": "node_claim",
+      "arguments": {
+        "node_id": "node-9"
+      },
+      "response": {
+        "lease_id": "plan-7:ACC-1:1",
+        "fence": 1,
+        "expires_at": "2026-11-16T12:32:00.857361+00:00",
+        "brief": {
+          "objective": "Выполнить сценарий в отдельном приёмочном проекте; сохранять evidence.",
+          "acceptance": [
+            "Настоящие Tier 1/2 дают зелёные квитанции. Живой Codex CLI отдельно доказан первым прогоном; этот узел исполняется детерминированным MCP-драйвером."
+          ],
+          "paths": [
+            "src/success.py",
+            "tests/test_success.py",
+            "evidence/success/**"
+          ],
+          "boundaries": "Не менять продуктовую ветку, бюджеты и глобальные правила проверок. При блокере — inbox, без новых вершин."
+        },
+        "context": {
+          "items": [],
+          "truncated": false,
+          "verified_commit": "05faed8a83e2aa0ccd6831204462565591d2f06a"
+        }
+      },
+      "is_error": false
+    },
+    {
+      "transport": "mcp-http",
+      "tool": "step_begin",
+      "arguments": {
+        "node_id": "node-9",
+        "fence": 1
+      },
+      "response": {
+        "direction_prefix": "{\"direction\":\"ACC-0\",\"gate_profile\":{\"direction\":[[\"/opt/aconsole/ui/bin/python\",\"-m\",\"pytest\",\"tests\"]],\"environment\":{\"container\":\"aconsole-acc-gate-ba2a407ac5\",\"image\":\"f4147a4165dbe6b85c65b0c7b0de4858bc9114466edabf2132f333861102eb70\"},\"micro\":{\"fix\":[\"/opt/aconsole/core/bin/ruff\",\"check\",\"--fix\"],\"format\":[\"/opt/aconsole/core/bin/ruff\",\"format\"],\"lint\":[\"/opt/aconsole/core/bin/ruff\",\"check\"],\"tests\":[\"/opt/aconsole/core/bin/python\",\"-m\",\"pytest\"],\"types\":[\"/opt/aconsole/core/bin/basedpyright\"]}},\"invariants\":\"Фиксированные 5 вершин; L2 не создаёт узлы; квитанции создаёт ядро; закрытие L0 — человеком.\",\"scope\":[\"evidence/**\",\"src/**\",\"tests/**\"],\"skeletons\":[[\"src/identity.py\",\"def value() -> int:\\n    ...\"],[\"src/resources.py\",\"def value() -> int:\\n    ...\"],[\"src/retry.py\",\"def value() -> int:\\n    ...\"],[\"src/success.py\",\"def value() -> int:\\n    ...\"],[\"tests/test_identity.py\",\"def test_value() -> None:\\n    ...\"],[\"tests/test_resources.py\",\"def test_value() -> None:\\n    ...\"],[\"tests/test_retry.py\",\"def test_value() -> None:\\n    ...\"],[\"tests/test_success.py\",\"def test_value() -> None:\\n    ...\"]]}",
+        "prefix_sha256": "47097142d59b8e518341e3909870131599b61b67089a24c428e32fee16b4b2ec",
+        "contract": "{\"acceptance\":[\"Настоящие Tier 1/2 дают зелёные квитанции. Живой Codex CLI отдельно доказан первым прогоном; этот узел исполняется детерминированным MCP-драйвером.\"],\"blast_radius\":[],\"boundaries\":\"Не менять продуктовую ветку, бюджеты и глобальные правила проверок. При блокере — inbox, без новых вершин.\",\"contract_sha256\":\"abaea56636e0628f68747a86980814a2031587bd3fcb9514da7cd0566d08e03d\",\"direction_key\":\"ACC-0\",\"key\":\"ACC-1\",\"objective\":\"Выполнить сценарий в отдельном приёмочном проекте; сохранять evidence.\",\"output_format\":null,\"paths\":[\"src/success.py\",\"tests/test_success.py\",\"evidence/success/**\"],\"test_cmd\":\"/opt/aconsole/core/bin/python -m pytest tests/test_success.py\"}",
+        "handoff": "{\"attempt\":1,\"compact_verdict\":null,\"contract_hash\":\"abaea56636e0628f68747a86980814a2031587bd3fcb9514da7cd0566d08e03d\",\"diff_stat\":null,\"head_block_hash\":\"bebecef1b24d265105dd296a4d610672ab4202d7ac81c56e6f04cbc329aae09a\",\"max_attempts\":4,\"next\":\"Complete the spec step.\",\"node\":\"ACC-1\",\"remaining_items\":[],\"scope\":[\"src/success.py\",\"tests/test_success.py\",\"evidence/success/**\"],\"step\":\"spec\",\"symbols\":[],\"v\":1}",
+        "file_slice": "src/success.py\n1: def value() -> int:\n2:     return 42",
+        "lease_id": "plan-7:ACC-1:1",
+        "fence": 1,
+        "expires_at": "2026-11-16T12:32:00.975319+00:00"
+      },
+      "is_error": false
+    },
+    {
+      "transport": "mcp-http",
+      "tool": "step_submit",
+      "arguments": {
+        "node_id": "node-9",
+        "fence": 1,
+        "step": "spec"
+      },
+      "response": {
+        "block_hash": "95f02c34be3f1aca7fe53a70adb3bf7aa59d58bbf59db8c15c03930a280b3246",
+        "step": "spec",
+        "attempt": 1,
+        "next_step": "patch",
+        "receipt_hash": null,
+        "passed": true
+      },
+      "is_error": false
+    },
+    {
+      "transport": "mcp-http",
+      "tool": "step_submit",
+      "arguments": {
+        "node_id": "node-9",
+        "fence": 1,
+        "step": "patch"
+      },
+      "response": {
+        "block_hash": "45722ef408266274486e651ee4be674e32ba12ad529b635db21e3f9fdc4aa595",
+        "step": "patch",
+        "attempt": 1,
+        "next_step": "test",
+        "receipt_hash": null,
+        "passed": true
+      },
+      "is_error": false
+    },
+    {
+      "transport": "mcp-http",
+      "tool": "step_submit",
+      "arguments": {
+        "node_id": "node-9",
+        "fence": 1,
+        "step": "test"
+      },
+      "response": {
+        "block_hash": "9d7e276c578f3f1c420bf505fc52ffc8d10473ad7a18464cd86c1a7a428f4cd6",
+        "step": "test",
+        "attempt": 1,
+        "next_step": "verify",
+        "receipt_hash": null,
+        "passed": true
+      },
+      "is_error": false
+    },
+    {
+      "transport": "mcp-http",
+      "tool": "step_submit",
+      "arguments": {
+        "node_id": "node-9",
+        "fence": 1,
+        "step": "verify"
+      },
+      "response": {
+        "block_hash": "db6c4b39eab4cd68c217a4892ccd2f8181dd2f0da9c2143a8294d597583cb92c",
+        "step": "verify",
+        "attempt": 1,
+        "next_step": null,
+        "receipt_hash": "ea3a1d475f6eb3b3e59e6e5da6ba910e7f14d493fb66c6a45bc3de8e955e876f",
+        "passed": true
+      },
+      "is_error": false
+    },
+    {
+      "transport": "mcp-http",
+      "tool": "gate_run",
+      "arguments": {
+        "node_id": "node-9",
+        "fence": 1,
+        "tier": "blast"
+      },
+      "response": {
+        "passed": true,
+        "receipt_hash": "c26e1d28caf9dac4a908034f1fbf3894f3f147b35f0eb85adeaa74f8bae6e236",
+        "state_hash": "e6ce8eab6dcf9da5bf14fc9f72cf9fa6280a86f61172a986ba970bd0821de349",
+        "cached": false,
+        "exhausted": false,
+        "verdict": "2 passed, 0 failed"
+      },
+      "is_error": false
+    },
+    {
+      "transport": "mcp-http",
+      "tool": "node_update",
+      "arguments": {
+        "node_id": "node-9",
+        "fence": 1,
+        "status": "done",
+        "evidence": "c26e1d28caf9dac4a908034f1fbf3894f3f147b35f0eb85adeaa74f8bae6e236"
+      },
+      "response": {
+        "status": "done"
+      },
+      "is_error": false
+    },
+    {
+      "transport": "human-ipc",
+      "method": "plan/get",
+      "response": {
+        "kind": "result",
+        "jsonrpc": "2.0",
+        "id": 2,
+        "result": {
+          "id": "plan-7",
+          "project_id": "hdag-acceptance",
+          "title": "0.1.3 — отдельная приёмка H-DAG — ревизия 2",
+          "goal": "Проверить положительные приёмочные узлы и живой Tier 3. Негативная исчерпанная фикстура остаётся в первом плане; ACC-2 проверяет её неизменные доказательства. Лимиты RSS 120/150 МиБ сохраняются.",
+          "status": "active",
+          "nodes": [
+            {
+              "id": "node-8",
+              "key": "ACC-0",
+              "title": "Приёмка H-DAG в отдельном проекте",
+              "status": "pending",
+              "ready": false,
+              "layer": 3,
+              "priority": 2.050634953703704e-06,
+              "depends_on": [
+                "node-9",
+                "node-10",
+                "node-11",
+                "node-12"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null,
+              "level": 0,
+              "parent": null,
+              "pipeline": false,
+              "attempt_no": 0,
+              "max_attempts": 4,
+              "last_verdict": null
+            },
+            {
+              "id": "node-9",
+              "key": "ACC-1",
+              "title": "Повторная проверка успешного pipeline",
+              "status": "done",
+              "ready": false,
+              "layer": 0,
+              "priority": 0.3000020506349537,
+              "depends_on": [],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null,
+              "level": 1,
+              "parent": "node-8",
+              "pipeline": true,
+              "attempt_no": 1,
+              "max_attempts": 4,
+              "last_verdict": "2 passed, 0 failed"
+            },
+            {
+              "id": "node-10",
+              "key": "ACC-2",
+              "title": "Проверить доказательства исчерпанной фикстуры",
+              "status": "pending",
+              "ready": true,
+              "layer": 1,
+              "priority": 2.200002050634954,
+              "depends_on": [
+                "node-9"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null,
+              "level": 1,
+              "parent": "node-8",
+              "pipeline": true,
+              "attempt_no": 0,
+              "max_attempts": 4,
+              "last_verdict": null
+            },
+            {
+              "id": "node-11",
+              "key": "ACC-3",
+              "title": "Повторная проверка pipeline и квитанций",
+              "status": "pending",
+              "ready": true,
+              "layer": 1,
+              "priority": 2.200002050634954,
+              "depends_on": [
+                "node-9"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null,
+              "level": 1,
+              "parent": "node-8",
+              "pipeline": true,
+              "attempt_no": 0,
+              "max_attempts": 4,
+              "last_verdict": null
+            },
+            {
+              "id": "node-12",
+              "key": "ACC-4",
+              "title": "Ресурсы и закрытие направления",
+              "status": "pending",
+              "ready": false,
+              "layer": 2,
+              "priority": 1.1000020506349537,
+              "depends_on": [
+                "node-10",
+                "node-11"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null,
+              "level": 1,
+              "parent": "node-8",
+              "pipeline": true,
+              "attempt_no": 0,
+              "max_attempts": 4,
+              "last_verdict": null
+            }
+          ],
+          "done": 1,
+          "total": 5,
+          "canvas": null,
+          "updated_at": "2026-11-16T12:17:18.301553Z",
+          "phase": "frozen",
+          "warnings": []
+        }
+      }
+    },
+    {
+      "transport": "mcp-http",
+      "tool": "node_claim",
+      "arguments": {
+        "node_id": "node-10"
+      },
+      "response": {
+        "lease_id": "plan-7:ACC-2:1",
+        "fence": 1,
+        "expires_at": "2026-11-16T12:32:18.389180+00:00",
+        "brief": {
+          "objective": "Выполнить сценарий в отдельном приёмочном проекте; сохранять evidence.",
+          "acceptance": [
+            "Тест проверяет SHA256 журналов первого плана и ATTEMPTS_EXHAUSTED до и после restart; четыре провала не повторяются в этом успешном узле."
+          ],
+          "paths": [
+            "src/retry.py",
+            "tests/test_retry.py",
+            "evidence/retry/**"
+          ],
+          "boundaries": "Не менять продуктовую ветку, бюджеты и глобальные правила проверок. При блокере — inbox, без новых вершин."
+        },
+        "context": {
+          "items": [],
+          "truncated": false,
+          "verified_commit": "84371b00a29c0188f7503f64adf5c01dec311c41"
+        }
+      },
+      "is_error": false
+    },
+    {
+      "transport": "mcp-http",
+      "tool": "step_begin",
+      "arguments": {
+        "node_id": "node-10",
+        "fence": 1
+      },
+      "response": {
+        "direction_prefix": "{\"direction\":\"ACC-0\",\"gate_profile\":{\"direction\":[[\"/opt/aconsole/ui/bin/python\",\"-m\",\"pytest\",\"tests\"]],\"environment\":{\"container\":\"aconsole-acc-gate-ba2a407ac5\",\"image\":\"f4147a4165dbe6b85c65b0c7b0de4858bc9114466edabf2132f333861102eb70\"},\"micro\":{\"fix\":[\"/opt/aconsole/core/bin/ruff\",\"check\",\"--fix\"],\"format\":[\"/opt/aconsole/core/bin/ruff\",\"format\"],\"lint\":[\"/opt/aconsole/core/bin/ruff\",\"check\"],\"tests\":[\"/opt/aconsole/core/bin/python\",\"-m\",\"pytest\"],\"types\":[\"/opt/aconsole/core/bin/basedpyright\"]}},\"invariants\":\"Фиксированные 5 вершин; L2 не создаёт узлы; квитанции создаёт ядро; закрытие L0 — человеком.\",\"scope\":[\"evidence/**\",\"src/**\",\"tests/**\"],\"skeletons\":[[\"src/identity.py\",\"def value() -> int:\\n    ...\"],[\"src/resources.py\",\"def value() -> int:\\n    ...\"],[\"src/retry.py\",\"def value() -> int:\\n    ...\"],[\"src/success.py\",\"def value() -> int:\\n    ...\"],[\"tests/test_identity.py\",\"def test_value() -> None:\\n    ...\"],[\"tests/test_resources.py\",\"def test_value() -> None:\\n    ...\"],[\"tests/test_retry.py\",\"def test_value() -> None:\\n    ...\"],[\"tests/test_success.py\",\"def test_value() -> None:\\n    ...\"]]}",
+        "prefix_sha256": "47097142d59b8e518341e3909870131599b61b67089a24c428e32fee16b4b2ec",
+        "contract": "{\"acceptance\":[\"Тест проверяет SHA256 журналов первого плана и ATTEMPTS_EXHAUSTED до и после restart; четыре провала не повторяются в этом успешном узле.\"],\"blast_radius\":[],\"boundaries\":\"Не менять продуктовую ветку, бюджеты и глобальные правила проверок. При блокере — inbox, без новых вершин.\",\"contract_sha256\":\"d018ccfffdea7e4e6c52fce24a0178b5a5022edc8ce7b5653fcd61b4757d47f9\",\"direction_key\":\"ACC-0\",\"key\":\"ACC-2\",\"objective\":\"Выполнить сценарий в отдельном приёмочном проекте; сохранять evidence.\",\"output_format\":null,\"paths\":[\"src/retry.py\",\"tests/test_retry.py\",\"evidence/retry/**\"],\"test_cmd\":\"/opt/aconsole/core/bin/python -m pytest tests/test_retry.py\"}",
+        "handoff": "{\"attempt\":1,\"compact_verdict\":null,\"contract_hash\":\"d018ccfffdea7e4e6c52fce24a0178b5a5022edc8ce7b5653fcd61b4757d47f9\",\"diff_stat\":null,\"head_block_hash\":\"2488dc33d4515b616ce25f6820cc5a20f43d835c2fb83cc3f801a1418f81f87f\",\"max_attempts\":4,\"next\":\"Complete the spec step.\",\"node\":\"ACC-2\",\"remaining_items\":[],\"scope\":[\"src/retry.py\",\"tests/test_retry.py\",\"evidence/retry/**\"],\"step\":\"spec\",\"symbols\":[],\"v\":1}",
+        "file_slice": "src/retry.py\n1: def value() -> int:\n2:     return 0",
+        "lease_id": "plan-7:ACC-2:1",
+        "fence": 1,
+        "expires_at": "2026-11-16T12:32:18.511287+00:00"
+      },
+      "is_error": false
+    },
+    {
+      "transport": "mcp-http",
+      "tool": "step_submit",
+      "arguments": {
+        "node_id": "node-10",
+        "fence": 1,
+        "step": "spec"
+      },
+      "response": {
+        "block_hash": "57ce8536827e1ff5a40f46a0ce751b91394413ac87365e1f18703e83ba97d2de",
+        "step": "spec",
+        "attempt": 1,
+        "next_step": "patch",
+        "receipt_hash": null,
+        "passed": true
+      },
+      "is_error": false
+    },
+    {
+      "transport": "mcp-http",
+      "tool": "step_submit",
+      "arguments": {
+        "node_id": "node-10",
+        "fence": 1,
+        "step": "patch"
+      },
+      "response": {
+        "block_hash": "f988d829e8327d70a95b53dfca7dff3428f6f31c5a312598fbcfb9f3556ef913",
+        "step": "patch",
+        "attempt": 1,
+        "next_step": "test",
+        "receipt_hash": null,
+        "passed": true
+      },
+      "is_error": false
+    },
+    {
+      "transport": "mcp-http",
+      "tool": "step_submit",
+      "arguments": {
+        "node_id": "node-10",
+        "fence": 1,
+        "step": "test"
+      },
+      "response": {
+        "block_hash": "3e54fa8574db17881cc86aa4b90d4ab0d8cdefcc6a5e781ffa45c51ba8efc2f6",
+        "step": "test",
+        "attempt": 1,
+        "next_step": "verify",
+        "receipt_hash": null,
+        "passed": true
+      },
+      "is_error": false
+    },
+    {
+      "transport": "mcp-http",
+      "tool": "step_submit",
+      "arguments": {
+        "node_id": "node-10",
+        "fence": 1,
+        "step": "verify"
+      },
+      "response": {
+        "block_hash": "71a6f430381b070a598b553ae3dab351fd778c0c56f6d07ff442f583e72790be",
+        "step": "verify",
+        "attempt": 1,
+        "next_step": null,
+        "receipt_hash": "98aa408419cbd44a2a9a73fd007ce46da9c61b23d966110f0d4e9d91c6339212",
+        "passed": true
+      },
+      "is_error": false
+    },
+    {
+      "transport": "mcp-http",
+      "tool": "gate_run",
+      "arguments": {
+        "node_id": "node-10",
+        "fence": 1,
+        "tier": "blast"
+      },
+      "response": {
+        "passed": true,
+        "receipt_hash": "133f507eebd1d10a2d92812613e99db419f90a58b676dc4d748d4e3b060b1a5e",
+        "state_hash": "152f7388421b326ae55dfbbda2148881afdd403b2dddcd63995560ab20ff350c",
+        "cached": false,
+        "exhausted": false,
+        "verdict": "2 passed, 0 failed"
+      },
+      "is_error": false
+    },
+    {
+      "transport": "mcp-http",
+      "tool": "node_update",
+      "arguments": {
+        "node_id": "node-10",
+        "fence": 1,
+        "status": "done",
+        "evidence": "133f507eebd1d10a2d92812613e99db419f90a58b676dc4d748d4e3b060b1a5e"
+      },
+      "response": {
+        "status": "done"
+      },
+      "is_error": false
+    },
+    {
+      "transport": "human-ipc",
+      "method": "plan/get",
+      "response": {
+        "kind": "result",
+        "jsonrpc": "2.0",
+        "id": 2,
+        "result": {
+          "id": "plan-7",
+          "project_id": "hdag-acceptance",
+          "title": "0.1.3 — отдельная приёмка H-DAG — ревизия 2",
+          "goal": "Проверить положительные приёмочные узлы и живой Tier 3. Негативная исчерпанная фикстура остаётся в первом плане; ACC-2 проверяет её неизменные доказательства. Лимиты RSS 120/150 МиБ сохраняются.",
+          "status": "active",
+          "nodes": [
+            {
+              "id": "node-8",
+              "key": "ACC-0",
+              "title": "Приёмка H-DAG в отдельном проекте",
+              "status": "pending",
+              "ready": false,
+              "layer": 3,
+              "priority": 4.039538194444444e-06,
+              "depends_on": [
+                "node-9",
+                "node-10",
+                "node-11",
+                "node-12"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null,
+              "level": 0,
+              "parent": null,
+              "pipeline": false,
+              "attempt_no": 0,
+              "max_attempts": 4,
+              "last_verdict": null
+            },
+            {
+              "id": "node-9",
+              "key": "ACC-1",
+              "title": "Повторная проверка успешного pipeline",
+              "status": "done",
+              "ready": false,
+              "layer": 0,
+              "priority": 0.3000040395381945,
+              "depends_on": [],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null,
+              "level": 1,
+              "parent": "node-8",
+              "pipeline": true,
+              "attempt_no": 1,
+              "max_attempts": 4,
+              "last_verdict": "2 passed, 0 failed"
+            },
+            {
+              "id": "node-10",
+              "key": "ACC-2",
+              "title": "Проверить доказательства исчерпанной фикстуры",
+              "status": "done",
+              "ready": false,
+              "layer": 1,
+              "priority": 0.20000403953819446,
+              "depends_on": [
+                "node-9"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null,
+              "level": 1,
+              "parent": "node-8",
+              "pipeline": true,
+              "attempt_no": 1,
+              "max_attempts": 4,
+              "last_verdict": "2 passed, 0 failed"
+            },
+            {
+              "id": "node-11",
+              "key": "ACC-3",
+              "title": "Повторная проверка pipeline и квитанций",
+              "status": "pending",
+              "ready": true,
+              "layer": 1,
+              "priority": 2.200004039538195,
+              "depends_on": [
+                "node-9"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null,
+              "level": 1,
+              "parent": "node-8",
+              "pipeline": true,
+              "attempt_no": 0,
+              "max_attempts": 4,
+              "last_verdict": null
+            },
+            {
+              "id": "node-12",
+              "key": "ACC-4",
+              "title": "Ресурсы и закрытие направления",
+              "status": "pending",
+              "ready": false,
+              "layer": 2,
+              "priority": 1.1000040395381945,
+              "depends_on": [
+                "node-10",
+                "node-11"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null,
+              "level": 1,
+              "parent": "node-8",
+              "pipeline": true,
+              "attempt_no": 0,
+              "max_attempts": 4,
+              "last_verdict": null
+            }
+          ],
+          "done": 2,
+          "total": 5,
+          "canvas": null,
+          "updated_at": "2026-11-16T12:17:35.474117Z",
+          "phase": "frozen",
+          "warnings": []
+        }
+      }
+    },
+    {
+      "transport": "mcp-http",
+      "tool": "node_claim",
+      "arguments": {
+        "node_id": "node-11"
+      },
+      "response": {
+        "lease_id": "plan-7:ACC-3:1",
+        "fence": 1,
+        "expires_at": "2026-11-16T12:32:35.582670+00:00",
+        "brief": {
+          "objective": "Выполнить сценарий в отдельном приёмочном проекте; сохранять evidence.",
+          "acceptance": [
+            "Настоящие Tier 1/2 дают зелёные квитанции. Защита старого fence, scope и дерева отдельно доказана первым прогоном."
+          ],
+          "paths": [
+            "src/identity.py",
+            "tests/test_identity.py",
+            "evidence/identity/**"
+          ],
+          "boundaries": "Не менять продуктовую ветку, бюджеты и глобальные правила проверок. При блокере — inbox, без новых вершин."
+        },
+        "context": {
+          "items": [],
+          "truncated": false,
+          "verified_commit": "1a46d9de3fd56af48bd7dc02d220bf67b82d1aa8"
+        }
+      },
+      "is_error": false
+    },
+    {
+      "transport": "mcp-http",
+      "tool": "step_begin",
+      "arguments": {
+        "node_id": "node-11",
+        "fence": 1
+      },
+      "response": {
+        "direction_prefix": "{\"direction\":\"ACC-0\",\"gate_profile\":{\"direction\":[[\"/opt/aconsole/ui/bin/python\",\"-m\",\"pytest\",\"tests\"]],\"environment\":{\"container\":\"aconsole-acc-gate-ba2a407ac5\",\"image\":\"f4147a4165dbe6b85c65b0c7b0de4858bc9114466edabf2132f333861102eb70\"},\"micro\":{\"fix\":[\"/opt/aconsole/core/bin/ruff\",\"check\",\"--fix\"],\"format\":[\"/opt/aconsole/core/bin/ruff\",\"format\"],\"lint\":[\"/opt/aconsole/core/bin/ruff\",\"check\"],\"tests\":[\"/opt/aconsole/core/bin/python\",\"-m\",\"pytest\"],\"types\":[\"/opt/aconsole/core/bin/basedpyright\"]}},\"invariants\":\"Фиксированные 5 вершин; L2 не создаёт узлы; квитанции создаёт ядро; закрытие L0 — человеком.\",\"scope\":[\"evidence/**\",\"src/**\",\"tests/**\"],\"skeletons\":[[\"src/identity.py\",\"def value() -> int:\\n    ...\"],[\"src/resources.py\",\"def value() -> int:\\n    ...\"],[\"src/retry.py\",\"def value() -> int:\\n    ...\"],[\"src/success.py\",\"def value() -> int:\\n    ...\"],[\"tests/test_identity.py\",\"def test_value() -> None:\\n    ...\"],[\"tests/test_resources.py\",\"def test_value() -> None:\\n    ...\"],[\"tests/test_retry.py\",\"def test_value() -> None:\\n    ...\\n\\ndef test_negative_fixture_evidence() -> None:\\n    ...\"],[\"tests/test_success.py\",\"def test_value() -> None:\\n    ...\"]]}",
+        "prefix_sha256": "9487c796d8e4101710333c080fcb2010389a611dab394eef44d33f294286933f",
+        "contract": "{\"acceptance\":[\"Настоящие Tier 1/2 дают зелёные квитанции. Защита старого fence, scope и дерева отдельно доказана первым прогоном.\"],\"blast_radius\":[],\"boundaries\":\"Не менять продуктовую ветку, бюджеты и глобальные правила проверок. При блокере — inbox, без новых вершин.\",\"contract_sha256\":\"85fe4c7800bc57102bd5b09f40ab59b922785293b6fe5eef6fd9d05d333a00b2\",\"direction_key\":\"ACC-0\",\"key\":\"ACC-3\",\"objective\":\"Выполнить сценарий в отдельном приёмочном проекте; сохранять evidence.\",\"output_format\":null,\"paths\":[\"src/identity.py\",\"tests/test_identity.py\",\"evidence/identity/**\"],\"test_cmd\":\"/opt/aconsole/core/bin/python -m pytest tests/test_identity.py\"}",
+        "handoff": "{\"attempt\":1,\"compact_verdict\":null,\"contract_hash\":\"85fe4c7800bc57102bd5b09f40ab59b922785293b6fe5eef6fd9d05d333a00b2\",\"diff_stat\":null,\"head_block_hash\":\"1a300f6cb533fca9434bf1af02c8baa5cff6662acefb109bbf267720de4990af\",\"max_attempts\":4,\"next\":\"Complete the spec step.\",\"node\":\"ACC-3\",\"remaining_items\":[],\"scope\":[\"src/identity.py\",\"tests/test_identity.py\",\"evidence/identity/**\"],\"step\":\"spec\",\"symbols\":[],\"v\":1}",
+        "file_slice": "src/identity.py\n1: def value() -> int:\n2:     return 1",
+        "lease_id": "plan-7:ACC-3:1",
+        "fence": 1,
+        "expires_at": "2026-11-16T12:32:35.708822+00:00"
+      },
+      "is_error": false
+    },
+    {
+      "transport": "mcp-http",
+      "tool": "step_submit",
+      "arguments": {
+        "node_id": "node-11",
+        "fence": 1,
+        "step": "spec"
+      },
+      "response": {
+        "block_hash": "136e0c4934faa99039e312c53e499a3ae84d9ab4a9e545e6e7f9579a549018e2",
+        "step": "spec",
+        "attempt": 1,
+        "next_step": "patch",
+        "receipt_hash": null,
+        "passed": true
+      },
+      "is_error": false
+    },
+    {
+      "transport": "mcp-http",
+      "tool": "step_submit",
+      "arguments": {
+        "node_id": "node-11",
+        "fence": 1,
+        "step": "patch"
+      },
+      "response": {
+        "block_hash": "5c3ff3bc836f71ac435fc2f78b28e068b9e630671cd5cec5675a7a5c7a370c51",
+        "step": "patch",
+        "attempt": 1,
+        "next_step": "test",
+        "receipt_hash": null,
+        "passed": true
+      },
+      "is_error": false
+    },
+    {
+      "transport": "mcp-http",
+      "tool": "step_submit",
+      "arguments": {
+        "node_id": "node-11",
+        "fence": 1,
+        "step": "test"
+      },
+      "response": {
+        "block_hash": "00423fbc0c8cca98dc4dddabd8827a86e64432a5f02d8db421bc1c6203885709",
+        "step": "test",
+        "attempt": 1,
+        "next_step": "verify",
+        "receipt_hash": null,
+        "passed": true
+      },
+      "is_error": false
+    },
+    {
+      "transport": "mcp-http",
+      "tool": "step_submit",
+      "arguments": {
+        "node_id": "node-11",
+        "fence": 1,
+        "step": "verify"
+      },
+      "response": {
+        "block_hash": "edee0f7a1db82a0ca669bcc38df966ffdc530a3308715ee2d611f2f9c5714e3b",
+        "step": "verify",
+        "attempt": 1,
+        "next_step": null,
+        "receipt_hash": "14fd327bc25da6945cf97ae82e5cd5ce2550ca4dbc240c304332bc466fcf97f1",
+        "passed": true
+      },
+      "is_error": false
+    },
+    {
+      "transport": "mcp-http",
+      "tool": "gate_run",
+      "arguments": {
+        "node_id": "node-11",
+        "fence": 1,
+        "tier": "blast"
+      },
+      "response": {
+        "passed": true,
+        "receipt_hash": "41299c9eef25557d06deb2a42baaa1eaeab73c1e0928e5930e29650622036d05",
+        "state_hash": "e572e131ff8c6ff4b71b6a80d02b2d2a39b47eac3d1425ec598bbdc5de0bc6bc",
+        "cached": false,
+        "exhausted": false,
+        "verdict": "2 passed, 0 failed"
+      },
+      "is_error": false
+    },
+    {
+      "transport": "mcp-http",
+      "tool": "node_update",
+      "arguments": {
+        "node_id": "node-11",
+        "fence": 1,
+        "status": "done",
+        "evidence": "41299c9eef25557d06deb2a42baaa1eaeab73c1e0928e5930e29650622036d05"
+      },
+      "response": {
+        "status": "done"
+      },
+      "is_error": false
+    },
+    {
+      "transport": "human-ipc",
+      "method": "plan/get",
+      "response": {
+        "kind": "result",
+        "jsonrpc": "2.0",
+        "id": 2,
+        "result": {
+          "id": "plan-7",
+          "project_id": "hdag-acceptance",
+          "title": "0.1.3 — отдельная приёмка H-DAG — ревизия 2",
+          "goal": "Проверить положительные приёмочные узлы и живой Tier 3. Негативная исчерпанная фикстура остаётся в первом плане; ACC-2 проверяет её неизменные доказательства. Лимиты RSS 120/150 МиБ сохраняются.",
+          "status": "active",
+          "nodes": [
+            {
+              "id": "node-8",
+              "key": "ACC-0",
+              "title": "Приёмка H-DAG в отдельном проекте",
+              "status": "pending",
+              "ready": false,
+              "layer": 3,
+              "priority": 5.787341435185186e-06,
+              "depends_on": [
+                "node-9",
+                "node-10",
+                "node-11",
+                "node-12"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null,
+              "level": 0,
+              "parent": null,
+              "pipeline": false,
+              "attempt_no": 0,
+              "max_attempts": 4,
+              "last_verdict": null
+            },
+            {
+              "id": "node-9",
+              "key": "ACC-1",
+              "title": "Повторная проверка успешного pipeline",
+              "status": "done",
+              "ready": false,
+              "layer": 0,
+              "priority": 0.30000578734143524,
+              "depends_on": [],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null,
+              "level": 1,
+              "parent": "node-8",
+              "pipeline": true,
+              "attempt_no": 1,
+              "max_attempts": 4,
+              "last_verdict": "2 passed, 0 failed"
+            },
+            {
+              "id": "node-10",
+              "key": "ACC-2",
+              "title": "Проверить доказательства исчерпанной фикстуры",
+              "status": "done",
+              "ready": false,
+              "layer": 1,
+              "priority": 0.2000057873414352,
+              "depends_on": [
+                "node-9"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null,
+              "level": 1,
+              "parent": "node-8",
+              "pipeline": true,
+              "attempt_no": 1,
+              "max_attempts": 4,
+              "last_verdict": "2 passed, 0 failed"
+            },
+            {
+              "id": "node-11",
+              "key": "ACC-3",
+              "title": "Повторная проверка pipeline и квитанций",
+              "status": "done",
+              "ready": false,
+              "layer": 1,
+              "priority": 0.2000057873414352,
+              "depends_on": [
+                "node-9"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null,
+              "level": 1,
+              "parent": "node-8",
+              "pipeline": true,
+              "attempt_no": 1,
+              "max_attempts": 4,
+              "last_verdict": "2 passed, 0 failed"
+            },
+            {
+              "id": "node-12",
+              "key": "ACC-4",
+              "title": "Ресурсы и закрытие направления",
+              "status": "pending",
+              "ready": true,
+              "layer": 2,
+              "priority": 1.1000057873414353,
+              "depends_on": [
+                "node-10",
+                "node-11"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null,
+              "level": 1,
+              "parent": "node-8",
+              "pipeline": true,
+              "attempt_no": 0,
+              "max_attempts": 4,
+              "last_verdict": null
+            }
+          ],
+          "done": 3,
+          "total": 5,
+          "canvas": null,
+          "updated_at": "2026-11-16T12:17:50.572879Z",
+          "phase": "frozen",
+          "warnings": []
+        }
+      }
+    },
+    {
+      "transport": "mcp-http",
+      "tool": "node_claim",
+      "arguments": {
+        "node_id": "node-12"
+      },
+      "response": {
+        "lease_id": "plan-7:ACC-4:1",
+        "fence": 1,
+        "expires_at": "2026-11-16T12:32:50.677511+00:00",
+        "brief": {
+          "objective": "Выполнить сценарий в отдельном приёмочном проекте; сохранять evidence.",
+          "acceptance": [
+            "Записаны реальные процессные идентичности и измерения пяти вкладок. Ресурсные лимиты проверяет L0 после завершения дочерних узлов; L1 не требует заранее зелёного L0."
+          ],
+          "paths": [
+            "src/resources.py",
+            "tests/test_resources.py",
+            "evidence/resources/**"
+          ],
+          "boundaries": "Не менять продуктовую ветку, бюджеты и глобальные правила проверок. При блокере — inbox, без новых вершин."
+        },
+        "context": {
+          "items": [],
+          "truncated": false,
+          "verified_commit": "c33f87aa7f156a875274267aca20ad3a799f340f"
+        }
+      },
+      "is_error": false
+    },
+    {
+      "transport": "mcp-http",
+      "tool": "step_begin",
+      "arguments": {
+        "node_id": "node-12",
+        "fence": 1
+      },
+      "response": {
+        "direction_prefix": "{\"direction\":\"ACC-0\",\"gate_profile\":{\"direction\":[[\"/opt/aconsole/ui/bin/python\",\"-m\",\"pytest\",\"tests\"]],\"environment\":{\"container\":\"aconsole-acc-gate-ba2a407ac5\",\"image\":\"f4147a4165dbe6b85c65b0c7b0de4858bc9114466edabf2132f333861102eb70\"},\"micro\":{\"fix\":[\"/opt/aconsole/core/bin/ruff\",\"check\",\"--fix\"],\"format\":[\"/opt/aconsole/core/bin/ruff\",\"format\"],\"lint\":[\"/opt/aconsole/core/bin/ruff\",\"check\"],\"tests\":[\"/opt/aconsole/core/bin/python\",\"-m\",\"pytest\"],\"types\":[\"/opt/aconsole/core/bin/basedpyright\"]}},\"invariants\":\"Фиксированные 5 вершин; L2 не создаёт узлы; квитанции создаёт ядро; закрытие L0 — человеком.\",\"scope\":[\"evidence/**\",\"src/**\",\"tests/**\"],\"skeletons\":[[\"src/identity.py\",\"def value() -> int:\\n    ...\"],[\"src/resources.py\",\"def value() -> int:\\n    ...\"],[\"src/retry.py\",\"def value() -> int:\\n    ...\"],[\"src/success.py\",\"def value() -> int:\\n    ...\"],[\"tests/test_identity.py\",\"def test_value() -> None:\\n    ...\"],[\"tests/test_resources.py\",\"def test_value() -> None:\\n    ...\"],[\"tests/test_retry.py\",\"def test_value() -> None:\\n    ...\\n\\ndef test_negative_fixture_evidence() -> None:\\n    ...\"],[\"tests/test_success.py\",\"def test_value() -> None:\\n    ...\"]]}",
+        "prefix_sha256": "9487c796d8e4101710333c080fcb2010389a611dab394eef44d33f294286933f",
+        "contract": "{\"acceptance\":[\"Записаны реальные процессные идентичности и измерения пяти вкладок. Ресурсные лимиты проверяет L0 после завершения дочерних узлов; L1 не требует заранее зелёного L0.\"],\"blast_radius\":[],\"boundaries\":\"Не менять продуктовую ветку, бюджеты и глобальные правила проверок. При блокере — inbox, без новых вершин.\",\"contract_sha256\":\"322631e361ef33c066fbef76dab7cb8da3d95983daa174c48bb0d21196e9a83b\",\"direction_key\":\"ACC-0\",\"key\":\"ACC-4\",\"objective\":\"Выполнить сценарий в отдельном приёмочном проекте; сохранять evidence.\",\"output_format\":null,\"paths\":[\"src/resources.py\",\"tests/test_resources.py\",\"evidence/resources/**\"],\"test_cmd\":\"/opt/aconsole/core/bin/python -m pytest tests/test_resources.py\"}",
+        "handoff": "{\"attempt\":1,\"compact_verdict\":null,\"contract_hash\":\"322631e361ef33c066fbef76dab7cb8da3d95983daa174c48bb0d21196e9a83b\",\"diff_stat\":null,\"head_block_hash\":\"635ead377d96e5d12146444582f701982ca862b5f7ed4b6bfb5f139c51a10773\",\"max_attempts\":4,\"next\":\"Complete the spec step.\",\"node\":\"ACC-4\",\"remaining_items\":[],\"scope\":[\"src/resources.py\",\"tests/test_resources.py\",\"evidence/resources/**\"],\"step\":\"spec\",\"symbols\":[],\"v\":1}",
+        "file_slice": "src/resources.py\n1: def value() -> int:\n2:     return 0",
+        "lease_id": "plan-7:ACC-4:1",
+        "fence": 1,
+        "expires_at": "2026-11-16T12:32:50.818840+00:00"
+      },
+      "is_error": false
+    },
+    {
+      "transport": "mcp-http",
+      "tool": "step_submit",
+      "arguments": {
+        "node_id": "node-12",
+        "fence": 1,
+        "step": "spec"
+      },
+      "response": {
+        "block_hash": "b6e4a0a0aad70d3b53778bf58e7eade48557db203a24ab567d369c1f18417da2",
+        "step": "spec",
+        "attempt": 1,
+        "next_step": "patch",
+        "receipt_hash": null,
+        "passed": true
+      },
+      "is_error": false
+    },
+    {
+      "transport": "mcp-http",
+      "tool": "step_submit",
+      "arguments": {
+        "node_id": "node-12",
+        "fence": 1,
+        "step": "patch"
+      },
+      "response": {
+        "block_hash": "2fa63802fb78329f0bfda37b0089584d6529706a3524d57d8de5451842f50620",
+        "step": "patch",
+        "attempt": 1,
+        "next_step": "test",
+        "receipt_hash": null,
+        "passed": true
+      },
+      "is_error": false
+    },
+    {
+      "transport": "mcp-http",
+      "tool": "step_submit",
+      "arguments": {
+        "node_id": "node-12",
+        "fence": 1,
+        "step": "test"
+      },
+      "response": {
+        "block_hash": "43a37b75cc61cc6b10bb361378b42041226511d5068e17e6423a6a66ad28a151",
+        "step": "test",
+        "attempt": 1,
+        "next_step": "verify",
+        "receipt_hash": null,
+        "passed": true
+      },
+      "is_error": false
+    },
+    {
+      "transport": "mcp-http",
+      "tool": "step_submit",
+      "arguments": {
+        "node_id": "node-12",
+        "fence": 1,
+        "step": "verify"
+      },
+      "response": {
+        "block_hash": "07b155c05f8027290b077e71e93cbedcbbca0ad18127a7dea06516f8ef7905fd",
+        "step": "verify",
+        "attempt": 1,
+        "next_step": null,
+        "receipt_hash": "e764f9de1ab4b8035b12dda0aa496c807a1ecb990110c97b874fb0bf41af5523",
+        "passed": true
+      },
+      "is_error": false
+    },
+    {
+      "transport": "mcp-http",
+      "tool": "gate_run",
+      "arguments": {
+        "node_id": "node-12",
+        "fence": 1,
+        "tier": "blast"
+      },
+      "response": {
+        "passed": true,
+        "receipt_hash": "4a170795d0b3daab930045f512bdd5cbe764a89fb50371aec6675f0ef4bc0ea4",
+        "state_hash": "58d5e0889e860d0f63adb642c0edde4013f39ccc72ff8fa1c8e9f9b11d9f4140",
+        "cached": false,
+        "exhausted": false,
+        "verdict": "2 passed, 0 failed"
+      },
+      "is_error": false
+    },
+    {
+      "transport": "mcp-http",
+      "tool": "node_update",
+      "arguments": {
+        "node_id": "node-12",
+        "fence": 1,
+        "status": "done",
+        "evidence": "4a170795d0b3daab930045f512bdd5cbe764a89fb50371aec6675f0ef4bc0ea4"
+      },
+      "response": {
+        "status": "done"
+      },
+      "is_error": false
+    },
+    {
+      "transport": "human-ipc",
+      "method": "plan/get",
+      "response": {
+        "kind": "result",
+        "jsonrpc": "2.0",
+        "id": 2,
+        "result": {
+          "id": "plan-7",
+          "project_id": "hdag-acceptance",
+          "title": "0.1.3 — отдельная приёмка H-DAG — ревизия 2",
+          "goal": "Проверить положительные приёмочные узлы и живой Tier 3. Негативная исчерпанная фикстура остаётся в первом плане; ACC-2 проверяет её неизменные доказательства. Лимиты RSS 120/150 МиБ сохраняются.",
+          "status": "active",
+          "nodes": [
+            {
+              "id": "node-8",
+              "key": "ACC-0",
+              "title": "Приёмка H-DAG в отдельном проекте",
+              "status": "pending",
+              "ready": false,
+              "layer": 3,
+              "priority": 7.791329282407407e-06,
+              "depends_on": [
+                "node-9",
+                "node-10",
+                "node-11",
+                "node-12"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null,
+              "level": 0,
+              "parent": null,
+              "pipeline": false,
+              "attempt_no": 0,
+              "max_attempts": 4,
+              "last_verdict": null
+            },
+            {
+              "id": "node-9",
+              "key": "ACC-1",
+              "title": "Повторная проверка успешного pipeline",
+              "status": "done",
+              "ready": false,
+              "layer": 0,
+              "priority": 0.30000779132928246,
+              "depends_on": [],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null,
+              "level": 1,
+              "parent": "node-8",
+              "pipeline": true,
+              "attempt_no": 1,
+              "max_attempts": 4,
+              "last_verdict": "2 passed, 0 failed"
+            },
+            {
+              "id": "node-10",
+              "key": "ACC-2",
+              "title": "Проверить доказательства исчерпанной фикстуры",
+              "status": "done",
+              "ready": false,
+              "layer": 1,
+              "priority": 0.20000779132928242,
+              "depends_on": [
+                "node-9"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null,
+              "level": 1,
+              "parent": "node-8",
+              "pipeline": true,
+              "attempt_no": 1,
+              "max_attempts": 4,
+              "last_verdict": "2 passed, 0 failed"
+            },
+            {
+              "id": "node-11",
+              "key": "ACC-3",
+              "title": "Повторная проверка pipeline и квитанций",
+              "status": "done",
+              "ready": false,
+              "layer": 1,
+              "priority": 0.20000779132928242,
+              "depends_on": [
+                "node-9"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null,
+              "level": 1,
+              "parent": "node-8",
+              "pipeline": true,
+              "attempt_no": 1,
+              "max_attempts": 4,
+              "last_verdict": "2 passed, 0 failed"
+            },
+            {
+              "id": "node-12",
+              "key": "ACC-4",
+              "title": "Ресурсы и закрытие направления",
+              "status": "done",
+              "ready": false,
+              "layer": 2,
+              "priority": 0.10000779132928242,
+              "depends_on": [
+                "node-10",
+                "node-11"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null,
+              "level": 1,
+              "parent": "node-8",
+              "pipeline": true,
+              "attempt_no": 1,
+              "max_attempts": 4,
+              "last_verdict": "2 passed, 0 failed"
+            }
+          ],
+          "done": 4,
+          "total": 5,
+          "canvas": null,
+          "updated_at": "2026-11-16T12:18:07.894589Z",
+          "phase": "frozen",
+          "warnings": []
+        }
+      }
+    },
+    {
+      "transport": "human-ipc",
+      "method": "plan/directionGate",
+      "response": {
+        "kind": "error",
+        "jsonrpc": "2.0",
+        "id": 2,
+        "error": {
+          "code": 4013,
+          "message": "NODE_CONTRACT",
+          "data": {
+            "reason": "NODE_CONTRACT",
+            "domain": "aconsole.ipc",
+            "retryable": false,
+            "user_message_key": "error.node_contract",
+            "user_message_args": {},
+            "hint": null,
+            "details": null
+          }
+        }
+      }
+    },
+    {
+      "transport": "human-ipc",
+      "method": "plan/directionGate",
+      "response": {
+        "kind": "result",
+        "jsonrpc": "2.0",
+        "id": 2,
+        "result": {
+          "passed": false,
+          "receipt_hash": "65a9f9d1dfad819eb649aa367326e5b074a9ceee7066f2a658562d9682b1219f",
+          "verdict": "Direction gate failed: requires 5 tabs, core RSS <=120 MiB and UI RSS <=150 MiB",
+          "core_rss_mib": 199.1171875,
+          "ui_rss_mib": 202.95703125,
+          "tab_count": 5,
+          "cache_read_fraction": 0.9841575494797347,
+          "nodes_before": 5,
+          "nodes_after": 5
+        }
+      }
+    },
+    {
+      "transport": "human-ipc",
+      "method": "plan/directionGate",
+      "response": {
+        "kind": "error",
+        "jsonrpc": "2.0",
+        "id": 2,
+        "error": {
+          "code": 4013,
+          "message": "NODE_CONTRACT",
+          "data": {
+            "reason": "NODE_CONTRACT",
+            "domain": "aconsole.ipc",
+            "retryable": false,
+            "user_message_key": "error.node_contract",
+            "user_message_args": {},
+            "hint": null,
+            "details": null
+          }
+        }
+      }
+    },
+    {
+      "transport": "human-ipc",
+      "method": "plan/get",
+      "response": {
+        "kind": "result",
+        "jsonrpc": "2.0",
+        "id": 2,
+        "result": {
+          "id": "plan-7",
+          "project_id": "hdag-acceptance",
+          "title": "0.1.3 — отдельная приёмка H-DAG — ревизия 2",
+          "goal": "Проверить положительные приёмочные узлы и живой Tier 3. Негативная исчерпанная фикстура остаётся в первом плане; ACC-2 проверяет её неизменные доказательства. Лимиты RSS 120/150 МиБ сохраняются.",
+          "status": "active",
+          "nodes": [
+            {
+              "id": "node-8",
+              "key": "ACC-0",
+              "title": "Приёмка H-DAG в отдельном проекте",
+              "status": "pending",
+              "ready": false,
+              "layer": 3,
+              "priority": 8.297123032407408e-06,
+              "depends_on": [
+                "node-9",
+                "node-10",
+                "node-11",
+                "node-12"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null,
+              "level": 0,
+              "parent": null,
+              "pipeline": false,
+              "attempt_no": 0,
+              "max_attempts": 4,
+              "last_verdict": null
+            },
+            {
+              "id": "node-9",
+              "key": "ACC-1",
+              "title": "Повторная проверка успешного pipeline",
+              "status": "done",
+              "ready": false,
+              "layer": 0,
+              "priority": 0.30000829712303245,
+              "depends_on": [],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null,
+              "level": 1,
+              "parent": "node-8",
+              "pipeline": true,
+              "attempt_no": 1,
+              "max_attempts": 4,
+              "last_verdict": "2 passed, 0 failed"
+            },
+            {
+              "id": "node-10",
+              "key": "ACC-2",
+              "title": "Проверить доказательства исчерпанной фикстуры",
+              "status": "done",
+              "ready": false,
+              "layer": 1,
+              "priority": 0.20000829712303242,
+              "depends_on": [
+                "node-9"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null,
+              "level": 1,
+              "parent": "node-8",
+              "pipeline": true,
+              "attempt_no": 1,
+              "max_attempts": 4,
+              "last_verdict": "2 passed, 0 failed"
+            },
+            {
+              "id": "node-11",
+              "key": "ACC-3",
+              "title": "Повторная проверка pipeline и квитанций",
+              "status": "done",
+              "ready": false,
+              "layer": 1,
+              "priority": 0.20000829712303242,
+              "depends_on": [
+                "node-9"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null,
+              "level": 1,
+              "parent": "node-8",
+              "pipeline": true,
+              "attempt_no": 1,
+              "max_attempts": 4,
+              "last_verdict": "2 passed, 0 failed"
+            },
+            {
+              "id": "node-12",
+              "key": "ACC-4",
+              "title": "Ресурсы и закрытие направления",
+              "status": "done",
+              "ready": false,
+              "layer": 2,
+              "priority": 0.10000829712303241,
+              "depends_on": [
+                "node-10",
+                "node-11"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null,
+              "level": 1,
+              "parent": "node-8",
+              "pipeline": true,
+              "attempt_no": 1,
+              "max_attempts": 4,
+              "last_verdict": "2 passed, 0 failed"
+            }
+          ],
+          "done": 4,
+          "total": 5,
+          "canvas": null,
+          "updated_at": "2026-11-16T12:18:07.894589Z",
+          "phase": "frozen",
+          "warnings": []
+        }
+      }
+    }
+  ]
+}

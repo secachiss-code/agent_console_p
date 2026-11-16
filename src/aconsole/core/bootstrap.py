@@ -120,9 +120,10 @@ from aconsole.core.infrastructure.persistence.repositories.work_sessions import 
     WorkSessionDatabase,
     WorkSessionHistoryDatabase,
 )
-from aconsole.core.infrastructure.persistence.startup import prepare_database, sqlite_url
+from aconsole.core.infrastructure.persistence.startup import prepare_database_isolated, sqlite_url
 from aconsole.core.infrastructure.persistence.writer import Writer
 from aconsole.core.infrastructure.pipeline import build_pipeline
+from aconsole.core.infrastructure.process_metrics import UiProcesses
 from aconsole.core.infrastructure.setup_checks import HostSetupFixes, HostSetupProbe, SetupTokens
 from aconsole.core.infrastructure.tabs import HostAgents, HostRepos, HostTabs
 from aconsole.core.infrastructure.vault.canvas import CanvasHistory
@@ -616,6 +617,7 @@ class Daemon:
         self._worker: ThreadPoolExecutor | None = None
         self._loop: asyncio.AbstractEventLoop | None = None
         self._connections: dict[Connection, asyncio.StreamWriter] = {}
+        self._ui_processes: UiProcesses = UiProcesses()
         # Hooks reach the core over HTTP on 127.0.0.1 (INGEST_HTTP). Off by default so tests stay socket-only.
         self.serve_ingest: bool = False
         self.ingest_port: int | None = None
@@ -1469,7 +1471,7 @@ class Daemon:
         path = self.database
         if path is None:
             return
-        _ = await asyncio.to_thread(prepare_database, path, now=datetime.now(UTC))
+        _ = await asyncio.to_thread(prepare_database_isolated, path, now=datetime.now(UTC))
         engine = write_engine(sqlite_url(path))
         writer = Writer(engine)
         writer.start()
@@ -1482,7 +1484,11 @@ class Daemon:
         self._plans.use_attempts(AttemptDatabase(writer))
         self._plans.directions = DirectionRuntime(book=self._plans, writer=writer,
             actor=self.tabs.pipeline_actor, runner=self._pipeline_runner,
-            tabs=lambda: self.tabs.snapshot().tabs, accounts=lambda: tuple(self._accounts.copy().values()))
+            tabs=lambda: self.tabs.snapshot().tabs, accounts=lambda: tuple(self._accounts.copy().values()),
+            ui_processes=self._ui_processes, environment=self._direction_environment)
+
+    def _direction_environment(self, actor: PipelineActor, image: str) -> str:
+        return self._host.gate_environment(actor.container, str(actor.worktree), image)
     def _pipeline_runner(self, actor: PipelineActor, commands: tuple[tuple[str, ...], ...]) -> GateRunner:
         return self._host.gate_runner(actor.container, str(actor.worktree), commands)
 
@@ -1771,6 +1777,7 @@ class Daemon:
             self._ring, tabs=self.tabs, approval_hold=self.approvals, setup_service=self.setup_service,
             review=self.review, knowledge=self.knowledge, git=self.git,
             host_namespace=same_mnt_namespace(pid), palette=self.palette, peer_pid=pid, frame_limit=self._frame_limit,
+            ui_processes=self._ui_processes,
         )
         connection.on_agent_notice = self._agent_notice
         connection.on_screen_signal = self._screen_signal
@@ -1802,6 +1809,7 @@ class Daemon:
             _ = await asyncio.gather(runner, *apart, return_exceptions=True)
             self._writers.discard(writer)
             _ = self._connections.pop(connection, None)
+            connection.close()
             self._sidecar_left(connection)
             if (connection.ready and connection.role is ClientRole.UI and
                 "approvals.inline" in connection.capabilities and not self._has_approval_ui()):

@@ -1,0 +1,39 @@
+import asyncio,json,os,tempfile,time,sys
+from pathlib import Path
+from aconsole.ui.bootstrap import run_app,spawn_task
+from aconsole.ui.views.app import AConsoleApp
+from aconsole.ui.client.core_client import CoreClient
+from aconsole.core.infrastructure.process_metrics import memory_sample,process_identity
+
+class Probe(AConsoleApp):
+ def __init__(self,socket):
+  super().__init__(CoreClient(socket),scenario='demo'); self.rows=[];self.result=None;self.error=None
+ def do_activate(self):
+  super().do_activate();spawn_task(self.measure())
+ async def measure(self):
+  try:
+   async with asyncio.timeout(30):
+    while self.window is None: await asyncio.sleep(.05)
+   snapshot=self.client.store.snapshot
+   for tab in snapshot.tabs: self.window._select_tab(tab.id)
+   await asyncio.sleep(1)
+   done=asyncio.Event();clock=self.window.get_frame_clock()
+   def painted(frame):
+    self.rows.append(frame.get_frame_time())
+    if len(self.rows)>120: done.set()
+    else: self.window.queue_draw()
+   handler=clock.connect('after-paint',painted)
+   started=time.process_time();self.window.queue_draw()
+   try:
+    async with asyncio.timeout(15): await done.wait()
+   finally: clock.disconnect(handler)
+   duration=time.process_time()-started
+   intervals=sorted((b-a)/1000 for a,b in zip(self.rows,self.rows[1:]))
+   surface=self.window.get_native()
+   self.result={'renderer':surface.get_renderer().__class__.__name__,'requested':os.environ.get('GSK_RENDERER'),'frames':len(intervals),'cpu_seconds':duration,'p50_interval_ms':intervals[len(intervals)//2],'p95_interval_ms':intervals[int(len(intervals)*.95)],**memory_sample(process_identity(os.getpid()))}
+  except Exception as e: self.error=e
+  finally: await self._finish()
+with tempfile.TemporaryDirectory(prefix='ac-frame-',dir='/tmp') as d:
+ app=Probe(str(Path(d)/'core.sock'));run_app(lambda:app,['aconsole-frame-probe'])
+ if app.error: raise app.error
+ Path(sys.argv[1]).write_text(json.dumps(app.result,indent=2)+'\n')

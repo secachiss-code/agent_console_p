@@ -40,6 +40,7 @@ lazy from aconsole.core.domain.pipeline import StateBlock
 
 _AT = datetime(2026, 11, 16, tzinfo=UTC)
 _PROFILE = {
+    "environment": {"container": "sealed-gates", "image": "sha256:" + "a" * 64},
     "micro": {
         "format": ["ruff", "format"],
         "fix": ["ruff", "check", "--fix"],

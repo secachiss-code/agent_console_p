@@ -1,0 +1,8 @@
+import sys,runpy
+
+def sdk_imports(importing,imported,fromlist):
+ return importing is not None and importing.startswith('mcp')
+sys.set_lazy_imports_filter(sdk_imports)
+sys.set_lazy_imports('all')
+sys.argv=['tools/hdag_acceptance.py','serve','--root',sys.argv[1]]
+runpy.run_path('tools/hdag_acceptance.py',run_name='__main__')

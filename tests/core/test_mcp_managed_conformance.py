@@ -14,6 +14,7 @@ from urllib.parse import urlsplit
 import pytest
 
 from aconsole.devcli import mcp_conformance
+from tests.mcp_names import ALL_TOOLS
 
 _CONFORMANCE = "@modelcontextprotocol/conformance@0.2.0-alpha.12"
 _REVISION = "2026-07-28"
@@ -141,7 +142,7 @@ def test_run_managed_uses_a_live_loopback_endpoint_and_cleans_its_private_state(
         assert isinstance(tool_result, dict)
         tools = tool_result["tools"]
         assert isinstance(tools, list)
-        assert len(tools) == 12
+        assert {tool["name"] for tool in tools} == ALL_TOOLS
         assert "authorization" not in headers
         return suite_status
 

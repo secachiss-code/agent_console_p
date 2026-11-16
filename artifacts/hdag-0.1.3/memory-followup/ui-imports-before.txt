@@ -1,0 +1,6 @@
+{"stage": "start", "rss": 13.95703125, "pss": 11.3740234375, "private": 11.33984375, "objects": 8185, "modules": 71}
+{"stage": "gi.repository.Gtk", "rss": 110.26171875, "pss": 43.2314453125, "private": 38.11328125, "objects": 22567, "modules": 210}
+{"stage": "aconsole.ui.views.app", "rss": 131.80078125, "pss": 58.46875, "private": 52.80078125, "objects": 36294, "modules": 403}
+{"stage": "before_gc", "rss": 131.80078125, "pss": 58.46875, "private": 52.80078125, "objects": 36293, "modules": 403}
+collected 5
+{"stage": "after_gc", "rss": 131.80078125, "pss": 58.46875, "private": 52.80078125, "objects": 35721, "modules": 403}

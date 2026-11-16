@@ -370,7 +370,10 @@ class DirectionGate:
         metrics = self._measure()
         cached = self._lookup(initial, argv_hash)
         if cached is not None and cached.passed and metrics.passed:
-            return replace(cached, metrics=metrics)
+            replayed = replace(cached, metrics=metrics)
+            if not check_only:
+                self._record(replayed)
+            return replayed
         if check_only:
             raise DomainError(code=4018, name="GATE_RECEIPT_REQUIRED", retryable=False)
         runner = self._bind_runner(commands)

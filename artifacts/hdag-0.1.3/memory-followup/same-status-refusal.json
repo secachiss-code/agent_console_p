@@ -1,0 +1,1 @@
+{"kind":"error","jsonrpc":"2.0","id":2,"error":{"code":4004,"message":"NODE_TRANSITION_INVALID","data":{"reason":"NODE_TRANSITION_INVALID","domain":"aconsole.ipc","retryable":false,"user_message_key":"error.node_transition_invalid","user_message_args":{"reason":"cancelled"},"hint":null,"details":null}}}

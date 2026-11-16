@@ -1,0 +1,26 @@
+
+╔══╗─────────▶╔╗ ╔╗      ╔╗◀───┐
+╚╣╠╝◀─────┐  ╔╝╚╗║║────▶╔╝╚╗   │
+ ║║   ╔══╦══╦╩╗╔╝║║  ╔╦═╩╗╔╝╔═╦══╗
+ ║║╔══╣╔╗║╔╗║╔╣║ ║║ ╔╬╣╔╗║║ ║│║╔═╝
+╔╣╠╣║║║╚╝║╚╝║║║╚╗║╚═╝║║║║║╚╗║═╣║
+╚══╩╩╩╣╔═╩══╩╝╚═╝╚═══╩╩╝╚╩═╩╩═╩╝
+  └──▶║║                    ▲
+      ╚╝────────────────────┘
+
+
+---------
+Contracts
+---------
+
+Analyzed 384 files, 2137 dependencies.
+--------------------------------------
+
+UI does not import the core KEPT
+Core does not import the UI or gi KEPT
+Domain stays free of infrastructure libraries KEPT
+Application does not import infrastructure KEPT
+Contracts do not import the rest of aconsole KEPT
+Sidecar stays on the standard library KEPT
+
+Contracts: 6 kept, 0 broken.

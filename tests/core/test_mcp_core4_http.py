@@ -8,16 +8,19 @@ from typing import TYPE_CHECKING
 
 from aconsole.contracts.app import (
     OpenTabParams,
+    PlanIdParams,
+    PlanView,
     ProjectAddParams,
     ProjectView,
     TabIdParams,
     TabView,
     TerminalLaunchSpec,
 )
-from aconsole.contracts.common import AgentKind, WorkspaceMode
+from aconsole.contracts.common import AgentKind, PlanId, WorkspaceMode
 from tests.core.git_helpers import commit
 from tests.core.test_claude_mcp import _config, _content, _Mcp
 from tests.core.test_wire import _connect, _daemon, _git_repo, _stop
+from tests.hdag_fixtures import planning_nodes
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -50,6 +53,8 @@ def test_http_tab_token_selects_lease_owner_even_in_another_mcp_session(
                         agent=AgentKind.CLAUDE,
                         workspace=WorkspaceMode.NEW_WORKTREE,
                         worktree_name=f"mcp-{index}",
+                        mode="plan",
+                        model="explicit-model",
                     ),
                     TabView,
                 )
@@ -76,11 +81,12 @@ def test_http_tab_token_selects_lease_owner_even_in_another_mcp_session(
                     {
                         "title": "Shared",
                         "goal": "Ship",
-                        "nodes": [{"key": "N-1", "title": "One", "objective": "done"}],
+                        "nodes": planning_nodes("N-1"),
                     },
                 )
             )
-            node = made["nodes"][0]["node_id"]
+            await client.call("plan/freeze", PlanIdParams(plan_id=PlanId(made["plan_id"])), PlanView)
+            node = next(item["node_id"] for item in made["nodes"] if item["key"] == "N-1")
             claimed = _content(await call(0, "node_claim", {"node_id": node}))
             fence = claimed["fence"]
             _ = await call(0, "handover", {"action": "write", "goal": "Private packet"})

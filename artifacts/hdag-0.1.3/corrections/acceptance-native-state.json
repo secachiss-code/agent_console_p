@@ -1,0 +1,402 @@
+{
+  "scope": "isolated candidate PlanBoard, not the live product board; IDs are local to this instance",
+  "plan": {
+    "id": "plan-1",
+    "project_id": "hdag-acceptance",
+    "title": "0.1.3 — отдельная приёмка H-DAG",
+    "goal": "Небольшой H-DAG: 1 L0 + 4 pipeline L1, L2 без вершин. До заморозки подготовить реальный sealed image и записать environment.container/image в профиль L0. Не использовать вымышленный digest. Порог памяти не менять. Выпускной gate продукта и отложенный пункт 4 остаются отдельным условием выпуска.",
+    "status": "active",
+    "created_at": "2026-11-16T11:10:37.849501Z",
+    "updated_at": "2026-11-16T11:10:37.865118Z",
+    "nodes": [
+      {
+        "id": "node-2",
+        "key": "ACC-0",
+        "title": "Приёмка H-DAG в отдельном проекте",
+        "objective": "Проверить замороженные контракты на небольшом реальном CLI-сценарии. Только отдельный приёмочный repository.",
+        "status": "pending",
+        "owner": null,
+        "paths": [
+          "src/**",
+          "tests/**",
+          "evidence/**"
+        ],
+        "acceptance": [
+          "Все четыре L1 завершены со свежими квитанциями.",
+          "Живой Tier 3 зелёный; числовые бюджеты не ослаблены."
+        ],
+        "review_required": true,
+        "boundaries": null,
+        "output_format": null,
+        "evidence": null,
+        "note": null,
+        "fence": 0,
+        "tab_id": null,
+        "lease_id": null,
+        "lease_expires_at": null,
+        "layer": 3,
+        "priority": 8.222222222222222e-10,
+        "unmet_blockers": 4,
+        "created_at": "2026-11-16T11:10:37.858163Z",
+        "depends_on": [
+          "ACC-1",
+          "ACC-2",
+          "ACC-3",
+          "ACC-4"
+        ],
+        "parent": null,
+        "related": [],
+        "artifacts": [],
+        "level": 0,
+        "pipeline": false,
+        "invariants": "Фиксированные 5 вершин; L2 не создаёт узлы; квитанции создаёт ядро; закрытие L0 — человеком.",
+        "gate_profile": {
+          "micro": {
+            "format": [
+              "/opt/aconsole/core/bin/ruff",
+              "format"
+            ],
+            "fix": [
+              "/opt/aconsole/core/bin/ruff",
+              "check",
+              "--fix"
+            ],
+            "lint": [
+              "/opt/aconsole/core/bin/ruff",
+              "check"
+            ],
+            "types": [
+              "/opt/aconsole/core/bin/basedpyright"
+            ],
+            "tests": [
+              "/opt/aconsole/core/bin/python",
+              "-m",
+              "pytest"
+            ]
+          },
+          "direction": [
+            [
+              "/opt/aconsole/ui/bin/python",
+              "-m",
+              "pytest",
+              "tests"
+            ]
+          ]
+        },
+        "test_cmd": null,
+        "max_attempts": 4,
+        "contract_sha256": null,
+        "blast_radius": null,
+        "baseline_children": 0
+      },
+      {
+        "id": "node-3",
+        "key": "ACC-1",
+        "title": "Живой успешный проход L2",
+        "objective": "Выполнить сценарий в отдельном приёмочном проекте; сохранять evidence.",
+        "status": "pending",
+        "owner": null,
+        "paths": [
+          "src/success.py",
+          "tests/test_success.py",
+          "evidence/success/**"
+        ],
+        "acceptance": [
+          "Реальный CLI проходит spec → patch → test → verify и Tier 1 → Tier 2.",
+          "Повтор submit/gate того же состояния не создаёт новую попытку и не исполняет проверки повторно.",
+          "Число вершин остаётся 5; в L2 вершины не добавляются."
+        ],
+        "review_required": false,
+        "boundaries": "Не менять продуктовую ветку, бюджеты и глобальные правила проверок. При блокере — inbox, без новых вершин.",
+        "output_format": null,
+        "evidence": null,
+        "note": null,
+        "fence": 0,
+        "tab_id": null,
+        "lease_id": null,
+        "lease_expires_at": null,
+        "layer": 0,
+        "priority": 3.3000000008285877,
+        "unmet_blockers": 0,
+        "created_at": "2026-11-16T11:10:37.858163Z",
+        "depends_on": [],
+        "parent": "ACC-0",
+        "related": [],
+        "artifacts": [],
+        "level": 1,
+        "pipeline": true,
+        "invariants": null,
+        "gate_profile": null,
+        "test_cmd": "/opt/aconsole/core/bin/python -m pytest tests/test_success.py",
+        "max_attempts": 4,
+        "contract_sha256": null,
+        "blast_radius": null,
+        "baseline_children": 0
+      },
+      {
+        "id": "node-4",
+        "key": "ACC-2",
+        "title": "Провалы и решение человека",
+        "objective": "Выполнить сценарий в отдельном приёмочном проекте; сохранять evidence.",
+        "status": "pending",
+        "owner": null,
+        "paths": [
+          "src/retry.py",
+          "tests/test_retry.py",
+          "evidence/retry/**"
+        ],
+        "acceptance": [
+          "Четыре провала блокируют модуль; пятой попытки нет.",
+          "После restart сохранены блоки, квитанции и одна запись inbox.",
+          "Только человек с непустой заметкой снимает блокировку; вершины не добавляются."
+        ],
+        "review_required": false,
+        "boundaries": "Не менять продуктовую ветку, бюджеты и глобальные правила проверок. При блокере — inbox, без новых вершин.",
+        "output_format": null,
+        "evidence": null,
+        "note": null,
+        "fence": 0,
+        "tab_id": null,
+        "lease_id": null,
+        "lease_expires_at": null,
+        "layer": 1,
+        "priority": 2.2000000008337963,
+        "unmet_blockers": 1,
+        "created_at": "2026-11-16T11:10:37.858163Z",
+        "depends_on": [
+          "ACC-1"
+        ],
+        "parent": "ACC-0",
+        "related": [],
+        "artifacts": [],
+        "level": 1,
+        "pipeline": true,
+        "invariants": null,
+        "gate_profile": null,
+        "test_cmd": "/opt/aconsole/core/bin/python -m pytest tests/test_retry.py",
+        "max_attempts": 4,
+        "contract_sha256": null,
+        "blast_radius": null,
+        "baseline_children": 0
+      },
+      {
+        "id": "node-5",
+        "key": "ACC-3",
+        "title": "Недействительные квитанции",
+        "objective": "Выполнить сценарий в отдельном приёмочном проекте; сохранять evidence.",
+        "status": "pending",
+        "owner": null,
+        "paths": [
+          "src/identity.py",
+          "tests/test_identity.py",
+          "evidence/identity/**"
+        ],
+        "acceptance": [
+          "Незарегистрированный UI PID, отключённый UI и повторно выданный PID отклоняются.",
+          "Новый image/container ID и смена окружения во время проверки не наследуют зелёную квитанцию.",
+          "Старый fence и изменение checkout не позволяют завершить модуль; запуска на хосте нет."
+        ],
+        "review_required": false,
+        "boundaries": "Не менять продуктовую ветку, бюджеты и глобальные правила проверок. При блокере — inbox, без новых вершин.",
+        "output_format": null,
+        "evidence": null,
+        "note": null,
+        "fence": 0,
+        "tab_id": null,
+        "lease_id": null,
+        "lease_expires_at": null,
+        "layer": 1,
+        "priority": 2.200000000836806,
+        "unmet_blockers": 1,
+        "created_at": "2026-11-16T11:10:37.858163Z",
+        "depends_on": [
+          "ACC-1"
+        ],
+        "parent": "ACC-0",
+        "related": [],
+        "artifacts": [],
+        "level": 1,
+        "pipeline": true,
+        "invariants": null,
+        "gate_profile": null,
+        "test_cmd": "/opt/aconsole/core/bin/python -m pytest tests/test_identity.py",
+        "max_attempts": 4,
+        "contract_sha256": null,
+        "blast_radius": null,
+        "baseline_children": 0
+      },
+      {
+        "id": "node-6",
+        "key": "ACC-4",
+        "title": "Ресурсы и закрытие направления",
+        "objective": "Выполнить сценарий в отдельном приёмочном проекте; сохранять evidence.",
+        "status": "pending",
+        "owner": null,
+        "paths": [
+          "src/resources.py",
+          "tests/test_resources.py",
+          "evidence/resources/**"
+        ],
+        "acceptance": [
+          "Кандидат core/UI измерен с пятью вкладками: RSS ≤120/150 МиБ.",
+          "При превышении бюджета Tier 3 остаётся красным; PSS не подменяет RSS.",
+          "Только человек закрывает L0 со свежей direction-квитанцией; сохранены логи и идентичности процессов/образа."
+        ],
+        "review_required": false,
+        "boundaries": "Не менять продуктовую ветку, бюджеты и глобальные правила проверок. При блокере — inbox, без новых вершин.",
+        "output_format": null,
+        "evidence": null,
+        "note": null,
+        "fence": 0,
+        "tab_id": null,
+        "lease_id": null,
+        "lease_expires_at": null,
+        "layer": 2,
+        "priority": 1.100000000839815,
+        "unmet_blockers": 2,
+        "created_at": "2026-11-16T11:10:37.858163Z",
+        "depends_on": [
+          "ACC-2",
+          "ACC-3"
+        ],
+        "parent": "ACC-0",
+        "related": [],
+        "artifacts": [],
+        "level": 1,
+        "pipeline": true,
+        "invariants": null,
+        "gate_profile": null,
+        "test_cmd": "/opt/aconsole/core/bin/python -m pytest tests/test_resources.py",
+        "max_attempts": 4,
+        "contract_sha256": null,
+        "blast_radius": null,
+        "baseline_children": 0
+      }
+    ],
+    "topology": {
+      "nodes": [
+        {
+          "key": "ACC-0",
+          "objective": "Проверить замороженные контракты на небольшом реальном CLI-сценарии. Только отдельный приёмочный repository.",
+          "level": 0,
+          "parent": null,
+          "paths": [
+            "src/**",
+            "tests/**",
+            "evidence/**"
+          ],
+          "acceptance": [
+            "Все четыре L1 завершены со свежими квитанциями.",
+            "Живой Tier 3 зелёный; числовые бюджеты не ослаблены."
+          ],
+          "test_cmd": null,
+          "boundaries": null,
+          "output_format": null,
+          "invariants": "Фиксированные 5 вершин; L2 не создаёт узлы; квитанции создаёт ядро; закрытие L0 — человеком.",
+          "gate_profile_json": "{\"direction\":[[\"/opt/aconsole/ui/bin/python\",\"-m\",\"pytest\",\"tests\"]],\"micro\":{\"fix\":[\"/opt/aconsole/core/bin/ruff\",\"check\",\"--fix\"],\"format\":[\"/opt/aconsole/core/bin/ruff\",\"format\"],\"lint\":[\"/opt/aconsole/core/bin/ruff\",\"check\"],\"tests\":[\"/opt/aconsole/core/bin/python\",\"-m\",\"pytest\"],\"types\":[\"/opt/aconsole/core/bin/basedpyright\"]}}"
+        },
+        {
+          "key": "ACC-1",
+          "objective": "Выполнить сценарий в отдельном приёмочном проекте; сохранять evidence.",
+          "level": 1,
+          "parent": "ACC-0",
+          "paths": [
+            "src/success.py",
+            "tests/test_success.py",
+            "evidence/success/**"
+          ],
+          "acceptance": [
+            "Реальный CLI проходит spec → patch → test → verify и Tier 1 → Tier 2.",
+            "Повтор submit/gate того же состояния не создаёт новую попытку и не исполняет проверки повторно.",
+            "Число вершин остаётся 5; в L2 вершины не добавляются."
+          ],
+          "test_cmd": "/opt/aconsole/core/bin/python -m pytest tests/test_success.py",
+          "boundaries": "Не менять продуктовую ветку, бюджеты и глобальные правила проверок. При блокере — inbox, без новых вершин.",
+          "output_format": null,
+          "invariants": null,
+          "gate_profile_json": "null"
+        },
+        {
+          "key": "ACC-2",
+          "objective": "Выполнить сценарий в отдельном приёмочном проекте; сохранять evidence.",
+          "level": 1,
+          "parent": "ACC-0",
+          "paths": [
+            "src/retry.py",
+            "tests/test_retry.py",
+            "evidence/retry/**"
+          ],
+          "acceptance": [
+            "Четыре провала блокируют модуль; пятой попытки нет.",
+            "После restart сохранены блоки, квитанции и одна запись inbox.",
+            "Только человек с непустой заметкой снимает блокировку; вершины не добавляются."
+          ],
+          "test_cmd": "/opt/aconsole/core/bin/python -m pytest tests/test_retry.py",
+          "boundaries": "Не менять продуктовую ветку, бюджеты и глобальные правила проверок. При блокере — inbox, без новых вершин.",
+          "output_format": null,
+          "invariants": null,
+          "gate_profile_json": "null"
+        },
+        {
+          "key": "ACC-3",
+          "objective": "Выполнить сценарий в отдельном приёмочном проекте; сохранять evidence.",
+          "level": 1,
+          "parent": "ACC-0",
+          "paths": [
+            "src/identity.py",
+            "tests/test_identity.py",
+            "evidence/identity/**"
+          ],
+          "acceptance": [
+            "Незарегистрированный UI PID, отключённый UI и повторно выданный PID отклоняются.",
+            "Новый image/container ID и смена окружения во время проверки не наследуют зелёную квитанцию.",
+            "Старый fence и изменение checkout не позволяют завершить модуль; запуска на хосте нет."
+          ],
+          "test_cmd": "/opt/aconsole/core/bin/python -m pytest tests/test_identity.py",
+          "boundaries": "Не менять продуктовую ветку, бюджеты и глобальные правила проверок. При блокере — inbox, без новых вершин.",
+          "output_format": null,
+          "invariants": null,
+          "gate_profile_json": "null"
+        },
+        {
+          "key": "ACC-4",
+          "objective": "Выполнить сценарий в отдельном приёмочном проекте; сохранять evidence.",
+          "level": 1,
+          "parent": "ACC-0",
+          "paths": [
+            "src/resources.py",
+            "tests/test_resources.py",
+            "evidence/resources/**"
+          ],
+          "acceptance": [
+            "Кандидат core/UI измерен с пятью вкладками: RSS ≤120/150 МиБ.",
+            "При превышении бюджета Tier 3 остаётся красным; PSS не подменяет RSS.",
+            "Только человек закрывает L0 со свежей direction-квитанцией; сохранены логи и идентичности процессов/образа."
+          ],
+          "test_cmd": "/opt/aconsole/core/bin/python -m pytest tests/test_resources.py",
+          "boundaries": "Не менять продуктовую ветку, бюджеты и глобальные правила проверок. При блокере — inbox, без новых вершин.",
+          "output_format": null,
+          "invariants": null,
+          "gate_profile_json": "null"
+        }
+      ],
+      "phase": "draft",
+      "revision_no": 0,
+      "frozen_at": null,
+      "baseline_nodes": 0,
+      "gross_added": 5,
+      "baseline_children": [],
+      "contract_hashes": [],
+      "gates_sha256": null,
+      "applied_changes": []
+    }
+  },
+  "admission": {
+    "vertices": 5,
+    "l0": 1,
+    "pipeline_l1": 4,
+    "phase": "draft",
+    "frozen": false,
+    "freeze_prerequisite": "Real sealed image/container must be prepared and pinned before freeze."
+  }
+}

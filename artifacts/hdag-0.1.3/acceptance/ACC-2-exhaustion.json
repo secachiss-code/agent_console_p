@@ -1,0 +1,682 @@
+{
+  "case": "retries",
+  "complete": true,
+  "events": [
+    {
+      "transport": "human-ipc",
+      "method": "plan/get",
+      "response": {
+        "kind": "result",
+        "jsonrpc": "2.0",
+        "id": 2,
+        "result": {
+          "id": "plan-1",
+          "project_id": "hdag-acceptance",
+          "title": "0.1.3 — отдельная приёмка H-DAG",
+          "goal": "Небольшой H-DAG: 1 L0 + 4 pipeline L1, L2 без вершин. До заморозки подготовить реальный sealed image и записать environment.container/image в профиль L0. Не использовать вымышленный digest. Порог памяти не менять. Выпускной gate продукта и отложенный пункт 4 остаются отдельным условием выпуска.",
+          "status": "active",
+          "nodes": [
+            {
+              "id": "node-2",
+              "key": "ACC-0",
+              "title": "Приёмка H-DAG в отдельном проекте",
+              "status": "pending",
+              "ready": false,
+              "layer": 3,
+              "priority": 0.00013808072025462963,
+              "depends_on": [
+                "node-4",
+                "node-5",
+                "node-6",
+                "node-3"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null,
+              "level": 0,
+              "parent": null,
+              "pipeline": false,
+              "attempt_no": 0,
+              "max_attempts": 4,
+              "last_verdict": null
+            },
+            {
+              "id": "node-3",
+              "key": "ACC-1",
+              "title": "Живой успешный проход L2",
+              "status": "done",
+              "ready": false,
+              "layer": 0,
+              "priority": 0.30013808072025466,
+              "depends_on": [],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null,
+              "level": 1,
+              "parent": "node-2",
+              "pipeline": true,
+              "attempt_no": 1,
+              "max_attempts": 4,
+              "last_verdict": "2 passed, 0 failed"
+            },
+            {
+              "id": "node-4",
+              "key": "ACC-2",
+              "title": "Провалы и решение человека",
+              "status": "pending",
+              "ready": true,
+              "layer": 1,
+              "priority": 2.200138080720255,
+              "depends_on": [
+                "node-3"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null,
+              "level": 1,
+              "parent": "node-2",
+              "pipeline": true,
+              "attempt_no": 0,
+              "max_attempts": 4,
+              "last_verdict": null
+            },
+            {
+              "id": "node-5",
+              "key": "ACC-3",
+              "title": "Недействительные квитанции",
+              "status": "pending",
+              "ready": true,
+              "layer": 1,
+              "priority": 2.200138080720255,
+              "depends_on": [
+                "node-3"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null,
+              "level": 1,
+              "parent": "node-2",
+              "pipeline": true,
+              "attempt_no": 0,
+              "max_attempts": 4,
+              "last_verdict": null
+            },
+            {
+              "id": "node-6",
+              "key": "ACC-4",
+              "title": "Ресурсы и закрытие направления",
+              "status": "pending",
+              "ready": false,
+              "layer": 2,
+              "priority": 1.1001380807202548,
+              "depends_on": [
+                "node-5",
+                "node-4"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null,
+              "level": 1,
+              "parent": "node-2",
+              "pipeline": true,
+              "attempt_no": 0,
+              "max_attempts": 4,
+              "last_verdict": null
+            }
+          ],
+          "done": 1,
+          "total": 5,
+          "canvas": null,
+          "updated_at": "2026-11-16T11:49:24.169668Z",
+          "phase": "frozen",
+          "warnings": []
+        }
+      }
+    },
+    {
+      "transport": "mcp-http",
+      "tool": "node_claim",
+      "arguments": {
+        "node_id": "node-4"
+      },
+      "response": {
+        "lease_id": "plan-1:ACC-2:1",
+        "fence": 1,
+        "expires_at": "2026-11-16T12:06:39.801810+00:00",
+        "brief": {
+          "objective": "Выполнить сценарий в отдельном приёмочном проекте; сохранять evidence.",
+          "acceptance": [
+            "Четыре провала блокируют модуль; пятой попытки нет.",
+            "После restart сохранены блоки, квитанции и одна запись inbox.",
+            "Только человек с непустой заметкой снимает блокировку; вершины не добавляются."
+          ],
+          "paths": [
+            "src/retry.py",
+            "tests/test_retry.py",
+            "evidence/retry/**"
+          ],
+          "boundaries": "Не менять продуктовую ветку, бюджеты и глобальные правила проверок. При блокере — inbox, без новых вершин."
+        },
+        "context": {
+          "items": [],
+          "truncated": false,
+          "verified_commit": "1ec4ba6446bc646c97ecd9c99e4c2724d2a5e6ad"
+        }
+      },
+      "is_error": false
+    },
+    {
+      "transport": "mcp-http",
+      "tool": "step_begin",
+      "arguments": {
+        "node_id": "node-4",
+        "fence": 1
+      },
+      "response": {
+        "direction_prefix": "{\"direction\":\"ACC-0\",\"gate_profile\":{\"direction\":[[\"/opt/aconsole/ui/bin/python\",\"-m\",\"pytest\",\"tests\"]],\"environment\":{\"container\":\"aconsole-acc-gate-ba2a407ac5\",\"image\":\"f4147a4165dbe6b85c65b0c7b0de4858bc9114466edabf2132f333861102eb70\"},\"micro\":{\"fix\":[\"/opt/aconsole/core/bin/ruff\",\"check\",\"--fix\"],\"format\":[\"/opt/aconsole/core/bin/ruff\",\"format\"],\"lint\":[\"/opt/aconsole/core/bin/ruff\",\"check\"],\"tests\":[\"/opt/aconsole/core/bin/python\",\"-m\",\"pytest\"],\"types\":[\"/opt/aconsole/core/bin/basedpyright\"]}},\"invariants\":\"Фиксированные 5 вершин; L2 не создаёт узлы; квитанции создаёт ядро; закрытие L0 — человеком.\",\"scope\":[\"evidence/**\",\"src/**\",\"tests/**\"],\"skeletons\":[[\"src/identity.py\",\"def value() -> int:\\n    ...\"],[\"src/resources.py\",\"def value() -> int:\\n    ...\"],[\"src/retry.py\",\"def value() -> int:\\n    ...\"],[\"src/success.py\",\"def value() -> int:\\n    ...\"],[\"tests/test_identity.py\",\"def test_value() -> None:\\n    ...\"],[\"tests/test_resources.py\",\"def test_value() -> None:\\n    ...\"],[\"tests/test_retry.py\",\"def test_value() -> None:\\n    ...\"],[\"tests/test_success.py\",\"def test_value() -> None:\\n    ...\"]]}",
+        "prefix_sha256": "47097142d59b8e518341e3909870131599b61b67089a24c428e32fee16b4b2ec",
+        "contract": "{\"acceptance\":[\"Четыре провала блокируют модуль; пятой попытки нет.\",\"После restart сохранены блоки, квитанции и одна запись inbox.\",\"Только человек с непустой заметкой снимает блокировку; вершины не добавляются.\"],\"blast_radius\":[],\"boundaries\":\"Не менять продуктовую ветку, бюджеты и глобальные правила проверок. При блокере — inbox, без новых вершин.\",\"contract_sha256\":\"a1d3240010a6f5cada05446c17d40d14ffeb36cbc8013342381e9f698febba2a\",\"direction_key\":\"ACC-0\",\"key\":\"ACC-2\",\"objective\":\"Выполнить сценарий в отдельном приёмочном проекте; сохранять evidence.\",\"output_format\":null,\"paths\":[\"src/retry.py\",\"tests/test_retry.py\",\"evidence/retry/**\"],\"test_cmd\":\"/opt/aconsole/core/bin/python -m pytest tests/test_retry.py\"}",
+        "handoff": "{\"attempt\":1,\"compact_verdict\":null,\"contract_hash\":\"a1d3240010a6f5cada05446c17d40d14ffeb36cbc8013342381e9f698febba2a\",\"diff_stat\":null,\"head_block_hash\":\"d47b829acbd89f13c99af05033a8ff136c9c25b9d72d478e0fcb0f2941817015\",\"max_attempts\":4,\"next\":\"Complete the spec step.\",\"node\":\"ACC-2\",\"remaining_items\":[],\"scope\":[\"src/retry.py\",\"tests/test_retry.py\",\"evidence/retry/**\"],\"step\":\"spec\",\"symbols\":[],\"v\":1}",
+        "file_slice": "src/retry.py\n1: def value() -> int:\n2:     return 0",
+        "lease_id": "plan-1:ACC-2:1",
+        "fence": 1,
+        "expires_at": "2026-11-16T12:06:39.914866+00:00"
+      },
+      "is_error": false
+    },
+    {
+      "transport": "mcp-http",
+      "tool": "step_submit",
+      "arguments": {
+        "node_id": "node-4",
+        "fence": 1,
+        "step": "spec"
+      },
+      "response": {
+        "block_hash": "01833a5d94fd9cac55869e541b7f513d4874985a65a53cb582dd92a69fb6ff55",
+        "step": "spec",
+        "attempt": 1,
+        "next_step": "patch",
+        "receipt_hash": null,
+        "passed": true
+      },
+      "is_error": false
+    },
+    {
+      "transport": "mcp-http",
+      "tool": "step_submit",
+      "arguments": {
+        "node_id": "node-4",
+        "fence": 1,
+        "step": "patch"
+      },
+      "response": {
+        "block_hash": "99d0130b57275423b05ff95bf32ae9e03821b9261851656bc9d99f301dbc0de2",
+        "step": "patch",
+        "attempt": 1,
+        "next_step": "test",
+        "receipt_hash": null,
+        "passed": true
+      },
+      "is_error": false
+    },
+    {
+      "transport": "mcp-http",
+      "tool": "step_submit",
+      "arguments": {
+        "node_id": "node-4",
+        "fence": 1,
+        "step": "test"
+      },
+      "response": {
+        "block_hash": "6f70a5628956a547c10bbecfa8875f1ba4717828d059f993e94c2ff607abf66b",
+        "step": "test",
+        "attempt": 1,
+        "next_step": "verify",
+        "receipt_hash": null,
+        "passed": true
+      },
+      "is_error": false
+    },
+    {
+      "transport": "mcp-http",
+      "tool": "step_submit",
+      "arguments": {
+        "node_id": "node-4",
+        "fence": 1,
+        "step": "verify"
+      },
+      "response": {
+        "passed": false,
+        "receipt_hash": "17fe424af0f0d33d2d2bfaaeec26dfbb1d023d1318ce923764465076281d167a",
+        "compact_verdict": "3 passed, 1 failed\n/opt/aconsole/core/bin/basedpyright: /home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/e9b422b1e208b10f/.aconsole-dev/hdag-live/workspace/src/retr",
+        "exhausted": false
+      },
+      "is_error": false
+    },
+    {
+      "transport": "mcp-http",
+      "tool": "step_begin",
+      "arguments": {
+        "node_id": "node-4",
+        "fence": 1
+      },
+      "response": {
+        "direction_prefix": "{\"direction\":\"ACC-0\",\"gate_profile\":{\"direction\":[[\"/opt/aconsole/ui/bin/python\",\"-m\",\"pytest\",\"tests\"]],\"environment\":{\"container\":\"aconsole-acc-gate-ba2a407ac5\",\"image\":\"f4147a4165dbe6b85c65b0c7b0de4858bc9114466edabf2132f333861102eb70\"},\"micro\":{\"fix\":[\"/opt/aconsole/core/bin/ruff\",\"check\",\"--fix\"],\"format\":[\"/opt/aconsole/core/bin/ruff\",\"format\"],\"lint\":[\"/opt/aconsole/core/bin/ruff\",\"check\"],\"tests\":[\"/opt/aconsole/core/bin/python\",\"-m\",\"pytest\"],\"types\":[\"/opt/aconsole/core/bin/basedpyright\"]}},\"invariants\":\"Фиксированные 5 вершин; L2 не создаёт узлы; квитанции создаёт ядро; закрытие L0 — человеком.\",\"scope\":[\"evidence/**\",\"src/**\",\"tests/**\"],\"skeletons\":[[\"src/identity.py\",\"def value() -> int:\\n    ...\"],[\"src/resources.py\",\"def value() -> int:\\n    ...\"],[\"src/retry.py\",\"def value() -> int:\\n    ...\"],[\"src/success.py\",\"def value() -> int:\\n    ...\"],[\"tests/test_identity.py\",\"def test_value() -> None:\\n    ...\"],[\"tests/test_resources.py\",\"def test_value() -> None:\\n    ...\"],[\"tests/test_retry.py\",\"def test_value() -> None:\\n    ...\"],[\"tests/test_success.py\",\"def test_value() -> None:\\n    ...\"]]}",
+        "prefix_sha256": "47097142d59b8e518341e3909870131599b61b67089a24c428e32fee16b4b2ec",
+        "contract": "{\"acceptance\":[\"Четыре провала блокируют модуль; пятой попытки нет.\",\"После restart сохранены блоки, квитанции и одна запись inbox.\",\"Только человек с непустой заметкой снимает блокировку; вершины не добавляются.\"],\"blast_radius\":[],\"boundaries\":\"Не менять продуктовую ветку, бюджеты и глобальные правила проверок. При блокере — inbox, без новых вершин.\",\"contract_sha256\":\"a1d3240010a6f5cada05446c17d40d14ffeb36cbc8013342381e9f698febba2a\",\"direction_key\":\"ACC-0\",\"key\":\"ACC-2\",\"objective\":\"Выполнить сценарий в отдельном приёмочном проекте; сохранять evidence.\",\"output_format\":null,\"paths\":[\"src/retry.py\",\"tests/test_retry.py\",\"evidence/retry/**\"],\"test_cmd\":\"/opt/aconsole/core/bin/python -m pytest tests/test_retry.py\"}",
+        "handoff": "{\"attempt\":2,\"compact_verdict\":\"3 passed, 1 failed\\n/opt/aconsole/core/bin/basedpyright: /home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/e9b422b1e208b10f/.aconsole-dev/hdag-live/workspace/src/retr\",\"contract_hash\":\"a1d3240010a6f5cada05446c17d40d14ffeb36cbc8013342381e9f698febba2a\",\"diff_stat\":null,\"head_block_hash\":\"6f70a5628956a547c10bbecfa8875f1ba4717828d059f993e94c2ff607abf66b\",\"max_attempts\":4,\"next\":\"Complete the patch step.\",\"node\":\"ACC-2\",\"remaining_items\":[],\"scope\":[\"src/retry.py\",\"tests/test_retry.py\",\"evidence/retry/**\"],\"step\":\"patch\",\"symbols\":[],\"v\":1}",
+        "file_slice": "src/retry.py\n1: def value() -> int:\n2:     return \"invalid\"",
+        "lease_id": "plan-1:ACC-2:1",
+        "fence": 1,
+        "expires_at": "2026-11-16T12:06:44.497730+00:00"
+      },
+      "is_error": false
+    },
+    {
+      "transport": "mcp-http",
+      "tool": "step_submit",
+      "arguments": {
+        "node_id": "node-4",
+        "fence": 1,
+        "step": "patch"
+      },
+      "response": {
+        "block_hash": "d243901cb54fe4e4f160e6a3c904010235a364806af42c3c4b5cd77915410846",
+        "step": "patch",
+        "attempt": 2,
+        "next_step": "test",
+        "receipt_hash": null,
+        "passed": true
+      },
+      "is_error": false
+    },
+    {
+      "transport": "mcp-http",
+      "tool": "step_submit",
+      "arguments": {
+        "node_id": "node-4",
+        "fence": 1,
+        "step": "test"
+      },
+      "response": {
+        "block_hash": "3631acb87f8e48763347c24918229ac5751904ec545bc8cd0680271db184ad7b",
+        "step": "test",
+        "attempt": 2,
+        "next_step": "verify",
+        "receipt_hash": null,
+        "passed": true
+      },
+      "is_error": false
+    },
+    {
+      "transport": "mcp-http",
+      "tool": "step_submit",
+      "arguments": {
+        "node_id": "node-4",
+        "fence": 1,
+        "step": "verify"
+      },
+      "response": {
+        "passed": false,
+        "receipt_hash": "17fe424af0f0d33d2d2bfaaeec26dfbb1d023d1318ce923764465076281d167a",
+        "compact_verdict": "3 passed, 1 failed\n/opt/aconsole/core/bin/basedpyright: /home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/e9b422b1e208b10f/.aconsole-dev/hdag-live/workspace/src/retr",
+        "exhausted": false
+      },
+      "is_error": false
+    },
+    {
+      "transport": "mcp-http",
+      "tool": "step_begin",
+      "arguments": {
+        "node_id": "node-4",
+        "fence": 1
+      },
+      "response": {
+        "direction_prefix": "{\"direction\":\"ACC-0\",\"gate_profile\":{\"direction\":[[\"/opt/aconsole/ui/bin/python\",\"-m\",\"pytest\",\"tests\"]],\"environment\":{\"container\":\"aconsole-acc-gate-ba2a407ac5\",\"image\":\"f4147a4165dbe6b85c65b0c7b0de4858bc9114466edabf2132f333861102eb70\"},\"micro\":{\"fix\":[\"/opt/aconsole/core/bin/ruff\",\"check\",\"--fix\"],\"format\":[\"/opt/aconsole/core/bin/ruff\",\"format\"],\"lint\":[\"/opt/aconsole/core/bin/ruff\",\"check\"],\"tests\":[\"/opt/aconsole/core/bin/python\",\"-m\",\"pytest\"],\"types\":[\"/opt/aconsole/core/bin/basedpyright\"]}},\"invariants\":\"Фиксированные 5 вершин; L2 не создаёт узлы; квитанции создаёт ядро; закрытие L0 — человеком.\",\"scope\":[\"evidence/**\",\"src/**\",\"tests/**\"],\"skeletons\":[[\"src/identity.py\",\"def value() -> int:\\n    ...\"],[\"src/resources.py\",\"def value() -> int:\\n    ...\"],[\"src/retry.py\",\"def value() -> int:\\n    ...\"],[\"src/success.py\",\"def value() -> int:\\n    ...\"],[\"tests/test_identity.py\",\"def test_value() -> None:\\n    ...\"],[\"tests/test_resources.py\",\"def test_value() -> None:\\n    ...\"],[\"tests/test_retry.py\",\"def test_value() -> None:\\n    ...\"],[\"tests/test_success.py\",\"def test_value() -> None:\\n    ...\"]]}",
+        "prefix_sha256": "47097142d59b8e518341e3909870131599b61b67089a24c428e32fee16b4b2ec",
+        "contract": "{\"acceptance\":[\"Четыре провала блокируют модуль; пятой попытки нет.\",\"После restart сохранены блоки, квитанции и одна запись inbox.\",\"Только человек с непустой заметкой снимает блокировку; вершины не добавляются.\"],\"blast_radius\":[],\"boundaries\":\"Не менять продуктовую ветку, бюджеты и глобальные правила проверок. При блокере — inbox, без новых вершин.\",\"contract_sha256\":\"a1d3240010a6f5cada05446c17d40d14ffeb36cbc8013342381e9f698febba2a\",\"direction_key\":\"ACC-0\",\"key\":\"ACC-2\",\"objective\":\"Выполнить сценарий в отдельном приёмочном проекте; сохранять evidence.\",\"output_format\":null,\"paths\":[\"src/retry.py\",\"tests/test_retry.py\",\"evidence/retry/**\"],\"test_cmd\":\"/opt/aconsole/core/bin/python -m pytest tests/test_retry.py\"}",
+        "handoff": "{\"attempt\":3,\"compact_verdict\":\"3 passed, 1 failed\\n/opt/aconsole/core/bin/basedpyright: /home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/e9b422b1e208b10f/.aconsole-dev/hdag-live/workspace/src/retr\",\"contract_hash\":\"a1d3240010a6f5cada05446c17d40d14ffeb36cbc8013342381e9f698febba2a\",\"diff_stat\":null,\"head_block_hash\":\"3631acb87f8e48763347c24918229ac5751904ec545bc8cd0680271db184ad7b\",\"max_attempts\":4,\"next\":\"Complete the patch step.\",\"node\":\"ACC-2\",\"remaining_items\":[],\"scope\":[\"src/retry.py\",\"tests/test_retry.py\",\"evidence/retry/**\"],\"step\":\"patch\",\"symbols\":[],\"v\":1}",
+        "file_slice": "src/retry.py\n1: def value() -> int:\n2:     return \"invalid\"",
+        "lease_id": "plan-1:ACC-2:1",
+        "fence": 1,
+        "expires_at": "2026-11-16T12:06:46.895970+00:00"
+      },
+      "is_error": false
+    },
+    {
+      "transport": "mcp-http",
+      "tool": "step_submit",
+      "arguments": {
+        "node_id": "node-4",
+        "fence": 1,
+        "step": "patch"
+      },
+      "response": {
+        "block_hash": "1d275a505f280d429f46eb75220a42c601c471314c7fb853d51da381ce237b40",
+        "step": "patch",
+        "attempt": 3,
+        "next_step": "test",
+        "receipt_hash": null,
+        "passed": true
+      },
+      "is_error": false
+    },
+    {
+      "transport": "mcp-http",
+      "tool": "step_submit",
+      "arguments": {
+        "node_id": "node-4",
+        "fence": 1,
+        "step": "test"
+      },
+      "response": {
+        "block_hash": "39de40bf052ef1871f167b624f7133425564868f09c7ca0afd42231d37ebf534",
+        "step": "test",
+        "attempt": 3,
+        "next_step": "verify",
+        "receipt_hash": null,
+        "passed": true
+      },
+      "is_error": false
+    },
+    {
+      "transport": "mcp-http",
+      "tool": "step_submit",
+      "arguments": {
+        "node_id": "node-4",
+        "fence": 1,
+        "step": "verify"
+      },
+      "response": {
+        "passed": false,
+        "receipt_hash": "17fe424af0f0d33d2d2bfaaeec26dfbb1d023d1318ce923764465076281d167a",
+        "compact_verdict": "3 passed, 1 failed\n/opt/aconsole/core/bin/basedpyright: /home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/e9b422b1e208b10f/.aconsole-dev/hdag-live/workspace/src/retr",
+        "exhausted": false
+      },
+      "is_error": false
+    },
+    {
+      "transport": "mcp-http",
+      "tool": "step_begin",
+      "arguments": {
+        "node_id": "node-4",
+        "fence": 1
+      },
+      "response": {
+        "direction_prefix": "{\"direction\":\"ACC-0\",\"gate_profile\":{\"direction\":[[\"/opt/aconsole/ui/bin/python\",\"-m\",\"pytest\",\"tests\"]],\"environment\":{\"container\":\"aconsole-acc-gate-ba2a407ac5\",\"image\":\"f4147a4165dbe6b85c65b0c7b0de4858bc9114466edabf2132f333861102eb70\"},\"micro\":{\"fix\":[\"/opt/aconsole/core/bin/ruff\",\"check\",\"--fix\"],\"format\":[\"/opt/aconsole/core/bin/ruff\",\"format\"],\"lint\":[\"/opt/aconsole/core/bin/ruff\",\"check\"],\"tests\":[\"/opt/aconsole/core/bin/python\",\"-m\",\"pytest\"],\"types\":[\"/opt/aconsole/core/bin/basedpyright\"]}},\"invariants\":\"Фиксированные 5 вершин; L2 не создаёт узлы; квитанции создаёт ядро; закрытие L0 — человеком.\",\"scope\":[\"evidence/**\",\"src/**\",\"tests/**\"],\"skeletons\":[[\"src/identity.py\",\"def value() -> int:\\n    ...\"],[\"src/resources.py\",\"def value() -> int:\\n    ...\"],[\"src/retry.py\",\"def value() -> int:\\n    ...\"],[\"src/success.py\",\"def value() -> int:\\n    ...\"],[\"tests/test_identity.py\",\"def test_value() -> None:\\n    ...\"],[\"tests/test_resources.py\",\"def test_value() -> None:\\n    ...\"],[\"tests/test_retry.py\",\"def test_value() -> None:\\n    ...\"],[\"tests/test_success.py\",\"def test_value() -> None:\\n    ...\"]]}",
+        "prefix_sha256": "47097142d59b8e518341e3909870131599b61b67089a24c428e32fee16b4b2ec",
+        "contract": "{\"acceptance\":[\"Четыре провала блокируют модуль; пятой попытки нет.\",\"После restart сохранены блоки, квитанции и одна запись inbox.\",\"Только человек с непустой заметкой снимает блокировку; вершины не добавляются.\"],\"blast_radius\":[],\"boundaries\":\"Не менять продуктовую ветку, бюджеты и глобальные правила проверок. При блокере — inbox, без новых вершин.\",\"contract_sha256\":\"a1d3240010a6f5cada05446c17d40d14ffeb36cbc8013342381e9f698febba2a\",\"direction_key\":\"ACC-0\",\"key\":\"ACC-2\",\"objective\":\"Выполнить сценарий в отдельном приёмочном проекте; сохранять evidence.\",\"output_format\":null,\"paths\":[\"src/retry.py\",\"tests/test_retry.py\",\"evidence/retry/**\"],\"test_cmd\":\"/opt/aconsole/core/bin/python -m pytest tests/test_retry.py\"}",
+        "handoff": "{\"attempt\":4,\"compact_verdict\":\"3 passed, 1 failed\\n/opt/aconsole/core/bin/basedpyright: /home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/e9b422b1e208b10f/.aconsole-dev/hdag-live/workspace/src/retr\",\"contract_hash\":\"a1d3240010a6f5cada05446c17d40d14ffeb36cbc8013342381e9f698febba2a\",\"diff_stat\":null,\"head_block_hash\":\"39de40bf052ef1871f167b624f7133425564868f09c7ca0afd42231d37ebf534\",\"max_attempts\":4,\"next\":\"Complete the patch step.\",\"node\":\"ACC-2\",\"remaining_items\":[],\"scope\":[\"src/retry.py\",\"tests/test_retry.py\",\"evidence/retry/**\"],\"step\":\"patch\",\"symbols\":[],\"v\":1}",
+        "file_slice": "src/retry.py\n1: def value() -> int:\n2:     return \"invalid\"",
+        "lease_id": "plan-1:ACC-2:1",
+        "fence": 1,
+        "expires_at": "2026-11-16T12:06:49.458078+00:00"
+      },
+      "is_error": false
+    },
+    {
+      "transport": "mcp-http",
+      "tool": "step_submit",
+      "arguments": {
+        "node_id": "node-4",
+        "fence": 1,
+        "step": "patch"
+      },
+      "response": {
+        "block_hash": "71f1d683c79954e98dac1973fc8aebfef5497ece31f1fd126bf0d480cf19a271",
+        "step": "patch",
+        "attempt": 4,
+        "next_step": "test",
+        "receipt_hash": null,
+        "passed": true
+      },
+      "is_error": false
+    },
+    {
+      "transport": "mcp-http",
+      "tool": "step_submit",
+      "arguments": {
+        "node_id": "node-4",
+        "fence": 1,
+        "step": "test"
+      },
+      "response": {
+        "block_hash": "bbe59bd71c913df0a7a00f5443bf087318a756080494491055d254962a7857fe",
+        "step": "test",
+        "attempt": 4,
+        "next_step": "verify",
+        "receipt_hash": null,
+        "passed": true
+      },
+      "is_error": false
+    },
+    {
+      "transport": "mcp-http",
+      "tool": "step_submit",
+      "arguments": {
+        "node_id": "node-4",
+        "fence": 1,
+        "step": "verify"
+      },
+      "response": {
+        "passed": false,
+        "receipt_hash": "17fe424af0f0d33d2d2bfaaeec26dfbb1d023d1318ce923764465076281d167a",
+        "compact_verdict": "3 passed, 1 failed\n/opt/aconsole/core/bin/basedpyright: /home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/e9b422b1e208b10f/.aconsole-dev/hdag-live/workspace/src/retr",
+        "exhausted": true
+      },
+      "is_error": false
+    },
+    {
+      "transport": "mcp-http",
+      "tool": "node_update",
+      "arguments": {
+        "node_id": "node-4",
+        "fence": 1,
+        "status": "pending"
+      },
+      "response": {
+        "error": {
+          "code": 4004,
+          "reason": "NODE_TRANSITION_INVALID",
+          "message": "NODE_TRANSITION_INVALID: NODE_TRANSITION_INVALID",
+          "hint": "call plan_get, then node_update with an allowed status"
+        }
+      },
+      "is_error": true
+    },
+    {
+      "transport": "mcp-http",
+      "tool": "step_begin",
+      "arguments": {
+        "node_id": "node-4",
+        "fence": 1
+      },
+      "response": {
+        "error": {
+          "code": 4016,
+          "reason": "ATTEMPTS_EXHAUSTED",
+          "message": "ATTEMPTS_EXHAUSTED: the durable retry budget is exhausted",
+          "hint": "call plan_get and retry the last legal step"
+        }
+      },
+      "is_error": true
+    },
+    {
+      "transport": "human-ipc",
+      "method": "plan/get",
+      "response": {
+        "kind": "result",
+        "jsonrpc": "2.0",
+        "id": 2,
+        "result": {
+          "id": "plan-1",
+          "project_id": "hdag-acceptance",
+          "title": "0.1.3 — отдельная приёмка H-DAG",
+          "goal": "Небольшой H-DAG: 1 L0 + 4 pipeline L1, L2 без вершин. До заморозки подготовить реальный sealed image и записать environment.container/image в профиль L0. Не использовать вымышленный digest. Порог памяти не менять. Выпускной gate продукта и отложенный пункт 4 остаются отдельным условием выпуска.",
+          "status": "active",
+          "nodes": [
+            {
+              "id": "node-2",
+              "key": "ACC-0",
+              "title": "Приёмка H-DAG в отдельном проекте",
+              "status": "pending",
+              "ready": false,
+              "layer": 3,
+              "priority": 0.00013950976759259258,
+              "depends_on": [
+                "node-4",
+                "node-5",
+                "node-6",
+                "node-3"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null,
+              "level": 0,
+              "parent": null,
+              "pipeline": false,
+              "attempt_no": 0,
+              "max_attempts": 4,
+              "last_verdict": null
+            },
+            {
+              "id": "node-3",
+              "key": "ACC-1",
+              "title": "Живой успешный проход L2",
+              "status": "done",
+              "ready": false,
+              "layer": 0,
+              "priority": 0.3001395097675926,
+              "depends_on": [],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null,
+              "level": 1,
+              "parent": "node-2",
+              "pipeline": true,
+              "attempt_no": 1,
+              "max_attempts": 4,
+              "last_verdict": "2 passed, 0 failed"
+            },
+            {
+              "id": "node-4",
+              "key": "ACC-2",
+              "title": "Провалы и решение человека",
+              "status": "blocked",
+              "ready": false,
+              "layer": 1,
+              "priority": 2.2001395097675926,
+              "depends_on": [
+                "node-3"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null,
+              "level": 1,
+              "parent": "node-2",
+              "pipeline": true,
+              "attempt_no": 4,
+              "max_attempts": 4,
+              "last_verdict": "3 passed, 1 failed\n/opt/aconsole/core/bin/basedpyright: /home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/e9b422b1e208b10f/.aconsole-dev/hdag-live/workspace/src/retr"
+            },
+            {
+              "id": "node-5",
+              "key": "ACC-3",
+              "title": "Недействительные квитанции",
+              "status": "pending",
+              "ready": true,
+              "layer": 1,
+              "priority": 2.2001395097675926,
+              "depends_on": [
+                "node-3"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null,
+              "level": 1,
+              "parent": "node-2",
+              "pipeline": true,
+              "attempt_no": 0,
+              "max_attempts": 4,
+              "last_verdict": null
+            },
+            {
+              "id": "node-6",
+              "key": "ACC-4",
+              "title": "Ресурсы и закрытие направления",
+              "status": "pending",
+              "ready": false,
+              "layer": 2,
+              "priority": 1.1001395097675928,
+              "depends_on": [
+                "node-5",
+                "node-4"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null,
+              "level": 1,
+              "parent": "node-2",
+              "pipeline": true,
+              "attempt_no": 0,
+              "max_attempts": 4,
+              "last_verdict": null
+            }
+          ],
+          "done": 1,
+          "total": 5,
+          "canvas": null,
+          "updated_at": "2026-11-16T11:51:51.920915Z",
+          "phase": "frozen",
+          "warnings": []
+        }
+      }
+    },
+    {
+      "transport": "human-ipc",
+      "method": "plan/inbox",
+      "response": {
+        "kind": "result",
+        "jsonrpc": "2.0",
+        "id": 2,
+        "result": {
+          "entries": [
+            {
+              "id": "9e7c4da6c9914d9898bb66165f",
+              "plan_id": "plan-1",
+              "node_id": "node-4",
+              "kind": "replan",
+              "body": "ATTEMPTS_EXHAUSTED",
+              "status": "open",
+              "payload_json": "{\"kind\":\"attempts\",\"fence\":1,\"source_tab_id\":\"acc-2\"}",
+              "created_at": "2026-11-16T11:51:51.906434Z",
+              "decided_at": null,
+              "decided_by": null
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

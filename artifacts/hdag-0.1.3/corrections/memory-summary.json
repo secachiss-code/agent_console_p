@@ -1,0 +1,25 @@
+{
+  "ui_before_last_closed": {
+    "rss_mib": 205.34375,
+    "pss_mib": 113.4814453125,
+    "retained_terminal_pages": 16
+  },
+  "ui_after_last_closed": {
+    "rss_mib": 198.71484375,
+    "pss_mib": 101.384765625,
+    "retained_terminal_pages": 0
+  },
+  "ui_before_retained_widgets": {
+    "aconsole.ui.views.approvals.panel.ApprovalCard": 8,
+    "aconsole.ui.views.tabs.row.TabRow": 23,
+    "aconsole.ui.views.terminal.page.TerminalPage": 16
+  },
+  "ui_after_retained_widgets": {},
+  "core_five_tabs_rss_mib": [
+    172.48828125,
+    184.89453125,
+    187.99609375
+  ],
+  "limits_met": false,
+  "note": "Controlled UI comparison restores only original UI files from HEAD into a temporary source tree. Same X11 backend, default renderer, native host GTK libraries, 3 cycles. Core is a real isolated daemon with inactive restored tabs. No production core restart, no live agent acceptance."
+}

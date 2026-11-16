@@ -1,0 +1,32 @@
+[
+  {
+    "stage": "metrics_only",
+    "rss_mib": 18.66796875,
+    "pss_mib": 13.4716796875,
+    "private_mib": 9.62890625
+  },
+  {
+    "stage": "mcp_types",
+    "rss_mib": 79.90625,
+    "pss_mib": 68.9443359375,
+    "private_mib": 59.3359375
+  },
+  {
+    "stage": "plan_board",
+    "rss_mib": 137.31640625,
+    "pss_mib": 125.2548828125,
+    "private_mib": 114.73046875
+  },
+  {
+    "stage": "daemon_import",
+    "rss_mib": 147.29296875,
+    "pss_mib": 135.2890625,
+    "private_mib": 124.64453125
+  },
+  {
+    "stage": "daemon_constructed",
+    "rss_mib": 151.9765625,
+    "pss_mib": 139.927734375,
+    "private_mib": 129.23828125
+  }
+]

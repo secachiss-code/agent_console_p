@@ -1,0 +1,27 @@
+{
+  "gate_image": "f4147a4165dbe6b85c65b0c7b0de4858bc9114466edabf2132f333861102eb70",
+  "gate_container_id": "b9d88714f246c579531d03aaef5abd1e96ebd9614d7cf6002f32629026997a47",
+  "environment_sha256": "cceb8988918b6c438aec515fe5b2c6ce187196178283d01d7437f6d557f9e337",
+  "readonly_rootfs": true,
+  "privileged": false,
+  "cap_add": [],
+  "mounts": [
+    {
+      "Type": "bind",
+      "Source": "/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/e9b422b1e208b10f/.aconsole-dev/hdag-live/workspace",
+      "Destination": "/home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/e9b422b1e208b10f/.aconsole-dev/hdag-live/workspace",
+      "Driver": "",
+      "Mode": "",
+      "Options": [
+        "rbind"
+      ],
+      "RW": false,
+      "Propagation": "rprivate"
+    }
+  ],
+  "executor_image": "8699c53bf23135c27c56c5d63147d1c3876b4b86887e7a739729360b2ddc3a3a",
+  "cli_version": "codex-cli 0.169.0",
+  "model": "gpt-6.1-sol",
+  "reasoning_effort": "medium",
+  "secrets": "auth and MCP tokens mounted from private files; never copied into image or artifacts"
+}

@@ -55,17 +55,12 @@ from aconsole.ui.viewmodels.sidebar_vm import SidebarSummaryViewModel  # noqa: E
 from aconsole.ui.viewmodels.tabs_vm import TabItem, TabsViewModel  # noqa: E402
 from aconsole.ui.views.approvals.alert import alert_notification  # noqa: E402
 from aconsole.ui.views.approvals.panel import ApprovalPanel, place_at_bottom  # noqa: E402
-from aconsole.ui.views.health_dialog import HealthDialog  # noqa: E402
-from aconsole.ui.views.palette.dialog import PaletteDialog  # noqa: E402
 from aconsole.ui.views.palette.messages import _ as palette_text  # noqa: E402
 from aconsole.ui.views.review.git_pane import GitPane  # noqa: E402
 from aconsole.ui.views.review.messages import _ as review_text  # noqa: E402
 from aconsole.ui.views.review.page import ReviewPage  # noqa: E402
 from aconsole.ui.views.setup.messages import _ as setup_text  # noqa: E402
-from aconsole.ui.views.setup.preferences import PreferencesDialog  # noqa: E402
-from aconsole.ui.views.setup.wizard import SetupWizard  # noqa: E402
 from aconsole.ui.views.shortcuts import ShortcutManager  # noqa: E402
-from aconsole.ui.views.shortcuts_dialog import ShortcutsDialog  # noqa: E402
 from aconsole.ui.views.sidebar.git_card import GitCard  # noqa: E402
 from aconsole.ui.views.sidebar.messages import _ as translate  # noqa: E402
 from aconsole.ui.views.sidebar.plan_card import PlanCard  # noqa: E402
@@ -73,11 +68,16 @@ from aconsole.ui.views.sidebar.plan_graph import PlanGraph  # noqa: E402
 from aconsole.ui.views.sidebar.quota_card import QuotaCard  # noqa: E402
 from aconsole.ui.views.sidebar.section import SummarySection  # noqa: E402
 from aconsole.ui.views.tabs.messages import _ as tabs_text  # noqa: E402
-from aconsole.ui.views.tabs.new_tab import NewTabDialog  # noqa: E402
 from aconsole.ui.views.tabs.project_bar import ProjectBar  # noqa: E402
 from aconsole.ui.views.tabs.sidebar import TabSidebar  # noqa: E402
 from aconsole.ui.views.terminal.messages import _ as terminal_text  # noqa: E402
 from aconsole.ui.views.terminal.page import TerminalPage  # noqa: E402
+lazy from aconsole.ui.views.health_dialog import HealthDialog  # noqa: E402
+lazy from aconsole.ui.views.palette.dialog import PaletteDialog  # noqa: E402
+lazy from aconsole.ui.views.setup.preferences import PreferencesDialog  # noqa: E402
+lazy from aconsole.ui.views.setup.wizard import SetupWizard  # noqa: E402
+lazy from aconsole.ui.views.shortcuts_dialog import ShortcutsDialog  # noqa: E402
+lazy from aconsole.ui.views.tabs.new_tab import NewTabDialog  # noqa: E402
 
 _LOG = logging.getLogger(__name__)
 _GIT_KEEP_S = 15

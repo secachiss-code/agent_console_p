@@ -1,5 +1,6 @@
 """Podman inspect, start, exec argv, and orphan search by the tab marker."""
 
+import hashlib
 import re
 import subprocess
 from collections.abc import Mapping
@@ -30,6 +31,10 @@ _MISSING: Final = "podman binary missing"
 _BAD_INSPECT: Final = "podman inspect was not a container"
 _BAD_PID: Final = "podman orphan pid was not a number"
 _ONE: Final = 1
+_GATE_INSPECT: Final = "gate environment inspection failed"
+_GATE_MUTABLE: Final = "gate requires an immutable image and read-only unprivileged rootfs"
+_GATE_MOUNT: Final = "gate environment has an external toolchain or unsupported mount"
+_GATE_TOOLS: Final = "gate virtualenvs must resolve to the immutable /opt/aconsole image toolchain"
 
 
 @final
@@ -55,6 +60,27 @@ class _Row(msgspec.Struct, frozen=True):
     Name: str
     State: _State
     Config: _Config | None = None
+
+
+class _GateHost(msgspec.Struct, frozen=True):
+    ReadonlyRootfs: bool = False
+    Privileged: bool = False
+    CapAdd: tuple[str, ...] | None = None
+
+
+class _GateMount(msgspec.Struct, frozen=True):
+    Type: str
+    Destination: str
+    Source: str = ""
+    RW: bool = True
+
+
+class _GateContainer(msgspec.Struct, frozen=True):
+    Id: str
+    Image: str
+    State: _State
+    HostConfig: _GateHost
+    Mounts: tuple[_GateMount, ...] = ()
 
 
 def _home(row: _Row) -> str | None:
@@ -123,6 +149,46 @@ class Podman:
         """Start a container that inspect reported as stopped."""
         check_container_name(name)
         _ = self._run(("start", name))
+
+    def gate_environment(self, name: str, worktree: str, *, expected_image: str | None = None) -> str:
+        """Identify an image-backed toolchain; mutable Distrobox roots are not sealed.
+
+        Only the checkout and scratch tmpfs may come from outside the image.
+        Toolchains must live in the image, outside both of those locations.
+        """
+        check_container_name(name)
+        try:
+            rows = msgspec.json.decode(self._run(("inspect", "--format", "json", name)), type=list[_GateContainer])
+        except msgspec.DecodeError as exc:
+            raise ContainerError(_GATE_INSPECT) from exc
+        if len(rows) != 1:
+            raise ContainerError(_GATE_INSPECT)
+        row = rows[0]
+        image = row.Image.removeprefix("sha256:")
+        if (not row.State.Running or not row.HostConfig.ReadonlyRootfs or row.HostConfig.Privileged
+                or row.HostConfig.CapAdd or re.fullmatch(r"[0-9a-f]{64}", image) is None):
+            raise ContainerError(_GATE_MUTABLE)
+        if expected_image is not None and expected_image.removeprefix("sha256:") != image:
+            raise ContainerError(_GATE_MUTABLE)
+        checkouts = 0
+        for mount in row.Mounts:
+            checkout = (mount.Type == "bind" and mount.Destination == worktree
+                        and not mount.RW and Path(mount.Source).resolve() == Path(worktree).resolve())
+            scratch = mount.Type == "tmpfs" and mount.Destination in {"/tmp", "/run"}  # noqa: S108 -- container scratch
+            if not checkout and not scratch:
+                raise ContainerError(_GATE_MOUNT)
+            checkouts += int(checkout)
+        if checkouts != _ONE:
+            raise ContainerError(_GATE_MOUNT)
+        for directory in (".venv", ".venv-core", ".venv-ui"):
+            path = Path(worktree) / directory
+            if (path.exists() or path.is_symlink()) and (
+                not path.is_symlink() or ".." in path.readlink().parts
+                or not path.readlink().is_relative_to("/opt/aconsole")
+            ):
+                raise ContainerError(_GATE_TOOLS)
+        # Include container identity: replacement never inherits a previous container's receipt.
+        return hashlib.sha256(msgspec.json.encode((row.Id, image, row.HostConfig, row.Mounts, worktree))).hexdigest()
 
     def exec_spec(self, request: ExecRequest) -> tuple[str, ...]:
         """Build the argv VTE will run. This does not start the process."""

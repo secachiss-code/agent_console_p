@@ -256,13 +256,15 @@ def test_verifying_uses_durable_attempt_base_and_persists_review(scope_board: Sc
     assert restored._plans[str(view.id)].dag.get("C-1").review_required
 
 
-def test_authorized_scope_can_advance_and_wrong_project_does_not_get_scope(scope_board: ScopeBoard) -> None:
+def test_authorized_scope_still_requires_verification_and_wrong_project_has_no_scope(scope_board: ScopeBoard) -> None:
     board, ctx, node, claim, repo, _writer = scope_board
     (repo / "src/in.py").write_text("permitted\n")
     assert board.scope_for_tab("t", "p") == ("src/in.py",)
     assert board.scope_for_tab("t", "other") is None
     board.assert_scope(ctx, node)
-    assert board.update(ctx, node, claim.fence, "verifying", None, "checked").status == "verifying"
+    with pytest.raises(_ToolError, match="GATE_RECEIPT_REQUIRED"):
+        board.update(ctx, node, claim.fence, "verifying", None, "checked")
+    assert next(n for n in board.views()[0].nodes if str(n.id) == node).status.value == "in_progress"
 
 
 def test_daemon_uses_active_node_scope_for_hook(scope_board: ScopeBoard, tmp_path: Path) -> None:

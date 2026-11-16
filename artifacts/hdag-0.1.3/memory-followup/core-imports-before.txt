@@ -1,0 +1,7 @@
+{"stage": "start", "rss": 15.9609375, "pss": 14.5087890625, "private": 14.16015625, "objects": 10126, "modules": 71}
+{"stage": "mcp.types", "rss": 80.63671875, "pss": 79.1298828125, "private": 78.7734375, "objects": 130576, "modules": 600}
+{"stage": "aconsole.core.infrastructure.mcp.tools", "rss": 136.671875, "pss": 135.1650390625, "private": 134.80859375, "objects": 240035, "modules": 1012}
+{"stage": "aconsole.core.bootstrap", "rss": 148.1953125, "pss": 146.6884765625, "private": 146.33203125, "objects": 268069, "modules": 1120}
+{"stage": "before_gc", "rss": 150.453125, "pss": 148.9462890625, "private": 148.58984375, "objects": 268068, "modules": 1120}
+collected 4132
+{"stage": "after_gc", "rss": 150.453125, "pss": 148.9462890625, "private": 148.58984375, "objects": 248057, "modules": 1120}

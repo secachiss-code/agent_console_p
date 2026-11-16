@@ -60,6 +60,7 @@ from aconsole.core.infrastructure.ipc.framing import decode_envelope, encode_lin
 from aconsole.core.infrastructure.ipc.ring import EventRing
 from aconsole.core.infrastructure.ipc.snapshot_chunks import SnapshotChunks
 from aconsole.core.infrastructure.knowledge import KNOWLEDGE_METHODS, KnowledgeService
+from aconsole.core.infrastructure.process_metrics import ProcessIdentity, UiProcesses
 
 _LOG = logging.getLogger(__name__)
 _SERVER = ProtocolVersion(major=1, minor=0)
@@ -113,6 +114,7 @@ class Connection:
         palette: PaletteService | None = None,
         peer_pid: int | None = None,
         frame_limit: int | None = None,
+        ui_processes: UiProcesses | None = None,
     ) -> None:
         self.ring = ring
         self.outbound_limit = outbound_limit
@@ -139,6 +141,8 @@ class Connection:
         self.sidecar_claim: tuple[str, str] | None = None
         # SO_PEERCRED is expressed in the core's PID namespace; initialize.pid is not.
         self.peer_pid = peer_pid
+        self._ui_processes = ui_processes
+        self.ui_identity: ProcessIdentity | None = None
         # UI and CLI are accepted only from the core's mount namespace. A container stays a sidecar.
         self.host_namespace = host_namespace
         self.inflight: set[int] = set()
@@ -167,6 +171,11 @@ class Connection:
                 return ()
             request_id = envelope.id if isinstance(envelope, Request) else None
             return (self._err(request_id, "INTERNAL_ERROR"),)
+
+    def close(self) -> None:
+        if self._ui_processes is not None and self.ui_identity is not None:
+            self._ui_processes.remove(self.ui_identity)
+            self.ui_identity = None
 
     def push_event(self, event: UiEvent, at: datetime) -> tuple[bytes, ...]:
         """Number the event and queue it, or send one backpressure resync."""
@@ -440,7 +449,7 @@ class Connection:
         elif signal.kind in _SCREEN_SIGNALS and self.on_screen_signal is not None:
             self.on_screen_signal(self._sidecar_tab, signal.kind, signal.text)
 
-    def _initialize(self, request: Request) -> tuple[bytes, ...]:
+    def _initialize(self, request: Request) -> tuple[bytes, ...]:  # noqa: PLR0911 -- handshake refuses invalid peers
         if self.ready:
             return (self._err(request.id, "ALREADY_INITIALIZED"),)
         try:
@@ -455,6 +464,11 @@ class Connection:
             return (self._err(request.id, "ROLE_FORBIDDEN"),)
         if params.role is ClientRole.SIDECAR and not self._sidecar_ok(params):
             return (self._err(request.id, "SIDECAR_TOKEN_INVALID"),)
+        if params.role is ClientRole.UI and self._ui_processes is not None:
+            try:
+                self.ui_identity = self._ui_processes.register(self.peer_pid or -1)
+            except DomainError:
+                return (self._err(request.id, "ROLE_FORBIDDEN"),)
         self.ready = True
         self.role = params.role
         self.capabilities = _SERVER_CAPS & params.capabilities

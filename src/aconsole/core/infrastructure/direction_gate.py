@@ -4,13 +4,14 @@ import hashlib
 import json
 import os
 from collections.abc import Callable
-from dataclasses import asdict
+from dataclasses import asdict, replace
 from datetime import UTC, datetime
 from pathlib import Path
 from threading import RLock
 from typing import Protocol, final
 from uuid import uuid4
 
+import msgspec
 from pydantic import TypeAdapter
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -21,13 +22,20 @@ from aconsole.core.application.ports.plan_store import StoredNode, StoredPlan
 from aconsole.core.application.services.gates import DirectionGate, DirectionMetrics, DirectionReceipt
 from aconsole.core.application.services.pipeline import PipelineActor
 from aconsole.core.domain.errors import DomainError
+from aconsole.core.infrastructure.containers.podman import ContainerError
 from aconsole.core.infrastructure.git.checkpoints import GitCheckpoints
 from aconsole.core.infrastructure.persistence.models import GateReceipt, Plan, PlanEdge, PlanInbox, PlanNode, Project
 from aconsole.core.infrastructure.persistence.writer import Writer
+from aconsole.core.infrastructure.process_metrics import ProcessIdentity, UiProcesses, memory_sample
 
 _DEFAULT = (("sh", "tools/check.sh"), (".venv-ui/bin/python", "-m", "pytest", "tests"))
 _KIB_IN_MIB = 1024
-_MODULE_ARGV = 3
+_SHA256_LENGTH = 64
+
+
+class _Environment(msgspec.Struct, frozen=True, forbid_unknown_fields=True):
+    container: str
+    image: str
 
 
 class DirectionBook(Protocol):
@@ -56,12 +64,14 @@ class DirectionRuntime:
         runner: Callable[[PipelineActor, tuple[tuple[str, ...], ...]], GateRunner],
         tabs: Callable[[], tuple[TabView, ...]],
         accounts: Callable[[], tuple[AccountView, ...]],
+        ui_processes: UiProcesses,
+        environment: Callable[[PipelineActor, str], str],
     ) -> None:
         self.book, self.writer, self.actor, self.runner = book, writer, actor, runner
         self.tabs, self.accounts = tabs, accounts
+        self._ui_processes, self._environment = ui_processes, environment
         self._lock = RLock()
         self._checkpoints = GitCheckpoints()
-        self._versions: dict[tuple[str, tuple[tuple[str, ...], ...]], str] = {}
 
     def run(
         self,
@@ -82,21 +92,29 @@ class DirectionRuntime:
                 raise DomainError(code=4003, name="NODE_NOT_READY", retryable=False)
             actor = self.actor(tab_id)
             self._require_root(actor, plan)
+            ui_identity = self._ui_processes.require(ui_pid)
+            try:
+                environment = msgspec.convert((direction.gate_profile or {}).get("environment"), type=_Environment)
+            except msgspec.ValidationError as exc:
+                raise DomainError(code=5010, name="GATE_RUNNER_UNAVAILABLE", retryable=True) from exc
+            image = environment.image.removeprefix("sha256:")
+            if len(image) != _SHA256_LENGTH or any(char not in "0123456789abcdef" for char in image):
+                raise DomainError(code=4013, name="NODE_CONTRACT", retryable=False)
+            actor = replace(actor, container=environment.container)
             try:
                 commands = TypeAdapter(tuple[tuple[str, ...], ...]).validate_python(
                     (direction.gate_profile or {}).get("direction", _DEFAULT)
                 )
             except ValueError as exc:
                 raise DomainError(code=4013, name="NODE_CONTRACT", retryable=False) from exc
-            versions = self._tool_versions(actor, commands)
             gate = DirectionGate(
                 bind_runner=lambda argv: self.runner(actor, argv),
-                capture=lambda: self._capture(actor, plan, direction, versions),
-                measure=lambda: self._metrics(actor, ui_pid, plan),
+                capture=lambda: self._capture(actor, plan, direction, self._sealed_environment(actor, image)),
+                measure=lambda: self._metrics(actor, ui_identity, plan),
                 lookup=lambda state, argv: self._lookup(
-                    node_id, state, argv, metrics=self._metrics(actor, ui_pid, plan)
+                    node_id, state, argv, metrics=self._metrics(actor, ui_identity, plan)
                 ),
-                record=lambda receipt: self._record(plan, direction, actor, ui_pid, receipt),
+                record=lambda receipt: self._record(plan, direction, actor, ui_identity, receipt, image),
             )
             closed = all(node.status in {"done", "cancelled"} for node in plan.nodes if node.parent == direction.key)
             try:
@@ -127,6 +145,9 @@ class DirectionRuntime:
                 payload = row.payload
                 tab, pid = payload.get("tab_id"), payload.get("ui_pid")
                 if payload.get("action") == "direction_gate" and isinstance(tab, str) and isinstance(pid, int):
+                    identity = self._ui_processes.require(pid)
+                    if payload.get("ui_process") != asdict(identity):
+                        raise DomainError(code=4018, name="GATE_RECEIPT_REQUIRED", retryable=False)
                     found.append((tab, pid))
                     break
 
@@ -147,16 +168,14 @@ class DirectionRuntime:
         if actor.project_id != plan.project_id or not roots or actor.worktree.resolve() != Path(roots[0]).resolve():
             raise DomainError(code=4013, name="NODE_CONTRACT", retryable=False)
 
-    def _tool_versions(self, actor: PipelineActor, commands: tuple[tuple[str, ...], ...]) -> str:
-        key = (actor.tab_id, commands)
-        if key not in self._versions:
-            probes = tuple(sorted({_version_command(argv) for argv in commands}))
-            runner = self.runner(actor, probes)
-            observed = tuple(
-                (result.returncode, result.output) for result in (runner.run(argv, tier=3) for argv in probes)
-            )
-            self._versions[key] = hashlib.sha256(json.dumps(observed).encode()).hexdigest()
-        return self._versions[key]
+    def _sealed_environment(self, actor: PipelineActor, image: str) -> str:
+        try:
+            identity = self._environment(actor, image)
+        except (ContainerError, OSError, ValueError) as exc:
+            raise DomainError(code=5010, name="GATE_RUNNER_UNAVAILABLE", retryable=True) from exc
+        if len(identity) != _SHA256_LENGTH or any(char not in "0123456789abcdef" for char in identity):
+            raise DomainError(code=5010, name="GATE_RUNNER_UNAVAILABLE", retryable=True)
+        return identity
 
     def _capture(self, actor: PipelineActor, plan: StoredPlan, direction: StoredNode, versions: str) -> str:
         current, fresh = self._find(direction.id)
@@ -180,8 +199,11 @@ class DirectionRuntime:
         )
         return hashlib.sha256(json.dumps(body, sort_keys=True).encode()).hexdigest()
 
-    def _metrics(self, actor: PipelineActor, ui_pid: int, plan: StoredPlan) -> DirectionMetrics:
+    def _metrics(self, actor: PipelineActor, ui: ProcessIdentity, plan: StoredPlan) -> DirectionMetrics:
+        ui_pid = ui.pid
         if ui_pid <= 0 or ui_pid == os.getpid():
+            raise DomainError(code=4013, name="NODE_CONTRACT", retryable=False)
+        if self._ui_processes.require(ui_pid) != ui:
             raise DomainError(code=4013, name="NODE_CONTRACT", retryable=False)
         inputs = cached = 0
         for account in self.accounts():
@@ -191,7 +213,7 @@ class DirectionRuntime:
                 inputs += usage.cache_read_tokens + usage.cache_write_tokens
         return DirectionMetrics(
             core_rss_mib=process_rss(os.getpid()),
-            ui_rss_mib=process_rss(ui_pid),
+            ui_rss_mib=memory_sample(ui)["rss_mib"],
             tab_count=sum(tab.project_id == actor.project_id and tab.status.value != "exited" for tab in self.tabs()),
             cache_read_fraction=cached / inputs if inputs else None,
             nodes_before=0 if plan.topology is None else plan.topology.baseline_nodes,
@@ -229,9 +251,12 @@ class DirectionRuntime:
         _ = self.writer.call(read)
         return found[0] if found else None
 
-    def _record(
-        self, plan: StoredPlan, direction: StoredNode, actor: PipelineActor, ui_pid: int, receipt: DirectionReceipt
+    def _record(  # noqa: PLR0913, PLR0917 -- audited plan, process and immutable environment
+        self, plan: StoredPlan, direction: StoredNode, actor: PipelineActor,
+        ui: ProcessIdentity, receipt: DirectionReceipt, image: str,
     ) -> None:
+        environment_sha256 = self._sealed_environment(actor, image)
+
         def write(session: Session) -> None:
             stored, node = session.get(Plan, plan.id), session.get(PlanNode, direction.id)
             children = session.scalars(
@@ -284,7 +309,10 @@ class DirectionRuntime:
                     payload={
                         "action": "direction_gate",
                         "tab_id": actor.tab_id,
-                        "ui_pid": ui_pid,
+                        "ui_pid": ui.pid,
+                        "ui_process": asdict(ui),
+                        "environment_image": image,
+                        "environment_sha256": environment_sha256,
                         "receipt_hash": receipt.receipt_hash,
                         "metrics": asdict(receipt.metrics),
                     },
@@ -292,11 +320,3 @@ class DirectionRuntime:
             )
 
         _ = self.writer.call(write)
-
-
-def _version_command(argv: tuple[str, ...]) -> tuple[str, ...]:
-    if not argv:
-        raise DomainError(code=4013, name="NODE_CONTRACT", retryable=False)
-    if len(argv) >= _MODULE_ARGV and argv[1] == "-m":
-        return (*argv[:_MODULE_ARGV], "--version")
-    return (argv[0], "--version")

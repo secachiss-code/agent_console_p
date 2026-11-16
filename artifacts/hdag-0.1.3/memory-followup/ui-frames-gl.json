@@ -1,0 +1,11 @@
+{
+  "renderer": "GLRenderer",
+  "requested": "gl",
+  "frames": 120,
+  "cpu_seconds": 0.4151041849999997,
+  "p50_interval_ms": 16.693,
+  "p95_interval_ms": 21.223,
+  "rss_mib": 235.01953125,
+  "pss_mib": 127.9638671875,
+  "private_mib": 114.84375
+}

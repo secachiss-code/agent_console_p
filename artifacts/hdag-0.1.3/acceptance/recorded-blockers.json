@@ -1,0 +1,68 @@
+[
+  {
+    "method": "plan/setNodeStatus",
+    "response": {
+      "kind": "result",
+      "jsonrpc": "2.0",
+      "id": 2,
+      "result": {
+        "id": "node-6",
+        "key": "ACC-4",
+        "title": "Ресурсы и закрытие направления",
+        "status": "blocked",
+        "ready": false,
+        "layer": 2,
+        "priority": 1.1003386502689816,
+        "depends_on": [
+          "node-5",
+          "node-4"
+        ],
+        "owner_agent": null,
+        "tab_id": null,
+        "lease_expires_at": null,
+        "note": null,
+        "evidence": null,
+        "level": 1,
+        "parent": "node-2",
+        "pipeline": true,
+        "attempt_no": 0,
+        "max_attempts": 4,
+        "last_verdict": null
+      }
+    }
+  },
+  {
+    "method": "plan/setNodeStatus",
+    "response": {
+      "kind": "result",
+      "jsonrpc": "2.0",
+      "id": 2,
+      "result": {
+        "id": "node-8",
+        "key": "ACC-0",
+        "title": "Приёмка H-DAG в отдельном проекте",
+        "status": "blocked",
+        "ready": false,
+        "layer": 3,
+        "priority": 2.453872997685185e-05,
+        "depends_on": [
+          "node-9",
+          "node-10",
+          "node-11",
+          "node-12"
+        ],
+        "owner_agent": null,
+        "tab_id": null,
+        "lease_expires_at": null,
+        "note": null,
+        "evidence": null,
+        "level": 0,
+        "parent": null,
+        "pipeline": false,
+        "attempt_no": 0,
+        "max_attempts": 4,
+        "last_verdict": null
+      }
+    }
+  }
+]

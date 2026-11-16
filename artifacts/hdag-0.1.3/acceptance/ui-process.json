@@ -1,0 +1,14 @@
+{
+  "ui_pid": 373533,
+  "process": {
+    "pid": 373533,
+    "start_ticks": 2650650,
+    "boot_id": "aa745c0a-0aea-4ccc-8614-3e074397a214"
+  },
+  "rss_mib": 195.9921875,
+  "pss_mib": 93.6064453125,
+  "private_mib": 78.69140625,
+  "window_tabs": 5,
+  "candidate_tabs": 5,
+  "workload": "native AConsoleApp demo window with five allocated terminals; readonly candidate observer"
+}

@@ -1,0 +1,973 @@
+{
+  "case": "review",
+  "complete": true,
+  "events": [
+    {
+      "transport": "human-ipc",
+      "method": "plan/get",
+      "response": {
+        "kind": "result",
+        "jsonrpc": "2.0",
+        "id": 2,
+        "result": {
+          "id": "plan-1",
+          "project_id": "hdag-acceptance",
+          "title": "0.1.3 — отдельная приёмка H-DAG",
+          "goal": "Небольшой H-DAG: 1 L0 + 4 pipeline L1, L2 без вершин. До заморозки подготовить реальный sealed image и записать environment.container/image в профиль L0. Не использовать вымышленный digest. Порог памяти не менять. Выпускной gate продукта и отложенный пункт 4 остаются отдельным условием выпуска.",
+          "status": "active",
+          "nodes": [
+            {
+              "id": "node-2",
+              "key": "ACC-0",
+              "title": "Приёмка H-DAG в отдельном проекте",
+              "status": "pending",
+              "ready": false,
+              "layer": 3,
+              "priority": 0.0001707085527777778,
+              "depends_on": [
+                "node-4",
+                "node-5",
+                "node-6",
+                "node-3"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null,
+              "level": 0,
+              "parent": null,
+              "pipeline": false,
+              "attempt_no": 0,
+              "max_attempts": 4,
+              "last_verdict": null
+            },
+            {
+              "id": "node-3",
+              "key": "ACC-1",
+              "title": "Живой успешный проход L2",
+              "status": "done",
+              "ready": false,
+              "layer": 0,
+              "priority": 0.30017070855277783,
+              "depends_on": [],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null,
+              "level": 1,
+              "parent": "node-2",
+              "pipeline": true,
+              "attempt_no": 1,
+              "max_attempts": 4,
+              "last_verdict": "2 passed, 0 failed"
+            },
+            {
+              "id": "node-4",
+              "key": "ACC-2",
+              "title": "Провалы и решение человека",
+              "status": "blocked",
+              "ready": false,
+              "layer": 1,
+              "priority": 2.2001707085527777,
+              "depends_on": [
+                "node-3"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null,
+              "level": 1,
+              "parent": "node-2",
+              "pipeline": true,
+              "attempt_no": 4,
+              "max_attempts": 4,
+              "last_verdict": "3 passed, 1 failed\n/opt/aconsole/core/bin/basedpyright: /home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/e9b422b1e208b10f/.aconsole-dev/hdag-live/workspace/src/retr"
+            },
+            {
+              "id": "node-5",
+              "key": "ACC-3",
+              "title": "Недействительные квитанции",
+              "status": "pending",
+              "ready": true,
+              "layer": 1,
+              "priority": 2.2001707085527777,
+              "depends_on": [
+                "node-3"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null,
+              "level": 1,
+              "parent": "node-2",
+              "pipeline": true,
+              "attempt_no": 0,
+              "max_attempts": 4,
+              "last_verdict": null
+            },
+            {
+              "id": "node-6",
+              "key": "ACC-4",
+              "title": "Ресурсы и закрытие направления",
+              "status": "pending",
+              "ready": false,
+              "layer": 2,
+              "priority": 1.1001707085527779,
+              "depends_on": [
+                "node-5",
+                "node-4"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null,
+              "level": 1,
+              "parent": "node-2",
+              "pipeline": true,
+              "attempt_no": 0,
+              "max_attempts": 4,
+              "last_verdict": null
+            }
+          ],
+          "done": 1,
+          "total": 5,
+          "canvas": null,
+          "updated_at": "2026-11-16T11:51:51.920915Z",
+          "phase": "frozen",
+          "warnings": []
+        }
+      }
+    },
+    {
+      "transport": "human-ipc",
+      "method": "plan/inbox",
+      "response": {
+        "kind": "result",
+        "jsonrpc": "2.0",
+        "id": 2,
+        "result": {
+          "entries": [
+            {
+              "id": "9e7c4da6c9914d9898bb66165f",
+              "plan_id": "plan-1",
+              "node_id": "node-4",
+              "kind": "replan",
+              "body": "ATTEMPTS_EXHAUSTED",
+              "status": "open",
+              "payload_json": "{\"kind\":\"attempts\",\"fence\":1,\"source_tab_id\":\"acc-2\"}",
+              "created_at": "2026-11-16T11:51:51.906434Z",
+              "decided_at": null,
+              "decided_by": null
+            }
+          ]
+        }
+      }
+    },
+    {
+      "transport": "human-ipc",
+      "method": "plan/decide",
+      "response": {
+        "kind": "error",
+        "jsonrpc": "2.0",
+        "id": 2,
+        "error": {
+          "code": 4013,
+          "message": "NODE_CONTRACT",
+          "data": {
+            "reason": "NODE_CONTRACT",
+            "domain": "aconsole.ipc",
+            "retryable": false,
+            "user_message_key": "error.node_contract",
+            "user_message_args": {},
+            "hint": null,
+            "details": null
+          }
+        }
+      }
+    },
+    {
+      "transport": "human-ipc",
+      "method": "plan/decide",
+      "response": {
+        "kind": "result",
+        "jsonrpc": "2.0",
+        "id": 2,
+        "result": {
+          "id": "plan-1",
+          "project_id": "hdag-acceptance",
+          "title": "0.1.3 — отдельная приёмка H-DAG",
+          "goal": "Небольшой H-DAG: 1 L0 + 4 pipeline L1, L2 без вершин. До заморозки подготовить реальный sealed image и записать environment.container/image в профиль L0. Не использовать вымышленный digest. Порог памяти не менять. Выпускной gate продукта и отложенный пункт 4 остаются отдельным условием выпуска.",
+          "status": "active",
+          "nodes": [
+            {
+              "id": "node-2",
+              "key": "ACC-0",
+              "title": "Приёмка H-DAG в отдельном проекте",
+              "status": "pending",
+              "ready": false,
+              "layer": 3,
+              "priority": 0.00017071327569444445,
+              "depends_on": [
+                "node-4",
+                "node-5",
+                "node-6",
+                "node-3"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null,
+              "level": 0,
+              "parent": null,
+              "pipeline": false,
+              "attempt_no": 0,
+              "max_attempts": 4,
+              "last_verdict": null
+            },
+            {
+              "id": "node-3",
+              "key": "ACC-1",
+              "title": "Живой успешный проход L2",
+              "status": "done",
+              "ready": false,
+              "layer": 0,
+              "priority": 0.3001707132756945,
+              "depends_on": [],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null,
+              "level": 1,
+              "parent": "node-2",
+              "pipeline": true,
+              "attempt_no": 1,
+              "max_attempts": 4,
+              "last_verdict": "2 passed, 0 failed"
+            },
+            {
+              "id": "node-4",
+              "key": "ACC-2",
+              "title": "Провалы и решение человека",
+              "status": "pending",
+              "ready": true,
+              "layer": 1,
+              "priority": 2.2001707132756945,
+              "depends_on": [
+                "node-3"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null,
+              "level": 1,
+              "parent": "node-2",
+              "pipeline": true,
+              "attempt_no": 4,
+              "max_attempts": 4,
+              "last_verdict": "3 passed, 1 failed\n/opt/aconsole/core/bin/basedpyright: /home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/e9b422b1e208b10f/.aconsole-dev/hdag-live/workspace/src/retr"
+            },
+            {
+              "id": "node-5",
+              "key": "ACC-3",
+              "title": "Недействительные квитанции",
+              "status": "pending",
+              "ready": true,
+              "layer": 1,
+              "priority": 2.2001707132756945,
+              "depends_on": [
+                "node-3"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null,
+              "level": 1,
+              "parent": "node-2",
+              "pipeline": true,
+              "attempt_no": 0,
+              "max_attempts": 4,
+              "last_verdict": null
+            },
+            {
+              "id": "node-6",
+              "key": "ACC-4",
+              "title": "Ресурсы и закрытие направления",
+              "status": "pending",
+              "ready": false,
+              "layer": 2,
+              "priority": 1.1001707132756946,
+              "depends_on": [
+                "node-5",
+                "node-4"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null,
+              "level": 1,
+              "parent": "node-2",
+              "pipeline": true,
+              "attempt_no": 0,
+              "max_attempts": 4,
+              "last_verdict": null
+            }
+          ],
+          "done": 1,
+          "total": 5,
+          "canvas": null,
+          "updated_at": "2026-11-16T11:56:21.652002Z",
+          "phase": "frozen",
+          "warnings": []
+        }
+      }
+    },
+    {
+      "transport": "human-ipc",
+      "method": "plan/decide",
+      "response": {
+        "kind": "result",
+        "jsonrpc": "2.0",
+        "id": 2,
+        "result": {
+          "id": "plan-1",
+          "project_id": "hdag-acceptance",
+          "title": "0.1.3 — отдельная приёмка H-DAG",
+          "goal": "Небольшой H-DAG: 1 L0 + 4 pipeline L1, L2 без вершин. До заморозки подготовить реальный sealed image и записать environment.container/image в профиль L0. Не использовать вымышленный digest. Порог памяти не менять. Выпускной gate продукта и отложенный пункт 4 остаются отдельным условием выпуска.",
+          "status": "active",
+          "nodes": [
+            {
+              "id": "node-2",
+              "key": "ACC-0",
+              "title": "Приёмка H-DAG в отдельном проекте",
+              "status": "pending",
+              "ready": false,
+              "layer": 3,
+              "priority": 0.0001707136646990741,
+              "depends_on": [
+                "node-4",
+                "node-5",
+                "node-6",
+                "node-3"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null,
+              "level": 0,
+              "parent": null,
+              "pipeline": false,
+              "attempt_no": 0,
+              "max_attempts": 4,
+              "last_verdict": null
+            },
+            {
+              "id": "node-3",
+              "key": "ACC-1",
+              "title": "Живой успешный проход L2",
+              "status": "done",
+              "ready": false,
+              "layer": 0,
+              "priority": 0.3001707136646991,
+              "depends_on": [],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null,
+              "level": 1,
+              "parent": "node-2",
+              "pipeline": true,
+              "attempt_no": 1,
+              "max_attempts": 4,
+              "last_verdict": "2 passed, 0 failed"
+            },
+            {
+              "id": "node-4",
+              "key": "ACC-2",
+              "title": "Провалы и решение человека",
+              "status": "pending",
+              "ready": true,
+              "layer": 1,
+              "priority": 2.2001707136646993,
+              "depends_on": [
+                "node-3"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null,
+              "level": 1,
+              "parent": "node-2",
+              "pipeline": true,
+              "attempt_no": 4,
+              "max_attempts": 4,
+              "last_verdict": "3 passed, 1 failed\n/opt/aconsole/core/bin/basedpyright: /home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/e9b422b1e208b10f/.aconsole-dev/hdag-live/workspace/src/retr"
+            },
+            {
+              "id": "node-5",
+              "key": "ACC-3",
+              "title": "Недействительные квитанции",
+              "status": "pending",
+              "ready": true,
+              "layer": 1,
+              "priority": 2.2001707136646993,
+              "depends_on": [
+                "node-3"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null,
+              "level": 1,
+              "parent": "node-2",
+              "pipeline": true,
+              "attempt_no": 0,
+              "max_attempts": 4,
+              "last_verdict": null
+            },
+            {
+              "id": "node-6",
+              "key": "ACC-4",
+              "title": "Ресурсы и закрытие направления",
+              "status": "pending",
+              "ready": false,
+              "layer": 2,
+              "priority": 1.1001707136646992,
+              "depends_on": [
+                "node-5",
+                "node-4"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null,
+              "level": 1,
+              "parent": "node-2",
+              "pipeline": true,
+              "attempt_no": 0,
+              "max_attempts": 4,
+              "last_verdict": null
+            }
+          ],
+          "done": 1,
+          "total": 5,
+          "canvas": null,
+          "updated_at": "2026-11-16T11:56:21.652002Z",
+          "phase": "frozen",
+          "warnings": []
+        }
+      }
+    },
+    {
+      "transport": "mcp-http",
+      "tool": "node_claim",
+      "arguments": {
+        "node_id": "node-4"
+      },
+      "response": {
+        "lease_id": "plan-1:ACC-2:2",
+        "fence": 2,
+        "expires_at": "2026-11-16T12:11:21.729760+00:00",
+        "brief": {
+          "objective": "Выполнить сценарий в отдельном приёмочном проекте; сохранять evidence.",
+          "acceptance": [
+            "Четыре провала блокируют модуль; пятой попытки нет.",
+            "После restart сохранены блоки, квитанции и одна запись inbox.",
+            "Только человек с непустой заметкой снимает блокировку; вершины не добавляются."
+          ],
+          "paths": [
+            "src/retry.py",
+            "tests/test_retry.py",
+            "evidence/retry/**"
+          ],
+          "boundaries": "Не менять продуктовую ветку, бюджеты и глобальные правила проверок. При блокере — inbox, без новых вершин."
+        },
+        "context": {
+          "items": [],
+          "truncated": false,
+          "verified_commit": "1ec4ba6446bc646c97ecd9c99e4c2724d2a5e6ad"
+        }
+      },
+      "is_error": false
+    },
+    {
+      "transport": "mcp-http",
+      "tool": "step_begin",
+      "arguments": {
+        "node_id": "node-4",
+        "fence": 2
+      },
+      "response": {
+        "error": {
+          "code": 4016,
+          "reason": "ATTEMPTS_EXHAUSTED",
+          "message": "ATTEMPTS_EXHAUSTED: ATTEMPTS_EXHAUSTED",
+          "hint": "call plan_get and retry the last legal step"
+        }
+      },
+      "is_error": true
+    },
+    {
+      "transport": "human-ipc",
+      "method": "plan/get",
+      "response": {
+        "kind": "result",
+        "jsonrpc": "2.0",
+        "id": 2,
+        "result": {
+          "id": "plan-1",
+          "project_id": "hdag-acceptance",
+          "title": "0.1.3 — отдельная приёмка H-DAG",
+          "goal": "Небольшой H-DAG: 1 L0 + 4 pipeline L1, L2 без вершин. До заморозки подготовить реальный sealed image и записать environment.container/image в профиль L0. Не использовать вымышленный digest. Порог памяти не менять. Выпускной gate продукта и отложенный пункт 4 остаются отдельным условием выпуска.",
+          "status": "active",
+          "nodes": [
+            {
+              "id": "node-2",
+              "key": "ACC-0",
+              "title": "Приёмка H-DAG в отдельном проекте",
+              "status": "pending",
+              "ready": false,
+              "layer": 3,
+              "priority": 0.00017074397986111112,
+              "depends_on": [
+                "node-4",
+                "node-5",
+                "node-6",
+                "node-3"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null,
+              "level": 0,
+              "parent": null,
+              "pipeline": false,
+              "attempt_no": 0,
+              "max_attempts": 4,
+              "last_verdict": null
+            },
+            {
+              "id": "node-3",
+              "key": "ACC-1",
+              "title": "Живой успешный проход L2",
+              "status": "done",
+              "ready": false,
+              "layer": 0,
+              "priority": 0.30017074397986115,
+              "depends_on": [],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null,
+              "level": 1,
+              "parent": "node-2",
+              "pipeline": true,
+              "attempt_no": 1,
+              "max_attempts": 4,
+              "last_verdict": "2 passed, 0 failed"
+            },
+            {
+              "id": "node-4",
+              "key": "ACC-2",
+              "title": "Провалы и решение человека",
+              "status": "blocked",
+              "ready": false,
+              "layer": 1,
+              "priority": 2.2001707439798612,
+              "depends_on": [
+                "node-3"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null,
+              "level": 1,
+              "parent": "node-2",
+              "pipeline": true,
+              "attempt_no": 4,
+              "max_attempts": 4,
+              "last_verdict": "3 passed, 1 failed\n/opt/aconsole/core/bin/basedpyright: /home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/e9b422b1e208b10f/.aconsole-dev/hdag-live/workspace/src/retr"
+            },
+            {
+              "id": "node-5",
+              "key": "ACC-3",
+              "title": "Недействительные квитанции",
+              "status": "pending",
+              "ready": true,
+              "layer": 1,
+              "priority": 2.2001707439798612,
+              "depends_on": [
+                "node-3"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null,
+              "level": 1,
+              "parent": "node-2",
+              "pipeline": true,
+              "attempt_no": 0,
+              "max_attempts": 4,
+              "last_verdict": null
+            },
+            {
+              "id": "node-6",
+              "key": "ACC-4",
+              "title": "Ресурсы и закрытие направления",
+              "status": "pending",
+              "ready": false,
+              "layer": 2,
+              "priority": 1.1001707439798611,
+              "depends_on": [
+                "node-5",
+                "node-4"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null,
+              "level": 1,
+              "parent": "node-2",
+              "pipeline": true,
+              "attempt_no": 0,
+              "max_attempts": 4,
+              "last_verdict": null
+            }
+          ],
+          "done": 1,
+          "total": 5,
+          "canvas": null,
+          "updated_at": "2026-11-16T11:56:21.881395Z",
+          "phase": "frozen",
+          "warnings": []
+        }
+      }
+    },
+    {
+      "transport": "human-ipc",
+      "method": "plan/inbox",
+      "response": {
+        "kind": "result",
+        "jsonrpc": "2.0",
+        "id": 2,
+        "result": {
+          "entries": [
+            {
+              "id": "b093ad8119f440749531078586",
+              "plan_id": "plan-1",
+              "node_id": "node-4",
+              "kind": "replan",
+              "body": "ATTEMPTS_EXHAUSTED",
+              "status": "open",
+              "payload_json": "{\"kind\":\"attempts\",\"fence\":2,\"source_tab_id\":\"acc-2\"}",
+              "created_at": "2026-11-16T11:56:21.881382Z",
+              "decided_at": null,
+              "decided_by": null
+            }
+          ]
+        }
+      }
+    },
+    {
+      "transport": "human-ipc",
+      "method": "plan/decide",
+      "response": {
+        "kind": "result",
+        "jsonrpc": "2.0",
+        "id": 2,
+        "result": {
+          "id": "plan-1",
+          "project_id": "hdag-acceptance",
+          "title": "0.1.3 — отдельная приёмка H-DAG",
+          "goal": "Небольшой H-DAG: 1 L0 + 4 pipeline L1, L2 без вершин. До заморозки подготовить реальный sealed image и записать environment.container/image в профиль L0. Не использовать вымышленный digest. Порог памяти не менять. Выпускной gate продукта и отложенный пункт 4 остаются отдельным условием выпуска.",
+          "status": "active",
+          "nodes": [
+            {
+              "id": "node-2",
+              "key": "ACC-0",
+              "title": "Приёмка H-DAG в отдельном проекте",
+              "status": "pending",
+              "ready": false,
+              "layer": 3,
+              "priority": 0.00017074909305555557,
+              "depends_on": [
+                "node-4",
+                "node-5",
+                "node-6",
+                "node-3"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null,
+              "level": 0,
+              "parent": null,
+              "pipeline": false,
+              "attempt_no": 0,
+              "max_attempts": 4,
+              "last_verdict": null
+            },
+            {
+              "id": "node-3",
+              "key": "ACC-1",
+              "title": "Живой успешный проход L2",
+              "status": "done",
+              "ready": false,
+              "layer": 0,
+              "priority": 0.3001707490930556,
+              "depends_on": [],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null,
+              "level": 1,
+              "parent": "node-2",
+              "pipeline": true,
+              "attempt_no": 1,
+              "max_attempts": 4,
+              "last_verdict": "2 passed, 0 failed"
+            },
+            {
+              "id": "node-4",
+              "key": "ACC-2",
+              "title": "Провалы и решение человека",
+              "status": "cancelled",
+              "ready": false,
+              "layer": 1,
+              "priority": 0.20017074909305557,
+              "depends_on": [
+                "node-3"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null,
+              "level": 1,
+              "parent": "node-2",
+              "pipeline": true,
+              "attempt_no": 4,
+              "max_attempts": 4,
+              "last_verdict": "3 passed, 1 failed\n/opt/aconsole/core/bin/basedpyright: /home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/e9b422b1e208b10f/.aconsole-dev/hdag-live/workspace/src/retr"
+            },
+            {
+              "id": "node-5",
+              "key": "ACC-3",
+              "title": "Недействительные квитанции",
+              "status": "pending",
+              "ready": true,
+              "layer": 1,
+              "priority": 2.2001707490930555,
+              "depends_on": [
+                "node-3"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null,
+              "level": 1,
+              "parent": "node-2",
+              "pipeline": true,
+              "attempt_no": 0,
+              "max_attempts": 4,
+              "last_verdict": null
+            },
+            {
+              "id": "node-6",
+              "key": "ACC-4",
+              "title": "Ресурсы и закрытие направления",
+              "status": "pending",
+              "ready": false,
+              "layer": 2,
+              "priority": 1.1001707490930557,
+              "depends_on": [
+                "node-5",
+                "node-4"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null,
+              "level": 1,
+              "parent": "node-2",
+              "pipeline": true,
+              "attempt_no": 0,
+              "max_attempts": 4,
+              "last_verdict": null
+            }
+          ],
+          "done": 1,
+          "total": 5,
+          "canvas": null,
+          "updated_at": "2026-11-16T11:56:21.970848Z",
+          "phase": "frozen",
+          "warnings": []
+        }
+      }
+    },
+    {
+      "transport": "human-ipc",
+      "method": "plan/get",
+      "response": {
+        "kind": "result",
+        "jsonrpc": "2.0",
+        "id": 2,
+        "result": {
+          "id": "plan-1",
+          "project_id": "hdag-acceptance",
+          "title": "0.1.3 — отдельная приёмка H-DAG",
+          "goal": "Небольшой H-DAG: 1 L0 + 4 pipeline L1, L2 без вершин. До заморозки подготовить реальный sealed image и записать environment.container/image в профиль L0. Не использовать вымышленный digest. Порог памяти не менять. Выпускной gate продукта и отложенный пункт 4 остаются отдельным условием выпуска.",
+          "status": "active",
+          "nodes": [
+            {
+              "id": "node-2",
+              "key": "ACC-0",
+              "title": "Приёмка H-DAG в отдельном проекте",
+              "status": "pending",
+              "ready": false,
+              "layer": 3,
+              "priority": 0.00017074968657407406,
+              "depends_on": [
+                "node-4",
+                "node-5",
+                "node-6",
+                "node-3"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null,
+              "level": 0,
+              "parent": null,
+              "pipeline": false,
+              "attempt_no": 0,
+              "max_attempts": 4,
+              "last_verdict": null
+            },
+            {
+              "id": "node-3",
+              "key": "ACC-1",
+              "title": "Живой успешный проход L2",
+              "status": "done",
+              "ready": false,
+              "layer": 0,
+              "priority": 0.30017074968657415,
+              "depends_on": [],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null,
+              "level": 1,
+              "parent": "node-2",
+              "pipeline": true,
+              "attempt_no": 1,
+              "max_attempts": 4,
+              "last_verdict": "2 passed, 0 failed"
+            },
+            {
+              "id": "node-4",
+              "key": "ACC-2",
+              "title": "Провалы и решение человека",
+              "status": "cancelled",
+              "ready": false,
+              "layer": 1,
+              "priority": 0.20017074968657408,
+              "depends_on": [
+                "node-3"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null,
+              "level": 1,
+              "parent": "node-2",
+              "pipeline": true,
+              "attempt_no": 4,
+              "max_attempts": 4,
+              "last_verdict": "3 passed, 1 failed\n/opt/aconsole/core/bin/basedpyright: /home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/e9b422b1e208b10f/.aconsole-dev/hdag-live/workspace/src/retr"
+            },
+            {
+              "id": "node-5",
+              "key": "ACC-3",
+              "title": "Недействительные квитанции",
+              "status": "pending",
+              "ready": true,
+              "layer": 1,
+              "priority": 2.200170749686574,
+              "depends_on": [
+                "node-3"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null,
+              "level": 1,
+              "parent": "node-2",
+              "pipeline": true,
+              "attempt_no": 0,
+              "max_attempts": 4,
+              "last_verdict": null
+            },
+            {
+              "id": "node-6",
+              "key": "ACC-4",
+              "title": "Ресурсы и закрытие направления",
+              "status": "pending",
+              "ready": false,
+              "layer": 2,
+              "priority": 1.1001707496865742,
+              "depends_on": [
+                "node-5",
+                "node-4"
+              ],
+              "owner_agent": null,
+              "tab_id": null,
+              "lease_expires_at": null,
+              "note": null,
+              "evidence": null,
+              "level": 1,
+              "parent": "node-2",
+              "pipeline": true,
+              "attempt_no": 0,
+              "max_attempts": 4,
+              "last_verdict": null
+            }
+          ],
+          "done": 1,
+          "total": 5,
+          "canvas": null,
+          "updated_at": "2026-11-16T11:56:21.970848Z",
+          "phase": "frozen",
+          "warnings": []
+        }
+      }
+    }
+  ]
+}

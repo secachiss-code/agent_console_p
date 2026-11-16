@@ -1,0 +1,13 @@
+import gc,json,os,importlib,sys
+from pathlib import Path
+
+def sample(stage):
+ values={}
+ for line in Path('/proc/self/smaps_rollup').read_text().splitlines():
+  p=line.split()
+  if len(p)==3 and p[2]=='kB': values[p[0].strip(':')]=int(p[1])/1024
+ print(json.dumps({'stage':stage,'rss':values['Rss'],'pss':values['Pss'],'private':values['Private_Dirty']+values['Private_Clean'],'objects':len(gc.get_objects()),'modules':len(sys.modules)}),flush=True)
+sample('start')
+for name in sys.argv[1:]:
+ importlib.import_module(name); sample(name)
+sample('before_gc'); print('collected',gc.collect());sample('after_gc')
