@@ -61,6 +61,7 @@ target-version = "py315"
 line-length = 120
 src = ["src"]
 extend-exclude = [
+  "artifacts",
   ".aconsole-dev",
   ".venv",
   ".venv-core",

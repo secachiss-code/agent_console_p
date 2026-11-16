@@ -14,9 +14,11 @@ PATTERNS = (
     re.compile(r"""\.execute\(\s*['"]"""),
 )
 # The engine owns PRAGMA and BEGIN IMMEDIATE; its own test reads them back.
+# Migration-worker fixtures must create legacy/unknown schemas without the current ORM.
 ALLOWED = (
     "src/aconsole/core/infrastructure/persistence/engine.py",
     "tests/core/test_persistence_a.py",
+    "tests/core/test_migration_worker.py",
 )
 SKIP_PARTS = {".venv", ".venv-core", ".venv-ui", ".venv-daemon", ".aconsole-dev", "fixtures", "corpus"}
 

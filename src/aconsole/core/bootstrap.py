@@ -849,7 +849,7 @@ class Daemon:
     def _plan_removed(self, plan_id: str) -> None:
         """Drop the plan from the snapshot. A removal wins over a plan update still waiting to flush."""
         with self._palette_plan_lock:
-            self._palette_plans.pop(plan_id, None)
+            _ = self._palette_plans.pop(plan_id, None)
         loop = self._loop
         if loop is not None and not loop.is_closed():
             _ = loop.call_soon_threadsafe(self._publish, PlanRemoved(plan_id=PlanId(plan_id)), self._live_tabs, None)

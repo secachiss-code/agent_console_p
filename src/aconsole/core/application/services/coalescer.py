@@ -35,7 +35,7 @@ class Coalescer:
 
     def push(self, event: UiEvent) -> UiEvent | None:
         if isinstance(event, PlanRemoved):
-            self._pending.pop(f"plan:{event.plan_id}", None)
+            _ = self._pending.pop(f"plan:{event.plan_id}", None)
             return event
         key = coalesce_key(event)
         if key is None:
