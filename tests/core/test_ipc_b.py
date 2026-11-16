@@ -47,6 +47,8 @@ if TYPE_CHECKING:
 
 _ENCODER = msgspec.json.Encoder()
 _LIMIT = 32
+# The UI allows 20 seconds for cold imports, migration worker and restore before IPC is ready.
+_STARTUP_WAIT_S = 20.0
 
 
 def _line(value: msgspec.Struct) -> bytes:
@@ -189,13 +191,13 @@ def test_ipc_b_second_process_leaves_the_socket(tmp_path: Path) -> None:
         text=True,
     )
     try:
-        deadline = time.monotonic() + 5
+        deadline = time.monotonic() + _STARTUP_WAIT_S
         while not sock.exists():
             if first.poll() is not None or time.monotonic() > deadline:
                 if first.poll() is None:
                     first.kill()
                 _out, err = first.communicate(timeout=2)
-                message = err or "daemon exited before the socket appeared"
+                message = err or f"daemon did not create its socket (exit={first.returncode}, wait={_STARTUP_WAIT_S}s)"
                 raise AssertionError(message)
             time.sleep(0.02)
         second = subprocess.run(
