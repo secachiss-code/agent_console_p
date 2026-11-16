@@ -1,0 +1,13 @@
+{
+  "version": "0.1.3+c",
+  "source_commit": "fd5fc80ac5c5a27e670d13b4695a740026220855",
+  "bytes": 67768736,
+  "sha256": "7ca49192802b8bb37a590f8f6281adaba95beecd2560c4383320037c5d417e95",
+  "source_files_per_environment": 329,
+  "checks": {
+    "core_isolated_import_and_gil": "0.1.3+c",
+    "ui_isolated_import_and_gil": "0.1.3+c",
+    "packaged_migrations_and_repair_api": "packaged migrations and repair API: passed",
+    "core_cli_usage": "passed (exit 2)"
+  }
+}
