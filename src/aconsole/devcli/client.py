@@ -33,7 +33,7 @@ def _initialize() -> bytes:
         client_name="devcli",
         client_version="0.0.0",
         pid=os.getpid(),
-        capabilities=frozenset({"events.v1"}),
+        capabilities=frozenset({"events.v1", "hdag.v1"}),
     )
     return _request(1, "initialize", params)
 

@@ -98,6 +98,24 @@ def test_same_session_gets_digest_and_new_sessions_or_tabs_get_full_prefix() -> 
         assert result.direction_prefix == first.direction_prefix
 
 
+def test_rejected_large_reply_does_not_mark_prefix_delivered() -> None:
+    scratch = _Scratch()
+    shaper = ContextShaper(scratch)
+    for _ in range(2):
+        with pytest.raises(DomainError, match="RESPONSE_TOO_LARGE"):
+            shaper.shape(
+                session=SESSION,
+                direction=DIRECTION,
+                module=MODULE,
+                envelope=ENVELOPE,
+                lease=LEASE,
+                file_slice="x" * (256 * 1024),
+            )
+        assert not scratch.seen
+    valid = shaper.shape(session=SESSION, direction=DIRECTION, module=MODULE, envelope=ENVELOPE, lease=LEASE)
+    assert valid.direction_prefix is not None
+
+
 @pytest.mark.parametrize("field", ["scope", "invariants", "gate_profile_json", "skeletons"])
 def test_prefix_manifest_changes_invalidate_delivery_tracking(field: str) -> None:
     changed = {

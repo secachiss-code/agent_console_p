@@ -9,6 +9,7 @@ from aconsole.core.domain.errors import DomainError
 from aconsole.core.domain.pipeline import HandoffEnvelope
 
 _ENVELOPE_BYTES = 1600
+_CONTEXT_BYTES = 256 * 1024
 _SYMBOLS = 12
 _REMAINING_ITEMS = 5
 _ITEM_CHARS = 160
@@ -143,8 +144,7 @@ class ContextShaper:
         seen = False
         if session.tab_id and session.agent_session_id:
             seen = self._scratch.prefix_seen(session.tab_id, session.agent_session_id, digest)
-            self._scratch.prefix_mark_seen(session.tab_id, session.agent_session_id, digest)
-        return ShapedContext(
+        shaped = ShapedContext(
             direction_prefix=None if seen else prefix,
             prefix_sha256=digest,
             contract=contract,
@@ -152,3 +152,8 @@ class ContextShaper:
             file_slice=file_slice,
             lease=lease,
         )
+        if len(_json(shaped.payload()).encode()) > _CONTEXT_BYTES:
+            raise DomainError(code=-32000, name="RESPONSE_TOO_LARGE", retryable=False)
+        if session.tab_id and session.agent_session_id:
+            self._scratch.prefix_mark_seen(session.tab_id, session.agent_session_id, digest)
+        return shaped

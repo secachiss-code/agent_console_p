@@ -1,20 +1,42 @@
 """Durable pipeline history. All reads and writes are serialized by Writer.
 
 Returned rows are detached snapshots; callers cannot mutate the writer's session.
-Lease authorization and step transitions belong to PipelineService.
+PipelineService authorizes requests; the optional guard rechecks leases at the Writer boundary.
 """
 
-from datetime import datetime
+from dataclasses import dataclass
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Literal, final
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from aconsole.core.domain.errors import DomainError
 from aconsole.core.domain.pipeline import StateBlock, block_hash, canonical_block, genesis_hash
 from aconsole.core.infrastructure.persistence.cleanup import remove_gate_logs, trim_gate_receipts
-from aconsole.core.infrastructure.persistence.models import GateReceipt, NodeAttempt, NodeStepBlock, PlanNode
+from aconsole.core.infrastructure.persistence.models import GateReceipt, Lease, NodeAttempt, NodeStepBlock, PlanNode
 from aconsole.core.infrastructure.persistence.writer import Writer
+
+
+@dataclass(frozen=True, kw_only=True)
+class AttemptLease:
+    tab_id: str
+    fence: int
+    at: datetime
+
+
+def check_attempt_lease(session: Session, node_id: str, guard: AttemptLease | None) -> None:
+    if guard is None:
+        return
+    lease = session.get(Lease, node_id)
+    if lease is None:
+        raise DomainError(code=4008, name="LEASE_EXPIRED", retryable=False)
+    if lease.tab_id != guard.tab_id or lease.fence != guard.fence:
+        raise DomainError(code=4007, name="LEASE_STALE_FENCE", retryable=False)
+    expires = lease.expires_at.replace(tzinfo=UTC) if lease.expires_at.tzinfo is None else lease.expires_at
+    if expires <= guard.at:
+        raise DomainError(code=4008, name="LEASE_EXPIRED", retryable=False)
 
 
 @final
@@ -22,10 +44,11 @@ class AttemptDatabase:
     def __init__(self, writer: Writer) -> None:
         self._writer = writer
 
-    def start(self, attempt: NodeAttempt) -> None:
+    def start(self, attempt: NodeAttempt, *, lease: AttemptLease | None = None) -> None:
         """Insert the next attempt without resetting the durable counter."""
 
         def write(session: Session) -> None:
+            check_attempt_lease(session, attempt.node_id, lease)
             node = session.get(PlanNode, attempt.node_id)
             previous = session.scalar(
                 select(NodeAttempt)
@@ -74,12 +97,13 @@ class AttemptDatabase:
         _ = self._writer.call(read)
         return tuple(found)
 
-    def append(self, attempt_id: str, block: StateBlock, *, now: datetime) -> str:
+    def append(self, attempt_id: str, block: StateBlock, *, now: datetime, lease: AttemptLease | None = None) -> str:
         """Persist a canonical block and its chain head in the same transaction."""
         digest = block_hash(block)
         body = canonical_block(block).decode()
 
         def write(session: Session) -> None:
+            check_attempt_lease(session, block.node_id, lease)
             held = session.get(NodeStepBlock, digest)
             if held is not None:
                 if held.attempt_id != attempt_id or held.body != body:
@@ -139,13 +163,20 @@ class AttemptDatabase:
         return tuple(found)
 
     def finish(
-        self, attempt_id: str, status: Literal["passed", "failed", "abandoned"], *, now: datetime, compact_verdict: str
+        self,
+        attempt_id: str,
+        status: Literal["passed", "failed", "abandoned"],
+        *,
+        now: datetime,
+        compact_verdict: str,
+        lease: AttemptLease | None = None,
     ) -> None:
         def write(session: Session) -> None:
             row = session.get(NodeAttempt, attempt_id)
             if row is None:
                 message = "unknown attempt"
                 raise ValueError(message)
+            check_attempt_lease(session, row.node_id, lease)
             if row.status != "running":
                 if row.status == status and row.compact_verdict == compact_verdict:
                     return

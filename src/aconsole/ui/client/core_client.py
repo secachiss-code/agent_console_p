@@ -53,6 +53,7 @@ _BACKOFF_S = (0.05, 0.1, 0.2, 0.4, 0.8)
 _UI_CAPABILITIES = frozenset(
     {
         "events.v1",
+        "hdag.v1",
         "approvals.inline",
         "terminal.inject",
         "notifications.desktop",

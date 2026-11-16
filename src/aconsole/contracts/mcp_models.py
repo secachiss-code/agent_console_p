@@ -22,6 +22,30 @@ class NodeSpec(BaseModel):
     review_required: bool = False
     output_format: str | None = None
     boundaries: str | None = None
+    level: Literal[0, 1] = 1
+    pipeline: bool = False
+    invariants: str | None = None
+    gate_profile: dict[str, object] | None = None
+
+
+class StepBeginIn(BaseModel):
+    model_config: ClassVar[ConfigDict] = {"frozen": True}
+    node_id: str
+    fence: int
+
+
+class StepSubmitIn(StepBeginIn):
+    step: Literal["spec", "patch", "test", "verify"]
+    affected_symbols: tuple[str, ...] = Field(default=(), max_length=12)
+    note: str | None = Field(default=None, max_length=2000)
+
+
+class StepResetIn(StepBeginIn):
+    pass
+
+
+class GateRunIn(StepBeginIn):
+    tier: Literal["micro", "blast"]
 
 
 class PlanCreateIn(BaseModel):

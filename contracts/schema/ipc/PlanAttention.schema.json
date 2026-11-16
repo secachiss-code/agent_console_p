@@ -1,0 +1,36 @@
+{
+  "$defs": {
+    "PlanAttention": {
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "node_id": {
+          "type": "string"
+        },
+        "plan_id": {
+          "type": "string"
+        },
+        "reason": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "plan_attention"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "plan_id",
+        "node_id",
+        "kind",
+        "reason"
+      ],
+      "title": "PlanAttention",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/PlanAttention",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "fence": {
+      "title": "Fence",
+      "type": "integer"
+    },
+    "node_id": {
+      "title": "Node Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "node_id",
+    "fence"
+  ],
+  "title": "StepResetIn",
+  "type": "object"
+}

@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "affected_symbols": {
+      "default": [],
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 12,
+      "title": "Affected Symbols",
+      "type": "array"
+    },
+    "fence": {
+      "title": "Fence",
+      "type": "integer"
+    },
+    "node_id": {
+      "title": "Node Id",
+      "type": "string"
+    },
+    "note": {
+      "anyOf": [
+        {
+          "maxLength": 2000,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Note"
+    },
+    "step": {
+      "enum": [
+        "spec",
+        "patch",
+        "test",
+        "verify"
+      ],
+      "title": "Step",
+      "type": "string"
+    }
+  },
+  "required": [
+    "node_id",
+    "fence",
+    "step"
+  ],
+  "title": "StepSubmitIn",
+  "type": "object"
+}

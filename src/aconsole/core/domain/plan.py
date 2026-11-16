@@ -491,10 +491,19 @@ class Plan:
             raise _fail(_LEASE_HELD, "LEASE_HELD", (node.tab_id,))
         return self.transition(Move(key=key, to=NodeStatus.IN_PROGRESS, role=role, at=at, tab_id=tab_id))
 
-    def heartbeat(self, key: str, *, fence: int, at: datetime) -> Node:
+    def heartbeat(self, key: str, *, fence: int, at: datetime, note: str | None = None) -> Node:
         node = self.get(key)
         self._require_fence(node, fence, at)
-        updated = replace(node, lease_expires_at=at + _LEASE)
+        updated = replace(node, lease_expires_at=at + _LEASE, note=node.note if note is None else note)
+        self._nodes[key] = updated
+        return updated
+
+    def record_pipeline_merge(self, key: str, *, evidence: str) -> Node:
+        """A merged pipeline node awaits a gate without an expiring worker lease."""
+        node = self.get(key)
+        if not node.pipeline or node.status not in {NodeStatus.PENDING, NodeStatus.IN_PROGRESS, NodeStatus.VERIFYING}:
+            return node
+        updated = replace(self._clear_holder(node, NodeStatus.VERIFYING), evidence=evidence, note=evidence)
         self._nodes[key] = updated
         return updated
 

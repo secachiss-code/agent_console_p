@@ -30,6 +30,7 @@ from aconsole.core.infrastructure.clipboard import store_image
 from aconsole.core.infrastructure.containers.distrobox_env import DistroboxEnvCache, DistroboxError
 from aconsole.core.infrastructure.containers.login import LOGIN_SHELL
 from aconsole.core.infrastructure.containers.podman import ContainerError, ExecRequest, Inspected, Podman
+from aconsole.core.infrastructure.gates.runner import ContainerGateRunner
 from aconsole.core.infrastructure.git.runner import GitCall, GitRunner
 from aconsole.core.infrastructure.git.worktrees import WorktreeError, WorktreeRequest, Worktrees
 from aconsole.core.infrastructure.host_bins import host_binary
@@ -258,6 +259,10 @@ class HostTabs:
 
     def inspect_container(self, name: str) -> Inspected:
         return self._podman.inspect(name)
+
+    def gate_runner(self, container: str, worktree: str, profile: tuple[tuple[str, ...], ...]) -> ContainerGateRunner:
+        return ContainerGateRunner(podman=self._podman, container=container, user=self._user,
+                                   worktree=worktree, profile=profile)
 
     def agent_home(self, name: str) -> Path | None:
         """The directory HOME names in the container. Distrobox binds it at the same path here."""

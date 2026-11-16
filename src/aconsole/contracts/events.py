@@ -14,7 +14,7 @@ from aconsole.contracts.app import (
     SetupState,
     TabView,
 )
-from aconsole.contracts.common import ApprovalId, NoteRef, ProjectId, TabId
+from aconsole.contracts.common import ApprovalId, NodeId, NoteRef, PlanId, ProjectId, TabId
 from aconsole.contracts.errors import ErrorObject
 
 
@@ -51,6 +51,13 @@ class QuotaUpdated(msgspec.Struct, frozen=True, kw_only=True, tag="quota_updated
 
 class PlanUpdated(msgspec.Struct, frozen=True, kw_only=True, tag="plan_updated", tag_field="type"):
     plan: PlanView
+
+
+class PlanAttention(msgspec.Struct, frozen=True, kw_only=True, tag="plan_attention", tag_field="type"):
+    plan_id: PlanId
+    node_id: NodeId
+    kind: str
+    reason: str
 
 
 class ProjectsChanged(msgspec.Struct, frozen=True, kw_only=True, tag="projects_changed", tag_field="type"):
@@ -143,6 +150,7 @@ UiEvent = (
     | ApprovalResolved
     | QuotaUpdated
     | PlanUpdated
+    | PlanAttention
     | ProjectsChanged
     | AgentsChanged
     | SettingsChanged

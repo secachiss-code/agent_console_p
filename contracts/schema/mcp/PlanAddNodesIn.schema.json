@@ -30,10 +30,44 @@
           "title": "Depends On",
           "type": "array"
         },
+        "gate_profile": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Gate Profile"
+        },
+        "invariants": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Invariants"
+        },
         "key": {
           "pattern": "^[A-Z]{1,4}-\\d{1,4}$",
           "title": "Key",
           "type": "string"
+        },
+        "level": {
+          "default": 1,
+          "enum": [
+            0,
+            1
+          ],
+          "title": "Level",
+          "type": "integer"
         },
         "objective": {
           "maxLength": 2000,
@@ -87,6 +121,11 @@
           },
           "title": "Paths",
           "type": "array"
+        },
+        "pipeline": {
+          "default": false,
+          "title": "Pipeline",
+          "type": "boolean"
         },
         "related": {
           "default": [],

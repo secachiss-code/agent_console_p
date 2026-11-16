@@ -26,10 +26,11 @@ import msgspec
 import uvicorn
 
 from aconsole.contracts.app import AccountView, CloseTabParams, CommandResult, HealthResult, PlanView
-from aconsole.contracts.common import AccountId, AgentKind, ClientRole, QuotaLevel, TabId
+from aconsole.contracts.common import AccountId, AgentKind, ClientRole, NodeId, PlanId, QuotaLevel, TabId
 from aconsole.contracts.errors import ErrorData, ErrorObject, MessageTooLargeDetails, error_by_name
 from aconsole.contracts.events import (
     Notify,
+    PlanAttention,
     PlanUpdated,
     QuotaUpdated,
     ResyncRequired,
@@ -120,14 +121,18 @@ from aconsole.core.infrastructure.persistence.repositories.work_sessions import 
 )
 from aconsole.core.infrastructure.persistence.startup import prepare_database, sqlite_url
 from aconsole.core.infrastructure.persistence.writer import Writer
+from aconsole.core.infrastructure.pipeline import build_pipeline
 from aconsole.core.infrastructure.setup_checks import HostSetupFixes, HostSetupProbe, SetupTokens
 from aconsole.core.infrastructure.tabs import HostAgents, HostRepos, HostTabs
 from aconsole.core.infrastructure.vault.canvas import CanvasHistory
 from aconsole.core.infrastructure.vault.sync import VaultSync
 lazy from aconsole.contracts.git import FactReviewView
+lazy from aconsole.core.application.ports.gate_runner import GateRunner
 lazy from aconsole.core.application.ports.knowledge_store import StoredFact
+lazy from aconsole.core.application.services.pipeline import PipelineActor
 lazy from aconsole.core.domain.git_operation import GitOperationRecord
 lazy from aconsole.core.domain.work_session import WorkSession
+lazy from aconsole.core.infrastructure.persistence.cache.store import CacheStore
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -620,6 +625,7 @@ class Daemon:
         self._palette_plan_lock: Lock = Lock()
         self._plans: PlanBoard = PlanBoard(checked_completion=True)
         self._plans.on_changed = self._plan_changed
+        self._plans.on_attention = self._plan_attention
         # Off the loop and off the tab worker: files can be slow, and an edit must not wait for a tab call.
         self._vault_thread: ThreadPoolExecutor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="aconsole-vault")
         self.vault: VaultSync = VaultSync(self._plans)
@@ -651,6 +657,7 @@ class Daemon:
         self.sweep_every_s: float = SWEEP_EVERY_S
         self._engine: Engine | None = None
         self._writer: Writer | None = None
+        self._pipeline_cache: CacheStore | None = None
         self._sweeper: asyncio.Task[None] | None = None
         # Checkpoint refs whose rows the sweep removed. Deleting the git refs belongs to the checkpoint service (A4).
         self.dropped_refs: list[str] = []
@@ -833,6 +840,12 @@ class Daemon:
         loop = self._loop
         if loop is not None and not loop.is_closed():
             _ = loop.call_soon_threadsafe(self._publish, PlanUpdated(plan=plan), self._live_tabs, None)
+
+    def _plan_attention(self, plan_id: str, node_id: str, kind: str, reason: str) -> None:
+        loop = self._loop
+        if loop is not None and not loop.is_closed():
+            event = PlanAttention(plan_id=PlanId(plan_id), node_id=NodeId(node_id), kind=kind, reason=reason[:500])
+            _ = loop.call_soon_threadsafe(self._publish, event, self._live_tabs, None)
 
     def _ingest_minted(self, tab_id: str, token: str) -> None:
         """A restored tab got its token from `tab/launchSpec`, on the worker. The hooks start only after that reply."""
@@ -1403,12 +1416,16 @@ class Daemon:
         self.review.checkpoints.protected_ref = checkpoints.is_session_ref
         await asyncio.to_thread(self._plans.use_store, PlanDatabase(writer))
         self._plans.use_attempts(AttemptDatabase(writer))
-        self.tabs.plan_context = self._plans.views
+        self.tabs.plan_context, self._plans.pipeline_actor = self._plans.views, self.tabs.pipeline_actor
         restored_plans = await asyncio.to_thread(self._plans.views)
         with self._palette_plan_lock:
             self._palette_plans.update((str(plan.id), plan) for plan in restored_plans)
         await asyncio.to_thread(self._plans.use_knowledge, KnowledgeDatabase(writer))
         self.knowledge.code_graph.use_store(CodeGraphDatabase(writer))
+        self._plans.pipeline, self._pipeline_cache = await asyncio.to_thread(
+            build_pipeline, book=self._plans, graph=self.knowledge.code_graph,
+            writer=writer, runner=self._pipeline_runner,
+        )
         await asyncio.to_thread(self.vault.use_bases, VaultFileDatabase(writer))
         self.vault.use_history(CanvasHistory(writer=writer))
         self.tabs.use_store(store)
@@ -1459,6 +1476,9 @@ class Daemon:
         self._writer = writer
         self._sweeper = asyncio.create_task(self._sweep_loop(writer))
         self._health = asyncio.create_task(self._health_loop())
+
+    def _pipeline_runner(self, actor: PipelineActor, commands: tuple[tuple[str, ...], ...]) -> GateRunner:
+        return self._host.gate_runner(actor.container, str(actor.worktree), commands)
 
     def _palette_snapshot(self) -> NavigationSnapshot:
         with self._palette_plan_lock:
@@ -1525,6 +1545,10 @@ class Daemon:
         return sweep(session, now=datetime.now(UTC), drop_ref=self.dropped_refs.append)
 
     async def _close_database(self) -> None:
+        if self._pipeline_cache is not None:
+            self._pipeline_cache.close()
+            self._pipeline_cache = None
+        self._plans.pipeline = None
         sweeper = self._sweeper
         self._sweeper = None
         if sweeper is not None:

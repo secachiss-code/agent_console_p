@@ -1055,6 +1055,9 @@
               "$ref": "#/$defs/PlanUpdated"
             },
             {
+              "$ref": "#/$defs/PlanAttention"
+            },
+            {
               "$ref": "#/$defs/ProjectsChanged"
             },
             {
@@ -1108,6 +1111,7 @@
               "inject_to_terminal": "#/$defs/InjectToTerminal",
               "notify": "#/$defs/Notify",
               "operation_progress": "#/$defs/OperationProgress",
+              "plan_attention": "#/$defs/PlanAttention",
               "plan_updated": "#/$defs/PlanUpdated",
               "projects_changed": "#/$defs/ProjectsChanged",
               "quota_updated": "#/$defs/QuotaUpdated",
@@ -1625,6 +1629,36 @@
         "conflicting_node"
       ],
       "title": "PathsOverlapDetails",
+      "type": "object"
+    },
+    "PlanAttention": {
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "node_id": {
+          "type": "string"
+        },
+        "plan_id": {
+          "type": "string"
+        },
+        "reason": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "plan_attention"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "plan_id",
+        "node_id",
+        "kind",
+        "reason"
+      ],
+      "title": "PlanAttention",
       "type": "object"
     },
     "PlanCycleDetails": {

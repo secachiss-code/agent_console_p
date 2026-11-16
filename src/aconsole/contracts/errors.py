@@ -386,6 +386,7 @@ ERRORS: tuple[ErrorSpec, ...] = (
     _spec(4017, "STEP_OUT_OF_ORDER", retryable=False),
     _spec(4018, "GATE_RECEIPT_REQUIRED", retryable=False),
     _spec(4019, "SPLIT_NO_PROOF", retryable=False),
+    _spec(5010, "GATE_RUNNER_UNAVAILABLE", retryable=True),
     _spec(5001, "VAULT_NOT_CONFIGURED", retryable=False),
     _spec(5002, "VAULT_WRITE_DEFERRED", retryable=True),
     _spec(5003, "VAULT_CONFLICT", retryable=False),

@@ -9,6 +9,7 @@ from pydantic import BaseModel
 from aconsole.contracts import ingest, methods
 from aconsole.contracts.catalog import STRUCTS
 from aconsole.contracts.mcp_models import (
+    GateRunIn,
     McpErrorBody,
     NodeAttachIn,
     NodeClaimIn,
@@ -16,6 +17,9 @@ from aconsole.contracts.mcp_models import (
     NodeUpdateIn,
     PlanAddNodesIn,
     PlanCreateIn,
+    StepBeginIn,
+    StepResetIn,
+    StepSubmitIn,
 )
 
 _SCHEMA = "https://json-schema.org/draft/2020-12/schema"
@@ -34,6 +38,10 @@ def pydantic_models() -> tuple[type[BaseModel], ...]:
         NodeUpdateIn,
         PlanAddNodesIn,
         PlanCreateIn,
+        StepBeginIn,
+        StepSubmitIn,
+        StepResetIn,
+        GateRunIn,
     )
 
 

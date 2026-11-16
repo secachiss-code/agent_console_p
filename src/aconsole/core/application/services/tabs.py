@@ -73,6 +73,7 @@ from aconsole.core.application.ports.tab_store import (
 from aconsole.core.application.services.approval_policy import ApprovalPolicyBook
 from aconsole.core.application.services.git_state import GitProject, GitTab
 from aconsole.core.application.services.palette import NavigationSnapshot
+from aconsole.core.application.services.pipeline import PipelineActor
 from aconsole.core.application.services.projects import ProjectCatalog
 from aconsole.core.application.services.work_session_history import WorkSessionHistory
 from aconsole.core.application.services.work_sessions import WorkSessionService, session_view
@@ -1035,6 +1036,12 @@ class TabService:
     def actor_context(self, tab_id: str) -> tuple[str, str, str | None]:
         tab = self._require(tab_id)
         return tab.title, tab.agent.value, tab.plan_node
+
+    def pipeline_actor(self, tab_id: str) -> PipelineActor:
+        tab = self._require(tab_id)
+        return PipelineActor(tab_id=tab.id, project_id=tab.project_id, worktree=Path(tab.worktree),
+                             mode=tab.plan_mode, agent=tab.agent.value, model=tab.model,
+                             agent_session_id=tab.session or "", container=tab.container)
 
     def archive_removed_workspace(self, project_id: str, path: str) -> None:
         record = self.work_sessions.at(project_id, path)

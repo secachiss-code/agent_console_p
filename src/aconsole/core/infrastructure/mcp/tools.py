@@ -8,6 +8,7 @@ An unleased transition may omit the ``node_update`` fence.
 from __future__ import annotations
 
 import inspect
+import json
 import logging
 import re
 import secrets
@@ -22,11 +23,12 @@ from typing import Annotated, ClassVar, Literal, NoReturn, Protocol
 
 import pydantic_core
 from mcp.types import CallToolResult, TextContent
-from pydantic import BaseModel, ConfigDict, Field, TypeAdapter
+from pydantic import BaseModel, ConfigDict, Field, RootModel, TypeAdapter
 
 from aconsole.contracts.app import PlanNodeView, PlanView
 from aconsole.contracts.common import AgentKind, NodeId, NoteRef, PlanId, ProjectId, TabId
 from aconsole.contracts.common import NodeStatus as NodeStatusView
+from aconsole.core.application.ports.gate_runner import GateRunnerUnavailableError
 from aconsole.core.application.ports.git_repo import GitCommandError
 from aconsole.core.application.ports.knowledge_store import KnowledgeStore, StoredFact, StoredHandover
 from aconsole.core.application.ports.plan_store import (
@@ -37,6 +39,8 @@ from aconsole.core.application.ports.plan_store import (
     StoredPlan,
     StoreWriteError,
 )
+from aconsole.core.application.services.context_shaper import DirectionContext, LeaseTail, ModuleContext
+from aconsole.core.application.services.pipeline import PipelineActor, PipelineContract, PipelineService
 from aconsole.core.application.services.plan_lifecycle import (
     apply_plan_change,
     freeze_plan,
@@ -45,6 +49,7 @@ from aconsole.core.application.services.plan_lifecycle import (
     topology_for,
 )
 from aconsole.core.domain.errors import DomainError
+from aconsole.core.domain.pipeline import Step
 from aconsole.core.domain.plan import Move, Node, NodeSpec, NodeStatus, Plan, Role, after_merge
 from aconsole.core.domain.plan_admission import PlanTopology
 from aconsole.core.domain.scope import check_scope
@@ -52,8 +57,10 @@ from aconsole.core.domain.vault_sync import Note as VaultNote
 from aconsole.core.domain.vault_sync import Owners, resolve_ref
 from aconsole.core.infrastructure.git.diff import GitDiff
 from aconsole.core.infrastructure.git.runner import GitRunner
+from aconsole.core.infrastructure.persistence.cache.store import StaleScratchFenceError
 from aconsole.core.infrastructure.persistence.repositories.attempts import AttemptDatabase
 from aconsole.core.infrastructure.persistence.repositories.code_graph import persistent_impact
+from aconsole.core.infrastructure.pipeline import micro_profile
 from aconsole.core.infrastructure.vault.sync import NodeNote
 
 _LOG = logging.getLogger(__name__)
@@ -63,6 +70,7 @@ _HELD = frozenset({NodeStatus.IN_PROGRESS, NodeStatus.VERIFYING})
 _SUMMARY = 300
 # Revisions of one plan kept to answer `since`: enough for several tabs reading it in turn.
 _REVISIONS = 16
+_PIPELINE_SCOPE_MAX = 20
 # What one `plan_get` showed: whether it was detailed, and each node as it read.
 type _Shown = tuple[bool, dict[str, str]]
 _DIFF = 4000
@@ -77,6 +85,10 @@ _URL = re.compile(r"^https?://\S+$")
 
 class _Frozen(BaseModel):
     model_config: ClassVar[ConfigDict] = ConfigDict(frozen=True)
+
+
+class PipelineReply(RootModel[dict[str, object]]):
+    """Keep stable context blocks and volatile lease fields in their deliberate wire order."""
 
 
 class NodeIn(_Frozen):
@@ -399,6 +411,9 @@ class PlanBoard:
         self._store: PlanStore | None = None
         self._saved: dict[str, StoredPlan] = {}
         self._attempts: AttemptDatabase | None = None
+        self.pipeline: PipelineService | None = None
+        self.pipeline_actor: Callable[[str], PipelineActor] | None = None
+        self.on_attention: Callable[[str, str, str, str], None] | None = None
         self._knowledge: KnowledgeStore | None = None
         self.on_changed: Callable[[PlanView], None] | None = None
         self.note_ref: Callable[[str, str], str | None] = lambda _plan, _key: None
@@ -536,6 +551,8 @@ class PlanBoard:
             stored, meta = self._find_node(node_id)
             now = self._now()
             target = NodeStatus(status)
+            if stored.dag.get(meta.key).pipeline and target is NodeStatus.DONE:
+                raise DomainError(code=4018, name="GATE_RECEIPT_REQUIRED", retryable=False)
             _ = stored.dag.transition(
                 Move(
                     key=meta.key,
@@ -566,8 +583,14 @@ class PlanBoard:
             if ("commit", oid) not in meta.artifacts:
                 meta.artifacts["commit", oid] = self._id("art")
             node = stored.dag.get(meta.key)
-            target = after_merge(node.status, review_required=node.review_required)
+            target = after_merge(node.status, review_required=node.review_required) if not node.pipeline else None
             evidence = f"merged as {oid}"
+            attention = False
+            if node.pipeline:
+                merged = stored.dag.record_pipeline_merge(meta.key, evidence=evidence)
+                attention = merged.status is NodeStatus.VERIFYING and (
+                    node.status is not NodeStatus.VERIFYING or node.lease_id is not None
+                )
             try:
                 if target is not None:
                     _ = stored.dag.transition(
@@ -589,9 +612,116 @@ class PlanBoard:
                 self._commit(stored)
             except _ToolError as exc:
                 raise StoreWriteError(str(exc)) from exc
+            if attention and self.on_attention is not None:
+                self.on_attention(stored.plan_id, meta.node_id, "verify", "Merged pipeline node requires a blast gate")
 
     def use_attempts(self, attempts: AttemptDatabase) -> None:
         self._attempts = attempts
+
+    def contract(self, actor: PipelineActor, node_id: str, fence: int) -> PipelineContract:
+        ctx = _actor_context(actor)
+        with self._lock:
+            stored, meta = self._node(ctx, node_id)
+            current = stored.dag.get(meta.key)
+            if current.status is NodeStatus.BLOCKED and current.note == "ATTEMPTS_EXHAUSTED":
+                _stop("ATTEMPTS_EXHAUSTED", "the durable retry budget is exhausted")
+            if current.tab_id != actor.tab_id:
+                _stop("LEASE_HELD", "the active lease belongs to another tab")
+            try:
+                node = stored.dag.heartbeat(meta.key, fence=fence, at=self._now())
+            except DomainError as exc:
+                _domain(exc)
+            if (
+                not node.pipeline
+                or not meta.contract_sha256
+                or stored.topology is None
+                or stored.topology.phase != "frozen"
+            ):
+                _stop("NODE_CONTRACT", "pipeline steps require a frozen module contract")
+            parent = stored.meta.get(meta.parent or "")
+            if parent is None or len(meta.paths) > _PIPELINE_SCOPE_MAX:
+                _stop("NODE_CONTRACT", "pipeline scope requires an L0 parent and at most 20 paths")
+            direction = stored.dag.get(parent.key)
+            profile = {} if direction.gate_profile is None else dict(direction.gate_profile)
+            self._commit(stored)
+            return PipelineContract(
+                plan_id=stored.plan_id,
+                node_id=node_id,
+                max_attempts=meta.max_attempts,
+                direction=DirectionContext(
+                    key=parent.key,
+                    invariants=direction.invariants or "",
+                    scope=direction.paths,
+                    gate_profile_json=json.dumps(profile, sort_keys=True),
+                ),
+                module=ModuleContext(
+                    key=meta.key,
+                    direction_key=parent.key,
+                    objective=meta.objective,
+                    acceptance=meta.acceptance,
+                    paths=meta.paths,
+                    test_cmd=meta.test_cmd,
+                    contract_sha256=meta.contract_sha256,
+                    boundaries=meta.boundaries,
+                    output_format=meta.output_format,
+                    blast_radius=meta.blast_radius,
+                ),
+                lease=LeaseTail(lease_id=node.lease_id or "", fence=fence, expires_at=_stamp(node.lease_expires_at)),
+                profile=micro_profile(profile),
+                gates_sha256=stored.topology.gates_sha256 or "",
+            )
+
+    def scope(self, actor: PipelineActor, node_id: str, fence: int) -> None:
+        _ = self.contract(actor, node_id, fence)
+        self.assert_scope(_actor_context(actor), node_id)
+
+    def exhausted(self, actor: PipelineActor, node_id: str, fence: int) -> None:
+        _ = self.update(_actor_context(actor), node_id, fence, "blocked", "ATTEMPTS_EXHAUSTED", None)
+        if self.on_attention is not None:
+            with self._lock:
+                stored, _meta = self._node(_actor_context(actor), node_id)
+                self.on_attention(stored.plan_id, node_id, "replan", "ATTEMPTS_EXHAUSTED")
+
+    def pipeline_step(  # noqa: PLR0913 -- common dispatcher for four pipeline tool signatures
+        self,
+        ctx: TabContext,
+        action: str,
+        node_id: str,
+        fence: int,
+        *,
+        step: Step = "spec",
+        symbols: tuple[str, ...] = (),
+        tier: str = "micro",
+        note: str | None = None,
+    ) -> PipelineReply:
+        _require_tab(ctx)
+        if self.pipeline is None or self.pipeline_actor is None:
+            _stop("NODE_CONTRACT", "pipeline storage is unavailable")
+        actor = self.pipeline_actor(ctx.tab_id)
+        if actor.project_id != ctx.project_id or actor.worktree != ctx.worktree:
+            _stop("NODE_CONTRACT", "pipeline actor no longer matches its bearer context")
+        try:
+            if action == "begin":
+                body = self.pipeline.begin(actor, node_id, fence)
+            elif action == "submit":
+                body = self.pipeline.submit(actor, node_id, fence, step, symbols)
+            elif action == "reset":
+                body = self.pipeline.reset(actor, node_id, fence)
+            else:
+                body = self.pipeline.gate_run(actor, node_id, fence, tier)
+        except DomainError as exc:
+            _domain(exc)
+        except StaleScratchFenceError:
+            _stop("LEASE_STALE_FENCE", "scratch state belongs to a newer lease")
+        except GateRunnerUnavailableError:
+            _stop("GATE_RUNNER_UNAVAILABLE", "the tab container cannot execute checks")
+        with self._lock:
+            stored, _meta = self._node(ctx, node_id)
+            node = stored.dag.get(_meta.key)
+            if note is not None and node.lease_expires_at is not None:
+                _ = stored.dag.heartbeat(_meta.key, fence=fence, at=self._now(), note=note)
+            self._commit(stored)
+        return PipelineReply(body)
 
     def scope_for_tab(self, tab_id: str, project_id: str | None) -> tuple[str, ...] | None:
         with self._lock:
@@ -955,8 +1085,10 @@ class PlanBoard:
                 if status is None:
                     if fence is None:
                         _stop("LEASE_STALE_FENCE", "a heartbeat requires the fence from node_claim")
-                    node = stored.dag.heartbeat(meta.key, fence=fence, at=now)
+                    node = stored.dag.heartbeat(meta.key, fence=fence, at=now, note=note)
                 else:
+                    if current.pipeline and status == "done":
+                        _stop("GATE_RECEIPT_REQUIRED", "a fresh blast gate receipt is required")
                     if current.pipeline and status in {"verifying", "done"}:
                         if fence is None:
                             _stop("LEASE_STALE_FENCE", "a scope check requires the active fence")
@@ -1351,6 +1483,12 @@ def _clock() -> datetime:
     return datetime.now(UTC)
 
 
+def _actor_context(actor: PipelineActor) -> TabContext:
+    return TabContext(
+        tab_id=actor.tab_id, project_id=actor.project_id, worktree=actor.worktree, agent=actor.agent, mode=actor.mode
+    )
+
+
 def _number(identifier: str) -> int:
     """`node-12` gives 12. Ids count up across a restart from the largest one kept."""
     digits = identifier.rpartition("-")[2]
@@ -1427,6 +1565,8 @@ def _node_note(stored: _Stored, meta: _Meta, graph: Owners) -> NodeNote:
 def _after_restart(item: StoredNode) -> NodeStatus:
     """A held node whose lease row is gone ends as an expired lease does: it can be claimed again."""
     status = NodeStatus(item.status)
+    if item.pipeline and status is NodeStatus.VERIFYING:
+        return status
     if status in {NodeStatus.IN_PROGRESS, NodeStatus.VERIFYING} and item.lease_expires_at is None:
         return NodeStatus.PENDING
     return status
@@ -1729,6 +1869,10 @@ def _git(worktree: Path | None, *args: str) -> str:
 
 
 _CODES: dict[str, int] = {
+    "GATE_RUNNER_UNAVAILABLE": 5010,
+    "ATTEMPTS_EXHAUSTED": 4016,
+    "STEP_OUT_OF_ORDER": 4017,
+    "GATE_RECEIPT_REQUIRED": 4018,
     "PLAN_GROWTH_LIMIT": 4014,
     "SPLIT_NO_PROOF": 4019,
     "PLAN_FROZEN": 4011,

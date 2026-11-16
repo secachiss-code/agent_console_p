@@ -23,6 +23,7 @@ from aconsole.core.infrastructure.mcp.tools import (
     Impact,
     KbAdded,
     NodeIn,
+    PipelineReply,
     PlanBoard,
     PlanCreated,
     PlanGot,
@@ -104,6 +105,8 @@ class _LeanServer(MCPServer):
         listed = await super().list_tools()
         if active(self.tab_context).mode == "execute":
             listed = [tool for tool in listed if tool.name not in {"plan_create", "plan_add_nodes", "change_propose"}]
+        if active(self.tab_context).mode == "plan":
+            listed = [tool for tool in listed if tool.name not in {"step_submit", "step_reset", "gate_run"}]
         return [tool.model_copy(update={"input_schema": lean_schema(tool.input_schema)}) for tool in listed]
 
 
@@ -295,6 +298,30 @@ def _register(  # noqa: C901 -- one nested function per MCP tool
         """Take the lease. Returns the fence later calls must send."""
         return board.claim(active(context), node_id)
 
+    def step_begin(node_id: _Id, fence: int) -> PipelineReply:
+        """Begin or resume L2 with stable context, handoff and lease tail."""
+        return board.pipeline_step(active(context), "begin", node_id, fence)
+
+    def step_submit(
+        node_id: _Id,
+        fence: int,
+        step: Literal["spec", "patch", "test", "verify"],
+        affected_symbols: Annotated[list[_Text], Field(max_length=12)] | None = None,
+        note: _Text | None = None,
+    ) -> PipelineReply:
+        """Record a scoped L2 block. Verify executes the kernel micro gate."""
+        return board.pipeline_step(
+            active(context), "submit", node_id, fence, step=step, symbols=tuple(affected_symbols or ()), note=note
+        )
+
+    def step_reset(node_id: _Id, fence: int) -> PipelineReply:
+        """Restore scope files to the last verified snapshot; keep other files."""
+        return board.pipeline_step(active(context), "reset", node_id, fence)
+
+    def gate_run(node_id: _Id, fence: int, tier: Literal["micro", "blast"]) -> PipelineReply:
+        """Run a kernel gate or reuse its fresh receipt."""
+        return board.pipeline_step(active(context), "gate", node_id, fence, tier=tier)
+
     def node_update(
         node_id: _Id,
         fence: int | None = None,
@@ -378,6 +405,10 @@ def _register(  # noqa: C901 -- one nested function per MCP tool
         (plan_get, "Read a plan. since=<revision> returns only the nodes changed after that read", _READ),
         (plan_ready, "List claimable nodes", _READ),
         (node_claim, "Claim a node", _WRITE),
+        (step_begin, "Begin an L2 step", _IDEMPOTENT),
+        (step_submit, "Submit an L2 step", _IDEMPOTENT),
+        (step_reset, "Restore scope files", _IDEMPOTENT),
+        (gate_run, "Run a verification gate", _WRITE),
         (node_update, "Update a node or extend its lease", _WRITE),
         (node_attach, "Attach an artifact", _IDEMPOTENT),
         (ctx_get, "Read knowledge", _READ),

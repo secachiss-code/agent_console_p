@@ -188,15 +188,13 @@ def test_daemon_checked_completion_updates_live_plan_count_and_survives_restart(
                 assert not result.get("isError", False), result
                 return _content(result)
 
-            made = await call("plan_create", {"title": "Checked", "goal": "goal", "nodes": [{
-                "key": "A-1", "title": "First", "objective": "do", "review_required": False,
-            }]})
-            plan_id = made["plan_id"]
-            assert isinstance(plan_id, str)
-            nodes = made["nodes"]
-            assert isinstance(nodes, list)
-            assert isinstance(nodes[0], dict)
-            node_id = nodes[0]["node_id"]
+            # Seed a legacy non-pipeline plan through the trusted adapter. The execute tab may only execute it.
+            made = daemon._plans.create(
+                TabContext(tab_id=str(tab.id), project_id=str(project.id), worktree=None, agent="claude"),
+                "Checked", "goal", [NodeIn(key="A-1", title="First", objective="do", review_required=False)],
+            )
+            plan_id = made.plan_id
+            node_id = made.nodes[0].node_id
             claim = await call("node_claim", {"node_id": node_id})
             await call("node_update", {
                 "node_id": node_id, "fence": claim["fence"], "status": "done", "evidence": "mandatory checks PASS",

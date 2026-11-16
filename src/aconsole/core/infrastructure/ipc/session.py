@@ -34,7 +34,7 @@ from aconsole.contracts.errors import (
     ProtocolVersionUnsupportedDetails,
     error_by_name,
 )
-from aconsole.contracts.events import ApprovalRequested, ApprovalResolved, ResyncRequired, UiEvent
+from aconsole.contracts.events import ApprovalRequested, ApprovalResolved, PlanAttention, ResyncRequired, UiEvent
 from aconsole.contracts.ipc import (
     CancelParams,
     EventEnvelope,
@@ -176,10 +176,7 @@ class Connection:
         """Frames for an event the ring already numbered. Nothing before `events/subscribe` or while paused."""
         if not self.ready or self.paused or not self.subscribed:
             return ()
-        if (
-            isinstance(item.event, (ApprovalRequested, ApprovalResolved))
-            and "approvals.inline" not in self.capabilities
-        ):
+        if not self._visible(item):
             return ()
         if self._queued >= self.outbound_limit:
             self.paused = True
@@ -501,6 +498,8 @@ class Connection:
         return tuple(frames)
 
     def _visible(self, item: EventEnvelope) -> bool:
+        if isinstance(item.event, PlanAttention):
+            return "hdag.v1" in self.capabilities
         if isinstance(item.event, (ApprovalRequested, ApprovalResolved)):
             return "approvals.inline" in self.capabilities
         return True

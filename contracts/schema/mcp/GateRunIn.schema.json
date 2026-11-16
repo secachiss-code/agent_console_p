@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "fence": {
+      "title": "Fence",
+      "type": "integer"
+    },
+    "node_id": {
+      "title": "Node Id",
+      "type": "string"
+    },
+    "tier": {
+      "enum": [
+        "micro",
+        "blast"
+      ],
+      "title": "Tier",
+      "type": "string"
+    }
+  },
+  "required": [
+    "node_id",
+    "fence",
+    "tier"
+  ],
+  "title": "GateRunIn",
+  "type": "object"
+}
