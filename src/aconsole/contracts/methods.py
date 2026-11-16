@@ -185,7 +185,8 @@ METHODS: tuple[Method, ...] = (
         name="plan/setNodeStatus",
         params="SetNodeStatusParams",
         result="PlanNodeView",
-        errors=("NODE_TRANSITION_INVALID", "NODE_NOT_READY", "NODE_NOT_FOUND"),
+        errors=("NODE_TRANSITION_INVALID", "NODE_NOT_READY", "NODE_NOT_FOUND",
+                "GATE_RECEIPT_REQUIRED", "GATE_RUNNER_UNAVAILABLE", "SCOPE_VIOLATION"),
     ),
     Method(
         name="knowledge/impact",

@@ -553,6 +553,12 @@ class PlanBoard:
 
     def set_node_status(self, node_id: str, status: str, note: str | None) -> PlanNodeView:
         """The user moves a node. A human holds no fence, so the node's own fence is used. A note serves as evidence."""
+        if status == "done":
+            with self._lock:
+                stored, meta = self._find_node(node_id)
+                pipeline = stored.dag.get(meta.key).pipeline
+            if pipeline:
+                _ = self._blast_node(stored, meta, check_only=True)
         with self._lock:
             stored, meta = self._find_node(node_id)
             now = self._now()
@@ -565,8 +571,6 @@ class PlanBoard:
                 )
                 view = self._decide(stored, synthetic, "unblock", note, "human")
                 return next(node for node in view.nodes if str(node.id) == node_id)
-            if stored.dag.get(meta.key).pipeline and target is NodeStatus.DONE:
-                raise DomainError(code=4018, name="GATE_RECEIPT_REQUIRED", retryable=False)
             _ = stored.dag.transition(
                 Move(
                     key=meta.key,
@@ -658,7 +662,8 @@ class PlanBoard:
                 )
                 if replay is not None:
                     return replay.id
-            if node.tab_id != actor.tab_id:
+            merged = self._review_holder(stored, meta, actor.tab_id, fence)
+            if node.tab_id != actor.tab_id and not merged:
                 _stop("LEASE_HELD", "only the active executor may escalate this node")
             try:
                 _ = stored.dag.transition(
@@ -667,7 +672,7 @@ class PlanBoard:
                         to=NodeStatus.BLOCKED,
                         role=Role.AGENT,
                         at=self._now(),
-                        fence=fence,
+                        fence=None if merged else fence,
                         tab_id=actor.tab_id,
                         note=reason,
                     )
@@ -678,9 +683,7 @@ class PlanBoard:
             self._commit(stored, attention=entry)
             return entry.id
 
-    def _attention(
-        self, stored: _Stored, meta: _Meta, tab_id: str, kind: str, reason: str
-    ) -> StoredPlanChange:
+    def _attention(self, stored: _Stored, meta: _Meta, tab_id: str, kind: str, reason: str) -> StoredPlanChange:
         return StoredPlanChange(
             id=uuid4().hex[:26],
             plan_id=stored.plan_id,
@@ -736,23 +739,29 @@ class PlanBoard:
                 self._commit(stored)
             except _ToolError as exc:
                 raise StoreWriteError(str(exc)) from exc
-            if attention and self.on_attention is not None:
-                self.on_attention(stored.plan_id, meta.node_id, "verify", "Merged pipeline node requires a blast gate")
+        if attention:
+            try:
+                _ = self._blast_node(stored, meta, check_only=False)
+            except (DomainError, _ToolError, GateRunnerUnavailableError) as exc:
+                _LOG.info("merged node %s awaits a blast gate: %s", meta.node_id, exc)
+            if self.on_attention is not None:
+                self.on_attention(stored.plan_id, meta.node_id, "verify", "Merged pipeline node requires review")
 
     def use_attempts(self, attempts: AttemptDatabase) -> None:
         self._attempts = attempts
 
-    def contract(self, actor: PipelineActor, node_id: str, fence: int) -> PipelineContract:
+    def contract(self, actor: PipelineActor, node_id: str, fence: int, *, review: bool = False) -> PipelineContract:
         ctx = _actor_context(actor)
         with self._lock:
             stored, meta = self._node(ctx, node_id)
             current = stored.dag.get(meta.key)
             if current.status is NodeStatus.BLOCKED and current.note == "ATTEMPTS_EXHAUSTED":
                 _stop("ATTEMPTS_EXHAUSTED", "the durable retry budget is exhausted")
-            if current.tab_id != actor.tab_id:
+            merged = review and self._review_holder(stored, meta, actor.tab_id, fence)
+            if current.tab_id != actor.tab_id and not merged:
                 _stop("LEASE_HELD", "the active lease belongs to another tab")
             try:
-                node = stored.dag.heartbeat(meta.key, fence=fence, at=self._now())
+                node = current if merged else stored.dag.heartbeat(meta.key, fence=fence, at=self._now())
             except DomainError as exc:
                 _domain(exc)
             if (
@@ -795,9 +804,35 @@ class PlanBoard:
                 gates_sha256=stored.topology.gates_sha256 or "",
             )
 
-    def scope(self, actor: PipelineActor, node_id: str, fence: int) -> None:
-        _ = self.contract(actor, node_id, fence)
-        self.assert_scope(_actor_context(actor), node_id)
+    def _review_holder(self, stored: _Stored, meta: _Meta, tab_id: str, fence: int) -> bool:
+        node = stored.dag.get(meta.key)
+        history = () if self._attempts is None else self._attempts.attempts(meta.node_id)
+        return (
+            node.pipeline
+            and node.status is NodeStatus.VERIFYING
+            and node.lease_id is None
+            and node.fence == fence
+            and bool(history)
+            and history[-1].tab_id == tab_id
+        )
+
+    def _blast_node(self, stored: _Stored, meta: _Meta, *, check_only: bool) -> dict[str, object]:
+        history = () if self._attempts is None else self._attempts.attempts(meta.node_id)
+        if not history or not history[-1].tab_id or self.pipeline_actor is None or self.pipeline is None:
+            raise DomainError(code=4018, name="GATE_RECEIPT_REQUIRED", retryable=False)
+        actor = self.pipeline_actor(history[-1].tab_id)
+        if actor.project_id != stored.project_id:
+            raise DomainError(code=4013, name="NODE_CONTRACT", retryable=False)
+        try:
+            return self.pipeline.blast_gate(actor, meta.node_id, stored.dag.get(meta.key).fence, check_only=check_only)
+        except _ToolError as exc:
+            raise DomainError(code=4018, name="GATE_RECEIPT_REQUIRED", retryable=False) from exc
+        except GateRunnerUnavailableError as exc:
+            raise DomainError(code=5010, name="GATE_RUNNER_UNAVAILABLE", retryable=True) from exc
+
+    def scope(self, actor: PipelineActor, node_id: str, fence: int, *, review: bool = False) -> None:
+        _ = self.contract(actor, node_id, fence, review=review)
+        self.assert_scope(_actor_context(actor), node_id, review=review)
 
     def exhausted(self, actor: PipelineActor, node_id: str, fence: int) -> None:
         _ = self.escalate(actor, node_id, fence, "attempts", "ATTEMPTS_EXHAUSTED")
@@ -858,12 +893,13 @@ class PlanBoard:
                 return None
             return node.paths
 
-    def assert_scope(self, ctx: TabContext, node_id: str) -> None:
+    def assert_scope(self, ctx: TabContext, node_id: str, *, review: bool = False) -> None:
         """Delegate the submitted delta to the domain scope rule before advancing L2."""
         with self._lock:
             stored, meta = self._node(ctx, node_id)
             current = stored.dag.get(meta.key)
-            if current.tab_id != ctx.tab_id:
+            merged = review and self._review_holder(stored, meta, ctx.tab_id, current.fence)
+            if current.tab_id != ctx.tab_id and not merged:
                 _stop("LEASE_HELD", "the active lease belongs to another tab")
             self._verify_scope(ctx, stored, meta)
 
@@ -1217,6 +1253,41 @@ class PlanBoard:
                 context=self._ctx(ctx, node_id=node_id, query=None, max_items=6),
             )
 
+    def _pipeline_transition(self, ctx: TabContext, node_id: str, fence: int | None, *, status: str) -> None:
+        with self._lock:
+            stored, meta = self._node(ctx, node_id)
+            current = stored.dag.get(meta.key)
+            if not current.pipeline:
+                return
+            merged = self._review_holder(stored, meta, ctx.tab_id, current.fence)
+            if current.tab_id != ctx.tab_id and not merged:
+                _stop("LEASE_HELD", "verification belongs to the active executor")
+            if current.lease_id is not None:
+                if fence is None:
+                    _stop("LEASE_STALE_FENCE", "verification requires the active fence")
+                _ = stored.dag.heartbeat(meta.key, fence=fence, at=self._now())
+            elif fence is not None and fence != current.fence:
+                _stop("LEASE_STALE_FENCE", "the merge retained a different fence")
+            self._verify_scope(ctx, stored, meta)
+        if self.pipeline is None or self.pipeline_actor is None:
+            _stop("GATE_RECEIPT_REQUIRED", "pipeline verification is unavailable")
+        actor = self.pipeline_actor(ctx.tab_id)
+        if actor.project_id != ctx.project_id or actor.worktree != ctx.worktree:
+            _stop("NODE_CONTRACT", "pipeline actor differs from the bearer context")
+        result = self.pipeline.blast_gate(actor, node_id, current.fence, check_only=status == "done")
+        if not result["passed"]:
+            _stop("GATE_RECEIPT_REQUIRED", "the blast gate failed")
+
+    def _pipeline_update(self, ctx: TabContext, node_id: str, fence: int | None, status: str | None) -> None:
+        if status not in {"verifying", "done"}:
+            return
+        try:
+            self._pipeline_transition(ctx, node_id, fence, status=status)
+        except DomainError as exc:
+            _domain(exc)
+        except GateRunnerUnavailableError:
+            _stop("GATE_RUNNER_UNAVAILABLE", "the tab container cannot execute checks")
+
     def update(  # noqa: PLR0913, PLR0917 -- status, note, and evidence travel with the fence
         self,
         ctx: TabContext,
@@ -1227,11 +1298,15 @@ class PlanBoard:
         evidence: str | None,
     ) -> Updated:
         _require_tab(ctx)
+        self._pipeline_update(ctx, node_id, fence, status)
         with self._lock:
             stored, meta = self._node(ctx, node_id)
             now = self._now()
             current = stored.dag.get(meta.key)
-            if current.status in _HELD and current.tab_id != ctx.tab_id:
+            merged = self._review_holder(stored, meta, ctx.tab_id, current.fence)
+            if merged and fence is not None and fence != current.fence:
+                _stop("LEASE_STALE_FENCE", "the merge retained a different fence")
+            if current.status in _HELD and current.tab_id != ctx.tab_id and not merged:
                 _stop("LEASE_HELD", "the active lease belongs to another tab")
             try:
                 if status is None:
@@ -1239,13 +1314,6 @@ class PlanBoard:
                         _stop("LEASE_STALE_FENCE", "a heartbeat requires the fence from node_claim")
                     node = stored.dag.heartbeat(meta.key, fence=fence, at=now, note=note)
                 else:
-                    if current.pipeline and status == "done":
-                        _stop("GATE_RECEIPT_REQUIRED", "a fresh blast gate receipt is required")
-                    if current.pipeline and status in {"verifying", "done"}:
-                        if fence is None:
-                            _stop("LEASE_STALE_FENCE", "a scope check requires the active fence")
-                        _ = stored.dag.heartbeat(meta.key, fence=fence, at=now)
-                        self._verify_scope(ctx, stored, meta)
                     node = stored.dag.transition(
                         Move(
                             key=meta.key,
@@ -1253,18 +1321,21 @@ class PlanBoard:
                             role=Role.AGENT,
                             at=now,
                             tab_id=ctx.tab_id,
-                            fence=fence,
+                            fence=None if merged else fence,
                             note=note,
                             evidence=evidence,
                         )
                     )
             except DomainError as exc:
                 _domain(exc)
+            except GateRunnerUnavailableError:
+                _stop("GATE_RUNNER_UNAVAILABLE", "the tab container cannot execute checks")
             except ValueError:
                 _stop("NODE_TRANSITION_INVALID", f"{status} is not a node status")
             attention = (
                 self._attention(stored, meta, ctx.tab_id, "replan", note or "Node blocked")
-                if status == "blocked" and current.status is not NodeStatus.BLOCKED else None
+                if status == "blocked" and current.status is not NodeStatus.BLOCKED
+                else None
             )
             self._commit(stored, attention=attention)
             return Updated(status=node.status.value, expires_at=_optional_stamp(node.lease_expires_at))
@@ -1282,6 +1353,16 @@ class PlanBoard:
                 _ = stored.dag.heartbeat(meta.key, fence=fence, at=self._now())
             except DomainError as exc:
                 _domain(exc)
+            if kind == "commit":
+                if ctx.worktree is None:
+                    _stop("NODE_CONTRACT", "a commit requires a Git worktree")
+                try:
+                    resolved = _GIT_RUNNER.read(
+                        ctx.worktree, "rev-parse", "--verify", "--end-of-options", ref + "^{commit}"
+                    )
+                except GitCommandError:
+                    _stop("NODE_CONTRACT", "commit does not resolve in this worktree")
+                ref = resolved.text.strip()
             key = (kind, ref)
             artifact_id = meta.artifacts.get(key)
             if artifact_id is None:

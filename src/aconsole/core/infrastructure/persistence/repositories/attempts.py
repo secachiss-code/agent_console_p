@@ -24,12 +24,27 @@ class AttemptLease:
     tab_id: str
     fence: int
     at: datetime
+    allow_merged: bool = False
 
 
 def check_attempt_lease(session: Session, node_id: str, guard: AttemptLease | None) -> None:
     if guard is None:
         return
     lease = session.get(Lease, node_id)
+    if lease is None and guard.allow_merged:
+        node = session.get(PlanNode, node_id)
+        attempt = session.scalar(
+            select(NodeAttempt).where(NodeAttempt.node_id == node_id).order_by(NodeAttempt.attempt_no.desc()).limit(1)
+        )
+        if (
+            node is not None
+            and node.pipeline
+            and node.status == "verifying"
+            and node.fence_seq == guard.fence
+            and attempt is not None
+            and attempt.tab_id == guard.tab_id
+        ):
+            return
     if lease is None:
         raise DomainError(code=4008, name="LEASE_EXPIRED", retryable=False)
     if lease.tab_id != guard.tab_id or lease.fence != guard.fence:

@@ -62,7 +62,7 @@ class _Runner:
     calls: list[tuple[str, ...]] = field(default_factory=list)
 
     def run(self, argv: tuple[str, ...], *, tier: int) -> GateResult:
-        assert tier == 1
+        assert tier in {1, 2}
         if self.unavailable:
             raise GateRunnerUnavailableError
         self.calls.append(argv)
@@ -113,6 +113,7 @@ class _Harness:
             scratch=cache,
             shaper=ContextShaper(cache),
             micro=runtime.run,
+            blast=runtime.blast,
         )
         self.board.pipeline_actor = lambda _tab: self.actor
 

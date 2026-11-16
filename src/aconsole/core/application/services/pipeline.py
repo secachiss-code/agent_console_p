@@ -61,8 +61,8 @@ class Attempt:
 
 
 class PipelineBook(Protocol):
-    def contract(self, actor: PipelineActor, node_id: str, fence: int) -> PipelineContract: ...
-    def scope(self, actor: PipelineActor, node_id: str, fence: int) -> None: ...
+    def contract(self, actor: PipelineActor, node_id: str, fence: int, *, review: bool = False) -> PipelineContract: ...
+    def scope(self, actor: PipelineActor, node_id: str, fence: int, *, review: bool = False) -> None: ...
     def escalate(self, actor: PipelineActor, node_id: str, fence: int, kind: str, reason: str) -> str: ...
     def exhausted(self, actor: PipelineActor, node_id: str, fence: int) -> None: ...
 
@@ -91,6 +91,7 @@ class PipelineWorkspace(Protocol):
     def capture(self, actor: PipelineActor, contract: PipelineContract, attempt: Attempt, seq: int) -> GateState: ...
     def changed(self, actor: PipelineActor, attempt: Attempt) -> tuple[str, ...]: ...
     def tests(self, actor: PipelineActor, changed: tuple[str, ...]) -> tuple[str, ...]: ...
+    def blast_tests(self, actor: PipelineActor, attempt: Attempt) -> tuple[str, ...]: ...
     def reset(self, actor: PipelineActor, contract: PipelineContract, ref: str) -> None: ...
     def context(
         self, actor: PipelineActor, contract: PipelineContract, symbols: tuple[str, ...]
@@ -112,6 +113,8 @@ class PipelineService:
         scratch: PipelineScratch,
         shaper: ContextShaper,
         micro: Callable[[PipelineActor, PipelineContract, Attempt, MicroRequest], MicroOutcome],
+        blast: Callable[[PipelineActor, PipelineContract, Attempt, MicroRequest, bool], MicroOutcome | None]
+        | None = None,
     ) -> None:
         self._book = book
         self._store = store
@@ -119,6 +122,7 @@ class PipelineService:
         self._scratch = scratch
         self._shaper = shaper
         self._micro = micro
+        self._blast = blast
         self._guard = RLock()
         self._locks: dict[str, RLock] = {}
 
@@ -294,6 +298,8 @@ class PipelineService:
 
     def gate_run(self, actor: PipelineActor, node_id: str, fence: int, tier: str) -> dict[str, object]:
         _execute(actor)
+        if tier == "blast":
+            return self.blast_gate(actor, node_id, fence)
         if tier != "micro":
             raise DomainError(code=4018, name="GATE_RECEIPT_REQUIRED", retryable=False)
         with self._lock(node_id):
@@ -307,6 +313,47 @@ class PipelineService:
                     raise DomainError(code=4018, name="GATE_RECEIPT_REQUIRED", retryable=False)
                 return _submitted(previous, state)
             return self._submit(actor, node_id, fence, "verify", ())
+
+    def blast_gate(
+        self, actor: PipelineActor, node_id: str, fence: int, *, check_only: bool = False
+    ) -> dict[str, object]:
+        _execute(actor)
+        with self._lock(node_id):
+            contract = self._book.contract(actor, node_id, fence, review=True)
+            history = self._store.history(node_id)
+            if self._blast is None or not history:
+                raise DomainError(code=4018, name="GATE_RECEIPT_REQUIRED", retryable=False)
+            attempt = history[-1]
+            state = self._state(contract, attempt)
+            if state.step is not None:
+                name, code = ("GATE_RECEIPT_REQUIRED", 4018) if check_only else ("STEP_OUT_OF_ORDER", 4017)
+                raise DomainError(code=code, name=name, retryable=False)
+            self._book.scope(actor, node_id, fence, review=True)
+            blocks = self._store.blocks(attempt.id)
+            current = self._workspace.capture(actor, contract, attempt, blocks[-1].seq)
+            if self._store.receipt_state(blocks[-1].verification_receipt_hash or "") != current.state_hash:
+                raise DomainError(code=4018, name="GATE_RECEIPT_REQUIRED", retryable=False)
+            request = MicroRequest(
+                node_id=node_id,
+                contract_hash=contract.module.contract_sha256,
+                gates_hash=contract.gates_sha256,
+                pipeline=state,
+                changed_files=(),
+                test_files=self._workspace.blast_tests(actor, attempt),
+            )
+            outcome = self._blast(actor, contract, attempt, request, check_only or attempt.status == "passed")
+            if outcome is None or (check_only and not outcome.receipt.passed):
+                raise DomainError(code=4018, name="GATE_RECEIPT_REQUIRED", retryable=False)
+            if outcome.exhausted:
+                self._book.exhausted(actor, node_id, fence)
+            return {
+                "passed": outcome.receipt.passed,
+                "receipt_hash": outcome.receipt.receipt_hash,
+                "state_hash": outcome.receipt.state.state_hash,
+                "cached": outcome.cached,
+                "exhausted": outcome.exhausted,
+                "verdict": outcome.receipt.compact_verdict,
+            }
 
     def _active(self, actor: PipelineActor, node_id: str, fence: int) -> tuple[PipelineContract, Attempt]:
         contract = self._book.contract(actor, node_id, fence)

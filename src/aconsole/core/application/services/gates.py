@@ -2,6 +2,7 @@
 
 import hashlib
 import json
+import shlex
 from collections.abc import Callable
 from dataclasses import dataclass, replace
 from pathlib import PurePosixPath
@@ -159,6 +160,97 @@ class MicroGate:
         # Include contract/profile/attempt identity so a retry cannot reuse a stale failure.
         self._cache.put(_cache_key(request, checked, argv_hash), _MICRO, outcome)
         return outcome
+
+
+@dataclass(frozen=True, kw_only=True)
+class BlastProfile:
+    test_cmd: str
+    tests: tuple[str, ...]
+
+    def argv_hash(self, test_files: tuple[str, ...]) -> str:
+        return _digest(("blast", self.commands(test_files)))
+
+    def commands(self, test_files: tuple[str, ...]) -> tuple[tuple[str, ...], ...]:
+        try:
+            primary = tuple(shlex.split(self.test_cmd))
+        except ValueError as exc:
+            raise DomainError(code=4013, name="NODE_CONTRACT", retryable=False) from exc
+        if not primary or not self.tests or any("\x00" in arg for arg in (*primary, *self.tests)):
+            raise DomainError(code=4013, name="NODE_CONTRACT", retryable=False)
+        # Preserve the CTE's depth priority while validating paths independently.
+        _ = _paths(test_files)
+        tests = tuple(dict.fromkeys(test_files))[:30]
+        return (primary, (*self.tests, *tests)) if tests else (primary,)
+
+
+@final
+class BlastGate:
+    def __init__(
+        self,
+        *,
+        bind_runner: Callable[[tuple[tuple[str, ...], ...]], GateRunner],
+        capture: Callable[[], GateState],
+        cache: GateCache,
+        audit: GateAudit,
+    ) -> None:
+        self._bind_runner, self._capture, self._cache, self._audit = bind_runner, capture, cache, audit
+
+    def run(self, request: MicroRequest, profile: BlastProfile, *, check_only: bool = False) -> MicroOutcome | None:
+        if request.pipeline.step is not None:
+            raise DomainError(code=4017, name="STEP_OUT_OF_ORDER", retryable=False)
+        commands = profile.commands(request.test_files)
+        argv_hash = profile.argv_hash(request.test_files)
+        initial = self._capture()
+        key = _cache_key(request, initial, argv_hash)
+        cached = self._cache.get(key, "blast")
+        if cached is not None:
+            return replace(cached, cached=True)
+        if check_only:
+            return None
+        runner = self._bind_runner(commands)
+        results: list[GateResult] = []
+        for argv in commands:
+            result = runner.run(argv, tier=2)
+            results.append(result)
+            if result.returncode != 0 or result.timed_out:
+                break
+        checked = self._capture()
+        unchanged = initial.state_hash == checked.state_hash
+        passed = unchanged and all(result.returncode == 0 and not result.timed_out for result in results)
+        items = tuple(
+            _failure(result)[:_MAX_ITEM_CHARS] for result in results if result.returncode != 0 or result.timed_out
+        )
+        if not unchanged:
+            items = (*items, "Workspace changed during the blast gate")
+        verdict = f"{sum(result.returncode == 0 for result in results)} passed, {len(items)} failed"
+        if items:
+            verdict += "\n" + "\n".join(items)
+        receipt = MicroReceipt(
+            node_id=request.node_id,
+            state=initial,
+            argv_sha256=argv_hash,
+            passed=passed,
+            compact_verdict=verdict[:_MAX_VERDICT],
+            remaining_items=items[:_MAX_ITEMS],
+            results=tuple(results),
+        )
+        state, exhausted = _blast_retry(request.pipeline, passed=passed)
+        outcome = MicroOutcome(receipt=receipt, pipeline=state, exhausted=exhausted)
+        self._audit.record(request, outcome)
+        # A moving workspace cannot cache a green result under its new content.
+        self._cache.put(key, "blast", outcome)
+        return outcome
+
+
+def _blast_retry(state: PipelineState, *, passed: bool) -> tuple[PipelineState, bool]:
+    if passed:
+        return state, False
+    try:
+        return retry(state), False
+    except DomainError as exc:
+        if exc.name != "ATTEMPTS_EXHAUSTED":
+            raise
+        return state, True
 
 
 def _paths(paths: tuple[str, ...]) -> tuple[str, ...]:

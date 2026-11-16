@@ -11,11 +11,14 @@ from uuid import uuid4
 
 import msgspec
 from pydantic import TypeAdapter
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from aconsole.core.application.ports.gate_runner import GateRunner
 from aconsole.core.application.services.context_shaper import ContextShaper, DirectionContext
 from aconsole.core.application.services.gates import (
+    BlastGate,
+    BlastProfile,
     GateState,
     MicroGate,
     MicroOutcome,
@@ -283,6 +286,26 @@ class PipelineGit:
                 )
         return tuple(sorted(paths))[:3]
 
+    def blast_tests(self, actor: PipelineActor, attempt: Attempt) -> tuple[str, ...]:
+        graph = self.graph.graph(actor.project_id)
+        names = {node.id: node.path for node in graph.nodes}
+        # The nearest dependent tests run first; cap only after combining all changed roots.
+        distances: dict[str, int] = {}
+        for path in GitDiff().changed_paths(actor.worktree, attempt.base_oid):
+            if path.startswith("tests/") and path.endswith(".py"):
+                distances[path] = 0
+            impact = persistent_impact(self.graph, actor.project_id, path, 3, 10000, None)
+            if impact is None:
+                continue
+            if impact[1]:
+                raise DomainError(code=4013, name="NODE_CONTRACT", retryable=False)
+            for depth, layer in enumerate(impact[0], 1):
+                for module in layer:
+                    candidate = names[module]
+                    if candidate.startswith("tests/") and candidate.endswith(".py"):
+                        distances[candidate] = min(distances.get(candidate, depth), depth)
+        return tuple(sorted(distances, key=lambda path: (distances[path], path)))[:30]
+
     def reset(self, actor: PipelineActor, contract: PipelineContract, ref: str) -> None:
         saved = set(self.git.read(actor.worktree, "ls-tree", "-r", "--name-only", "-z", ref).text.split("\0")) - {""}
         current = set(self._paths(actor))
@@ -386,24 +409,81 @@ class MicroRuntime:
         )
         return gate.run(request, contract.profile)
 
+    def blast(
+        self,
+        actor: PipelineActor,
+        contract: PipelineContract,
+        attempt: Attempt,
+        request: MicroRequest,
+        check_only: bool,  # noqa: FBT001 -- callback port includes a read-only probe flag
+    ) -> MicroOutcome | None:
+        profile = BlastProfile(test_cmd=contract.module.test_cmd or "", tests=contract.profile.tests)
+
+        def capture() -> GateState:
+            return self.workspace.capture(actor, contract, attempt, request.pipeline.seq)
+
+        gate = BlastGate(
+            bind_runner=lambda commands: self.runner(actor, commands),
+            capture=capture,
+            cache=_MicroCache(
+                self.cache.cache, self.storage, request, capture, argv_hash=profile.argv_hash(request.test_files)
+            ),
+            audit=_MicroAudit(self.storage, attempt, actor, contract, tier="blast"),
+        )
+        outcome = gate.run(request, profile, check_only=check_only)
+        if outcome is not None and outcome.cached and outcome.receipt.passed and attempt.status == "running":
+            _MicroAudit(self.storage, attempt, actor, contract, tier="blast").record(request, outcome)
+        return outcome
+
 
 @final
 class _MicroCache:
     def __init__(
-        self, cache: CacheStore, storage: PipelineStorage, request: MicroRequest, capture: Callable[[], GateState]
+        self,
+        cache: CacheStore,
+        storage: PipelineStorage,
+        request: MicroRequest,
+        capture: Callable[[], GateState],
+        *,
+        argv_hash: str | None = None,
     ) -> None:
         self.cache, self.storage, self.request, self.capture = cache, storage, request, capture
+        self.argv_hash = argv_hash
 
     def get(self, state_hash: str, tier: str) -> MicroOutcome | None:
         row = self.cache.get(verification_gate_cache, {"state_hash": state_hash, "tier": tier})
-        if row is None:
-            return None
-        receipt_id: object = row["receipt_hash"]  # pyright: ignore[reportAny] -- validated SQL row boundary
-        receipt = self.storage.database.receipt(receipt_id) if isinstance(receipt_id, str) else None
-        if receipt is None:
+        if row is None and tier != "blast":
             return None
         state = self.capture()
-        if receipt.state_hash != state.state_hash:
+        receipt_id: object = None if row is None else row["receipt_hash"]
+        receipt = self.storage.database.receipt(receipt_id) if isinstance(receipt_id, str) else None
+        if receipt is None and tier == "blast" and self.argv_hash is not None:
+
+            def read(session: Session) -> GateReceipt | None:
+                found = session.scalar(
+                    select(GateReceipt)
+                    .where(
+                        GateReceipt.node_id == self.request.node_id,
+                        GateReceipt.tier == tier,
+                        GateReceipt.state_hash == state.state_hash,
+                        GateReceipt.argv_sha256 == self.argv_hash,
+                        GateReceipt.passed.is_(True),
+                    )
+                    .order_by(GateReceipt.created_at.desc())
+                    .limit(1)
+                )
+                if found is not None:
+                    session.expunge(found)
+                return found
+
+            loaded = self.storage.writer.call(read)
+            receipt = loaded if isinstance(loaded, GateReceipt) else None
+        if (
+            receipt is None
+            or receipt.node_id != self.request.node_id
+            or receipt.tier != tier
+            or receipt.state_hash != state.state_hash
+        ):
             return None
         micro = MicroReceipt(
             node_id=receipt.node_id,
@@ -442,23 +522,34 @@ class _MicroCache:
 @final
 class _MicroAudit:
     def __init__(
-        self, storage: PipelineStorage, attempt: Attempt, actor: PipelineActor, contract: PipelineContract
+        self,
+        storage: PipelineStorage,
+        attempt: Attempt,
+        actor: PipelineActor,
+        contract: PipelineContract,
+        *,
+        tier: str = "micro",
     ) -> None:
         self.storage, self.attempt = storage, attempt
         self.actor, self.contract = actor, contract
+        self.tier = tier
 
     def record(self, request: MicroRequest, outcome: MicroOutcome) -> None:
         receipt = outcome.receipt
         results = receipt.results
 
         def write(session: Session) -> None:
-            check_attempt_lease(session, request.node_id, self.storage.lease(self.actor, self.contract))
+            check_attempt_lease(
+                session,
+                request.node_id,
+                replace(self.storage.lease(self.actor, self.contract), allow_merged=self.tier == "blast"),
+            )
             if session.get(GateReceipt, receipt.receipt_hash) is None:
                 session.add(
                     GateReceipt(
                         receipt_hash=receipt.receipt_hash,
                         node_id=request.node_id,
-                        tier="micro",
+                        tier=self.tier,
                         state_hash=receipt.state.state_hash,
                         argv_sha256=receipt.argv_sha256,
                         exit_code=next((result.returncode for result in results if result.returncode), 0),
@@ -469,12 +560,12 @@ class _MicroAudit:
                         created_at=datetime.now(UTC),
                     )
                 )
-            if not receipt.passed:
+            if not receipt.passed or self.tier == "blast":
                 attempt = session.get(NodeAttempt, self.attempt.id)
                 if attempt is None or attempt.status != "running":
                     message = "gate failure has no running attempt"
                     raise ValueError(message)
-                attempt.status = "failed"
+                attempt.status = "passed" if receipt.passed else "failed"
                 attempt.finished_at = datetime.now(UTC)
                 attempt.compact_verdict = receipt.compact_verdict
 
@@ -503,7 +594,13 @@ def build_pipeline(
     runtime = MicroRuntime(storage, scratch, workspace, runner)
     workspace.versions = runtime.versions
     return PipelineService(
-        book=book, store=storage, workspace=workspace, scratch=scratch, shaper=ContextShaper(scratch), micro=runtime.run
+        book=book,
+        store=storage,
+        workspace=workspace,
+        scratch=scratch,
+        shaper=ContextShaper(scratch),
+        micro=runtime.run,
+        blast=runtime.blast,
     ), cache
 
 

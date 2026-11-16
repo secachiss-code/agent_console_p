@@ -41,6 +41,7 @@ SPEC: dict[NodeStatus, dict[NodeStatus, str]] = {
         NodeStatus.CANCELLED: HUMAN,
     },
     NodeStatus.VERIFYING: {
+        NodeStatus.BLOCKED: NOTE,
         NodeStatus.IN_PROGRESS: BOTH,
         NodeStatus.DONE: HUMAN,
         NodeStatus.PENDING: HUMAN,
