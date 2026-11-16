@@ -309,14 +309,16 @@ def _register(  # noqa: C901 -- one nested function per MCP tool
     def plan_get(
         plan_id: _Id, response_format: Literal["concise", "detailed"] = "concise", since: _Id | None = None
     ) -> PlanGot:
-        """Read one plan. Detailed adds dependencies, objective, acceptance, paths, and the lease.
+        """Read phase, node pipeline mode and contract hashes.
+
+        Detailed adds dependencies, objective, acceptance, paths, and the lease.
 
         Pass the revision of your last read as since to get only the nodes that changed (changed_only is true).
         """
         return board.get(active(context), plan_id, detailed=response_format == "detailed", since=since)
 
     def plan_ready(plan_id: _Id | None = None, limit: Annotated[int, Field(ge=1, le=20)] = 5) -> PlanReady:
-        """Claimable nodes, highest priority first."""
+        """Claimable nodes, highest priority first. Pipeline nodes require a frozen contract."""
         return board.ready(active(context), plan_id, limit)
 
     def node_claim(node_id: _Id) -> Claimed:

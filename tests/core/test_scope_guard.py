@@ -25,6 +25,7 @@ from aconsole.core.infrastructure.persistence.models import NodeAttempt, Project
 from aconsole.core.infrastructure.persistence.repositories.attempts import AttemptDatabase
 from aconsole.core.infrastructure.persistence.repositories.plans import PlanDatabase
 from aconsole.core.infrastructure.persistence.writer import Writer
+from tests.gate_profiles import MICRO_PROFILE
 
 
 @pytest.mark.parametrize(
@@ -227,11 +228,14 @@ def scope_board(tmp_path: Path) -> Iterator[ScopeBoard]:
         "Scope preview",
         "Check wiring",
         [
-            NodeIn(key="D-0", title="Direction", objective="Scope", level=0, paths=["src/**", "tests/**"]),
-            NodeIn(key="C-1", title="Contract", objective="Change", parent="D-0", pipeline=True, paths=["src/in.py"]),
+            NodeIn(key="D-0", title="Direction", objective="Scope", level=0, paths=["src/**", "tests/**"],
+                   invariants="scope held", gate_profile=MICRO_PROFILE),
+            NodeIn(key="C-1", title="Contract", objective="Change", parent="D-0", pipeline=True,
+                   paths=["src/in.py"], acceptance=["scope held"], test_cmd="pytest"),
         ],
     )
     node = created.nodes[1].node_id
+    board.freeze(created.plan_id, {}, graph_present=False)
     claim = board.claim(ctx, node)
     history.start(NodeAttempt(id="a", node_id=node, attempt_no=1, status="running", base_oid=base, started_at=_AT))
     try:

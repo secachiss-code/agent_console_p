@@ -20,6 +20,7 @@ from aconsole.core.infrastructure.persistence.repositories import plans as plans
 from aconsole.core.infrastructure.persistence.repositories.plans import PlanDatabase
 from aconsole.core.infrastructure.persistence.writer import Writer
 from tests.core.test_wire import _connect, _daemon, _git_repo, _stop
+from tests.gate_profiles import MICRO_PROFILE
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -125,7 +126,7 @@ def test_hdag_contract_and_readiness_survive_restart(tmp_path: Path) -> None:
                     level=0,
                     paths=["src/**"],
                     invariants="Pure domain",
-                    gate_profile={"tier3": ["pytest"]},
+                    gate_profile={**MICRO_PROFILE, "tier3": ["pytest"]},
                 ),
                 NodeIn(
                     key="CORE-1",
@@ -139,6 +140,8 @@ def test_hdag_contract_and_readiness_survive_restart(tmp_path: Path) -> None:
                 ),
             ],
         )
+        assert board.ready(ctx, created.plan_id, 10).nodes == []
+        board.freeze(created.plan_id, {}, graph_present=False)
         assert [node.key for node in board.ready(ctx, created.plan_id, 10).nodes] == ["CORE-1"]
 
         fresh = PlanBoard()
@@ -149,11 +152,11 @@ def test_hdag_contract_and_readiness_survive_restart(tmp_path: Path) -> None:
         module = next(node for node in stored.nodes if node.key == "CORE-1")
         assert direction.level == 0
         assert direction.invariants == "Pure domain"
-        assert direction.gate_profile == {"tier3": ["pytest"]}
+        assert direction.gate_profile == {**MICRO_PROFILE, "tier3": ["pytest"]}
         assert module.pipeline is True
         assert module.parent == "CORE-0"
 
-        with pytest.raises(tools._ToolError, match="NODE_CONTRACT"):
+        with pytest.raises(tools._ToolError, match="PLAN_FROZEN"):
             fresh.add_nodes(
                 ctx,
                 created.plan_id,

@@ -24,6 +24,7 @@ from aconsole.core.infrastructure.mcp.tools import NodeIn, PlanBoard, TabContext
 from aconsole.core.infrastructure.persistence.models import PlanInbox
 from aconsole.core.infrastructure.persistence.repositories.plans import PlanDatabase
 from tests.core.test_wire import _connect, _daemon, _git_repo, _stop
+from tests.gate_profiles import MICRO_PROFILE
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -56,7 +57,7 @@ def test_human_freeze_change_and_restart_keep_topology(  # noqa: PLR0915 -- one 
                 level=0,
                 paths=["**"],
                 invariants="pure",
-                gate_profile={"tests": ["pytest"]},
+                gate_profile=MICRO_PROFILE,
             )
         ]
         nodes.extend(

@@ -10,7 +10,6 @@ from typing import Literal, final
 from uuid import uuid4
 
 import msgspec
-from pydantic import TypeAdapter
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -34,6 +33,7 @@ from aconsole.core.application.services.pipeline import (
     PipelineService,
 )
 from aconsole.core.domain.errors import DomainError
+from aconsole.core.domain.gate_profile import micro_commands
 from aconsole.core.domain.pipeline import PipelineState, StateBlock, genesis_hash, retry
 from aconsole.core.domain.scope import check_scope
 from aconsole.core.infrastructure.codegraph.index import CodeGraphIndex
@@ -60,22 +60,8 @@ from aconsole.core.infrastructure.persistence.writer import Writer
 _MODULE_ARGV_LENGTH = 3
 
 
-def micro_profile(profile: Mapping[str, object]) -> MicroProfile:
-    try:
-        raw = TypeAdapter(dict[str, object]).validate_python(profile.get("micro", profile))
-    except ValueError as exc:
-        raise DomainError(code=4013, name="NODE_CONTRACT", retryable=False) from exc
-    return MicroProfile(**{key: _argv(raw.get(key)) for key in ("format", "fix", "lint", "types", "tests")})
-
-
-def _argv(raw: object) -> tuple[str, ...]:
-    try:
-        argv = TypeAdapter(tuple[str, ...]).validate_python(raw)
-    except ValueError as exc:
-        raise DomainError(code=4013, name="NODE_CONTRACT", retryable=False) from exc
-    if not argv or any(not arg or "\x00" in arg for arg in argv):
-        raise DomainError(code=4013, name="NODE_CONTRACT", retryable=False)
-    return argv
+def micro_profile(profile: Mapping[str, object], *, location: str = "gate_profile") -> MicroProfile:
+    return MicroProfile(**micro_commands(profile, location=location))
 
 
 @final

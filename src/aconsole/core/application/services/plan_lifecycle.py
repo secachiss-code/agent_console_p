@@ -8,6 +8,7 @@ from typing import Protocol
 
 from aconsole.core.application.ports.plan_store import StoredNode, StoredPlan, StoredPlanChange
 from aconsole.core.domain.errors import DomainError
+from aconsole.core.domain.gate_profile import micro_commands
 from aconsole.core.domain.plan_admission import AppliedChange, PlanTopology, TopologyContract, validate_contract
 from aconsole.core.domain.vault_sync import Note, resolve_ref
 
@@ -104,6 +105,7 @@ def apply_plan_change(  # noqa: PLR0913 -- staged graph, decision proof and code
     radius: Callable[[StoredPlan], tuple[dict[str, tuple[str, ...] | None], bool]],
 ) -> StoredPlan:
     """Bind newly approved contracts to their frozen hashes and code radius."""
+    _validate_gate_profiles(inserted)
     topology = apply_topology(before, change, offered, proof_receipt)
     radii, graph_present = radius(inserted)
     hashes = dict(topology.contract_hashes)
@@ -126,6 +128,7 @@ def freeze_plan(
     at: datetime,
     graph_present: bool,
 ) -> StoredPlan:
+    _validate_gate_profiles(plan)
     topology = topology_for(plan)
     if topology.phase == "frozen":
         return plan
@@ -159,3 +162,13 @@ def freeze_plan(
             for node in plan.nodes
         ),
     )
+
+
+def _validate_gate_profiles(plan: StoredPlan) -> None:
+    parents = {node.key: node for node in plan.nodes}
+    checked: set[str] = set()
+    for node in plan.nodes:
+        if node.pipeline and node.parent in parents and node.parent not in checked:
+            parent = parents[node.parent]
+            _ = micro_commands(parent.gate_profile or {}, location=f"{parent.key}.gate_profile")
+            checked.add(parent.key)

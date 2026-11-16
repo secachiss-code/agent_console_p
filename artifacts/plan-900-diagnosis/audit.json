@@ -1,0 +1,635 @@
+{
+  "plan": {
+    "id": "plan-900",
+    "phase": "frozen",
+    "revision_no": 2,
+    "frozen_at": "2026-11-16T19:26:57.985590+00:00"
+  },
+  "nodes": [
+    {
+      "id": "node-901",
+      "node_key": "IDX-0",
+      "status": "pending",
+      "level": 0,
+      "pipeline": 0,
+      "contract_sha256": "836b1cce5a70ef594319ef12ef1b86eaf1f93027d524b6b8f8a405840f149fde",
+      "test_cmd": null,
+      "gate_profile": "{\"direction\": [[\".venv-core/bin/python\", \"-m\", \"pytest\", \"-q\"]], \"environment\": {\"container\": \"devtools\", \"image\": \"sha256:0000000000000000000000000000000000000000000000000000000000000000\"}}"
+    },
+    {
+      "id": "node-902",
+      "node_key": "IDX-1",
+      "status": "pending",
+      "level": 1,
+      "pipeline": 1,
+      "contract_sha256": "a481ea50bfea85c8ff045e6ab2dc44ceaa830db411b2ab6e7007e997c87cc25d",
+      "test_cmd": ".venv-core/bin/python -m pytest tests/core/test_code_index_cache.py tests/core/test_codegraph_protocol.py -q",
+      "gate_profile": null
+    },
+    {
+      "id": "node-903",
+      "node_key": "IDX-2",
+      "status": "pending",
+      "level": 1,
+      "pipeline": 1,
+      "contract_sha256": "6ab1f8b678f2304f0c78da44ed5f02a0de0916e512136d47fbed6561d9f988a2",
+      "test_cmd": ".venv-core/bin/python -m pytest tests/core/test_code_graph_store.py tests/core/test_merge_migrations.py -q",
+      "gate_profile": null
+    },
+    {
+      "id": "node-904",
+      "node_key": "IDX-3",
+      "status": "pending",
+      "level": 1,
+      "pipeline": 1,
+      "contract_sha256": "938fd5b72261fa9ab6895b4aa36cf163d9e05becf96cd26141f36ffcdcbc593c",
+      "test_cmd": ".venv-core/bin/python -m pytest tests/core/test_codegraph_rust.py tests/hostrun/test_rust_metadata.py -q",
+      "gate_profile": null
+    },
+    {
+      "id": "node-905",
+      "node_key": "IDX-4",
+      "status": "pending",
+      "level": 1,
+      "pipeline": 1,
+      "contract_sha256": "c7957ac9914fd1cfd35208dd9b1f99fe6b03fef72f93650d801ef2d11d5a482c",
+      "test_cmd": ".venv-core/bin/python -m pytest tests/hostrun/test_csharp_info.py -q",
+      "gate_profile": null
+    },
+    {
+      "id": "node-906",
+      "node_key": "IDX-5",
+      "status": "pending",
+      "level": 1,
+      "pipeline": 1,
+      "contract_sha256": "e7796524c1abf391fbcdba9e0750b8b8f05747b7d7a4bac18b9d779a787cccdc",
+      "test_cmd": ".venv-core/bin/python -m pytest tests/core/test_codegraph_py_ts.py tests/hostrun/test_actions.py -q",
+      "gate_profile": null
+    },
+    {
+      "id": "node-907",
+      "node_key": "LOD-0",
+      "status": "pending",
+      "level": 0,
+      "pipeline": 0,
+      "contract_sha256": "c64060e23b36fe56fd2091b6d9d8236a0bea230d5309435199557db7b3d6c540",
+      "test_cmd": null,
+      "gate_profile": "{\"direction\": [[\".venv-core/bin/python\", \"-m\", \"pytest\", \"-q\"]], \"environment\": {\"container\": \"devtools\", \"image\": \"sha256:0000000000000000000000000000000000000000000000000000000000000000\"}}"
+    },
+    {
+      "id": "node-908",
+      "node_key": "LOD-1",
+      "status": "pending",
+      "level": 1,
+      "pipeline": 1,
+      "contract_sha256": "60b3ab3587e4580e3ae496d15f3c99bbc2d649431e7b375a89f8dd979e246c30",
+      "test_cmd": ".venv-core/bin/python -m pytest tests/core/application/test_context_shaper.py tests/core/test_code_impact.py -q",
+      "gate_profile": null
+    },
+    {
+      "id": "node-909",
+      "node_key": "LOD-2",
+      "status": "pending",
+      "level": 1,
+      "pipeline": 1,
+      "contract_sha256": "5b56300898308312b94b7d7c15126a4b0302c225f87fe0313ba6881ed836459e",
+      "test_cmd": ".venv-core/bin/python -m pytest tests/core/test_cache_db.py -q",
+      "gate_profile": null
+    },
+    {
+      "id": "node-910",
+      "node_key": "LOD-3",
+      "status": "pending",
+      "level": 1,
+      "pipeline": 1,
+      "contract_sha256": "4eebb9b644f0cb84b01aa47c557de655fe9274632057093afb599dbdfb1ec201",
+      "test_cmd": ".venv-core/bin/python -m pytest tests/core/application/test_context_shaper.py -q",
+      "gate_profile": null
+    },
+    {
+      "id": "node-911",
+      "node_key": "VLT-0",
+      "status": "pending",
+      "level": 0,
+      "pipeline": 0,
+      "contract_sha256": "d45675ea3f514674c5d16119c88312726f859bb40cb77d992c33e12a93013bfd",
+      "test_cmd": null,
+      "gate_profile": "{\"direction\": [[\".venv-core/bin/python\", \"-m\", \"pytest\", \"-q\"]], \"environment\": {\"container\": \"devtools\", \"image\": \"sha256:0000000000000000000000000000000000000000000000000000000000000000\"}}"
+    },
+    {
+      "id": "node-912",
+      "node_key": "VLT-1",
+      "status": "pending",
+      "level": 1,
+      "pipeline": 1,
+      "contract_sha256": "73b74a1e11410798245bcf533943e9da0d1912eedb66e61c6e9741361c479fee",
+      "test_cmd": ".venv-core/bin/python -m pytest tests/core/test_vault_writer.py tests/core/test_vault_wire.py -q",
+      "gate_profile": null
+    },
+    {
+      "id": "node-913",
+      "node_key": "VLT-2",
+      "status": "pending",
+      "level": 1,
+      "pipeline": 1,
+      "contract_sha256": "c6b56eef1eb06be98bb75c8082663182e636d293ec92b80a11664fe2a9afad3a",
+      "test_cmd": ".venv-core/bin/python -m pytest tests/core/test_vault_writer.py -q",
+      "gate_profile": null
+    },
+    {
+      "id": "node-914",
+      "node_key": "VLT-3",
+      "status": "pending",
+      "level": 1,
+      "pipeline": 1,
+      "contract_sha256": "69003508d04c3fbe8b9716e6fb72af8e49fe7b98587003f773654f5cc5ffc511",
+      "test_cmd": ".venv-core/bin/python -m pytest tests/core/test_vault_canvas.py -q",
+      "gate_profile": null
+    },
+    {
+      "id": "node-915",
+      "node_key": "GAT-0",
+      "status": "pending",
+      "level": 0,
+      "pipeline": 0,
+      "contract_sha256": "8a4056ee84deda9227d68f84aabcda1920782cd2570a36aaa2dacce9827a602e",
+      "test_cmd": null,
+      "gate_profile": "{\"direction\": [[\".venv-core/bin/python\", \"-m\", \"pytest\", \"-q\"]], \"environment\": {\"container\": \"devtools\", \"image\": \"sha256:0000000000000000000000000000000000000000000000000000000000000000\"}}"
+    },
+    {
+      "id": "node-916",
+      "node_key": "GAT-1",
+      "status": "pending",
+      "level": 1,
+      "pipeline": 1,
+      "contract_sha256": "2e22ec8e2cd971d2416775c9d3cb2a9a622d453ccb03d0c970f819474dc4eb77",
+      "test_cmd": ".venv-core/bin/python -m pytest tests/core/test_mcp_pipeline.py tests/core/test_gate_runner.py -q",
+      "gate_profile": null
+    },
+    {
+      "id": "node-917",
+      "node_key": "GAT-2",
+      "status": "pending",
+      "level": 1,
+      "pipeline": 1,
+      "contract_sha256": "658b6524f5dec8b8c720f989fffb249e4e773a86f1f2e00209e78a89402cae60",
+      "test_cmd": ".venv-core/bin/python -m pytest tests/core/application/test_gates_tier1.py tests/core/test_mcp_pipeline.py -q",
+      "gate_profile": null
+    },
+    {
+      "id": "node-918",
+      "node_key": "FND-0",
+      "status": "pending",
+      "level": 0,
+      "pipeline": 0,
+      "contract_sha256": "beb034e3d60552b2b00c24886f604be0526a4387fe6301dd5d007804d5958784",
+      "test_cmd": null,
+      "gate_profile": "{\"direction\": [[\".venv-core/bin/python\", \"-m\", \"pytest\", \"-q\"]], \"environment\": {\"container\": \"devtools\", \"image\": \"sha256:0000000000000000000000000000000000000000000000000000000000000000\"}}"
+    },
+    {
+      "id": "node-919",
+      "node_key": "FND-1",
+      "status": "pending",
+      "level": 1,
+      "pipeline": 1,
+      "contract_sha256": "11434ac11bb8cb0778160aa868915f44a78560c0d795b1aedeae9c62996c1182",
+      "test_cmd": ".venv-core/bin/python -m pytest tests/core/test_knowledge_store.py tests/core/test_merge_migrations.py -q",
+      "gate_profile": null
+    },
+    {
+      "id": "node-920",
+      "node_key": "FND-2",
+      "status": "pending",
+      "level": 1,
+      "pipeline": 1,
+      "contract_sha256": "1f128ec8efb7a4348da55c157c24eb392a8818e3444f1ab903a60fccfd982e3d",
+      "test_cmd": ".venv-core/bin/python -m pytest tests/core/test_mcp_knowledge_recovery.py -q",
+      "gate_profile": null
+    },
+    {
+      "id": "node-921",
+      "node_key": "MEM-0",
+      "status": "pending",
+      "level": 0,
+      "pipeline": 0,
+      "contract_sha256": "83f0e3f64ef0f5747f152eea2eea964baf358bd1353f812d8828527de7cc934f",
+      "test_cmd": null,
+      "gate_profile": "{\"direction\": [[\".venv-core/bin/python\", \"-m\", \"pytest\", \"-q\"]], \"environment\": {\"container\": \"devtools\", \"image\": \"sha256:0000000000000000000000000000000000000000000000000000000000000000\"}}"
+    },
+    {
+      "id": "node-922",
+      "node_key": "MEM-1",
+      "status": "pending",
+      "level": 1,
+      "pipeline": 1,
+      "contract_sha256": "025c6a787327832414b7f48529238d0cc2d465b06d12a2229dab0ffd23f8a4bc",
+      "test_cmd": ".venv-core/bin/python -m pytest tests/core/test_perf7_observer.py -q",
+      "gate_profile": null
+    },
+    {
+      "id": "node-923",
+      "node_key": "MEM-2",
+      "status": "pending",
+      "level": 1,
+      "pipeline": 1,
+      "contract_sha256": "e26eb144f100895f5cba659aa425ccd821b417ed20842ceee17e7ffd8c1c4aeb",
+      "test_cmd": ".venv-core/bin/python -m pytest tests/core/test_code_index_cache.py -q",
+      "gate_profile": null
+    }
+  ],
+  "profiles": [
+    {
+      "direction": "IDX-0",
+      "gate_profile": {
+        "direction": [
+          [
+            ".venv-core/bin/python",
+            "-m",
+            "pytest",
+            "-q"
+          ]
+        ],
+        "environment": {
+          "container": "devtools",
+          "image": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+        }
+      },
+      "missing_micro_commands": [
+        "format",
+        "fix",
+        "lint",
+        "types",
+        "tests"
+      ],
+      "parser_result": "NODE_CONTRACT"
+    },
+    {
+      "direction": "LOD-0",
+      "gate_profile": {
+        "direction": [
+          [
+            ".venv-core/bin/python",
+            "-m",
+            "pytest",
+            "-q"
+          ]
+        ],
+        "environment": {
+          "container": "devtools",
+          "image": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+        }
+      },
+      "missing_micro_commands": [
+        "format",
+        "fix",
+        "lint",
+        "types",
+        "tests"
+      ],
+      "parser_result": "NODE_CONTRACT"
+    },
+    {
+      "direction": "VLT-0",
+      "gate_profile": {
+        "direction": [
+          [
+            ".venv-core/bin/python",
+            "-m",
+            "pytest",
+            "-q"
+          ]
+        ],
+        "environment": {
+          "container": "devtools",
+          "image": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+        }
+      },
+      "missing_micro_commands": [
+        "format",
+        "fix",
+        "lint",
+        "types",
+        "tests"
+      ],
+      "parser_result": "NODE_CONTRACT"
+    },
+    {
+      "direction": "GAT-0",
+      "gate_profile": {
+        "direction": [
+          [
+            ".venv-core/bin/python",
+            "-m",
+            "pytest",
+            "-q"
+          ]
+        ],
+        "environment": {
+          "container": "devtools",
+          "image": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+        }
+      },
+      "missing_micro_commands": [
+        "format",
+        "fix",
+        "lint",
+        "types",
+        "tests"
+      ],
+      "parser_result": "NODE_CONTRACT"
+    },
+    {
+      "direction": "FND-0",
+      "gate_profile": {
+        "direction": [
+          [
+            ".venv-core/bin/python",
+            "-m",
+            "pytest",
+            "-q"
+          ]
+        ],
+        "environment": {
+          "container": "devtools",
+          "image": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+        }
+      },
+      "missing_micro_commands": [
+        "format",
+        "fix",
+        "lint",
+        "types",
+        "tests"
+      ],
+      "parser_result": "NODE_CONTRACT"
+    },
+    {
+      "direction": "MEM-0",
+      "gate_profile": {
+        "direction": [
+          [
+            ".venv-core/bin/python",
+            "-m",
+            "pytest",
+            "-q"
+          ]
+        ],
+        "environment": {
+          "container": "devtools",
+          "image": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+        }
+      },
+      "missing_micro_commands": [
+        "format",
+        "fix",
+        "lint",
+        "types",
+        "tests"
+      ],
+      "parser_result": "NODE_CONTRACT"
+    }
+  ],
+  "edges": [
+    {
+      "src_node_id": "node-901",
+      "dst_node_id": "node-902",
+      "kind": "parent"
+    },
+    {
+      "src_node_id": "node-901",
+      "dst_node_id": "node-903",
+      "kind": "parent"
+    },
+    {
+      "src_node_id": "node-901",
+      "dst_node_id": "node-904",
+      "kind": "parent"
+    },
+    {
+      "src_node_id": "node-901",
+      "dst_node_id": "node-905",
+      "kind": "parent"
+    },
+    {
+      "src_node_id": "node-901",
+      "dst_node_id": "node-906",
+      "kind": "parent"
+    },
+    {
+      "src_node_id": "node-902",
+      "dst_node_id": "node-901",
+      "kind": "blocks"
+    },
+    {
+      "src_node_id": "node-902",
+      "dst_node_id": "node-903",
+      "kind": "blocks"
+    },
+    {
+      "src_node_id": "node-902",
+      "dst_node_id": "node-904",
+      "kind": "blocks"
+    },
+    {
+      "src_node_id": "node-902",
+      "dst_node_id": "node-905",
+      "kind": "blocks"
+    },
+    {
+      "src_node_id": "node-902",
+      "dst_node_id": "node-906",
+      "kind": "blocks"
+    },
+    {
+      "src_node_id": "node-902",
+      "dst_node_id": "node-908",
+      "kind": "blocks"
+    },
+    {
+      "src_node_id": "node-903",
+      "dst_node_id": "node-901",
+      "kind": "blocks"
+    },
+    {
+      "src_node_id": "node-903",
+      "dst_node_id": "node-909",
+      "kind": "blocks"
+    },
+    {
+      "src_node_id": "node-904",
+      "dst_node_id": "node-901",
+      "kind": "blocks"
+    },
+    {
+      "src_node_id": "node-904",
+      "dst_node_id": "node-923",
+      "kind": "blocks"
+    },
+    {
+      "src_node_id": "node-905",
+      "dst_node_id": "node-901",
+      "kind": "blocks"
+    },
+    {
+      "src_node_id": "node-905",
+      "dst_node_id": "node-923",
+      "kind": "blocks"
+    },
+    {
+      "src_node_id": "node-906",
+      "dst_node_id": "node-901",
+      "kind": "blocks"
+    },
+    {
+      "src_node_id": "node-906",
+      "dst_node_id": "node-923",
+      "kind": "blocks"
+    },
+    {
+      "src_node_id": "node-907",
+      "dst_node_id": "node-908",
+      "kind": "parent"
+    },
+    {
+      "src_node_id": "node-907",
+      "dst_node_id": "node-909",
+      "kind": "parent"
+    },
+    {
+      "src_node_id": "node-907",
+      "dst_node_id": "node-910",
+      "kind": "parent"
+    },
+    {
+      "src_node_id": "node-908",
+      "dst_node_id": "node-907",
+      "kind": "blocks"
+    },
+    {
+      "src_node_id": "node-908",
+      "dst_node_id": "node-909",
+      "kind": "blocks"
+    },
+    {
+      "src_node_id": "node-909",
+      "dst_node_id": "node-907",
+      "kind": "blocks"
+    },
+    {
+      "src_node_id": "node-909",
+      "dst_node_id": "node-910",
+      "kind": "blocks"
+    },
+    {
+      "src_node_id": "node-910",
+      "dst_node_id": "node-907",
+      "kind": "blocks"
+    },
+    {
+      "src_node_id": "node-911",
+      "dst_node_id": "node-912",
+      "kind": "parent"
+    },
+    {
+      "src_node_id": "node-911",
+      "dst_node_id": "node-913",
+      "kind": "parent"
+    },
+    {
+      "src_node_id": "node-911",
+      "dst_node_id": "node-914",
+      "kind": "parent"
+    },
+    {
+      "src_node_id": "node-912",
+      "dst_node_id": "node-911",
+      "kind": "blocks"
+    },
+    {
+      "src_node_id": "node-912",
+      "dst_node_id": "node-913",
+      "kind": "blocks"
+    },
+    {
+      "src_node_id": "node-913",
+      "dst_node_id": "node-911",
+      "kind": "blocks"
+    },
+    {
+      "src_node_id": "node-914",
+      "dst_node_id": "node-911",
+      "kind": "blocks"
+    },
+    {
+      "src_node_id": "node-915",
+      "dst_node_id": "node-916",
+      "kind": "parent"
+    },
+    {
+      "src_node_id": "node-915",
+      "dst_node_id": "node-917",
+      "kind": "parent"
+    },
+    {
+      "src_node_id": "node-916",
+      "dst_node_id": "node-915",
+      "kind": "blocks"
+    },
+    {
+      "src_node_id": "node-916",
+      "dst_node_id": "node-917",
+      "kind": "blocks"
+    },
+    {
+      "src_node_id": "node-917",
+      "dst_node_id": "node-915",
+      "kind": "blocks"
+    },
+    {
+      "src_node_id": "node-918",
+      "dst_node_id": "node-919",
+      "kind": "parent"
+    },
+    {
+      "src_node_id": "node-918",
+      "dst_node_id": "node-920",
+      "kind": "parent"
+    },
+    {
+      "src_node_id": "node-919",
+      "dst_node_id": "node-918",
+      "kind": "blocks"
+    },
+    {
+      "src_node_id": "node-919",
+      "dst_node_id": "node-920",
+      "kind": "blocks"
+    },
+    {
+      "src_node_id": "node-920",
+      "dst_node_id": "node-918",
+      "kind": "blocks"
+    },
+    {
+      "src_node_id": "node-921",
+      "dst_node_id": "node-922",
+      "kind": "parent"
+    },
+    {
+      "src_node_id": "node-921",
+      "dst_node_id": "node-923",
+      "kind": "parent"
+    },
+    {
+      "src_node_id": "node-922",
+      "dst_node_id": "node-921",
+      "kind": "blocks"
+    },
+    {
+      "src_node_id": "node-923",
+      "dst_node_id": "node-921",
+      "kind": "blocks"
+    }
+  ],
+  "database_access": "read-only; no application state changed"
+}

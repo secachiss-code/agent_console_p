@@ -56,6 +56,7 @@ from aconsole.core.application.services.plan_lifecycle import (
 )
 from aconsole.core.application.services.plan_review import review_move
 from aconsole.core.domain.errors import DomainError
+from aconsole.core.domain.gate_profile import micro_commands
 from aconsole.core.domain.pipeline import Step
 from aconsole.core.domain.plan import Move, Node, NodeSpec, NodeStatus, Plan, Role, after_merge
 from aconsole.core.domain.plan_admission import PlanTopology
@@ -154,6 +155,9 @@ class NodeBrief(_Frozen):
     title: str
     status: str
     ready: bool
+    pipeline: bool = False
+    contract_sha256: str | None = None
+    contract_error: str | None = None
     owner: str | None = None
     depends_on: list[str] = Field(default_factory=list)
     objective: str | None = None
@@ -167,6 +171,7 @@ class NodeBrief(_Frozen):
 class PlanGot(_Frozen):
     title: str
     goal: str
+    phase: str
     counts: dict[str, int]
     nodes: list[NodeBrief]
     revision: str
@@ -821,7 +826,7 @@ class PlanBoard:
                     blast_radius=meta.blast_radius,
                 ),
                 lease=LeaseTail(lease_id=node.lease_id or "", fence=fence, expires_at=_stamp(node.lease_expires_at)),
-                profile=micro_profile(profile),
+                profile=micro_profile(profile, location=f"{parent.key}.gate_profile"),
                 gates_sha256=stored.topology.gates_sha256 or "",
             )
 
@@ -1158,7 +1163,7 @@ class PlanBoard:
             key=meta.key,
             title=meta.title,
             status=NodeStatusView(node.status.value),
-            ready=stored.dag.ready(meta.key),
+            ready=_execution_ready(stored, meta),
             layer=layer,
             priority=stored.dag.priority(meta.key, now),
             depends_on=tuple(NodeId(by_key[key]) for key in stored.deps.get(meta.key, ()) if key in by_key),
@@ -1218,15 +1223,13 @@ class PlanBoard:
                 return self._write_document(stored, created=created, title=title, goal=goal, nodes=incoming)
             except _ToolError as exc:
                 if created:
-                    self._plans.pop(stored.plan_id, None)
+                    _ = self._plans.pop(stored.plan_id, None)
                 refusal = _domain_error(exc)
             except DomainError as exc:
                 if created:
-                    self._plans.pop(stored.plan_id, None)
+                    _ = self._plans.pop(stored.plan_id, None)
                 refusal = exc
-        if refusal is not None:
-            raise refusal
-        raise DomainError(code=-32603, name="INTERNAL_ERROR", retryable=False)
+        raise refusal
 
     def save_for_tab(
         self,
@@ -1281,9 +1284,9 @@ class PlanBoard:
                     self._store.delete(plan_id)
                 except StoreWriteError as exc:
                     raise DomainError(code=-32603, name="INTERNAL_ERROR", retryable=False) from exc
-            self._plans.pop(plan_id, None)
-            self._saved.pop(plan_id, None)
-            self._seen.pop(plan_id, None)
+            _ = self._plans.pop(plan_id, None)
+            _ = self._saved.pop(plan_id, None)
+            _ = self._seen.pop(plan_id, None)
             self._memory_inbox = {
                 key: entry for key, entry in self._memory_inbox.items() if entry.plan_id != plan_id
             }
@@ -1330,7 +1333,7 @@ class PlanBoard:
             return self._view(stored)
         if created:
             if nodes:
-                self._insert(stored, nodes)
+                _ = self._insert(stored, nodes)
             self._commit(stored)
             return self._view(stored)
         fresh = _Stored(
@@ -1346,7 +1349,7 @@ class PlanBoard:
             topology=PlanTopology(),
         )
         if nodes:
-            self._insert(fresh, nodes)
+            _ = self._insert(fresh, nodes)
         self._plans[stored.plan_id] = fresh
         self._commit(fresh)
         return self._view(fresh)
@@ -1385,6 +1388,7 @@ class PlanBoard:
             return PlanGot(
                 title=stored.title,
                 goal=stored.goal,
+                phase="draft" if stored.topology is None else stored.topology.phase,
                 counts=_counts(stored),
                 nodes=briefs,
                 revision=revision,
@@ -1411,7 +1415,7 @@ class PlanBoard:
             ranked = [
                 (stored.dag.priority(meta.key, self._now()), meta)
                 for meta in stored.meta.values()
-                if stored.dag.ready(meta.key)
+                if _execution_ready(stored, meta)
             ]
             ranked.sort(key=lambda item: (-item[0], item[1].key))
             chosen = [
@@ -1431,6 +1435,10 @@ class PlanBoard:
         _require_tab(ctx)
         with self._lock:
             stored, meta = self._node(ctx, node_id)
+            if issue := _profile_error(stored, meta):
+                _stop("NODE_CONTRACT", issue)
+            if stored.dag.get(meta.key).pipeline and not _pipeline_contract_ready(stored, meta):
+                _stop("NODE_CONTRACT", "the module contract must be frozen before claiming this node")
             try:
                 node = stored.dag.claim(meta.key, tab_id=ctx.tab_id, at=self._now())
             except DomainError as exc:
@@ -1945,14 +1953,9 @@ def _busy(stored: _Stored) -> bool:
 
 def _gate_profile(raw: msgspec.Raw) -> dict[str, object] | None:
     try:
-        value = json.loads(bytes(raw))
-    except (json.JSONDecodeError, TypeError) as exc:
-        _stop("NODE_CONTRACT", f"gate_profile is not JSON: {exc}")
-    if value is None:
-        return None
-    if not isinstance(value, dict):
-        _stop("NODE_CONTRACT", "gate_profile must be an object")
-    return value
+        return TypeAdapter(dict[str, object] | None).validate_json(bytes(raw))
+    except ValueError as exc:
+        _stop("NODE_CONTRACT", f"gate_profile must be a JSON object: {exc}")
 
 
 def _mcp_specs(nodes: list[NodeIn]) -> tuple[PlanNodeSpec, ...]:
@@ -2153,6 +2156,11 @@ def _planning_nodes(ctx: TabContext, nodes: list[NodeIn]) -> list[NodeIn]:
     if ctx.mode is None:
         return nodes
     for item in nodes:
+        if item.level == 0:
+            try:
+                _ = micro_commands(item.gate_profile or {}, location=f"{item.key}.gate_profile")
+            except DomainError as exc:
+                _domain(exc)
         direction_ok = (
             bool(item.invariants and item.gate_profile) if item.level == 0 else bool(item.parent and item.test_cmd)
         )
@@ -2167,11 +2175,15 @@ def _domain(exc: DomainError) -> NoReturn:
 
 
 def _domain_error(exc: _ToolError) -> DomainError:
-    body = exc.result.structured_content
-    error = body.get("error", {}) if isinstance(body, dict) else {}
-    name = str(error.get("reason", "NODE_CONTRACT")) if isinstance(error, dict) else "NODE_CONTRACT"
-    code = error.get("code", 4013) if isinstance(error, dict) else 4013
-    return DomainError(code=code if isinstance(code, int) else 4013, name=name, retryable=name == "LEASE_HELD")
+    wire = TypeAdapter(dict[str, object]).validate_json(exc.result.model_dump_json(by_alias=True))
+    body = TypeAdapter(dict[str, object]).validate_python(wire.get("structuredContent", {}))
+    error = TypeAdapter(dict[str, object]).validate_python(body.get("error", {}))
+    name = str(error.get("reason", "NODE_CONTRACT"))
+    code = error.get("code", 4013)
+    detail = str(error.get("message", name))
+    return DomainError(
+        code=code if isinstance(code, int) else 4013, name=name, retryable=name == "LEASE_HELD", extra=(detail,)
+    )
 
 
 def _stop(name: str, message: str) -> NoReturn:
@@ -2250,6 +2262,33 @@ def _counts(stored: _Stored) -> dict[str, int]:
     return counts
 
 
+def _pipeline_contract_ready(stored: _Stored, meta: _Meta) -> bool:
+    return bool(meta.contract_sha256 and stored.topology is not None and stored.topology.phase == "frozen")
+
+
+def _execution_ready(stored: _Stored, meta: _Meta) -> bool:
+    node = stored.dag.get(meta.key)
+    return (
+        stored.dag.ready(meta.key)
+        and (not node.pipeline or _pipeline_contract_ready(stored, meta))
+        and _profile_error(stored, meta) is None
+    )
+
+
+def _profile_error(stored: _Stored, meta: _Meta) -> str | None:
+    node = stored.dag.get(meta.key)
+    parent = stored.meta.get(meta.parent or "")
+    direction = meta if node.level == 0 else parent if node.pipeline else None
+    if direction is not None:
+        try:
+            _ = micro_commands(
+                stored.dag.get(direction.key).gate_profile or {}, location=f"{direction.key}.gate_profile"
+            )
+        except DomainError as exc:
+            return "; ".join(exc.extra)
+    return None
+
+
 def _brief(stored: _Stored, meta: _Meta, *, detailed: bool) -> NodeBrief:
     node = stored.dag.get(meta.key)
     brief = NodeBrief(
@@ -2257,7 +2296,10 @@ def _brief(stored: _Stored, meta: _Meta, *, detailed: bool) -> NodeBrief:
         key=meta.key,
         title=meta.title,
         status=node.status.value,
-        ready=stored.dag.ready(meta.key),
+        ready=_execution_ready(stored, meta),
+        pipeline=node.pipeline,
+        contract_sha256=meta.contract_sha256,
+        contract_error=_profile_error(stored, meta),
         owner=meta.owner,
     )
     if not detailed:
@@ -2415,6 +2457,11 @@ _CODES: dict[str, int] = {
 }
 
 _HINTS: dict[str, str] = {
+    "NODE_CONTRACT": (
+        "inspect plan_get phase and contract_error; correct the named gate_profile fields in the plan contract; "
+        "Freeze applies only to a draft, and unblocking does not repair a profile; "
+        "legacy nodes use node_update instead of step_begin"
+    ),
     "RESPONSE_TOO_LARGE": "use concise output, a revision, or a narrower query; no answer was truncated",
     "INTERNAL_ERROR": "nothing was saved; retry, and read the core log if it keeps failing",
     "INGEST_UNAUTHORIZED": "open a tab and pass Authorization: Bearer <tab token>",

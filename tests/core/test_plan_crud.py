@@ -27,6 +27,7 @@ from aconsole.core.infrastructure.fake.scenarios import demo_snapshot
 from aconsole.core.infrastructure.mcp.tools import PlanBoard, TabContext
 from aconsole.ui.client.store import CoreStore
 from tests.core.test_wire import _connect, _daemon, _git_repo, _stop
+from tests.gate_profiles import MICRO_PROFILE
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -43,7 +44,7 @@ def _direction() -> PlanNodeSpec:
         paths=("src/**",),
         acceptance=("scope held",),
         invariants="pure",
-        gate_profile=msgspec.Raw(json.dumps({"tests": ["pytest"]}).encode()),
+        gate_profile=msgspec.Raw(json.dumps(MICRO_PROFILE).encode()),
     )
 
 
@@ -102,10 +103,11 @@ def test_a_lease_keeps_the_plan() -> None:
     made = board.save_document("proj", "Board", "goal", None, (_direction(), _module()))
     module = next(node for node in made.nodes if node.key == "M-1")
     ctx = TabContext(tab_id="tab-1", project_id="proj", worktree=None, agent="codex", mode="execute")
+    board.freeze(str(made.id), {}, graph_present=False)
     board.claim(ctx, str(module.id))
     with pytest.raises(DomainError, match="LEASE_HELD"):
         board.delete_plan(str(made.id))
-    with pytest.raises(DomainError, match="LEASE_HELD"):
+    with pytest.raises(DomainError, match="PLAN_FROZEN"):
         board.save_document("proj", "Board", "goal", str(made.id), (_direction(),))
 
 

@@ -13,6 +13,7 @@ from mcp.types import TextContent
 
 from aconsole.core.infrastructure.mcp.server import build_server
 from aconsole.core.infrastructure.mcp.tools import PlanBoard, TabContext
+from tests.gate_profiles import MICRO_PROFILE
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -185,7 +186,7 @@ def test_planning_requires_full_contract_and_defaults_pipeline_on() -> None:
             created = await _call(client, "plan_create", {
                 "title": "Plan", "goal": "Goal", "nodes": [
                     {**_node("D-0", paths=["src/**"]), "level": 0, "invariants": "pure domain",
-                     "gate_profile": {"tests": ["pytest"]}, "acceptance": ["green"]},
+                     "gate_profile": MICRO_PROFILE, "acceptance": ["green"]},
                     {**_node("C-1", paths=["src/a.py"]), "parent": "D-0", "test_cmd": "pytest",
                      "acceptance": ["green"]},
                 ],
@@ -203,7 +204,7 @@ def test_planning_requires_full_contract_and_defaults_pipeline_on() -> None:
                 "goal": "Goal",
                 "nodes": [
                     {**_node("D-0", paths=["src/**"]), "level": 0, "invariants": "pure domain",
-                     "gate_profile": {"tests": ["pytest"]}, "acceptance": ["green"]},
+                     "gate_profile": MICRO_PROFILE, "acceptance": ["green"]},
                     {**_node("C-2", paths=["src/b.py"]), "parent": "D-0", "test_cmd": "pytest",
                      "acceptance": ["green"]},
                 ],
@@ -536,7 +537,7 @@ async def _hdag_scope() -> None:
                         **_node("CORE-0", paths=["src/**"]),
                         "level": 0,
                         "invariants": "Pure domain",
-                        "gate_profile": {"tier3": ["pytest"]},
+                        "gate_profile": MICRO_PROFILE,
                     },
                 ],
             },
@@ -563,9 +564,57 @@ async def _hdag_scope() -> None:
             {
                 "plan_id": plan_id,
                 "nodes": [
-                    {**_node("CORE-1", paths=["src/core.py"]), "parent": "CORE-0", "pipeline": True},
+                    {**_node("CORE-1", paths=["src/core.py"]), "parent": "CORE-0", "pipeline": True,
+                     "test_cmd": "pytest", "acceptance": ["green"]},
                 ],
             },
         )
         ready = await _call(client, "plan_ready", {"plan_id": plan_id})
+        assert ready["nodes"] == []
+        board.freeze(str(plan_id), {"CORE-1": ()}, graph_present=True)
+        ready = await _call(client, "plan_ready", {"plan_id": plan_id})
         assert [node["key"] for node in _nodes(ready)] == ["CORE-1"]
+
+
+def test_pipeline_draft_cannot_be_claimed_and_freeze_makes_it_ready() -> None:
+    async def scenario() -> None:
+        board = PlanBoard()
+        planner = TabContext(tab_id="planner", project_id="proj", worktree=None, agent="codex", mode="plan")
+        async with Client(build_server(board, planner)) as client:
+            made = await _call(client, "plan_create", {
+                "title": "Freeze contract", "goal": "Ship", "nodes": [
+                    {**_node("D-0", paths=["src/**"]), "level": 0, "invariants": "pure",
+                     "gate_profile": MICRO_PROFILE, "acceptance": ["green"]},
+                    {**_node("C-1", paths=["src/a.py"]), "parent": "D-0", "test_cmd": "pytest",
+                     "acceptance": ["green"]},
+                ],
+            })
+        plan_id = str(made["plan_id"])
+        node_id = _node_id(made, "C-1")
+        async with Client(build_server(board, replace(planner, tab_id="executor", mode="execute"))) as client:
+            args = {"plan_id": plan_id, "response_format": "detailed"}
+            draft = await _call(client, "plan_get", args)
+            assert draft["phase"] == "draft"
+            module = _nodes(draft)[1]
+            assert module["pipeline"] is True
+            assert not module.get("contract_sha256")
+            assert module["ready"] is False
+            assert (await _call(client, "plan_ready", {"plan_id": plan_id}))["nodes"] == []
+            denied = _error(await client.call_tool("node_claim", {"node_id": node_id}))
+            assert denied["reason"] == "NODE_CONTRACT"
+            assert "Freeze" in str(denied["hint"])
+            stored = board.export_plan(plan_id).nodes[1]
+            assert stored.fence == 0
+            assert stored.lease_id is None
+            assert board.view(plan_id).nodes[1].ready is False
+            board.freeze(plan_id, {"C-1": ()}, graph_present=True)
+            frozen = await _call(client, "plan_get", {**args, "since": draft["revision"]})
+            assert frozen["phase"] == "frozen"
+            module = next(node for node in _nodes(frozen) if node["key"] == "C-1")
+            assert module["ready"] is True
+            assert module["contract_sha256"]
+            assert board.view(plan_id).nodes[1].ready is True
+            assert (await _call(client, "plan_ready", {"plan_id": plan_id}))["nodes"]
+            assert (await _call(client, "node_claim", {"node_id": node_id}))["fence"] == 1
+
+    asyncio.run(scenario())

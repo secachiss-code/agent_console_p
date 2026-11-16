@@ -9,6 +9,7 @@ from aconsole.core.application.ports.plan_store import StoredPlan, StoredPlanCha
 from aconsole.core.application.services.plan_lifecycle import apply_plan_change, freeze_plan
 from aconsole.core.domain.errors import DomainError
 from aconsole.core.infrastructure.mcp.tools import NodeIn, PlanBoard, TabContext, _ToolError
+from tests.gate_profiles import MICRO_PROFILE
 
 _AT = datetime(2026, 11, 16, tzinfo=UTC)
 _CTX = TabContext(tab_id="t", project_id="p", worktree=None, agent="codex")
@@ -25,7 +26,7 @@ def _draft() -> tuple[PlanBoard, StoredPlan]:
             paths=["src/**"],
             acceptance=["green"],
             invariants="pure",
-            gate_profile={"tests": ["pytest"]},
+            gate_profile=MICRO_PROFILE,
         )
     ]
     nodes.extend(
