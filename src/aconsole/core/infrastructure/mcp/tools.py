@@ -50,6 +50,7 @@ from aconsole.core.application.services.pipeline import PipelineActor, PipelineC
 from aconsole.core.application.services.plan_lifecycle import (
     apply_plan_change,
     freeze_plan,
+    repair_gate_profiles,
     require_note_contract,
     topology_contract,
     topology_for,
@@ -1199,15 +1200,17 @@ class PlanBoard:
                 self._commit(stored)
             return PlanCreated(plan_id=stored.plan_id, nodes=_refs(stored), canvas_note=_canvas(stored.plan_id))
 
-    def save_document(
+    def save_document(  # noqa: PLR0913 -- document identity, nodes and explicit legacy repair
         self,
         project_id: str,
         title: str,
         goal: str,
         plan_id: str | None,
         nodes: tuple[PlanNodeSpec, ...] | None,
+        *,
+        repair_profiles: dict[str, dict[str, object]] | None = None,
     ) -> PlanView:
-        """Create a plan or replace a draft in one transaction. Omitted nodes leave the graph."""
+        """Save a draft, or explicitly repair invalid frozen profiles without replacing the graph."""
         human = TabContext(tab_id=_HUMAN_TAB, project_id=project_id, worktree=None, agent="human", mode="plan")
         refusal: DomainError | None = None
         try:
@@ -1218,6 +1221,12 @@ class PlanBoard:
         if refusal is not None:
             raise refusal
         with self._lock:
+            if repair_profiles is not None:
+                stored = self._repair_target(project_id, title, goal, plan_id, nodes)
+                try:
+                    return self._repair_profiles(stored, repair_profiles)
+                except _ToolError as exc:
+                    raise _domain_error(exc) from exc
             stored, created = self._document_target(project_id, title, goal, plan_id)
             try:
                 return self._write_document(stored, created=created, title=title, goal=goal, nodes=incoming)
@@ -1231,13 +1240,15 @@ class PlanBoard:
                 refusal = exc
         raise refusal
 
-    def save_for_tab(
+    def save_for_tab(  # noqa: PLR0913 -- tab identity, document and explicit legacy repair
         self,
         ctx: TabContext,
         title: str,
         goal: str,
         plan_id: str | None,
         nodes: list[NodeIn] | None,
+        *,
+        repair_profiles: dict[str, dict[str, object]] | None = None,
     ) -> PlanSaved:
         """The planning tab's one-call create or draft replace. Execute tabs are refused."""
         _require_tab(ctx)
@@ -1245,7 +1256,12 @@ class PlanBoard:
             _stop("PLAN_ROLE", "graph changes require a planning tab")
         try:
             view = self.save_document(
-                ctx.project_id, title, goal, plan_id, None if nodes is None else _mcp_specs(nodes)
+                ctx.project_id,
+                title,
+                goal,
+                plan_id,
+                None if nodes is None else _mcp_specs(nodes),
+                repair_profiles=repair_profiles,
             )
         except DomainError as exc:
             _domain(exc)
@@ -1256,6 +1272,50 @@ class PlanBoard:
             status=view.status,
             nodes=[NodeRef(key=node.key, node_id=str(node.id)) for node in view.nodes],
         )
+
+    def _repair_profiles(self, stored: _Stored, profiles: dict[str, dict[str, object]]) -> PlanView:
+        before = self._state(stored)
+        if self._attempts is not None and any(self._attempts.attempts(node.id) for node in before.nodes):
+            raise DomainError(
+                code=4013,
+                name="NODE_CONTRACT",
+                retryable=False,
+                extra=("profile repair requires a plan without pipeline attempts",),
+            )
+        repaired = repair_gate_profiles(before, profiles, at=self._now())
+        if repaired == before:
+            return self._view(stored)
+        candidate = _restored(repaired, checked_completion=self._checked_completion)
+        self._plans[stored.plan_id] = candidate
+        self._commit(
+            candidate,
+            decision=StoredPlanDecision(
+                id=uuid4().hex[:26],
+                request_id=None,
+                node_id=None,
+                action="repair_gate_profiles",
+                note="Repaired legacy gate profiles: " + ", ".join(sorted(profiles)),
+                at=self._now(),
+            ),
+        )
+        return self._view(candidate)
+
+    def _repair_target(
+        self, project_id: str, title: str, goal: str, plan_id: str | None, nodes: tuple[PlanNodeSpec, ...] | None
+    ) -> _Stored:
+        if plan_id is None or nodes is not None:
+            raise DomainError(
+                code=4013,
+                name="NODE_CONTRACT",
+                retryable=False,
+                extra=("profile repair requires plan_id and omitted nodes",),
+            )
+        stored, _ = self._document_target(project_id, title, goal, plan_id)
+        if stored.title != title or stored.goal != goal:
+            raise DomainError(
+                code=4013, name="NODE_CONTRACT", retryable=False, extra=("profile repair cannot change title or goal",)
+            )
+        return stored
 
     def delete_for_tab(self, ctx: TabContext, plan_id: str) -> PlanDeleted:
         """Delete one plan of this project. A live lease keeps it."""
@@ -1287,15 +1347,11 @@ class PlanBoard:
             _ = self._plans.pop(plan_id, None)
             _ = self._saved.pop(plan_id, None)
             _ = self._seen.pop(plan_id, None)
-            self._memory_inbox = {
-                key: entry for key, entry in self._memory_inbox.items() if entry.plan_id != plan_id
-            }
+            self._memory_inbox = {key: entry for key, entry in self._memory_inbox.items() if entry.plan_id != plan_id}
             if self.on_removed is not None:
                 self.on_removed(plan_id)
 
-    def _document_target(
-        self, project_id: str, title: str, goal: str, plan_id: str | None
-    ) -> tuple[_Stored, bool]:
+    def _document_target(self, project_id: str, title: str, goal: str, plan_id: str | None) -> tuple[_Stored, bool]:
         if plan_id is not None:
             stored = self._plans.get(plan_id)
             if stored is None or stored.project_id != project_id:
@@ -2458,7 +2514,9 @@ _CODES: dict[str, int] = {
 
 _HINTS: dict[str, str] = {
     "NODE_CONTRACT": (
-        "inspect plan_get phase and contract_error; correct the named gate_profile fields in the plan contract; "
+        "inspect plan_get phase and contract_error; correct draft gate_profile fields, or use a planning tab's "
+        "plan_save(plan_id, unchanged title/goal, repair_gate_profiles={L0 key: complete profile}) without nodes "
+        "for an invalid frozen plan with no leases or pipeline attempts; "
         "Freeze applies only to a draft, and unblocking does not repair a profile; "
         "legacy nodes use node_update instead of step_begin"
     ),

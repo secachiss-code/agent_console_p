@@ -172,3 +172,56 @@ def _validate_gate_profiles(plan: StoredPlan) -> None:
             parent = parents[node.parent]
             _ = micro_commands(parent.gate_profile or {}, location=f"{parent.key}.gate_profile")
             checked.add(parent.key)
+
+
+def repair_gate_profiles(plan: StoredPlan, profiles: Mapping[str, dict[str, object]], *, at: datetime) -> StoredPlan:
+    """Explicitly repair legacy invalid L0 profiles without replacing nodes or execution history."""
+    if plan.topology is None or plan.topology.phase != "frozen":
+        raise DomainError(code=4011, name="PLAN_FROZEN", retryable=False)
+    directions = {node.key: node for node in plan.nodes if node.level == 0}
+    if not profiles or profiles.keys() - directions.keys():
+        raise DomainError(code=4013, name="NODE_CONTRACT", retryable=False, extra=("expected existing L0 keys",))
+    if any(node.lease_id is not None for node in plan.nodes):
+        raise DomainError(code=4006, name="LEASE_HELD", retryable=True)
+    if any(node.status not in {"pending", "blocked"} for node in plan.nodes):
+        raise DomainError(code=4013, name="NODE_CONTRACT", retryable=False, extra=("plan execution has started",))
+    changed = False
+    for key, profile in profiles.items():
+        _ = micro_commands(profile, location=f"{key}.gate_profile")
+        if profile == directions[key].gate_profile:
+            continue
+        try:
+            _ = micro_commands(directions[key].gate_profile or {}, location=f"{key}.gate_profile")
+        except DomainError:
+            changed = True
+        else:
+            raise DomainError(code=4013, name="NODE_CONTRACT", retryable=False, extra=(f"{key} profile is valid",))
+    candidate = replace(
+        plan,
+        nodes=tuple(
+            replace(node, gate_profile=profiles[node.key]) if node.key in profiles else node for node in plan.nodes
+        ),
+    )
+    _validate_gate_profiles(candidate)
+    if not changed:
+        return plan
+    # Freeze again to bind every child to its repaired parent, retaining the original graph and radius.
+    frozen = freeze_plan(
+        replace(candidate, topology=replace(plan.topology, phase="draft")),
+        {node.key: node.blast_radius for node in plan.nodes if node.blast_radius is not None},
+        at=at,
+        graph_present=False,
+    )
+    return replace(
+        frozen,
+        topology=replace(
+            topology_for(frozen),
+            baseline_nodes=plan.topology.baseline_nodes,
+            baseline_children=plan.topology.baseline_children,
+            gross_added=plan.topology.gross_added,
+        ),
+        nodes=tuple(
+            replace(node, baseline_children=original.baseline_children)
+            for node, original in zip(frozen.nodes, plan.nodes, strict=True)
+        ),
+    )

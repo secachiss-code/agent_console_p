@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Final, final
 
 import msgspec
+from pydantic import TypeAdapter
 
 from aconsole.contracts.app import (
     DirectionGateParams,
@@ -156,6 +157,12 @@ class KnowledgeService:
             params.goal,
             None if params.plan_id is None else str(params.plan_id),
             params.nodes,
+            repair_profiles=None
+            if params.repair_gate_profiles is None
+            else {
+                key: TypeAdapter(dict[str, object]).validate_json(bytes(profile))
+                for key, profile in params.repair_gate_profiles.items()
+            },
         )
 
     def vault_ok(self) -> bool:

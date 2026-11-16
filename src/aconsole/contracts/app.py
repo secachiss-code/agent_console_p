@@ -540,6 +540,8 @@ class PlanSaveParams(msgspec.Struct, frozen=True, kw_only=True, forbid_unknown_f
     Without `plan_id`, the project and title name the plan: a second save returns that plan
     instead of inserting another. With `plan_id`, `title` may rename it. `nodes` replaces the
     whole draft set in the same transaction.
+    `repair_gate_profiles` explicitly replaces invalid legacy frozen L0 profiles by key;
+    it requires `plan_id`, unchanged title/goal, omitted nodes, and no leases or attempts.
     """
 
     project_id: ProjectId
@@ -547,6 +549,8 @@ class PlanSaveParams(msgspec.Struct, frozen=True, kw_only=True, forbid_unknown_f
     goal: Annotated[str, Meta(max_length=8000)] = ""
     plan_id: PlanId | None = None
     nodes: tuple[PlanNodeSpec, ...] | None = None
+    # Explicit legacy repair, mutually exclusive with nodes; keyed by existing L0 key.
+    repair_gate_profiles: dict[str, msgspec.Raw] | None = None
 
 
 class SetNodeStatusParams(msgspec.Struct, frozen=True, kw_only=True):

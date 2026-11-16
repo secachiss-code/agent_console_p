@@ -295,12 +295,15 @@ def _register(  # noqa: C901 -- one nested function per MCP tool
         goal: Annotated[str, Field(max_length=8000)] = "",
         plan_id: _Id | None = None,
         nodes: Annotated[list[NodeIn], Field(max_length=100)] | None = None,
+        repair_gate_profiles: dict[str, dict[str, object]] | None = None,
     ) -> PlanSaved:
         """Create or replace this project's draft in one call. The same title returns the same plan.
 
         Omit nodes to change only the title and goal. A nodes list replaces the whole draft set.
+        For an invalid legacy frozen plan, pass plan_id and repair_gate_profiles keyed by L0 key,
+        with unchanged title/goal and omitted nodes. Requires no leases or pipeline attempts.
         """
-        return board.save_for_tab(active(context), title, goal, plan_id, nodes)
+        return board.save_for_tab(active(context), title, goal, plan_id, nodes, repair_profiles=repair_gate_profiles)
 
     def plan_delete(plan_id: _Id) -> PlanDeleted:
         """Delete one plan of this project. A node someone is working keeps the plan."""
