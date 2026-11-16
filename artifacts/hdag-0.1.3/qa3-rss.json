@@ -1,0 +1,6 @@
+{
+  "source": "candidate native GTK app with demo fake core",
+  "tab_count": 5,
+  "ui_rss_mib": 194.08,
+  "core_note": "real production core baseline measured separately; fake core is not a production core benchmark"
+}

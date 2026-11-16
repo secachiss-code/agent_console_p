@@ -1,0 +1,148 @@
+"""Human-only direction verification, terminal children, fresh receipts and metrics."""
+
+from __future__ import annotations
+
+from dataclasses import replace
+from typing import TYPE_CHECKING, override
+from unittest.mock import patch
+
+import pytest
+
+from aconsole.core.application.ports.gate_runner import GateResult
+from aconsole.core.application.services.gates import DirectionGate, DirectionMetrics, DirectionReceipt
+from aconsole.core.domain.errors import DomainError
+from aconsole.core.infrastructure.direction_gate import DirectionRuntime
+from aconsole.core.infrastructure.persistence.models import Project
+from tests.core.application.test_gates_tier1 import _Harness
+
+if TYPE_CHECKING:
+    from sqlalchemy.orm import Session
+
+    from tests.core.test_mcp_pipeline import _Harness as PipelineHarness
+from tests.core.test_mcp_pipeline import pipeline as pipeline  # noqa: PLC0414 -- shared real database fixture
+
+_METRICS = DirectionMetrics(
+    core_rss_mib=80, ui_rss_mib=100, tab_count=5, cache_read_fraction=0.75, nodes_before=2, nodes_after=2
+)
+_COMMANDS = (("check",), ("pytest",))
+
+
+class _DirectionHarness(_Harness):
+    def __init__(self) -> None:
+        super().__init__()
+        self.metrics: DirectionMetrics = _METRICS
+        self.receipts: list[DirectionReceipt] = []
+
+    @override
+    def run(self, argv: tuple[str, ...], *, tier: int) -> GateResult:
+        assert tier == 3
+        return super().run(argv, tier=1)
+
+    def lookup(self, state: str, argv: str) -> DirectionReceipt | None:
+        return next(
+            (
+                receipt
+                for receipt in self.receipts
+                if receipt.state_hash == state and receipt.argv_sha256 == argv and receipt.passed
+            ),
+            None,
+        )
+
+    def direction(self) -> DirectionGate:
+        return DirectionGate(
+            bind_runner=self.bind,
+            capture=lambda: self.state.state_hash,
+            measure=lambda: self.metrics,
+            lookup=self.lookup,
+            record=self.receipts.append,
+        )
+
+
+def test_only_human_with_closed_children_may_run() -> None:
+    h = _DirectionHarness()
+    with pytest.raises(DomainError, match="PLAN_ROLE"):
+        _ = h.direction().run("direction", _COMMANDS, children_closed=True, decided_by="agent")
+    with pytest.raises(DomainError, match="NODE_NOT_READY"):
+        _ = h.direction().run("direction", _COMMANDS, children_closed=False, decided_by="human")
+    assert h.calls == []
+
+
+def test_receipt_replay_and_state_invalidation() -> None:
+    h = _DirectionHarness()
+    with pytest.raises(DomainError, match="GATE_RECEIPT_REQUIRED"):
+        _ = h.direction().run("direction", _COMMANDS, children_closed=True, decided_by="human", check_only=True)
+    receipt = h.direction().run("direction", _COMMANDS, children_closed=True, decided_by="human")
+    assert receipt.passed
+    assert receipt.metrics.cache_read_fraction == 0.75
+    assert h.calls == list(_COMMANDS)
+    assert (
+        h.direction().run("direction", _COMMANDS, children_closed=True, decided_by="human", check_only=True) == receipt
+    )
+    assert len(h.calls) == 2
+    h.state = replace(h.state, state_hash="edited")
+    with pytest.raises(DomainError, match="GATE_RECEIPT_REQUIRED"):
+        _ = h.direction().run("direction", _COMMANDS, children_closed=True, decided_by="human", check_only=True)
+
+
+@pytest.mark.parametrize(("field", "value"), [("core_rss_mib", 121), ("ui_rss_mib", 151), ("tab_count", 4)])
+def test_resource_limits_are_part_of_verdict(field: str, value: int) -> None:
+    h = _DirectionHarness()
+    h.metrics = replace(h.metrics, **{field: value})
+    result = h.direction().run("direction", _COMMANDS, children_closed=True, decided_by="human")
+    assert not result.passed
+    assert h.receipts == [result]
+
+
+def test_failed_check_is_not_a_direction_receipt() -> None:
+    h = _DirectionHarness()
+    h.fail = "check"
+    result = h.direction().run("direction", _COMMANDS, children_closed=True, decided_by="human")
+    assert not result.passed
+    assert h.calls == [("check",)]
+
+
+def test_real_direction_receipt_audit_restart_and_completion(pipeline: PipelineHarness) -> None:
+    h = pipeline
+    direction = h.board.export_plan(h.plan).nodes[0]
+    with pytest.raises(DomainError, match="GATE_RECEIPT_REQUIRED"):
+        _ = h.board.set_node_status(direction.id, "done", "Reviewed")
+    # A human may cancel the module; the L0 gate still verifies the integrated checkout.
+    _ = h.board.set_node_status(h.node, "cancelled", "Not needed")
+
+    def root(session: Session) -> None:
+        project = session.get(Project, "p")
+        assert project is not None
+        project.root_path = str(h.repo)
+
+    _ = h.writer.call(root)
+    calls: list[tuple[str, ...]] = []
+
+    class Runner:
+        def run(self, argv: tuple[str, ...], *, tier: int) -> GateResult:
+            assert tier == 3
+            calls.append(argv)
+            return GateResult(argv=argv, returncode=0, timed_out=False, output="ok", log_path="log", duration_ms=1)
+
+    def runtime() -> DirectionRuntime:
+        return DirectionRuntime(
+            book=h.board,
+            writer=h.writer,
+            actor=lambda _tab: h.actor,
+            runner=lambda _actor, _commands: Runner(),
+            tabs=lambda: (),
+            accounts=lambda: (),
+        )
+
+    with patch.object(DirectionRuntime, "_metrics", return_value=_METRICS):
+        h.board.directions = runtime()
+        receipt = h.board.directions.run(direction.id, "t", 1234)
+        assert receipt.passed
+        assert calls
+        h.restart()
+        h.board.directions = runtime()
+        original = (h.repo / "src/a.py").read_text()
+        _ = (h.repo / "src/a.py").write_text("VALUE = 77\n")
+        with pytest.raises(DomainError, match="GATE_RECEIPT_REQUIRED"):
+            _ = h.board.set_node_status(direction.id, "done", "Reviewed direction")
+        _ = (h.repo / "src/a.py").write_text(original)
+        assert h.board.set_node_status(direction.id, "done", "Reviewed direction").status.value == "done"

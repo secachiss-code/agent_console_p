@@ -16,6 +16,8 @@ from aconsole.contracts.app import (
     DiffFileResult,
     DiffSummaryParams,
     DiffSummaryResult,
+    DirectionGateParams,
+    DirectionGateResult,
     EmptyParams,
     EmptyResult,
     ExitedParams,
@@ -264,6 +266,9 @@ class TypedFacade(Facade):
 
     async def plan_decide(self, params: PlanDecideParams) -> PlanView:
         return await self.typed("plan/decide", params, PlanView)
+
+    async def plan_direction_gate(self, params: DirectionGateParams) -> DirectionGateResult:
+        return await self.typed("plan/directionGate", params, DirectionGateResult)
 
     async def plan_freeze(self, params: PlanIdParams) -> PlanView:
         return await self.typed("plan/freeze", params, PlanView)

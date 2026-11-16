@@ -604,7 +604,11 @@ class Plan:
         return _RULES.get((source, target))
 
     def _check_rule(self, node: Node, move: Move) -> None:
-        rule = self._rule(node.status, move.to, move.role)
+        rule = (
+            self._direction_rule(node, move)
+            if node.level == 0 and node.status is not NodeStatus.DONE and move.to is NodeStatus.DONE
+            else self._rule(node.status, move.to, move.role)
+        )
         review = bool(rule is not None and rule.review_blocks and node.review_required)
         if rule is None or move.role not in rule.roles or review:
             allowed = self._allowed(node, move.role)
@@ -615,6 +619,17 @@ class Plan:
             raise _fail(_EVIDENCE, "NODE_EVIDENCE_REQUIRED")
         if rule.note and not move.note:
             raise _fail(_EVIDENCE, "NODE_EVIDENCE_REQUIRED", ("note",))
+
+    def _direction_rule(self, node: Node, move: Move) -> _Rule:
+        if move.role is not Role.HUMAN:
+            raise _fail(4012, "PLAN_ROLE")
+        if any(
+            self._nodes[key].status not in {NodeStatus.DONE, NodeStatus.CANCELLED}
+            for key, parent in self._parents.items()
+            if parent == node.key
+        ):
+            raise _fail(_NOT_READY, "NODE_NOT_READY")
+        return _human()
 
     def _allowed(self, node: Node, role: Role) -> frozenset[NodeStatus]:
         found: set[NodeStatus] = set()

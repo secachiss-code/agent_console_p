@@ -17,6 +17,9 @@ _MAX_TEST_FILES = 3
 _MAX_VERDICT = 500
 _MAX_ITEMS = 5
 _MAX_ITEM_CHARS = 160
+_DIRECTION_TABS = 5
+_CORE_RSS_MIB = 120
+_UI_RSS_MIB = 150
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -285,3 +288,124 @@ def _failure(result: GateResult) -> str:
     lines = tuple(line.strip() for line in result.output.splitlines() if line.strip())
     error = next((line for line in lines if "error" in line.casefold()), lines[0] if lines else "no output")
     return f"{result.argv[0]}: {error}"
+
+
+@dataclass(frozen=True, kw_only=True)
+class DirectionMetrics:
+    core_rss_mib: float
+    ui_rss_mib: float
+    tab_count: int
+    cache_read_fraction: float | None
+    nodes_before: int
+    nodes_after: int
+
+    @property
+    def passed(self) -> bool:
+        return (
+            self.tab_count >= _DIRECTION_TABS
+            and 0 < self.core_rss_mib <= _CORE_RSS_MIB
+            and 0 < self.ui_rss_mib <= _UI_RSS_MIB
+        )
+
+
+@dataclass(frozen=True, kw_only=True)
+class DirectionReceipt:
+    node_id: str
+    state_hash: str
+    argv_sha256: str
+    passed: bool
+    verdict: str
+    metrics: DirectionMetrics
+    results: tuple[GateResult, ...] = ()
+
+    @property
+    def receipt_hash(self) -> str:
+        return _digest(("direction", self.node_id, self.state_hash, self.argv_sha256, self.passed, self.verdict))
+
+
+class DirectionVerifier(Protocol):
+    def run(
+        self,
+        node_id: str,
+        tab_id: str | None,
+        ui_pid: int | None,
+        *,
+        check_only: bool = False,
+        decided_by: str = "human",
+    ) -> DirectionReceipt: ...
+
+
+@final
+class DirectionGate:
+    """Human-only Tier 3. The kernel owns commands, workspace capture, metrics and audit."""
+
+    def __init__(
+        self,
+        *,
+        bind_runner: Callable[[tuple[tuple[str, ...], ...]], GateRunner],
+        capture: Callable[[], str],
+        measure: Callable[[], DirectionMetrics],
+        lookup: Callable[[str, str], DirectionReceipt | None],
+        record: Callable[[DirectionReceipt], None],
+    ) -> None:
+        self._bind_runner, self._capture, self._measure = bind_runner, capture, measure
+        self._lookup, self._record = lookup, record
+
+    def run(
+        self,
+        node_id: str,
+        commands: tuple[tuple[str, ...], ...],
+        *,
+        children_closed: bool,
+        decided_by: str,
+        check_only: bool = False,
+    ) -> DirectionReceipt:
+        if decided_by != "human":
+            raise DomainError(code=4012, name="PLAN_ROLE", retryable=False)
+        if not children_closed:
+            raise DomainError(code=4003, name="NODE_NOT_READY", retryable=False)
+        if not commands or any(not argv or any(not arg or "\x00" in arg for arg in argv) for argv in commands):
+            raise DomainError(code=4013, name="NODE_CONTRACT", retryable=False)
+        initial, argv_hash = self._capture(), _digest(("direction", commands))
+        metrics = self._measure()
+        cached = self._lookup(initial, argv_hash)
+        if cached is not None and cached.passed and metrics.passed:
+            return replace(cached, metrics=metrics)
+        if check_only:
+            raise DomainError(code=4018, name="GATE_RECEIPT_REQUIRED", retryable=False)
+        runner = self._bind_runner(commands)
+        results: list[GateResult] = []
+        for argv in commands:
+            result = runner.run(argv, tier=3)
+            results.append(result)
+            if result.returncode != 0 or result.timed_out:
+                break
+        metrics = self._measure()
+        unchanged = initial == self._capture()
+        passed = (
+            metrics.passed and unchanged and all(result.returncode == 0 and not result.timed_out for result in results)
+        )
+        failures = tuple(_failure(result) for result in results if result.returncode or result.timed_out)
+        verdict = _direction_verdict(passed=passed, unchanged=unchanged, metrics_ok=metrics.passed, failures=failures)
+        receipt = DirectionReceipt(
+            node_id=node_id,
+            state_hash=initial,
+            argv_sha256=argv_hash,
+            passed=passed,
+            verdict=verdict[:500],
+            metrics=metrics,
+            results=tuple(results),
+        )
+        self._record(receipt)
+        return receipt
+
+
+def _direction_verdict(*, passed: bool, unchanged: bool, metrics_ok: bool, failures: tuple[str, ...]) -> str:
+    verdict = "Direction gate passed" if passed else "Direction gate failed"
+    if not unchanged:
+        verdict += ": workspace changed"
+    if not metrics_ok:
+        verdict += ": requires 5 tabs, core RSS <=120 MiB and UI RSS <=150 MiB"
+    if failures:
+        verdict += ": " + "; ".join(failures)
+    return verdict

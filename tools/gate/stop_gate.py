@@ -16,7 +16,7 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 REPO = HERE.parents[1]
-_TASK = re.compile(r"^[A-Z][0-9]{1,2}(?:\.[0-9]{1,2})?[a-z]?$")
+_TASK = re.compile(r"^(?:[A-Z][0-9]{1,2}(?:\.[0-9]{1,2})?[a-z]?|(?:CORE|DB|SEC|QA|APR|FE)-[0-9]{1,4})$")
 _TAIL = 40
 
 

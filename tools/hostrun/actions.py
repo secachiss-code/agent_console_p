@@ -36,8 +36,10 @@ _UV = f"{_DEVTOOLS_HOME}/.cargo/bin/uv"
 _SCENARIO = re.compile(r"[A-Za-z0-9_-]{1,64}\Z")
 # H1, R0b, A0.0r, I0 and frontend ids. One trailing letter is a part (A1.1b); a reopened task adds r (A2.1br).
 _TASK = re.compile(
-    r"(?:A[0-9]{1,2}(?:\.[0-9]{1,2})?[a-z]?r?|H[0-9]{1,2}|R[0-9]{1,2}[a-z]?|I[0-9]{1,2}|B[0-9]{1,2}[a-z]?|C[0-9]{1,2})\Z"
+    r"(?:A[0-9]{1,2}(?:\.[0-9]{1,2})?[a-z]?r?|H[0-9]{1,2}|R[0-9]{1,2}[a-z]?|I[0-9]{1,2}|"
+    r"B[0-9]{1,2}[a-z]?|C[0-9]{1,2}|(?:CORE|DB|SEC|QA|APR|FE)-[0-9]{1,4})\Z"
 )
+
 _CONTAINER = re.compile(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,63}\Z")
 _PYTEST_K = re.compile(r"[A-Za-z0-9_ (),:-]{1,200}\Z")
 _PYTEST_PATH = re.compile(r"[A-Za-z0-9_./-]{1,512}\Z")

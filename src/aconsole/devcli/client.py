@@ -1,5 +1,6 @@
 """Speak NDJSON to a core socket. `snapshot` and `events` are the A1.9 commands."""
 
+import argparse
 import io
 import os
 import socket
@@ -7,8 +8,14 @@ import sys
 
 import msgspec
 
-from aconsole.contracts.app import AppSnapshot, SnapshotResult, SubscribeResult
-from aconsole.contracts.common import ClientRole
+from aconsole.contracts.app import (
+    AppSnapshot,
+    DirectionGateParams,
+    DirectionGateResult,
+    SnapshotResult,
+    SubscribeResult,
+)
+from aconsole.contracts.common import ClientRole, NodeId, PlanId, TabId
 from aconsole.contracts.ipc import (
     Envelope,
     InitializeParams,
@@ -20,9 +27,11 @@ from aconsole.contracts.ipc import (
 )
 
 
-def _request(request_id: int, method: str, params: msgspec.Struct | None = None) -> bytes:
+def _request(
+    request_id: int, method: str, params: msgspec.Struct | None = None, *, timeout_ms: int | None = None
+) -> bytes:
     encoded = b"{}" if params is None else msgspec.json.encode(params)
-    body = Request(id=request_id, method=method, params=msgspec.Raw(encoded))
+    body = Request(id=request_id, method=method, params=msgspec.Raw(encoded), timeout_ms=timeout_ms)
     return msgspec.json.encode(body) + b"\n"
 
 
@@ -64,8 +73,10 @@ def _decode_line(line: bytes) -> Envelope:
     raise ConnectionError(message)
 
 
-def request_frame(path: str, method: str, params: msgspec.Struct | None = None) -> Envelope:
-    frames = _exchange(path, (_initialize(), _request(2, method, params)), 0)
+def request_frame(path: str, method: str, params: msgspec.Struct | None = None, *, timeout: float = 3) -> Envelope:
+    frames = _exchange(
+        path, (_initialize(), _request(2, method, params, timeout_ms=int(timeout * 1000))), 0, timeout=timeout
+    )
     return frames[-1]
 
 
@@ -100,8 +111,9 @@ def collect_event_types(path: str) -> frozenset[str]:
         return frozenset(names)
 
 
-def _exchange(path: str, payloads: tuple[bytes, ...], extra: int) -> tuple[Envelope, ...]:
+def _exchange(path: str, payloads: tuple[bytes, ...], extra: int, *, timeout: float = 3) -> tuple[Envelope, ...]:
     with _socket(path) as sock:
+        sock.settimeout(timeout)
         for payload in payloads:
             sock.sendall(payload)
         reader = sock.makefile("rb")
@@ -131,6 +143,8 @@ _ARGV = 3
 
 
 def main(argv: list[str]) -> int:
+    if argv[:1] == ["direction-gate"]:
+        return _direction_gate(argv[1:])
     if len(argv) != _ARGV or argv[0] not in {"snapshot", "events"} or argv[1] != "--socket":
         _ = sys.stdout.write("usage: devcli snapshot|events --socket PATH\n")
         return 2
@@ -141,3 +155,31 @@ def main(argv: list[str]) -> int:
     for name in sorted(collect_event_types(argv[2])):
         _ = sys.stdout.write(name + "\n")
     return 0
+
+
+class _DirectionArgs(argparse.Namespace):
+    socket: str = ""
+    plan: str = ""
+    node: str = ""
+    tab: str = ""
+    ui_pid: int = 0
+
+
+def _direction_gate(argv: list[str]) -> int:
+    parser = argparse.ArgumentParser(prog="devcli direction-gate")
+    for argument in ("socket", "plan", "node", "tab"):
+        _ = parser.add_argument("--" + argument, required=True)
+    _ = parser.add_argument("--ui-pid", type=int, required=True)
+    args = parser.parse_args(argv, namespace=_DirectionArgs())
+    params = DirectionGateParams(
+        plan_id=PlanId(args.plan), node_id=NodeId(args.node), tab_id=TabId(args.tab), ui_pid=args.ui_pid
+    )
+    response = request_frame(args.socket, "plan/directionGate", params, timeout=3600)
+    if isinstance(response, ResponseErr):
+        _ = sys.stderr.write(response.error.message + "\n")
+        return 1
+    if not isinstance(response, ResponseOk):
+        return 1
+    result = msgspec.json.decode(response.result, type=DirectionGateResult)
+    _ = sys.stdout.write(msgspec.json.encode(result).decode() + "\n")
+    return 0 if result.passed else 1

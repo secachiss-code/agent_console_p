@@ -1,0 +1,57 @@
+{
+  "$defs": {
+    "DirectionGateResult": {
+      "properties": {
+        "cache_read_fraction": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "core_rss_mib": {
+          "type": "number"
+        },
+        "nodes_after": {
+          "type": "integer"
+        },
+        "nodes_before": {
+          "type": "integer"
+        },
+        "passed": {
+          "type": "boolean"
+        },
+        "receipt_hash": {
+          "type": "string"
+        },
+        "tab_count": {
+          "type": "integer"
+        },
+        "ui_rss_mib": {
+          "type": "number"
+        },
+        "verdict": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "passed",
+        "receipt_hash",
+        "verdict",
+        "core_rss_mib",
+        "ui_rss_mib",
+        "tab_count",
+        "cache_read_fraction",
+        "nodes_before",
+        "nodes_after"
+      ],
+      "title": "DirectionGateResult",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/DirectionGateResult",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

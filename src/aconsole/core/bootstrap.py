@@ -76,6 +76,7 @@ from aconsole.core.infrastructure.agents.opencode.limits import OpenCodeLimits
 from aconsole.core.infrastructure.agents.usage_log import UsageLog, claude_events, codex_events
 from aconsole.core.infrastructure.codegraph.index import CodeGraphIndex
 from aconsole.core.infrastructure.codegraph.runner import ExtractorRunner
+from aconsole.core.infrastructure.direction_gate import DirectionRuntime
 from aconsole.core.infrastructure.git.checkpoints import GitCheckpoints
 from aconsole.core.infrastructure.git.diff import GitDiff
 from aconsole.core.infrastructure.git.history import GitHistory
@@ -1415,7 +1416,7 @@ class Daemon:
         self.review.checkpoints.use_journal(checkpoints)
         self.review.checkpoints.protected_ref = checkpoints.is_session_ref
         await asyncio.to_thread(self._plans.use_store, PlanDatabase(writer))
-        self._plans.use_attempts(AttemptDatabase(writer))
+        self._bind_direction_gates(writer)
         self.tabs.plan_context, self._plans.pipeline_actor = self._plans.views, self.tabs.pipeline_actor
         restored_plans = await asyncio.to_thread(self._plans.views)
         with self._palette_plan_lock:
@@ -1477,6 +1478,11 @@ class Daemon:
         self._sweeper = asyncio.create_task(self._sweep_loop(writer))
         self._health = asyncio.create_task(self._health_loop())
 
+    def _bind_direction_gates(self, writer: Writer) -> None:
+        self._plans.use_attempts(AttemptDatabase(writer))
+        self._plans.directions = DirectionRuntime(book=self._plans, writer=writer,
+            actor=self.tabs.pipeline_actor, runner=self._pipeline_runner,
+            tabs=lambda: self.tabs.snapshot().tabs, accounts=lambda: tuple(self._accounts.copy().values()))
     def _pipeline_runner(self, actor: PipelineActor, commands: tuple[tuple[str, ...], ...]) -> GateRunner:
         return self._host.gate_runner(actor.container, str(actor.worktree), commands)
 

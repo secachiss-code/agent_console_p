@@ -228,6 +228,25 @@ class PlanDecideParams(msgspec.Struct, frozen=True, kw_only=True, forbid_unknown
     note: str | None = None
 
 
+class DirectionGateParams(msgspec.Struct, frozen=True, kw_only=True, forbid_unknown_fields=True):
+    plan_id: PlanId
+    node_id: NodeId
+    tab_id: TabId
+    ui_pid: Annotated[int, Meta(gt=0)]
+
+
+class DirectionGateResult(msgspec.Struct, frozen=True, kw_only=True):
+    passed: bool
+    receipt_hash: str
+    verdict: str
+    core_rss_mib: float
+    ui_rss_mib: float
+    tab_count: int
+    cache_read_fraction: float | None
+    nodes_before: int
+    nodes_after: int
+
+
 class PlanApplyChangeParams(msgspec.Struct, frozen=True, kw_only=True):
     plan_id: PlanId
     change_id: str

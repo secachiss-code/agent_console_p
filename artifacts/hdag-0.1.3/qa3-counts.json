@@ -1,0 +1,8 @@
+{
+  "scope": "isolated PlanBoard freeze, not the live user plan",
+  "before_freeze": 29,
+  "after_freeze": 29,
+  "l0": 6,
+  "l1": 23,
+  "l2_vertices": 0
+}

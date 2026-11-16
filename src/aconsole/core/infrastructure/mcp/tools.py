@@ -44,6 +44,7 @@ from aconsole.core.application.ports.plan_store import (
     StoreWriteError,
 )
 from aconsole.core.application.services.context_shaper import DirectionContext, LeaseTail, ModuleContext
+from aconsole.core.application.services.gates import DirectionVerifier
 from aconsole.core.application.services.pipeline import PipelineActor, PipelineContract, PipelineService
 from aconsole.core.application.services.plan_lifecycle import (
     apply_plan_change,
@@ -416,6 +417,7 @@ class PlanBoard:
         self._store: PlanStore | None = None
         self._saved: dict[str, StoredPlan] = {}
         self._attempts: AttemptDatabase | None = None
+        self.directions: DirectionVerifier | None = None
         self.pipeline: PipelineService | None = None
         self.pipeline_actor: Callable[[str], PipelineActor] | None = None
         self.on_attention: Callable[[str, str, str, str], None] | None = None
@@ -557,6 +559,11 @@ class PlanBoard:
             with self._lock:
                 stored, meta = self._find_node(node_id)
                 pipeline = stored.dag.get(meta.key).pipeline
+                direction = stored.dag.get(meta.key).level == 0
+            if direction:
+                if self.directions is None:
+                    raise DomainError(code=4018, name="GATE_RECEIPT_REQUIRED", retryable=False)
+                _ = self.directions.run(node_id, None, None, check_only=True)
             if pipeline:
                 _ = self._blast_node(stored, meta, check_only=True)
         with self._lock:
@@ -1001,6 +1008,8 @@ class PlanBoard:
 
     def _move_by_hand(self, stored: _Stored, key: str, status: str) -> None:
         current = stored.dag.get(key)
+        if current.level == 0 and status == "done":
+            raise DomainError(code=4018, name="GATE_RECEIPT_REQUIRED", retryable=False)
         if current.status.value == status:
             return
         target = NodeStatus(status)

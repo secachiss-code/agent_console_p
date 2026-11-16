@@ -1,0 +1,32 @@
+{
+  "$defs": {
+    "DirectionGateParams": {
+      "additionalProperties": false,
+      "properties": {
+        "node_id": {
+          "type": "string"
+        },
+        "plan_id": {
+          "type": "string"
+        },
+        "tab_id": {
+          "type": "string"
+        },
+        "ui_pid": {
+          "exclusiveMinimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "plan_id",
+        "node_id",
+        "tab_id",
+        "ui_pid"
+      ],
+      "title": "DirectionGateParams",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/DirectionGateParams",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

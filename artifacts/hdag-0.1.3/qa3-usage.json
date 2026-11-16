@@ -1,0 +1,10 @@
+{
+  "source": "usage_log.codex_events, existing CLI logs for 2026-11-16",
+  "files": 1,
+  "events": 266,
+  "cache_read_input_tokens": 58856832,
+  "cache_read_fraction": 0.9908605117044753,
+  "uncached_input_tokens": 542883,
+  "total_input_tokens": 59399715,
+  "note": "Existing CLI sessions, not a controlled H-DAG retry experiment. usage_log reports uncached and cached input separately."
+}

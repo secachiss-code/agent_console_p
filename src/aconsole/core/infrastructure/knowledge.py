@@ -7,6 +7,8 @@ from typing import Final, final
 import msgspec
 
 from aconsole.contracts.app import (
+    DirectionGateParams,
+    DirectionGateResult,
     ImpactParams,
     ImpactView,
     NoteUriParams,
@@ -30,7 +32,16 @@ from aconsole.core.infrastructure.persistence.repositories.code_graph import per
 from aconsole.core.infrastructure.vault.sync import VaultSync
 
 PLAN_METHODS: Final = frozenset(
-    {"plan/inbox", "plan/decide", "plan/list", "plan/get", "plan/setNodeStatus", "plan/freeze", "plan/applyChange"}
+    {
+        "plan/directionGate",
+        "plan/inbox",
+        "plan/decide",
+        "plan/list",
+        "plan/get",
+        "plan/setNodeStatus",
+        "plan/freeze",
+        "plan/applyChange",
+    }
 )
 KNOWLEDGE_METHODS: Final = PLAN_METHODS | {"knowledge/noteUri", "knowledge/impact"}
 _IMPACT_LIMIT: Final = 200
@@ -54,7 +65,7 @@ class KnowledgeService:
         return self._note_uri(msgspec.json.decode(raw, type=NoteUriParams))
 
     def _plan(self, method: str, raw: bytes) -> msgspec.Struct:
-        if method in {"plan/inbox", "plan/decide"}:
+        if method in {"plan/inbox", "plan/decide", "plan/directionGate"}:
             return self._review(method, raw)
         if method == "plan/list":
             listed = msgspec.json.decode(raw, type=PlanListParams)
@@ -76,6 +87,26 @@ class KnowledgeService:
         return self.board.set_node_status(str(moved.node_id), moved.status.value, moved.note)
 
     def _review(self, method: str, raw: bytes) -> msgspec.Struct:
+        if method == "plan/directionGate":
+            params = msgspec.json.decode(raw, type=DirectionGateParams)
+            state = self.board.export_plan(str(params.plan_id))
+            if not any(node.id == str(params.node_id) and node.level == 0 for node in state.nodes):
+                raise DomainError(code=4002, name="NODE_NOT_FOUND", retryable=False)
+            if self.board.directions is None:
+                raise DomainError(code=5010, name="GATE_RUNNER_UNAVAILABLE", retryable=True)
+            receipt = self.board.directions.run(str(params.node_id), str(params.tab_id), params.ui_pid)
+            metrics = receipt.metrics
+            return DirectionGateResult(
+                passed=receipt.passed,
+                receipt_hash=receipt.receipt_hash,
+                verdict=receipt.verdict,
+                core_rss_mib=metrics.core_rss_mib,
+                ui_rss_mib=metrics.ui_rss_mib,
+                tab_count=metrics.tab_count,
+                cache_read_fraction=metrics.cache_read_fraction,
+                nodes_before=metrics.nodes_before,
+                nodes_after=metrics.nodes_after,
+            )
         if method == "plan/decide":
             decision = msgspec.json.decode(raw, type=PlanDecideParams)
             if decision.decision == "apply":
