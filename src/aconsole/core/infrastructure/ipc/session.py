@@ -67,6 +67,7 @@ _SERVER = ProtocolVersion(major=1, minor=0)
 _SERVER_CAPS = frozenset(
     {
         "events.v1",
+        "hdag.v1",
         "approvals.inline",
         "notifications.desktop",
         "diff.v1",

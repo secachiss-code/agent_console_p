@@ -131,6 +131,24 @@
           ],
           "default": null
         },
+        "mode": {
+          "default": "execute",
+          "enum": [
+            "execute",
+            "plan"
+          ]
+        },
+        "model": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
         "order": {
           "type": "integer"
         },

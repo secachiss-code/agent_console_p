@@ -11,17 +11,21 @@ from aconsole.contracts.app import (
     ImpactView,
     NoteUriParams,
     NoteUriResult,
+    PlanApplyChangeParams,
     PlanIdParams,
     PlanListParams,
     PlanListResult,
     SetNodeStatusParams,
 )
+from aconsole.core.application.ports.plan_store import StoredPlan
 from aconsole.core.domain.errors import DomainError
+from aconsole.core.domain.scope import check_scope
 from aconsole.core.infrastructure.codegraph.index import CodeGraphIndex
 from aconsole.core.infrastructure.mcp.tools import PlanBoard, impact_layers
+from aconsole.core.infrastructure.persistence.repositories.code_graph import persistent_impact
 from aconsole.core.infrastructure.vault.sync import VaultSync
 
-PLAN_METHODS: Final = frozenset({"plan/list", "plan/get", "plan/setNodeStatus"})
+PLAN_METHODS: Final = frozenset({"plan/list", "plan/get", "plan/setNodeStatus", "plan/freeze", "plan/applyChange"})
 KNOWLEDGE_METHODS: Final = PLAN_METHODS | {"knowledge/noteUri", "knowledge/impact"}
 _IMPACT_LIMIT: Final = 200
 _IMPACT_UNKNOWN: Final = 5007
@@ -37,6 +41,13 @@ class KnowledgeService:
         self.code_graph: CodeGraphIndex = code_graph
 
     def dispatch(self, method: str, raw: bytes) -> msgspec.Struct:
+        if method.startswith("plan/"):
+            return self._plan(method, raw)
+        if method == "knowledge/impact":
+            return self._impact(msgspec.json.decode(raw, type=ImpactParams))
+        return self._note_uri(msgspec.json.decode(raw, type=NoteUriParams))
+
+    def _plan(self, method: str, raw: bytes) -> msgspec.Struct:
         if method == "plan/list":
             listed = msgspec.json.decode(raw, type=PlanListParams)
             plans = self.board.views(str(listed.project_id), active_only=listed.status == "active")
@@ -47,15 +58,43 @@ class KnowledgeService:
             if view is None:
                 raise DomainError(code=_PLAN_NOT_FOUND, name="PLAN_NOT_FOUND", retryable=False)
             return view
-        if method == "knowledge/impact":
-            return self._impact(msgspec.json.decode(raw, type=ImpactParams))
-        if method == "knowledge/noteUri":
-            return self._note_uri(msgspec.json.decode(raw, type=NoteUriParams))
+        if method == "plan/freeze":
+            wanted = msgspec.json.decode(raw, type=PlanIdParams)
+            return self._freeze(str(wanted.plan_id))
+        if method == "plan/applyChange":
+            change = msgspec.json.decode(raw, type=PlanApplyChangeParams)
+            return self.board.apply_change(str(change.plan_id), change.change_id, self._radii)
         moved = msgspec.json.decode(raw, type=SetNodeStatusParams)
         return self.board.set_node_status(str(moved.node_id), moved.status.value, moved.note)
 
     def vault_ok(self) -> bool:
         return self.vault.root is not None
+
+    def _freeze(self, plan_id: str) -> msgspec.Struct:
+        plan = self.board.export_plan(plan_id)
+        if plan.topology is not None and plan.topology.phase == "frozen":
+            return self.board.freeze(plan_id, {}, graph_present=False)
+        radii, present = self._radii(plan)
+        return self.board.freeze(plan_id, radii, graph_present=present)
+
+    def _radii(self, plan: StoredPlan) -> tuple[dict[str, tuple[str, ...] | None], bool]:
+        graph = self.code_graph.graph(plan.project_id)
+        present = bool(graph.nodes)
+        paths = {node.id: node.path for node in graph.nodes}
+        radii: dict[str, tuple[str, ...] | None] = {}
+        for contract in plan.nodes:
+            if contract.level != 1:
+                continue
+            radius: set[str] = set()
+            for node in graph.nodes:
+                if check_scope(contract.paths, (node.path,)).violations:
+                    continue
+                result = persistent_impact(self.code_graph, plan.project_id, node.id, 3, 10000, None)
+                if result is None or result[1]:
+                    raise DomainError(code=4013, name="NODE_CONTRACT", retryable=False, extra=(contract.key,))
+                radius.update(paths[module] for layer in result[0] for module in layer)
+            radii[contract.key] = tuple(sorted(radius)) if present else None
+        return radii, present
 
     def _impact(self, params: ImpactParams) -> ImpactView:
         project_id = str(params.project_id)

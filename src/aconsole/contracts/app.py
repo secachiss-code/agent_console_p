@@ -194,6 +194,13 @@ class PlanView(msgspec.Struct, frozen=True, kw_only=True):
     total: int
     canvas: NoteRef | None
     updated_at: AwareDatetime
+    phase: Literal["draft", "frozen", "completed"] = "draft"
+    warnings: tuple[str, ...] = ()
+
+
+class PlanApplyChangeParams(msgspec.Struct, frozen=True, kw_only=True):
+    plan_id: PlanId
+    change_id: str
 
 
 class SetupState(msgspec.Struct, frozen=True, kw_only=True):

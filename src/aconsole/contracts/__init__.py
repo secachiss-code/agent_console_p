@@ -4,6 +4,6 @@ from aconsole.contracts.errors import ERRORS
 from aconsole.contracts.methods import METHODS
 from aconsole.contracts.pipeline import HandoffEnvelope, StateBlock
 
-API_VERSION = "1.4.0"
+API_VERSION = "1.5.0"
 
 __all__ = ["API_VERSION", "ERRORS", "METHODS", "HandoffEnvelope", "StateBlock"]

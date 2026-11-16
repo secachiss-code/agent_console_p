@@ -181,6 +181,8 @@ def _samples() -> dict[str, msgspec.Struct]:
         "session/list": SessionListResult(sessions=()),
         "plan/list": PlanListResult(plans=(plan,)),
         "plan/get": plan,
+        "plan/freeze": msgspec.structs.replace(plan, phase="frozen"),
+        "plan/applyChange": msgspec.structs.replace(plan, phase="frozen"),
         "plan/setNodeStatus": node,
         "knowledge/impact": ImpactView(target="mod", hops=1, layers=(("mod",),), truncated=False, canvas=None),
         "knowledge/noteUri": NoteUriResult(uri="file:///vault/n.md"),

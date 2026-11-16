@@ -598,6 +598,14 @@
           },
           "type": "array"
         },
+        "phase": {
+          "default": "draft",
+          "enum": [
+            "completed",
+            "draft",
+            "frozen"
+          ]
+        },
         "project_id": {
           "type": "string"
         },
@@ -617,6 +625,13 @@
         "updated_at": {
           "format": "date-time",
           "type": "string"
+        },
+        "warnings": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
         }
       },
       "required": [
@@ -959,6 +974,24 @@
           "anyOf": [
             {
               "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "mode": {
+          "default": "execute",
+          "enum": [
+            "execute",
+            "plan"
+          ]
+        },
+        "model": {
+          "anyOf": [
+            {
+              "type": "string"
             },
             {
               "type": "null"

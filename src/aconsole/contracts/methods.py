@@ -153,6 +153,11 @@ METHODS: tuple[Method, ...] = (
     Method(name="session/list", params="SessionListParams", result="SessionListResult"),
     Method(name="plan/list", params="PlanListParams", result="PlanListResult"),
     Method(name="plan/get", params="PlanIdParams", result="PlanView", errors=("PLAN_NOT_FOUND",)),
+    Method(name="plan/freeze", params="PlanIdParams", result="PlanView",
+           errors=("PLAN_NOT_FOUND", "PLAN_ROLE", "PLAN_FROZEN", "NODE_CONTRACT"), capability="hdag.v1"),
+    Method(name="plan/applyChange", params="PlanApplyChangeParams", result="PlanView", capability="hdag.v1",
+           errors=("PLAN_NOT_FOUND", "PLAN_ROLE", "PLAN_FROZEN", "NODE_CONTRACT",
+                   "PLAN_GROWTH_LIMIT", "SPLIT_NO_PROOF")),
     Method(
         name="plan/setNodeStatus",
         params="SetNodeStatusParams",

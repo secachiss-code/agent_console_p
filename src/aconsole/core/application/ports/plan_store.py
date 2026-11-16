@@ -2,7 +2,9 @@
 
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Protocol
+from typing import Protocol, runtime_checkable
+
+from aconsole.core.domain.plan_admission import PlanTopology
 
 
 class StoreWriteError(Exception):
@@ -50,6 +52,10 @@ class StoredNode:
     invariants: str | None = None
     gate_profile: dict[str, object] | None = None
     test_cmd: str | None = None
+    max_attempts: int = 4
+    contract_sha256: str | None = None
+    blast_radius: tuple[str, ...] | None = None
+    baseline_children: int = 0
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -62,6 +68,7 @@ class StoredPlan:
     created_at: datetime
     updated_at: datetime
     nodes: tuple[StoredNode, ...]
+    topology: PlanTopology | None = None
 
 
 class PlanStore(Protocol):
@@ -71,4 +78,23 @@ class PlanStore(Protocol):
 
     def save(self, plan: StoredPlan) -> None:
         """Commit the plan's new state, or raise `StoreWriteError`."""
+        ...
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class StoredPlanChange:
+    id: str
+    plan_id: str
+    kind: str
+    status: str
+    payload: dict[str, object]
+    node_id: str | None = None
+
+
+@runtime_checkable
+class PlanChangeStore(PlanStore, Protocol):
+    def load_change(self, change_id: str) -> StoredPlanChange | None: ...
+
+    def save_change(self, plan: StoredPlan, change_id: str) -> None:
+        """Save the plan and human decision in one transaction, only while the request is open."""
         ...

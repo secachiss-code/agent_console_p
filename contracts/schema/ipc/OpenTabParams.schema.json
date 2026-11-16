@@ -45,6 +45,27 @@
           "default": false,
           "type": "boolean"
         },
+        "mode": {
+          "default": "execute",
+          "enum": [
+            "execute",
+            "plan"
+          ]
+        },
+        "model": {
+          "anyOf": [
+            {
+              "maxLength": 64,
+              "minLength": 1,
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
         "plan_node": {
           "anyOf": [
             {

@@ -22,7 +22,7 @@ from typing import Annotated, ClassVar, Literal, NoReturn, Protocol
 
 import pydantic_core
 from mcp.types import CallToolResult, TextContent
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, TypeAdapter
 
 from aconsole.contracts.app import PlanNodeView, PlanView
 from aconsole.contracts.common import AgentKind, NodeId, NoteRef, PlanId, ProjectId, TabId
@@ -30,14 +30,23 @@ from aconsole.contracts.common import NodeStatus as NodeStatusView
 from aconsole.core.application.ports.git_repo import GitCommandError
 from aconsole.core.application.ports.knowledge_store import KnowledgeStore, StoredFact, StoredHandover
 from aconsole.core.application.ports.plan_store import (
+    PlanChangeStore,
     PlanStore,
     StoredArtifact,
     StoredNode,
     StoredPlan,
     StoreWriteError,
 )
+from aconsole.core.application.services.plan_lifecycle import (
+    apply_plan_change,
+    freeze_plan,
+    require_note_contract,
+    topology_contract,
+    topology_for,
+)
 from aconsole.core.domain.errors import DomainError
 from aconsole.core.domain.plan import Move, Node, NodeSpec, NodeStatus, Plan, Role, after_merge
+from aconsole.core.domain.plan_admission import PlanTopology
 from aconsole.core.domain.scope import check_scope
 from aconsole.core.domain.vault_sync import Note as VaultNote
 from aconsole.core.domain.vault_sync import Owners, resolve_ref
@@ -323,6 +332,10 @@ class _Meta:
     parent: str | None
     related: tuple[str, ...]
     test_cmd: str | None = None
+    max_attempts: int = 4
+    contract_sha256: str | None = None
+    blast_radius: tuple[str, ...] | None = None
+    baseline_children: int = 0
     artifacts: dict[tuple[str, str], str] = field(default_factory=dict)
 
 
@@ -337,6 +350,7 @@ class _Stored:
     deps: dict[str, tuple[str, ...]]
     updated_at: datetime
     created_at: datetime
+    topology: PlanTopology | None = None
 
 
 @dataclass
@@ -450,6 +464,71 @@ class PlanBoard:
         with self._lock:
             stored = self._plans.get(plan_id)
             return None if stored is None else self._view(stored)
+
+    def export_plan(self, plan_id: str) -> StoredPlan:
+        with self._lock:
+            stored = self._plans.get(plan_id)
+            if stored is None:
+                raise DomainError(code=4001, name="PLAN_NOT_FOUND", retryable=False)
+            return self._state(stored)
+
+    def freeze(self, plan_id: str, radii: dict[str, tuple[str, ...] | None], *, graph_present: bool) -> PlanView:
+        with self._lock:
+            frozen = freeze_plan(self.export_plan(plan_id), radii, at=self._now(), graph_present=graph_present)
+            current = self._plans[plan_id]
+            if current.topology is not None and current.topology.phase == "frozen":
+                return self._view(current)
+            stored = _restored(frozen, checked_completion=self._checked_completion)
+            self._plans[plan_id] = stored
+            self._commit(stored)
+            return self._view(stored)
+
+    def apply_change(
+        self,
+        plan_id: str,
+        change_id: str,
+        radius: Callable[[StoredPlan], tuple[dict[str, tuple[str, ...] | None], bool]],
+    ) -> PlanView:
+        with self._lock:
+            before = self.export_plan(plan_id)
+            if before.topology is not None and change_id in before.topology.applied_changes:
+                return self._view(self._plans[plan_id])
+            if not isinstance(self._store, PlanChangeStore):
+                message = "a durable decision store is required"
+                raise StoreWriteError(message)
+            change = self._store.load_change(change_id)
+            if change is None:
+                raise DomainError(code=4013, name="NODE_CONTRACT", retryable=False)
+            try:
+                offered = TypeAdapter(list[NodeIn]).validate_python(change.payload.get("nodes", []))
+            except ValueError as exc:
+                raise DomainError(code=4013, name="NODE_CONTRACT", retryable=False) from exc
+            offered = _planning_nodes(
+                TabContext(tab_id="human", project_id=before.project_id, worktree=None, agent="human", mode="plan"),
+                offered,
+            )
+            proof: str | None = None
+            receipt_id = change.payload.get("proof_receipt")
+            if isinstance(receipt_id, str) and self._attempts is not None:
+                receipt = self._attempts.receipt(receipt_id)
+                if (
+                    receipt is not None
+                    and not receipt.passed
+                    and receipt.node_id == change.node_id
+                    and receipt.node_id in {node.id for node in before.nodes}
+                    and receipt.tier in {"micro", "blast"}
+                ):
+                    proof = receipt_id
+            candidate = _restored(before, checked_completion=self._checked_completion)
+            candidate.topology = replace(topology_for(before), phase="draft")
+            _ = self._insert(candidate, offered)
+            changed = apply_plan_change(
+                before, self._state(candidate), change, offered, proof_receipt=proof, radius=radius
+            )
+            candidate = _restored(changed, checked_completion=self._checked_completion)
+            self._plans[plan_id] = candidate
+            self._commit(candidate, change_id=change_id)
+            return self._view(candidate)
 
     def set_node_status(self, node_id: str, status: str, note: str | None) -> PlanNodeView:
         """The user moves a node. A human holds no fence, so the node's own fence is used. A note serves as evidence."""
@@ -610,6 +689,7 @@ class PlanBoard:
             meta = None if stored is None else stored.meta.get(key)
             if stored is None or meta is None:
                 return
+            require_note_contract(self._state(stored), key, note)
             meta.title = note.title
             meta.objective = note.objective
             meta.acceptance = note.acceptance
@@ -648,13 +728,16 @@ class PlanBoard:
                     return stored, meta
         raise DomainError(code=_NODE_NOT_FOUND, name="NODE_NOT_FOUND", retryable=False, extra=(node_id,))
 
-    def _commit(self, stored: _Stored) -> None:
+    def _commit(self, stored: _Stored, *, change_id: str | None = None) -> None:
         """Every change goes through here: the store, then whoever shows plans."""
         stored.updated_at = self._now()
         if self._store is not None:
             state = self._state(stored)
             try:
-                self._store.save(state)
+                if change_id is not None and isinstance(self._store, PlanChangeStore):
+                    self._store.save_change(state, change_id)
+                else:
+                    self._store.save(state)
             except StoreWriteError as exc:
                 self._forget_unsaved(stored.plan_id)
                 _stop("INTERNAL_ERROR", str(exc))
@@ -683,6 +766,7 @@ class PlanBoard:
             nodes=tuple(
                 _stored_node(stored, item, layers.get(item.key, 0), self._now()) for item in stored.meta.values()
             ),
+            topology=stored.topology,
         )
 
     def _view(self, stored: _Stored) -> PlanView:
@@ -705,6 +789,12 @@ class PlanBoard:
                 else None
             ),
             updated_at=stored.updated_at,
+            phase="draft" if stored.topology is None else stored.topology.phase,
+            warnings=("NO_CODE_GRAPH",)
+            if stored.topology is not None
+            and stored.topology.phase == "frozen"
+            and any(stored.dag.get(meta.key).pipeline and meta.blast_radius is None for meta in stored.meta.values())
+            else (),
         )
 
     def _node_view(self, stored: _Stored, meta: _Meta, layer: int, now: datetime) -> PlanNodeView:
@@ -1054,6 +1144,10 @@ class PlanBoard:
         fresh = [item for item in nodes if item.key not in stored.meta]
         if not fresh:
             return []
+        try:
+            topology = topology_for(self._state(stored)).add(tuple(topology_contract(item) for item in fresh))
+        except DomainError as exc:
+            _domain(exc)
         cycle = self._preview(stored, fresh)
         if cycle is not None:
             _stop("PLAN_CYCLE", "cycle " + " -> ".join(cycle))
@@ -1063,6 +1157,7 @@ class PlanBoard:
             stored.deps[spec.key] = tuple(spec.depends_on)
             stored.meta[spec.key] = _meta(self._id("node"), spec)
         stored.updated_at = now
+        stored.topology = topology
         return [NodeRef(key=spec.key, node_id=stored.meta[spec.key].node_id) for spec in fresh]
 
     def _preview(self, stored: _Stored, fresh: list[NodeIn]) -> tuple[str, ...] | None:
@@ -1296,6 +1391,10 @@ def _stored_node(stored: _Stored, meta: _Meta, layer: int, now: datetime) -> Sto
         parent=meta.parent,
         related=meta.related,
         test_cmd=meta.test_cmd,
+        max_attempts=meta.max_attempts,
+        contract_sha256=meta.contract_sha256,
+        blast_radius=meta.blast_radius,
+        baseline_children=meta.baseline_children,
         level=node.level,
         pipeline=node.pipeline,
         invariants=node.invariants,
@@ -1374,6 +1473,10 @@ def _restored(saved: StoredPlan, *, checked_completion: bool = False) -> _Stored
             parent=item.parent,
             related=item.related,
             test_cmd=item.test_cmd,
+            max_attempts=item.max_attempts,
+            contract_sha256=item.contract_sha256,
+            blast_radius=item.blast_radius,
+            baseline_children=item.baseline_children,
             artifacts={(artifact.kind, artifact.ref): artifact.id for artifact in item.artifacts},
         )
     return _Stored(
@@ -1386,6 +1489,7 @@ def _restored(saved: StoredPlan, *, checked_completion: bool = False) -> _Stored
         deps=deps,
         updated_at=saved.updated_at,
         created_at=saved.created_at,
+        topology=saved.topology,
     )
 
 
@@ -1400,8 +1504,8 @@ def _planning_nodes(ctx: TabContext, nodes: list[NodeIn]) -> list[NodeIn]:
     if ctx.mode is None:
         return nodes
     for item in nodes:
-        direction_ok = bool(item.invariants and item.gate_profile) if item.level == 0 else bool(
-            item.parent and item.test_cmd
+        direction_ok = (
+            bool(item.invariants and item.gate_profile) if item.level == 0 else bool(item.parent and item.test_cmd)
         )
         if not (item.objective.strip() and item.paths and item.acceptance and direction_ok):
             _stop("NODE_CONTRACT", f"incomplete planning contract: {item.key}")
@@ -1625,6 +1729,9 @@ def _git(worktree: Path | None, *args: str) -> str:
 
 
 _CODES: dict[str, int] = {
+    "PLAN_GROWTH_LIMIT": 4014,
+    "SPLIT_NO_PROOF": 4019,
+    "PLAN_FROZEN": 4011,
     "PLAN_ROLE": 4012,
     "NODE_CONTRACT": 4013,
     "RESPONSE_TOO_LARGE": -32000,

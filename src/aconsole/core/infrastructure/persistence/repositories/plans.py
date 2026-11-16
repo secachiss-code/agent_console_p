@@ -6,14 +6,23 @@ import logging
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import final
+from uuid import uuid4
 
 from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
-from aconsole.core.application.ports.plan_store import StoredArtifact, StoredNode, StoredPlan, StoreWriteError
+from aconsole.core.application.ports.plan_store import (
+    StoredArtifact,
+    StoredNode,
+    StoredPlan,
+    StoredPlanChange,
+    StoreWriteError,
+)
+from aconsole.core.application.services.plan_lifecycle import topology_contract
 from aconsole.core.domain.agent import AgentKind
 from aconsole.core.domain.plan import NodeStatus
+from aconsole.core.domain.plan_admission import PlanTopology
 from aconsole.core.infrastructure.persistence.models import (
     ArtifactKind,
     EdgeKind,
@@ -21,6 +30,7 @@ from aconsole.core.infrastructure.persistence.models import (
     NodeArtifact,
     Plan,
     PlanEdge,
+    PlanInbox,
     PlanNode,
     PlanStatus,
     Project,
@@ -63,6 +73,34 @@ class PlanDatabase:
             message = f"plan {plan.id} was not saved: {exc}"
             raise StoreWriteError(message) from exc
 
+    def load_change(self, change_id: str) -> StoredPlanChange | None:
+        found: list[StoredPlanChange] = []
+
+        def read(session: Session) -> None:
+            row = session.get(PlanInbox, change_id)
+            if row is not None:
+                found.append(StoredPlanChange(id=row.id, plan_id=row.plan_id, kind=row.kind,
+                                              status=row.status, payload=dict(row.payload), node_id=row.node_id))
+
+        _ = self._writer.call(read)
+        return found[0] if found else None
+
+    def save_change(self, plan: StoredPlan, change_id: str) -> None:
+        def write(session: Session) -> None:
+            change = session.get(PlanInbox, change_id)
+            if change is None or change.plan_id != plan.id or change.status != "open":
+                message = "change request is no longer open for this plan"
+                raise StoreWriteError(message)
+            save_plan(session, plan)
+            change.status = "applied"
+            change.decided_by = "human"
+            change.decided_at = plan.updated_at
+
+        try:
+            _ = self._writer.call(write)
+        except (SQLAlchemyError, TimeoutError) as exc:
+            raise StoreWriteError(str(exc)) from exc
+
 
 def save_plan(session: Session, plan: StoredPlan) -> None:
     """Upsert one plan. A plan outside any added project has nowhere to live and stays in memory."""
@@ -77,6 +115,20 @@ def save_plan(session: Session, plan: StoredPlan) -> None:
     row.goal = plan.goal
     row.status = PlanStatus(plan.status)
     row.updated_at = plan.updated_at
+    if plan.topology is not None:
+        topology = plan.topology
+        if topology.phase == "frozen" and row.phase != "frozen":
+            session.add(PlanInbox(
+                id=uuid4().hex[:26], plan_id=plan.id, kind="human", body="Plan frozen",
+                payload={"action": "freeze", "revision_no": topology.revision_no}, status="applied",
+                created_at=plan.updated_at, decided_at=plan.updated_at, decided_by="human",
+            ))
+        row.phase = topology.phase
+        row.revision_no = topology.revision_no
+        row.frozen_at = topology.frozen_at
+        row.baseline_nodes = topology.baseline_nodes
+        row.gross_added = topology.gross_added
+        row.gates_sha256 = topology.gates_sha256
     for node in plan.nodes:
         _save_node(session, plan, node)
     session.flush()
@@ -104,6 +156,20 @@ def load_plans(session: Session) -> tuple[StoredPlan, ...]:
                 created_at=_aware(row.created_at),
                 updated_at=_aware(row.updated_at),
                 nodes=nodes,
+                topology=PlanTopology(
+                    nodes=tuple(topology_contract(node) for node in nodes),
+                    phase="completed" if row.phase == "completed" else "frozen" if row.phase == "frozen" else "draft",
+                    revision_no=row.revision_no,
+                    frozen_at=None if row.frozen_at is None else _aware(row.frozen_at),
+                    baseline_nodes=row.baseline_nodes, gross_added=row.gross_added,
+                    gates_sha256=row.gates_sha256,
+                    contract_hashes=tuple((node.key, node.contract_sha256) for node in nodes if node.contract_sha256),
+                    baseline_children=tuple((node.key, node.baseline_children) for node in nodes),
+                    applied_changes=tuple(session.scalars(select(PlanInbox.id).where(
+                        PlanInbox.plan_id == row.id, PlanInbox.status == "applied",
+                        PlanInbox.decided_by == "human", PlanInbox.kind.in_(("add", "split")),
+                    )).all()),
+                ),
             )
         )
     return tuple(plans)
@@ -127,6 +193,10 @@ def _save_node(session: Session, plan: StoredPlan, node: StoredNode) -> None:
     row.pipeline = node.pipeline
     row.invariants = node.invariants
     row.gate_profile = node.gate_profile
+    row.max_attempts = node.max_attempts
+    row.contract_sha256 = node.contract_sha256
+    row.blast_radius = None if node.blast_radius is None else list(node.blast_radius)
+    row.baseline_children = node.baseline_children
     row.status = NodeStatus(node.status)
     row.owner_agent = None if node.owner is None else AgentKind(node.owner)
     row.paths = list(node.paths)
@@ -240,6 +310,10 @@ def _stored_node(links: _Links, row: PlanNode, keys: dict[str, str]) -> StoredNo
         pipeline=row.pipeline,
         invariants=row.invariants,
         gate_profile=row.gate_profile,
+        max_attempts=row.max_attempts,
+        contract_sha256=row.contract_sha256,
+        blast_radius=None if row.blast_radius is None else tuple(row.blast_radius),
+        baseline_children=row.baseline_children,
         status=row.status.value,
         owner=None if row.owner_agent is None else row.owner_agent.value,
         paths=tuple(row.paths),
