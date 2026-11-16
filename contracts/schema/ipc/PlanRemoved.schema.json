@@ -1,0 +1,24 @@
+{
+  "$defs": {
+    "PlanRemoved": {
+      "properties": {
+        "plan_id": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "plan_removed"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "plan_id"
+      ],
+      "title": "PlanRemoved",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/PlanRemoved",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

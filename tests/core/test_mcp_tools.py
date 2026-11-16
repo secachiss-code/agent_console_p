@@ -22,11 +22,16 @@ if TYPE_CHECKING:
 
 _HINT = "open a tab and pass Authorization: Bearer <tab token>"
 _READ = frozenset({"plan_get", "plan_ready", "ctx_get", "kb_impact", "plan_list"})
-_IDEMPOTENT = frozenset({"node_escalate", "plan_create", "plan_add_nodes", "node_attach", "step_begin", "step_submit", "step_reset"})
+_IDEMPOTENT = frozenset({
+    "node_escalate", "plan_create", "plan_add_nodes", "plan_save", "node_attach",
+    "step_begin", "step_submit", "step_reset",
+})
 _TOOLS = frozenset(
     {
         "plan_create",
         "plan_add_nodes",
+        "plan_save",
+        "plan_delete",
         "plan_get",
         "plan_ready",
         "node_claim",
@@ -48,6 +53,8 @@ _ERROR_ARGS: dict[str, dict[str, object]] = {
     "gate_run": {"node_id": "node-1", "fence": 0, "tier": "micro"},
     "plan_create": {"title": "Plan", "goal": "Ship"},
     "plan_add_nodes": {"plan_id": "plan-1", "nodes": []},
+    "plan_save": {"title": "Plan", "goal": "Ship"},
+    "plan_delete": {"plan_id": "plan-1"},
     "plan_get": {"plan_id": "plan-1"},
     "plan_ready": {},
     "node_claim": {"node_id": "node-1"},
@@ -149,10 +156,14 @@ def test_execute_cannot_list_or_call_graph_mutations() -> None:
         server = build_server(board, ctx)
         async with Client(server) as client:
             names = {tool.name for tool in (await client.list_tools()).tools}
-            assert not names.intersection({"plan_create", "plan_add_nodes", "change_propose"})
+            assert not names.intersection(
+                {"plan_create", "plan_add_nodes", "plan_save", "plan_delete", "change_propose"}
+            )
             for name, arguments in (
                 ("plan_create", {"title": "Plan", "goal": "Goal"}),
                 ("plan_add_nodes", {"plan_id": "missing", "nodes": []}),
+                ("plan_save", {"title": "Plan", "goal": "Goal"}),
+                ("plan_delete", {"plan_id": "missing"}),
             ):
                 result = await client.call_tool(name, arguments)
                 assert result.is_error
@@ -186,6 +197,23 @@ def test_planning_requires_full_contract_and_defaults_pipeline_on() -> None:
                 denied = await execution.call_tool("plan_add_nodes", {"plan_id": plan_id, "nodes": [_node("C-2")]})
                 assert _error(denied)["reason"] == "PLAN_ROLE"
             assert len(board.view(plan_id).nodes) == 2
+            saved = await _call(client, "plan_save", {
+                "plan_id": plan_id,
+                "title": "Plan renamed",
+                "goal": "Goal",
+                "nodes": [
+                    {**_node("D-0", paths=["src/**"]), "level": 0, "invariants": "pure domain",
+                     "gate_profile": {"tests": ["pytest"]}, "acceptance": ["green"]},
+                    {**_node("C-2", paths=["src/b.py"]), "parent": "D-0", "test_cmd": "pytest",
+                     "acceptance": ["green"]},
+                ],
+            })
+            assert saved["plan_id"] == plan_id
+            assert saved["title"] == "Plan renamed"
+            assert {node["key"] for node in saved["nodes"]} == {"D-0", "C-2"}
+            removed = await _call(client, "plan_delete", {"plan_id": plan_id})
+            assert removed == {"plan_id": plan_id}
+            assert board.view(plan_id) is None
 
     asyncio.run(scenario())
 
@@ -227,7 +255,7 @@ async def _each_tool(worktree: Path) -> None:
 def _check_tool(name: str, tool: Tool) -> None:
     marks = tool.annotations
     assert marks is not None
-    assert marks.destructive_hint is False
+    assert marks.destructive_hint is (name == "plan_delete")
     assert marks.open_world_hint is False
     assert marks.read_only_hint is (name in _READ)
     assert marks.idempotent_hint is (name in _READ or name in _IDEMPOTENT)

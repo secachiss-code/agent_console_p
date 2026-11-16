@@ -4,6 +4,7 @@ from aconsole.contracts.events import (
     Banner,
     GitStateUpdated,
     OperationProgress,
+    PlanRemoved,
     PlanUpdated,
     QuotaUpdated,
     TabUpdated,
@@ -33,6 +34,9 @@ class Coalescer:
         self._pending: dict[str, UiEvent] = {}
 
     def push(self, event: UiEvent) -> UiEvent | None:
+        if isinstance(event, PlanRemoved):
+            self._pending.pop(f"plan:{event.plan_id}", None)
+            return event
         key = coalesce_key(event)
         if key is None:
             return event

@@ -154,6 +154,28 @@ METHODS: tuple[Method, ...] = (
     Method(name="plan/list", params="PlanListParams", result="PlanListResult"),
     Method(name="plan/get", params="PlanIdParams", result="PlanView", errors=("PLAN_NOT_FOUND",)),
     Method(
+        name="plan/save",
+        params="PlanSaveParams",
+        result="PlanView",
+        capability="hdag.v1",
+        errors=(
+            "PLAN_NOT_FOUND",
+            "NODE_NOT_FOUND",
+            "NODE_CONTRACT",
+            "PLAN_CYCLE",
+            "PLAN_FROZEN",
+            "LEASE_HELD",
+            "PLAN_GROWTH_LIMIT",
+        ),
+    ),
+    Method(
+        name="plan/delete",
+        params="PlanIdParams",
+        result="EmptyResult",
+        capability="hdag.v1",
+        errors=("PLAN_NOT_FOUND", "LEASE_HELD"),
+    ),
+    Method(
         name="plan/inbox",
         params="PlanIdParams",
         result="PlanInboxResult",

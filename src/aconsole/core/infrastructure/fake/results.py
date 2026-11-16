@@ -183,6 +183,8 @@ def _samples() -> dict[str, msgspec.Struct]:
         "session/list": SessionListResult(sessions=()),
         "plan/list": PlanListResult(plans=(plan,)),
         "plan/get": plan,
+        "plan/save": plan,
+        "plan/delete": empty,
         "plan/inbox": PlanInboxResult(entries=()),
         "plan/decide": plan,
         "plan/directionGate": DirectionGateResult(passed=False, receipt_hash="demo", verdict="Demo only",

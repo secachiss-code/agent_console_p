@@ -1055,6 +1055,9 @@
               "$ref": "#/$defs/PlanUpdated"
             },
             {
+              "$ref": "#/$defs/PlanRemoved"
+            },
+            {
               "$ref": "#/$defs/PlanAttention"
             },
             {
@@ -1112,6 +1115,7 @@
               "notify": "#/$defs/Notify",
               "operation_progress": "#/$defs/OperationProgress",
               "plan_attention": "#/$defs/PlanAttention",
+              "plan_removed": "#/$defs/PlanRemoved",
               "plan_updated": "#/$defs/PlanUpdated",
               "projects_changed": "#/$defs/ProjectsChanged",
               "quota_updated": "#/$defs/QuotaUpdated",
@@ -1838,6 +1842,24 @@
         "plan_id"
       ],
       "title": "PlanNotFoundDetails",
+      "type": "object"
+    },
+    "PlanRemoved": {
+      "properties": {
+        "plan_id": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "plan_removed"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "plan_id"
+      ],
+      "title": "PlanRemoved",
       "type": "object"
     },
     "PlanUpdated": {

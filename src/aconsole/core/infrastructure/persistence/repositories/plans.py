@@ -74,6 +74,13 @@ class PlanDatabase:
             message = f"plan {plan.id} was not saved: {exc}"
             raise StoreWriteError(message) from exc
 
+    def delete(self, plan_id: str) -> None:
+        try:
+            _ = self._writer.call(lambda session: delete_plan(session, plan_id))
+        except (SQLAlchemyError, TimeoutError) as exc:
+            message = f"plan {plan_id} was not deleted: {exc}"
+            raise StoreWriteError(message) from exc
+
     def load_change(self, change_id: str) -> StoredPlanChange | None:
         found: list[StoredPlanChange] = []
 
@@ -231,14 +238,26 @@ def save_plan(session: Session, plan: StoredPlan) -> None:
         row.baseline_nodes = topology.baseline_nodes
         row.gross_added = topology.gross_added
         row.gates_sha256 = topology.gates_sha256
+    kept = {node.id for node in plan.nodes}
+    for stale in session.scalars(select(PlanNode).where(PlanNode.plan_id == plan.id)).all():
+        if stale.id not in kept:
+            session.delete(stale)
+    session.flush()
     for node in plan.nodes:
         _save_node(session, plan, node)
     session.flush()
     ids = {node.key: node.id for node in plan.nodes}
     node_ids = tuple(ids.values())
-    _sync_edges(session, plan, ids, node_ids)
-    _sync_artifacts(session, plan, node_ids)
-    _sync_leases(session, plan, node_ids)
+    if node_ids:
+        _sync_edges(session, plan, ids, node_ids)
+        _sync_artifacts(session, plan, node_ids)
+        _sync_leases(session, plan, node_ids)
+
+
+def delete_plan(session: Session, plan_id: str) -> None:
+    row = session.get(Plan, plan_id)
+    if row is not None:
+        session.delete(row)
 
 
 def load_plans(session: Session) -> tuple[StoredPlan, ...]:

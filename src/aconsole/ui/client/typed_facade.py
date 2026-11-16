@@ -40,6 +40,7 @@ from aconsole.contracts.app import (
     PlanListParams,
     PlanListResult,
     PlanNodeView,
+    PlanSaveParams,
     PlanView,
     PreparedImagePaste,
     PrepareImagePasteParams,
@@ -260,6 +261,12 @@ class TypedFacade(Facade):
 
     async def plan_get(self, params: PlanIdParams) -> PlanView:
         return await self.typed("plan/get", params, PlanView)
+
+    async def plan_save(self, params: PlanSaveParams) -> PlanView:
+        return await self.typed("plan/save", params, PlanView)
+
+    async def plan_delete(self, params: PlanIdParams) -> EmptyResult:
+        return await self.typed("plan/delete", params, EmptyResult)
 
     async def plan_inbox(self, params: PlanIdParams) -> PlanInboxResult:
         return await self.typed("plan/inbox", params, PlanInboxResult)

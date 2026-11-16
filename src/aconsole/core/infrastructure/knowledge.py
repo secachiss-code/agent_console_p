@@ -9,6 +9,7 @@ import msgspec
 from aconsole.contracts.app import (
     DirectionGateParams,
     DirectionGateResult,
+    EmptyResult,
     ImpactParams,
     ImpactView,
     NoteUriParams,
@@ -20,6 +21,7 @@ from aconsole.contracts.app import (
     PlanInboxResult,
     PlanListParams,
     PlanListResult,
+    PlanSaveParams,
     SetNodeStatusParams,
 )
 from aconsole.contracts.common import NodeId, PlanId
@@ -38,6 +40,8 @@ PLAN_METHODS: Final = frozenset(
         "plan/decide",
         "plan/list",
         "plan/get",
+        "plan/save",
+        "plan/delete",
         "plan/setNodeStatus",
         "plan/freeze",
         "plan/applyChange",
@@ -83,8 +87,7 @@ class KnowledgeService:
         if method == "plan/applyChange":
             change = msgspec.json.decode(raw, type=PlanApplyChangeParams)
             return self.board.apply_change(str(change.plan_id), change.change_id, self._radii)
-        moved = msgspec.json.decode(raw, type=SetNodeStatusParams)
-        return self.board.set_node_status(str(moved.node_id), moved.status.value, moved.note)
+        return self._document(method, raw)
 
     def _review(self, method: str, raw: bytes) -> msgspec.Struct:
         if method == "plan/directionGate":
@@ -130,6 +133,29 @@ class KnowledgeService:
                 )
                 for entry in self.board.inbox(plan.id)
             )
+        )
+
+    def _document(self, method: str, raw: bytes) -> msgspec.Struct:
+        if method == "plan/save":
+            return self._save(raw)
+        if method == "plan/delete":
+            wanted = msgspec.json.decode(raw, type=PlanIdParams)
+            self.board.delete_plan(str(wanted.plan_id))
+            return EmptyResult()
+        moved = msgspec.json.decode(raw, type=SetNodeStatusParams)
+        return self.board.set_node_status(str(moved.node_id), moved.status.value, moved.note)
+
+    def _save(self, raw: bytes) -> msgspec.Struct:
+        try:
+            params = msgspec.json.decode(raw, type=PlanSaveParams)
+        except msgspec.ValidationError as exc:
+            raise ValueError(str(exc)) from exc
+        return self.board.save_document(
+            str(params.project_id),
+            params.title,
+            params.goal,
+            None if params.plan_id is None else str(params.plan_id),
+            params.nodes,
         )
 
     def vault_ok(self) -> bool:

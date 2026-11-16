@@ -31,6 +31,7 @@ from aconsole.contracts.errors import ErrorData, ErrorObject, MessageTooLargeDet
 from aconsole.contracts.events import (
     Notify,
     PlanAttention,
+    PlanRemoved,
     PlanUpdated,
     QuotaUpdated,
     ResyncRequired,
@@ -628,6 +629,7 @@ class Daemon:
         self._palette_plan_lock: Lock = Lock()
         self._plans: PlanBoard = PlanBoard(checked_completion=True)
         self._plans.on_changed = self._plan_changed
+        self._plans.on_removed = self._plan_removed
         self._plans.on_attention = self._plan_attention
         # Off the loop and off the tab worker: files can be slow, and an edit must not wait for a tab call.
         self._vault_thread: ThreadPoolExecutor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="aconsole-vault")
@@ -843,6 +845,14 @@ class Daemon:
         loop = self._loop
         if loop is not None and not loop.is_closed():
             _ = loop.call_soon_threadsafe(self._publish, PlanUpdated(plan=plan), self._live_tabs, None)
+
+    def _plan_removed(self, plan_id: str) -> None:
+        """Drop the plan from the snapshot. A removal wins over a plan update still waiting to flush."""
+        with self._palette_plan_lock:
+            self._palette_plans.pop(plan_id, None)
+        loop = self._loop
+        if loop is not None and not loop.is_closed():
+            _ = loop.call_soon_threadsafe(self._publish, PlanRemoved(plan_id=PlanId(plan_id)), self._live_tabs, None)
 
     def _plan_attention(self, plan_id: str, node_id: str, kind: str, reason: str) -> None:
         loop = self._loop

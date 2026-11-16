@@ -171,7 +171,7 @@ class Exercise:
         node = self.state.nodes["ACC-3"]
         async with self.client(3) as client:
             names = {tool.name for tool in (await client.list_tools()).tools}
-            if names & {"plan_create", "plan_add_nodes", "plan_decide"}:
+            if names & {"plan_create", "plan_add_nodes", "plan_save", "plan_delete", "plan_decide"}:
                 raise AssertionError("an executor sees graph or human decision tools")
             await self.call(client, "plan_create", {"title": "Forbidden", "goal": "Forbidden"},
                             expected_error="PLAN_ROLE")

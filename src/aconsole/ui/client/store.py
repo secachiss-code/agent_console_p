@@ -11,6 +11,7 @@ from aconsole.contracts.events import (
     AgentsChanged,
     ApprovalRequested,
     ApprovalResolved,
+    PlanRemoved,
     PlanUpdated,
     ProjectsChanged,
     QuotaUpdated,
@@ -194,6 +195,9 @@ def _put[Item](items: tuple[Item, ...], item: Item, key: Callable[[Item], object
 def _model(snapshot: AppSnapshot, event: UiEvent) -> AppSnapshot:
     if isinstance(event, ApprovalRequested | ApprovalResolved):
         return _approvals(snapshot, event)
+    if isinstance(event, PlanRemoved):
+        kept = tuple(plan for plan in snapshot.plans if plan.id != event.plan_id)
+        return msgspec.structs.replace(snapshot, plans=kept)
     if isinstance(event, QuotaUpdated | PlanUpdated):
         return _resources(snapshot, event)
     if isinstance(event, ProjectsChanged | AgentsChanged | SettingsChanged | SetupRequired):

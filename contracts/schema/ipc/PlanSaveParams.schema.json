@@ -1,0 +1,201 @@
+{
+  "$defs": {
+    "PlanNodeSpec": {
+      "additionalProperties": false,
+      "description": "One node in a `plan/save` document. The same shape creates a node or replaces it.",
+      "properties": {
+        "acceptance": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 100,
+          "type": "array"
+        },
+        "boundaries": {
+          "anyOf": [
+            {
+              "maxLength": 2000,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "depends_on": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 100,
+          "type": "array"
+        },
+        "gate_profile": {},
+        "invariants": {
+          "anyOf": [
+            {
+              "maxLength": 2000,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "key": {
+          "maxLength": 10,
+          "minLength": 3,
+          "type": "string"
+        },
+        "level": {
+          "default": 1,
+          "enum": [
+            0,
+            1
+          ]
+        },
+        "objective": {
+          "maxLength": 2000,
+          "type": "string"
+        },
+        "output_format": {
+          "anyOf": [
+            {
+              "maxLength": 2000,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "owner_agent": {
+          "anyOf": [
+            {
+              "enum": [
+                "claude",
+                "codex"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "parent": {
+          "anyOf": [
+            {
+              "maxLength": 10,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "paths": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 100,
+          "type": "array"
+        },
+        "related": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 100,
+          "type": "array"
+        },
+        "review_required": {
+          "default": false,
+          "type": "boolean"
+        },
+        "test_cmd": {
+          "anyOf": [
+            {
+              "maxLength": 1000,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "title": {
+          "maxLength": 120,
+          "minLength": 3,
+          "type": "string"
+        }
+      },
+      "required": [
+        "key",
+        "title",
+        "objective"
+      ],
+      "title": "PlanNodeSpec",
+      "type": "object"
+    },
+    "PlanSaveParams": {
+      "additionalProperties": false,
+      "description": "Create a plan, or replace a draft. Omit `nodes` to leave the graph as it is.\n\nWithout `plan_id`, the project and title name the plan: a second save returns that plan\ninstead of inserting another. With `plan_id`, `title` may rename it. `nodes` replaces the\nwhole draft set in the same transaction.",
+      "properties": {
+        "goal": {
+          "default": "",
+          "maxLength": 8000,
+          "type": "string"
+        },
+        "nodes": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/PlanNodeSpec"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "plan_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "project_id": {
+          "type": "string"
+        },
+        "title": {
+          "maxLength": 120,
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "project_id",
+        "title"
+      ],
+      "title": "PlanSaveParams",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/PlanSaveParams",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

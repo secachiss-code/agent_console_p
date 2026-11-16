@@ -133,7 +133,9 @@ def test_claude_launch_config_lists_tools_and_isolates_projects(
             })
             assert not made.get("isError", False)
             execute_tools = await asyncio.to_thread(sessions[1].request, "tools/list", {})
-            assert not {tool["name"] for tool in execute_tools["tools"]}.intersection({"plan_create", "plan_add_nodes"})
+            assert not {tool["name"] for tool in execute_tools["tools"]}.intersection(
+                {"plan_create", "plan_add_nodes", "plan_save", "plan_delete"}
+            )
             refused = await asyncio.to_thread(sessions[1].request, "tools/call", {
                 "name": "plan_add_nodes", "arguments": {"plan_id": "missing", "nodes": []},
             })

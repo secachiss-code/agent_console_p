@@ -22,11 +22,12 @@ from pathlib import Path
 from typing import Annotated, ClassVar, Literal, NoReturn, Protocol
 from uuid import uuid4
 
+import msgspec
 import pydantic_core
 from mcp.types import CallToolResult, TextContent
 from pydantic import BaseModel, ConfigDict, Field, RootModel, TypeAdapter
 
-from aconsole.contracts.app import PlanNodeView, PlanView
+from aconsole.contracts.app import PlanNodeSpec, PlanNodeView, PlanView
 from aconsole.contracts.common import AgentKind, NodeId, NoteRef, PlanId, ProjectId, TabId
 from aconsole.contracts.common import NodeStatus as NodeStatusView
 from aconsole.core.application.ports.gate_runner import GateRunnerUnavailableError
@@ -128,6 +129,18 @@ class PlanCreated(_Frozen):
     plan_id: str
     nodes: list[NodeRef]
     canvas_note: str
+
+
+class PlanSaved(_Frozen):
+    plan_id: str
+    title: str
+    phase: str
+    status: str
+    nodes: list[NodeRef]
+
+
+class PlanDeleted(_Frozen):
+    plan_id: str
 
 
 class Added(_Frozen):
@@ -424,6 +437,7 @@ class PlanBoard:
         self._memory_inbox: dict[str, StoredPlanChange] = {}
         self._knowledge: KnowledgeStore | None = None
         self.on_changed: Callable[[PlanView], None] | None = None
+        self.on_removed: Callable[[str], None] | None = None
         self.note_ref: Callable[[str, str], str | None] = lambda _plan, _key: None
         self.code_graph: CodeGraph | None = None
         self._epoch: str = secrets.token_hex(3)
@@ -1180,6 +1194,163 @@ class PlanBoard:
                 self._commit(stored)
             return PlanCreated(plan_id=stored.plan_id, nodes=_refs(stored), canvas_note=_canvas(stored.plan_id))
 
+    def save_document(
+        self,
+        project_id: str,
+        title: str,
+        goal: str,
+        plan_id: str | None,
+        nodes: tuple[PlanNodeSpec, ...] | None,
+    ) -> PlanView:
+        """Create a plan or replace a draft in one transaction. Omitted nodes leave the graph."""
+        human = TabContext(tab_id=_HUMAN_TAB, project_id=project_id, worktree=None, agent="human", mode="plan")
+        refusal: DomainError | None = None
+        try:
+            incoming = None if nodes is None else _planning_nodes(human, _node_inputs(nodes))
+        except _ToolError as exc:
+            refusal = _domain_error(exc)
+            incoming = None
+        if refusal is not None:
+            raise refusal
+        with self._lock:
+            stored, created = self._document_target(project_id, title, goal, plan_id)
+            try:
+                return self._write_document(stored, created=created, title=title, goal=goal, nodes=incoming)
+            except _ToolError as exc:
+                if created:
+                    self._plans.pop(stored.plan_id, None)
+                refusal = _domain_error(exc)
+            except DomainError as exc:
+                if created:
+                    self._plans.pop(stored.plan_id, None)
+                refusal = exc
+        if refusal is not None:
+            raise refusal
+        raise DomainError(code=-32603, name="INTERNAL_ERROR", retryable=False)
+
+    def save_for_tab(
+        self,
+        ctx: TabContext,
+        title: str,
+        goal: str,
+        plan_id: str | None,
+        nodes: list[NodeIn] | None,
+    ) -> PlanSaved:
+        """The planning tab's one-call create or draft replace. Execute tabs are refused."""
+        _require_tab(ctx)
+        if ctx.mode == "execute":
+            _stop("PLAN_ROLE", "graph changes require a planning tab")
+        try:
+            view = self.save_document(
+                ctx.project_id, title, goal, plan_id, None if nodes is None else _mcp_specs(nodes)
+            )
+        except DomainError as exc:
+            _domain(exc)
+        return PlanSaved(
+            plan_id=str(view.id),
+            title=view.title,
+            phase=view.phase,
+            status=view.status,
+            nodes=[NodeRef(key=node.key, node_id=str(node.id)) for node in view.nodes],
+        )
+
+    def delete_for_tab(self, ctx: TabContext, plan_id: str) -> PlanDeleted:
+        """Delete one plan of this project. A live lease keeps it."""
+        _require_tab(ctx)
+        if ctx.mode == "execute":
+            _stop("PLAN_ROLE", "graph changes require a planning tab")
+        view = self.view(plan_id)
+        if view is None or str(view.project_id) != ctx.project_id:
+            _stop("PLAN_NOT_FOUND", f"no plan {plan_id}")
+        try:
+            self.delete_plan(plan_id)
+        except DomainError as exc:
+            _domain(exc)
+        return PlanDeleted(plan_id=plan_id)
+
+    def delete_plan(self, plan_id: str) -> None:
+        """Drop a plan that nobody is working. A live lease keeps the plan."""
+        with self._lock:
+            stored = self._plans.get(plan_id)
+            if stored is None:
+                raise DomainError(code=4001, name="PLAN_NOT_FOUND", retryable=False)
+            if _busy(stored):
+                raise DomainError(code=4006, name="LEASE_HELD", retryable=True)
+            if self._store is not None:
+                try:
+                    self._store.delete(plan_id)
+                except StoreWriteError as exc:
+                    raise DomainError(code=-32603, name="INTERNAL_ERROR", retryable=False) from exc
+            self._plans.pop(plan_id, None)
+            self._saved.pop(plan_id, None)
+            self._seen.pop(plan_id, None)
+            self._memory_inbox = {
+                key: entry for key, entry in self._memory_inbox.items() if entry.plan_id != plan_id
+            }
+            if self.on_removed is not None:
+                self.on_removed(plan_id)
+
+    def _document_target(
+        self, project_id: str, title: str, goal: str, plan_id: str | None
+    ) -> tuple[_Stored, bool]:
+        if plan_id is not None:
+            stored = self._plans.get(plan_id)
+            if stored is None or stored.project_id != project_id:
+                raise DomainError(code=4001, name="PLAN_NOT_FOUND", retryable=False)
+            return stored, False
+        found = self._by_title(project_id, title)
+        if found is not None:
+            return found, False
+        return self._new_plan(project_id, title, goal), True
+
+    def _write_document(
+        self,
+        stored: _Stored,
+        *,
+        created: bool,
+        title: str,
+        goal: str,
+        nodes: list[NodeIn] | None,
+    ) -> PlanView:
+        if not created:
+            phase = "draft" if stored.topology is None else stored.topology.phase
+            if phase != "draft" and (stored.title != title or stored.goal != goal or nodes is not None):
+                raise DomainError(code=4011, name="PLAN_FROZEN", retryable=False)
+            taken = self._by_title(stored.project_id, title)
+            if taken is not None and taken.plan_id != stored.plan_id:
+                raise DomainError(code=4013, name="NODE_CONTRACT", retryable=False, extra=(title,))
+            if nodes is not None and _busy(stored):
+                raise DomainError(code=4006, name="LEASE_HELD", retryable=True)
+        if nodes is None:
+            changed = created or stored.title != title or stored.goal != goal
+            stored.title = title
+            stored.goal = goal
+            if changed:
+                self._commit(stored)
+            return self._view(stored)
+        if created:
+            if nodes:
+                self._insert(stored, nodes)
+            self._commit(stored)
+            return self._view(stored)
+        fresh = _Stored(
+            plan_id=stored.plan_id,
+            project_id=stored.project_id,
+            title=title,
+            goal=goal,
+            dag=Plan(checked_completion=self._checked_completion, lease_namespace=stored.plan_id),
+            meta={},
+            deps={},
+            updated_at=stored.updated_at,
+            created_at=stored.created_at,
+            topology=PlanTopology(),
+        )
+        if nodes:
+            self._insert(fresh, nodes)
+        self._plans[stored.plan_id] = fresh
+        self._commit(fresh)
+        return self._view(fresh)
+
     def add_nodes(self, ctx: TabContext, plan_id: str, nodes: list[NodeIn]) -> Added:
         """Add missing keys. A key that already exists is unchanged. A cycle adds nothing."""
         _require_tab(ctx)
@@ -1764,6 +1935,81 @@ def _plan_status(stored: _Stored) -> Literal["active", "completed"]:
     return "completed" if every and all(status in finished for status in every) else "active"
 
 
+def _busy(stored: _Stored) -> bool:
+    for meta in stored.meta.values():
+        node = stored.dag.get(meta.key)
+        if node.lease_id is not None and node.status in _HELD:
+            return True
+    return False
+
+
+def _gate_profile(raw: msgspec.Raw) -> dict[str, object] | None:
+    try:
+        value = json.loads(bytes(raw))
+    except (json.JSONDecodeError, TypeError) as exc:
+        _stop("NODE_CONTRACT", f"gate_profile is not JSON: {exc}")
+    if value is None:
+        return None
+    if not isinstance(value, dict):
+        _stop("NODE_CONTRACT", "gate_profile must be an object")
+    return value
+
+
+def _mcp_specs(nodes: list[NodeIn]) -> tuple[PlanNodeSpec, ...]:
+    return tuple(
+        PlanNodeSpec(
+            key=item.key,
+            title=item.title,
+            objective=item.objective,
+            depends_on=tuple(item.depends_on),
+            parent=item.parent,
+            related=tuple(item.related),
+            paths=tuple(item.paths),
+            acceptance=tuple(item.acceptance),
+            level=item.level,
+            invariants=item.invariants,
+            gate_profile=(
+                msgspec.Raw(b"null")
+                if item.gate_profile is None
+                else msgspec.Raw(json.dumps(item.gate_profile, sort_keys=True, separators=(",", ":")).encode())
+            ),
+            test_cmd=item.test_cmd,
+            review_required=item.review_required,
+            output_format=item.output_format,
+            boundaries=item.boundaries,
+            owner_agent=item.owner_agent,
+        )
+        for item in nodes
+    )
+
+
+def _node_inputs(nodes: tuple[PlanNodeSpec, ...]) -> list[NodeIn]:
+    try:
+        return [
+            NodeIn(
+                key=item.key,
+                title=item.title,
+                objective=item.objective,
+                depends_on=list(item.depends_on),
+                parent=item.parent,
+                related=list(item.related),
+                owner_agent=item.owner_agent,
+                paths=list(item.paths),
+                acceptance=list(item.acceptance),
+                level=item.level,
+                invariants=item.invariants,
+                gate_profile=_gate_profile(item.gate_profile),
+                test_cmd=item.test_cmd,
+                review_required=item.review_required,
+                output_format=item.output_format,
+                boundaries=item.boundaries,
+            )
+            for item in nodes
+        ]
+    except pydantic_core.ValidationError as exc:
+        _stop("NODE_CONTRACT", str(exc))
+
+
 def _stored_node(stored: _Stored, meta: _Meta, layer: int, now: datetime) -> StoredNode:
     node = stored.dag.get(meta.key)
     return StoredNode(
@@ -1918,6 +2164,14 @@ def _planning_nodes(ctx: TabContext, nodes: list[NodeIn]) -> list[NodeIn]:
 def _domain(exc: DomainError) -> NoReturn:
     detail = exc.name if not exc.extra else exc.name + " " + ", ".join(exc.extra)
     _stop(exc.name, detail)
+
+
+def _domain_error(exc: _ToolError) -> DomainError:
+    body = exc.result.structured_content
+    error = body.get("error", {}) if isinstance(body, dict) else {}
+    name = str(error.get("reason", "NODE_CONTRACT")) if isinstance(error, dict) else "NODE_CONTRACT"
+    code = error.get("code", 4013) if isinstance(error, dict) else 4013
+    return DomainError(code=code if isinstance(code, int) else 4013, name=name, retryable=name == "LEASE_HELD")
 
 
 def _stop(name: str, message: str) -> NoReturn:

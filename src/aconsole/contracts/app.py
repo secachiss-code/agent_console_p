@@ -512,6 +512,43 @@ class PlanIdParams(msgspec.Struct, frozen=True, kw_only=True):
     plan_id: PlanId
 
 
+class PlanNodeSpec(msgspec.Struct, frozen=True, kw_only=True, forbid_unknown_fields=True):
+    """One node in a `plan/save` document. The same shape creates a node or replaces it."""
+
+    key: Annotated[str, Meta(min_length=3, max_length=10)]
+    title: Annotated[str, Meta(min_length=3, max_length=120)]
+    objective: Annotated[str, Meta(max_length=2000)]
+    depends_on: Annotated[tuple[str, ...], Meta(max_length=100)] = ()
+    parent: Annotated[str, Meta(max_length=10)] | None = None
+    related: Annotated[tuple[str, ...], Meta(max_length=100)] = ()
+    paths: Annotated[tuple[str, ...], Meta(max_length=100)] = ()
+    acceptance: Annotated[tuple[str, ...], Meta(max_length=100)] = ()
+    level: Literal[0, 1] = 1
+    invariants: Annotated[str, Meta(max_length=2000)] | None = None
+    # A JSON object. Null means the node has no gate profile.
+    gate_profile: msgspec.Raw = msgspec.field(default_factory=lambda: msgspec.Raw(b"null"))
+    test_cmd: Annotated[str, Meta(max_length=1000)] | None = None
+    review_required: bool = False
+    output_format: Annotated[str, Meta(max_length=2000)] | None = None
+    boundaries: Annotated[str, Meta(max_length=2000)] | None = None
+    owner_agent: Literal["claude", "codex"] | None = None
+
+
+class PlanSaveParams(msgspec.Struct, frozen=True, kw_only=True, forbid_unknown_fields=True):
+    """Create a plan, or replace a draft. Omit `nodes` to leave the graph as it is.
+
+    Without `plan_id`, the project and title name the plan: a second save returns that plan
+    instead of inserting another. With `plan_id`, `title` may rename it. `nodes` replaces the
+    whole draft set in the same transaction.
+    """
+
+    project_id: ProjectId
+    title: Annotated[str, Meta(min_length=1, max_length=120)]
+    goal: Annotated[str, Meta(max_length=8000)] = ""
+    plan_id: PlanId | None = None
+    nodes: tuple[PlanNodeSpec, ...] | None = None
+
+
 class SetNodeStatusParams(msgspec.Struct, frozen=True, kw_only=True):
     node_id: NodeId
     status: NodeStatus

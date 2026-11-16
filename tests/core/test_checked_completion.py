@@ -114,6 +114,10 @@ class _Store:
             raise StoreWriteError(message)
         self.saved = plan
 
+    def delete(self, plan_id: str) -> None:
+        if self.saved is not None and self.saved.id == plan_id:
+            self.saved = None
+
 
 def _context(tab: str) -> TabContext:
     return TabContext(tab_id=tab, project_id="proj", worktree=None, agent="codex")

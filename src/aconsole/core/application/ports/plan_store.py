@@ -80,6 +80,10 @@ class PlanStore(Protocol):
         """Commit the plan's new state, or raise `StoreWriteError`."""
         ...
 
+    def delete(self, plan_id: str) -> None:
+        """Remove the plan and its nodes, or raise `StoreWriteError`."""
+        ...
+
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class StoredPlanChange:

@@ -53,6 +53,10 @@ class PlanUpdated(msgspec.Struct, frozen=True, kw_only=True, tag="plan_updated",
     plan: PlanView
 
 
+class PlanRemoved(msgspec.Struct, frozen=True, kw_only=True, tag="plan_removed", tag_field="type"):
+    plan_id: PlanId
+
+
 class PlanAttention(msgspec.Struct, frozen=True, kw_only=True, tag="plan_attention", tag_field="type"):
     plan_id: PlanId
     node_id: NodeId
@@ -150,6 +154,7 @@ UiEvent = (
     | ApprovalResolved
     | QuotaUpdated
     | PlanUpdated
+    | PlanRemoved
     | PlanAttention
     | ProjectsChanged
     | AgentsChanged

@@ -26,9 +26,11 @@ from aconsole.core.infrastructure.mcp.tools import (
     PipelineReply,
     PlanBoard,
     PlanCreated,
+    PlanDeleted,
     PlanGot,
     PlanList,
     PlanReady,
+    PlanSaved,
     TabContext,
     Updated,
     active,
@@ -39,6 +41,7 @@ from aconsole.core.infrastructure.mcp.tools import (
 _READ = ToolAnnotations(read_only_hint=True, destructive_hint=False, idempotent_hint=True, open_world_hint=False)
 _WRITE = ToolAnnotations(read_only_hint=False, destructive_hint=False, idempotent_hint=False, open_world_hint=False)
 _IDEMPOTENT = ToolAnnotations(read_only_hint=False, destructive_hint=False, idempotent_hint=True, open_world_hint=False)
+_DELETE = ToolAnnotations(read_only_hint=False, destructive_hint=True, idempotent_hint=False, open_world_hint=False)
 _MCP = "/mcp"
 _PAIR = 2
 _REQUEST_BYTES = 1024 * 1024
@@ -104,7 +107,11 @@ class _LeanServer(MCPServer):
     async def list_tools(self) -> list[Tool]:
         listed = await super().list_tools()
         if active(self.tab_context).mode == "execute":
-            listed = [tool for tool in listed if tool.name not in {"plan_create", "plan_add_nodes", "change_propose"}]
+            listed = [
+                tool
+                for tool in listed
+                if tool.name not in {"plan_create", "plan_add_nodes", "plan_save", "plan_delete", "change_propose"}
+            ]
         if active(self.tab_context).mode == "plan":
             listed = [
                 tool for tool in listed if tool.name not in {"step_submit", "step_reset", "gate_run", "node_escalate"}
@@ -283,6 +290,22 @@ def _register(  # noqa: C901 -- one nested function per MCP tool
         """Add nodes. An existing key is left unchanged. A cycle adds nothing."""
         return board.add_nodes(active(context), plan_id, nodes)
 
+    def plan_save(
+        title: Annotated[str, Field(min_length=1, max_length=120)],
+        goal: Annotated[str, Field(max_length=8000)] = "",
+        plan_id: _Id | None = None,
+        nodes: Annotated[list[NodeIn], Field(max_length=100)] | None = None,
+    ) -> PlanSaved:
+        """Create or replace this project's draft in one call. The same title returns the same plan.
+
+        Omit nodes to change only the title and goal. A nodes list replaces the whole draft set.
+        """
+        return board.save_for_tab(active(context), title, goal, plan_id, nodes)
+
+    def plan_delete(plan_id: _Id) -> PlanDeleted:
+        """Delete one plan of this project. A node someone is working keeps the plan."""
+        return board.delete_for_tab(active(context), plan_id)
+
     def plan_get(
         plan_id: _Id, response_format: Literal["concise", "detailed"] = "concise", since: _Id | None = None
     ) -> PlanGot:
@@ -413,6 +436,8 @@ def _register(  # noqa: C901 -- one nested function per MCP tool
     specs = (
         (plan_create, "Create a plan", _IDEMPOTENT),
         (plan_add_nodes, "Add plan nodes", _IDEMPOTENT),
+        (plan_save, "Create or replace a draft plan", _IDEMPOTENT),
+        (plan_delete, "Delete a plan", _DELETE),
         (plan_get, "Read a plan. since=<revision> returns only the nodes changed after that read", _READ),
         (plan_ready, "List claimable nodes", _READ),
         (node_claim, "Claim a node", _WRITE),

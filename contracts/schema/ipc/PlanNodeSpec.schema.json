@@ -1,0 +1,151 @@
+{
+  "$defs": {
+    "PlanNodeSpec": {
+      "additionalProperties": false,
+      "description": "One node in a `plan/save` document. The same shape creates a node or replaces it.",
+      "properties": {
+        "acceptance": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 100,
+          "type": "array"
+        },
+        "boundaries": {
+          "anyOf": [
+            {
+              "maxLength": 2000,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "depends_on": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 100,
+          "type": "array"
+        },
+        "gate_profile": {},
+        "invariants": {
+          "anyOf": [
+            {
+              "maxLength": 2000,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "key": {
+          "maxLength": 10,
+          "minLength": 3,
+          "type": "string"
+        },
+        "level": {
+          "default": 1,
+          "enum": [
+            0,
+            1
+          ]
+        },
+        "objective": {
+          "maxLength": 2000,
+          "type": "string"
+        },
+        "output_format": {
+          "anyOf": [
+            {
+              "maxLength": 2000,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "owner_agent": {
+          "anyOf": [
+            {
+              "enum": [
+                "claude",
+                "codex"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "parent": {
+          "anyOf": [
+            {
+              "maxLength": 10,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "paths": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 100,
+          "type": "array"
+        },
+        "related": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 100,
+          "type": "array"
+        },
+        "review_required": {
+          "default": false,
+          "type": "boolean"
+        },
+        "test_cmd": {
+          "anyOf": [
+            {
+              "maxLength": 1000,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "title": {
+          "maxLength": 120,
+          "minLength": 3,
+          "type": "string"
+        }
+      },
+      "required": [
+        "key",
+        "title",
+        "objective"
+      ],
+      "title": "PlanNodeSpec",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/PlanNodeSpec",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}
