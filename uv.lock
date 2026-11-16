@@ -4,7 +4,7 @@ requires-python = ">=3.15"
 
 [[package]]
 name = "aconsole"
-version = "0.1.3+b"
+version = "0.1.3+c"
 source = { editable = "." }
 dependencies = [
     { name = "alembic" },
