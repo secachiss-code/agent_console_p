@@ -165,13 +165,9 @@ def freeze_plan(
 
 
 def _validate_gate_profiles(plan: StoredPlan) -> None:
-    parents = {node.key: node for node in plan.nodes}
-    checked: set[str] = set()
     for node in plan.nodes:
-        if node.pipeline and node.parent in parents and node.parent not in checked:
-            parent = parents[node.parent]
-            _ = micro_commands(parent.gate_profile or {}, location=f"{parent.key}.gate_profile")
-            checked.add(parent.key)
+        if node.level == 0:
+            _ = micro_commands(node.gate_profile or {}, location=f"{node.key}.gate_profile")
 
 
 def repair_gate_profiles(plan: StoredPlan, profiles: Mapping[str, dict[str, object]], *, at: datetime) -> StoredPlan:

@@ -83,6 +83,14 @@ def test_incomplete_profile_cannot_be_frozen_or_change_draft_state() -> None:
     assert board.export_plan(before.id) == before
 
 
+def test_direction_without_children_cannot_freeze_with_an_invalid_profile() -> None:
+    _, draft = _broken_plan()
+    standalone = replace(draft, nodes=draft.nodes[:1])
+    with pytest.raises(DomainError) as error:
+        freeze_plan(standalone, {}, at=_AT, graph_present=False)
+    assert "IDX-0.gate_profile.micro missing commands" in error.value.extra[0]
+
+
 @pytest.mark.parametrize("operation", ["plan_create", "plan_save"])
 def test_planning_rejects_incomplete_profile_before_saving(operation: str) -> None:
     async def scenario() -> None:
