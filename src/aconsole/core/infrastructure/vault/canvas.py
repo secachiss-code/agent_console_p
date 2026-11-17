@@ -1,6 +1,7 @@
 """JSON Canvas 1.0 projection and durable inputs for the vault mirror."""
 
 import json
+from collections import defaultdict
 from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import PurePosixPath
@@ -23,7 +24,7 @@ _COLORS = {
 _WIDTH = 320
 _HEIGHT = 180
 _MARGIN = 40
-_COLUMN = 420
+_COLUMN = 450
 _ROW = 240
 
 
@@ -107,24 +108,9 @@ def render_canvas(
         raise ValueError(message)
     directions = sorted((node for node in nodes if node.level == 0), key=lambda node: node.key)
     columns = {node.key: index for index, node in enumerate(directions)}
-    offsets: dict[str | None, int] = {}
-    points: dict[str, tuple[int, int]] = {}
-    for node in sorted(nodes, key=lambda node: node.key):
+    for node in nodes:
         _safe_component(node.key)
-        if node.level == 0:
-            continue
-        column = columns.get(node.parent, len(columns)) if node.parent is not None else len(columns)
-        row = offsets.get(node.parent, 0)
-        offsets[node.parent] = row + 1
-        origin = (
-            (positions or {}).get(by_key[node.parent].id) if node.parent is not None and node.parent in by_key else None
-        )
-        default = (
-            (origin[0] + _MARGIN, origin[1] + _MARGIN + row * _ROW)
-            if origin is not None
-            else (column * _COLUMN, row * _ROW)
-        )
-        points[node.id] = (positions or {}).get(node.id, default)
+    points = _layout_points(by_key, positions or {})
     rendered: list[dict[str, object]] = []
     for direction in directions:
         children = [points[node.id] for node in nodes if node.level != 0 and node.parent == direction.key]
@@ -162,6 +148,61 @@ def render_canvas(
         )
     edges = _blocking_edges(nodes, by_key)
     return json.dumps({"nodes": rendered, "edges": edges}, ensure_ascii=False, sort_keys=True, indent=2) + "\n"
+
+
+def _layout_points(
+    by_key: Mapping[str, CanvasNode],
+    saved: Mapping[str, tuple[int, int]],
+) -> dict[str, tuple[int, int]]:
+    modules = {key: node for key, node in by_key.items() if node.level == 1}
+    blockers = {key: set(node.depends_on) & modules.keys() for key, node in modules.items()}
+    layers = _kahn_layers(blockers)
+    grouped: dict[int, list[str]] = defaultdict(list)
+    for key in sorted(modules):
+        grouped[layers[key]].append(key)
+    ranks: dict[str, int] = {}
+    points: dict[str, tuple[int, int]] = {}
+    for layer in sorted(grouped):
+        scored: list[tuple[float, str]] = []
+        for fallback, key in enumerate(grouped[layer]):
+            previous = [ranks[parent] for parent in sorted(blockers[key]) if layers[parent] < layer and parent in ranks]
+            score = sum(previous) / len(previous) if previous else float(fallback)
+            scored.append((score, key))
+        for row, (_score, key) in enumerate(sorted(scored)):
+            node = modules[key]
+            ranks[key] = row
+            parent = by_key.get(node.parent) if node.parent is not None else None
+            origin = saved.get(parent.id) if parent is not None and parent.level == 0 else None
+            x, y = layer * _COLUMN, row * _ROW
+            if origin is not None:
+                x, y = x + origin[0] + _MARGIN, y + origin[1] + _MARGIN
+            points[node.id] = saved.get(node.id, (x, y))
+    return points
+
+
+def _kahn_layers(blockers: Mapping[str, set[str]]) -> dict[str, int]:
+    successors: dict[str, set[str]] = defaultdict(set)
+    for key, dependencies in blockers.items():
+        for dependency in dependencies:
+            successors[dependency].add(key)
+    indegrees = {key: len(dependencies) for key, dependencies in blockers.items()}
+    frontier = sorted(key for key, count in indegrees.items() if count == 0)
+    layers = dict.fromkeys(blockers, 0)
+    visited: set[str] = set()
+    while frontier:
+        next_frontier: list[str] = []
+        for key in frontier:
+            visited.add(key)
+            for successor in sorted(successors[key]):
+                layers[successor] = max(layers[successor], layers[key] + 1)
+                indegrees[successor] -= 1
+                if indegrees[successor] == 0:
+                    next_frontier.append(successor)
+        frontier = sorted(next_frontier)
+    # Corrupt cycles and their blocked descendants remain visible in layer 0.
+    for key in blockers.keys() - visited:
+        layers[key] = 0
+    return layers
 
 
 def _blocking_edges(nodes: tuple[CanvasNode, ...], by_key: Mapping[str, CanvasNode]) -> list[dict[str, object]]:
