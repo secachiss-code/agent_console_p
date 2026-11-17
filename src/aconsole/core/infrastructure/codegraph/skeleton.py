@@ -2,6 +2,33 @@
 
 import ast
 import copy
+import hashlib
+from dataclasses import dataclass
+from pathlib import Path
+
+
+@dataclass(frozen=True, slots=True)
+class FileHashes:
+    body: str | None
+    interface: str | None
+
+
+def file_hashes(root: Path, path: str, language: str | None, symbols: tuple[str, ...]) -> FileHashes:
+    """Hash source bytes without executing code; an empty interface is never reusable."""
+    if language is None:
+        return FileHashes(None, None)
+    try:
+        source = root / path
+        if not source.resolve().is_relative_to(root.resolve()):
+            return FileHashes(None, None)
+        raw = source.read_bytes()
+    except OSError, ValueError:
+        return FileHashes(None, None)
+    body = hashlib.sha256(raw).hexdigest()
+    interface = "\n".join(sorted(set(symbols))) if symbols else None
+    if language == "python":
+        interface = _python_interface(raw)
+    return FileHashes(body, hashlib.sha256(interface.encode("utf-8")).hexdigest() if interface is not None else "")
 
 
 def _public(name: str) -> bool:
@@ -28,14 +55,18 @@ def _declarations(body: list[ast.stmt]) -> list[ast.stmt]:
     return found
 
 
-def python_skeleton(source: str) -> str:
-    """Invalid intermediate edits have no reliable AST and yield an empty skeleton."""
+def _python_interface(source: str | bytes) -> str | None:
     try:
         tree = ast.parse(source)
     except SyntaxError, ValueError:
-        return ""
+        return None
     tree.body = _declarations(tree.body)
     return ast.unparse(ast.fix_missing_locations(tree))
+
+
+def python_skeleton(source: str) -> str:
+    """Invalid intermediate edits have no reliable AST and yield an empty skeleton."""
+    return _python_interface(source) or ""
 
 
 def python_slice(source: str, symbols: tuple[str, ...], *, context: int = 3, max_lines: int = 120) -> str:

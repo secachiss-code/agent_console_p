@@ -86,6 +86,7 @@ class KbEdgeKind(StrEnum):
     IMPORTS = "imports"
     USES_TYPE = "uses_type"
     INHERITS = "inherits"
+    IMPLEMENTS = "implements"
     PROJECT_REF = "project_ref"
     CODE_REF = "code_ref"
     DEPENDS_ON = "depends_on"
@@ -160,9 +161,14 @@ class Workspace(Base):
 @final
 class WorkSessionRow(Base):
     __tablename__ = "work_sessions"
-    __table_args__ = _table_args(Index(
-        "ix_work_sessions_workspace", "worktree", unique=True, sqlite_where=column("workspace_removed") == false(),
-    ))
+    __table_args__ = _table_args(
+        Index(
+            "ix_work_sessions_workspace",
+            "worktree",
+            unique=True,
+            sqlite_where=column("workspace_removed") == false(),
+        )
+    )
 
     id: Mapped[str] = mapped_column(String(32), primary_key=True)
     project_id: Mapped[str] = mapped_column(ForeignKey("projects.id", ondelete="CASCADE"), index=True)
@@ -182,7 +188,8 @@ class WorkSessionSnapshotRow(Base):
     __tablename__ = "work_session_snapshots"
 
     work_session_id: Mapped[str] = mapped_column(
-        ForeignKey("work_sessions.id", ondelete="CASCADE"), primary_key=True,
+        ForeignKey("work_sessions.id", ondelete="CASCADE"),
+        primary_key=True,
     )
     sequence: Mapped[int] = mapped_column(primary_key=True)
     kind: Mapped[str] = mapped_column(String(32))
@@ -212,8 +219,10 @@ class Plan(Base):
     goal: Mapped[str] = mapped_column(Text)
     status: Mapped[PlanStatus] = mapped_column(_enum(PlanStatus))
     phase: Mapped[str] = mapped_column(
-        String(16), CheckConstraint("phase IN ('draft', 'frozen', 'completed')", name="phase"),
-        default="draft", server_default="draft",
+        String(16),
+        CheckConstraint("phase IN ('draft', 'frozen', 'completed')", name="phase"),
+        default="draft",
+        server_default="draft",
     )
     revision_no: Mapped[int] = mapped_column(default=1, server_default="1")
     frozen_at: Mapped[datetime | None] = mapped_column()
@@ -258,7 +267,9 @@ class PlanNode(Base):
     level: Mapped[int] = mapped_column(CheckConstraint("level IN (0, 1)", name="level"), default=1, server_default="1")
     pipeline: Mapped[bool] = mapped_column(default=False, server_default=false())
     max_attempts: Mapped[int] = mapped_column(
-        CheckConstraint("max_attempts BETWEEN 1 AND 4", name="max_attempts"), default=4, server_default="4",
+        CheckConstraint("max_attempts BETWEEN 1 AND 4", name="max_attempts"),
+        default=4,
+        server_default="4",
     )
     contract_sha256: Mapped[str | None] = mapped_column(String(64))
     invariants: Mapped[str | None] = mapped_column(Text)
@@ -284,8 +295,10 @@ class Tab(Base):
     workspace_id: Mapped[str | None] = mapped_column(ForeignKey("workspaces.id", ondelete="SET NULL"))
     agent_kind: Mapped[AgentKind] = mapped_column(_enum(AgentKind))
     mode: Mapped[str] = mapped_column(
-        String(16), CheckConstraint("mode IN ('plan', 'execute')", name="mode"),
-        default="execute", server_default="execute",
+        String(16),
+        CheckConstraint("mode IN ('plan', 'execute')", name="mode"),
+        default="execute",
+        server_default="execute",
     )
     model: Mapped[str | None] = mapped_column(String(64))
     account_id: Mapped[str | None] = mapped_column(ForeignKey("agent_accounts.id"))
@@ -496,6 +509,9 @@ class KbNode(Base):
     source: Mapped[str | None] = mapped_column(String(2048))
     verified_commit: Mapped[str | None] = mapped_column(String(64))
     body: Mapped[str | None] = mapped_column(Text)
+    language: Mapped[str | None] = mapped_column(String(16))
+    body_hash: Mapped[str | None] = mapped_column(String(64))
+    interface_hash: Mapped[str | None] = mapped_column(String(64))
     is_stale: Mapped[bool] = mapped_column(Boolean(create_constraint=True))
     updated_at: Mapped[datetime] = mapped_column()
 
@@ -597,14 +613,17 @@ class PlanInbox(Base):
     plan_id: Mapped[str] = mapped_column(ForeignKey("plans.id", ondelete="CASCADE"), index=True)
     node_id: Mapped[str | None] = mapped_column(ForeignKey("plan_nodes.id", ondelete="SET NULL"))
     kind: Mapped[str] = mapped_column(
-        String(16), CheckConstraint("kind IN ('backlog','replan','human','add','split','reopen')", name="inbox_kind"),
+        String(16),
+        CheckConstraint("kind IN ('backlog','replan','human','add','split','reopen')", name="inbox_kind"),
     )
     body: Mapped[str] = mapped_column(Text)
     payload: Mapped[dict[str, object]] = mapped_column(JsonObject, default=dict)
     tab_id: Mapped[str | None] = mapped_column(ForeignKey("tabs.id", ondelete="SET NULL"))
     status: Mapped[str] = mapped_column(
-        String(16), CheckConstraint("status IN ('open', 'applied', 'rejected')", name="inbox_status"),
-        default="open", server_default="open",
+        String(16),
+        CheckConstraint("status IN ('open', 'applied', 'rejected')", name="inbox_status"),
+        default="open",
+        server_default="open",
     )
     created_at: Mapped[datetime] = mapped_column()
     decided_at: Mapped[datetime | None] = mapped_column()

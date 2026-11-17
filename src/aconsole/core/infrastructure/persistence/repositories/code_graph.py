@@ -1,6 +1,8 @@
 """Incremental graph snapshots through Writer, sharing module identity with facts."""
 
+from collections.abc import Sequence
 from datetime import UTC, datetime
+from pathlib import Path
 from typing import Protocol, final, runtime_checkable
 
 from sqlalchemy import Integer, String, delete, func, literal, select, tuple_, type_coerce
@@ -9,12 +11,15 @@ from sqlalchemy.orm import Session
 
 from aconsole.core.application.ports.plan_store import StoreWriteError
 from aconsole.core.domain.errors import DomainError
-from aconsole.core.infrastructure.codegraph.protocol import ExtractorGraph
+from aconsole.core.infrastructure.codegraph.protocol import ExtractorGraph, GraphNode
+from aconsole.core.infrastructure.codegraph.skeleton import file_hashes
 from aconsole.core.infrastructure.persistence.models import KbEdge, KbEdgeKind, KbNode, KbType, Project
 from aconsole.core.infrastructure.persistence.repositories.knowledge import code_ref_id
 from aconsole.core.infrastructure.persistence.writer import Writer
 
-_KINDS = frozenset({KbEdgeKind.IMPORTS, KbEdgeKind.USES_TYPE, KbEdgeKind.INHERITS})
+_KINDS = frozenset(
+    {KbEdgeKind.IMPORTS, KbEdgeKind.USES_TYPE, KbEdgeKind.INHERITS, KbEdgeKind.IMPLEMENTS, KbEdgeKind.DEPENDS_ON}
+)
 _ORIGIN = "codegraph"
 _MAX_HOPS = 3
 
@@ -147,8 +152,9 @@ def impact_rows(  # noqa: PLR0913, PLR0917 -- existing impact request plus sessi
 
 
 def sync_graph(session: Session, project_id: str, graph: ExtractorGraph) -> None:
-    """Remove only vanished codegraph edges; module nodes may still be referenced by facts."""
-    if session.get(Project, project_id) is None:
+    """Update module hashes and reconcile only sources whose interface changed."""
+    project = session.get(Project, project_id)
+    if project is None:
         message = f"unknown project {project_id}"
         raise ValueError(message)
     identifiers = {node.id: code_ref_id(project_id, node.path) for node in graph.nodes}
@@ -160,40 +166,118 @@ def sync_graph(session: Session, project_id: str, graph: ExtractorGraph) -> None
             message = "code graph edge refers to an unknown node"
             raise ValueError(message)
         wanted.add((identifiers[edge.source], identifiers[edge.target], KbEdgeKind(edge.kind)))
-    held_nodes = {node.id for node in session.scalars(select(KbNode).where(KbNode.project_id == project_id))}
-    now = datetime.now(UTC)
-    for node in graph.nodes:
-        node_id = identifiers[node.id]
-        if node_id not in held_nodes:
-            session.add(
-                KbNode(
-                    id=node_id,
-                    project_id=project_id,
-                    node_type=KbType.MODULE,
-                    title=node.path[:300],
-                    source=node.path,
-                    is_stale=False,
-                    updated_at=now,
-                )
-            )
-            held_nodes.add(node_id)
+    held_nodes = {
+        node.id: node
+        for node in session.scalars(
+            select(KbNode).where(KbNode.project_id == project_id, KbNode.node_type == KbType.MODULE)
+        )
+    }
+    unchanged, invalid = _sync_nodes(session, project, graph, identifiers, held_nodes)
     session.flush()
     project_nodes = select(KbNode.id).where(KbNode.project_id == project_id)
-    existing = session.scalars(select(KbEdge).where(KbEdge.src_id.in_(project_nodes))).all()
+    existing = session.scalars(
+        select(KbEdge).where(KbEdge.src_id.in_(project_nodes) | KbEdge.dst_id.in_(project_nodes))
+    ).all()
     held = {(edge.src_id, edge.dst_id, edge.kind) for edge in existing}
+    present = set(identifiers.values())
+    wanted = {edge for edge in wanted if edge[0] not in invalid}
     removed = [
         (edge.src_id, edge.dst_id, edge.kind)
         for edge in existing
-        if edge.origin == _ORIGIN and edge.kind in _KINDS and (edge.src_id, edge.dst_id, edge.kind) not in wanted
+        if edge.origin == _ORIGIN
+        and edge.kind in _KINDS
+        and edge.src_id in held_nodes
+        and (
+            edge.src_id not in present
+            or edge.dst_id not in present
+            or (edge.src_id not in unchanged and (edge.src_id, edge.dst_id, edge.kind) not in wanted)
+        )
     ]
     if removed:
         _ = session.execute(
-            delete(KbEdge)
-            .where(
+            delete(KbEdge).where(
                 KbEdge.origin == _ORIGIN,
                 tuple_(KbEdge.src_id, KbEdge.dst_id, KbEdge.kind).in_(removed),
             )
-            .returning(KbEdge.src_id, KbEdge.dst_id, KbEdge.kind)
-        ).all()
+        )
     for source, target, kind in sorted(wanted - held):
-        session.add(KbEdge(src_id=source, dst_id=target, kind=kind, origin=_ORIGIN))
+        if source not in unchanged:
+            session.add(KbEdge(src_id=source, dst_id=target, kind=kind, origin=_ORIGIN))
+    _remove_vanished(session, held_nodes, present, existing)
+
+
+def _language(node: GraphNode) -> str | None:
+    for prefix, language in (("ts:", "typescript"), ("rs:", "rust"), ("rs-crate:", "rust"), ("cs:", "csharp")):
+        if node.id.startswith(prefix):
+            return language
+    return {
+        ".py": "python",
+        ".pyi": "python",
+        ".rs": "rust",
+        ".cs": "csharp",
+        ".ts": "typescript",
+        ".tsx": "typescript",
+        ".js": "typescript",
+        ".jsx": "typescript",
+        ".mjs": "typescript",
+        ".cjs": "typescript",
+    }.get(Path(node.path).suffix)
+
+
+def _sync_nodes(
+    session: Session,
+    project: Project,
+    graph: ExtractorGraph,
+    identifiers: dict[str, str],
+    held: dict[str, KbNode],
+) -> tuple[set[str], set[str]]:
+    unchanged: set[str] = set()
+    invalid: set[str] = set()
+    now = datetime.now(UTC)
+    files: dict[str, list[GraphNode]] = {}
+    for node in graph.nodes:
+        files.setdefault(identifiers[node.id], []).append(node)
+    for node_id, declarations in files.items():
+        node = declarations[0]
+        language = _language(node)
+        symbols = tuple(symbol for declaration in declarations for symbol in declaration.symbols)
+        hashes = file_hashes(Path(project.root_path), node.path, language, symbols)
+        current = held.get(node_id)
+        if current is None:
+            current = KbNode(
+                id=node_id,
+                project_id=project.id,
+                node_type=KbType.MODULE,
+                title=node.path[:300],
+                source=node.path,
+                is_stale=False,
+                updated_at=now,
+            )
+            session.add(current)
+            held[node_id] = current
+        if current.node_type is not KbType.MODULE:
+            continue
+        if hashes.interface and hashes.interface == current.interface_hash:
+            unchanged.add(node_id)
+        if language == "python" and hashes.interface == "":
+            invalid.add(node_id)
+        if (current.language, current.body_hash, current.interface_hash) != (language, hashes.body, hashes.interface):
+            current.language, current.body_hash, current.interface_hash = language, hashes.body, hashes.interface
+            current.updated_at = now
+    return unchanged, invalid
+
+
+def _remove_vanished(session: Session, held: dict[str, KbNode], present: set[str], edges: Sequence[KbEdge]) -> None:
+    referenced: set[str] = set()
+    for edge in edges:
+        if edge.origin != _ORIGIN or edge.kind not in _KINDS or edge.src_id not in held:
+            referenced.update((edge.src_id, edge.dst_id))
+    for node_id, node in held.items():
+        if node_id in present or node.node_type is not KbType.MODULE:
+            continue
+        if node_id in referenced:
+            if any(value is not None for value in (node.language, node.body_hash, node.interface_hash)):
+                node.language, node.body_hash, node.interface_hash = None, None, None
+                node.updated_at = datetime.now(UTC)
+        else:
+            session.delete(node)

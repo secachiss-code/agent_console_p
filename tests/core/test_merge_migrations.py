@@ -60,20 +60,54 @@ def test_hdag_upgrade_backfills_legacy_data_and_round_trips(tmp_path: Path) -> N
         session.add(Project(id="p", name="P", root_path="/p", languages=[], created_at=now))
         session.flush()
         for plan_id in ("plan-1", "plan-623", "plan-636"):
-            session.add(Plan(id=plan_id, project_id="p", title=plan_id, goal="keep",
-                             status=PlanStatus.COMPLETED if plan_id == "plan-1" else PlanStatus.ACTIVE,
-                             created_at=now, updated_at=now))
+            session.add(
+                Plan(
+                    id=plan_id,
+                    project_id="p",
+                    title=plan_id,
+                    goal="keep",
+                    status=PlanStatus.COMPLETED if plan_id == "plan-1" else PlanStatus.ACTIVE,
+                    created_at=now,
+                    updated_at=now,
+                )
+            )
         session.flush()
         for plan_id in ("plan-1", "plan-623", "plan-636"):
             for key in ("CORE-0", "CORE-1"):
-                session.add(PlanNode(id=f"{plan_id}-{key}", plan_id=plan_id, node_key=key, title=key,
-                                     objective="keep", status=NodeStatus.PENDING, paths=[], acceptance=[],
-                                     review_required=False, layer=0, priority=0, unmet_blockers=0, fence_seq=0,
-                                     test_cmd="pytest", created_at=now, updated_at=now))
+                session.add(
+                    PlanNode(
+                        id=f"{plan_id}-{key}",
+                        plan_id=plan_id,
+                        node_key=key,
+                        title=key,
+                        objective="keep",
+                        status=NodeStatus.PENDING,
+                        paths=[],
+                        acceptance=[],
+                        review_required=False,
+                        layer=0,
+                        priority=0,
+                        unmet_blockers=0,
+                        fence_seq=0,
+                        test_cmd="pytest",
+                        created_at=now,
+                        updated_at=now,
+                    )
+                )
         session.flush()
         session.add(PlanEdge(src_node_id="plan-636-CORE-0", dst_node_id="plan-636-CORE-1", kind=EdgeKind.PARENT))
-        session.add(Tab(id="t", project_id="p", agent_kind=AgentKind.CODEX, title="tab", tab_order=0,
-                        last_status=TabStatus.IDLE, created_at=now, updated_at=now))
+        session.add(
+            Tab(
+                id="t",
+                project_id="p",
+                agent_kind=AgentKind.CODEX,
+                title="tab",
+                tab_order=0,
+                last_status=TabStatus.IDLE,
+                created_at=now,
+                updated_at=now,
+            )
+        )
         session.commit()
     engine.dispose()
     cfg = Config()
@@ -110,7 +144,87 @@ def test_hdag_upgrade_backfills_legacy_data_and_round_trips(tmp_path: Path) -> N
         engine.dispose()
 
 
-
 def _flush_invalid(session: Session, row: object, attribute: str, value: object) -> None:
     setattr(row, attribute, value)
     session.flush()
+
+
+def test_code_file_hashes_round_trip_keeps_module_identity_and_fact_edges(tmp_path: Path) -> None:
+    from datetime import UTC, datetime
+
+    from alembic import command
+    from alembic.config import Config
+    from sqlalchemy import select
+    from sqlalchemy.orm import Session
+
+    from aconsole.core.infrastructure.persistence.engine import MIGRATIONS
+    from aconsole.core.infrastructure.persistence.models import KbEdge, KbEdgeKind, KbNode, KbType, Project
+
+    url = f"sqlite:///{tmp_path / 'hashes.db'}"
+    migrate(url, "head")
+    engine = write_engine(url)
+    now = datetime.now(UTC)
+    try:
+        with Session(engine) as session:
+            session.add(Project(id="p", name="P", root_path="/p", languages=[], created_at=now))
+            session.flush()
+            session.add_all(
+                [
+                    KbNode(
+                        id="module",
+                        project_id="p",
+                        node_type=KbType.MODULE,
+                        title="x.py",
+                        source="x.py",
+                        language="python",
+                        body_hash="a" * 64,
+                        interface_hash="b" * 64,
+                        is_stale=False,
+                        updated_at=now,
+                    ),
+                    KbNode(
+                        id="fact",
+                        project_id="p",
+                        node_type=KbType.FACT,
+                        title="Keep",
+                        body="Keep body",
+                        is_stale=False,
+                        updated_at=now,
+                    ),
+                ]
+            )
+            session.flush()
+            session.add(KbEdge(src_id="fact", dst_id="module", kind=KbEdgeKind.CODE_REF, origin="fact"))
+            session.commit()
+    finally:
+        engine.dispose()
+    cfg = Config()
+    cfg.set_main_option("script_location", str(MIGRATIONS))
+    cfg.set_main_option("sqlalchemy.url", url)
+    command.downgrade(cfg, "0011_node_attempts")
+    engine = write_engine(url)
+    try:
+        assert not {"language", "body_hash", "interface_hash"} & {
+            column["name"] for column in inspect(engine).get_columns("kb_nodes")
+        }
+        with Session(engine) as session:
+            assert set(session.scalars(select(KbNode.id))) == {"fact", "module"}
+            assert session.scalar(select(KbNode.body).where(KbNode.id == "fact")) == "Keep body"
+            assert session.scalar(select(KbEdge.dst_id)) == "module"
+    finally:
+        engine.dispose()
+    migrate(url, "head")
+    engine = write_engine(url)
+    try:
+        with Session(engine) as session:
+            rows = session.scalars(select(KbNode)).all()
+            assert len(rows) == 2
+            assert all(
+                node.language is None and node.body_hash is None and node.interface_hash is None for node in rows
+            )
+            edge = session.scalar(select(KbEdge))
+            assert edge is not None
+            assert edge.kind is KbEdgeKind.CODE_REF
+            assert edge.origin == "fact"
+    finally:
+        engine.dispose()
