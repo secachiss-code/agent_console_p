@@ -168,3 +168,14 @@ def test_prefix_graph_preserves_paths_and_namespaces_both_edge_endpoints() -> No
         assert graph.edges == (GraphEdge(source=prefix + "a", target=prefix + "b", kind="imports"),)
         assert prefix_graph(graph, prefix) == graph
     assert original.nodes[0].id == "a"
+
+
+def test_rust_crate_namespace_survives_graph_merge() -> None:
+    from aconsole.core.infrastructure.codegraph.protocol import prefix_graph
+
+    graph = ExtractorGraph(
+        version=1,
+        nodes=(GraphNode(id="rs-crate:Cargo.toml", path="Cargo.toml", name="demo", kind="package"),),
+        edges=(GraphEdge(source="rs-crate:Cargo.toml", target="rs-crate:Cargo.toml", kind="depends_on"),),
+    )
+    assert prefix_graph(graph, "rs:") == graph

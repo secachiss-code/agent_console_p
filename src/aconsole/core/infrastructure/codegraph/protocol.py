@@ -61,7 +61,9 @@ def prefix_graph(graph: ExtractorGraph, prefix: str) -> ExtractorGraph:
     """Namespace foreign IDs and both edge endpoints, preserving paths and version."""
 
     def identifier(value: str) -> str:
-        return value if value.startswith(prefix) else prefix + value
+        return (
+            value if value.startswith(prefix) or (prefix == "rs:" and value.startswith("rs-crate:")) else prefix + value
+        )
 
     return msgspec.structs.replace(
         graph,
