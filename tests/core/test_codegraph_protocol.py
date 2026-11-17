@@ -45,9 +45,9 @@ def test_codegraph_protocol_schema_and_unknown_version() -> None:
     assert decode_graph(raw) == graph
     assert decode_graph(b'{"version":1,"nodes":[],"edges":[]}') == ExtractorGraph(version=1, nodes=(), edges=())
     with pytest.raises(ExtractorProtocolError, match="schema"):
-        decode_graph(b'{"version":1,"edges":[]}')
+        _ = decode_graph(b'{"version":1,"edges":[]}')
     with pytest.raises(ExtractorProtocolError, match="unsupported extractor version"):
-        decode_graph(b'{"version":2,"nodes":[],"edges":[]}')
+        _ = decode_graph(b'{"version":2,"nodes":[],"edges":[]}')
 
 
 def test_codegraph_protocol_runner_builds_hostrun_devtools_argv(tmp_path: Path) -> None:
@@ -71,6 +71,7 @@ def test_codegraph_protocol_runner_maps_failures(tmp_path: Path) -> None:
     assert failed.error is not None
     assert failed.error.code == 5006
     assert failed.error.message == "CODEGRAPH_EXTRACTOR_FAILED"
+    assert failed.error.data is not None
     assert isinstance(failed.error.data.details, CodegraphExtractorFailedDetails)
     assert failed.error.data.details.language == "python"
     assert failed.error.data.details.stderr_tail == "extractor failed"
@@ -101,9 +102,9 @@ def test_codegraph_protocol_runner_maps_failures(tmp_path: Path) -> None:
     assert isinstance(missing.error.data.details, CodegraphExtractorFailedDetails)
     assert missing.error.data.details.stderr_tail == "hostrun is missing"
     with pytest.raises(ValueError, match="absolute"):
-        ExtractorRunner(Path("hostrun"))
+        _ = ExtractorRunner(Path("hostrun"))
     with pytest.raises(ValueError, match="timeout"):
-        ExtractorRunner(timeout_s=0)
+        _ = ExtractorRunner(timeout_s=0)
 
 
 def _run_ok(tmp: Path) -> list[str]:
@@ -117,7 +118,7 @@ def _run_ok(tmp: Path) -> list[str]:
 def _run(tmp: Path, mode: str, stdout: bytes, *, path: str = "pkg") -> ExtractorRun:
     script = _stand_in(tmp)
     out = tmp / "stdout"
-    out.write_bytes(stdout)
+    _ = out.write_bytes(stdout)
     argv = tmp / "argv"
     os.environ[_ARGV] = str(argv)
     os.environ[_MODE] = mode
@@ -126,14 +127,35 @@ def _run(tmp: Path, mode: str, stdout: bytes, *, path: str = "pkg") -> Extractor
         timeout = 0.3 if mode == "sleep" else 5.0
         return ExtractorRunner(script, timeout_s=timeout).run("python", path)
     finally:
-        os.environ.pop(_ARGV, None)
-        os.environ.pop(_MODE, None)
-        os.environ.pop(_STDOUT, None)
+        _ = os.environ.pop(_ARGV, None)
+        _ = os.environ.pop(_MODE, None)
+        _ = os.environ.pop(_STDOUT, None)
 
 
 def _stand_in(tmp: Path) -> Path:
     script = tmp / "hostrun"
     if not script.exists():
-        script.write_text(_SCRIPT)
+        _ = script.write_text(_SCRIPT)
         script.chmod(0o755)
     return script
+
+
+def test_prefix_graph_preserves_paths_and_namespaces_both_edge_endpoints() -> None:
+    from aconsole.core.infrastructure.codegraph.protocol import prefix_graph
+
+    original = ExtractorGraph(
+        version=1,
+        nodes=(
+            GraphNode(id="a", path="src/a.ts", name="a", kind="module"),
+            GraphNode(id="b", path="src/b.ts", name="b", kind="module"),
+        ),
+        edges=(GraphEdge(source="a", target="b", kind="imports"),),
+    )
+    for prefix in ("ts:", "rs:", "cs:"):
+        graph = prefix_graph(original, prefix)
+        assert graph.version == 1
+        assert graph.nodes[0].id == prefix + "a"
+        assert graph.nodes[0].path == "src/a.ts"
+        assert graph.edges == (GraphEdge(source=prefix + "a", target=prefix + "b", kind="imports"),)
+        assert prefix_graph(graph, prefix) == graph
+    assert original.nodes[0].id == "a"

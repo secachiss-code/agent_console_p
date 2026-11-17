@@ -12,14 +12,14 @@ from typing import Final, Protocol, final
 from aconsole.contracts.errors import ErrorObject
 from aconsole.core.domain.errors import DomainError
 from aconsole.core.infrastructure.codegraph.local_python import scan_python
-from aconsole.core.infrastructure.codegraph.protocol import ExtractorGraph
+from aconsole.core.infrastructure.codegraph.protocol import ExtractorGraph, prefix_graph
 from aconsole.core.infrastructure.codegraph.runner import ExtractorRun
 
 _TTL_S: Final = 300.0
 _FAILED: Final = 5006
 _UNKNOWN_PROJECT: Final = 5007
 _PYTHON_MARKERS: Final = ("pyproject.toml", "setup.py", "setup.cfg")
-_MARKERS: Final = (("Cargo.toml", "rust-metadata"), ("package.json", "ts"), ("tsconfig.json", "ts"))
+_FOREIGN: Final = (("rust", "rust-metadata", "rs:"), ("typescript", "ts", "ts:"), ("csharp", "csharp", "cs:"))
 
 
 class Runner(Protocol):
@@ -132,18 +132,44 @@ class CodeGraphIndex:
         return reversed_edges
 
     def _build(self, root: Path, enabled: frozenset[str]) -> ExtractorGraph:
-        # A Python project with a `package.json` for its docs is still a Python project.
-        if any((root / marker).is_file() for marker in _PYTHON_MARKERS):
-            return scan_python(root) if "python" in enabled else ExtractorGraph(version=1, nodes=(), edges=())
-        language = next((name for marker, name in _MARKERS if (root / marker).is_file()), None)
-        if language is None:
-            return scan_python(root) if "python" in enabled else ExtractorGraph(version=1, nodes=(), edges=())
-        if {"rust-metadata": "rust", "ts": "typescript"}[language] not in enabled:
-            return ExtractorGraph(version=1, nodes=(), edges=())
-        run = self._runner.run(language, ".", cwd=root)
-        if run.graph is not None:
-            return run.graph
-        raise _failed(run.error)
+        detected = _project_languages(root)
+        graphs: list[ExtractorGraph] = []
+        errors: list[ErrorObject | None] = []
+        if "python" in detected & enabled:
+            graphs.append(scan_python(root))
+        for language, extractor, prefix in _FOREIGN:
+            if language not in detected & enabled:
+                continue
+            run = self._runner.run(extractor, ".", cwd=root)
+            if run.graph is None:
+                errors.append(run.error)
+            else:
+                graphs.append(prefix_graph(run.graph, prefix))
+        if not graphs and errors:
+            raise _failed(errors[0])
+        return ExtractorGraph(
+            version=1,
+            nodes=tuple(sorted((node for graph in graphs for node in graph.nodes), key=lambda node: node.id)),
+            edges=tuple(
+                sorted(
+                    (edge for graph in graphs for edge in graph.edges),
+                    key=lambda edge: (edge.source, edge.target, edge.kind),
+                )
+            ),
+        )
+
+
+def _project_languages(root: Path) -> frozenset[str]:
+    languages: set[str] = set()
+    if any((root / marker).is_file() for marker in _PYTHON_MARKERS):
+        languages.add("python")
+    if (root / "Cargo.toml").is_file():
+        languages.add("rust")
+    if any((root / marker).is_file() for marker in ("package.json", "tsconfig.json")):
+        languages.add("typescript")
+    if any(path.is_file() for pattern in ("*.sln", "*.csproj") for path in root.glob(pattern)):
+        languages.add("csharp")
+    return frozenset(languages or {"python"})
 
 
 def _indexed(graph: ExtractorGraph, until: float) -> _Cached:

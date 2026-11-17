@@ -54,3 +54,19 @@ def decode_graph(raw: bytes) -> ExtractorGraph:
     if graph.version != _VERSION:
         raise ExtractorProtocolError(_VERSION_MSG)
     return graph
+
+
+def prefix_graph(graph: ExtractorGraph, prefix: str) -> ExtractorGraph:
+    """Namespace foreign IDs and both edge endpoints, preserving paths and version."""
+
+    def identifier(value: str) -> str:
+        return value if value.startswith(prefix) else prefix + value
+
+    return msgspec.structs.replace(
+        graph,
+        nodes=tuple(msgspec.structs.replace(node, id=identifier(node.id)) for node in graph.nodes),
+        edges=tuple(
+            msgspec.structs.replace(edge, source=identifier(edge.source), target=identifier(edge.target))
+            for edge in graph.edges
+        ),
+    )
