@@ -48,7 +48,7 @@ _SIZE = re.compile(r"[0-9]{2,5}x[0-9]{2,5}\Z")
 _TOKEN = re.compile(r"[A-Za-z0-9_-]{1,64}\Z")
 # The MCP server under test listens on loopback only (MCP_TOOLS.md §5).
 _MCP_URL = re.compile(r"http://127\.0\.0\.1:(?P<port>[0-9]{4,5})/mcp\Z")
-_REPO_PATH = re.compile(r"[A-Za-z0-9_][A-Za-z0-9_./-]{0,511}\Z")
+_REPO_PATH = re.compile(r"(?:\.|[A-Za-z0-9_][A-Za-z0-9_./-]{0,511})\Z")
 
 # Container with node, dotnet, rust and python (PLAN §4). It mounts $HOME, so worktree paths are the same there.
 _DEVTOOLS = "devtools"
@@ -61,11 +61,19 @@ _MCP_REVISION = "2026-07-28"
 # Rust extraction uses a prebuilt syn binary after offline metadata; no build on the hot path.
 _EXTRACTORS: dict[str, tuple[str, ...]] = {
     "python": ("python3", "tools/codegraph/extract_python.py"),
-    "ts": ("npx", "--yes", "dependency-cruiser@18.7.0", "--output-type", "json"),
+    "ts": (),
     "rust-metadata": (),
     "csharp": ("dotnet", "run", "--project", "tools/csgraph", "--"),
     "csharp-info": (),
 }
+
+# Image provisioning installs these exact tools; extraction never installs them.
+_TS_NODE = f"{_DEVTOOLS_HOME}/.local/share/fnm/node-versions/v24.22.0/installation/bin/node"
+_TS_CRUISER = str(
+    Path(_DEVTOOLS_HOME)
+    / ".local/lib/aconsole/dependency-cruiser-18.7.0"
+    / "node_modules/dependency-cruiser/bin/dependency-cruiser.mjs"
+)
 
 # Fixed inventory only: the validated context argument is deliberately unused.
 _CSHARP_INFO_SCRIPT = """
@@ -578,6 +586,26 @@ def _devtools(args: list[str], repo: str) -> Step:
     path = args[1]
     if _REPO_PATH.fullmatch(path) is None or ".." in path.split("/"):
         raise ActionError(400, "devtools path must be relative to the worktree")
+    if args[0] == "ts":
+        return Step(
+            argv=(
+                "podman",
+                "exec",
+                "--workdir",
+                repo,
+                "--env",
+                f"PYTHONPATH={repo}/src",
+                _DEVTOOLS,
+                _core_python(repo),
+                "-m",
+                "aconsole.core.infrastructure.codegraph.typescript",
+                "--node",
+                _TS_NODE,
+                "--cruiser",
+                _TS_CRUISER,
+                path,
+            )
+        )
     if args[0] == "csharp-info":
         return Step(
             argv=(

@@ -19,7 +19,7 @@ def test_hdag_gate_key(tmp_path: Path, key: str) -> None:
     assert plan.steps[-1].argv[-1] == key
     marker = tmp_path / ".aconsole-dev" / "current-task"
     marker.parent.mkdir()
-    marker.write_text(key + "\n")
+    _ = marker.write_text(key + "\n")
     assert current_task(tmp_path) == key
 
 
@@ -27,3 +27,21 @@ def test_hdag_gate_key(tmp_path: Path, key: str) -> None:
 def test_hdag_invalid_key(tmp_path: Path, key: str) -> None:
     with pytest.raises(ActionError):
         _ = build_plan("gate", [key], tmp_path, str(tmp_path), 30)
+
+
+def test_ts_extractor_uses_image_tools_and_current_worktree_adapter(tmp_path: Path) -> None:
+    plan = build_plan("devtools", ["ts", "."], tmp_path, str(tmp_path), 30)
+    argv = plan.steps[-1].argv
+    assert not ({"npx", "npm", "install", "--yes"} & set(argv))
+    assert f"PYTHONPATH={tmp_path}/src" in argv
+    assert "aconsole.core.infrastructure.codegraph.typescript" in argv
+    assert "--node" in argv
+    assert "--cruiser" in argv
+    assert "dependency-cruiser-18.7.0" in argv[argv.index("--cruiser") + 1]
+    assert argv[-1] == "."
+
+
+@pytest.mark.parametrize("requested", ["../outside", "/outside", "src/../../outside", "src;id"])
+def test_ts_extractor_rejects_paths_outside_worktree(tmp_path: Path, requested: str) -> None:
+    with pytest.raises(ActionError, match="devtools path"):
+        _ = build_plan("devtools", ["ts", requested], tmp_path, str(tmp_path), 30)
