@@ -1,0 +1,20 @@
+Collected 0 items to run in parallel
+....                                                                     [100%]
+=============================== warnings summary ===============================
+src/aconsole/ui/views/sidebar/plan_graph.py:13
+  /home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/c1b8f2ac852efabd/src/aconsole/ui/views/sidebar/plan_graph.py:13: PyGIWarning: Gdk was imported without specifying a version first. Use gi.require_version('Gdk', '4.0') before import to ensure that the right version gets loaded.
+    from gi.repository import Gdk, GLib, GObject, Gtk, Pango  # noqa: E402
+
+.venv-ui/lib/python3.15/site-packages/gi/events.py:803
+  /home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/c1b8f2ac852efabd/.venv-ui/lib/python3.15/site-packages/gi/events.py:803: DeprecationWarning: 'asyncio.AbstractEventLoopPolicy' is deprecated and slated for removal in Python 3.16
+    AbstractEventLoopPolicy = getattr(asyncio, "AbstractEventLoopPolicy", object)
+
+tests/gui/front/test_plan_profile_repair.py::test_repair_sends_only_profiles_and_keeps_errors_and_input_for_retry
+  /home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/c1b8f2ac852efabd/src/aconsole/ui/views/sidebar/plan_graph.py:421: DeprecationWarning: Gtk.Widget.get_style_context is deprecated
+    style = self.get_style_context()
+
+tests/gui/front/test_plan_profile_repair.py::test_repair_sends_only_profiles_and_keeps_errors_and_input_for_retry
+  /home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/c1b8f2ac852efabd/src/aconsole/ui/views/sidebar/plan_graph.py:422: DeprecationWarning: Gtk.StyleContext.lookup_color is deprecated
+    _found, line = style.lookup_color("window_fg_color")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html

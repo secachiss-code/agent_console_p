@@ -1,0 +1,278 @@
+{
+  "IDX-0": {
+    "direction": [
+      [
+        ".venv-core/bin/python",
+        "-m",
+        "pytest",
+        "-q"
+      ]
+    ],
+    "environment": {
+      "container": "devtools",
+      "image": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    "micro": {
+      "format": [
+        "/home/sas/Projects/sp_aconsole_prototype/.venv-core/bin/python",
+        "-m",
+        "ruff",
+        "format"
+      ],
+      "fix": [
+        "/home/sas/Projects/sp_aconsole_prototype/.venv-core/bin/python",
+        "-m",
+        "ruff",
+        "check",
+        "--fix"
+      ],
+      "lint": [
+        "/home/sas/Projects/sp_aconsole_prototype/.venv-core/bin/python",
+        "-m",
+        "ruff",
+        "check"
+      ],
+      "types": [
+        "/home/sas/Projects/sp_aconsole_prototype/.venv-core/bin/python",
+        "-m",
+        "basedpyright"
+      ],
+      "tests": [
+        "/home/sas/Projects/sp_aconsole_prototype/.venv-core/bin/python",
+        "-m",
+        "pytest",
+        "-q"
+      ]
+    }
+  },
+  "LOD-0": {
+    "direction": [
+      [
+        ".venv-core/bin/python",
+        "-m",
+        "pytest",
+        "-q"
+      ]
+    ],
+    "environment": {
+      "container": "devtools",
+      "image": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    "micro": {
+      "format": [
+        "/home/sas/Projects/sp_aconsole_prototype/.venv-core/bin/python",
+        "-m",
+        "ruff",
+        "format"
+      ],
+      "fix": [
+        "/home/sas/Projects/sp_aconsole_prototype/.venv-core/bin/python",
+        "-m",
+        "ruff",
+        "check",
+        "--fix"
+      ],
+      "lint": [
+        "/home/sas/Projects/sp_aconsole_prototype/.venv-core/bin/python",
+        "-m",
+        "ruff",
+        "check"
+      ],
+      "types": [
+        "/home/sas/Projects/sp_aconsole_prototype/.venv-core/bin/python",
+        "-m",
+        "basedpyright"
+      ],
+      "tests": [
+        "/home/sas/Projects/sp_aconsole_prototype/.venv-core/bin/python",
+        "-m",
+        "pytest",
+        "-q"
+      ]
+    }
+  },
+  "VLT-0": {
+    "direction": [
+      [
+        ".venv-core/bin/python",
+        "-m",
+        "pytest",
+        "-q"
+      ]
+    ],
+    "environment": {
+      "container": "devtools",
+      "image": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    "micro": {
+      "format": [
+        "/home/sas/Projects/sp_aconsole_prototype/.venv-core/bin/python",
+        "-m",
+        "ruff",
+        "format"
+      ],
+      "fix": [
+        "/home/sas/Projects/sp_aconsole_prototype/.venv-core/bin/python",
+        "-m",
+        "ruff",
+        "check",
+        "--fix"
+      ],
+      "lint": [
+        "/home/sas/Projects/sp_aconsole_prototype/.venv-core/bin/python",
+        "-m",
+        "ruff",
+        "check"
+      ],
+      "types": [
+        "/home/sas/Projects/sp_aconsole_prototype/.venv-core/bin/python",
+        "-m",
+        "basedpyright"
+      ],
+      "tests": [
+        "/home/sas/Projects/sp_aconsole_prototype/.venv-core/bin/python",
+        "-m",
+        "pytest",
+        "-q"
+      ]
+    }
+  },
+  "GAT-0": {
+    "direction": [
+      [
+        ".venv-core/bin/python",
+        "-m",
+        "pytest",
+        "-q"
+      ]
+    ],
+    "environment": {
+      "container": "devtools",
+      "image": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    "micro": {
+      "format": [
+        "/home/sas/Projects/sp_aconsole_prototype/.venv-core/bin/python",
+        "-m",
+        "ruff",
+        "format"
+      ],
+      "fix": [
+        "/home/sas/Projects/sp_aconsole_prototype/.venv-core/bin/python",
+        "-m",
+        "ruff",
+        "check",
+        "--fix"
+      ],
+      "lint": [
+        "/home/sas/Projects/sp_aconsole_prototype/.venv-core/bin/python",
+        "-m",
+        "ruff",
+        "check"
+      ],
+      "types": [
+        "/home/sas/Projects/sp_aconsole_prototype/.venv-core/bin/python",
+        "-m",
+        "basedpyright"
+      ],
+      "tests": [
+        "/home/sas/Projects/sp_aconsole_prototype/.venv-core/bin/python",
+        "-m",
+        "pytest",
+        "-q"
+      ]
+    }
+  },
+  "FND-0": {
+    "direction": [
+      [
+        ".venv-core/bin/python",
+        "-m",
+        "pytest",
+        "-q"
+      ]
+    ],
+    "environment": {
+      "container": "devtools",
+      "image": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    "micro": {
+      "format": [
+        "/home/sas/Projects/sp_aconsole_prototype/.venv-core/bin/python",
+        "-m",
+        "ruff",
+        "format"
+      ],
+      "fix": [
+        "/home/sas/Projects/sp_aconsole_prototype/.venv-core/bin/python",
+        "-m",
+        "ruff",
+        "check",
+        "--fix"
+      ],
+      "lint": [
+        "/home/sas/Projects/sp_aconsole_prototype/.venv-core/bin/python",
+        "-m",
+        "ruff",
+        "check"
+      ],
+      "types": [
+        "/home/sas/Projects/sp_aconsole_prototype/.venv-core/bin/python",
+        "-m",
+        "basedpyright"
+      ],
+      "tests": [
+        "/home/sas/Projects/sp_aconsole_prototype/.venv-core/bin/python",
+        "-m",
+        "pytest",
+        "-q"
+      ]
+    }
+  },
+  "MEM-0": {
+    "direction": [
+      [
+        ".venv-core/bin/python",
+        "-m",
+        "pytest",
+        "-q"
+      ]
+    ],
+    "environment": {
+      "container": "devtools",
+      "image": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    "micro": {
+      "format": [
+        "/home/sas/Projects/sp_aconsole_prototype/.venv-core/bin/python",
+        "-m",
+        "ruff",
+        "format"
+      ],
+      "fix": [
+        "/home/sas/Projects/sp_aconsole_prototype/.venv-core/bin/python",
+        "-m",
+        "ruff",
+        "check",
+        "--fix"
+      ],
+      "lint": [
+        "/home/sas/Projects/sp_aconsole_prototype/.venv-core/bin/python",
+        "-m",
+        "ruff",
+        "check"
+      ],
+      "types": [
+        "/home/sas/Projects/sp_aconsole_prototype/.venv-core/bin/python",
+        "-m",
+        "basedpyright"
+      ],
+      "tests": [
+        "/home/sas/Projects/sp_aconsole_prototype/.venv-core/bin/python",
+        "-m",
+        "pytest",
+        "-q"
+      ]
+    }
+  }
+}
