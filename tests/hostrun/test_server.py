@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from tests.socket_paths import short_socket_path
-
 import contextlib
 import json
 import os
@@ -18,6 +16,8 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 import pytest
+
+from tests.socket_paths import short_socket_path
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterator
@@ -372,7 +372,8 @@ def test_run_plan_discards_startup_output_on_success(
 
     assert code == 0
     assert calls == [step.argv for step in plan.steps]
-    assert len(deadlines) == 2 and deadlines[0] == deadlines[1]
+    assert len(deadlines) == 2
+    assert deadlines[0] == deadlines[1]
     assert output_limits == [policy.output_limit_bytes, policy.output_limit_bytes]
     assert b"".join(output) == b'{"packages":[]}\n'
 
@@ -553,7 +554,9 @@ def test_check_names_the_tools(running: Running, monkeypatch: pytest.MonkeyPatch
     assert '"action":"check"' in audit
 
 
-def test_check_passes_the_container_name_into_devtools(running: Running, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+def test_check_passes_the_container_name_into_devtools(
+    running: Running, monkeypatch: pytest.MonkeyPatch, tmp_path: Path,
+) -> None:
     policy, _holder = running
     dump = tmp_path / "env-dump"
     _install_check(policy.repo, f"#!/bin/sh\nprintf '%s' \"$HOSTRUN_CONTAINER\" > '{dump}'\n")
@@ -733,7 +736,7 @@ def test_conformance_rejects_wrong_argument_shape(tmp_path: Path, args: list[str
 
 DEVTOOLS_CASES = [
     ("python", "src/aconsole", ("python3", "tools/codegraph/extract_python.py", "src/aconsole")),
-    ("ts", "src", ("npx", "--yes", "dependency-cruiser@18.7.0", "--output-type", "json", "src")),
+    ("ts", "src", None),
     ("rust-metadata", "crates/core", None),
     ("csharp", "src/Cs", ("dotnet", "run", "--project", "tools/csgraph", "--", "src/Cs")),
 ]
@@ -758,6 +761,15 @@ def test_devtools_extractor_argv(
     if extractor == "rust-metadata":
         assert manifest is not None
         _assert_rust_metadata_wrapper(argv, repo, manifest)
+    elif extractor == "ts":
+        assert argv[:7] == ("podman", "exec", "--workdir", repo, "--env", f"PYTHONPATH={repo}/src", "devtools")
+        assert argv[8:11] == ("-m", "aconsole.core.infrastructure.codegraph.typescript", "--node")
+        assert Path(argv[11]).is_absolute()
+        assert argv[12] == "--cruiser"
+        assert Path(argv[13]).is_absolute()
+        assert "dependency-cruiser-18.7.0" in argv[13]
+        assert argv[-1] == path
+        assert not ({"npx", "npm", "install", "--yes"} & set(argv))
     else:
         assert tail is not None
         assert argv == ("podman", "exec", "--workdir", repo, "devtools", *tail)
