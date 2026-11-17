@@ -20,7 +20,7 @@ from tools.hostrun import actions  # noqa: E402
 def _manifest(repo: Path) -> Path:
     manifest = repo / "crates" / "demo" / "Cargo.toml"
     manifest.parent.mkdir(parents=True, exist_ok=True)
-    manifest.write_text("[package]\nname = 'demo'\nversion = '0.1.0'\n", encoding="utf-8")
+    _ = manifest.write_text("[package]\nname = 'demo'\nversion = '0.1.0'\n", encoding="utf-8")
     return manifest
 
 
@@ -66,7 +66,7 @@ def test_rust_metadata_rejects_traversal_and_missing_or_wrong_manifest(
     tmp_path: Path,
     requested: str,
 ) -> None:
-    _manifest(tmp_path)
+    _ = _manifest(tmp_path)
 
     with pytest.raises(actions.ActionError, match="devtools path"):
         _ = _rust_step(tmp_path, requested)
@@ -85,13 +85,14 @@ def test_rust_metadata_rejects_manifest_symlink_escape(tmp_path: Path) -> None:
 
 def _write_executable(path: Path, contents: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(contents, encoding="utf-8")
+    _ = path.write_text(contents, encoding="utf-8")
     path.chmod(0o755)
 
 
 @pytest.mark.parametrize("use_rustup_home", [False, True])
 def test_rust_metadata_script_uses_installed_toolchain_offline_and_passes_manifest_as_argv(
     tmp_path: Path,
+    *,
     use_rustup_home: bool,
 ) -> None:
     repo = tmp_path / "repo"
@@ -104,10 +105,11 @@ def test_rust_metadata_script_uses_installed_toolchain_offline_and_passes_manife
     path_log = tmp_path / "cargo-path"
     _write_executable(
         tool_bin / "cargo",
-        "#!/bin/sh\nprintf '%s\\n' \"$@\" > \"$CARGO_ARGS_FILE\"\nprintf '%s' \"$PATH\" > \"$CARGO_PATH_FILE\"\n",
+        '#!/bin/sh\nprintf \'%s\\n\' "$@" > "$CARGO_ARGS_FILE"\nprintf \'%s\' "$PATH" > "$CARGO_PATH_FILE"\n',
     )
     _write_executable(tool_bin / "rustc", "#!/bin/sh\nexit 0\n")
 
+    _write_executable(home / ".local/bin/aconsole-rsgraph", "#!/bin/sh\ncat\n")
     step = _rust_step(repo, "crates/demo/Cargo.toml")
     argv = step.argv
     shell_index = argv.index("/bin/sh")
@@ -133,7 +135,7 @@ def test_rust_metadata_script_uses_installed_toolchain_offline_and_passes_manife
     if use_rustup_home:
         env["RUSTUP_HOME"] = str(rustup_home)
     else:
-        env.pop("RUSTUP_HOME", None)
+        _ = env.pop("RUSTUP_HOME", None)
     completed = subprocess.run(
         argv[shell_index:],
         check=False,
@@ -154,3 +156,24 @@ def test_rust_metadata_script_uses_installed_toolchain_offline_and_passes_manife
         str(manifest.resolve()),
     ]
     assert str(tool_bin) in path_log.read_text(encoding="utf-8")
+
+
+def test_rust_hot_path_uses_prebuilt_extractor_and_propagates_cargo_failure(tmp_path: Path) -> None:
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    _ = _manifest(repo)
+    home = tmp_path / "home"
+    tool_bin = home / ".rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin"
+    _write_executable(tool_bin / "cargo", "#!/bin/sh\nexit 19\n")
+    _write_executable(tool_bin / "rustc", "#!/bin/sh\nexit 0\n")
+    _write_executable(home / ".local/bin/aconsole-rsgraph", "#!/bin/sh\necho unexpected\n")
+    argv = _rust_step(repo, "crates/demo/Cargo.toml").argv
+    script = argv[argv.index("/bin/sh") + 2]
+    assert "cargo-modules" not in script
+    assert "cargo build" not in script
+    assert "cargo install" not in script
+    assert "aconsole-rsgraph" in script
+    env = {**os.environ, "HOME": str(home), "RUSTUP_HOME": str(home / ".rustup")}
+    result = subprocess.run(argv[argv.index("/bin/sh") :], env=env, capture_output=True, check=False, timeout=5)
+    assert result.returncode == 19
+    assert result.stdout == b""

@@ -1,0 +1,10 @@
+[package]
+name = "aconsole-rsgraph"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.98"
+
+[dependencies]
+syn = { version = "=2.0.119", features = ["full", "visit"] }
+quote = "=1.0.47"
+serde_json = "=1.0.154"

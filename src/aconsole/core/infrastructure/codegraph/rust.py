@@ -11,7 +11,7 @@ from pathlib import PurePosixPath
 
 import msgspec
 
-from aconsole.core.infrastructure.codegraph.protocol import ExtractorGraph, GraphEdge, GraphNode
+from aconsole.core.infrastructure.codegraph.protocol import ExtractorGraph, GraphEdge, GraphNode, decode_graph
 
 _SCHEMA = "Cargo metadata does not match the schema"
 _DOT = "unsupported or malformed cargo-modules DOT"
@@ -37,9 +37,17 @@ class _Metadata(msgspec.Struct, frozen=True, kw_only=True):
     workspace_root: str
 
 
+class _Format(msgspec.Struct, frozen=True, kw_only=True):
+    version: int | None = None
+    workspace_root: str | None = None
+
+
 def from_cargo_metadata(raw: bytes) -> ExtractorGraph:
-    """Convert workspace members and their local dependencies to a graph."""
+    """Read rsgraph v1 output or legacy cargo workspace metadata."""
     try:
+        format_hint = msgspec.json.decode(raw, type=_Format)
+        if format_hint.version is not None and format_hint.workspace_root is None:
+            return decode_graph(raw)
         metadata = msgspec.json.decode(raw, type=_Metadata)
     except msgspec.DecodeError as exc:
         raise ValueError(_SCHEMA) from exc

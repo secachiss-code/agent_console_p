@@ -1,3 +1,4 @@
+# ruff: noqa: INP001 -- hostrun is a standalone script bundle.
 """Named hostrun actions use fixed argv, including a fixed Rust shell script.
 
 The validated Rust manifest is passed separately as a positional argument;
@@ -36,8 +37,7 @@ _UV = f"{_DEVTOOLS_HOME}/.cargo/bin/uv"
 _SCENARIO = re.compile(r"[A-Za-z0-9_-]{1,64}\Z")
 # H1, R0b, A0.0r, I0 and frontend ids. One trailing letter is a part (A1.1b); a reopened task adds r (A2.1br).
 _TASK = re.compile(
-    r"(?:A[0-9]{1,2}(?:\.[0-9]{1,2})?[a-z]?r?|H[0-9]{1,2}|R[0-9]{1,2}[a-z]?|I[0-9]{1,2}|"
-    r"B[0-9]{1,2}[a-z]?|C[0-9]{1,2}|(?:CORE|DB|SEC|QA|APR|FE)-[0-9]{1,4})\Z"
+    r"(?:A[0-9]{1,2}(?:\.[0-9]{1,2})?[a-z]?r?|H[0-9]{1,2}|R[0-9]{1,2}[a-z]?|I[0-9]{1,2}|B[0-9]{1,2}[a-z]?|C[0-9]{1,2}|(?:CORE|DB|SEC|QA|APR|FE)-[0-9]{1,4})\Z"
 )
 
 _CONTAINER = re.compile(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,63}\Z")
@@ -58,7 +58,7 @@ _ISOLATED_X = Path(__file__).resolve().parent / "isolated_x.py"
 _CONFORMANCE = "@modelcontextprotocol/conformance@0.2.0-alpha.12"
 _MCP_REVISION = "2026-07-28"
 # Extractors for the code graph (A8.1). The path argument is appended; each tool is pinned to the version in PLAN §8.
-# rust-modules (cargo-modules 0.28) is added by A8.3 once its flags are checked against the installed version.
+# Rust extraction uses a prebuilt syn binary after offline metadata; no build on the hot path.
 _EXTRACTORS: dict[str, tuple[str, ...]] = {
     "python": ("python3", "tools/codegraph/extract_python.py"),
     "ts": ("npx", "--yes", "dependency-cruiser@18.7.0", "--output-type", "json"),
@@ -68,7 +68,7 @@ _EXTRACTORS: dict[str, tuple[str, ...]] = {
 }
 
 # Fixed inventory only: the validated context argument is deliberately unused.
-_CSHARP_INFO_SCRIPT = '''
+_CSHARP_INFO_SCRIPT = """
 export DOTNET_CLI_TELEMETRY_OPTOUT=1 DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1
 export DOTNET_NOLOGO=1 DOTNET_MULTILEVEL_LOOKUP=0
 printf 'HOME=%s\\nDOTNET_ROOT=%s\\n' "${HOME:-}" "${DOTNET_ROOT:-}"
@@ -109,10 +109,10 @@ printf '%s\\n' "$sdks" | while IFS= read -r line; do
         done
     done
 done
-'''.replace("@DEVTOOLS@", _DEVTOOLS_HOME)
+""".replace("@DEVTOOLS@", _DEVTOOLS_HOME)
 
 # Fixed script: the manifest is supplied only as a positional argument.
-_RUST_METADATA_SCRIPT = '''
+_RUST_METADATA_SCRIPT = """
 toolchain=stable-x86_64-unknown-linux-gnu/bin
 bin="${RUSTUP_HOME:-${HOME}/.rustup}/toolchains/$toolchain"
 if [ ! -x "$bin/cargo" ] || [ ! -x "$bin/rustc" ]; then
@@ -124,8 +124,19 @@ if [ ! -x "$bin/cargo" ] || [ ! -x "$bin/rustc" ]; then
 fi
 PATH="$bin:$PATH"
 export PATH
-exec "$bin/cargo" metadata --offline --format-version 1 --no-deps --manifest-path "$1"
-'''.replace("@DEVTOOLS@", _DEVTOOLS_HOME)
+extractor="${HOME}/.local/bin/aconsole-rsgraph"
+if [ ! -x "$extractor" ]; then
+    extractor="@DEVTOOLS@/.local/bin/aconsole-rsgraph"
+fi
+if [ ! -x "$extractor" ]; then
+    echo "Rust graph extractor is unavailable" >&2
+    exit 127
+fi
+metadata=$(mktemp) || exit $?
+trap 'rm -f "$metadata"' EXIT HUP INT TERM
+"$bin/cargo" metadata --offline --format-version 1 --no-deps --manifest-path "$1" > "$metadata" || exit $?
+"$extractor" < "$metadata"
+""".replace("@DEVTOOLS@", _DEVTOOLS_HOME)
 
 
 class ActionError(Exception):
@@ -133,8 +144,8 @@ class ActionError(Exception):
 
     def __init__(self, status: int, message: str) -> None:
         super().__init__(message)
-        self.status = status
-        self.message = message
+        self.status: int = status
+        self.message: str = message
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -218,13 +229,17 @@ def build_plan(
     if action == "test":
         return Plan(mode="exec", steps=_test(args, repo, side), timeout_s=timeout_s)
     if action == "ui-snapshot":
-        return Plan(mode="exec",
-                    steps=_in_devtools(repo, _ui_snapshot(args, repo).argv, side=side, desktop=True),
-                    timeout_s=timeout_s)
+        return Plan(
+            mode="exec",
+            steps=_in_devtools(repo, _ui_snapshot(args, repo).argv, side=side, desktop=True),
+            timeout_s=timeout_s,
+        )
     if action == "ui-run":
-        return Plan(mode="exec",
-                    steps=_in_devtools(repo, _ui_run(args, repo).argv, side=side, desktop=True),
-                    timeout_s=timeout_s)
+        return Plan(
+            mode="exec",
+            steps=_in_devtools(repo, _ui_run(args, repo).argv, side=side, desktop=True),
+            timeout_s=timeout_s,
+        )
     if action == "fake-core":
         return _fake_core(args, repo, timeout_s, runtime_dir or f"{repo}/.fake-runtime", side)
     if action == "core-run":
@@ -244,8 +259,7 @@ def build_plan(
     if action == "distrobox-dry-run":
         return Plan(mode="exec", steps=(_distrobox(args),), timeout_s=timeout_s)
     if action == "git":
-        return Plan(mode="exec", steps=_in_devtools(str(cwd), _git(args, cwd).argv, side=side),
-                    timeout_s=timeout_s)
+        return Plan(mode="exec", steps=_in_devtools(str(cwd), _git(args, cwd).argv, side=side), timeout_s=timeout_s)
     if action == "gate":
         return Plan(
             mode="exec",
@@ -258,12 +272,15 @@ def build_plan(
     if action == "gate-review":
         if args[:1] == ["approve"]:
             raise ActionError(403, "agent review approval is disabled; independent review is required")
-        if (len(args) not in (3, 4) or args[0] not in ("inspect", "approve")
-                or len(args) != (3 if args[0] == "inspect" else 4)
-                or _TASK.fullmatch(args[1]) is None
-                or re.fullmatch(r"tools/(?:gate|hostrun)/[A-Za-z0-9_./-]+", args[2]) is None
-                or ".." in args[2].split("/")
-                or (len(args) == 4 and re.fullmatch(r"[0-9a-f]{64}", args[3]) is None)):
+        if (
+            len(args) not in (3, 4)
+            or args[0] not in ("inspect", "approve")
+            or len(args) != (3 if args[0] == "inspect" else 4)
+            or _TASK.fullmatch(args[1]) is None
+            or re.fullmatch(r"tools/(?:gate|hostrun)/[A-Za-z0-9_./-]+", args[2]) is None
+            or ".." in args[2].split("/")
+            or (len(args) == 4 and re.fullmatch(r"[0-9a-f]{64}", args[3]) is None)
+        ):
             raise ActionError(400, "invalid gate review request")
         target = Path(repo) / args[2]
         if not target.is_file() or target.resolve() != Path(repo).resolve() / args[2]:
@@ -330,8 +347,7 @@ def _deps_sync(args: list[str], repo: str, side: str = "") -> tuple[Step, ...]:
         argv=tuple(sync_argv),
         env=(("UV_PROJECT_ENVIRONMENT", venv),),
     )
-    return (*_in_devtools(repo, create.argv, side=side),
-            *_in_devtools(repo, sync.argv, sync.env, side=side)[1:])
+    return (*_in_devtools(repo, create.argv, side=side), *_in_devtools(repo, sync.argv, sync.env, side=side)[1:])
 
 
 _SUITES: dict[str, tuple[str, ...]] = {
@@ -446,10 +462,24 @@ def _ui_run(args: list[str], repo: str) -> Step:
 def _fake_core(args: list[str], repo: str, timeout_s: float, runtime_dir: str, side: str) -> Plan:
     # Validate using the same builder as the container-side lifecycle command.
     local = container_fake_plan(args, repo, timeout_s, runtime_dir, side)
-    command = (_core_python(repo), f"{repo}/tools/hostrun/server.py", "--container-fake",
-               repo, runtime_dir, side, *args)
-    return Plan(mode="exec", steps=_in_devtools(repo, command, _gil_off(), side=side), timeout_s=timeout_s,
-                scenario=local.scenario, repo=repo, socket_path=local.socket_path, side=side)
+    command = (
+        _core_python(repo),
+        f"{repo}/tools/hostrun/server.py",
+        "--container-fake",
+        repo,
+        runtime_dir,
+        side,
+        *args,
+    )
+    return Plan(
+        mode="exec",
+        steps=_in_devtools(repo, command, _gil_off(), side=side),
+        timeout_s=timeout_s,
+        scenario=local.scenario,
+        repo=repo,
+        socket_path=local.socket_path,
+        side=side,
+    )
 
 
 def container_fake_plan(args: list[str], repo: str, timeout_s: float, runtime_dir: str, side: str) -> Plan:
@@ -478,16 +508,16 @@ def _distrobox(args: list[str]) -> Step:
 def _git(args: list[str], cwd: Path) -> Step:
     base = ("git", "-C", str(cwd))
     if args == ["status"]:
-        return Step(argv=base + ("status",))
+        return Step(argv=(*base, "status"))
     if args == ["diff"]:
         # A repo can name diff.external and textconv drivers. These flags keep git from running them.
-        return Step(argv=base + ("diff", "--no-ext-diff", "--no-textconv"))
+        return Step(argv=(*base, "diff", "--no-ext-diff", "--no-textconv"))
     if args == ["log"]:
-        return Step(argv=base + ("log",))
+        return Step(argv=(*base, "log"))
     if args == ["worktree", "list"]:
-        return Step(argv=base + ("worktree", "list"))
+        return Step(argv=(*base, "worktree", "list"))
     if args == ["rev-parse", "HEAD"]:
-        return Step(argv=base + ("rev-parse", "HEAD"))
+        return Step(argv=(*base, "rev-parse", "HEAD"))
     raise ActionError(400, "git arguments are not allowed")
 
 
@@ -508,8 +538,14 @@ def _conformance(args: list[str], repo: str) -> Step:
     if args == ["managed"]:
         return Step(
             argv=(
-                "podman", "exec", "--workdir", repo, _DEVTOOLS,
-                _core_python(repo), "-m", "aconsole.devcli.mcp_conformance",
+                "podman",
+                "exec",
+                "--workdir",
+                repo,
+                _DEVTOOLS,
+                _core_python(repo),
+                "-m",
+                "aconsole.devcli.mcp_conformance",
             ),
             env=_gil_off(),
         )
@@ -545,8 +581,16 @@ def _devtools(args: list[str], repo: str) -> Step:
     if args[0] == "csharp-info":
         return Step(
             argv=(
-                "podman", "exec", "--workdir", repo, _DEVTOOLS,
-                "/bin/sh", "-c", _CSHARP_INFO_SCRIPT, "hostrun-csharp-info", path,
+                "podman",
+                "exec",
+                "--workdir",
+                repo,
+                _DEVTOOLS,
+                "/bin/sh",
+                "-c",
+                _CSHARP_INFO_SCRIPT,
+                "hostrun-csharp-info",
+                path,
             )
         )
     if args[0] == "rust-metadata":
@@ -556,15 +600,23 @@ def _devtools(args: list[str], repo: str) -> Step:
             candidate = candidate / "Cargo.toml"
         try:
             manifest = candidate.resolve(strict=True)
-            manifest.relative_to(root)
-        except (OSError, ValueError, RuntimeError):
-            raise ActionError(400, "devtools path must resolve to a repository Cargo.toml") from None
+            _ = manifest.relative_to(root)
+        except (OSError, ValueError, RuntimeError) as exc:
+            raise ActionError(400, "devtools path must resolve to a repository Cargo.toml") from exc
         if manifest.name != "Cargo.toml" or not manifest.is_file():
             raise ActionError(400, "devtools path must resolve to a repository Cargo.toml")
         return Step(
             argv=(
-                "podman", "exec", "--workdir", repo, _DEVTOOLS,
-                "/bin/sh", "-c", _RUST_METADATA_SCRIPT, "aconsole-rust", str(manifest),
+                "podman",
+                "exec",
+                "--workdir",
+                repo,
+                _DEVTOOLS,
+                "/bin/sh",
+                "-c",
+                _RUST_METADATA_SCRIPT,
+                "aconsole-rust",
+                str(manifest),
             )
         )
     return Step(argv=("podman", "exec", "--workdir", repo, _DEVTOOLS, *_EXTRACTORS[args[0]], path))
