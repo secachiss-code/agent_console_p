@@ -77,6 +77,7 @@ lazy from aconsole.ui.views.palette.dialog import PaletteDialog  # noqa: E402
 lazy from aconsole.ui.views.setup.preferences import PreferencesDialog  # noqa: E402
 lazy from aconsole.ui.views.setup.wizard import SetupWizard  # noqa: E402
 lazy from aconsole.ui.views.shortcuts_dialog import ShortcutsDialog  # noqa: E402
+lazy from aconsole.ui.views.sidebar.plan_repair import PlanRepairDialog  # noqa: E402
 lazy from aconsole.ui.views.tabs.new_tab import NewTabDialog  # noqa: E402
 
 _LOG = logging.getLogger(__name__)
@@ -400,10 +401,20 @@ class MainWindow(Adw.ApplicationWindow):
         plan = self._summary_vm.plan
         if plan is not None and plan.id == plan_id:
             self.plan_page = PlanGraph(plan, self._close_plan, self._select_tab, self._decide_node,
-                                       on_freeze=self._freeze_plan, on_review=self._review_plan)
+                                       on_freeze=self._freeze_plan, on_review=self._review_plan,
+                                       on_repair=self._repair_plan)
             self.plan_page.set_inbox(self._summary_vm.inbox)
             self._summary_vm.refresh_inbox()
             self.content_view.set_content(self.plan_page)
+
+    def _repair_plan(self, plan: PlanView) -> None:
+        page = self.plan_page
+
+        def saved(result: PlanView) -> None:
+            if page is not None:
+                _ = page.update(result)
+
+        PlanRepairDialog(self.tabs.client, plan, saved).present(self)
 
     def _freeze_plan(self, plan_id: PlanId) -> None:
         _ = spawn_task(self._freeze(plan_id, self.plan_page))

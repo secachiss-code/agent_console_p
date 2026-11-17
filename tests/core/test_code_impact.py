@@ -83,22 +83,23 @@ def test_another_language_uses_the_runner_and_is_cached(tmp_path: Path) -> None:
     runner = _Runner(ExtractorRun(graph=_RUST, error=None))
     now = [0.0]
     index = CodeGraphIndex(runner, lambda _project: tmp_path, clock=lambda: now[0], ttl_s=10)
-    assert index.resolve("p", "a.rs") == "a"
-    assert index.dependents("p") == {"a": ("b",)}
+    assert index.resolve("p", "a.rs") == "rs:a"
+    assert index.dependents("p") == {"rs:a": ("rs:b",)}
     assert runner.calls == [("rust-metadata", tmp_path)]
     now[0] = 11.0
     _ = index.graph("p")
     assert len(runner.calls) == 2
 
 
-def test_a_python_project_stays_python_with_a_package_json(tmp_path: Path) -> None:
+def test_a_python_project_merges_the_package_json_graph(tmp_path: Path) -> None:
     _write(tmp_path)
     (tmp_path / "pyproject.toml").write_text("[project]\n", encoding="utf-8")
     (tmp_path / "package.json").write_text("{}", encoding="utf-8")
     runner = _Runner(ExtractorRun(graph=_RUST, error=None))
     index = CodeGraphIndex(runner, lambda _project: tmp_path)
     assert index.resolve("p", "pkg.base") == "pkg.base"
-    assert runner.calls == []
+    assert index.resolve("p", "ts:a") == "ts:a"
+    assert runner.calls == [("ts", tmp_path)]
 
 
 def test_a_failed_extractor_is_a_contract_error(tmp_path: Path) -> None:

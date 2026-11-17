@@ -2086,3 +2086,24 @@ msgstr "Отменить узел"
 
 msgid "plan.reject"
 msgstr "Отклонить запрос"
+
+msgid "plan.repair"
+msgstr "Исправить проверки"
+
+msgid "plan.repair_help"
+msgstr "Загрузите или вставьте профили проверок по ключам направлений (например, IDX-0). Это исправляет неполные профили замороженного плана до начала работы. Граф и история сохраняются."
+
+msgid "plan.repair_load"
+msgstr "Загрузить JSON…"
+
+msgid "plan.repair_json"
+msgstr "Профили проверок в формате JSON"
+
+msgid "plan.repair_apply"
+msgstr "Применить профили"
+
+msgid "plan.repair_size"
+msgstr "Размер профилей не должен превышать 256 КиБ."
+
+msgid "plan.repair_empty"
+msgstr "Укажите хотя бы один профиль направления."

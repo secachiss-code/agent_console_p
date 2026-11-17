@@ -36,12 +36,14 @@ class PlanGraph(Gtk.Box):
         *,
         on_freeze: Callable[[PlanId], None] | None = None,
         on_review: Callable[[str, str, str], None] | None = None,
+        on_repair: Callable[[PlanView], None] | None = None,
     ) -> None:
         super().__init__(orientation=Gtk.Orientation.VERTICAL)
         self.add_css_class("ac-plan-page")
         self.plan: PlanView = plan
         self._on_freeze: Callable[[PlanId], None] | None = on_freeze
         self._on_review: Callable[[str, str, str], None] | None = on_review
+        self._on_repair: Callable[[PlanView], None] | None = on_repair
         self._inbox: tuple[PlanInboxEntry, ...] = ()
         self._inbox_key: object = None
         self._review_actions: dict[str, Gtk.Box] = {}
@@ -100,6 +102,7 @@ class PlanGraph(Gtk.Box):
         self._summary_label.set_text(translate("plan.card.progress").format(done=plan.done, total=plan.total))
         self.phase_label.set_text(translate(f"plan.phase.{plan.phase}"))
         self.freeze_button.set_visible(plan.phase == "draft")
+        self.repair_button.set_visible(self._can_repair())
         self.set_inbox(self._inbox)
         self.set_hovered(self._hovered)
         return True
@@ -130,7 +133,24 @@ class PlanGraph(Gtk.Box):
         self.freeze_button.set_sensitive(self._on_freeze is not None)
         _ = self.freeze_button.connect("clicked", self._freeze)
         heading.append(self.freeze_button)
+        self.repair_button: Gtk.Button = Gtk.Button(label=translate("plan.repair"), valign=Gtk.Align.CENTER)
+        self.repair_button.set_visible(self._can_repair())
+        _ = self.repair_button.connect("clicked", self._repair)
+        heading.insert_child_after(self.repair_button, self.close_button)
         return heading
+
+    def _can_repair(self) -> bool:
+        return (
+            self._on_repair is not None
+            and self.plan.phase == "frozen"
+            and any(node.level == 0 for node in self.plan.nodes)
+            and all(node.status in {NodeStatus.PENDING, NodeStatus.BLOCKED}
+                    and node.tab_id is None and node.attempt_no == 0 for node in self.plan.nodes)
+        )
+
+    def _repair(self, _button: Gtk.Button) -> None:
+        if self._can_repair() and self._on_repair is not None:
+            self._on_repair(self.plan)
 
     def _freeze(self, _button: Gtk.Button) -> None:
         if self._on_freeze is not None and self.freeze_button.get_sensitive() and self.plan.phase == "draft":

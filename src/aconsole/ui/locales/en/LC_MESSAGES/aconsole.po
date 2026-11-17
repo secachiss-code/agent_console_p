@@ -2074,3 +2074,24 @@ msgstr "Cancel node"
 
 msgid "plan.reject"
 msgstr "Reject request"
+
+msgid "plan.repair"
+msgstr "Repair checks"
+
+msgid "plan.repair_help"
+msgstr "Load or paste verification profiles by direction key (for example, IDX-0). This repairs incomplete profiles in a frozen plan before work starts. The graph and history are preserved."
+
+msgid "plan.repair_load"
+msgstr "Load JSON file…"
+
+msgid "plan.repair_json"
+msgstr "Verification profiles as JSON"
+
+msgid "plan.repair_apply"
+msgstr "Apply profiles"
+
+msgid "plan.repair_size"
+msgstr "The profiles file must be at most 256 KiB."
+
+msgid "plan.repair_empty"
+msgstr "Provide at least one direction profile."
