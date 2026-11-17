@@ -16,6 +16,7 @@ class GraphNode(msgspec.Struct, frozen=True, kw_only=True):
     path: str
     name: str
     kind: str
+    symbols: tuple[str, ...] = ()
 
 
 class GraphEdge(msgspec.Struct, frozen=True, kw_only=True):

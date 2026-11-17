@@ -50,6 +50,15 @@ def test_codegraph_protocol_schema_and_unknown_version() -> None:
         _ = decode_graph(b'{"version":2,"nodes":[],"edges":[]}')
 
 
+def test_version_one_optional_symbols_preserve_legacy_extractors() -> None:
+    old = decode_graph(b'{"version":1,"nodes":[{"id":"a","path":"a.rs","name":"a","kind":"module"}],"edges":[]}')
+    assert old.nodes[0].symbols == ()
+    node = msgspec.structs.replace(old.nodes[0], symbols=("pub fn a() -> i32",))
+    graph = msgspec.structs.replace(old, nodes=(node,))
+    assert decode_graph(msgspec.json.encode(graph)) == graph
+    assert graph.version == 1
+
+
 def test_codegraph_protocol_runner_builds_hostrun_devtools_argv(tmp_path: Path) -> None:
     runner = ExtractorRunner(Path(_HOSTRUN))
     assert runner.argv("python", "src") == (_HOSTRUN, "devtools", "python", "src")
