@@ -1,4 +1,4 @@
-"""Public Python declarations without executing project code or retaining bodies."""
+"""Hash file bytes and public interfaces without executing project code or retaining bodies."""
 
 import ast
 import copy
