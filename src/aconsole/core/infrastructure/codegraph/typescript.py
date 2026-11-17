@@ -74,7 +74,7 @@ def _local_path(value: str) -> bool:
 
 
 def extract_typescript(node: Path, cruiser: Path, path: str, *, root: Path) -> ExtractorGraph:
-    """Use only the image's preinstalled CLI; never load project cruise configs."""
+    """Require the image's pinned CLI and ignore executable project cruise configs."""
     if not node.is_absolute() or not cruiser.is_absolute() or not node.is_file() or not cruiser.is_file():
         message = "preinstalled TypeScript extractor is unavailable"
         raise ValueError(message)
