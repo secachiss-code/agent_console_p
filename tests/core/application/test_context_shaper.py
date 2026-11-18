@@ -14,6 +14,7 @@ from aconsole.core.application.services.context_shaper import (
     DirectionContext,
     LeaseTail,
     ModuleContext,
+    ShapedContext,
     bounded_handoff,
 )
 from aconsole.core.domain.errors import DomainError
@@ -144,12 +145,17 @@ def test_unordered_direction_inputs_produce_identical_bytes() -> None:
         scope=("tests/**", "src/**"),
         gate_profile_json='{"z": 2, "a": 1}',
         skeletons=(*DIRECTION.skeletons, ("src/b.py", "class Other: ...")),
+        dependencies=(
+            DependencyContext(path="src/z.py", distance=1, text="def neighbor(): ..."),
+            DependencyContext(path="src/c.py", distance=2, text="src/c.py module Public"),
+        ),
     )
     reordered = replace(
         direction,
         scope=tuple(reversed(direction.scope)),
         gate_profile_json=' { "a" : 1, "z" : 2 } ',
         skeletons=tuple(reversed(direction.skeletons)),
+        dependencies=tuple(reversed(direction.dependencies)),
     )
     shaper = ContextShaper(Scratch())
     first = shaper.shape(session=SESSION, direction=direction, module=MODULE, envelope=ENVELOPE, lease=LEASE)
@@ -160,7 +166,10 @@ def test_unordered_direction_inputs_produce_identical_bytes() -> None:
         envelope=ENVELOPE,
         lease=LEASE,
     )
-    assert first.direction_prefix == second.direction_prefix
+    assert first.direction_prefix is not None
+    assert second.direction_prefix is not None
+    assert first.direction_prefix.encode() == second.direction_prefix.encode()
+    assert first.prefix_sha256 == second.prefix_sha256
 
 
 def test_volatile_lease_fields_are_the_final_payload_keys() -> None:
@@ -352,3 +361,46 @@ def test_lod_budget_discards_distant_bands_before_long_direct_skeletons(
     )
     assert repeated.direction_prefix is None
     assert repeated.prefix_sha256 == result.prefix_sha256
+
+
+@pytest.mark.parametrize("placement", ["scope", "dependency"])
+def test_body_edits_keep_prefix_bytes_but_signature_edits_change_them(placement: str) -> None:
+    scratch = Scratch()
+    shaper = ContextShaper(scratch)
+    results: list[ShapedContext] = []
+    for source in (
+        "def calculate(value: int) -> int:\n    return value + 1\n",
+        "def calculate(value: int) -> int:\n    # Другая реализация\n    return value * 2\n",
+        "def calculate(value: int, scale: int = 2) -> int:\n    return value * scale\n",
+    ):
+        skeleton = python_skeleton(source)
+        direction = replace(
+            DIRECTION,
+            skeletons=(("src/a.py", skeleton),) if placement == "scope" else DIRECTION.skeletons,
+            dependencies=(DependencyContext(path="src/neighbor.py", distance=1, text=skeleton),)
+            if placement == "dependency"
+            else (),
+        )
+        # A cold delivery proves byte equality independently of the prefix cache.
+        results.append(
+            shaper.shape(
+                session=replace(SESSION, agent_session_id=f"session-{len(results)}"),
+                direction=direction,
+                module=MODULE,
+                envelope=ENVELOPE,
+                lease=LEASE,
+                file_slice=python_slice(source, ("calculate",)),
+            )
+        )
+    first, body_edit, signature_edit = results
+    assert first.direction_prefix is not None
+    assert body_edit.direction_prefix is not None
+    assert signature_edit.direction_prefix is not None
+    assert first.direction_prefix.encode() == body_edit.direction_prefix.encode()
+    assert first.prefix_sha256 == body_edit.prefix_sha256
+    assert first.direction_prefix != signature_edit.direction_prefix
+    assert first.prefix_sha256 != signature_edit.prefix_sha256
+    assert first.file_slice != body_edit.file_slice
+    assert "return value" not in first.direction_prefix
+    assert "Другая реализация" not in body_edit.direction_prefix
+    assert len(scratch.prefixes) == 2
