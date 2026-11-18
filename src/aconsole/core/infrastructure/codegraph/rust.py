@@ -1,4 +1,4 @@
-"""Convert Cargo metadata and a documented subset of cargo-modules DOT to graphs.
+"""Read prebuilt syn protocol v1 output and legacy Cargo metadata or DOT.
 
 The DOT reader accepts quoted node IDs and directed edges in an unnamed digraph.
 It does not claim to parse arbitrary DOT or unverified cargo-modules attributes.

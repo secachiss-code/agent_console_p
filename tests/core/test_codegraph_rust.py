@@ -1,4 +1,4 @@
-"""Cargo metadata and documented cargo-modules DOT become sorted protocol graphs."""
+"""Verify syn module graphs, legacy metadata, and the supported DOT subset."""
 
 from __future__ import annotations
 
@@ -343,6 +343,31 @@ def test_syn_interface_ignores_function_bodies_and_changes_with_signatures(
     assert _extract_rust(rsgraph_binary, tmp_path) == before
     _ = path.write_text("pub struct Value;\npub fn value(arg: u32) -> u32 { arg }\n")
     assert _extract_rust(rsgraph_binary, tmp_path) != before
+
+
+@pytest.mark.parametrize(
+    "external_use",
+    [
+        "use unknown_external::Thing;",
+        "use unknown_external::{Thing as Value, other::*};",
+        "fn local() { use unknown_external::api::Value; }",
+    ],
+)
+def test_syn_unresolved_external_use_cannot_create_local_module_edges(
+    tmp_path: Path,
+    rsgraph_binary: Path,
+    external_use: str,
+) -> None:
+    _rust_workspace(tmp_path)
+    worker = tmp_path / "demo/src/worker.rs"
+    _ = worker.write_text("pub fn work() {}\n")
+    before = _extract_rust(rsgraph_binary, tmp_path)
+    _ = worker.write_text(f"{external_use}\npub fn work() {{}}\n")
+    after = _extract_rust(rsgraph_binary, tmp_path)
+
+    # Local api/Value names must not make an unknown external path resolve.
+    assert after.edges == before.edges
+    assert tuple(node.id for node in after.nodes) == tuple(node.id for node in before.nodes)
 
 
 def test_syn_ids_survive_workspace_move(tmp_path: Path, rsgraph_binary: Path) -> None:

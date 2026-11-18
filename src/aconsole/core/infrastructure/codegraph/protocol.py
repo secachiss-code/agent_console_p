@@ -58,7 +58,7 @@ def decode_graph(raw: bytes) -> ExtractorGraph:
 
 
 def prefix_graph(graph: ExtractorGraph, prefix: str) -> ExtractorGraph:
-    """Namespace foreign IDs and both edge endpoints, preserving paths and version."""
+    """Namespace IDs and edge endpoints; preserve Rust module/crate namespaces."""
 
     def identifier(value: str) -> str:
         return (
