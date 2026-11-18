@@ -1,0 +1,219 @@
+{
+  "title": "0.1.4 — Индекс, LOD и vault",
+  "goal": "Дельта концепции 0.1.4 поверх закрытого plan-636. Полиглотный индекс, body_hash и interface_hash, LOD по прямой дистанции импорта, долговечное эхо vault, Canvas слоями Кана, предпроверка патча MCP, FTS5 BM25. Источник истины: plans/0.1.4-index.md. Образ в gate_profile — заглушка sha256 из нулей; перед закрытием L0 его заменяют на образ devtools.",
+  "phase": "frozen",
+  "counts": {
+    "pending": 15,
+    "in_progress": 0,
+    "verifying": 1,
+    "blocked": 0,
+    "done": 7,
+    "failed": 0,
+    "cancelled": 0,
+    "total": 23
+  },
+  "nodes": [
+    {
+      "node_id": "node-901",
+      "key": "IDX-0",
+      "title": "Закрыть направление IDX: многоязычный индекс",
+      "status": "pending",
+      "ready": false,
+      "contract_sha256": "65acface1c597d2d00312c8fa861cca3064cf3f1ef7c7b2b0ca719b1ec08c7e1"
+    },
+    {
+      "node_id": "node-902",
+      "key": "IDX-1",
+      "title": "Сливать графы нескольких языков",
+      "status": "done",
+      "ready": false,
+      "pipeline": true,
+      "contract_sha256": "b467471e7a9ba9f68080af5f39c512b54e451dcc8a7ff5b371215fd3e359fa53"
+    },
+    {
+      "node_id": "node-903",
+      "key": "IDX-2",
+      "title": "Хранить body_hash и interface_hash",
+      "status": "done",
+      "ready": false,
+      "pipeline": true,
+      "contract_sha256": "05fc8a3ea8c8c609652a0f583e173bdb1703d4eedca1618d4df1c6d1a320df25"
+    },
+    {
+      "node_id": "node-904",
+      "key": "IDX-3",
+      "title": "Снять модульный граф Rust через syn",
+      "status": "done",
+      "ready": false,
+      "pipeline": true,
+      "contract_sha256": "1a690820dfdd3fbdb3b2b1f856306e2044a5a89beea2dc47fd14b3293ca6dfc4"
+    },
+    {
+      "node_id": "node-905",
+      "key": "IDX-4",
+      "title": "Поставить бинарный экстрактор C#",
+      "status": "verifying",
+      "ready": false,
+      "pipeline": true,
+      "contract_sha256": "2628d5b3385f05e55c8387481ff12c5c458410c8ba11164cdc6f46503f1d6ce6"
+    },
+    {
+      "node_id": "node-906",
+      "key": "IDX-5",
+      "title": "Закрепить экстрактор TypeScript в образе",
+      "status": "done",
+      "ready": false,
+      "pipeline": true,
+      "contract_sha256": "49f4efafa796aba333f5bfdd7ee3e43f9a69b99440ca475ffebe309075de362d"
+    },
+    {
+      "node_id": "node-907",
+      "key": "LOD-0",
+      "title": "Закрыть направление LOD: контекст по дистанции",
+      "status": "pending",
+      "ready": false,
+      "contract_sha256": "0a403c3f27a55dfbd2581c04d8992d28d9bf5d2449a51d94764fbd5deef125a5"
+    },
+    {
+      "node_id": "node-908",
+      "key": "LOD-1",
+      "title": "Собирать контекст по дистанции графа",
+      "status": "done",
+      "ready": false,
+      "pipeline": true,
+      "contract_sha256": "7c369e49df0e42b7667537d3129ac638c517ccfdaea9b2ad51bcb64efab657fe"
+    },
+    {
+      "node_id": "node-909",
+      "key": "LOD-2",
+      "title": "Ключевать скелеты по interface_hash",
+      "status": "pending",
+      "ready": true,
+      "pipeline": true,
+      "contract_sha256": "3d2bdce6e3196d5860cb927671c814b74e19ccd4be9cfcb0bd2aa3009a994553"
+    },
+    {
+      "node_id": "node-910",
+      "key": "LOD-3",
+      "title": "Зафиксировать байтовую стабильность префикса",
+      "status": "pending",
+      "ready": false,
+      "pipeline": true,
+      "contract_sha256": "4c8f9ebb7bc962e1d2ccbafe95c0248f5eb66600a21152bbd09de083488cb6d9"
+    },
+    {
+      "node_id": "node-911",
+      "key": "VLT-0",
+      "title": "Закрыть направление VLT: vault и карта",
+      "status": "pending",
+      "ready": false,
+      "contract_sha256": "54e25cd7234099ca97ca94af982ca5757587685236114194af94b3a1f24cc700"
+    },
+    {
+      "node_id": "node-912",
+      "key": "VLT-1",
+      "title": "Считать эхо по долговечному blake2b",
+      "status": "done",
+      "ready": false,
+      "pipeline": true,
+      "contract_sha256": "69f459ba8d48cd87ea53d98a4b21a8fc626d152974cf2b79370a738808b26ea7"
+    },
+    {
+      "node_id": "node-913",
+      "key": "VLT-2",
+      "title": "Не затирать чужую правку заметки",
+      "status": "pending",
+      "ready": true,
+      "pipeline": true,
+      "contract_sha256": "35b6602c4022eee95048e0052826a96d241c039cbd52e86aff390310840d535b"
+    },
+    {
+      "node_id": "node-914",
+      "key": "VLT-3",
+      "title": "Раскладывать L1 слоями Кана и барицентром",
+      "status": "done",
+      "ready": false,
+      "pipeline": true,
+      "contract_sha256": "749ac4cfc8e7de0792ccdf3dcf386339d6b9ab37d26ed83e0ed7987b471d044d"
+    },
+    {
+      "node_id": "node-915",
+      "key": "GAT-0",
+      "title": "Закрыть направление GAT: предпроверка патча",
+      "status": "pending",
+      "ready": false,
+      "contract_sha256": "50086137c4f0091c571b2b1e42781d6a356291ff7948e02889a87f9e7accbb79"
+    },
+    {
+      "node_id": "node-916",
+      "key": "GAT-1",
+      "title": "Принимать патч до копирования в worktree",
+      "status": "pending",
+      "ready": true,
+      "pipeline": true,
+      "contract_sha256": "4c62badf9250e24c8a236d13f80981215299192940075d7c6300db3c77a150a5"
+    },
+    {
+      "node_id": "node-917",
+      "key": "GAT-2",
+      "title": "Вернуть одну строку диагностики",
+      "status": "pending",
+      "ready": false,
+      "pipeline": true,
+      "contract_sha256": "d311cb22bfa84cb0faeebe7c1c18a1e888f95aac88823b91414ab444d878206f"
+    },
+    {
+      "node_id": "node-918",
+      "key": "FND-0",
+      "title": "Закрыть направление FND: полнотекстовый поиск",
+      "status": "pending",
+      "ready": false,
+      "contract_sha256": "bb52b51c59f421b8bc0944a7ce0b72fae6e97e42579ec3a97925173994e9329a"
+    },
+    {
+      "node_id": "node-919",
+      "key": "FND-1",
+      "title": "Индексировать заметки и факты в FTS5",
+      "status": "pending",
+      "ready": true,
+      "pipeline": true,
+      "contract_sha256": "ebc42263f6541835ed426db80d1fc262b306c8a5323a7dc97fecb6690cad34e8"
+    },
+    {
+      "node_id": "node-920",
+      "key": "FND-2",
+      "title": "Отдавать ctx_get порядок BM25",
+      "status": "pending",
+      "ready": false,
+      "pipeline": true,
+      "contract_sha256": "ae3c205eba45e04d11a41d513efa94b4204894be3f7861d111b89d44366f28c3"
+    },
+    {
+      "node_id": "node-921",
+      "key": "MEM-0",
+      "title": "Закрыть направление MEM: бюджет памяти",
+      "status": "pending",
+      "ready": false,
+      "contract_sha256": "9587cb1d3ec709d6f8d8b7449b506a272e4c7eae8917bed893b5b0028cc84c43"
+    },
+    {
+      "node_id": "node-922",
+      "key": "MEM-1",
+      "title": "Сторожить RSS ядра от принятой базы",
+      "status": "pending",
+      "ready": true,
+      "pipeline": true,
+      "contract_sha256": "673c029463b6175af9c743e61831c1cc072fb0164aba580026abeff54c36227c"
+    },
+    {
+      "node_id": "node-923",
+      "key": "MEM-2",
+      "title": "Не загружать экстракторы в процесс ядра",
+      "status": "pending",
+      "ready": false,
+      "pipeline": true,
+      "contract_sha256": "1dabb0340d2a4be559e9ad0783fc2f0c47aeef74e83d823eb4c7e00fd8900d41"
+    }
+  ],
+  "revision": "0ddb3e.12"
+}
