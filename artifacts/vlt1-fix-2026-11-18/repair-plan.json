@@ -1,0 +1,72 @@
+{
+  "project_id": "9fe226e18f76d5d2",
+  "title": "0.1.4 — Индекс, LOD и vault",
+  "goal": "Дельта концепции 0.1.4 поверх закрытого plan-636. Полиглотный индекс, body_hash и interface_hash, LOD по прямой дистанции импорта, долговечное эхо vault, Canvas слоями Кана, предпроверка патча MCP, FTS5 BM25. Источник истины: plans/0.1.4-index.md. Образ в gate_profile — заглушка sha256 из нулей; перед закрытием L0 его заменяют на образ devtools.",
+  "plan_id": "plan-900",
+  "repair_paths": {
+    "IDX-0": [
+      "src/aconsole/core/infrastructure/codegraph/index.py",
+      "src/aconsole/core/infrastructure/codegraph/protocol.py",
+      "src/aconsole/core/infrastructure/codegraph/rust.py",
+      "src/aconsole/core/infrastructure/codegraph/typescript.py",
+      "src/aconsole/core/infrastructure/codegraph/skeleton.py",
+      "src/aconsole/core/infrastructure/persistence/models.py",
+      "src/aconsole/core/infrastructure/persistence/repositories/code_graph.py",
+      "migrations/versions/0012_code_file_hashes.py",
+      "tools/hostrun/actions.py",
+      "tools/rsgraph/**",
+      "tools/csgraph/**",
+      "tests/core/test_code_index_cache.py",
+      "tests/core/test_codegraph_protocol.py",
+      "tests/core/test_codegraph_py_ts.py",
+      "tests/core/test_codegraph_rust.py",
+      "tests/core/test_code_graph_store.py",
+      "tests/core/test_merge_migrations.py",
+      "tests/hostrun/test_rust_metadata.py",
+      "tests/hostrun/test_csharp_info.py",
+      "tests/hostrun/test_actions.py",
+      "artifacts/0.1.4/csgraph-aot.md",
+      "tests/hostrun/test_server.py"
+    ],
+    "IDX-3": [
+      "tools/rsgraph/**",
+      "tools/hostrun/actions.py",
+      "src/aconsole/core/infrastructure/codegraph/rust.py",
+      "tests/core/test_codegraph_rust.py",
+      "tests/hostrun/test_rust_metadata.py",
+      "src/aconsole/core/infrastructure/codegraph/protocol.py",
+      "tests/core/test_codegraph_protocol.py"
+    ],
+    "IDX-4": [
+      "tools/csgraph/**",
+      "tools/hostrun/actions.py",
+      "tests/hostrun/test_csharp_info.py",
+      "artifacts/0.1.4/csgraph-aot.md"
+    ],
+    "LOD-0": [
+      "src/aconsole/core/application/services/context_shaper.py",
+      "src/aconsole/core/infrastructure/persistence/repositories/code_graph.py",
+      "src/aconsole/core/infrastructure/persistence/cache/schema.py",
+      "src/aconsole/core/infrastructure/persistence/cache/store.py",
+      "tests/core/application/test_context_shaper.py",
+      "tests/core/test_code_impact.py",
+      "tests/core/test_cache_db.py",
+      "src/aconsole/core/infrastructure/pipeline.py"
+    ],
+    "LOD-1": [
+      "src/aconsole/core/application/services/context_shaper.py",
+      "src/aconsole/core/infrastructure/persistence/repositories/code_graph.py",
+      "tests/core/application/test_context_shaper.py",
+      "tests/core/test_code_impact.py",
+      "src/aconsole/core/infrastructure/pipeline.py"
+    ]
+  },
+  "repair_contracts": {
+    "IDX-0": "cde821ea7d4e8dedef38bcac9ddc8d024f406a5f3948daf9f6bdcc311ca86bd5",
+    "IDX-3": "48e851d3767b3b3da7f9a9c43066d3ebe03ebf9dab38be4800d67bbbf6480774",
+    "IDX-4": "85c57e0092323b07195e49dcb194e64f1873be7a6792b5a96351aef7c604a52d",
+    "LOD-0": "36c58ab204752a5ffdee8ff2055c0e5102512b854f99ea3c74c7135eca02bd3d",
+    "LOD-1": "28547ed48902ec1f1de0eccd40f02514933a6367b6b1412e8451728bb7da0f25"
+  },
+  "repair_note": "По поручению пользователя исправить препятствия приёмки: каталоги Rust/C# должны включать потомков; IDX-3 включает подготовку протокола; IDX-0 включает test_server.py; LOD-1 и LOD-0 включают подключение контекста к live pipeline. Только открытые контракты, без замены узлов и ослабления check_scope."
+}

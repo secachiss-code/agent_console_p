@@ -29,7 +29,7 @@ _WHEN = datetime(2026, 10, 29, 12, 0, tzinfo=UTC)
 
 class _Clock:
     def __init__(self) -> None:
-        self.moment = _WHEN
+        self.moment: datetime = _WHEN
 
     def __call__(self) -> datetime:
         return self.moment
@@ -37,7 +37,7 @@ class _Clock:
 
 def test_vault_writer_round_trip_is_byte_for_byte(tmp_path: Path) -> None:
     root = tmp_path / "vault"
-    shutil.copytree(_SAMPLE, root)
+    _ = shutil.copytree(_SAMPLE, root)
     for path in sorted(root.rglob("*")):
         if not path.is_file():
             continue
@@ -48,7 +48,7 @@ def test_vault_writer_round_trip_is_byte_for_byte(tmp_path: Path) -> None:
 
 def test_vault_writer_repeat_does_not_change_mtime(tmp_path: Path) -> None:
     source = tmp_path / "note.md"
-    shutil.copyfile(f"{_SAMPLE}/sample/plans/sample-plan/N-01-vault-sample.md", source)
+    _ = shutil.copyfile(f"{_SAMPLE}/sample/plans/sample-plan/N-01-vault-sample.md", source)
     clock = _Clock()
     writer = VaultWriter(now=clock)
     text = source.read_text(encoding="utf-8")
@@ -89,7 +89,7 @@ def test_echo_prune_and_remember_are_serialized(tmp_path: Path, monkeypatch: pyt
     book.remember(first, "one", _WHEN)
     now = _WHEN + timedelta(seconds=11)
     entered, release, writing, written = Event(), Event(), Event(), Event()
-    prune = EchoBook._prune
+    prune = EchoBook._prune  # pyright: ignore[reportPrivateUsage] -- pause the real pruning operation to verify lock ordering
 
     def paused_prune(self: EchoBook, at: datetime) -> None:
         if current_thread().name.startswith("echo-reader"):

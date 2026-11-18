@@ -23,8 +23,8 @@ from aconsole.core.infrastructure.persistence.repositories.vault_files import Va
 from aconsole.core.infrastructure.vault.canvas import AttemptLine, CanvasHistory
 from aconsole.core.infrastructure.vault.sync import VaultSync
 from aconsole.core.infrastructure.vault.writer import load_front, note_hashes, split_note
-from tests.core.test_knowledge_store import _writer
-from tests.core.test_wire import _connect, _daemon, _git_repo, _stop
+from tests.core.test_knowledge_store import _writer  # pyright: ignore[reportPrivateUsage] -- reuse the SQLite integration fixture
+from tests.core.test_wire import _connect, _daemon, _git_repo, _stop  # pyright: ignore[reportPrivateUsage] -- shared wire-test fixtures
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -140,7 +140,7 @@ def test_a_missing_vault_is_not_created_and_a_ref_cannot_leave_it(tmp_path: Path
     sync.publish(plan_id)
     assert not (tmp_path / "absent").exists()
     (tmp_path / "vault").mkdir()
-    (tmp_path / "secret.md").write_text("x", encoding="utf-8")
+    _ = (tmp_path / "secret.md").write_text("x", encoding="utf-8")
     sync.use_root(tmp_path / "vault")
     try:
         assert sync.resolve("../secret.md") is None
@@ -168,7 +168,8 @@ def test_the_daemon_writes_notes_when_a_vault_is_chosen_and_keeps_edits_across_a
         project = await client.call("project/add", ProjectAddParams(root=str(repo)), ProjectView)
         assert not (await client.snapshot()).vault_ok
         ctx = TabContext(tab_id="t1", project_id=str(project.id), worktree=None, agent="claude")
-        created = daemon._plans.create(ctx, "Plan", "goal", [NodeIn(key="N-01", title="First", objective="one")])
+        board = daemon._plans  # pyright: ignore[reportPrivateUsage] -- seed the assembled daemon's real plan board
+        created = board.create(ctx, "Plan", "goal", [NodeIn(key="N-01", title="First", objective="one")])
         current = await client.call("settings/get", EmptyParams(), Settings)
         chosen = await client.call(
             "settings/update",
@@ -181,6 +182,7 @@ def test_the_daemon_writes_notes_when_a_vault_is_chosen_and_keeps_edits_across_a
         snapshot = await client.snapshot()
         assert snapshot.vault_ok
         ref = snapshot.plans[0].nodes[0].note
+        assert ref is not None
         assert ref == NoteRef(f"plans/{created.plan_id}/N-01.md")
         uri = await client.call("knowledge/noteUri", NoteUriParams(note=ref), NoteUriResult)
         assert uri.uri == note.as_uri()
@@ -283,7 +285,7 @@ def test_durable_echo_survives_restart_and_does_not_parse_unchanged_notes(
     restarted.stop()
     heard: list[str] = []
     restarted.on_edit = heard.append
-    parsed = sync_module._parsed
+    parsed = sync_module._parsed  # pyright: ignore[reportPrivateUsage] -- spy on parsing to prove durable echoes bypass it
     parsed_fronts: list[str] = []
 
     def tracked(front: str) -> Note | None:
@@ -292,16 +294,16 @@ def test_durable_echo_survives_restart_and_does_not_parse_unchanged_notes(
 
     monkeypatch.setattr(sync_module, "_parsed", tracked)
     try:
-        assert len(restarted._writer.echo) == 0
+        assert len(restarted._writer.echo) == 0  # pyright: ignore[reportPrivateUsage] -- prove RAM state was not reused
         assert store.matches(ref, *note_hashes(text))
-        restarted._heard(path)
+        restarted._heard(path)  # pyright: ignore[reportPrivateUsage] -- replay a watcher notification deterministically
         restarted.publish(plan_id)
         assert heard == []
         assert parsed_fronts == []
         assert path.stat().st_mtime_ns == before
 
         _edit(path, "title: First", "title: Edited offline")
-        restarted._heard(path)
+        restarted._heard(path)  # pyright: ignore[reportPrivateUsage] -- replay the edited frontmatter event
         assert heard == [plan_id]
         restarted.publish(plan_id)
         assert len(parsed_fronts) == 1
@@ -309,7 +311,7 @@ def test_durable_echo_survives_restart_and_does_not_parse_unchanged_notes(
 
         # Body-only changes must also miss the digest.
         _edit(path, "## Заметки", "## Заметки\n\nUser paragraph")
-        restarted._heard(path)
+        restarted._heard(path)  # pyright: ignore[reportPrivateUsage] -- replay the body-only edit event
         restarted.publish(plan_id)
         assert len(heard) == 2
         assert len(parsed_fronts) == 2
