@@ -22,12 +22,20 @@ def _json(value: object) -> str:
 
 
 @dataclass(frozen=True, kw_only=True)
+class DependencyContext:
+    path: str
+    distance: int
+    text: str
+
+
+@dataclass(frozen=True, kw_only=True)
 class DirectionContext:
     key: str
     invariants: str
     scope: tuple[str, ...]
     gate_profile_json: str
     skeletons: tuple[tuple[str, str], ...] = ()
+    dependencies: tuple[DependencyContext, ...] = ()
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -127,33 +135,44 @@ class ContextShaper:
             raise DomainError(code=4013, name="NODE_CONTRACT", retryable=False)
         # Build the potentially failing block before updating delivery tracking.
         handoff = bounded_handoff(envelope)
-        prefix = _json(
-            {
+        contract = _json(asdict(module))
+        dependencies = list(direction.dependencies)
+        while True:
+            manifest: dict[str, object] = {
                 "direction": direction.key,
                 "invariants": direction.invariants,
                 "scope": sorted(direction.scope),
                 "gate_profile": json.loads(direction.gate_profile_json),
                 "skeletons": sorted(direction.skeletons),
             }
-        )
-        digest = hashlib.sha256(prefix.encode()).hexdigest()
+            if dependencies:
+                manifest["dependencies"] = [asdict(item) for item in sorted(dependencies, key=lambda item: item.path)]
+            prefix = _json(manifest)
+            digest = hashlib.sha256(prefix.encode()).hexdigest()
+            shaped = ShapedContext(
+                direction_prefix=prefix,
+                prefix_sha256=digest,
+                contract=contract,
+                handoff=handoff,
+                file_slice=file_slice,
+                lease=lease,
+            )
+            if len(_json(shaped.payload()).encode()) <= _CONTEXT_BYTES:
+                break
+            if not dependencies:
+                raise DomainError(code=-32000, name="RESPONSE_TOO_LARGE", retryable=False)
+            # Discard distant summaries first, then the longest direct interfaces.
+            dropped = max(dependencies, key=lambda item: (item.distance, len(item.text.encode()), item.path))
+            dependencies.remove(dropped)
         cached = self._scratch.prefix_get(session.plan_id, direction.key, digest)
         if cached != prefix:
             self._scratch.prefix_put(session.plan_id, direction.key, digest, prefix)
-        contract = _json(asdict(module))
-        seen = False
-        if session.tab_id and session.agent_session_id:
-            seen = self._scratch.prefix_seen(session.tab_id, session.agent_session_id, digest)
-        shaped = ShapedContext(
-            direction_prefix=None if seen else prefix,
-            prefix_sha256=digest,
-            contract=contract,
-            handoff=handoff,
-            file_slice=file_slice,
-            lease=lease,
-        )
-        if len(_json(shaped.payload()).encode()) > _CONTEXT_BYTES:
-            raise DomainError(code=-32000, name="RESPONSE_TOO_LARGE", retryable=False)
+        if (
+            session.tab_id
+            and session.agent_session_id
+            and self._scratch.prefix_seen(session.tab_id, session.agent_session_id, digest)
+        ):
+            shaped = replace(shaped, direction_prefix=None)
         if session.tab_id and session.agent_session_id:
             self._scratch.prefix_mark_seen(session.tab_id, session.agent_session_id, digest)
         return shaped

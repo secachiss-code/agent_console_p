@@ -1,5 +1,6 @@
 """Incremental graph snapshots through Writer, sharing module identity with facts."""
 
+from collections import deque
 from collections.abc import Sequence
 from datetime import UTC, datetime
 from pathlib import Path
@@ -59,6 +60,100 @@ class CodeGraphDatabase:
             lambda session: found.append(impact_rows(session, project_id, target_id, hops, limit, kinds))
         )
         return found[0]
+
+    def dependencies(self, project_id: str, targets: tuple[str, ...]) -> list[tuple[str, int]]:
+        found: list[list[tuple[str, int]]] = []
+        _ = self._writer.call(lambda session: found.append(dependency_rows(session, project_id, targets)))
+        return found[0]
+
+
+def dependency_rows(session: Session, project_id: str, targets: tuple[str, ...]) -> list[tuple[str, int]]:
+    """Forward distance from all scoped files; bounded UNION terminates cycles."""
+    if not targets:
+        return []
+    source_in_project = select(KbNode.id).where(KbNode.id == KbEdge.src_id, KbNode.project_id == project_id).exists()
+    target_in_project = select(KbNode.id).where(KbNode.id == KbEdge.dst_id, KbNode.project_id == project_id).exists()
+    allowed = _KINDS - {KbEdgeKind.USES_TYPE}
+    valid = (KbEdge.kind.in_(allowed), source_in_project, target_in_project)
+    reached = (
+        select(KbEdge.dst_id.label("id"), literal(1).label("depth"))
+        .where(KbEdge.src_id.in_(targets), *valid)
+        .cte("dependencies", recursive=True)
+    )
+    reached = reached.union(
+        select(KbEdge.dst_id, (reached.c.depth + 1).label("depth"))
+        .join(reached, KbEdge.src_id == reached.c.id)
+        .where(reached.c.depth < _MAX_HOPS, *valid)
+    )
+    depth = func.min(type_coerce(reached.c.depth, Integer))
+    statement = (
+        select(type_coerce(reached.c.id, String), depth)
+        .join(KbNode, KbNode.id == reached.c.id)
+        .where(reached.c.id.not_in(targets))
+        .group_by(reached.c.id)
+        .order_by(depth, KbNode.source, reached.c.id)
+        .limit(40)
+    )
+    return [(row[0], row[1]) for row in session.execute(statement)]
+
+
+def forward_dependencies(
+    index: _IndexWithStore, project_id: str, paths: tuple[str, ...]
+) -> tuple[tuple[GraphNode, int], ...]:
+    """Use durable file identities when available, and the same BFS for transient indexes."""
+    snapshot = index.graph(project_id)
+    targets = {node.id for node in snapshot.nodes if node.path in paths}
+    distances: dict[str, int] = {}
+    if isinstance(index.store, CodeGraphDatabase):
+        rows = index.store.dependencies(project_id, tuple(sorted({code_ref_id(project_id, path) for path in paths})))
+        by_file = dict(rows)
+        distances = {
+            node.id: by_file[code_ref_id(project_id, node.path)]
+            for node in snapshot.nodes
+            if code_ref_id(project_id, node.path) in by_file
+        }
+    else:
+        distances = _forward_distances(snapshot, targets)
+    # A file may carry several symbols; keep them together and count files, not symbols.
+    files: dict[str, tuple[GraphNode, int]] = {}
+    for node in sorted(snapshot.nodes, key=lambda item: (item.path, item.id)):
+        if node.id not in distances or node.path in paths:
+            continue
+        depth = distances[node.id]
+        merged = node
+        previous = files.get(node.path)
+        if previous is not None:
+            held, old_depth = previous
+            merged = GraphNode(
+                id=held.id,
+                path=held.path,
+                name=held.name,
+                kind=held.kind,
+                symbols=tuple(sorted(set(held.symbols + node.symbols))),
+            )
+            depth = min(depth, old_depth)
+        files[node.path] = (merged, depth)
+    return tuple(sorted(files.values(), key=lambda item: (item[1], item[0].path))[:40])
+
+
+def _forward_distances(snapshot: ExtractorGraph, targets: set[str]) -> dict[str, int]:
+    distances: dict[str, int] = {}
+    adjacency: dict[str, set[str]] = {}
+    for edge in snapshot.edges:
+        if edge.kind in _KINDS and edge.kind != KbEdgeKind.USES_TYPE:
+            adjacency.setdefault(edge.source, set()).add(edge.target)
+    queue = deque((identifier, 0) for identifier in sorted(targets))
+    seen = set(targets)
+    while queue:
+        identifier, depth = queue.popleft()
+        if depth >= _MAX_HOPS:
+            continue
+        for neighbor in sorted(adjacency.get(identifier, ())):
+            if neighbor not in seen:
+                seen.add(neighbor)
+                distances[neighbor] = depth + 1
+                queue.append((neighbor, depth + 1))
+    return distances
 
 
 def persistent_impact(  # noqa: PLR0913, PLR0917 -- existing impact request plus index dependency

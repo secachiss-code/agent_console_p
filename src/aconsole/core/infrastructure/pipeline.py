@@ -14,7 +14,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from aconsole.core.application.ports.gate_runner import GateRunner
-from aconsole.core.application.services.context_shaper import ContextShaper, DirectionContext
+from aconsole.core.application.services.context_shaper import ContextShaper, DependencyContext, DirectionContext
 from aconsole.core.application.services.gates import (
     BlastGate,
     BlastProfile,
@@ -54,7 +54,7 @@ from aconsole.core.infrastructure.persistence.repositories.attempts import (
     AttemptLease,
     check_attempt_lease,
 )
-from aconsole.core.infrastructure.persistence.repositories.code_graph import persistent_impact
+from aconsole.core.infrastructure.persistence.repositories.code_graph import forward_dependencies, persistent_impact
 from aconsole.core.infrastructure.persistence.writer import Writer
 
 _MODULE_ARGV_LENGTH = 3
@@ -306,15 +306,25 @@ class PipelineGit:
     def context(
         self, actor: PipelineActor, contract: PipelineContract, symbols: tuple[str, ...]
     ) -> tuple[DirectionContext, str | None]:
-        paths = tuple(
-            path
-            for path in self._paths(actor)
-            if path.endswith(".py") and not check_scope(contract.direction.scope, (path,)).violations
-        )
+        paths = tuple(path for path in self._paths(actor) if not check_scope(contract.module.paths, (path,)).violations)
+        snapshot = self.graph.graph(actor.project_id)
+        symbols_by_path: dict[str, set[str]] = {}
+        for node in snapshot.nodes:
+            symbols_by_path.setdefault(node.path, set()).update(node.symbols)
         direction = replace(
-            contract.direction, skeletons=tuple((path, python_skeleton(self._source(actor, path))) for path in paths)
+            contract.direction,
+            skeletons=tuple(
+                (
+                    path,
+                    python_skeleton(self._source(actor, path))
+                    if path.endswith(".py")
+                    else "\n".join(sorted(symbols_by_path.get(path, ()))),
+                )
+                for path in paths
+            ),
+            dependencies=self._dependencies(actor, paths),
         )
-        targets = [path for path in paths if not check_scope(contract.module.paths, (path,)).violations]
+        targets = [path for path in paths if path.endswith(".py")]
         sliced = None
         if targets:
             selected = python_slice(self._source(actor, targets[0]), symbols)
@@ -329,6 +339,18 @@ class PipelineGit:
                 )
             )
         return direction, sliced
+
+    def _dependencies(self, actor: PipelineActor, paths: tuple[str, ...]) -> tuple[DependencyContext, ...]:
+        dependencies: list[DependencyContext] = []
+        for node, depth in forward_dependencies(self.graph, actor.project_id, paths):
+            interface = (
+                python_skeleton(self._source(actor, node.path))
+                if node.path.endswith(".py")
+                else "\n".join(sorted(set(node.symbols)))
+            )
+            text = interface if depth == 1 else f"{node.path} {node.kind} {' '.join(interface.split())}"
+            dependencies.append(DependencyContext(path=node.path, distance=depth, text=text))
+        return tuple(dependencies)
 
     def _paths(self, actor: PipelineActor) -> tuple[str, ...]:
         return tuple(
