@@ -1,4 +1,4 @@
-"""Vault notes round-trip byte for byte, and a repeated write leaves mtime alone."""
+"""Exact-byte note digests, unchanged mtimes and serialized in-memory echo pruning."""
 
 from __future__ import annotations
 

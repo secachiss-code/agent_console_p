@@ -1,4 +1,4 @@
-"""The frontmatter last synced for each vault note, in `vault_files`."""
+"""Persist note merge bases and exact-byte publication digests in `vault_files`."""
 
 from __future__ import annotations
 

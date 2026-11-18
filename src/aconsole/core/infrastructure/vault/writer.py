@@ -1,7 +1,8 @@
 """Write vault notes with ruamel, an atomic rename, and a short echo journal.
 
 A second write of the same bytes does not touch the file. A user-owned section
-is never replaced. App lines are inserted under their heading.
+is never replaced. App lines are inserted under their heading. The same blake2b
+note digests support both the short journal and durable publication records.
 """
 
 from __future__ import annotations

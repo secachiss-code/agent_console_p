@@ -1,0 +1,50 @@
+[
+  {
+    "receipt_hash": "c2f687c44d13214073f88c0d6e6e68631fc7f07526e92af894b1a80809acc167",
+    "tier": "micro",
+    "passed": false,
+    "state_hash": "71c0d6682bb66c6e5c00217b6e06675a62065df6371330a84f9a14ef7fa63a66",
+    "argv_sha256": "ed301fb547d5c36cbded7113b2e78bef800e0b1337b622b1ba5fe73213062bed",
+    "exit_code": 1,
+    "compact_verdict": "1 passed, 1 failed\n/home/sas/Projects/sp_aconsole_prototype/.venv-core/bin/python: Found 6 errors.",
+    "log_ref": "/home/sas/.local/state/aconsole/gates/tmpxnjvpvwe.log",
+    "duration_ms": 388,
+    "created_at": "2026-11-18 18:37:29.841806+00:00"
+  },
+  {
+    "receipt_hash": "7c093b51b960be54ed4ac65c0b2095d63f40d73c06f56e8bbb27f8c97b16c8dc",
+    "tier": "micro",
+    "passed": false,
+    "state_hash": "ab948def36325acb4ee98d5de8fde4727cbad40c2a60a7f6fb3c70e19455d3a3",
+    "argv_sha256": "ed301fb547d5c36cbded7113b2e78bef800e0b1337b622b1ba5fe73213062bed",
+    "exit_code": 3,
+    "compact_verdict": "3 passed, 1 failed\n/home/sas/Projects/sp_aconsole_prototype/.venv-core/bin/python: /home/sas/.local/share/aconsole/worktrees/sp_aconsole_prototype/bfd8f876482ec1cf/src/aconsole/co",
+    "log_ref": "/home/sas/.local/state/aconsole/gates/tmp0x9jqjw8.log",
+    "duration_ms": 2736,
+    "created_at": "2026-11-18 18:38:26.181343+00:00"
+  },
+  {
+    "receipt_hash": "312d2d32b6b92538c2ab7b28dd3e091868f73b9a654a85d69de389fcc568f3a6",
+    "tier": "micro",
+    "passed": true,
+    "state_hash": "79503fd0449d83b4a5b7474bd2a5c48ca697ff1a64251576563d37feac0e0ac0",
+    "argv_sha256": "ed301fb547d5c36cbded7113b2e78bef800e0b1337b622b1ba5fe73213062bed",
+    "exit_code": 0,
+    "compact_verdict": "5 passed, 0 failed",
+    "log_ref": "/home/sas/.local/state/aconsole/gates/tmp09zqo45_.log",
+    "duration_ms": 15949,
+    "created_at": "2026-11-18 18:58:43.999778+00:00"
+  },
+  {
+    "receipt_hash": "879d5311e16938ac3ec69fad1a1f4476f47d9ca57462bdfd62598d59af0e563e",
+    "tier": "blast",
+    "passed": true,
+    "state_hash": "79503fd0449d83b4a5b7474bd2a5c48ca697ff1a64251576563d37feac0e0ac0",
+    "argv_sha256": "65e058f51f0ea1e8611dd95d0e395090cadf46dad39de90689a86d1c34266d74",
+    "exit_code": 0,
+    "compact_verdict": "2 passed, 0 failed",
+    "log_ref": "/home/sas/.local/state/aconsole/gates/tmpl4j3hkkq.log",
+    "duration_ms": 204369,
+    "created_at": "2026-11-18 19:02:38.350922+00:00"
+  }
+]

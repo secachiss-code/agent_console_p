@@ -1,4 +1,4 @@
-"""Plan notes on disk: written, edited by hand, and refused when the plan rules say no."""
+"""Plan-note merges and durable publication echoes across daemon and writer restarts."""
 
 from __future__ import annotations
 

@@ -3,6 +3,8 @@
 The core writes `plans/<plan>/<KEY>.md`. A person edits the frontmatter, and the three-way merge in the domain decides
 what is accepted: an accepted field goes back to the plan board, a refused one is written back as the core has it.
 The body under the frontmatter belongs to the person after the first write.
+Publication digests suppress unchanged echoes even when the writer's RAM journal
+has expired or the daemon has restarted; different bytes still reach the merge.
 """
 
 from __future__ import annotations
