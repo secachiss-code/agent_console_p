@@ -1,0 +1,11 @@
+[
+  {
+    "id": "663fc0517db146268f54d22d3f",
+    "node_id": "node-904",
+    "kind": "replan",
+    "status": "open",
+    "body": "Приёмка IDX-3: замороженный paths содержит literal tools/rsgraph вместо tools/rsgraph/**. check_scope закономерно отклоняет Cargo.toml, Cargo.lock, src/main.rs, README.md, .gitignore. Нужна явная корректировка frozen-контракта IDX-3 и родителя IDX-0 с пересчётом contract hash; applyChange сейчас умеет только добавление новых контрактов. Реализация Rust и live hostrun исправны; ограничение не обходилось.",
+    "payload": "{\"kind\": \"scope_contract\", \"fence\": 2, \"source_tab_id\": \"c1b8f2ac852efabd\"}",
+    "created_at": "2026-11-17T19:23:51.478095+00:00"
+  }
+]

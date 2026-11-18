@@ -1,0 +1,98 @@
+[
+  {
+    "node_id": "node-903",
+    "tier": "micro",
+    "state_hash": "d2eb60bdbbdab0d6328e77486b59a0e69049aee9cb4df3d3bae52018657eb7e9",
+    "receipt_hash": "b4a8725b8866c722c8ecfae61b822e23d6fead39bd5f32222186a48e85b8e79d",
+    "argv_sha256": "20e7f51d7405a773a40ea04dfe632b0d8421fb60b8aad003402f922bc7af7ae9",
+    "passed": 1,
+    "compact_verdict": "5 passed, 0 failed",
+    "log_ref": "/home/sas/.local/state/aconsole/gates/tmp0whqsjw0.log",
+    "duration_ms": 30900,
+    "created_at": "2026-11-17T18:12:17.102084+00:00"
+  },
+  {
+    "node_id": "node-903",
+    "tier": "blast",
+    "state_hash": "d2eb60bdbbdab0d6328e77486b59a0e69049aee9cb4df3d3bae52018657eb7e9",
+    "receipt_hash": "9b1970e92cbef1154f3c348c674f55192a4823120398e72a25b77ad473c5c3d3",
+    "argv_sha256": "8223489e9e0c11b36eba0031681b938356477f5604848350075e6609ee08e5c7",
+    "passed": 1,
+    "compact_verdict": "2 passed, 0 failed",
+    "log_ref": "/home/sas/.local/state/aconsole/gates/tmplnejrv94.log",
+    "duration_ms": 270584,
+    "created_at": "2026-11-17T18:16:58.954327+00:00"
+  },
+  {
+    "node_id": "node-906",
+    "tier": "micro",
+    "state_hash": "0a48c51d61e490f0a47fe3d315db80ff054c235e3a09be63da02178e8f8a5085",
+    "receipt_hash": "6d711af6889b033216c320a55d154d131c08c818148f3040fd3652b6495050b5",
+    "argv_sha256": "92dde8c8a1b6267713e5e080b8c22675d97b1ee8745431dbe943836cb9c50461",
+    "passed": 1,
+    "compact_verdict": "5 passed, 0 failed",
+    "log_ref": "/home/sas/.local/state/aconsole/gates/tmpnpxa8k6_.log",
+    "duration_ms": 8623,
+    "created_at": "2026-11-17T18:45:53.280492+00:00"
+  },
+  {
+    "node_id": "node-906",
+    "tier": "blast",
+    "state_hash": "0a48c51d61e490f0a47fe3d315db80ff054c235e3a09be63da02178e8f8a5085",
+    "receipt_hash": "17df5784497054ef292f765614cbf279404789d9b1a1dc5cf514f5550ca58ebf",
+    "argv_sha256": "e57d4b3f4330e8dc95394e8f7edaccf2b76f848d0c1cacaf4921626c4b237d3d",
+    "passed": 0,
+    "compact_verdict": "1 passed, 1 failed\n/home/sas/Projects/sp_aconsole_prototype/.venv-core/bin/python: E           AssertionError: assert ('podman', 'e..._t0/src', ...) == ('podman', 'e...', 'npx', .",
+    "log_ref": "/home/sas/.local/state/aconsole/gates/tmpwed7a56_.log",
+    "duration_ms": 34180,
+    "created_at": "2026-11-17T18:46:34.706917+00:00"
+  },
+  {
+    "node_id": "node-903",
+    "tier": "micro",
+    "state_hash": "00a7183c3aa5a9ee6e174e5334b53a03894dc085b3d26417dc28c0c677992114",
+    "receipt_hash": "47c85804cbc2fe7466f8776231a5ee48e87d6d4e16a6952242eced083d6afe64",
+    "argv_sha256": "7e73d4021a1d994248dbe7e8ac240e920960b648dad1acbe9dbc6653f99f39be",
+    "passed": 1,
+    "compact_verdict": "5 passed, 0 failed",
+    "log_ref": "/home/sas/.local/state/aconsole/gates/tmp1oprkvkf.log",
+    "duration_ms": 12994,
+    "created_at": "2026-11-17T19:17:22.526412+00:00"
+  },
+  {
+    "node_id": "node-903",
+    "tier": "blast",
+    "state_hash": "00a7183c3aa5a9ee6e174e5334b53a03894dc085b3d26417dc28c0c677992114",
+    "receipt_hash": "b140556503e6b927f41d742e5193a39013d68622117a89ec489a7eb5b92cf51d",
+    "argv_sha256": "7318da2d8227a1745f111a9b4080e0f88a11c6d0569609fe51202e49736d3ec3",
+    "passed": 1,
+    "compact_verdict": "2 passed, 0 failed",
+    "log_ref": "/home/sas/.local/state/aconsole/gates/tmpdrj_tyuw.log",
+    "duration_ms": 207176,
+    "created_at": "2026-11-17T19:21:11.473401+00:00"
+  },
+  {
+    "node_id": "node-906",
+    "tier": "micro",
+    "state_hash": "ca6d786ad6f6748db706f9707d7f6026b1b511b731b5755f5e66a60353b8954b",
+    "receipt_hash": "123ee1912d851ff2664ba31c58972f42948cad8582330a88d7eb8cf4cd58d477",
+    "argv_sha256": "e8305df534140180a37a6579d75a83c8579ecbb17c77001360694d6ff1ef84e9",
+    "passed": 1,
+    "compact_verdict": "5 passed, 0 failed",
+    "log_ref": "/home/sas/.local/state/aconsole/gates/tmp87q_ziya.log",
+    "duration_ms": 7960,
+    "created_at": "2026-11-17T19:24:19.241122+00:00"
+  },
+  {
+    "node_id": "node-906",
+    "tier": "blast",
+    "state_hash": "ca6d786ad6f6748db706f9707d7f6026b1b511b731b5755f5e66a60353b8954b",
+    "receipt_hash": "2cf8695191c33e5f78e61fbf9d69af963ff097a6a05c0d9b210e449e65ca920b",
+    "argv_sha256": "b8b068d219e79c1c9830b93301a70e3a6fd89f00a7f2c2f41e8e35000a4528ce",
+    "passed": 1,
+    "compact_verdict": "2 passed, 0 failed",
+    "log_ref": "/home/sas/.local/state/aconsole/gates/tmpnxgphsw2.log",
+    "duration_ms": 10564,
+    "created_at": "2026-11-17T19:24:35.918009+00:00"
+  }
+]

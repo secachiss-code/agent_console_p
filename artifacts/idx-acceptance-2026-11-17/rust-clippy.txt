@@ -1,0 +1,11 @@
+   Compiling proc-macro2 v1.0.107
+    Checking unicode-ident v1.0.27
+   Compiling serde_core v1.0.229
+   Compiling zmij v1.0.23
+   Compiling quote v1.0.47
+   Compiling serde_json v1.0.154
+    Checking memchr v2.8.3
+    Checking itoa v1.0.18
+    Checking syn v2.0.119
+    Checking aconsole-rsgraph v0.1.0 (/home/sas/Projects/sp_aconsole_prototype/tools/rsgraph)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 3.49s

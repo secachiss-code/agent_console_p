@@ -1,0 +1,43 @@
+Collected 0 items to run in parallel
+.............................s.......................................... [ 30%]
+........................................................................ [ 61%]
+..................................F..................................... [ 91%]
+....................                                                     [100%]
+=================================== FAILURES ===================================
+__________________ test_devtools_extractor_argv[ts-src-tail1] __________________
+
+tmp_path = PosixPath('/tmp/pytest-of-sas/pytest-159/test_devtools_extractor_argv_t0')
+extractor = 'ts', path = 'src'
+tail = ('npx', '--yes', 'dependency-cruiser@18.7.0', '--output-type', 'json', 'src')
+
+    @pytest.mark.parametrize(("extractor", "path", "tail"), DEVTOOLS_CASES)
+    def test_devtools_extractor_argv(
+        tmp_path: Path,
+        extractor: str,
+        path: str,
+        tail: tuple[str, ...] | None,
+    ) -> None:
+        repo = str(tmp_path)
+        manifest: Path | None = None
+        if extractor == "rust-metadata":
+            manifest = tmp_path / path / "Cargo.toml"
+            manifest.parent.mkdir(parents=True)
+            manifest.write_text("[workspace]\nmembers = []\n", encoding="utf-8")
+        plan = actions.build_plan("devtools", [extractor, path], tmp_path, repo, 30)
+        assert plan.steps[0].argv == ("podman", "start", "devtools")
+        argv = plan.steps[1].argv
+        if extractor == "rust-metadata":
+            assert manifest is not None
+            _assert_rust_metadata_wrapper(argv, repo, manifest)
+        else:
+            assert tail is not None
+>           assert argv == ("podman", "exec", "--workdir", repo, "devtools", *tail)
+E           AssertionError: assert ('podman', 'e..._t0/src', ...) == ('podman', 'e...', 'npx', ...)
+E
+E             At index 4 diff: '--env' != 'devtools'
+E             Left contains 4 more items, first extra item: '/tmp/aconsole-test-home-7jsvi95u/.containers/containers/devtools/.local/share/fnm/node-versions/v24.22.0/installation/bin/node'
+E             Use -v to get more diff
+
+tests/hostrun/test_server.py:763: AssertionError
+=========================== short test summary info ============================
+FAILED tests/hostrun/test_server.py::test_devtools_extractor_argv[ts-src-tail1]
