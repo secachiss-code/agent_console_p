@@ -11,7 +11,14 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from aconsole.core.infrastructure.vault.writer import EchoBook, UserSectionError, VaultWriter, append_under, render
+from aconsole.core.infrastructure.vault.writer import (
+    EchoBook,
+    UserSectionError,
+    VaultWriter,
+    append_under,
+    note_hashes,
+    render,
+)
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -63,6 +70,17 @@ def test_vault_writer_refuses_a_user_section() -> None:
     with pytest.raises(UserSectionError):
         _ = append_under("# Title\n\n## Цель\nkeep\n", "Цель", "replaced")
 
+
+def test_note_hashes_keep_front_body_and_line_endings_distinct() -> None:
+    import hashlib
+
+    text = "---\ntitle: First\n---\ncafé\n"
+    front, body = note_hashes(text)
+    assert front == hashlib.blake2b(b"title: First\n", digest_size=32).hexdigest()
+    assert body == hashlib.blake2b("café\n".encode(), digest_size=32).hexdigest()
+    assert note_hashes(text.replace("First", "Second")) == (note_hashes("---\ntitle: Second\n---\n")[0], body)
+    assert note_hashes(text.replace("café", "Changed"))[0] == front
+    assert note_hashes(text.replace("\n", "\r\n")) != (front, body)
 
 
 def test_echo_prune_and_remember_are_serialized(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:

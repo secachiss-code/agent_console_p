@@ -11,7 +11,7 @@ import logging
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Final, Protocol, final, override
+from typing import Final, Protocol, final, override, runtime_checkable
 
 import msgspec
 from watchdog.events import FileSystemEvent, FileSystemEventHandler
@@ -20,7 +20,14 @@ from watchdog.observers.api import BaseObserver
 
 from aconsole.core.domain.vault_sync import Note, Owners, merge
 from aconsole.core.infrastructure.vault.canvas import CanvasHistory, CanvasNode, render_canvas
-from aconsole.core.infrastructure.vault.writer import VaultWriter, dump_front, load_front, split_note, update_attempt
+from aconsole.core.infrastructure.vault.writer import (
+    VaultWriter,
+    dump_front,
+    load_front,
+    note_hashes,
+    split_note,
+    update_attempt,
+)
 
 _LOG = logging.getLogger(__name__)
 _PLANS: Final = "plans"
@@ -29,7 +36,14 @@ _NOTE: Final = ".md"
 _DEPTH: Final = 3
 _LIST_FIELDS: Final = frozenset({"depends_on", "paths", "acceptance", "tags"})
 _SHARED_FIELDS: Final = (
-    "title", "objective", "acceptance", "review_required", "status", "owner_agent", "depends_on", "paths",
+    "title",
+    "objective",
+    "acceptance",
+    "review_required",
+    "status",
+    "owner_agent",
+    "depends_on",
+    "paths",
 )
 _TEXT_FIELDS: Final = ("status", "owner_agent", "lease", "updated", "title", "objective")
 
@@ -62,6 +76,15 @@ class BaseStore(Protocol):
     def load(self) -> dict[str, Note]: ...
 
     def save(self, note_ref: str, note: Note) -> None: ...
+
+
+@runtime_checkable
+class WrittenStore(BaseStore, Protocol):
+    """Optional durable echo support for stores of successfully written notes."""
+
+    def save_written(self, note_ref: str, note: Note, front_hash: str, body_hash: str) -> None: ...
+
+    def matches(self, note_ref: str, front_hash: str, body_hash: str) -> bool: ...
 
 
 @final
@@ -157,13 +180,25 @@ class VaultSync:
                 ref = self.note_ref(plan_id, attempt.key)
                 path = None if ref is None else self.resolve(ref)
                 if path is not None:
-                    text = path.read_text(encoding="utf-8")
-                    _ = self._writer.write(path, update_attempt(text, attempt.attempt_no, attempt.render()))
+                    text = path.read_bytes().decode("utf-8")
+                    written = update_attempt(text, attempt.attempt_no, attempt.render())
+                    _ = self._writer.write(path, written)
+                    if ref is not None and ref in self._synced:
+                        self._remember(ref, self._synced[ref], written)
 
     def _publish_canvas(self, plan_id: str, nodes: tuple[NodeNote, ...]) -> None:
-        canvas = tuple(CanvasNode(id=node.node_id or node.key, key=node.key, title=node.note.title,
-                                  status=node.note.status, level=node.level, parent=node.parent,
-                                  depends_on=node.note.depends_on) for node in nodes)
+        canvas = tuple(
+            CanvasNode(
+                id=node.node_id or node.key,
+                key=node.key,
+                title=node.note.title,
+                status=node.note.status,
+                level=node.level,
+                parent=node.parent,
+                depends_on=node.note.depends_on,
+            )
+            for node in nodes
+        )
         positions = None if self._history is None else self._history.positions(plan_id)
         text = render_canvas(plan_id, canvas, positions)
         path = self._path(f"{_PLANS}/{plan_id}/_plan.canvas")
@@ -175,9 +210,9 @@ class VaultSync:
         if not path.is_file():
             self._write(ref, path, node.note, _first_body(node.note))
             return
-        text = path.read_text(encoding="utf-8")
+        text = path.read_bytes().decode("utf-8")
         front, body = split_note(text)
-        user = _parsed(front)
+        user = self._synced.get(ref) if self._is_written(ref, text) else _parsed(front)
         if user is None:
             _LOG.warning("the frontmatter of %s does not parse; the core's copy replaces it", ref)
             self._write(ref, path, node.note, body)
@@ -189,10 +224,19 @@ class VaultSync:
         self._write(ref, path, final, body)
 
     def _write(self, ref: str, path: Path, note: Note, body: str) -> None:
-        _ = self._writer.write(path, f"---\n{dump_front(_front(note))}---\n{body}")
-        self._synced[ref] = note
-        if self._bases is not None:
+        text = f"---\n{dump_front(_front(note))}---\n{body}"
+        _ = self._writer.write(path, text)
+        self._remember(ref, note, text)
+
+    def _remember(self, ref: str, note: Note, text: str) -> None:
+        if isinstance(self._bases, WrittenStore):
+            self._bases.save_written(ref, note, *note_hashes(text))
+        elif self._bases is not None:
             self._bases.save(ref, note)
+        self._synced[ref] = note
+
+    def _is_written(self, ref: str, text: str) -> bool:
+        return isinstance(self._bases, WrittenStore) and self._bases.matches(ref, *note_hashes(text))
 
     def _path(self, ref: str) -> Path:
         root = self._root
@@ -213,10 +257,15 @@ class VaultSync:
             return
         try:
             parts = path.relative_to(root).parts
-            text = path.read_text(encoding="utf-8")
-        except (OSError, ValueError, UnicodeDecodeError):
+            text = path.read_bytes().decode("utf-8")
+        except OSError, ValueError, UnicodeDecodeError:
             return
-        if len(parts) == _DEPTH and parts[0] == _PLANS and not self._writer.is_echo(path, text):
+        if (
+            len(parts) == _DEPTH
+            and parts[0] == _PLANS
+            and not self._writer.is_echo(path, text)
+            and not self._is_written(path.relative_to(root).as_posix(), text)
+        ):
             on_edit(parts[1])
 
 
@@ -306,7 +355,4 @@ def _parsed(front: str) -> Note | None:
 
 def _edited(final: Note, app: Note) -> bool:
     """Whether the merge kept something the board does not have. App-owned fields never count."""
-    return any(
-        getattr(final, name) != getattr(app, name)
-        for name in _SHARED_FIELDS
-    )
+    return any(getattr(final, name) != getattr(app, name) for name in _SHARED_FIELDS)

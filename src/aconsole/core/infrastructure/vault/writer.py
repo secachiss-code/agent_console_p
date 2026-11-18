@@ -103,6 +103,12 @@ def _digest(text: str) -> str:
     return hashlib.blake2b(text.encode("utf-8"), digest_size=_DIGEST).hexdigest()
 
 
+def note_hashes(text: str) -> tuple[str, str]:
+    """Digest the exact frontmatter and body bytes, without parsing YAML."""
+    front, body = split_note(text)
+    return _digest(front), _digest(body)
+
+
 @dataclass(frozen=True, slots=True)
 class _Echo:
     front: str

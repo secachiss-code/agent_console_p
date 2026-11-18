@@ -41,6 +41,29 @@ class VaultFileDatabase:
         return found
 
     def save(self, note_ref: str, note: Note) -> None:
+        self._save(note_ref, note, None, None)
+
+    def save_written(self, note_ref: str, note: Note, front_hash: str, body_hash: str) -> None:
+        """Commit the merge base and the successfully published bytes together."""
+        self._save(note_ref, note, front_hash, body_hash)
+
+    def matches(self, note_ref: str, front_hash: str, body_hash: str) -> bool:
+        """Old rows without digests cannot suppress a filesystem event."""
+        found: list[bool] = []
+
+        def collect(session: Session) -> None:
+            row = session.get(VaultFile, note_ref)
+            found.append(
+                row is not None
+                and row.last_writer == _CORE
+                and row.frontmatter_hash == front_hash
+                and row.body_hash == body_hash
+            )
+
+        _ = self._writer.call(collect)
+        return found[0]
+
+    def _save(self, note_ref: str, note: Note, front_hash: str | None, body_hash: str | None) -> None:
         at = self._now()
         base: dict[str, object] = asdict(note)
 
@@ -50,9 +73,12 @@ class VaultFileDatabase:
                 row = VaultFile(note_ref=note_ref, kind=_KIND, owner=_OWNER, last_writer=_CORE, synced_at=at)
                 session.add(row)
             row.base_frontmatter = base
+            row.frontmatter_hash = front_hash
+            row.body_hash = body_hash
+            row.last_writer = _CORE
             row.synced_at = at
 
-        self._writer.post(store)
+        _ = self._writer.call(store)
 
 
 def _note(saved: dict[str, object] | None) -> Note | None:

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from dataclasses import replace
 from typing import TYPE_CHECKING
 
 from aconsole.contracts.app import (
@@ -18,8 +19,11 @@ from aconsole.contracts.settings import Settings, SettingsPatch
 from aconsole.core.domain.plan import NodeStatus as DomainStatus
 from aconsole.core.domain.plan import Plan
 from aconsole.core.infrastructure.mcp.tools import NodeIn, PlanBoard, TabContext
+from aconsole.core.infrastructure.persistence.repositories.vault_files import VaultFileDatabase
+from aconsole.core.infrastructure.vault.canvas import AttemptLine, CanvasHistory
 from aconsole.core.infrastructure.vault.sync import VaultSync
-from aconsole.core.infrastructure.vault.writer import load_front, split_note
+from aconsole.core.infrastructure.vault.writer import load_front, note_hashes, split_note
+from tests.core.test_knowledge_store import _writer
 from tests.core.test_wire import _connect, _daemon, _git_repo, _stop
 
 if TYPE_CHECKING:
@@ -28,6 +32,7 @@ if TYPE_CHECKING:
     import pytest
 
     from aconsole.core.domain.plan import Node
+    from aconsole.core.domain.vault_sync import Note
 
 _CTX = TabContext(tab_id="t1", project_id="p1", worktree=None, agent="claude")
 
@@ -201,11 +206,15 @@ def test_the_daemon_writes_notes_when_a_vault_is_chosen_and_keeps_edits_across_a
 def test_note_projection_reads_the_graph_linearly(monkeypatch: pytest.MonkeyPatch) -> None:
     count = 200
     board = PlanBoard()
-    created = board.create(_CTX, "Large projection", "goal", [
-        NodeIn(key=f"N-{i}", title=f"Node {i}", objective="work",
-               depends_on=[] if i == 0 else [f"N-{i-1}"])
-        for i in range(count)
-    ])
+    created = board.create(
+        _CTX,
+        "Large projection",
+        "goal",
+        [
+            NodeIn(key=f"N-{i}", title=f"Node {i}", objective="work", depends_on=[] if i == 0 else [f"N-{i - 1}"])
+            for i in range(count)
+        ],
+    )
     original = Plan.get
     reads = 0
 
@@ -219,7 +228,7 @@ def test_note_projection_reads_the_graph_linearly(monkeypatch: pytest.MonkeyPatc
     assert len(notes) == count
     assert reads <= 3 * count, "note projection must not traverse the entire graph once per note"
     keys = frozenset(f"N-{i}" for i in range(count))
-    edges = tuple((f"N-{i}", f"N-{i-1}") for i in range(1, count))
+    edges = tuple((f"N-{i}", f"N-{i - 1}") for i in range(1, count))
     states = tuple((f"N-{i}", "pending") for i in range(count))
     for index, projected in enumerate(notes):
         assert projected.key == projected.owners.node_key == f"N-{index}"
@@ -227,7 +236,7 @@ def test_note_projection_reads_the_graph_linearly(monkeypatch: pytest.MonkeyPatc
         assert projected.owners.edges == edges
         assert projected.owners.blocker_status == states
         assert not projected.owners.leased_by_other
-        assert projected.note.depends_on == (() if index == 0 else (f"N-{index-1}",))
+        assert projected.note.depends_on == (() if index == 0 else (f"N-{index - 1}",))
 
 
 def test_projected_graph_is_fresh_and_previous_notes_keep_their_state() -> None:
@@ -248,3 +257,114 @@ def test_projected_graph_is_fresh_and_previous_notes_keep_their_state() -> None:
     assert before[1].owners.blocker_status == (("N-01", "pending"), ("N-02", "pending"))
     assert during[0].note.status == "in_progress"
     assert during[1].owners.blocker_status == (("N-01", "in_progress"), ("N-02", "pending"))
+
+
+def test_durable_echo_survives_restart_and_does_not_parse_unchanged_notes(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from aconsole.core.infrastructure.vault import sync as sync_module
+
+    board, plan_id = _board()
+    writer = _writer(tmp_path)
+    sync = VaultSync(board, bases=VaultFileDatabase(writer))
+    sync.use_root(tmp_path)
+    sync.stop()  # Deliver watcher events explicitly, without timing races.
+    sync.publish(plan_id)
+    ref = f"plans/{plan_id}/N-01.md"
+    path = tmp_path / ref
+    before = path.stat().st_mtime_ns
+    text = path.read_bytes().decode()
+    writer.stop()
+
+    writer = _writer(tmp_path)
+    store = VaultFileDatabase(writer)
+    restarted = VaultSync(board, bases=store)
+    restarted.use_root(tmp_path)
+    restarted.stop()
+    heard: list[str] = []
+    restarted.on_edit = heard.append
+    parsed = sync_module._parsed
+    parsed_fronts: list[str] = []
+
+    def tracked(front: str) -> Note | None:
+        parsed_fronts.append(front)
+        return parsed(front)
+
+    monkeypatch.setattr(sync_module, "_parsed", tracked)
+    try:
+        assert len(restarted._writer.echo) == 0
+        assert store.matches(ref, *note_hashes(text))
+        restarted._heard(path)
+        restarted.publish(plan_id)
+        assert heard == []
+        assert parsed_fronts == []
+        assert path.stat().st_mtime_ns == before
+
+        _edit(path, "title: First", "title: Edited offline")
+        restarted._heard(path)
+        assert heard == [plan_id]
+        restarted.publish(plan_id)
+        assert len(parsed_fronts) == 1
+        assert board.node_notes(plan_id)[0].note.title == "Edited offline"
+
+        # Body-only changes must also miss the digest.
+        _edit(path, "## Заметки", "## Заметки\n\nUser paragraph")
+        restarted._heard(path)
+        restarted.publish(plan_id)
+        assert len(heard) == 2
+        assert len(parsed_fronts) == 2
+        assert "User paragraph" in path.read_text()
+    finally:
+        restarted.stop()
+        writer.stop()
+
+
+def test_durable_echo_still_publishes_changed_board_state(tmp_path: Path) -> None:
+    board, plan_id = _board()
+    writer = _writer(tmp_path)
+    store = VaultFileDatabase(writer)
+    sync = VaultSync(board, bases=store)
+    sync.use_root(tmp_path)
+    sync.stop()
+    try:
+        sync.publish(plan_id)
+        notes = board.node_notes(plan_id)
+        board.apply_note(plan_id, "N-01", replace(notes[0].note, status="blocked"))
+        sync.publish(plan_id)
+        ref = f"plans/{plan_id}/N-01.md"
+        assert _front(tmp_path / ref)["status"] == "blocked"
+        assert store.matches(ref, *note_hashes((tmp_path / ref).read_bytes().decode()))
+        # A legacy base without a successful byte publication is not an echo.
+        store.save(ref, board.node_notes(plan_id)[0].note)
+        assert not store.matches(ref, *note_hashes((tmp_path / ref).read_bytes().decode()))
+    finally:
+        sync.stop()
+        writer.stop()
+
+
+def test_attempt_publication_updates_the_durable_body_digest(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    board, plan_id = _board()
+    writer = _writer(tmp_path)
+    store = VaultFileDatabase(writer)
+    sync = VaultSync(board, bases=store)
+    sync.use_root(tmp_path)
+    sync.stop()
+    line = AttemptLine(key="N-01", attempt_no=1, status="failed", verdict="retry", head_block="hash")
+
+    def attempts(_history: CanvasHistory, _plan: str) -> tuple[AttemptLine, ...]:
+        return (line,)
+
+    monkeypatch.setattr(CanvasHistory, "attempts", attempts)
+    sync.use_history(CanvasHistory(writer=writer))
+    try:
+        sync.publish(plan_id)
+        ref = f"plans/{plan_id}/N-01.md"
+        text = (tmp_path / ref).read_bytes().decode()
+        assert line.render() in text
+        assert store.matches(ref, *note_hashes(text))
+        sync.publish(plan_id)
+        assert (tmp_path / ref).read_bytes().decode().count(line.render()) == 1
+        assert store.matches(ref, *note_hashes(text))
+    finally:
+        sync.stop()
+        writer.stop()
