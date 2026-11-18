@@ -63,7 +63,7 @@ _EXTRACTORS: dict[str, tuple[str, ...]] = {
     "python": ("python3", "tools/codegraph/extract_python.py"),
     "ts": (),
     "rust-metadata": (),
-    "csharp": ("dotnet", "run", "--project", "tools/csgraph", "--"),
+    "csharp": ("dotnet", "exec", f"{_DEVTOOLS_HOME}/.local/lib/aconsole-csgraph/csgraph.dll"),
     "csharp-info": (),
 }
 

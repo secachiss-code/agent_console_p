@@ -16,6 +16,7 @@ if sys_path not in sys.path:
 
 from tools.hostrun import actions  # noqa: E402
 
+from aconsole.core.infrastructure.codegraph.protocol import GraphEdge, decode_graph  # noqa: E402
 
 _CONTEXT = "tests/fixtures/codegraph/csharp"
 
@@ -88,7 +89,7 @@ def test_csharp_info_rejects_bad_context_or_argument_count(
 
 def _write_executable(path: Path, contents: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(contents, encoding="utf-8")
+    _ = path.write_text(contents, encoding="utf-8")
     path.chmod(0o755)
 
 
@@ -100,27 +101,29 @@ def _fake_toolchain(tmp_path: Path) -> tuple[Path, Path, Path, Path]:
     reference_pack = dotnet_root / "packs" / "Microsoft.NETCore.App.Ref" / "10.0.0" / "ref" / "net10.0"
     fake_bin = tmp_path / "fake-bin"
     invocation_log = tmp_path / "dotnet-invocations.txt"
-    fail_probe = tmp_path / "fail-list-sdks"
     compiler.parent.mkdir(parents=True)
-    compiler.write_bytes(b"fake csc marker; never an executable assembly")
+    _ = compiler.write_bytes(b"fake csc marker; never an executable assembly")
     reference_pack.mkdir(parents=True)
     dotnet = fake_bin / "dotnet"
     _write_executable(
         dotnet,
-        "#!/bin/sh\n"
-        "printf '<%s>\\n' \"$@\" >> \"$FAKE_DOTNET_LOG\"\n"
-        "if [ \"${1-}\" = '--list-sdks' ] && [ \"$#\" -eq 1 ]; then\n"
-        "  if [ -f \"$FAKE_DOTNET_FAIL_PROBE\" ]; then exit 45; fi\n"
-        "  printf '10.0.100 [%s/sdk]\\n' \"$DOTNET_ROOT\"\n"
-        "  exit 0\n"
-        "fi\n"
-        "if [ \"${1-}\" = \"$DOTNET_ROOT/sdk/10.0.100/Roslyn/bincore/csc.dll\" ] "
-        "&& [ \"${2-}\" = '-version' ] && [ \"$#\" -eq 2 ]; then\n"
-        "  if [ -f \"$FAKE_DOTNET_FAIL_CSC\" ]; then exit 46; fi\n"
-        "  printf '5.9.0\\n'\n"
-        "  exit 0\n"
-        "fi\n"
-        "exit 97\n",
+        r"""#!/bin/sh
+printf '<%s>\n' "$@" >> "$FAKE_DOTNET_LOG"
+if [ "${1-}" = '--list-sdks' ] \
+    && [ "$#" -eq 1 ]; then
+  if [ -f "$FAKE_DOTNET_FAIL_PROBE" ]; then exit 45; fi
+  printf '10.0.100 [%s/sdk]\n' "$DOTNET_ROOT"
+  exit 0
+fi
+if [ "${1-}" = "$DOTNET_ROOT/sdk/10.0.100/Roslyn/bincore/csc.dll" ] \
+    && [ "${2-}" = '-version' ] \
+    && [ "$#" -eq 2 ]; then
+  if [ -f "$FAKE_DOTNET_FAIL_CSC" ]; then exit 46; fi
+  printf '5.9.0\n'
+  exit 0
+fi
+exit 97
+""",
     )
     return home, dotnet_root, fake_bin, invocation_log
 
@@ -149,7 +152,7 @@ def _run_fixed_script(
         }
     )
     env.update(dict(plan.steps[1].env))
-    env.pop("RUSTUP_HOME", None)
+    _ = env.pop("RUSTUP_HOME", None)
     return subprocess.run(
         argv[shell_index:],
         check=False,
@@ -233,3 +236,201 @@ def test_csharp_info_propagates_compiler_version_failure(tmp_path: Path) -> None
         "<-version>",
     ]
     assert "CSC_VERSION=" not in completed.stdout
+
+
+def test_csharp_hot_path_is_published_dll_without_build(tmp_path: Path) -> None:
+    plan = actions.build_plan("devtools", ["csharp", "src/Cs"], tmp_path, str(tmp_path), 30)
+    argv = plan.steps[1].argv
+    assert argv[5:] == (
+        "dotnet",
+        "exec",
+        str(Path.home() / ".containers/containers/devtools/.local/lib/aconsole-csgraph/csgraph.dll"),
+        "src/Cs",
+    )
+    assert not {"run", "build", "restore", "publish"}.intersection(argv)
+
+
+@pytest.fixture(scope="module")
+def published_csgraph(tmp_path_factory: pytest.TempPathFactory) -> Path:
+    import shutil
+
+    if shutil.which("dotnet") is None:
+        pytest.skip("C# integration requires the devtools .NET SDK")
+    project = tmp_path_factory.mktemp("csgraph-publish")
+    for name in ("Program.cs", "csgraph.csproj"):
+        _ = shutil.copyfile(ROOT / "tools" / "csgraph" / name, project / name)
+    completed = subprocess.run(
+        [
+            "dotnet",
+            "publish",
+            str(project / "csgraph.csproj"),
+            "-c",
+            "Release",
+            "-o",
+            str(project / "published"),
+            "-p:NuGetAudit=false",
+        ],
+        capture_output=True,
+        text=True,
+        timeout=60,
+        check=False,
+    )
+    assert completed.returncode == 0, completed.stdout + completed.stderr
+    return project / "published" / "csgraph.dll"
+
+
+def _csharp_fixture(root: Path) -> None:
+    contracts = root / "Contracts"
+    app = root / "App"
+    contracts.mkdir()
+    app.mkdir()
+    _ = (contracts / "Contracts.csproj").write_text(
+        r"""<Project Sdk="Microsoft.NET.Sdk">
+<PropertyGroup>
+<TargetFramework>net10.0</TargetFramework>
+</PropertyGroup>
+</Project>""",
+        encoding="utf-8",
+    )
+    _ = (app / "App.csproj").write_text(
+        r"""<Project Sdk="Microsoft.NET.Sdk">
+<PropertyGroup>
+<TargetFramework>net10.0</TargetFramework>
+</PropertyGroup>
+<ItemGroup>
+<ProjectReference Include="../Contracts/Contracts.csproj" />
+</ItemGroup>
+<Target Name="MustNeverExecute" BeforeTargets="Build">
+<Error Text="Project code must not execute" />
+</Target>
+</Project>""",
+        encoding="utf-8",
+    )
+    _ = (contracts / "Api.cs").write_text(
+        "namespace Api; public interface IService { int Read(); } public class Base {}",
+        encoding="utf-8",
+    )
+    _ = (app / "Service.cs").write_text(
+        "using Api; public class Service : Base, IService { public int Read() => 1; }",
+        encoding="utf-8",
+    )
+    _ = (app / "Unknown.cs").write_text("public class Unknown : External {}", encoding="utf-8")
+    generated = app / "obj"
+    generated.mkdir()
+    _ = (generated / "Ignore.cs").write_text("public class Ignore {}", encoding="utf-8")
+    _ = (root / "Example.sln").write_text(
+        'Project("guid") = "App", "App\\App.csproj", "app-guid"\nEndProject\n',
+        encoding="utf-8",
+    )
+
+
+def _extract_csgraph(dll: Path, root: Path, input_path: str) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        ["dotnet", "exec", str(dll), input_path],
+        cwd=root,
+        capture_output=True,
+        text=True,
+        timeout=30,
+        check=False,
+    )
+
+
+def test_published_csharp_extracts_semantic_cross_project_edges_offline_and_repeatably(
+    published_csgraph: Path,
+    tmp_path: Path,
+) -> None:
+    _csharp_fixture(tmp_path)
+    first = _extract_csgraph(published_csgraph, tmp_path, "Example.sln")
+    second = _extract_csgraph(published_csgraph, tmp_path, "App/App.csproj")
+    assert first.returncode == second.returncode == 0, first.stderr + second.stderr
+    assert first.stdout == second.stdout
+    graph = decode_graph(first.stdout.encode())
+    assert graph.version == 1
+    assert graph.edges == (
+        GraphEdge(source="cs:App/Service.cs", target="cs:Contracts/Api.cs", kind="implements"),
+        GraphEdge(source="cs:App/Service.cs", target="cs:Contracts/Api.cs", kind="inherits"),
+    )
+    assert [node.path for node in graph.nodes] == ["App/Service.cs", "App/Unknown.cs", "Contracts/Api.cs"]
+    assert all(node.kind == "module" and node.id == "cs:" + node.path for node in graph.nodes)
+    signatures = next(node.symbols for node in graph.nodes if node.path == "App/Service.cs")
+    assert any("Read()" in signature for signature in signatures)
+    assert not any("=>" in signature for signature in signatures)
+    assert not (tmp_path / "App" / "bin").exists()
+    assert not (tmp_path / "App" / "obj" / "project.assets.json").exists()
+    # Both invocations work after the extractor's build tree is removed.
+    import shutil
+
+    shutil.rmtree(published_csgraph.parent.parent / "obj", ignore_errors=True)
+    shutil.rmtree(published_csgraph.parent.parent / "bin", ignore_errors=True)
+    repeated = _extract_csgraph(published_csgraph, tmp_path, "Example.sln")
+    assert repeated.returncode == 0, repeated.stderr
+    assert repeated.stdout == first.stdout
+
+
+def test_csharp_syntax_error_has_empty_symbols_and_no_outgoing_edges(
+    published_csgraph: Path,
+    tmp_path: Path,
+) -> None:
+    _csharp_fixture(tmp_path)
+    _ = (tmp_path / "App" / "Service.cs").write_text("public class Broken : Api.IService {", encoding="utf-8")
+    completed = _extract_csgraph(published_csgraph, tmp_path, "App/App.csproj")
+    assert completed.returncode == 0, completed.stderr
+    graph = decode_graph(completed.stdout.encode())
+    assert graph.edges == ()
+    assert next(node.symbols for node in graph.nodes if node.path == "App/Service.cs") == ()
+
+
+def test_csharp_rejects_unsupported_compile_selection_and_project_cycles(
+    published_csgraph: Path,
+    tmp_path: Path,
+) -> None:
+    _csharp_fixture(tmp_path)
+    project = tmp_path / "Contracts" / "Contracts.csproj"
+    _ = project.write_text('<Project><ItemGroup><Compile Remove="Api.cs" /></ItemGroup></Project>', encoding="utf-8")
+    unsupported = _extract_csgraph(published_csgraph, tmp_path, "Example.sln")
+    assert unsupported.returncode != 0
+    assert unsupported.stdout == ""
+    assert "unsupported MSBuild evaluation" in unsupported.stderr
+    _ = project.write_text(
+        '<Project><ItemGroup><ProjectReference Include="../App/App.csproj" /></ItemGroup></Project>',
+        encoding="utf-8",
+    )
+    cycle = _extract_csgraph(published_csgraph, tmp_path, "Example.sln")
+    assert cycle.returncode != 0
+    assert cycle.stdout == ""
+    assert "cyclic project references" in cycle.stderr
+
+
+def test_csharp_symbols_ignore_method_bodies_and_track_signatures(
+    published_csgraph: Path,
+    tmp_path: Path,
+) -> None:
+    _csharp_fixture(tmp_path)
+    before = _extract_csgraph(published_csgraph, tmp_path, "Example.sln")
+    source = tmp_path / "App" / "Service.cs"
+    _ = source.write_text(
+        "using Api; public class Service : Base, IService { public int Read() => 200; }", encoding="utf-8"
+    )
+    body = _extract_csgraph(published_csgraph, tmp_path, "Example.sln")
+    assert before.returncode == body.returncode == 0
+    assert before.stdout == body.stdout
+    _ = source.write_text(
+        "using Api; public class Service : Base, IService { public int Read(int count) => count; }", encoding="utf-8"
+    )
+    signature = _extract_csgraph(published_csgraph, tmp_path, "Example.sln")
+    assert signature.returncode == 0
+    assert decode_graph(signature.stdout.encode()).nodes != decode_graph(before.stdout.encode()).nodes
+
+
+def test_csharp_rejects_source_symlinks_outside_repository(
+    published_csgraph: Path,
+    tmp_path: Path,
+) -> None:
+    _csharp_fixture(tmp_path)
+    outside = tmp_path.parent / f"{tmp_path.name}-outside.cs"
+    _ = outside.write_text("public class External {}", encoding="utf-8")
+    (tmp_path / "App" / "Link.cs").symlink_to(outside)
+    completed = _extract_csgraph(published_csgraph, tmp_path, "Example.sln")
+    assert completed.returncode != 0
+    assert completed.stdout == ""
+    assert "symlink" in completed.stderr
