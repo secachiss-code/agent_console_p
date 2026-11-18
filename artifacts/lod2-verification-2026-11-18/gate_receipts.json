@@ -1,0 +1,54 @@
+[
+  {
+    "receipt_hash": "ef5d0df565764b93e046d96f4150772dd4bb4d57c08e344346d6ba76760dc9b0",
+    "node_id": "node-909",
+    "tier": "micro",
+    "state_hash": "2f46dd3bb1d612d43fdcda96b2b18ab12c227082b5bbdb3076d18fba30795102",
+    "argv_sha256": "85d33d6348e0b8d2b79e33849d3068cd0adadaa0468b6c190a8598de4571f28f",
+    "exit_code": 0,
+    "passed": 1,
+    "compact_verdict": "5 passed, 0 failed",
+    "log_ref": "/home/sas/.local/state/aconsole/gates/tmpdagjx6x1.log",
+    "duration_ms": 5053,
+    "created_at": "2026-11-18T19:56:03.413068+00:00"
+  },
+  {
+    "receipt_hash": "b42e5085ee25ef161570090914cb01a0c3cabec9d08445757b6b656c7e2b11e7",
+    "node_id": "node-909",
+    "tier": "blast",
+    "state_hash": "2f46dd3bb1d612d43fdcda96b2b18ab12c227082b5bbdb3076d18fba30795102",
+    "argv_sha256": "d396932eec7cf4bb8b01d1ebbf4fd1b1f8f3d93219161022d121ac7dfbea882f",
+    "exit_code": 1,
+    "passed": 0,
+    "compact_verdict": "1 passed, 1 failed\n/home/sas/Projects/sp_aconsole_prototype/.venv-core/bin/python: tests/core/test_persistence_a.py:140: AssertionError",
+    "log_ref": "/home/sas/.local/state/aconsole/gates/tmpzkp4tt85.log",
+    "duration_ms": 259597,
+    "created_at": "2026-11-18T20:00:36.120256+00:00"
+  },
+  {
+    "receipt_hash": "3df8506d573891c41e76abdbf078810ea2cc714217f038389a4f6f5a22ab0346",
+    "node_id": "node-909",
+    "tier": "micro",
+    "state_hash": "b05f19259123c545af779b22fbcccfebc73d06411a83eae1ecd56b226a4b9c34",
+    "argv_sha256": "bd1c92a6c68e1b2cf02acb796337ea446f56636c09f6dc07ec609175f0d48371",
+    "exit_code": 0,
+    "passed": 1,
+    "compact_verdict": "5 passed, 0 failed",
+    "log_ref": "/home/sas/.local/state/aconsole/gates/tmphpxldj3a.log",
+    "duration_ms": 10275,
+    "created_at": "2026-11-18T20:03:04.116491+00:00"
+  },
+  {
+    "receipt_hash": "cc2a0d91c3067628b304421564dba568e863eddd99757eb648b64e1e6a5a8470",
+    "node_id": "node-909",
+    "tier": "blast",
+    "state_hash": "b05f19259123c545af779b22fbcccfebc73d06411a83eae1ecd56b226a4b9c34",
+    "argv_sha256": "af90e682f92a634286d7a36536e4d8aaa5010560db172604e4b4b9592e0a4f49",
+    "exit_code": 0,
+    "passed": 1,
+    "compact_verdict": "2 passed, 0 failed",
+    "log_ref": "/home/sas/.local/state/aconsole/gates/tmpk90hrt5c.log",
+    "duration_ms": 260588,
+    "created_at": "2026-11-18T20:07:36.964546+00:00"
+  }
+]

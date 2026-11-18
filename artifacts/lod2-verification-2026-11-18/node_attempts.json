@@ -1,0 +1,34 @@
+[
+  {
+    "id": "225d4341d08a4216bd5c86dda1",
+    "node_id": "node-909",
+    "attempt_no": 1,
+    "status": "failed",
+    "tab_id": "bfd8f876482ec1cf",
+    "agent_kind": "codex",
+    "model": null,
+    "base_oid": "1dc5d0c074d59d0f5c704602f1e2f2d79488ae6e",
+    "head_block": "b0dc71898365c5cfdc37b538917f7f57784a32161fe80dc3a3d41bcb16a20b73",
+    "diff_stat": null,
+    "compact_verdict": "1 passed, 1 failed\n/home/sas/Projects/sp_aconsole_prototype/.venv-core/bin/python: tests/core/test_persistence_a.py:140: AssertionError",
+    "cost_usd": null,
+    "started_at": "2026-11-18T19:54:31.656403+00:00",
+    "finished_at": "2026-11-18T20:00:36.120976+00:00"
+  },
+  {
+    "id": "9bee29eb5c044d1095d6b40068",
+    "node_id": "node-909",
+    "attempt_no": 2,
+    "status": "passed",
+    "tab_id": "bfd8f876482ec1cf",
+    "agent_kind": "codex",
+    "model": null,
+    "base_oid": "1dc5d0c074d59d0f5c704602f1e2f2d79488ae6e",
+    "head_block": "c42d566d1724b9db6d65a803d0499a437a691ee3f68016f162a439440c800f4f",
+    "diff_stat": null,
+    "compact_verdict": "2 passed, 0 failed",
+    "cost_usd": null,
+    "started_at": "2026-11-18T20:01:51.385770+00:00",
+    "finished_at": "2026-11-18T20:07:36.965260+00:00"
+  }
+]

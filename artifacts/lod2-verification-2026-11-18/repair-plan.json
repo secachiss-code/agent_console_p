@@ -1,0 +1,30 @@
+{
+  "project_id": "9fe226e18f76d5d2",
+  "plan_id": "plan-900",
+  "title": "0.1.4 — Индекс, LOD и vault",
+  "goal": "Дельта концепции 0.1.4 поверх закрытого plan-636. Полиглотный индекс, body_hash и interface_hash, LOD по прямой дистанции импорта, долговечное эхо vault, Canvas слоями Кана, предпроверка патча MCP, FTS5 BM25. Источник истины: plans/0.1.4-index.md. Образ в gate_profile — заглушка sha256 из нулей; перед закрытием L0 его заменяют на образ devtools.",
+  "repair_paths": {
+    "LOD-0": [
+      "src/aconsole/core/application/services/context_shaper.py",
+      "src/aconsole/core/infrastructure/persistence/repositories/code_graph.py",
+      "src/aconsole/core/infrastructure/persistence/cache/schema.py",
+      "src/aconsole/core/infrastructure/persistence/cache/store.py",
+      "tests/core/application/test_context_shaper.py",
+      "tests/core/test_code_impact.py",
+      "tests/core/test_cache_db.py",
+      "src/aconsole/core/infrastructure/pipeline.py",
+      "tests/core/test_persistence_a.py"
+    ],
+    "LOD-2": [
+      "src/aconsole/core/infrastructure/persistence/cache/schema.py",
+      "src/aconsole/core/infrastructure/persistence/cache/store.py",
+      "tests/core/test_cache_db.py",
+      "tests/core/test_persistence_a.py"
+    ]
+  },
+  "repair_contracts": {
+    "LOD-0": "0a403c3f27a55dfbd2581c04d8992d28d9bf5d2449a51d94764fbd5deef125a5",
+    "LOD-2": "3d2bdce6e3196d5860cb927671c814b74e19ccd4be9cfcb0bd2aa3009a994553"
+  },
+  "repair_note": "Продолжение плана по поручению пользователя: Blast LOD-2 выявил hardcoded user_version=1 в test_persistence_a.py:140. Добавить существующий регрессионный тест в scope LOD-2 и LOD-0 для проверки CACHE_SCHEMA=2; checks и граф не меняются."
+}

@@ -1,0 +1,15 @@
+{
+  "project_id": "9fe226e18f76d5d2",
+  "plan_id": "plan-900",
+  "title": "0.1.4 — Индекс, LOD и vault",
+  "goal": "Дельта концепции 0.1.4 поверх закрытого plan-636. Полиглотный индекс, body_hash и interface_hash, LOD по прямой дистанции импорта, долговечное эхо vault, Canvas слоями Кана, предпроверка патча MCP, FTS5 BM25. Источник истины: plans/0.1.4-index.md. Образ в gate_profile — заглушка sha256 из нулей; перед закрытием L0 его заменяют на образ devtools.",
+  "repair_paths": {
+    "LOD-3": [
+      "tests/core/application/test_context_shaper.py"
+    ]
+  },
+  "repair_contracts": {
+    "LOD-3": "4c8f9ebb7bc962e1d2ccbafe95c0248f5eb66600a21152bbd09de083488cb6d9"
+  },
+  "repair_note": "LOD-3 ограничивается приёмочным регрессионным тестом: реализация ContextShaper уже удовлетворяет контракту и не изменяется. Удалить source context_shaper.py из scope. Старую попытку, начатую до фиксации LOD-2 (base1dc5d0c), заменить свежей цепочкой после scoped repair; сохранить старую историю и все проверки."
+}
