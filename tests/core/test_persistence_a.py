@@ -10,7 +10,7 @@ if TYPE_CHECKING:
     from pathlib import Path
 
 import pytest
-from sqlalchemy import select
+from sqlalchemy import inspect, select
 from sqlalchemy.orm import Session
 
 from aconsole.core.infrastructure.persistence.engine import (
@@ -27,9 +27,11 @@ _TABLES = frozenset(Base.metadata.tables)
 
 
 def _names(url: str) -> set[str]:
-    with write_engine(url).connect() as connection:
-        rows = connection.exec_driver_sql("SELECT name FROM sqlite_master WHERE type='table'").fetchall()
-    return {str(row[0]) for row in rows}
+    engine = write_engine(url)
+    try:
+        return set(inspect(engine).get_table_names())
+    finally:
+        engine.dispose()
 
 
 def test_persistence_a_migrations_go_up_and_down(tmp_path: Path) -> None:
@@ -77,7 +79,7 @@ def test_persistence_a_round_trip_and_pragmas(tmp_path: Path) -> None:
     raw.close()
     naive = datetime.now(UTC).replace(tzinfo=None)
     with pytest.raises(ValueError, match="timezone-aware"):
-        UtcDateTime().process_bind_param(naive, writer.dialect)
+        _ = UtcDateTime().process_bind_param(naive, writer.dialect)
 
 
 def test_migrations_are_found_in_a_package_and_in_a_checkout(tmp_path: Path) -> None:
@@ -90,6 +92,7 @@ def test_migrations_are_found_in_a_package_and_in_a_checkout(tmp_path: Path) -> 
     packaged = tmp_path / "site" / "aconsole" / "_migrations"
     packaged.mkdir()
     assert migrations_dir(module) == packaged
+
 
 def test_wal_pinned_reader_is_not_interrupted_and_compacts_after_release(tmp_path: Path) -> None:
     import time
@@ -128,14 +131,15 @@ def test_wal_pinned_reader_is_not_interrupted_and_compacts_after_release(tmp_pat
 
 
 def test_cache_version_and_pragmas(tmp_path: Path) -> None:
+    from aconsole.core.infrastructure.persistence.cache.schema import CACHE_SCHEMA
     from aconsole.core.infrastructure.persistence.cache.store import CacheStore
 
     path = tmp_path / "cache.db"
     with sqlite3.connect(path) as connection:
-        connection.execute("PRAGMA user_version=999")
-        connection.execute("CREATE TABLE obsolete (value TEXT)")
+        _ = connection.execute("PRAGMA user_version=999")
+        _ = connection.execute("CREATE TABLE obsolete (value TEXT)")
     store = CacheStore.open(path)
     store.close()
     with sqlite3.connect(path) as connection:
-        assert connection.execute("PRAGMA user_version").fetchone() == (1,)
+        assert connection.execute("PRAGMA user_version").fetchone() == (CACHE_SCHEMA,)
         assert connection.execute("SELECT name FROM sqlite_master WHERE name='obsolete'").fetchone() is None
