@@ -150,11 +150,7 @@ def test_gate_audit_ui_is_400_over_http(running: Running) -> None:
 def test_policy_rejects_a_container_without_worktree(tmp_path: Path) -> None:
     source = (ROOT / "tools" / "hostrun" / "policy.example.toml").read_text(encoding="utf-8")
     head, tail = source.split("[containers.agent-codex]", 1)
-    broken = (
-        head
-        + "[containers.agent-codex]"
-        + tail.replace('worktree = "@REPO@"\n', "", 1)
-    )
+    broken = head + "[containers.agent-codex]" + tail.replace('worktree = "@REPO@"\n', "", 1)
     assert broken != source
     path = tmp_path / "policy.toml"
     _ = path.write_text(broken, encoding="utf-8")
@@ -192,7 +188,7 @@ def test_default_paths_stay_inside_the_suite(tmp_path: Path) -> None:
 def test_example_policy_loads() -> None:
     policy = server.load_policy(ROOT / "tools" / "hostrun" / "policy.example.toml")
     assert "check" in policy.containers["agent-cursor"].actions
-    assert policy.containers["agent-cursor"].worktree== str(ROOT)
+    assert policy.containers["agent-cursor"].worktree == str(ROOT)
     assert "gate" in policy.containers["agent-claude"].actions
     assert "gate" not in policy.containers["agent-codex"].actions
     assert "core-run" not in policy.containers["agent-codex"].actions
@@ -333,7 +329,7 @@ def test_run_plan_discards_startup_output_on_success(
     repo = Path(policy.repo)
     manifest = repo / "crates" / "core" / "Cargo.toml"
     manifest.parent.mkdir(parents=True)
-    manifest.write_text("[workspace]\nmembers = []\n", encoding="utf-8")
+    _ = manifest.write_text("[workspace]\nmembers = []\n", encoding="utf-8")
     plan = actions.build_plan("devtools", ["rust-metadata", "crates/core"], repo, policy.repo, 30)
     assert plan.steps[0].quiet_success is True
     calls: list[tuple[str, ...]] = []
@@ -386,7 +382,7 @@ def test_run_plan_preserves_startup_diagnostic_and_stops_on_failure(
     repo = Path(policy.repo)
     manifest = repo / "crates" / "core" / "Cargo.toml"
     manifest.parent.mkdir(parents=True)
-    manifest.write_text("[workspace]\nmembers = []\n", encoding="utf-8")
+    _ = manifest.write_text("[workspace]\nmembers = []\n", encoding="utf-8")
     plan = actions.build_plan("devtools", ["rust-metadata", "crates/core"], repo, policy.repo, 30)
     assert plan.steps[0].quiet_success is True
     calls: list[tuple[str, ...]] = []
@@ -555,7 +551,9 @@ def test_check_names_the_tools(running: Running, monkeypatch: pytest.MonkeyPatch
 
 
 def test_check_passes_the_container_name_into_devtools(
-    running: Running, monkeypatch: pytest.MonkeyPatch, tmp_path: Path,
+    running: Running,
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
 ) -> None:
     policy, _holder = running
     dump = tmp_path / "env-dump"
@@ -593,7 +591,7 @@ def test_deps_sync_interpreters(tmp_path: Path) -> None:
     core = actions.build_plan("deps-sync", ["core"], repo, str(repo), 30)
     ui = actions.build_plan("deps-sync", ["ui"], repo, str(repo), 30)
     assert _devtools_command(core.steps[-1].argv, str(repo)) == (
-        actions._UV,
+        str(Path.home() / ".containers/containers/devtools/.cargo/bin/uv"),
         "venv",
         "--no-project",
         "--no-python-downloads",
@@ -607,7 +605,7 @@ def test_deps_sync_interpreters(tmp_path: Path) -> None:
     _ = (repo / "pyproject.toml").write_text("[project]\nname='x'\nversion='0'\n", encoding="utf-8")
     synced = actions.build_plan("deps-sync", ["core"], repo, str(repo), 30)
     assert _devtools_command(synced.steps[-1].argv, str(repo)) == (
-        actions._UV,
+        str(Path.home() / ".containers/containers/devtools/.cargo/bin/uv"),
         "sync",
         "--locked",
         "--no-python-downloads",
@@ -617,7 +615,7 @@ def test_deps_sync_interpreters(tmp_path: Path) -> None:
     assert f"UV_PROJECT_ENVIRONMENT={repo}/.venv-core" in synced.steps[-1].argv
     synced_ui = actions.build_plan("deps-sync", ["ui"], repo, str(repo), 30)
     assert _devtools_command(synced_ui.steps[-1].argv, str(repo)) == (
-        actions._UV,
+        str(Path.home() / ".containers/containers/devtools/.cargo/bin/uv"),
         "sync",
         "--locked",
         "--group",
@@ -738,7 +736,16 @@ DEVTOOLS_CASES = [
     ("python", "src/aconsole", ("python3", "tools/codegraph/extract_python.py", "src/aconsole")),
     ("ts", "src", None),
     ("rust-metadata", "crates/core", None),
-    ("csharp", "src/Cs", ("dotnet", "run", "--project", "tools/csgraph", "--", "src/Cs")),
+    (
+        "csharp",
+        "src/Cs",
+        (
+            "dotnet",
+            "exec",
+            str(Path.home() / ".containers/containers/devtools/.local/lib/aconsole-csgraph/csgraph.dll"),
+            "src/Cs",
+        ),
+    ),
 ]
 
 
@@ -754,7 +761,7 @@ def test_devtools_extractor_argv(
     if extractor == "rust-metadata":
         manifest = tmp_path / path / "Cargo.toml"
         manifest.parent.mkdir(parents=True)
-        manifest.write_text("[workspace]\nmembers = []\n", encoding="utf-8")
+        _ = manifest.write_text("[workspace]\nmembers = []\n", encoding="utf-8")
     plan = actions.build_plan("devtools", [extractor, path], tmp_path, repo, 30)
     assert plan.steps[0].argv == ("podman", "start", "devtools")
     argv = plan.steps[1].argv
@@ -789,7 +796,7 @@ def test_devtools_rust_metadata_appends_cargo_toml_after_a_trailing_slash(tmp_pa
     repo = str(tmp_path)
     manifest = tmp_path / "crates" / "core" / "Cargo.toml"
     manifest.parent.mkdir(parents=True)
-    manifest.write_text("[workspace]\nmembers = []\n", encoding="utf-8")
+    _ = manifest.write_text("[workspace]\nmembers = []\n", encoding="utf-8")
     plan = actions.build_plan("devtools", ["rust-metadata", "crates/core/"], tmp_path, repo, 30)
     _assert_rust_metadata_wrapper(plan.steps[-1].argv, repo, manifest)
 
@@ -887,7 +894,7 @@ def test_check_test_and_gate_keep_checkout_code_inside_devtools(tmp_path: Path) 
     marker = tmp_path / "host-ran"
     _ = script.write_text(f"#!/bin/sh\ntouch '{marker}'\n", encoding="utf-8")
     script.chmod(0o755)
-    cases = (
+    cases: tuple[tuple[str, list[str]], ...] = (
         ("check", []),
         ("test", ["core", "-k", "smoke"]),
         ("test", ["gui"]),
@@ -960,22 +967,46 @@ def _git(repo: Path, *args: str) -> None:
     assert completed.returncode == 0, completed.stderr
 
 
-@pytest.mark.parametrize(("action", "args"), [
-    ("deps-sync", ["core"]), ("deps-sync", ["ui"]),
-    ("core-run", []), ("ui-run", []), ("ui-run", ["--spike"]),
-    ("ui-run", ["--fake", "demo"]), ("ui-snapshot", ["--spike"]),
-    ("ui-snapshot", ["--scenario", "demo", "--view", "plan", "--theme", "dark",
-                     "--size", "1280x800", "--out", "docs/ui/demo.png"]),
-    ("fake-core", ["start", "demo"]), ("fake-core", ["stop", "demo"]),
-])
+@pytest.mark.parametrize(
+    ("action", "args"),
+    [
+        ("deps-sync", ["core"]),
+        ("deps-sync", ["ui"]),
+        ("core-run", []),
+        ("ui-run", []),
+        ("ui-run", ["--spike"]),
+        ("ui-run", ["--fake", "demo"]),
+        ("ui-snapshot", ["--spike"]),
+        (
+            "ui-snapshot",
+            [
+                "--scenario",
+                "demo",
+                "--view",
+                "plan",
+                "--theme",
+                "dark",
+                "--size",
+                "1280x800",
+                "--out",
+                "docs/ui/demo.png",
+            ],
+        ),
+        ("fake-core", ["start", "demo"]),
+        ("fake-core", ["stop", "demo"]),
+    ],
+)
 def test_remaining_checkout_actions_only_execute_podman(tmp_path: Path, action: str, args: list[str]) -> None:
     repo = tmp_path / "repo"
     repo.mkdir()
-    (repo / "pyproject.toml").write_text("[project]\nname='untrusted'\nversion='0'\n")
-    plan = actions.build_plan(action, args, repo, str(repo), 30, runtime_dir=str(tmp_path / "runtime"),
-                              side="agent-cursor")
+    _ = (repo / "pyproject.toml").write_text("[project]\nname='untrusted'\nversion='0'\n")
+    plan = actions.build_plan(
+        action, args, repo, str(repo), 30, runtime_dir=str(tmp_path / "runtime"), side="agent-cursor"
+    )
     assert plan.mode == "exec"
     assert plan.steps[0].argv == ("podman", "start", "devtools")
+    assert len(plan.steps) > 1
+    command: tuple[str, ...] = ()
     for step in plan.steps[1:]:
         assert step.argv[0] == "podman"
         assert step.env == ()
@@ -983,36 +1014,55 @@ def test_remaining_checkout_actions_only_execute_podman(tmp_path: Path, action: 
         assert command
         assert "HOSTRUN_CONTAINER=agent-cursor" in step.argv
     if action == "fake-core":
-        assert command[1:] == (f"{repo}/tools/hostrun/server.py", "--container-fake", str(repo),
-                               str(tmp_path / "runtime"), "agent-cursor", *args)
+        assert command[1:] == (
+            f"{repo}/tools/hostrun/server.py",
+            "--container-fake",
+            str(repo),
+            str(tmp_path / "runtime"),
+            "agent-cursor",
+            *args,
+        )
     if action.startswith("ui-"):
         for key in ("DISPLAY", "WAYLAND_DISPLAY", "XDG_RUNTIME_DIR", "XAUTHORITY"):
             assert key in plan.steps[-1].argv
 
 
-@pytest.mark.parametrize(("action", "args"), [
-    ("core-run", ["--eval"]), ("deps-sync", ["core; touch marker"]),
-    ("ui-run", ["--fake", "../escape"]), ("ui-snapshot", ["--out", "/escape.png"]),
-    ("fake-core", ["start", "../escape"]), ("fake-core", ["exec", "demo"]),
-])
+@pytest.mark.parametrize(
+    ("action", "args"),
+    [
+        ("core-run", ["--eval"]),
+        ("deps-sync", ["core; touch marker"]),
+        ("ui-run", ["--fake", "../escape"]),
+        ("ui-snapshot", ["--out", "/escape.png"]),
+        ("fake-core", ["start", "../escape"]),
+        ("fake-core", ["exec", "demo"]),
+    ],
+)
 def test_remaining_checkout_actions_keep_argument_validation(tmp_path: Path, action: str, args: list[str]) -> None:
     with pytest.raises(actions.ActionError):
-        actions.build_plan(action, args, tmp_path, str(tmp_path), 30)
+        _ = actions.build_plan(action, args, tmp_path, str(tmp_path), 30)
 
 
 @pytest.mark.parametrize("operation", ["start", "stop"])
-def test_container_fake_entry_uses_container_lifecycle(tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
-                                                     operation: str) -> None:
+def test_container_fake_entry_uses_container_lifecycle(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, operation: str
+) -> None:
     policy = _policy(tmp_path)
     runtime = str(tmp_path / "runtime")
-    monkeypatch.setattr(sys, "argv", ["server.py", "--container-fake", policy.repo,
-                                     runtime, "agent-cursor", operation, "demo"])
+    monkeypatch.setattr(
+        sys, "argv", ["server.py", "--container-fake", policy.repo, runtime, "agent-cursor", operation, "demo"]
+    )
     monkeypatch.setattr(server, "ensure_not_root", lambda: None)
-    monkeypatch.setattr(server, "load_policy", lambda _path: policy)
-    seen = []
 
-    def run(app: server.Application, plan: actions.Plan, *, cwd: str,
-            write: Callable[[bytes], None], container: str) -> int:
+    def load_policy(_path: Path) -> server.Policy:
+        return policy
+
+    monkeypatch.setattr(server, "load_policy", load_policy)
+    seen: list[tuple[str, actions.Plan, str, str]] = []
+
+    def run(
+        app: server.Application, plan: actions.Plan, *, cwd: str, write: Callable[[bytes], None], container: str
+    ) -> int:
         del write
         seen.append((app.policy.state_dir, plan, cwd, container))
         return 7
@@ -1026,17 +1076,31 @@ def test_container_fake_entry_uses_container_lifecycle(tmp_path: Path, monkeypat
     assert cwd == policy.repo
     assert side == "agent-cursor"
     assert plan.mode == ("fake-start" if operation == "start" else "fake-stop")
-    assert plan.steps[0].argv == (f"{policy.repo}/.venv-core/bin/python", "-m", "aconsole.core",
-                                 "--fake", "demo", "--socket", f"{runtime}/demo.sock")
+    assert plan.steps[0].argv == (
+        f"{policy.repo}/.venv-core/bin/python",
+        "-m",
+        "aconsole.core",
+        "--fake",
+        "demo",
+        "--socket",
+        f"{runtime}/demo.sock",
+    )
 
 
-@pytest.mark.parametrize(("action", "args"), [
-    ("core-run", []), ("deps-sync", ["core"]), ("ui-run", ["--fake", "demo"]),
-    ("ui-snapshot", ["--spike"]), ("fake-core", ["start", "demo"]),
-    ("fake-core", ["stop", "demo"]),
-])
-def test_remaining_actions_dispatch_only_container_commands(running: Running, monkeypatch: pytest.MonkeyPatch,
-                                                            action: str, args: list[str]) -> None:
+@pytest.mark.parametrize(
+    ("action", "args"),
+    [
+        ("core-run", []),
+        ("deps-sync", ["core"]),
+        ("ui-run", ["--fake", "demo"]),
+        ("ui-snapshot", ["--spike"]),
+        ("fake-core", ["start", "demo"]),
+        ("fake-core", ["stop", "demo"]),
+    ],
+)
+def test_remaining_actions_dispatch_only_container_commands(
+    running: Running, monkeypatch: pytest.MonkeyPatch, action: str, args: list[str]
+) -> None:
     seen = _capture_exec(monkeypatch)
     status, body = _post(running[0].socket_path, {"action": action, "args": args})
     assert status == 200
@@ -1054,14 +1118,13 @@ def test_container_fake_lifecycle_starts_and_stops_a_real_process(tmp_path: Path
     package = repo / "aconsole"
     package.mkdir()
     (package / "__init__.py").touch()
-    (package / "core.py").write_text(
-        "import socket, sys, time\ns = socket.socket(socket.AF_UNIX)\n"
-        "s.bind(sys.argv[-1])\ntime.sleep(60)\n",
+    _ = (package / "core.py").write_text(
+        "import socket, sys, time\ns = socket.socket(socket.AF_UNIX)\ns.bind(sys.argv[-1])\ntime.sleep(60)\n",
     )
     with tempfile.TemporaryDirectory(prefix="hf-", dir="/tmp") as runtime:
         app = server.Application(policy)
         start = actions.container_fake_plan(["start", "demo"], str(repo), 30, runtime, "agent-cursor")
-        output = []
+        output: list[bytes] = []
         pid = None
         try:
             assert app.run_plan(start, cwd=str(repo), write=output.append, container="agent-cursor") == 0
@@ -1073,18 +1136,21 @@ def test_container_fake_lifecycle_starts_and_stops_a_real_process(tmp_path: Path
             stop = actions.container_fake_plan(["stop", "demo"], str(repo), 30, runtime, "agent-cursor")
             assert app.run_plan(stop, cwd=str(repo), write=output.append) == 0
             assert not pid_file.exists()
-            assert server._cmdline(pid) in (None, [])
+            command_file = Path(f"/proc/{pid}/cmdline")
+            assert not command_file.exists() or command_file.read_bytes() == b""
         finally:
             if pid is not None:
                 with contextlib.suppress(ProcessLookupError):
                     os.kill(pid, signal.SIGKILL)
                 with contextlib.suppress(ChildProcessError):
-                    os.waitpid(pid, 0)
+                    _ = os.waitpid(pid, 0)
 
 
 @pytest.mark.parametrize("args", [["status"], ["diff"], ["log"], ["worktree", "list"], ["rev-parse", "HEAD"]])
 def test_git_actions_dispatch_only_container_commands(
-    running: Running, monkeypatch: pytest.MonkeyPatch, args: list[str],
+    running: Running,
+    monkeypatch: pytest.MonkeyPatch,
+    args: list[str],
 ) -> None:
     policy, _holder = running
     seen = _capture_exec(monkeypatch, output=b"container Git output\n")
@@ -1099,7 +1165,8 @@ def test_git_actions_dispatch_only_container_commands(
 
 
 def test_git_start_failure_has_no_host_fallback(
-    running: Running, monkeypatch: pytest.MonkeyPatch,
+    running: Running,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     policy, _holder = running
     seen: list[tuple[str, ...]] = []
@@ -1117,7 +1184,10 @@ def test_git_start_failure_has_no_host_fallback(
 
 @pytest.mark.parametrize(("verb", "driver"), [("diff", "filter"), ("status", "fsmonitor")])
 def test_git_config_programs_are_confined_to_inner_command(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, verb: str, driver: str,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    verb: str,
+    driver: str,
 ) -> None:
     """Run only inside devtools: emulate Podman dispatch and exercise actual Git configuration."""
     policy = _policy(tmp_path)
@@ -1130,10 +1200,10 @@ def test_git_config_programs_are_confined_to_inner_command(
     marker = tmp_path / "inner-driver-ran"
     script = tmp_path / "driver.sh"
     tail = "cat\n" if driver == "filter" else "printf 'token\\0'\n"
-    script.write_text(f"#!/bin/sh\nprintf ran >> '{marker}'\n{tail}")
+    _ = script.write_text(f"#!/bin/sh\nprintf ran >> '{marker}'\n{tail}")
     script.chmod(0o700)
     if driver == "filter":
-        (repo / ".gitattributes").write_text("f filter=evil\n")
+        _ = (repo / ".gitattributes").write_text("f filter=evil\n")
         _git(repo, "config", "filter.evil.clean", str(script))
     else:
         _git(repo, "config", "core.fsmonitor", str(script))
