@@ -342,6 +342,20 @@ class PlanTopology:
             raise _admission_error(4011, "PLAN_FROZEN")
         return replace(self, phase="completed")
 
+    def refresh_direction_profiles(self, *, keys: set[str]) -> PlanTopology:
+        """Rebind amended L0 contracts while retaining the execution contracts of L1."""
+        hashes = dict(self.contract_hashes)
+        for node in self.nodes:
+            if node.key in keys:
+                hashes[node.key] = contract_sha256(node, None)
+        gates = {node.key: json.loads(node.gate_profile_json) for node in self.nodes if node.level == 0}
+        return replace(
+            self,
+            revision_no=self.revision_no + 1,
+            contract_hashes=tuple(sorted(hashes.items())),
+            gates_sha256=_hash(gates),
+        )
+
     def _insert(self, fresh: tuple[TopologyContract, ...]) -> PlanTopology:
         nodes = (*self.nodes, *fresh)
         _validate_topology(nodes)

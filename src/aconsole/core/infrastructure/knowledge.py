@@ -163,6 +163,7 @@ class KnowledgeService:
                 key: TypeAdapter(dict[str, object]).validate_json(bytes(profile))
                 for key, profile in params.repair_gate_profiles.items()
             },
+            allow_direction_repair=True,
         )
 
     def vault_ok(self) -> bool:

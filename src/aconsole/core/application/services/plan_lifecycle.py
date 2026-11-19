@@ -1,10 +1,11 @@
 """Frozen topology and contract snapshots, independent of transport and persistence."""
 
 import json
+import re
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import replace
 from datetime import datetime
-from typing import Protocol
+from typing import Protocol, TypeGuard
 
 from aconsole.core.application.ports.plan_store import StoredNode, StoredPlan, StoredPlanChange
 from aconsole.core.domain.errors import DomainError
@@ -168,6 +169,107 @@ def _validate_gate_profiles(plan: StoredPlan) -> None:
     for node in plan.nodes:
         if node.level == 0:
             _ = micro_commands(node.gate_profile or {}, location=f"{node.key}.gate_profile")
+
+
+def repair_direction_profiles(
+    plan: StoredPlan, profiles: Mapping[str, dict[str, object]], *, at: datetime
+) -> StoredPlan:
+    """Replace legacy L0 placeholders after L1 execution, keeping the L1 receipt bindings."""
+    if plan.topology is None or plan.topology.phase != "frozen":
+        raise DomainError(code=4011, name="PLAN_FROZEN", retryable=False)
+    directions = {node.key: node for node in plan.nodes if node.level == 0}
+    if not profiles or profiles.keys() - directions.keys():
+        detail = "expected existing L0 keys"
+        raise _direction_profile_error(detail)
+    if any(node.lease_id is not None for node in plan.nodes):
+        raise DomainError(code=4006, name="LEASE_HELD", retryable=True)
+    if any(node.status not in {"done", "cancelled"} for node in plan.nodes if node.level == 1) or any(
+        node.status not in {"pending", "blocked"} for node in directions.values()
+    ):
+        detail = "direction repair requires closed L1 work and open L0 directions"
+        raise _direction_profile_error(detail)
+
+    changed: dict[str, dict[str, object]] = {}
+    for key, profile in profiles.items():
+        original = directions[key].gate_profile or {}
+        if profile == original:
+            continue
+        _validate_direction_repair(key, original, profile)
+        changed[key] = profile
+    if not changed:
+        return plan
+
+    candidate = replace(
+        plan,
+        nodes=tuple(
+            replace(node, gate_profile=changed[node.key]) if node.key in changed else node for node in plan.nodes
+        ),
+    )
+    topology = topology_for(candidate).refresh_direction_profiles(keys=set(changed))
+    hashes = dict(topology.contract_hashes)
+    return replace(
+        candidate,
+        topology=topology,
+        updated_at=at,
+        nodes=tuple(
+            replace(node, contract_sha256=hashes[node.key]) if node.key in changed else node for node in candidate.nodes
+        ),
+    )
+
+
+def _validate_direction_repair(key: str, original: Mapping[str, object], profile: dict[str, object]) -> None:
+    old_environment = original.get("environment")
+    placeholder = "0" * 64
+    if not _environment_fields(old_environment) or old_environment["image"] not in (
+        placeholder,
+        "sha256:" + placeholder,
+    ):
+        detail = f"{key}.gate_profile.environment is not a legacy placeholder"
+        raise _direction_profile_error(detail)
+    direction_fields = {"direction", "environment"}
+    if {k: v for k, v in original.items() if k not in direction_fields} != {
+        k: v for k, v in profile.items() if k not in direction_fields
+    }:
+        detail = f"{key}.gate_profile: only direction and environment may change"
+        raise _direction_profile_error(detail)
+    _ = micro_commands(profile, location=f"{key}.gate_profile")
+
+    environment = profile.get("environment")
+    if not _environment_fields(environment):
+        detail = f"{key}.gate_profile.environment requires container and image"
+        raise _direction_profile_error(detail)
+    container, image = environment["container"], environment["image"]
+    if not isinstance(container, str) or re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,63}", container) is None:
+        detail = f"{key}.gate_profile.environment.container is invalid"
+        raise _direction_profile_error(detail)
+    digest = image.removeprefix("sha256:") if isinstance(image, str) else ""
+    if digest == placeholder or re.fullmatch(r"[0-9a-f]{64}", digest) is None:
+        detail = f"{key}.gate_profile.environment.image requires a nonzero SHA-256 digest"
+        raise _direction_profile_error(detail)
+    commands = profile.get("direction")
+    if not _json_list(commands) or not commands or not all(_valid_argv(argv) for argv in commands):
+        detail = f"{key}.gate_profile.direction requires nonempty argv lists"
+        raise _direction_profile_error(detail)
+
+
+def _valid_argv(value: object) -> bool:
+    return (
+        _json_list(value)
+        and bool(value)
+        and all(isinstance(arg, str) and arg.strip() and "\x00" not in arg for arg in value)
+    )
+
+
+def _environment_fields(value: object) -> TypeGuard[dict[str, object]]:
+    return isinstance(value, dict) and value.keys() == {"container", "image"}
+
+
+def _json_list(value: object) -> TypeGuard[list[object]]:
+    return isinstance(value, list)
+
+
+def _direction_profile_error(detail: str) -> DomainError:
+    return DomainError(code=4013, name="NODE_CONTRACT", retryable=False, extra=(detail,))
 
 
 def repair_gate_profiles(plan: StoredPlan, profiles: Mapping[str, dict[str, object]], *, at: datetime) -> StoredPlan:

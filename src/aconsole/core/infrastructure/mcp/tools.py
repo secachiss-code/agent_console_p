@@ -50,6 +50,7 @@ from aconsole.core.application.services.pipeline import PipelineActor, PipelineC
 from aconsole.core.application.services.plan_lifecycle import (
     apply_plan_change,
     freeze_plan,
+    repair_direction_profiles,
     repair_gate_profiles,
     require_note_contract,
     topology_contract,
@@ -1210,6 +1211,7 @@ class PlanBoard:
         nodes: tuple[PlanNodeSpec, ...] | None,
         *,
         repair_profiles: dict[str, dict[str, object]] | None = None,
+        allow_direction_repair: bool = False,
     ) -> PlanView:
         """Save a draft, or explicitly repair invalid frozen profiles without replacing the graph."""
         human = TabContext(tab_id=_HUMAN_TAB, project_id=project_id, worktree=None, agent="human", mode="plan")
@@ -1225,7 +1227,7 @@ class PlanBoard:
             if repair_profiles is not None:
                 stored = self._repair_target(project_id, title, goal, plan_id, nodes)
                 try:
-                    return self._repair_profiles(stored, repair_profiles)
+                    return self._repair_profiles(stored, repair_profiles, allow_direction_repair=allow_direction_repair)
                 except _ToolError as exc:
                     raise _domain_error(exc) from exc
             stored, created = self._document_target(project_id, title, goal, plan_id)
@@ -1274,16 +1276,30 @@ class PlanBoard:
             nodes=[NodeRef(key=node.key, node_id=str(node.id)) for node in view.nodes],
         )
 
-    def _repair_profiles(self, stored: _Stored, profiles: dict[str, dict[str, object]]) -> PlanView:
+    def _repair_profiles(
+        self, stored: _Stored, profiles: dict[str, dict[str, object]], *, allow_direction_repair: bool
+    ) -> PlanView:
         before = self._state(stored)
-        if self._attempts is not None and any(self._attempts.attempts(node.id) for node in before.nodes):
+        direction_repair = allow_direction_repair and any(
+            node.level == 1 and node.status in {"done", "cancelled"} for node in before.nodes
+        )
+        if direction_repair:
+            repaired = repair_direction_profiles(before, profiles, at=self._now())
+            action = "repair_direction_profiles"
+            prior = before.topology.gates_sha256 if before.topology is not None else None
+            current = repaired.topology.gates_sha256 if repaired.topology is not None else None
+            note = f"Tier 3 gates {prior} -> {current}; repaired profiles: "
+        elif self._attempts is not None and any(self._attempts.attempts(node.id) for node in before.nodes):
             raise DomainError(
                 code=4013,
                 name="NODE_CONTRACT",
                 retryable=False,
                 extra=("profile repair requires a plan without pipeline attempts",),
             )
-        repaired = repair_gate_profiles(before, profiles, at=self._now())
+        else:
+            repaired = repair_gate_profiles(before, profiles, at=self._now())
+            action = "repair_gate_profiles"
+            note = "Repaired legacy gate profiles: "
         if repaired == before:
             return self._view(stored)
         candidate = _restored(repaired, checked_completion=self._checked_completion)
@@ -1294,8 +1310,8 @@ class PlanBoard:
                 id=uuid4().hex[:26],
                 request_id=None,
                 node_id=None,
-                action="repair_gate_profiles",
-                note="Repaired legacy gate profiles: " + ", ".join(sorted(profiles)),
+                action=action,
+                note=note + ", ".join(sorted(profiles)),
                 at=self._now(),
             ),
         )

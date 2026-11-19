@@ -11,7 +11,7 @@ from mcp import Client
 lazy from sqlalchemy.orm import Session
 
 from aconsole.core.application.ports.plan_store import StoreWriteError
-from aconsole.core.application.services.plan_lifecycle import freeze_plan, topology_for
+from aconsole.core.application.services.plan_lifecycle import freeze_plan, repair_direction_profiles, topology_for
 from aconsole.core.domain.errors import DomainError
 from aconsole.core.domain.gate_profile import MICRO_COMMANDS
 from aconsole.core.infrastructure.mcp.server import build_server
@@ -24,9 +24,15 @@ lazy from aconsole.core.application.ports.plan_store import StoredPlan
 
 _AT = datetime(2026, 11, 16, tzinfo=UTC)
 _CTX = TabContext(tab_id="executor", project_id="p", worktree=None, agent="codex")
-_BROKEN = {
+_BROKEN: dict[str, object] = {
     "direction": [[".venv-core/bin/python", "-m", "pytest", "-q"]],
     "environment": {"container": "devtools", "image": "sha256:" + "0" * 64},
+}
+_DIRECTION_PROFILE = {**MICRO_PROFILE, **_BROKEN}
+_SEALED_PROFILE: dict[str, object] = {
+    **MICRO_PROFILE,
+    "direction": [["/opt/aconsole/core/bin/python", "-m", "pytest", "-q", "tests/core"]],
+    "environment": {"container": "sealed-tier3", "image": "sha256:" + "a" * 64},
 }
 
 
@@ -163,6 +169,44 @@ def _legacy_frozen() -> StoredPlan:
     )
 
 
+def _executed_plan() -> StoredPlan:
+    _, draft = _broken_plan()
+    direction, module = draft.nodes
+    ready = replace(draft, nodes=(replace(direction, gate_profile=_DIRECTION_PROFILE), module))
+    frozen = freeze_plan(ready, {}, at=_AT, graph_present=False)
+    return replace(frozen, nodes=(frozen.nodes[0], replace(frozen.nodes[1], status="done", fence=3)))
+
+
+@pytest.mark.parametrize("case", ["l1_open", "l0_done", "lease", "micro_change", "invalid_image", "invalid_argv"])
+def test_direction_repair_refuses_changes_outside_open_tier3(case: str) -> None:
+    plan = _executed_plan()
+    direction, module = plan.nodes
+    profiles: dict[str, dict[str, object]] = {
+        "micro_change": {**_SEALED_PROFILE, "micro": {**MICRO_PROFILE["micro"], "tests": ["false"]}},
+        "invalid_image": {**_SEALED_PROFILE, "environment": _BROKEN["environment"]},
+        "invalid_argv": {**_SEALED_PROFILE, "direction": [[]]},
+    }
+    if case == "l1_open":
+        plan = replace(plan, nodes=(direction, replace(module, status="pending")))
+    if case == "l0_done":
+        plan = replace(plan, nodes=(replace(direction, status="done"), module))
+    if case == "lease":
+        plan = replace(plan, nodes=(replace(direction, lease_id="lease"), module))
+    with pytest.raises(DomainError, match="LEASE_HELD" if case == "lease" else "NODE_CONTRACT"):
+        _ = repair_direction_profiles(plan, {direction.key: profiles.get(case, _SEALED_PROFILE)}, at=_AT)
+
+
+def _check_direction_amendment(before: StoredPlan, after: StoredPlan) -> None:
+    assert before.topology is not None
+    assert after.topology is not None
+    assert after.topology.frozen_at == before.topology.frozen_at
+    assert after.topology.revision_no == before.topology.revision_no + 1
+    assert after.topology.gates_sha256 != before.topology.gates_sha256
+    assert after.nodes[0].gate_profile == _SEALED_PROFILE
+    assert after.nodes[0].contract_sha256 != before.nodes[0].contract_sha256
+    assert after.nodes[1] == before.nodes[1]
+
+
 def test_planning_repairs_legacy_profiles_and_preserves_identity_after_reload() -> None:
     async def scenario() -> None:
         saved = _legacy_frozen()
@@ -255,17 +299,19 @@ def test_profile_repair_store_failure_rolls_back_memory() -> None:
     assert store.plans[saved.id] == saved
 
 
-@pytest.mark.parametrize("with_attempt", [False, True])
-def test_profile_repair_ipc_persists_audit_and_survives_restart(tmp_path: Path, *, with_attempt: bool) -> None:
+@pytest.mark.parametrize("case", ["legacy", "legacy_attempt", "direction"])
+def test_profile_repair_ipc_persists_audit_and_survives_restart(  # noqa: PLR0915 -- IPC, audit and restart
+    tmp_path: Path, case: str
+) -> None:
     from aconsole.contracts.app import PlanSaveParams, PlanView, ProjectAddParams, ProjectView
     from aconsole.contracts.common import PlanId
-    from aconsole.core.infrastructure.persistence.models import NodeAttempt, PlanInbox
+    from aconsole.core.infrastructure.persistence.models import GateReceipt, NodeAttempt, PlanInbox
     from aconsole.core.infrastructure.persistence.repositories.plans import PlanDatabase
     from tests.core.test_wire import _connect, _daemon, _git_repo, _stop
 
     repo = _git_repo(tmp_path / "repo")
 
-    async def scenario() -> None:
+    async def scenario() -> None:  # noqa: PLR0915 -- one daemon lifecycle per case
         daemon = _daemon(tmp_path, serve_ingest=False)
         task = asyncio.create_task(daemon.serve())
         client = await _connect(daemon.socket)
@@ -273,18 +319,20 @@ def test_profile_repair_ipc_persists_audit_and_survives_restart(tmp_path: Path, 
         daemon._plans._now = lambda: _AT
         writer = daemon._writer
         assert writer is not None
-        saved = replace(_legacy_frozen(), project_id=str(project.id))
+        direction_repair = case == "direction"
+        saved = replace(_executed_plan() if direction_repair else _legacy_frozen(), project_id=str(project.id))
         database = PlanDatabase(writer)
         database.save(saved)
         daemon._plans.use_store(database)
+        profile: dict[str, object] = _SEALED_PROFILE if direction_repair else dict(MICRO_PROFILE)
         params = PlanSaveParams(
             project_id=project.id,
             title=saved.title,
             goal=saved.goal,
             plan_id=PlanId(saved.id),
-            repair_gate_profiles={"IDX-0": msgspec.Raw(msgspec.json.encode(MICRO_PROFILE))},
+            repair_gate_profiles={"IDX-0": msgspec.Raw(msgspec.json.encode(profile))},
         )
-        if with_attempt:
+        if case != "legacy":
 
             def add_attempt(session: Session) -> None:
                 session.add(
@@ -292,18 +340,41 @@ def test_profile_repair_ipc_persists_audit_and_survives_restart(tmp_path: Path, 
                         id="old-attempt",
                         node_id=saved.nodes[1].id,
                         attempt_no=1,
-                        status="failed",
+                        status="passed" if direction_repair else "failed",
                         base_oid="a" * 40,
                         started_at=_AT,
                     )
                 )
+                if direction_repair:
+                    session.add(
+                        GateReceipt(
+                            receipt_hash="b" * 64,
+                            node_id=saved.nodes[1].id,
+                            tier="blast",
+                            state_hash="c" * 64,
+                            argv_sha256="d" * 64,
+                            exit_code=0,
+                            passed=True,
+                            compact_verdict="passed",
+                            duration_ms=1,
+                            created_at=_AT,
+                        )
+                    )
 
             writer.call(add_attempt)
+        if case == "legacy_attempt":
             before = daemon._plans.export_plan(saved.id)
             assert await client.error("plan/save", params) == "NODE_CONTRACT"
             assert daemon._plans.export_plan(saved.id) == before
             await _stop(daemon, task, client)
             return
+        before = daemon._plans.export_plan(saved.id)
+        if direction_repair:
+            planner = replace(_CTX, project_id=str(project.id), mode="plan")
+            with pytest.raises(_ToolError, match="profile repair requires a plan without pipeline attempts"):
+                _ = daemon._plans.save_for_tab(
+                    planner, saved.title, saved.goal, saved.id, None, repair_profiles={"IDX-0": profile}
+                )
         result = await client.call(
             "plan/save",
             params,
@@ -311,12 +382,25 @@ def test_profile_repair_ipc_persists_audit_and_survives_restart(tmp_path: Path, 
         )
         assert result.phase == "frozen"
         repaired = daemon._plans.export_plan(saved.id)
+        if direction_repair:
+            _check_direction_amendment(before, repaired)
+            assert (await client.call("plan/save", params, PlanView)).phase == "frozen"
+            assert daemon._plans.export_plan(saved.id) == repaired
 
         def check_audit(session: Session) -> None:
             audit = session.query(PlanInbox).filter_by(plan_id=saved.id, kind="human").all()
-            repairs = [entry for entry in audit if entry.payload.get("decision") == "repair_gate_profiles"]
+            decision = "repair_direction_profiles" if direction_repair else "repair_gate_profiles"
+            repairs = [entry for entry in audit if entry.payload.get("decision") == decision]
             assert len(repairs) == 1
             assert repairs[0].decided_by == "human"
+            if direction_repair:
+                attempt = session.get(NodeAttempt, "old-attempt")
+                assert attempt is not None
+                assert attempt.status == "passed"
+                receipt = session.get(GateReceipt, "b" * 64)
+                assert receipt is not None
+                assert receipt.passed
+                assert receipt.state_hash == "c" * 64
 
         writer.call(check_audit)
         await _stop(daemon, task, client)

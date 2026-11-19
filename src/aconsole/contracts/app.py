@@ -541,7 +541,9 @@ class PlanSaveParams(msgspec.Struct, frozen=True, kw_only=True, forbid_unknown_f
     instead of inserting another. With `plan_id`, `title` may rename it. `nodes` replaces the
     whole draft set in the same transaction.
     `repair_gate_profiles` explicitly replaces invalid legacy frozen L0 profiles by key;
-    it requires `plan_id`, unchanged title/goal, omitted nodes, and no leases or attempts.
+    it requires `plan_id`, unchanged title/goal, omitted nodes, and no leases.
+    Full repairs require no attempts. Once all L1 work is closed and L0 is still open,
+    this IPC method can replace the legacy zero-digest Tier 3 settings of those L0 nodes.
     """
 
     project_id: ProjectId
