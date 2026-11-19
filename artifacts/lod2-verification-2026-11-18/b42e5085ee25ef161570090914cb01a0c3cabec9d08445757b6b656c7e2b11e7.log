@@ -1,0 +1,31 @@
+Collected 0 items to run in parallel
+........................................................................ [ 18%]
+........................................................................ [ 36%]
+.....................................................................F.. [ 55%]
+........................................................................ [ 73%]
+........................................................................ [ 91%]
+................................                                         [100%]
+=================================== FAILURES ===================================
+________________________ test_cache_version_and_pragmas ________________________
+
+tmp_path = PosixPath('/tmp/pytest-of-sas/pytest-40/test_cache_version_and_pragmas0')
+
+    def test_cache_version_and_pragmas(tmp_path: Path) -> None:
+        from aconsole.core.infrastructure.persistence.cache.store import CacheStore
+    
+        path = tmp_path / "cache.db"
+        with sqlite3.connect(path) as connection:
+            connection.execute("PRAGMA user_version=999")
+            connection.execute("CREATE TABLE obsolete (value TEXT)")
+        store = CacheStore.open(path)
+        store.close()
+        with sqlite3.connect(path) as connection:
+>           assert connection.execute("PRAGMA user_version").fetchone() == (1,)
+E           assert (2,) == (1,)
+E             
+E             At index 0 diff: 2 != 1
+E             Use -v to get more diff
+
+tests/core/test_persistence_a.py:140: AssertionError
+=========================== short test summary info ============================
+FAILED tests/core/test_persistence_a.py::test_cache_version_and_pragmas - ass...
