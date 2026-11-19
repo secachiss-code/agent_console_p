@@ -255,16 +255,22 @@ def test_history_reads_real_positions_and_attempts_without_extra_notes(tmp_path:
         sync.publish("plan")
         files_before = set(root.rglob("*"))
         note = root / "plans/plan/n.md"
-        _ = note.write_text(note.read_text() + "\n## User notes\nkeep\n")
+        baseline = note.read_bytes()
+        foreign = baseline + b"\n## User notes\nkeep\n"
+        _ = note.write_bytes(foreign)
         for number in range(1, 5):
             database.start(_attempt(number))
             database.finish(f"attempt-{number}", "failed", now=_NOW, compact_verdict="retry\n## fake")
             sync.publish("plan")
         sync.publish("plan")
+        assert note.read_bytes() == foreign
+        assert len(history.attempts("plan")) == 4
+        _ = note.write_bytes(baseline)
+        sync.publish("plan")
         text = note.read_text()
         assert text.count("## Попытки") == 1
         assert text.count("/4 · failed") == 4
-        assert "## User notes\nkeep" in text
+        assert "## User notes\nkeep" not in text
         assert "## fake\n" not in text
         assert set(root.rglob("*")) == files_before
         assert history.positions("plan") == {"n": (-12, 37)}

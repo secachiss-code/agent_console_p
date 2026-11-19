@@ -24,6 +24,12 @@ _TTL = timedelta(seconds=10)
 _DIGEST = 32
 _FENCES = 3
 _MAX_ATTEMPTS = 4
+_MARKDOWN_INDENT = 3
+_MARKDOWN_FENCE = 3
+
+
+class ConcurrentNoteEditError(Exception):
+    """The file changed after the publisher read it."""
 
 
 class UserSectionError(Exception):
@@ -110,6 +116,41 @@ def note_hashes(text: str) -> tuple[str, str]:
     return _digest(front), _digest(body)
 
 
+def _attempt_section(text: str) -> tuple[int, int, int] | None:
+    """Locate the app-owned H2 section, ignoring headings inside fenced examples."""
+    offset = 0
+    found: tuple[int, int] | None = None
+    fence = ""
+    width = 0
+    for line in text.splitlines(keepends=True):
+        stripped = line.rstrip("\r\n")
+        content = stripped.lstrip(" ")
+        if len(stripped) - len(content) <= _MARKDOWN_INDENT:
+            marker = content[:1]
+            run = len(content) - len(content.lstrip(marker)) if marker in {"`", "~"} else 0
+            if fence:
+                if marker == fence and run >= width and not content[run:].strip():
+                    fence = ""
+            elif run >= _MARKDOWN_FENCE:
+                fence, width = marker, run
+            elif found is not None and (content in {"#", "##"} or content.startswith(("# ", "## ", "#\t", "##\t"))):
+                return *found, offset
+            elif content == "## Попытки":
+                found = offset, offset + len(line)
+        offset += len(line)
+    return None if found is None else (*found, len(text))
+
+
+def protected_body_hash(text: str) -> str:
+    """Hash exact body bytes outside the app's attempt section, preserving line endings."""
+    _front, body = split_note(text)
+    section = _attempt_section(body)
+    if section is not None:
+        start, _content, end = section
+        body = body[:start] + body[end:]
+    return _digest(body)
+
+
 @dataclass(frozen=True, slots=True)
 class _Echo:
     front: str
@@ -184,20 +225,24 @@ def update_attempt(text: str, attempt_no: int, line: str) -> str:
     if not 1 <= attempt_no <= _MAX_ATTEMPTS or "\n" in line or "\r" in line:
         message = "attempt journal requires one line and an attempt number in 1..4"
         raise ValueError(message)
-    marker = "## Попытки\n"
-    start = text.find(marker)
-    if start >= 0:
-        body_at = start + len(marker)
-        end = text.find("\n## ", body_at)
-        end = len(text) if end < 0 else end
-        section = text[body_at:end]
-        prefix = f"- {attempt_no}/4 · "
-        lines = section.splitlines(keepends=True)
-        for index, old in enumerate(lines):
-            if old.startswith(prefix):
-                lines[index] = line + ("\n" if old.endswith("\n") else "")
-                return text[:body_at] + "".join(lines) + text[end:]
-    return append_under(text, "Попытки", line)
+    front, body = split_note(text)
+    section = _attempt_section(body)
+    if section is None:
+        suffix = "" if text.endswith("\n") else "\n"
+        return f"{text}{suffix}## Попытки\n{line}\n"
+    _start, body_at, end = section
+    prefix = f"- {attempt_no}/4 · "
+    lines = body[body_at:end].splitlines(keepends=True)
+    for index, old in enumerate(lines):
+        if old.startswith(prefix):
+            lines[index] = line + ("\n" if old.endswith("\n") else "")
+            break
+    else:
+        if lines and not lines[-1].endswith("\n"):
+            lines[-1] += "\n"
+        lines.append(line + "\n")
+    updated = body[:body_at] + "".join(lines) + body[end:]
+    return f"---\n{front}---\n{updated}" if text.startswith("---\n") else updated
 
 
 class VaultWriter:
@@ -211,10 +256,13 @@ class VaultWriter:
         """Whether ``text`` is what this writer just put at ``path``."""
         return self.echo.is_echo(path, text, self._now())
 
-    def write(self, path: Path, text: str) -> bool:
+    def write(self, path: Path, text: str, *, expected: str | None = None) -> bool:
         """Replace ``path`` when the bytes differ. Return whether the file changed."""
         data = text.encode("utf-8")
-        if path.is_file() and path.read_bytes() == data:
+        current = path.read_bytes() if path.is_file() else None
+        if expected is not None and current != expected.encode("utf-8"):
+            raise ConcurrentNoteEditError(str(path))
+        if current == data:
             return False
         path.parent.mkdir(parents=True, exist_ok=True)
         temporary = path.with_name(f".{path.name}.aconsole-tmp")

@@ -23,10 +23,12 @@ from watchdog.observers.api import BaseObserver
 from aconsole.core.domain.vault_sync import Note, Owners, merge
 from aconsole.core.infrastructure.vault.canvas import CanvasHistory, CanvasNode, render_canvas
 from aconsole.core.infrastructure.vault.writer import (
+    ConcurrentNoteEditError,
     VaultWriter,
     dump_front,
     load_front,
     note_hashes,
+    protected_body_hash,
     split_note,
     update_attempt,
 )
@@ -89,6 +91,24 @@ class WrittenStore(BaseStore, Protocol):
     def matches(self, note_ref: str, front_hash: str, body_hash: str) -> bool: ...
 
 
+@runtime_checkable
+class ProtectedStore(WrittenStore, Protocol):
+    """Durable protection and deferred writes, without adopting a conflicting body."""
+
+    def save_protected(
+        self,
+        note_ref: str,
+        note: Note,
+        front_hash: str,
+        body_hash: str,
+        protected_hash: str,
+    ) -> None: ...
+
+    def matches_protected(self, note_ref: str, body_hash: str, protected_hash: str) -> bool: ...
+
+    def save_pending(self, note_ref: str, text: str) -> None: ...
+
+
 @final
 class VaultSync:
     """Runs on one thread of its own: `publish` and the watcher's calls must not overlap."""
@@ -107,12 +127,15 @@ class VaultSync:
         self._root: Path | None = None
         self._observer: _Watch | None = None
         self._history: CanvasHistory | None = None
+        self._protected: dict[str, str] = {}
+        self._deferred: set[str] = set()
         self.on_edit: Callable[[str], None] | None = None
 
     def use_bases(self, bases: BaseStore) -> None:
         """The store came up after this object did."""
         self._bases = bases
         self._synced = bases.load()
+        self._protected.clear()
 
     def use_history(self, history: CanvasHistory) -> None:
         """Attach durable positions and attempt history during bootstrap."""
@@ -129,6 +152,7 @@ class VaultSync:
             return
         self.stop()
         self._root = wanted
+        self._protected.clear()
         if wanted is not None:
             (wanted / _PLANS).mkdir(exist_ok=True)
             self._observer = _Watch(wanted / _PLANS, self._heard)
@@ -173,6 +197,7 @@ class VaultSync:
         """Bring every note of the plan and the board together."""
         if self._root is None:
             return
+        self._deferred.clear()
         nodes = self._board.node_notes(plan_id)
         self._publish_canvas(plan_id, nodes)
         for node in nodes:
@@ -181,11 +206,17 @@ class VaultSync:
             for attempt in self._history.attempts(plan_id):
                 ref = self.note_ref(plan_id, attempt.key)
                 path = None if ref is None else self.resolve(ref)
-                if path is not None:
+                if path is not None and ref is not None:
                     text = path.read_bytes().decode("utf-8")
+                    if ref in self._deferred or not self._can_write(ref, text):
+                        continue
                     written = update_attempt(text, attempt.attempt_no, attempt.render())
-                    _ = self._writer.write(path, written)
-                    if ref is not None and ref in self._synced:
+                    try:
+                        _ = self._writer.write(path, written, expected=text)
+                    except ConcurrentNoteEditError:
+                        self._defer(ref, written)
+                        continue
+                    if ref in self._synced:
                         self._remember(ref, self._synced[ref], written)
 
     def _publish_canvas(self, plan_id: str, nodes: tuple[NodeNote, ...]) -> None:
@@ -217,25 +248,47 @@ class VaultSync:
         user = self._synced.get(ref) if self._is_written(ref, text) else _parsed(front)
         if user is None:
             _LOG.warning("the frontmatter of %s does not parse; the core's copy replaces it", ref)
-            self._write(ref, path, node.note, body)
+            self._write(ref, path, node.note, body, expected=text)
             return
         decision = merge(self._synced.get(ref, user), user, node.note, node.owners)
         final = decision.apply
         if _edited(final, node.note):
             self._board.apply_note(plan_id, node.key, final)
-        self._write(ref, path, final, body)
+        self._write(ref, path, final, body, expected=text)
 
-    def _write(self, ref: str, path: Path, note: Note, body: str) -> None:
+    def _write(self, ref: str, path: Path, note: Note, body: str, *, expected: str | None = None) -> None:
         text = f"---\n{dump_front(_front(note))}---\n{body}"
-        _ = self._writer.write(path, text)
+        if expected is not None and not self._can_write(ref, expected):
+            self._defer(ref, text)
+            return
+        try:
+            _ = self._writer.write(path, text, expected=expected)
+        except ConcurrentNoteEditError:
+            self._defer(ref, text)
+            return
         self._remember(ref, note, text)
 
+    def _can_write(self, ref: str, text: str) -> bool:
+        protected = protected_body_hash(text)
+        if isinstance(self._bases, ProtectedStore):
+            return self._bases.matches_protected(ref, note_hashes(text)[1], protected)
+        return self._protected.get(ref) == protected
+
+    def _defer(self, ref: str, text: str) -> None:
+        self._deferred.add(ref)
+        if isinstance(self._bases, ProtectedStore):
+            self._bases.save_pending(ref, text)
+
     def _remember(self, ref: str, note: Note, text: str) -> None:
-        if isinstance(self._bases, WrittenStore):
+        protected = protected_body_hash(text)
+        if isinstance(self._bases, ProtectedStore):
+            self._bases.save_protected(ref, note, *note_hashes(text), protected)
+        elif isinstance(self._bases, WrittenStore):
             self._bases.save_written(ref, note, *note_hashes(text))
         elif self._bases is not None:
             self._bases.save(ref, note)
         self._synced[ref] = note
+        self._protected[ref] = protected
 
     def _is_written(self, ref: str, text: str) -> bool:
         return isinstance(self._bases, WrittenStore) and self._bases.matches(ref, *note_hashes(text))

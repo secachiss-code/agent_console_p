@@ -18,6 +18,7 @@ from aconsole.core.infrastructure.persistence.writer import Writer
 _KIND = "plan_node"
 _OWNER = "shared"
 _CORE = "app"
+_PROTECTED = "_protected_body_hash"
 
 
 @final
@@ -47,6 +48,43 @@ class VaultFileDatabase:
         """Commit the merge base and the successfully published bytes together."""
         self._save(note_ref, note, front_hash, body_hash)
 
+    def save_protected(
+        self,
+        note_ref: str,
+        note: Note,
+        front_hash: str,
+        body_hash: str,
+        protected_hash: str,
+    ) -> None:
+        """Publish hashes and merge base, clearing any previously deferred text."""
+        self._save(note_ref, note, front_hash, body_hash, protected_hash)
+
+    def matches_protected(self, note_ref: str, body_hash: str, protected_hash: str) -> bool:
+        """Legacy rows are trusted only when the exact last published body still matches."""
+
+        found: list[bool] = []
+
+        def collect(session: Session) -> None:
+            row = session.get(VaultFile, note_ref)
+            if row is None or row.last_writer != _CORE:
+                found.append(False)
+                return
+            saved = None if row.base_frontmatter is None else row.base_frontmatter.get(_PROTECTED)
+            found.append(saved == protected_hash if isinstance(saved, str) else row.body_hash == body_hash)
+
+        _ = self._writer.call(collect)
+        return found[0]
+
+    def save_pending(self, note_ref: str, text: str) -> None:
+        """Defer the desired text without changing the successful publication baseline."""
+
+        def store(session: Session) -> None:
+            row = session.get(VaultFile, note_ref)
+            if row is not None:
+                row.pending_write = {"text": text}
+
+        _ = self._writer.call(store)
+
     def matches(self, note_ref: str, front_hash: str, body_hash: str) -> bool:
         """Old rows without digests cannot suppress a filesystem event."""
         found: list[bool] = []
@@ -63,9 +101,18 @@ class VaultFileDatabase:
         _ = self._writer.call(collect)
         return found[0]
 
-    def _save(self, note_ref: str, note: Note, front_hash: str | None, body_hash: str | None) -> None:
+    def _save(
+        self,
+        note_ref: str,
+        note: Note,
+        front_hash: str | None,
+        body_hash: str | None,
+        protected_hash: str | None = None,
+    ) -> None:
         at = self._now()
         base: dict[str, object] = asdict(note)
+        if protected_hash is not None:
+            base[_PROTECTED] = protected_hash
 
         def store(session: Session) -> None:
             row = session.get(VaultFile, note_ref)
@@ -76,6 +123,7 @@ class VaultFileDatabase:
             row.frontmatter_hash = front_hash
             row.body_hash = body_hash
             row.last_writer = _CORE
+            row.pending_write = None
             row.synced_at = at
 
         _ = self._writer.call(store)
