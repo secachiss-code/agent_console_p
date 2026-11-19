@@ -1,0 +1,19 @@
+{
+  "project_id": "9fe226e18f76d5d2",
+  "plan_id": "plan-900",
+  "title": "0.1.4 — Индекс, LOD и vault",
+  "goal": "Дельта концепции 0.1.4 поверх закрытого plan-636. Полиглотный индекс, body_hash и interface_hash, LOD по прямой дистанции импорта, долговечное эхо vault, Canvas слоями Кана, предпроверка патча MCP, FTS5 BM25. Источник истины: plans/0.1.4-index.md. Образ в gate_profile — заглушка sha256 из нулей; перед закрытием L0 его заменяют на образ devtools.",
+  "repair_paths": {
+    "VLT-2": [
+      "src/aconsole/core/infrastructure/vault/sync.py",
+      "src/aconsole/core/infrastructure/vault/writer.py",
+      "tests/core/test_vault_writer.py",
+      "src/aconsole/core/infrastructure/persistence/repositories/vault_files.py",
+      "tests/core/test_vault_canvas.py"
+    ]
+  },
+  "repair_contracts": {
+    "VLT-2": "1412f20562a109b566efbe31e62b28c79f192c22b860b07cee20a456f1f769d0"
+  },
+  "repair_note": "VLT-2: локальная расширенная проверка выявила противоположное ожидание в старом canvas-тесте. Добавить test_vault_canvas.py (уже в родительском scope), проверить defer до удаления foreign paragraph и последующую публикацию4 durable attempts. Gates не меняются."
+}

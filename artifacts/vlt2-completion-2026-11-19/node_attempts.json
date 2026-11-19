@@ -1,0 +1,50 @@
+[
+  {
+    "id": "e6310be13249404eb76d9122a7",
+    "node_id": "node-913",
+    "attempt_no": 1,
+    "status": "abandoned",
+    "tab_id": "bfd8f876482ec1cf",
+    "agent_kind": "codex",
+    "model": null,
+    "base_oid": "d53446083f053efe39b6629a74df879793272832",
+    "head_block": "717f7bfc9a7163e6c8c9f6cb7d42b1826e6be26b41d4566b4bbd427e09d52101",
+    "diff_stat": null,
+    "compact_verdict": "Frozen scope contract repaired",
+    "cost_usd": null,
+    "started_at": "2026-11-19T17:08:44.499866+00:00",
+    "finished_at": "2026-11-19T17:10:56.227203+00:00"
+  },
+  {
+    "id": "d993537f4ee84c44b38ae86cb3",
+    "node_id": "node-913",
+    "attempt_no": 2,
+    "status": "abandoned",
+    "tab_id": "bfd8f876482ec1cf",
+    "agent_kind": "codex",
+    "model": null,
+    "base_oid": "d53446083f053efe39b6629a74df879793272832",
+    "head_block": "58cd5b159bbace510c4c8e304093de04b9fc8879903bfd7ffa962d83fbe4984c",
+    "diff_stat": null,
+    "compact_verdict": "Frozen scope contract repaired",
+    "cost_usd": null,
+    "started_at": "2026-11-19T17:10:56.236838+00:00",
+    "finished_at": "2026-11-19T17:14:02.435006+00:00"
+  },
+  {
+    "id": "55ad187f1fb1495a885d33743d",
+    "node_id": "node-913",
+    "attempt_no": 3,
+    "status": "passed",
+    "tab_id": "bfd8f876482ec1cf",
+    "agent_kind": "codex",
+    "model": null,
+    "base_oid": "d53446083f053efe39b6629a74df879793272832",
+    "head_block": "8a10584030d0b172892b8eb2e938d6bcd21e6b8a85b78bb7ff975ba64d874ac1",
+    "diff_stat": null,
+    "compact_verdict": "2 passed, 0 failed",
+    "cost_usd": null,
+    "started_at": "2026-11-19T17:14:02.445416+00:00",
+    "finished_at": "2026-11-19T17:20:16.677782+00:00"
+  }
+]

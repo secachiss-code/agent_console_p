@@ -1,0 +1,18 @@
+{
+  "project_id": "9fe226e18f76d5d2",
+  "plan_id": "plan-900",
+  "title": "0.1.4 — Индекс, LOD и vault",
+  "goal": "Дельта концепции 0.1.4 поверх закрытого plan-636. Полиглотный индекс, body_hash и interface_hash, LOD по прямой дистанции импорта, долговечное эхо vault, Canvas слоями Кана, предпроверка патча MCP, FTS5 BM25. Источник истины: plans/0.1.4-index.md. Образ в gate_profile — заглушка sha256 из нулей; перед закрытием L0 его заменяют на образ devtools.",
+  "repair_paths": {
+    "VLT-2": [
+      "src/aconsole/core/infrastructure/vault/sync.py",
+      "src/aconsole/core/infrastructure/vault/writer.py",
+      "tests/core/test_vault_writer.py",
+      "src/aconsole/core/infrastructure/persistence/repositories/vault_files.py"
+    ]
+  },
+  "repair_contracts": {
+    "VLT-2": "35b6602c4022eee95048e0052826a96d241c039cbd52e86aff390310840d535b"
+  },
+  "repair_note": "Продолжение VLT-2 по поручению пользователя. §4.4 требует pending_write и сравнение с последней записью ядра после перезапуска. Добавить существующий VaultFileDatabase для сохранения protected-body hash в base_frontmatter и отложенного текста в уже имеющийся pending_write. Миграций и новых таблиц нет. Родитель VLT-0 уже содержит репозиторий. Checks не ослабляются."
+}
