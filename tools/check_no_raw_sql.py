@@ -1,4 +1,4 @@
-"""Reject raw SQL outside the persistence engine module."""
+"""Reject raw SQL outside the persistence engine and FTS module."""
 
 from __future__ import annotations
 
@@ -17,6 +17,7 @@ PATTERNS = (
 # Migration-worker fixtures must create legacy/unknown schemas without the current ORM.
 ALLOWED = (
     "src/aconsole/core/infrastructure/persistence/engine.py",
+    "src/aconsole/core/infrastructure/persistence/search.py",
     "tests/core/test_persistence_a.py",
     "tests/core/test_migration_worker.py",
 )
@@ -52,7 +53,7 @@ def main(argv: list[str]) -> int:
     roots = [Path(arg) for arg in argv] or [Path("src"), Path("tests")]
     hits = scan(roots)
     for hit in hits:
-        sys.stdout.write(hit + "\n")
+        _ = sys.stdout.write(hit + "\n")
     return 1 if hits else 0
 
 

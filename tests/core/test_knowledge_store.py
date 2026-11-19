@@ -1,5 +1,8 @@
 """Knowledge and handovers live through a restart, and a write that fails is reported and leaves nothing behind."""
 
+# pyright: reportPrivateUsage=false
+# Existing integration tests inspect the board and share daemon fixtures.
+
 from __future__ import annotations
 
 import asyncio
@@ -19,6 +22,10 @@ from tests.core.test_wire import _connect, _daemon, _git_repo, _open, _stop
 
 if TYPE_CHECKING:
     from pathlib import Path
+
+    from sqlalchemy.orm import Session
+
+    from aconsole.core.application.ports.knowledge_store import StoredFact
 
 
 _STATEMENT = "INSERT"
@@ -87,4 +94,148 @@ def test_a_fact_that_fails_to_save_stays_out_of_memory(tmp_path: Path, monkeypat
             _ = board.kb_add(ctx, "decision", "T", "B", "s", [], None)
         assert board._facts == {}
     finally:
+        writer.stop()
+
+
+def fts_rows(session: Session, query: str | None = None) -> list[tuple[str, str, str]]:
+    from sqlalchemy import String, column, select, table
+
+    notes = table("note_fts", column("title", String), column("body", String), column("note_ref", String))
+    statement = select(notes.c.title, notes.c.body, notes.c.note_ref)
+    if query is not None:
+        statement = statement.where(column("note_fts").match(query))
+    return [(row[0], row[1], row[2]) for row in session.execute(statement)]
+
+
+def _fact() -> StoredFact:
+    from datetime import UTC, datetime
+
+    from aconsole.core.application.ports.knowledge_store import StoredFact
+
+    return StoredFact(
+        id="fact-1",
+        project_id="p",
+        kind="fact",
+        title="Кэш SQLite",
+        body="Транзакция café",
+        source="src/a.py#L1-2",
+        code_refs=(),
+        stale=False,
+        note_ref="aconsole://note/fact-1",
+        updated_at=datetime.now(UTC),
+    )
+
+
+def test_fact_fts_shares_transaction_and_deletion(tmp_path: Path) -> None:
+    from sqlalchemy.orm import Session
+
+    from aconsole.core.infrastructure.persistence.models import KbNode, Project
+
+    url = f"sqlite:///{tmp_path / 'fts.db'}"
+    migrate(url, "head")
+    engine = write_engine(url)
+    fact = _fact()
+    try:
+        with Session(engine) as session:
+            session.add(Project(id="p", name="P", root_path="/p", languages=[], created_at=fact.updated_at))
+            session.commit()
+            knowledge_repo.save_fact(session, fact, None)
+            assert fts_rows(session, "транзакция AND cafe") == [(fact.title, fact.body, fact.note_ref)]
+            session.rollback()
+            assert session.get(KbNode, fact.id) is None
+            assert fts_rows(session) == []
+            knowledge_repo.save_fact(session, fact, None)
+            session.commit()
+            row = session.get(KbNode, fact.id)
+            assert row is not None
+            session.delete(row)
+            session.flush()
+            assert fts_rows(session) == []
+            session.rollback()
+            assert fts_rows(session) == [(fact.title, fact.body, fact.note_ref)]
+            session.delete(session.get_one(Project, "p"))
+            session.commit()
+            assert fts_rows(session) == []
+    finally:
+        engine.dispose()
+
+
+def test_published_note_fts_is_atomic_and_replaces_text(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+
+    from aconsole.core.domain.vault_sync import Note
+    from aconsole.core.infrastructure.persistence.repositories import vault_files
+    from aconsole.core.infrastructure.persistence.repositories.vault_files import VaultFileDatabase
+
+    writer = _writer(tmp_path)
+    store = VaultFileDatabase(writer)
+    note = Note(title="Опубликовано", objective="Цель")
+    ref = "plans/plan-1/N-01.md"
+    rows: list[list[tuple[str, str, str]]] = []
+    from aconsole.core.infrastructure.persistence.search import replace_note
+
+    original = replace_note
+
+    def inspect_then_fail(session: Session, note_ref: str, title: str, body: str) -> None:
+        from aconsole.core.infrastructure.persistence.models import VaultFile
+
+        original(session, note_ref, title, body)
+        session.flush()
+        assert session.get(VaultFile, note_ref) is not None
+        assert fts_rows(session) == [(title, body, note_ref)]
+        message = "publication failed"
+        raise ValueError(message)
+
+    try:
+        monkeypatch.setattr(vault_files, "replace_note", inspect_then_fail)
+        with pytest.raises(ValueError, match="publication failed"):
+            store.save_publication(ref, note, ("front", "body", "protected"), "Черновик")
+        assert store.load() == {}
+        _ = writer.call(lambda session: rows.append(fts_rows(session)))
+        assert rows.pop() == []
+        monkeypatch.setattr(vault_files, "replace_note", original)
+        store.save_publication(ref, note, ("front", "body", "protected"), "Старый текст")
+        store.save_publication(ref, note, ("front2", "body2", "protected2"), "Новый текст")
+        _ = writer.call(lambda session: rows.append(fts_rows(session)))
+        assert rows.pop() == [(note.title, "Новый текст", ref)]
+        assert store.load()[ref] == note
+        assert store.matches(ref, "front2", "body2")
+        store.save_pending(ref, "Отложенный текст")
+        _ = writer.call(lambda session: rows.append(fts_rows(session)))
+        assert rows.pop() == [(note.title, "Новый текст", ref)]
+    finally:
+        writer.stop()
+
+
+def test_vault_sync_indexes_published_body(tmp_path: Path) -> None:
+    from aconsole.core.infrastructure.mcp.tools import NodeIn
+    from aconsole.core.infrastructure.persistence.repositories.vault_files import VaultFileDatabase
+    from aconsole.core.infrastructure.vault.sync import VaultSync
+
+    writer = _writer(tmp_path)
+    board = PlanBoard()
+    context = TabContext(tab_id="t", project_id="p", worktree=None, agent="claude")
+    plan = board.create(context, "Plan", "goal", [NodeIn(key="N-01", title="Заметка", objective="Содержимое")])
+    sync = VaultSync(board, bases=VaultFileDatabase(writer))
+    root = tmp_path / "vault"
+    root.mkdir()
+    rows: list[list[tuple[str, str, str]]] = []
+    try:
+        sync.use_root(root)
+        sync.stop()
+        sync.publish(plan.plan_id)
+        sync.publish(plan.plan_id)
+        _ = writer.call(lambda session: rows.append(fts_rows(session, "содержимое")))
+        result = rows.pop()
+        assert len(result) == 1
+        title, body, ref = result[0]
+        assert title == "Заметка"
+        assert "Содержимое" in body
+        assert ref == f"plans/{plan.plan_id}/N-01.md"
+        path = root / ref
+        _ = path.write_text(path.read_text() + "Чужой абзац\n")
+        sync.publish(plan.plan_id)
+        _ = writer.call(lambda session: rows.append(fts_rows(session)))
+        assert rows.pop() == result
+    finally:
+        sync.stop()
         writer.stop()

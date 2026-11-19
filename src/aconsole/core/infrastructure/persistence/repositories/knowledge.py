@@ -15,6 +15,7 @@ from sqlalchemy.orm import Session
 from aconsole.core.application.ports.knowledge_store import StoredFact, StoredHandover
 from aconsole.core.application.ports.plan_store import StoreWriteError
 from aconsole.core.infrastructure.persistence.models import Handover, KbEdge, KbEdgeKind, KbNode, KbType, Project, Tab
+from aconsole.core.infrastructure.persistence.search import replace_note
 from aconsole.core.infrastructure.persistence.writer import Writer
 
 _REF_PREFIX = "ref-"
@@ -74,6 +75,7 @@ def save_fact(session: Session, fact: StoredFact, supersedes: str | None) -> Non
         )
     )
     session.flush()
+    replace_note(session, fact.note_ref, fact.title[:_TITLE_LIMIT], fact.body)
     for ref in dict.fromkeys(fact.code_refs):
         target = _ref_node(session, fact, ref)
         session.add(KbEdge(src_id=fact.id, dst_id=target, kind=KbEdgeKind.CODE_REF, origin=_ORIGIN))

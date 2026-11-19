@@ -13,6 +13,7 @@ from sqlalchemy.orm import Session
 
 from aconsole.core.domain.vault_sync import Note
 from aconsole.core.infrastructure.persistence.models import VaultFile
+from aconsole.core.infrastructure.persistence.search import replace_note
 from aconsole.core.infrastructure.persistence.writer import Writer
 
 _KIND = "plan_node"
@@ -42,11 +43,11 @@ class VaultFileDatabase:
         return found
 
     def save(self, note_ref: str, note: Note) -> None:
-        self._save(note_ref, note, None, None)
+        self._save(note_ref, note, (None, None, None))
 
     def save_written(self, note_ref: str, note: Note, front_hash: str, body_hash: str) -> None:
         """Commit the merge base and the successfully published bytes together."""
-        self._save(note_ref, note, front_hash, body_hash)
+        self._save(note_ref, note, (front_hash, body_hash, None))
 
     def save_protected(
         self,
@@ -57,7 +58,17 @@ class VaultFileDatabase:
         protected_hash: str,
     ) -> None:
         """Publish hashes and merge base, clearing any previously deferred text."""
-        self._save(note_ref, note, front_hash, body_hash, protected_hash)
+        self._save(note_ref, note, (front_hash, body_hash, protected_hash))
+
+    def save_publication(
+        self,
+        note_ref: str,
+        note: Note,
+        hashes: tuple[str, str, str],
+        body: str,
+    ) -> None:
+        """Save the published text and its merge/echo baseline in one transaction."""
+        self._save(note_ref, note, hashes, body=body)
 
     def matches_protected(self, note_ref: str, body_hash: str, protected_hash: str) -> bool:
         """Legacy rows are trusted only when the exact last published body still matches."""
@@ -105,10 +116,11 @@ class VaultFileDatabase:
         self,
         note_ref: str,
         note: Note,
-        front_hash: str | None,
-        body_hash: str | None,
-        protected_hash: str | None = None,
+        hashes: tuple[str | None, str | None, str | None],
+        *,
+        body: str | None = None,
     ) -> None:
+        front_hash, body_hash, protected_hash = hashes
         at = self._now()
         base: dict[str, object] = asdict(note)
         if protected_hash is not None:
@@ -125,6 +137,8 @@ class VaultFileDatabase:
             row.last_writer = _CORE
             row.pending_write = None
             row.synced_at = at
+            if body is not None:
+                replace_note(session, note_ref, note.title, body)
 
         _ = self._writer.call(store)
 

@@ -109,6 +109,19 @@ class ProtectedStore(WrittenStore, Protocol):
     def save_pending(self, note_ref: str, text: str) -> None: ...
 
 
+@runtime_checkable
+class PublicationStore(ProtectedStore, Protocol):
+    """Store published body text together with its durable baseline."""
+
+    def save_publication(
+        self,
+        note_ref: str,
+        note: Note,
+        hashes: tuple[str, str, str],
+        body: str,
+    ) -> None: ...
+
+
 @final
 class VaultSync:
     """Runs on one thread of its own: `publish` and the watcher's calls must not overlap."""
@@ -281,7 +294,9 @@ class VaultSync:
 
     def _remember(self, ref: str, note: Note, text: str) -> None:
         protected = protected_body_hash(text)
-        if isinstance(self._bases, ProtectedStore):
+        if isinstance(self._bases, PublicationStore):
+            self._bases.save_publication(ref, note, (*note_hashes(text), protected), split_note(text)[1])
+        elif isinstance(self._bases, ProtectedStore):
             self._bases.save_protected(ref, note, *note_hashes(text), protected)
         elif isinstance(self._bases, WrittenStore):
             self._bases.save_written(ref, note, *note_hashes(text))

@@ -228,3 +228,70 @@ def test_code_file_hashes_round_trip_keeps_module_identity_and_fact_edges(tmp_pa
             assert edge.origin == "fact"
     finally:
         engine.dispose()
+
+
+def test_note_fts_upgrade_and_downgrade_preserve_source_rows(tmp_path: Path) -> None:  # noqa: PLR0915 -- verify both sides of the migration
+    from datetime import UTC, datetime
+
+    from alembic import command
+    from alembic.config import Config
+    from sqlalchemy import select
+    from sqlalchemy.orm import Session
+
+    from aconsole.core.infrastructure.persistence.engine import MIGRATIONS
+    from aconsole.core.infrastructure.persistence.models import KbNode, KbType, Project
+    from aconsole.core.infrastructure.persistence.search import replace_note
+    from tests.core.test_knowledge_store import fts_rows
+
+    url = f"sqlite:///{tmp_path / 'note-fts.db'}"
+    migrate(url, "0012_code_file_hashes")
+    engine = write_engine(url)
+    now = datetime.now(UTC)
+    try:
+        with Session(engine) as session:
+            session.add(Project(id="p", name="P", root_path="/p", languages=[], created_at=now))
+            session.flush()
+            session.add(
+                KbNode(
+                    id="fact",
+                    project_id="p",
+                    node_type=KbType.FACT,
+                    title="До миграции",
+                    body="Тело",
+                    note_ref="fact-ref",
+                    is_stale=False,
+                    updated_at=now,
+                )
+            )
+            session.commit()
+    finally:
+        engine.dispose()
+    migrate(url, "head")
+    engine = write_engine(url)
+    try:
+        assert "note_fts" in inspect(engine).get_table_names()
+        with Session(engine) as session:
+            replace_note(session, "fact-ref", "До миграции", "Тело")
+            session.commit()
+            assert fts_rows(session, "тело") == [("До миграции", "Тело", "fact-ref")]
+    finally:
+        engine.dispose()
+    cfg = Config()
+    cfg.set_main_option("script_location", str(MIGRATIONS))
+    cfg.set_main_option("sqlalchemy.url", url)
+    command.downgrade(cfg, "0012_code_file_hashes")
+    engine = write_engine(url)
+    try:
+        assert not any(name.startswith("note_fts") for name in inspect(engine).get_table_names())
+        with Session(engine) as session:
+            assert session.scalar(select(KbNode.body)) == "Тело"
+    finally:
+        engine.dispose()
+    migrate(url, "head")
+    engine = write_engine(url)
+    try:
+        with Session(engine) as session:
+            assert fts_rows(session) == []
+            assert session.scalar(select(KbNode.title)) == "До миграции"
+    finally:
+        engine.dispose()
