@@ -2,8 +2,19 @@
 
 from __future__ import annotations
 
+import sqlite3
+
+import msgspec
 from sqlalchemy import Connection
+from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Session
+
+_MATCH_ERRORS = (
+    "fts5: syntax error",
+    "fts5: parser stack overflow",
+    "no such column: ",
+    "unknown special query:",
+)
 
 
 def create_index(connection: Connection) -> None:
@@ -34,3 +45,34 @@ def replace_note(session: Session, note_ref: str, title: str, body: str) -> None
     _ = connection.exec_driver_sql(
         "INSERT INTO note_fts (title, body, note_ref) VALUES (?, ?, ?)", (title, body, note_ref)
     )
+
+
+def search_facts(session: Session, project_id: str, query: str, limit: int) -> tuple[list[str], frozenset[str]]:
+    """Read ranked matches and the project's unindexed fact IDs in one transaction."""
+    connection = session.connection()
+    try:
+        matches = connection.exec_driver_sql(
+            """SELECT k.id FROM note_fts
+               JOIN kb_nodes AS k ON k.note_ref = note_fts.note_ref
+               WHERE note_fts MATCH ? AND k.project_id = ?
+               ORDER BY bm25(note_fts), k.id LIMIT ?""",
+            (query, project_id, limit),
+        )
+        ranked = msgspec.convert(matches.scalars().all(), type=list[str])
+    except OperationalError as exc:
+        original = exc.orig
+        if isinstance(original, sqlite3.OperationalError) and original.sqlite_errorcode == sqlite3.SQLITE_ERROR:
+            message = str(original)
+            if message == "unterminated string" or message.startswith(_MATCH_ERRORS):
+                return [], frozenset()
+        raise
+
+    if len(ranked) == limit:
+        return ranked, frozenset()
+    legacy = connection.exec_driver_sql(
+        """SELECT id FROM kb_nodes WHERE project_id = ?
+           AND (note_ref IS NULL OR note_ref NOT IN
+               (SELECT note_ref FROM note_fts WHERE note_ref IS NOT NULL))""",
+        (project_id,),
+    )
+    return ranked, msgspec.convert(legacy.scalars().all(), type=frozenset[str])

@@ -40,6 +40,10 @@ class KnowledgeStore(Protocol):
         """Every fact and handover, oldest first."""
         ...
 
+    def search(self, project_id: str, query: str, limit: int) -> tuple[list[str], frozenset[str]]:
+        """Return ranked fact IDs and IDs eligible for legacy substring search."""
+        ...
+
     def save_fact(self, fact: StoredFact, supersedes: str | None) -> None:
         """Commit a new fact and mark the one it replaces stale, or raise `StoreWriteError`."""
         ...

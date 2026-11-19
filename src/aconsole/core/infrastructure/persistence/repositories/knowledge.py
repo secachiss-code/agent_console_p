@@ -15,7 +15,7 @@ from sqlalchemy.orm import Session
 from aconsole.core.application.ports.knowledge_store import StoredFact, StoredHandover
 from aconsole.core.application.ports.plan_store import StoreWriteError
 from aconsole.core.infrastructure.persistence.models import Handover, KbEdge, KbEdgeKind, KbNode, KbType, Project, Tab
-from aconsole.core.infrastructure.persistence.search import replace_note
+from aconsole.core.infrastructure.persistence.search import replace_note, search_facts
 from aconsole.core.infrastructure.persistence.writer import Writer
 
 _REF_PREFIX = "ref-"
@@ -39,6 +39,11 @@ class KnowledgeDatabase:
             found.append((load_facts(session), load_handovers(session)))
 
         _ = self._writer.call(collect)
+        return found[0]
+
+    def search(self, project_id: str, query: str, limit: int) -> tuple[list[str], frozenset[str]]:
+        found: list[tuple[list[str], frozenset[str]]] = []
+        _ = self._writer.call(lambda session: found.append(search_facts(session, project_id, query, limit)))
         return found[0]
 
     def save_fact(self, fact: StoredFact, supersedes: str | None) -> None:

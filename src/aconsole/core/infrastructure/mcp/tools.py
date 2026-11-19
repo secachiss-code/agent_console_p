@@ -1807,16 +1807,32 @@ class PlanBoard:
         if node_id is not None:
             _stored, meta = self._node(ctx, node_id)
             paths = meta.paths
-        needle = "" if query is None else query.casefold()
-        matched = [
-            item for item in self._facts.values() if item.project_id == ctx.project_id and _hit(item, needle, paths)
-        ]
-        matched.sort(key=lambda item: (item.stale, item.title))
+        if query and self._knowledge is not None:
+            ranked, unindexed = self._knowledge.search(ctx.project_id, query, max_items + 1)
+            matched = [self._facts[kb_id] for kb_id in ranked if kb_id in self._facts]
+            if unindexed:
+                matched.extend(self._substring_facts(ctx.project_id, query.casefold(), paths, unindexed))
+        else:
+            matched = self._substring_facts(ctx.project_id, query.casefold() if query else "", paths)
         chosen = matched[:max_items]
         return CtxResult(
             items=[_item(fact) for fact in chosen],
             truncated=len(matched) > max_items,
             verified_commit=_verified(ctx.worktree),
+        )
+
+    def _substring_facts(
+        self, project_id: str, needle: str, paths: tuple[str, ...], eligible: frozenset[str] | None = None
+    ) -> list[_Fact]:
+        return sorted(
+            (
+                fact
+                for fact in self._facts.values()
+                if fact.project_id == project_id
+                and (eligible is None or fact.kb_id in eligible)
+                and _hit(fact, needle, paths)
+            ),
+            key=lambda fact: (fact.stale, fact.title),
         )
 
     def _write_handover(  # noqa: PLR0913, PLR0917 -- the handover packet is one write
