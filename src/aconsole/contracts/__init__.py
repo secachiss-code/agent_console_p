@@ -5,5 +5,6 @@ from aconsole.contracts.methods import METHODS
 from aconsole.contracts.pipeline import HandoffEnvelope, StateBlock
 
 API_VERSION = "1.6.0"
+PREFLIGHT_CAPABILITY = "preflight.v1"
 
-__all__ = ["API_VERSION", "ERRORS", "METHODS", "HandoffEnvelope", "StateBlock"]
+__all__ = ["API_VERSION", "ERRORS", "METHODS", "PREFLIGHT_CAPABILITY", "HandoffEnvelope", "StateBlock"]

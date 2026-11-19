@@ -1,5 +1,8 @@
 """Gate commands stay in the selected container and use trusted argv only."""
 
+# pyright: reportPrivateUsage=false
+# The timeout probe intentionally overrides the runner's internal deadline.
+
 import os
 from pathlib import Path
 
@@ -22,15 +25,22 @@ class _LiveReport(msgspec.Struct, frozen=True):
 
 def _runner(tmp_path: Path, *, code: int = 0, running: bool = True) -> ContainerGateRunner:
     binary = tmp_path / "podman"
-    binary.write_text(
-        "#!/usr/bin/python3\n"
-        "import json, sys\n"
-        "if sys.argv[1] == 'inspect':\n"
-        f" print(json.dumps([dict(Id='container', Name='container', State=dict(Running={running!r}))]))\n"
-        "else:\n"
-        " print(json.dumps(sys.argv[1:]))\n"
-        " print('error: ' + 'x' * 1100000)\n"
-        f" sys.exit({code})\n"
+    _ = binary.write_text(
+        "\n".join(
+            (
+                "#!/usr/bin/python3",
+                "import json, sys",
+                "if '{{.Image}}' in sys.argv:",
+                " print('sha256:' + 'a' * 64)",
+                "elif sys.argv[1] == 'inspect':",
+                f" print(json.dumps([dict(Id='container', Name='container', State=dict(Running={running!r}))]))",
+                "else:",
+                " print(json.dumps(sys.argv[1:]))",
+                " print('error: ' + 'x' * 1100000)",
+                f" sys.exit({code})",
+                "",
+            )
+        )
     )
     binary.chmod(0o700)
     return ContainerGateRunner(
@@ -46,7 +56,7 @@ def _runner(tmp_path: Path, *, code: int = 0, running: bool = True) -> Container
 def test_only_exact_profile_argv_can_run(tmp_path: Path) -> None:
     runner = _runner(tmp_path)
     with pytest.raises(ValueError, match="frozen profile"):
-        runner.run(("pytest", "--override-ini", "anything"), tier=1)
+        _ = runner.run(("pytest", "--override-ini", "anything"), tier=1)
     assert not (tmp_path / "aconsole/gates").exists()
 
 
@@ -72,7 +82,7 @@ def test_timeout_verdict_is_compact(tmp_path: Path, code: int) -> None:
 
 def test_stopped_container_is_unavailable(tmp_path: Path) -> None:
     with pytest.raises(GateRunnerUnavailableError, match="GATE_RUNNER_UNAVAILABLE"):
-        _runner(tmp_path, running=False).run(("pytest", "tests/core"), tier=1)
+        _ = _runner(tmp_path, running=False).run(("pytest", "tests/core"), tier=1)
     assert not (tmp_path / "aconsole/gates").exists()
 
 
@@ -80,13 +90,13 @@ def test_missing_podman_never_falls_back_to_host(tmp_path: Path) -> None:
     runner = _runner(tmp_path)
     (tmp_path / "podman").unlink()
     with pytest.raises(GateRunnerUnavailableError):
-        runner.run(("pytest", "tests/core"), tier=1)
+        _ = runner.run(("pytest", "tests/core"), tier=1)
 
 
 def test_invalid_utf8_still_obeys_output_byte_limit(tmp_path: Path) -> None:
     runner = _runner(tmp_path)
     binary = tmp_path / "podman"
-    binary.write_text(
+    _ = binary.write_text(
         binary.read_text().replace(
             "print('error: ' + 'x' * 1100000)", "sys.stdout.flush(); sys.stdout.buffer.write(b'\\xff' * 1100000)"
         )
@@ -99,7 +109,7 @@ def test_invalid_utf8_still_obeys_output_byte_limit(tmp_path: Path) -> None:
 
 def test_invalid_tier_is_rejected_before_execution(tmp_path: Path) -> None:
     with pytest.raises(ValueError, match="gate tier"):
-        _runner(tmp_path).run(("pytest", "tests/core"), tier=0)
+        _ = _runner(tmp_path).run(("pytest", "tests/core"), tier=0)
     assert not (tmp_path / "aconsole/gates").exists()
 
 
@@ -145,3 +155,50 @@ def test_live_container_timeout_kills_process_group(tmp_path: Path, monkeypatch:
         "and p.read_text().split(') ')[1][0] != 'Z'])"
     )
     assert podman.run_in(container, user, ("/usr/bin/python3", "-c", probe)).strip() == "[]"
+
+
+def test_preflight_binds_only_scratch_and_uses_image(tmp_path: Path) -> None:
+    root = tmp_path / "scratch"
+    source = root / "copy"
+    source.mkdir(parents=True)
+    results = _runner(tmp_path).preflight(source, root, (("pytest", "tests/core"),))
+    argv = msgspec.json.decode(results[0].output.splitlines()[0], type=list[str])
+    assert argv[0] == "run"
+    assert argv.count("--mount") == 1
+    assert argv[argv.index("--mount") + 1] == f"type=bind,src={source},dst=/tmp/aconsole-preflight,rw"
+    assert "--read-only" in argv
+    assert "--network=none" in argv
+    assert "--pull=never" in argv
+    assert "sha256:" + "a" * 64 in argv
+    assert "/work tree" not in argv
+
+
+@pytest.mark.parametrize("kind", ["parent", "outside", "symlink", "comma"])
+def test_preflight_rejects_invalid_mount_before_execution(tmp_path: Path, kind: str) -> None:
+    root = tmp_path / "scratch"
+    root.mkdir()
+    source = root / "copy"
+    source.mkdir()
+    if kind == "parent":
+        source = root / "copy/../copy"
+    elif kind == "outside":
+        source = tmp_path
+    elif kind == "symlink":
+        link = root / "link"
+        link.symlink_to(source, target_is_directory=True)
+        source = link
+    else:
+        source = root / "with,comma"
+        source.mkdir()
+    with pytest.raises(ValueError, match="mount"):
+        _ = _runner(tmp_path).preflight(source, root, (("pytest", "tests/core"),))
+    assert not (tmp_path / "aconsole/gates").exists()
+
+
+def test_preflight_stopped_container_has_no_host_fallback(tmp_path: Path) -> None:
+    root = tmp_path / "scratch"
+    source = root / "copy"
+    source.mkdir(parents=True)
+    with pytest.raises(GateRunnerUnavailableError):
+        _ = _runner(tmp_path, running=False).preflight(source, root, (("pytest", "tests/core"),))
+    assert not (tmp_path / "aconsole/gates").exists()

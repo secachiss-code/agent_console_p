@@ -1,11 +1,13 @@
 """Lease-authorized L2 execution. Every step advances one durable chain, never the graph."""
 
 from collections.abc import Callable
+from contextlib import AbstractContextManager
 from dataclasses import dataclass
 from pathlib import Path
 from threading import RLock
 from typing import Literal, Protocol, final
 
+from aconsole.core.application.ports.gate_runner import GateRunnerUnavailableError
 from aconsole.core.application.services.context_shaper import (
     ContextSession,
     ContextShaper,
@@ -102,6 +104,16 @@ class PipelineScratch(Protocol):
     def record(self, contract: PipelineContract, actor: PipelineActor, state: PipelineState) -> None: ...
 
 
+class PreparedPatch(Protocol):
+    @property
+    def passed(self) -> bool: ...
+
+    @property
+    def verdict(self) -> str: ...
+
+    def publish(self) -> None: ...
+
+
 @final
 class PipelineService:
     def __init__(  # noqa: PLR0913 -- explicit ports keep execution and storage out of application policy
@@ -115,6 +127,8 @@ class PipelineService:
         micro: Callable[[PipelineActor, PipelineContract, Attempt, MicroRequest], MicroOutcome],
         blast: Callable[[PipelineActor, PipelineContract, Attempt, MicroRequest, bool], MicroOutcome | None]
         | None = None,
+        preflight: Callable[[PipelineActor, PipelineContract, str], AbstractContextManager[PreparedPatch]]
+        | None = None,
     ) -> None:
         self._book = book
         self._store = store
@@ -123,6 +137,7 @@ class PipelineService:
         self._shaper = shaper
         self._micro = micro
         self._blast = blast
+        self._preflight = preflight
         self._guard = RLock()
         self._locks: dict[str, RLock] = {}
 
@@ -187,24 +202,28 @@ class PipelineService:
             file_slice=sliced,
         ).payload()
 
-    def submit(
+    def submit(  # noqa: PLR0913 -- compatible step API plus optional patch
         self,
         actor: PipelineActor,
         node_id: str,
         fence: int,
         step: Step,
         affected_symbols: tuple[str, ...] = (),
+        *,
+        patch: str | None = None,
     ) -> dict[str, object]:
         with self._lock(node_id):
-            return self._submit(actor, node_id, fence, step, affected_symbols)
+            return self._submit(actor, node_id, fence, step, affected_symbols, patch=patch)
 
-    def _submit(
+    def _submit(  # noqa: C901, PLR0913 -- authorize, preflight, then advance one durable step
         self,
         actor: PipelineActor,
         node_id: str,
         fence: int,
         step: Step,
         affected_symbols: tuple[str, ...],
+        *,
+        patch: str | None = None,
     ) -> dict[str, object]:
         _execute(actor)
         contract, attempt = self._active(actor, node_id, fence)
@@ -213,6 +232,19 @@ class PipelineService:
         blocks = self._store.blocks(attempt.id)
         if state.step != step and (not blocks or blocks[-1].step_type != step):
             raise DomainError(code=4017, name="STEP_OUT_OF_ORDER", retryable=False)
+        if patch:
+            if len(patch.encode("utf-8")) > 256 * 1024 or "\x00" in patch:
+                raise DomainError(code=4013, name="NODE_CONTRACT", retryable=False)
+            if state.step != step:
+                raise DomainError(code=4017, name="STEP_OUT_OF_ORDER", retryable=False)
+            if self._preflight is None:
+                raise GateRunnerUnavailableError
+            with self._preflight(actor, contract, patch) as prepared:
+                if not prepared.passed:
+                    return {"passed": False, "compact_verdict": prepared.verdict[:499]}
+                _ = self._book.contract(actor, node_id, fence)
+                self._book.scope(actor, node_id, fence)
+                prepared.publish()
         snapshot = self._workspace.capture(actor, contract, attempt, state.seq)
         if blocks and blocks[-1].step_type == step:
             previous = blocks[-1]

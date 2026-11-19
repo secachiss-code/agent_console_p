@@ -1,5 +1,8 @@
 """Real Git, SQLite, disposable cache and MCP around a recording container runner."""
 
+# pyright: reportPrivateUsage=false
+# Integration tests intentionally reuse test helpers and inspect kernel internals.
+
 from __future__ import annotations
 
 import asyncio
@@ -24,7 +27,7 @@ from aconsole.core.infrastructure.codegraph.runner import ExtractorRunner
 from aconsole.core.infrastructure.ipc.ring import EventRing
 from aconsole.core.infrastructure.ipc.session import Connection
 from aconsole.core.infrastructure.mcp.server import build_server
-from aconsole.core.infrastructure.mcp.tools import NodeIn, PlanBoard, TabContext
+from aconsole.core.infrastructure.mcp.tools import NodeIn, PlanBoard, TabContext, _ToolError
 from aconsole.core.infrastructure.persistence.cache.store import CacheStore
 from aconsole.core.infrastructure.persistence.engine import migrate, write_engine
 from aconsole.core.infrastructure.persistence.repositories.attempts import AttemptDatabase
@@ -39,7 +42,7 @@ from tests.core.test_tabs_restore import _row
 lazy from aconsole.core.domain.pipeline import StateBlock
 
 _AT = datetime(2026, 11, 16, tzinfo=UTC)
-_PROFILE = {
+_PROFILE: dict[str, object] = {
     "environment": {"container": "sealed-gates", "image": "sha256:" + "a" * 64},
     "micro": {
         "format": ["ruff", "format"],
@@ -47,7 +50,7 @@ _PROFILE = {
         "lint": ["ruff", "check"],
         "types": ["basedpyright"],
         "tests": ["pytest"],
-    }
+    },
 }
 
 
@@ -62,6 +65,18 @@ class _Runner:
     unavailable: bool = False
     calls: list[tuple[str, ...]] = field(default_factory=list)
 
+    def preflight(self, source: Path, root: Path, commands: tuple[tuple[str, ...], ...]) -> tuple[GateResult, ...]:
+        assert source.is_relative_to(root)
+        assert (self.repo / "src/a.py").read_text() == "VALUE = 1\n"
+        staged = replace(self, repo=source)
+        results: list[GateResult] = []
+        for command in commands:
+            result = staged.run(command, tier=1)
+            results.append(result)
+            if result.returncode:
+                break
+        return tuple(results)
+
     def run(self, argv: tuple[str, ...], *, tier: int) -> GateResult:
         assert tier in {1, 2}
         if self.unavailable:
@@ -72,7 +87,7 @@ class _Runner:
                 path = self.repo / name
                 text = path.read_text()
                 if not text.endswith("\n\n"):
-                    path.write_text(text + "\n")
+                    _ = path.write_text(text + "\n")
         failed = self.fail and argv[:2] == ("ruff", "check") and "--fix" not in argv
         return GateResult(
             argv=argv,
@@ -115,6 +130,7 @@ class _Harness:
             shaper=ContextShaper(cache),
             micro=runtime.run,
             blast=runtime.blast,
+            preflight=runtime.preflight,
         )
         self.board.pipeline_actor = lambda _tab: self.actor
 
@@ -140,13 +156,13 @@ class _Harness:
 def pipeline(tmp_path: Path) -> Iterator[_Harness]:
     repo = tmp_path / "repo"
     repo.mkdir()
-    _git(repo, "init", "-q", "-b", "main")
+    _ = _git(repo, "init", "-q", "-b", "main")
     for name, body in (("src/a.py", "VALUE = 1\n"), ("tests/test_a.py", "from src.a import VALUE\n")):
         path = repo / name
         path.parent.mkdir(exist_ok=True)
-        path.write_text(body)
-    _git(repo, "add", ".")
-    _git(repo, "commit", "-qm", "base")
+        _ = path.write_text(body)
+    _ = _git(repo, "add", ".")
+    _ = _git(repo, "commit", "-qm", "base")
     url = f"sqlite:///{tmp_path / 'state.db'}"
     migrate(url, "head")
     engine = write_engine(url)
@@ -192,7 +208,7 @@ def pipeline(tmp_path: Path) -> Iterator[_Harness]:
             ),
         ],
     )
-    board.freeze(created.plan_id, {"C-1": ()}, graph_present=True)
+    _ = board.freeze(created.plan_id, {"C-1": ()}, graph_present=True)
     node = created.nodes[1].node_id
     claim = board.claim(ctx, node)
     actor = PipelineActor(
@@ -228,7 +244,7 @@ def pipeline(tmp_path: Path) -> Iterator[_Harness]:
 def test_full_chain_replays_and_stale_fence_is_rejected(pipeline: _Harness) -> None:
     async def scenario() -> None:
         async with Client(build_server(pipeline.board, pipeline.context())) as client:
-            params = {"node_id": pipeline.node, "fence": pipeline.fence}
+            params: dict[str, object] = {"node_id": pipeline.node, "fence": pipeline.fence}
             first = await _call(client, "step_begin", params)
             assert "direction_prefix" in first
             assert list(first)[-3:] == ["lease_id", "fence", "expires_at"]
@@ -238,9 +254,9 @@ def test_full_chain_replays_and_stale_fence_is_rejected(pipeline: _Harness) -> N
             assert again["contract"] == first["contract"]
             for step in ("spec", "patch", "test", "verify"):
                 if step == "patch":
-                    (pipeline.repo / "src/a.py").write_text("VALUE = 2\n")
+                    _ = (pipeline.repo / "src/a.py").write_text("VALUE = 2\n")
                 if step == "test":
-                    (pipeline.repo / "tests/test_a.py").write_text("from src.a import VALUE\nassert VALUE == 2\n")
+                    _ = (pipeline.repo / "tests/test_a.py").write_text("from src.a import VALUE\nassert VALUE == 2\n")
                 submitted = await _call(client, "step_submit", {**params, "step": step})
                 calls = len(pipeline.runner.calls)
                 assert await _call(client, "step_submit", {**params, "step": step}) == submitted
@@ -270,11 +286,11 @@ def test_full_chain_replays_and_stale_fence_is_rejected(pipeline: _Harness) -> N
 
 
 def test_cache_loss_and_core_restart_resume_durable_chain(pipeline: _Harness) -> None:
-    params = {"node_id": pipeline.node, "fence": pipeline.fence}
+    params: dict[str, object] = {"node_id": pipeline.node, "fence": pipeline.fence}
 
     async def first() -> str:
         async with Client(build_server(pipeline.board, pipeline.context())) as client:
-            await _call(client, "step_begin", params)
+            _ = await _call(client, "step_begin", params)
             return str((await _call(client, "step_submit", {**params, "step": "spec"}))["block_hash"])
 
     digest = asyncio.run(first())
@@ -297,9 +313,9 @@ def test_cache_loss_and_core_restart_resume_durable_chain(pipeline: _Harness) ->
 def test_outside_scope_never_advances_and_test_edit_requires_review(pipeline: _Harness, outside: str) -> None:
     async def scenario() -> None:
         async with Client(build_server(pipeline.board, pipeline.context())) as client:
-            params = {"node_id": pipeline.node, "fence": pipeline.fence}
-            await _call(client, "step_begin", params)
-            (pipeline.repo / outside).write_text("outside\n")
+            params: dict[str, object] = {"node_id": pipeline.node, "fence": pipeline.fence}
+            _ = await _call(client, "step_begin", params)
+            _ = (pipeline.repo / outside).write_text("outside\n")
             denied = await client.call_tool("step_submit", {**params, "step": "spec"})
             assert _error(denied)["reason"] == "SCOPE_VIOLATION"
 
@@ -313,14 +329,14 @@ def test_outside_scope_never_advances_and_test_edit_requires_review(pipeline: _H
 def test_reset_restores_only_scope_and_preserves_green_snapshot(pipeline: _Harness) -> None:
     async def scenario() -> None:
         async with Client(build_server(pipeline.board, pipeline.context())) as client:
-            params = {"node_id": pipeline.node, "fence": pipeline.fence}
-            await _call(client, "step_begin", params)
+            params: dict[str, object] = {"node_id": pipeline.node, "fence": pipeline.fence}
+            _ = await _call(client, "step_begin", params)
             for step in ("spec", "patch", "test", "verify"):
-                await _call(client, "step_submit", {**params, "step": step})
+                _ = await _call(client, "step_submit", {**params, "step": step})
             good = (pipeline.repo / "src/a.py").read_text()
-            (pipeline.repo / "src/a.py").write_text("changed\n")
-            (pipeline.repo / "src/new.py").write_text("new\n")
-            (pipeline.repo / "outside.txt").write_text("keep me\n")
+            _ = (pipeline.repo / "src/a.py").write_text("changed\n")
+            _ = (pipeline.repo / "src/new.py").write_text("new\n")
+            _ = (pipeline.repo / "outside.txt").write_text("keep me\n")
             reset = await _call(client, "step_reset", params)
             assert (pipeline.repo / "src/a.py").read_text() == good
             assert not (pipeline.repo / "src/new.py").exists()
@@ -338,14 +354,14 @@ def test_failed_micro_gate_consumes_durable_budget_without_fifth_attempt(pipelin
 
     async def scenario() -> None:
         async with Client(build_server(pipeline.board, pipeline.context())) as client:
-            params = {"node_id": pipeline.node, "fence": pipeline.fence}
+            params: dict[str, object] = {"node_id": pipeline.node, "fence": pipeline.fence}
             for attempt in range(1, 5):
-                await _call(client, "step_begin", params)
+                _ = await _call(client, "step_begin", params)
                 if attempt == 1:
-                    await _call(client, "step_submit", {**params, "step": "spec"})
-                (pipeline.repo / "src/a.py").write_text(f"VALUE = {attempt + 1}\n")
+                    _ = await _call(client, "step_submit", {**params, "step": "spec"})
+                _ = (pipeline.repo / "src/a.py").write_text(f"VALUE = {attempt + 1}\n")
                 for step in ("patch", "test"):
-                    await _call(client, "step_submit", {**params, "step": step})
+                    _ = await _call(client, "step_submit", {**params, "step": step})
                 failed = await _call(client, "step_submit", {**params, "step": "verify"})
                 assert failed["passed"] is False
                 assert failed["exhausted"] == (attempt == 4)
@@ -413,8 +429,8 @@ def test_attention_is_sent_only_to_clients_negotiating_hdag(*, capable: bool) ->
     ring = EventRing()
     connection = Connection(ring, host_namespace=True)
     capabilities = frozenset({"events.v1", "hdag.v1"}) if capable else frozenset({"events.v1"})
-    connection.receive(_init(caps=capabilities))
-    connection.receive(_subscribe(2, 0))
+    _ = connection.receive(_init(caps=capabilities))
+    _ = connection.receive(_subscribe(2, 0))
     event = PlanAttention(plan_id=PlanId("p"), node_id=NodeId("n"), kind="verify", reason="Gate required")
     frames = connection.deliver(ring.append(event, _AT))
     assert bool(frames) is capable
@@ -423,8 +439,8 @@ def test_attention_is_sent_only_to_clients_negotiating_hdag(*, capable: bool) ->
 def test_unavailable_container_does_not_consume_an_attempt(pipeline: _Harness) -> None:
     async def scenario() -> None:
         async with Client(build_server(pipeline.board, pipeline.context())) as client:
-            params = {"node_id": pipeline.node, "fence": pipeline.fence}
-            await _call(client, "step_begin", params)
+            params: dict[str, object] = {"node_id": pipeline.node, "fence": pipeline.fence}
+            _ = await _call(client, "step_begin", params)
             pipeline.runner.unavailable = True
             unavailable = await client.call_tool("step_submit", {**params, "step": "spec"})
             assert _error(unavailable)["reason"] == "GATE_RUNNER_UNAVAILABLE"
@@ -455,16 +471,16 @@ def test_writer_rejects_lease_reclaimed_after_step_authorization(
         actor: PipelineActor,
         contract: PipelineContract,
     ) -> str:
-        pipeline.board.update(pipeline.context(), pipeline.node, pipeline.fence, "pending", None, None)
-        pipeline.board.claim(pipeline.context(), pipeline.node)
+        _ = pipeline.board.update(pipeline.context(), pipeline.node, pipeline.fence, "pending", None, None)
+        _ = pipeline.board.claim(pipeline.context(), pipeline.node)
         return original(storage, attempt_id, block, actor=actor, contract=contract)
 
     monkeypatch.setattr(PipelineStorage, "append", racing_append)
 
     async def scenario() -> None:
         async with Client(build_server(pipeline.board, pipeline.context())) as client:
-            params = {"node_id": pipeline.node, "fence": pipeline.fence}
-            await _call(client, "step_begin", params)
+            params: dict[str, object] = {"node_id": pipeline.node, "fence": pipeline.fence}
+            _ = await _call(client, "step_begin", params)
             denied = await client.call_tool("step_submit", {**params, "step": "spec"})
             assert _error(denied)["reason"] == "LEASE_STALE_FENCE"
 
@@ -477,7 +493,7 @@ def test_writer_rejects_lease_reclaimed_after_step_authorization(
 def test_parallel_replays_create_one_attempt_and_one_block(pipeline: _Harness) -> None:
     async def scenario() -> None:
         async with Client(build_server(pipeline.board, pipeline.context())) as client:
-            params = {"node_id": pipeline.node, "fence": pipeline.fence}
+            params: dict[str, object] = {"node_id": pipeline.node, "fence": pipeline.fence}
             begins = await asyncio.gather(_call(client, "step_begin", params), _call(client, "step_begin", params))
             assert sum("direction_prefix" in begun for begun in begins) == 1
             submitted = await asyncio.gather(
@@ -490,3 +506,89 @@ def test_parallel_replays_create_one_attempt_and_one_block(pipeline: _Harness) -
     store = PipelineStorage(pipeline.writer)
     assert len(store.history(pipeline.node)) == 1
     assert len(store.blocks(store.history(pipeline.node)[0].id)) == 1
+
+
+_PATCH = "--- a/src/a.py\n+++ b/src/a.py\n@@ -1 +1 @@\n-VALUE = 1\n+VALUE = 2\n"
+
+
+@pytest.mark.parametrize("fail", [False, True])
+def test_patch_checks_copies_before_publication(pipeline: _Harness, *, fail: bool) -> None:
+    board, ctx = pipeline.board, pipeline.context()
+    _ = board.pipeline_step(ctx, "begin", pipeline.node, pipeline.fence)
+    pipeline.runner.fail = fail
+    reply = board.pipeline_step(ctx, "submit", pipeline.node, pipeline.fence, step="spec", patch=_PATCH).root
+    assert reply["passed"] is not fail
+    original = (pipeline.repo / "src/a.py").read_text()
+    assert original == "VALUE = 1\n" if fail else original.startswith("VALUE = 2\n")
+    assert all(command[0] != "pytest" or "--version" in command for command in pipeline.runner.calls)
+
+
+@pytest.mark.parametrize("name", ["outside.py", "../escape.py", "/absolute.py", "src/../../escape.py"])
+def test_patch_rejects_outside_scope_without_writes(pipeline: _Harness, name: str) -> None:
+    board, ctx = pipeline.board, pipeline.context()
+    _ = board.pipeline_step(ctx, "begin", pipeline.node, pipeline.fence)
+    patch = f"--- /dev/null\n+++ b/{name}\n@@ -0,0 +1 @@\n+BAD = 1\n"
+    before = _git(pipeline.repo, "status", "--porcelain")
+    with pytest.raises(_ToolError, match=r"SCOPE_VIOLATION|NODE_CONTRACT"):
+        _ = board.pipeline_step(ctx, "submit", pipeline.node, pipeline.fence, patch=patch)
+    assert _git(pipeline.repo, "status", "--porcelain") == before
+    assert not (pipeline.repo.parent / "escape.py").exists()
+
+
+@pytest.mark.parametrize("patch", ["not a diff", "я" * (130 * 1024)], ids=["malformed", "utf8-oversize"])
+def test_patch_contract_validation(pipeline: _Harness, patch: str) -> None:
+    board, ctx = pipeline.board, pipeline.context()
+    _ = board.pipeline_step(ctx, "begin", pipeline.node, pipeline.fence)
+    with pytest.raises(_ToolError, match="NODE_CONTRACT"):
+        _ = board.pipeline_step(ctx, "submit", pipeline.node, pipeline.fence, patch=patch)
+    assert (pipeline.repo / "src/a.py").read_text() == "VALUE = 1\n"
+
+
+def test_patch_missing_container_keeps_original(pipeline: _Harness) -> None:
+    board, ctx = pipeline.board, pipeline.context()
+    _ = board.pipeline_step(ctx, "begin", pipeline.node, pipeline.fence)
+    pipeline.runner.unavailable = True
+    with pytest.raises(_ToolError, match="GATE_RUNNER_UNAVAILABLE"):
+        _ = board.pipeline_step(ctx, "submit", pipeline.node, pipeline.fence, patch=_PATCH)
+    assert (pipeline.repo / "src/a.py").read_text() == "VALUE = 1\n"
+
+
+def test_patch_does_not_follow_worktree_symlinks(pipeline: _Harness) -> None:
+    board, ctx = pipeline.board, pipeline.context()
+    _ = board.pipeline_step(ctx, "begin", pipeline.node, pipeline.fence)
+    outside = pipeline.repo.parent / "outside.py"
+    _ = outside.write_text("VALUE = 1\n")
+    (pipeline.repo / "src/a.py").unlink()
+    (pipeline.repo / "src/a.py").symlink_to(outside)
+    with pytest.raises(_ToolError, match="SCOPE_VIOLATION"):
+        _ = board.pipeline_step(ctx, "submit", pipeline.node, pipeline.fence, patch=_PATCH)
+    assert outside.read_text() == "VALUE = 1\n"
+
+
+def test_mcp_patch_schema_and_transport(pipeline: _Harness) -> None:
+    async def scenario() -> None:
+        async with Client(build_server(pipeline.board, pipeline.context())) as client:
+            schema = next(tool for tool in (await client.list_tools()).tools if tool.name == "step_submit").input_schema
+            assert "patch" in schema["properties"]
+            params: dict[str, object] = {"node_id": pipeline.node, "fence": pipeline.fence}
+            _ = await _call(client, "step_begin", params)
+            reply = await _call(client, "step_submit", {**params, "step": "spec", "patch": _PATCH})
+            assert reply["passed"] is True
+            assert (pipeline.repo / "src/a.py").read_text().startswith("VALUE = 2\n")
+
+    asyncio.run(scenario())
+
+
+def test_preflight_capability_is_negotiated() -> None:
+    connection = Connection(EventRing(), host_namespace=True)
+    _ = connection.receive(_init(caps=frozenset({"hdag.v1", "preflight.v1"})))
+    assert "preflight.v1" in connection.capabilities
+
+
+def test_preflight_refuses_hardlinked_target(pipeline: _Harness) -> None:
+    board, ctx = pipeline.board, pipeline.context()
+    _ = board.pipeline_step(ctx, "begin", pipeline.node, pipeline.fence)
+    (pipeline.repo.parent / "linked.py").hardlink_to(pipeline.repo / "src/a.py")
+    with pytest.raises(_ToolError, match="SCOPE_VIOLATION"):
+        _ = board.pipeline_step(ctx, "submit", pipeline.node, pipeline.fence, patch=_PATCH)
+    assert (pipeline.repo.parent / "linked.py").read_text() == "VALUE = 1\n"

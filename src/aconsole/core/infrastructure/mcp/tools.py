@@ -877,6 +877,7 @@ class PlanBoard:
         note: str | None = None,
         kind: str = "replan",
         reason: str = "",
+        patch: str | None = None,
     ) -> PipelineReply:
         _require_tab(ctx)
         if self.pipeline is None or self.pipeline_actor is None:
@@ -888,7 +889,7 @@ class PlanBoard:
             if action == "begin":
                 body = self.pipeline.begin(actor, node_id, fence)
             elif action == "submit":
-                body = self.pipeline.submit(actor, node_id, fence, step, symbols)
+                body = self.pipeline.submit(actor, node_id, fence, step, symbols, patch=patch)
             elif action == "escalate":
                 body = self.pipeline.escalate(actor, node_id, fence, kind, reason)
             elif action == "reset":

@@ -69,6 +69,7 @@ _SERVER_CAPS = frozenset(
     {
         "events.v1",
         "hdag.v1",
+        "preflight.v1",
         "approvals.inline",
         "notifications.desktop",
         "diff.v1",
@@ -550,9 +551,13 @@ class Connection:
         self._queued = 0
         _LOG.warning("event %d exceeds the transport limit; requesting resync", item.seq)
         replacement = EventEnvelope(seq=item.seq, at=item.at, event=ResyncRequired(reason="backpressure"))
-        return encode_line(self._encoder, Notification(
-            method="$/event", params=msgspec.Raw(self._encoder.encode(replacement)),
-        ))
+        return encode_line(
+            self._encoder,
+            Notification(
+                method="$/event",
+                params=msgspec.Raw(self._encoder.encode(replacement)),
+            ),
+        )
 
 
 def _sets_approval_policy(raw: bytes) -> bool:

@@ -4,6 +4,7 @@ import hashlib
 import json
 import time
 from collections.abc import Callable, Mapping
+from contextlib import AbstractContextManager
 from dataclasses import replace
 from datetime import UTC, datetime
 from typing import Literal, final
@@ -31,6 +32,7 @@ from aconsole.core.application.services.pipeline import (
     PipelineBook,
     PipelineContract,
     PipelineService,
+    PreparedPatch,
 )
 from aconsole.core.domain.errors import DomainError
 from aconsole.core.domain.gate_profile import micro_commands
@@ -38,6 +40,7 @@ from aconsole.core.domain.pipeline import PipelineState, StateBlock, genesis_has
 from aconsole.core.domain.scope import check_scope
 from aconsole.core.infrastructure.codegraph.index import CodeGraphIndex
 from aconsole.core.infrastructure.codegraph.skeleton import python_skeleton, python_slice
+from aconsole.core.infrastructure.gates.runner import prepare_patch
 from aconsole.core.infrastructure.git.checkpoints import GitCheckpoints, remove_worktree_file
 from aconsole.core.infrastructure.git.diff import GitDiff
 from aconsole.core.infrastructure.git.runner import GitRunner
@@ -417,6 +420,19 @@ class MicroRuntime:
         )
         return gate.run(request, contract.profile)
 
+    def preflight(
+        self, actor: PipelineActor, contract: PipelineContract, patch: str
+    ) -> AbstractContextManager[PreparedPatch]:
+        # Authorize the exact commands derived from the immutable profile. File
+        # arguments are determined again by the staging parser, never by the client.
+        return prepare_patch(
+            lambda commands: self.runner(actor, commands),
+            actor.worktree,
+            contract.module.paths,
+            contract.profile,
+            patch,
+        )
+
     def blast(
         self,
         actor: PipelineActor,
@@ -609,6 +625,7 @@ def build_pipeline(
         shaper=ContextShaper(scratch),
         micro=runtime.run,
         blast=runtime.blast,
+        preflight=runtime.preflight,
     ), cache
 
 

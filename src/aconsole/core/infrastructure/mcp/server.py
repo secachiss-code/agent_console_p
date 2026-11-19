@@ -332,16 +332,24 @@ def _register(  # noqa: C901 -- one nested function per MCP tool
         """Begin or resume L2 with stable context, handoff and lease tail."""
         return board.pipeline_step(active(context), "begin", node_id, fence)
 
-    def step_submit(
+    def step_submit(  # noqa: PLR0913, PLR0917 -- public MCP signature
         node_id: _Id,
         fence: int,
         step: Literal["spec", "patch", "test", "verify"],
         affected_symbols: Annotated[list[_Text], Field(max_length=12)] | None = None,
         note: _Text | None = None,
+        patch: Annotated[str, Field(max_length=256 * 1024)] | None = None,
     ) -> PipelineReply:
         """Record a scoped L2 block. Verify executes the kernel micro gate."""
         return board.pipeline_step(
-            active(context), "submit", node_id, fence, step=step, symbols=tuple(affected_symbols or ()), note=note
+            active(context),
+            "submit",
+            node_id,
+            fence,
+            step=step,
+            symbols=tuple(affected_symbols or ()),
+            note=note,
+            patch=patch,
         )
 
     def step_reset(node_id: _Id, fence: int) -> PipelineReply:
