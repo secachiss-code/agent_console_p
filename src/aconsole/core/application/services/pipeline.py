@@ -111,6 +111,9 @@ class PreparedPatch(Protocol):
     @property
     def verdict(self) -> str: ...
 
+    @property
+    def outcome(self) -> MicroOutcome | None: ...
+
     def publish(self) -> None: ...
 
 
@@ -127,7 +130,9 @@ class PipelineService:
         micro: Callable[[PipelineActor, PipelineContract, Attempt, MicroRequest], MicroOutcome],
         blast: Callable[[PipelineActor, PipelineContract, Attempt, MicroRequest, bool], MicroOutcome | None]
         | None = None,
-        preflight: Callable[[PipelineActor, PipelineContract, str], AbstractContextManager[PreparedPatch]]
+        preflight: Callable[
+            [PipelineActor, PipelineContract, Attempt, MicroRequest, str], AbstractContextManager[PreparedPatch]
+        ]
         | None = None,
     ) -> None:
         self._book = book
@@ -215,7 +220,7 @@ class PipelineService:
         with self._lock(node_id):
             return self._submit(actor, node_id, fence, step, affected_symbols, patch=patch)
 
-    def _submit(  # noqa: C901, PLR0913 -- authorize, preflight, then advance one durable step
+    def _submit(  # noqa: C901, PLR0912, PLR0913 -- authorize, preflight, then advance one durable step
         self,
         actor: PipelineActor,
         node_id: str,
@@ -239,9 +244,27 @@ class PipelineService:
                 raise DomainError(code=4017, name="STEP_OUT_OF_ORDER", retryable=False)
             if self._preflight is None:
                 raise GateRunnerUnavailableError
-            with self._preflight(actor, contract, patch) as prepared:
+            request = MicroRequest(
+                node_id=node_id,
+                contract_hash=contract.module.contract_sha256,
+                gates_hash=contract.gates_sha256,
+                pipeline=state,
+                changed_files=(),
+                test_files=(),
+            )
+            with self._preflight(actor, contract, attempt, request, patch) as prepared:
                 if not prepared.passed:
-                    return {"passed": False, "compact_verdict": prepared.verdict[:499]}
+                    outcome = prepared.outcome
+                    exhausted = outcome.exhausted if outcome is not None else False
+                    if exhausted:
+                        self._book.exhausted(actor, node_id, fence)
+                    return {
+                        "passed": False,
+                        "compact_verdict": " ".join(prepared.verdict.split())[:499],
+                        "cached": outcome.cached if outcome is not None else False,
+                        "exhausted": exhausted,
+                        "receipt_hash": outcome.receipt.receipt_hash if outcome is not None else None,
+                    }
                 _ = self._book.contract(actor, node_id, fence)
                 self._book.scope(actor, node_id, fence)
                 prepared.publish()

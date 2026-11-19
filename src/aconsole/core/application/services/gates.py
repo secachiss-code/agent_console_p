@@ -165,6 +165,59 @@ class MicroGate:
         return outcome
 
 
+@final
+class PreflightGate:
+    """Cache refusals by staged input; each newly submitted attempt is audited."""
+
+    def __init__(self, *, cache: GateCache, audit: GateAudit) -> None:
+        self._cache, self._audit = cache, audit
+
+    def run(
+        self,
+        request: MicroRequest,
+        state: GateState,
+        commands: tuple[tuple[str, ...], ...],
+        execute: Callable[[], tuple[GateResult, ...]],
+    ) -> MicroOutcome:
+        argv_hash = _digest(("preflight", commands))
+        # A refused copy is discarded. Its input remains identical across retries,
+        # unlike Micro's normalized worktree state. Never reuse a full Micro receipt.
+        key = _digest(
+            ("preflight", request.node_id, request.contract_hash, request.gates_hash, state.state_hash, argv_hash)
+        )
+        cached = self._cache.get(key, _MICRO)
+        if cached is not None and not cached.receipt.passed:
+            receipt = replace(cached.receipt, state=state, results=())
+        else:
+            results = execute()
+            passed = bool(results) and all(result.returncode == 0 and not result.timed_out for result in results)
+            items = tuple(_failure(result) for result in results if result.returncode or result.timed_out)
+            count = sum(result.returncode == 0 and not result.timed_out for result in results)
+            verdict = f"{count} passed, {len(items)} failed"
+            if items:
+                verdict += ": " + "; ".join(items)
+            receipt = MicroReceipt(
+                node_id=request.node_id,
+                state=state,
+                argv_sha256=argv_hash,
+                passed=passed,
+                compact_verdict=" ".join(verdict.split())[: _MAX_VERDICT - 1],
+                remaining_items=items[:_MAX_ITEMS],
+                results=results,
+            )
+        # Preflight can reject any L2 step; apply the same retry budget as Tier 1.
+        pipeline, exhausted = _blast_retry(replace(request.pipeline, step="verify"), passed=receipt.passed)
+        if receipt.passed:
+            pipeline = request.pipeline
+        outcome = MicroOutcome(receipt=receipt, pipeline=pipeline, exhausted=exhausted, cached=cached is not None)
+        self._audit.record(request, outcome)
+        # Green normalization changes copies. Replaying it would require storing
+        # those bytes, so only refusals (which can never publish) enter this cache.
+        if not receipt.passed:
+            self._cache.put(key, _MICRO, outcome)
+        return outcome
+
+
 @dataclass(frozen=True, kw_only=True)
 class BlastProfile:
     test_cmd: str

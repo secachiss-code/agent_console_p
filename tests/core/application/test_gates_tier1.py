@@ -1,5 +1,8 @@
 """Tier 1 normalization, cache identity, audit and retry budgets."""
 
+# pyright: reportPrivateUsage=false
+# White-box integration fixtures are shared with the MCP pipeline suite.
+
 import hashlib
 import os
 import time
@@ -15,11 +18,17 @@ from aconsole.core.application.services.gates import (
     MicroOutcome,
     MicroProfile,
     MicroRequest,
+    PreflightGate,
 )
 from aconsole.core.domain.errors import DomainError
 from aconsole.core.domain.pipeline import PipelineState
 from aconsole.core.infrastructure.containers.podman import Podman
 from aconsole.core.infrastructure.gates.runner import ContainerGateRunner
+from aconsole.core.infrastructure.persistence.repositories.attempts import AttemptDatabase
+from tests.core.test_mcp_pipeline import _PATCH
+from tests.core.test_mcp_pipeline import _Harness as _PipelineHarness
+from tests.core.test_mcp_pipeline import _Runner as _PipelineRunner
+from tests.core.test_mcp_pipeline import pipeline as pipeline  # noqa: PLC0414 -- expose the shared pytest fixture
 
 
 class _Harness:
@@ -115,7 +124,7 @@ def test_repeat_of_normalized_state_launches_no_tools_and_does_not_reaudit() -> 
 )
 def test_cache_cannot_cross_state_contract_profile_or_attempt(change: str) -> None:
     harness = _Harness()
-    harness.gate().run(_REQUEST, _PROFILE)
+    _ = harness.gate().run(_REQUEST, _PROFILE)
     harness.calls.clear()
     request, profile = _REQUEST, _PROFILE
     if change == "diff":
@@ -175,7 +184,7 @@ def test_unavailable_container_never_generates_receipt_or_consumes_attempt() -> 
     harness = _Harness()
     harness.unavailable = True
     with pytest.raises(GateRunnerUnavailableError):
-        harness.gate().run(_REQUEST, _PROFILE)
+        _ = harness.gate().run(_REQUEST, _PROFILE)
     assert not harness.audit
     assert not harness.cache
 
@@ -184,14 +193,14 @@ def test_unavailable_container_never_generates_receipt_or_consumes_attempt() -> 
 def test_malformed_paths_are_refused_before_launch(path: str) -> None:
     harness = _Harness()
     with pytest.raises(DomainError, match="NODE_CONTRACT"):
-        harness.gate().run(replace(_REQUEST, changed_files=(path,)), _PROFILE)
+        _ = harness.gate().run(replace(_REQUEST, changed_files=(path,)), _PROFILE)
     assert not harness.calls
 
 
 def test_wrong_pipeline_step_is_refused() -> None:
     harness = _Harness()
     with pytest.raises(DomainError, match="STEP_OUT_OF_ORDER"):
-        harness.gate().run(replace(_REQUEST, pipeline=PipelineState()), _PROFILE)
+        _ = harness.gate().run(replace(_REQUEST, pipeline=PipelineState()), _PROFILE)
     assert not harness.calls
 
 
@@ -206,7 +215,7 @@ def test_live_micro_gate_latency_without_tests(tmp_path: Path) -> None:
         pytest.skip("live Podman context and gate tools directory were not supplied")
     harness = _Harness()
     source = tmp_path / "sample.py"
-    source.write_text("def value() -> int:\n return 1\n")
+    _ = source.write_text("def value() -> int:\n return 1\n")
     profile = MicroProfile(
         format=(str(Path(tools) / "ruff"), "format"),
         fix=(str(Path(tools) / "ruff"), "check", "--fix"),
@@ -243,3 +252,156 @@ def test_live_micro_gate_latency_without_tests(tmp_path: Path) -> None:
     # With five observations, the nearest-rank p95 is the maximum.
     assert max(durations) <= 5, durations
     print(f"Micro-Gate seconds: {durations}; p95={max(durations):.3f}")  # noqa: T201 -- measured acceptance evidence
+
+
+def test_preflight_failure_cache_retries_and_budget(pipeline: _PipelineHarness) -> None:
+    board, ctx = pipeline.board, pipeline.context()
+    pipeline.runner.fail = True
+    for attempt in range(1, 5):
+        _ = board.pipeline_step(ctx, "begin", pipeline.node, pipeline.fence)
+        before = len(pipeline.runner.calls)
+        reply = board.pipeline_step(
+            ctx,
+            "submit",
+            pipeline.node,
+            pipeline.fence,
+            step="spec" if attempt == 1 else "patch",
+            patch=_PATCH,
+        ).root
+        assert reply["passed"] is False
+        assert reply["cached"] is (attempt > 1)
+        assert reply["exhausted"] is (attempt == 4)
+        verdict = reply["compact_verdict"]
+        assert isinstance(verdict, str)
+        assert len(verdict) < 500
+        assert "\n" not in verdict
+        assert "lint failed" in verdict
+        assert (pipeline.repo / "src/a.py").read_text() == "VALUE = 1\n"
+        if attempt > 1:
+            assert len(pipeline.runner.calls) == before
+        history = AttemptDatabase(pipeline.writer).attempts(pipeline.node)
+        assert len(history) == attempt
+        assert history[-1].status == "failed"
+        assert history[-1].compact_verdict == verdict
+        assert AttemptDatabase(pipeline.writer).blocks(history[-1].id) == ()
+    assert board.export_plan(pipeline.plan).nodes[1].status == "blocked"
+
+
+def test_preflight_changed_copy_invalidates_cache(pipeline: _PipelineHarness) -> None:
+    board, ctx = pipeline.board, pipeline.context()
+    pipeline.runner.fail = True
+    _ = board.pipeline_step(ctx, "begin", pipeline.node, pipeline.fence)
+    _ = board.pipeline_step(ctx, "submit", pipeline.node, pipeline.fence, step="spec", patch=_PATCH)
+    _ = board.pipeline_step(ctx, "begin", pipeline.node, pipeline.fence)
+    before = len(pipeline.runner.calls)
+    pipeline.runner.fail = False
+    reply = board.pipeline_step(
+        ctx,
+        "submit",
+        pipeline.node,
+        pipeline.fence,
+        step="patch",
+        patch=_PATCH.replace("VALUE = 2", "VALUE = 3"),
+    ).root
+    assert reply["passed"] is True
+    assert len(pipeline.runner.calls) > before
+    assert (pipeline.repo / "src/a.py").read_text().startswith("VALUE = 3\n")
+
+
+def test_preflight_refusal_survives_restart_as_failed_attempt(pipeline: _PipelineHarness) -> None:
+    board, ctx = pipeline.board, pipeline.context()
+    pipeline.runner.fail = True
+    _ = board.pipeline_step(ctx, "begin", pipeline.node, pipeline.fence)
+    _ = board.pipeline_step(ctx, "submit", pipeline.node, pipeline.fence, step="spec", patch=_PATCH)
+    pipeline.restart()
+    history = AttemptDatabase(pipeline.writer).attempts(pipeline.node)
+    assert len(history) == 1
+    assert history[0].status == "failed"
+    reply = pipeline.board.pipeline_step(pipeline.context(), "begin", pipeline.node, pipeline.fence).root
+    assert '"attempt":2' in str(reply["handoff"])
+    assert (pipeline.repo / "src/a.py").read_text() == "VALUE = 1\n"
+
+
+def test_preflight_verdict_is_single_line_bounded_and_timeout_fails() -> None:
+    harness = _Harness()
+    gate = PreflightGate(cache=harness, audit=harness)
+    result = GateResult(
+        argv=("ruff",),
+        returncode=0,
+        timed_out=True,
+        output="error: " + "x" * 2000 + "\nmore details",
+        log_path="log",
+        duration_ms=1,
+    )
+    outcome = gate.run(_REQUEST, harness.state, (("ruff",),), lambda: (result,))
+    assert not outcome.receipt.passed
+    assert "timeout" in outcome.receipt.compact_verdict
+    assert len(outcome.receipt.compact_verdict) < 500
+    assert "\n" not in outcome.receipt.compact_verdict
+    result = replace(result, timed_out=False, returncode=1)
+    outcome = gate.run(_REQUEST, replace(harness.state, state_hash="other"), (("ruff",),), lambda: (result,))
+    assert len(outcome.receipt.compact_verdict) == 499
+
+
+@pytest.mark.parametrize("change", ["state", "contract", "gates", "commands", "node"])
+def test_preflight_cache_identity(change: str) -> None:
+    harness = _Harness()
+    gate = PreflightGate(cache=harness, audit=harness)
+    result = GateResult(
+        argv=("ruff",),
+        returncode=1,
+        timed_out=False,
+        output="error: lint",
+        log_path="log",
+        duration_ms=1,
+    )
+    calls: list[bool] = []
+
+    def execute() -> tuple[GateResult, ...]:
+        calls.append(True)
+        return (result,)
+
+    _ = gate.run(_REQUEST, harness.state, (("ruff",),), execute)
+    state, request, commands = harness.state, _REQUEST, (("ruff",),)
+    if change == "state":
+        state = replace(state, state_hash="changed")
+    elif change == "contract":
+        request = replace(request, contract_hash="changed")
+    elif change == "gates":
+        request = replace(request, gates_hash="changed")
+    elif change == "node":
+        request = replace(request, node_id="changed")
+    else:
+        commands = (("pyright",),)
+    outcome = gate.run(request, state, commands, execute)
+    assert not outcome.cached
+    assert len(calls) == 2
+
+
+def test_preflight_success_then_test_failure_leaves_reset_to_existing_port(
+    pipeline: _PipelineHarness,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    board, ctx = pipeline.board, pipeline.context()
+    original_run = type(pipeline.runner).run
+
+    def fail_tests(runner: _PipelineRunner, argv: tuple[str, ...], *, tier: int) -> GateResult:
+        result = original_run(runner, argv, tier=tier)
+        if argv[0] == "pytest" and "--version" not in argv:
+            return replace(result, returncode=1, output="test failed")
+        return result
+
+    monkeypatch.setattr(type(pipeline.runner), "run", fail_tests)
+    _ = board.pipeline_step(ctx, "begin", pipeline.node, pipeline.fence)
+    _ = board.pipeline_step(ctx, "submit", pipeline.node, pipeline.fence, step="spec", patch=_PATCH)
+    _ = (pipeline.repo / "tests/test_a.py").write_text(
+        "from src.a import VALUE\n\ndef test_value():\n    assert VALUE == 1\n"
+    )
+    for step in ("patch", "test"):
+        _ = board.pipeline_step(ctx, "submit", pipeline.node, pipeline.fence, step=step)
+    reply = board.pipeline_step(ctx, "submit", pipeline.node, pipeline.fence, step="verify").root
+    assert reply["passed"] is False
+    assert (pipeline.repo / "src/a.py").read_text().startswith("VALUE = 2\n")
+    _ = board.pipeline_step(ctx, "begin", pipeline.node, pipeline.fence)
+    _ = board.pipeline_step(ctx, "reset", pipeline.node, pipeline.fence)
+    assert (pipeline.repo / "src/a.py").read_text() == "VALUE = 1\n"

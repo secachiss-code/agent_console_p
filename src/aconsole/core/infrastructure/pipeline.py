@@ -14,7 +14,7 @@ import msgspec
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from aconsole.core.application.ports.gate_runner import GateRunner
+from aconsole.core.application.ports.gate_runner import GateResult, GateRunner
 from aconsole.core.application.services.context_shaper import ContextShaper, DependencyContext, DirectionContext
 from aconsole.core.application.services.gates import (
     BlastGate,
@@ -25,6 +25,7 @@ from aconsole.core.application.services.gates import (
     MicroProfile,
     MicroReceipt,
     MicroRequest,
+    PreflightGate,
 )
 from aconsole.core.application.services.pipeline import (
     Attempt,
@@ -421,8 +422,26 @@ class MicroRuntime:
         return gate.run(request, contract.profile)
 
     def preflight(
-        self, actor: PipelineActor, contract: PipelineContract, patch: str
+        self, actor: PipelineActor, contract: PipelineContract, attempt: Attempt, request: MicroRequest, patch: str
     ) -> AbstractContextManager[PreparedPatch]:
+        base = self.workspace.capture(actor, contract, attempt, request.pipeline.seq)
+
+        def check(
+            staged: GateState,
+            commands: tuple[tuple[str, ...], ...],
+            execute: Callable[[], tuple[GateResult, ...]],
+        ) -> MicroOutcome:
+            state = replace(base, state_hash=_sha(json.dumps((base.state_hash, staged.state_hash))))
+
+            def capture() -> GateState:
+                return state
+
+            gate = PreflightGate(
+                cache=_MicroCache(self.cache.cache, self.storage, request, capture),
+                audit=_MicroAudit(self.storage, attempt, actor, contract),
+            )
+            return gate.run(request, state, commands, execute)
+
         # Authorize the exact commands derived from the immutable profile. File
         # arguments are determined again by the staging parser, never by the client.
         return prepare_patch(
@@ -431,6 +450,7 @@ class MicroRuntime:
             contract.module.paths,
             contract.profile,
             patch,
+            check=check,
         )
 
     def blast(

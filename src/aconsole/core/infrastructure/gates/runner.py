@@ -1,5 +1,7 @@
 """Execute trusted profile argv through Podman, with no host command fallback."""
 
+import hashlib
+import json
 import os
 import re
 import shutil
@@ -14,7 +16,7 @@ from typing import Protocol, final, runtime_checkable
 
 from aconsole.core.application.ports.gate_runner import GateResult, GateRunner, GateRunnerUnavailableError
 from aconsole.core.application.ports.git_repo import GitCommandError
-from aconsole.core.application.services.gates import MicroProfile
+from aconsole.core.application.services.gates import GateState, MicroOutcome, MicroProfile
 from aconsole.core.domain.errors import DomainError
 from aconsole.core.domain.scope import check_scope
 from aconsole.core.infrastructure.containers.podman import ContainerError, Podman
@@ -239,13 +241,18 @@ class StagedPatch:
     source: Path
     originals: dict[str, bytes | None]
     results: tuple[GateResult, ...]
+    outcome: MicroOutcome | None = None
 
     @property
     def passed(self) -> bool:
+        if self.outcome is not None:
+            return self.outcome.receipt.passed
         return bool(self.results) and all(result.returncode == 0 and not result.timed_out for result in self.results)
 
     @property
     def verdict(self) -> str:
+        if self.outcome is not None:
+            return self.outcome.receipt.compact_verdict
         return compact_verdict(list(self.results))
 
     def publish(self) -> None:
@@ -278,12 +285,15 @@ def _regular_path(root: Path, name: str) -> Path:
 
 
 @contextmanager
-def prepare_patch(  # noqa: C901 -- validate diff, copy, apply, check, publish under one cleanup scope
+def prepare_patch(  # noqa: C901, PLR0913, PLR0915 -- validate diff, copy, apply, check, publish under one cleanup scope
     bind_runner: Callable[[tuple[tuple[str, ...], ...]], GateRunner],
     worktree: Path,
     paths: tuple[str, ...],
     profile: MicroProfile,
     patch: str,
+    *,
+    check: Callable[[GateState, tuple[tuple[str, ...], ...], Callable[[], tuple[GateResult, ...]]], MicroOutcome]
+    | None = None,
 ) -> Generator[StagedPatch]:
     """Apply only to regular-file copies. Git parses paths; tools never execute on the host."""
     root = Path(os.environ.get("XDG_RUNTIME_DIR", f"/run/user/{os.getuid()}")) / "aconsole/preflight"
@@ -345,5 +355,14 @@ def prepare_patch(  # noqa: C901 -- validate diff, copy, apply, check, publish u
         runner = bind_runner(commands)
         if not isinstance(runner, PreflightRunner):
             raise GateRunnerUnavailableError(_UNAVAILABLE)
-        results = runner.preflight(source, root, commands)
-        yield StagedPatch(worktree=worktree, source=source, originals=originals, results=results)
+        fingerprint = tuple(
+            (name, hashlib.sha256((source / name).read_bytes()).hexdigest(), (source / name).stat().st_mode & 0o777)
+            if (source / name).exists()
+            else (name, None, None)
+            for name in sorted(originals)
+        )
+        digest = hashlib.sha256(json.dumps(fingerprint).encode()).hexdigest()
+        state = GateState(state_hash=digest, delta_ref="", delta_sha256=digest)
+        outcome = check(state, commands, lambda: runner.preflight(source, root, commands)) if check else None
+        results = outcome.receipt.results if outcome is not None else runner.preflight(source, root, commands)
+        yield StagedPatch(worktree=worktree, source=source, originals=originals, results=results, outcome=outcome)
