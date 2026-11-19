@@ -1,0 +1,28 @@
+[
+  {
+    "receipt_hash": "6dc678334da7bc382026f799e708b38235409bc9fdeab5ce0ed3378967acd7a7",
+    "node_id": "node-917",
+    "tier": "micro",
+    "state_hash": "9a99dcaa57c08fdf1765a6346190e4bfb87f99533cfb1055fe1648ac771ce12e",
+    "argv_sha256": "068f32217b620991e6a6743b381c4a0bfc6e9235f8ff46e97eedda071a653410",
+    "exit_code": 0,
+    "passed": 1,
+    "compact_verdict": "5 passed, 0 failed",
+    "log_ref": "/home/sas/.local/state/aconsole/gates/tmpgh0u5zo3.log",
+    "duration_ms": 38616,
+    "created_at": "2026-11-19T18:08:02.409088+00:00"
+  },
+  {
+    "receipt_hash": "e978ab6004bfc7e1df56d780664e456325debe9b065eef25df4f791982df784c",
+    "node_id": "node-917",
+    "tier": "blast",
+    "state_hash": "9a99dcaa57c08fdf1765a6346190e4bfb87f99533cfb1055fe1648ac771ce12e",
+    "argv_sha256": "7432fa15da96e41ae76ac6808b65475a344a4acfa26ecf222dce048e066a25a0",
+    "exit_code": 0,
+    "passed": 1,
+    "compact_verdict": "2 passed, 0 failed",
+    "log_ref": "/home/sas/.local/state/aconsole/gates/tmpy49lg00z.log",
+    "duration_ms": 247472,
+    "created_at": "2026-11-19T18:12:21.309108+00:00"
+  }
+]

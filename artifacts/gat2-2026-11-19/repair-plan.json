@@ -1,0 +1,19 @@
+{
+  "project_id": "9fe226e18f76d5d2",
+  "plan_id": "plan-900",
+  "title": "0.1.4 — Индекс, LOD и vault",
+  "goal": "Дельта концепции 0.1.4 поверх закрытого plan-636. Полиглотный индекс, body_hash и interface_hash, LOD по прямой дистанции импорта, долговечное эхо vault, Canvas слоями Кана, предпроверка патча MCP, FTS5 BM25. Источник истины: plans/0.1.4-index.md. Образ в gate_profile — заглушка sha256 из нулей; перед закрытием L0 его заменяют на образ devtools.",
+  "repair_paths": {
+    "GAT-2": [
+      "src/aconsole/core/application/services/gates.py",
+      "src/aconsole/core/application/services/pipeline.py",
+      "tests/core/application/test_gates_tier1.py",
+      "src/aconsole/core/infrastructure/pipeline.py",
+      "src/aconsole/core/infrastructure/gates/runner.py"
+    ]
+  },
+  "repair_contracts": {
+    "GAT-2": "d311cb22bfa84cb0faeebe7c1c18a1e888f95aac88823b91414ab444d878206f"
+  },
+  "repair_note": "GAT-2: include production preflight staging and runtime adapters required for verification_gate_cache and durable failure audit. Parent GAT-0 already includes these paths. No gates executed; abandon scope-only attempt1."
+}
