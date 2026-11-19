@@ -1,0 +1,35 @@
+{
+  "project_id": "9fe226e18f76d5d2",
+  "plan_id": "plan-900",
+  "title": "0.1.4 — Индекс, LOD и vault",
+  "goal": "Дельта концепции 0.1.4 поверх закрытого plan-636. Полиглотный индекс, body_hash и interface_hash, LOD по прямой дистанции импорта, долговечное эхо vault, Canvas слоями Кана, предпроверка патча MCP, FTS5 BM25. Источник истины: plans/0.1.4-index.md. Образ в gate_profile — заглушка sha256 из нулей; перед закрытием L0 его заменяют на образ devtools.",
+  "repair_paths": {
+    "FND-1": [
+      "migrations/versions/0013_note_fts.py",
+      "src/aconsole/core/infrastructure/persistence/search.py",
+      "src/aconsole/core/infrastructure/persistence/repositories/knowledge.py",
+      "src/aconsole/core/infrastructure/vault/sync.py",
+      "tools/check_no_raw_sql.py",
+      "tests/core/test_knowledge_store.py",
+      "tests/core/test_merge_migrations.py",
+      "src/aconsole/core/infrastructure/persistence/repositories/vault_files.py"
+    ],
+    "FND-0": [
+      "migrations/versions/0013_note_fts.py",
+      "src/aconsole/core/infrastructure/persistence/search.py",
+      "src/aconsole/core/infrastructure/persistence/repositories/knowledge.py",
+      "src/aconsole/core/infrastructure/vault/sync.py",
+      "tools/check_no_raw_sql.py",
+      "tests/core/test_knowledge_store.py",
+      "tests/core/test_merge_migrations.py",
+      "src/aconsole/core/infrastructure/mcp/tools.py",
+      "tests/core/test_mcp_knowledge_recovery.py",
+      "src/aconsole/core/infrastructure/persistence/repositories/vault_files.py"
+    ]
+  },
+  "repair_contracts": {
+    "FND-1": "ebc42263f6541835ed426db80d1fc262b306c8a5323a7dc97fecb6690cad34e8",
+    "FND-0": "bb52b51c59f421b8bc0944a7ce0b72fae6e97e42579ec3a97925173994e9329a"
+  },
+  "repair_note": "FND-1: include vault_files repository to persist published note text in FTS in the same writer transaction as publication digests and frontmatter. No gates executed; abandon scope-only attempt1. Include adapter in FND-0 scope."
+}

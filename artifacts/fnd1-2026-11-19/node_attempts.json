@@ -1,0 +1,34 @@
+[
+  {
+    "id": "3e43af7b16644afb8daaf595c0",
+    "node_id": "node-919",
+    "attempt_no": 1,
+    "status": "abandoned",
+    "tab_id": "bfd8f876482ec1cf",
+    "agent_kind": "codex",
+    "model": null,
+    "base_oid": "4cf23822a4f1bedd9df6bf63fc1fd4ca1d6cf5a9",
+    "head_block": "91f6ece68340a22381dcf118564f0e2af3551cc4f0697fc262d17aafbbecb3da",
+    "diff_stat": null,
+    "compact_verdict": "Frozen scope contract repaired",
+    "cost_usd": null,
+    "started_at": "2026-11-19T18:18:04.313215+00:00",
+    "finished_at": "2026-11-19T18:19:23.215325+00:00"
+  },
+  {
+    "id": "224e053ccf604416bacf2f4f88",
+    "node_id": "node-919",
+    "attempt_no": 2,
+    "status": "passed",
+    "tab_id": "bfd8f876482ec1cf",
+    "agent_kind": "codex",
+    "model": null,
+    "base_oid": "4cf23822a4f1bedd9df6bf63fc1fd4ca1d6cf5a9",
+    "head_block": "a017d7aca34d1ca9c0a70f4be25e73b91dbaae000385880aad4164dfad7a88ad",
+    "diff_stat": null,
+    "compact_verdict": "2 passed, 0 failed",
+    "cost_usd": null,
+    "started_at": "2026-11-19T18:19:23.228462+00:00",
+    "finished_at": "2026-11-19T18:27:58.127553+00:00"
+  }
+]
