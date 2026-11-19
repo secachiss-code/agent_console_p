@@ -1,0 +1,37 @@
+{
+  "project_id": "9fe226e18f76d5d2",
+  "plan_id": "plan-900",
+  "title": "0.1.4 — Индекс, LOD и vault",
+  "goal": "Дельта концепции 0.1.4 поверх закрытого plan-636. Полиглотный индекс, body_hash и interface_hash, LOD по прямой дистанции импорта, долговечное эхо vault, Canvas слоями Кана, предпроверка патча MCP, FTS5 BM25. Источник истины: plans/0.1.4-index.md. Образ в gate_profile — заглушка sha256 из нулей; перед закрытием L0 его заменяют на образ devtools.",
+  "repair_paths": {
+    "GAT-0": [
+      "src/aconsole/core/infrastructure/mcp/server.py",
+      "src/aconsole/core/infrastructure/mcp/tools.py",
+      "src/aconsole/core/application/services/pipeline.py",
+      "src/aconsole/core/application/services/gates.py",
+      "src/aconsole/core/infrastructure/gates/runner.py",
+      "src/aconsole/contracts/__init__.py",
+      "tests/core/test_mcp_pipeline.py",
+      "tests/core/test_gate_runner.py",
+      "tests/core/application/test_gates_tier1.py",
+      "src/aconsole/core/infrastructure/pipeline.py",
+      "src/aconsole/core/infrastructure/ipc/session.py"
+    ],
+    "GAT-1": [
+      "src/aconsole/core/infrastructure/mcp/server.py",
+      "src/aconsole/core/infrastructure/mcp/tools.py",
+      "src/aconsole/core/application/services/pipeline.py",
+      "src/aconsole/core/infrastructure/gates/runner.py",
+      "src/aconsole/contracts/__init__.py",
+      "tests/core/test_mcp_pipeline.py",
+      "tests/core/test_gate_runner.py",
+      "src/aconsole/core/infrastructure/pipeline.py",
+      "src/aconsole/core/infrastructure/ipc/session.py"
+    ]
+  },
+  "repair_contracts": {
+    "GAT-0": "50086137c4f0091c571b2b1e42781d6a356291ff7948e02889a87f9e7accbb79",
+    "GAT-1": "4c62badf9250e24c8a236d13f80981215299192940075d7c6300db3c77a150a5"
+  },
+  "repair_note": "GAT-1: include production pipeline composition and IPC preflight.v1 capability negotiation. Existing scope omitted both wiring files. Extend parent GAT-0 consistently; keep acceptance and checks unchanged. No gate executed."
+}

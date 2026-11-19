@@ -1,0 +1,10 @@
+[
+  {
+    "returncode": 0,
+    "output": "isolated-preflight\n",
+    "argv": [
+      "/bin/cat",
+      "probe.txt"
+    ]
+  }
+]
