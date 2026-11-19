@@ -2,19 +2,21 @@
 
 from __future__ import annotations
 
+import subprocess
+import sys
 import threading
 import time
 from concurrent.futures import ThreadPoolExecutor
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 from aconsole.core.infrastructure.codegraph.index import CodeGraphIndex
 from aconsole.core.infrastructure.codegraph.local_python import scan_python
 from aconsole.core.infrastructure.codegraph.protocol import ExtractorGraph, GraphEdge, GraphNode
-from aconsole.core.infrastructure.codegraph.runner import ExtractorRun
+from aconsole.core.infrastructure.codegraph.runner import ExtractorRun, ExtractorRunner
 
 if TYPE_CHECKING:
     from collections.abc import Callable
-    from pathlib import Path
 
     import pytest
 
@@ -28,6 +30,29 @@ def _project(tmp_path: Path) -> Path:
 
 def _index(root: Path, languages: Callable[[], frozenset[str]] | None = None) -> CodeGraphIndex:
     return CodeGraphIndex(runner=_Runner(), root_of=lambda _project_id: root, languages=languages)
+
+
+def test_index_and_runner_import_without_loading_grimp() -> None:
+    source = Path(__file__).resolve().parents[2] / "src"
+    script = """
+import sys
+
+sys.path.insert(0, sys.argv[1])
+from aconsole.core.infrastructure.codegraph import index, runner
+
+assert not any(name.partition(".")[0] == "grimp" for name in sys.modules)
+"""
+    result = subprocess.run(
+        (sys.executable, "-I", "-c", script, str(source)), check=False, capture_output=True, text=True, timeout=15
+    )
+    assert result.returncode == 0, result.stderr
+
+
+def test_foreign_extractors_use_external_devtools_argv(tmp_path: Path) -> None:
+    hostrun = tmp_path / "hostrun"
+    runner = ExtractorRunner(hostrun)
+    for language in ("csharp", "rust-metadata", "ts"):
+        assert runner.argv(language, ".") == (str(hostrun), "devtools", language, ".")
 
 
 def test_concurrent_callers_share_one_build(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
