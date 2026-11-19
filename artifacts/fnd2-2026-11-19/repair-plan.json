@@ -1,0 +1,33 @@
+{
+  "project_id": "9fe226e18f76d5d2",
+  "plan_id": "plan-900",
+  "title": "0.1.4 — Индекс, LOD и vault",
+  "goal": "Дельта концепции 0.1.4 поверх закрытого plan-636. Полиглотный индекс, body_hash и interface_hash, LOD по прямой дистанции импорта, долговечное эхо vault, Canvas слоями Кана, предпроверка патча MCP, FTS5 BM25. Источник истины: plans/0.1.4-index.md. Образ в gate_profile — заглушка sha256 из нулей; перед закрытием L0 его заменяют на образ devtools.",
+  "repair_paths": {
+    "FND-0": [
+      "migrations/versions/0013_note_fts.py",
+      "src/aconsole/core/infrastructure/persistence/search.py",
+      "src/aconsole/core/infrastructure/persistence/repositories/knowledge.py",
+      "src/aconsole/core/infrastructure/vault/sync.py",
+      "tools/check_no_raw_sql.py",
+      "tests/core/test_knowledge_store.py",
+      "tests/core/test_merge_migrations.py",
+      "src/aconsole/core/infrastructure/mcp/tools.py",
+      "tests/core/test_mcp_knowledge_recovery.py",
+      "src/aconsole/core/infrastructure/persistence/repositories/vault_files.py",
+      "src/aconsole/core/application/ports/knowledge_store.py"
+    ],
+    "FND-2": [
+      "src/aconsole/core/infrastructure/mcp/tools.py",
+      "src/aconsole/core/infrastructure/persistence/search.py",
+      "tests/core/test_mcp_knowledge_recovery.py",
+      "src/aconsole/core/application/ports/knowledge_store.py",
+      "src/aconsole/core/infrastructure/persistence/repositories/knowledge.py"
+    ]
+  },
+  "repair_contracts": {
+    "FND-0": "44751c51265aee1fa424be4456e4cbee74deaa3aad538789ee99e72537f3660b",
+    "FND-2": "ae3c205eba45e04d11a41d513efa94b4204894be3f7861d111b89d44366f28c3"
+  },
+  "repair_note": "FND-2: add the knowledge port and SQLite adapter to route project-scoped search through the existing writer. No gates ran on attempt 1."
+}
