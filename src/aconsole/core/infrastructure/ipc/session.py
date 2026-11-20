@@ -155,6 +155,21 @@ class Connection:
         self._queued_requests: set[int] = set()
         self._cancelled_requests: set[int] = set()
 
+    def invoke(self, method: str, params: bytes, *, timeout_ms: int) -> bytes:
+        """Run one method as the local UI. The caller already checked the API token and the method list.
+
+        This connection is not a socket client: it does not perform the initialize handshake.
+        """
+        self.role = ClientRole.UI
+        self.ready = True
+        if not self.capabilities:
+            self.capabilities = _SERVER_CAPS
+        request = Request(id=1, method=method, params=msgspec.Raw(params), timeout_ms=timeout_ms)
+        frames = self._ready(request)
+        if not frames:
+            return self._err(request.id, "INTERNAL_ERROR")
+        return frames[0]
+
     def receive(self, line: bytes) -> tuple[bytes, ...]:
         try:
             envelope = decode_envelope(line)
