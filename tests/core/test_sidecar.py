@@ -214,8 +214,9 @@ def test_sidecar_frame_latency_is_under_five_milliseconds() -> None:
 
 def test_sidecar_echoes_through_a_pty() -> None:
     echoed = exchange(["/bin/sh", "-c", 'read x; printf %s "$x"'], b"ping\n", timeout_s=2.0)
+    # PTYs combine stdout and stderr. Keep environment-specific .pth startup output out of the fixture.
     framed = exchange(
-        [sys.executable, "-c", "import sys; sys.stdout.buffer.write(b'\\x1b[?2026hHELLO\\x1b[?2026l')"],
+        [sys.executable, "-S", "-c", "import sys; sys.stdout.buffer.write(b'\\x1b[?2026hHELLO\\x1b[?2026l')"],
         b"",
         timeout_s=2.0,
     )
