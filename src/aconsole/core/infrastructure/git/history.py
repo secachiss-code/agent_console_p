@@ -82,10 +82,17 @@ class GitHistory:
             return None
         return name.removeprefix("refs/remotes/origin/")
 
-    def status(self, worktree: Path) -> StatusRow:
+    def status(self, worktree: Path, *, preload_index: bool = True) -> StatusRow:
+        settings = () if preload_index else ("-c", "core.preloadIndex=false")
         raw = self._git.read(
-            worktree, "status", "--porcelain=v2", "-z", "--branch",
-            "--untracked-files=all", "--ignore-submodules=none",
+            worktree,
+            *settings,
+            "status",
+            "--porcelain=v2",
+            "-z",
+            "--branch",
+            "--untracked-files=all",
+            "--ignore-submodules=none",
         ).text
         return _status(raw, _in_progress(worktree))
 

@@ -11,6 +11,7 @@ from collections import OrderedDict
 from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
+from functools import partial
 from pathlib import Path
 from typing import Final, NoReturn, Protocol, final
 
@@ -124,7 +125,7 @@ def _hash(*parts: str) -> str:
     return hashlib.sha256("\0".join(parts).encode()).hexdigest()[:32]
 
 
-_STATUS_WORKERS: Final = 4
+_WORKTREE_WORKERS: Final = 4
 
 
 def _same_path(left: str, right: str) -> bool:
@@ -413,12 +414,6 @@ class GitStateService:
         kept.extend(row.head for row in worktrees if row.head is not None and _same_path(row.path, tab.worktree))
         return tuple(dict.fromkeys(kept))
 
-    def _statuses(self, worktrees: tuple[WorktreeRow, ...]) -> dict[str, StatusRow]:
-        """Side by side: this is most of a look's cost, and each one waits on its own disk scan."""
-        with ThreadPoolExecutor(max_workers=_STATUS_WORKERS) as pool:
-            found = pool.map(self._reader.status, [Path(row.path) for row in worktrees])
-            return {row.path: status for row, status in zip(worktrees, found, strict=True)}
-
     def _build(self, project: GitProject) -> GitStateResult:
         root = Path(project.root)
         refs = self._reader.refs(root)
@@ -429,10 +424,21 @@ class GitStateService:
             base = worktrees[0].branch
         base_oid = None if base is None else heads.get(base)
         tabs = self._catalog().git_tabs(project.project_id)
-        statuses = self._statuses(worktrees)
-        views = tuple(
-            self._worktree(root, row, statuses[row.path], tabs, base, base_oid, project.project_id) for row in worktrees
+        # Session data belongs to the calling thread. Only the independent Git reads use the pool.
+        sessions = tuple(self.session_at(project.project_id, row.path) for row in worktrees)
+        # Multiple concurrent status scans share the CPUs without starting more Git index threads.
+        read_worktree = partial(
+            self._worktree,
+            root=root,
+            tabs=tabs,
+            base=base,
+            base_oid=base_oid,
+            preload_index=len(worktrees) <= 1,
         )
+        with ThreadPoolExecutor(max_workers=_WORKTREE_WORKERS) as pool:
+            worktree_states = tuple(pool.map(read_worktree, worktrees, sessions))
+        views = tuple(view for view, _status in worktree_states)
+        statuses = {view.path: status for view, status in worktree_states}
         placed = {row.branch: row.path for row in worktrees if row.branch is not None}
         branches = tuple(
             self._branch(root, name, oid, placed.get(name), base_oid) for name, oid in sorted(heads.items())
@@ -488,21 +494,23 @@ class GitStateService:
             deletions=deletions,
         )
 
-    def _worktree(  # noqa: PLR0913, PLR0917 -- one row needs all of these
+    def _worktree(  # noqa: PLR0913 -- one row needs all of these
         self,
-        root: Path,
         row: WorktreeRow,
-        status: StatusRow,
+        session: WorkSession | None,
+        *,
+        root: Path,
         tabs: tuple[GitTab, ...],
         base: str | None,
         base_oid: str | None,
-        project_id: str,
-    ) -> WorktreeGitState:
+        preload_index: bool,
+    ) -> tuple[WorktreeGitState, StatusRow]:
+        path = Path(row.path)
+        status = self._reader.status(path, preload_index=preload_index)
         members = tuple(item for item in tabs if _same_path(item.worktree, row.path))
         tab = members[0] if len(members) == 1 else None
-        session = self.session_at(project_id, row.path)
         ahead, behind = self._between(root, row.head, base_oid)
-        start = self._reader.start_of(root, Path(row.path))
+        start = self._reader.start_of(root, path)
         if start is None and row.head is not None and base_oid is not None:
             start = self._reader.merge_base(root, base_oid, row.head)
         on_base = base is not None and row.branch == base
@@ -513,7 +521,7 @@ class GitStateService:
         )
         dirty = status.staged + status.unstaged + status.untracked + status.conflicted > 0
         busy = any(blocks_writes(DomainTabStatus(item.status.value)) for item in members)
-        return WorktreeGitState(
+        view = WorktreeGitState(
             path=row.path,
             is_main=row.is_main,
             branch=row.branch,
@@ -540,6 +548,7 @@ class GitStateService:
             work_session_id=None if session is None else session.id,
             tab_ids=tuple(TabId(item.tab_id) for item in members),
         )
+        return view, status
 
 
 @final
