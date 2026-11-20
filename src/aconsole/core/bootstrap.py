@@ -84,6 +84,7 @@ from aconsole.core.infrastructure.git.history import GitHistory
 from aconsole.core.infrastructure.git.operations import GitMutations
 from aconsole.core.infrastructure.git.retention import drain_ref_deletions
 from aconsole.core.infrastructure.git.watch import GitWatch
+from aconsole.core.infrastructure.http.api import MethodApi, issue_api_token
 from aconsole.core.infrastructure.http.app import IngestApp, serve_config
 from aconsole.core.infrastructure.http.approval import handle_permission
 from aconsole.core.infrastructure.http.auth import TokenBook
@@ -658,6 +659,7 @@ class Daemon:
         self._ingest_loop: asyncio.AbstractEventLoop | None = None
         self._ingest_tasks: list[asyncio.Task[None]] = []
         self._uvicorn: uvicorn.Server | None = None
+        self._method_connection: Connection | None = None
         self.database: Path | None = database
         self.sweep_every_s: float = SWEEP_EVERY_S
         self._engine: Engine | None = None
@@ -991,6 +993,7 @@ class Daemon:
             IngestApp(self._tokens, self._ingest_queue, observer=wake, permission_handler=self._permission),
             http_app(self._mcp),
             self._mcp_tokens,
+            MethodApi(issue_api_token(self.socket.parent), self._invoke_method),
         )
         listener = sockets.socket(sockets.AF_INET, sockets.SOCK_STREAM)
         listener.setsockopt(sockets.SOL_SOCKET, sockets.SO_REUSEADDR, 1)
@@ -1023,6 +1026,25 @@ class Daemon:
         # uvicorn exposes only a `started` flag, no event to wait on.
         while not server.started and not self._ingest_tasks[0].done():  # noqa: ASYNC110
             await asyncio.sleep(0.01)
+
+    def _method_session(self) -> Connection:
+        """A UI-role connection used only by ``POST /api``. It never shares a socket client's handshake."""
+        existing = self._method_connection
+        if existing is not None:
+            return existing
+        connection = Connection(
+            self._ring, tabs=self.tabs, approval_hold=self.approvals, setup_service=self.setup_service,
+            review=self.review, knowledge=self.knowledge, git=self.git, palette=self.palette,
+            session_id="api", host_namespace=True,
+        )
+        connection.health = self.health
+        connection.quota_refresh = self.refresh_limits
+        self._method_connection = connection
+        return connection
+
+    async def _invoke_method(self, method: str, params: bytes, timeout_ms: int) -> bytes:
+        connection = self._method_session()
+        return await self._in_worker(lambda: connection.invoke(method, params, timeout_ms=timeout_ms))
 
     async def _ingest_lost(self, tab_id: str, count: int) -> None:
         _LOG.warning("ingest lost/coalesced %d events for %s", count, tab_id)

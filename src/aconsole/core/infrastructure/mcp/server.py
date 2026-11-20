@@ -166,17 +166,18 @@ def http_app(server: MCPServer) -> _App:
     )
 
 
-def beside_ingest(ingest: _App, mcp: _App, tokens: TabTokens) -> _App:
-    """Serve MCP at ``/mcp`` and leave every other path on the ingest app."""
-    return _Beside(ingest, mcp, tokens)
+def beside_ingest(ingest: _App, mcp: _App, tokens: TabTokens, api: _App | None = None) -> _App:
+    """Serve MCP at ``/mcp``, the method API at ``/api``, and leave every other path on ingest."""
+    return _Beside(ingest, mcp, tokens, api)
 
 
 class _Beside:
     """One ASGI app: lifespan starts the MCP session manager; ``/mcp`` is the tool server."""
 
-    def __init__(self, ingest: _App, mcp: _App, tokens: TabTokens) -> None:
+    def __init__(self, ingest: _App, mcp: _App, tokens: TabTokens, api: _App | None = None) -> None:
         self._ingest: _App = ingest
         self._mcp: _App = mcp
+        self._api: _App | None = api
         self._tokens: TabTokens = tokens
         self._sessions: dict[str, str] = {}
 
@@ -187,6 +188,9 @@ class _Beside:
         path = scope.get("path")
         if isinstance(path, str) and (path == _MCP or path.startswith(f"{_MCP}/")):
             await self._mcp_request(scope, receive, send)
+            return
+        if self._api is not None and isinstance(path, str) and (path == "/api" or path.startswith("/api/")):
+            await self._api(scope, receive, send)
             return
         await self._ingest(scope, receive, send)
 
