@@ -14,6 +14,17 @@
     },
     "SetNodeStatusParams": {
       "properties": {
+        "accepted_debt": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
         "node_id": {
           "type": "string"
         },

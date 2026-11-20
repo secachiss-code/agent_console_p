@@ -5030,7 +5030,7 @@
       },
       "PlanSaveParams": {
         "additionalProperties": false,
-        "description": "Create a plan, or replace a draft. Omit `nodes` to leave the graph as it is.\n\nWithout `plan_id`, the project and title name the plan: a second save returns that plan\ninstead of inserting another. With `plan_id`, `title` may rename it. `nodes` replaces the\nwhole draft set in the same transaction.\n`repair_gate_profiles` explicitly replaces invalid legacy frozen L0 profiles by key;\nit requires `plan_id`, unchanged title/goal, omitted nodes, and no leases or attempts.",
+        "description": "Create a plan, or replace a draft. Omit `nodes` to leave the graph as it is.\n\nWithout `plan_id`, the project and title name the plan: a second save returns that plan\ninstead of inserting another. With `plan_id`, `title` may rename it. `nodes` replaces the\nwhole draft set in the same transaction.\n`repair_gate_profiles` explicitly replaces invalid legacy frozen L0 profiles by key;\nit requires `plan_id`, unchanged title/goal, omitted nodes, and no leases.\nFull repairs require no attempts. Once all L1 work is closed and L0 is still open,\nthis IPC method can replace the legacy zero-digest Tier 3 settings of those L0 nodes.",
         "properties": {
           "goal": {
             "default": "",
@@ -6097,6 +6097,17 @@
       },
       "SetNodeStatusParams": {
         "properties": {
+          "accepted_debt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
           "node_id": {
             "type": "string"
           },
