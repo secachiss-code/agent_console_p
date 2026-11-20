@@ -107,6 +107,33 @@ from aconsole.contracts.ipc import (
     InitializeParams,
     InitializeResult,
 )
+from aconsole.contracts.primitives import (
+    ApprovalListResult,
+    GateRunParams,
+    HandoverReadParams,
+    HandoverView,
+    HandoverWriteParams,
+    KnowledgeAddParams,
+    KnowledgeAddResult,
+    KnowledgeGetParams,
+    KnowledgeGetResult,
+    NodeAttachParams,
+    NodeAttachResult,
+    NodeClaimParams,
+    NodeClaimResult,
+    NodeEscalateParams,
+    NodeStepParams,
+    NodeUpdateParams,
+    NodeUpdateResult,
+    PipelineStepResult,
+    PlanAddNodeParams,
+    PlanAddNodeResult,
+    PlanCreateParams,
+    PlanCreateResult,
+    PlanReadyParams,
+    PlanReadyResult,
+    ProjectListResult,
+)
 from aconsole.contracts.settings import (
     Settings,
 )
@@ -262,6 +289,15 @@ class TypedFacade(Facade):
     async def plan_get(self, params: PlanIdParams) -> PlanView:
         return await self.typed("plan/get", params, PlanView)
 
+    async def plan_create(self, params: PlanCreateParams) -> PlanCreateResult:
+        return await self.typed("plan/create", params, PlanCreateResult)
+
+    async def plan_add_node(self, params: PlanAddNodeParams) -> PlanAddNodeResult:
+        return await self.typed("plan/addNode", params, PlanAddNodeResult)
+
+    async def plan_ready(self, params: PlanReadyParams) -> PlanReadyResult:
+        return await self.typed("plan/ready", params, PlanReadyResult)
+
     async def plan_save(self, params: PlanSaveParams) -> PlanView:
         return await self.typed("plan/save", params, PlanView)
 
@@ -291,6 +327,45 @@ class TypedFacade(Facade):
 
     async def knowledge_note_uri(self, params: NoteUriParams) -> NoteUriResult:
         return await self.typed("knowledge/noteUri", params, NoteUriResult)
+
+    async def knowledge_get(self, params: KnowledgeGetParams) -> KnowledgeGetResult:
+        return await self.typed("knowledge/get", params, KnowledgeGetResult)
+
+    async def knowledge_add(self, params: KnowledgeAddParams) -> KnowledgeAddResult:
+        return await self.typed("knowledge/add", params, KnowledgeAddResult)
+
+    async def handover_read(self, params: HandoverReadParams) -> HandoverView:
+        return await self.typed("handover/read", params, HandoverView)
+
+    async def handover_write(self, params: HandoverWriteParams) -> HandoverView:
+        return await self.typed("handover/write", params, HandoverView)
+
+    async def node_claim(self, params: NodeClaimParams) -> NodeClaimResult:
+        return await self.typed("node/claim", params, NodeClaimResult)
+
+    async def node_update(self, params: NodeUpdateParams) -> NodeUpdateResult:
+        return await self.typed("node/update", params, NodeUpdateResult)
+
+    async def node_attach(self, params: NodeAttachParams) -> NodeAttachResult:
+        return await self.typed("node/attach", params, NodeAttachResult)
+
+    async def node_step(self, params: NodeStepParams) -> PipelineStepResult:
+        return await self.typed("node/step", params, PipelineStepResult)
+
+    async def node_escalate(self, params: NodeEscalateParams) -> PipelineStepResult:
+        return await self.typed("node/escalate", params, PipelineStepResult)
+
+    async def gate_run(self, params: GateRunParams) -> PipelineStepResult:
+        return await self.typed("gate/run", params, PipelineStepResult)
+
+    async def project_list(self, params: EmptyParams) -> ProjectListResult:
+        return await self.typed("project/list", params, ProjectListResult)
+
+    async def project_get(self, params: ProjectIdParams) -> ProjectView:
+        return await self.typed("project/get", params, ProjectView)
+
+    async def approval_list(self, params: EmptyParams) -> ApprovalListResult:
+        return await self.typed("approval/list", params, ApprovalListResult)
 
     async def checkpoint_list(self, params: CheckpointListParams) -> CheckpointListResult:
         return await self.typed("checkpoint/list", params, CheckpointListResult)

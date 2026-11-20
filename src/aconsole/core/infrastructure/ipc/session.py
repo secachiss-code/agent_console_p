@@ -48,6 +48,7 @@ from aconsole.contracts.ipc import (
     ResponseOk,
     SidecarSignal,
 )
+from aconsole.contracts.primitives import ApprovalListResult
 from aconsole.core.application.ports.git_repo import GitCommandError
 from aconsole.core.application.services.approval_broker import ApprovalHold
 from aconsole.core.application.services.git import GIT_METHODS, GitService
@@ -272,6 +273,13 @@ class Connection:
         if request.method == "quota/refresh" and self.quota_refresh is not None:
             self.quota_refresh()
             return (self._ok(request.id, EmptyResult()),)
+        if request.method == "approval/list":
+            try:
+                _ = msgspec.json.decode(request.params, type=EmptyParams)
+            except msgspec.DecodeError:
+                return (self._err(request.id, "INVALID_PARAMS"),)
+            pending = () if self.approval_hold is None else self.approval_hold.pending_views()
+            return (self._ok(request.id, ApprovalListResult(approvals=pending)),)
         if request.method == "approval/decide" and self.approval_hold is not None:
             return self._decide_approval(request, self.approval_hold)
         if request.method == "approval/releaseToNative" and self.approval_hold is not None:

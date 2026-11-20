@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from typing import Final, final
+from typing import Final, Literal, final
 
 import msgspec
-from pydantic import TypeAdapter
+from pydantic import BaseModel, TypeAdapter
 
 from aconsole.contracts.app import (
     DirectionGateParams,
@@ -26,11 +26,44 @@ from aconsole.contracts.app import (
     SetNodeStatusParams,
 )
 from aconsole.contracts.common import NodeId, PlanId
+from aconsole.contracts.primitives import (
+    GateRunParams,
+    HandoverReadParams,
+    HandoverView,
+    HandoverWriteParams,
+    KnowledgeAddParams,
+    KnowledgeAddResult,
+    KnowledgeGetParams,
+    KnowledgeGetResult,
+    NodeAttachParams,
+    NodeAttachResult,
+    NodeClaimParams,
+    NodeClaimResult,
+    NodeEscalateParams,
+    NodeStepParams,
+    NodeUpdateParams,
+    NodeUpdateResult,
+    PipelineStepResult,
+    PlanAddNodeParams,
+    PlanAddNodeResult,
+    PlanCreateParams,
+    PlanCreateResult,
+    PlanReadyParams,
+    PlanReadyResult,
+)
 from aconsole.core.application.ports.plan_store import StoredPlan
 from aconsole.core.domain.errors import DomainError
+from aconsole.core.domain.pipeline import Step
 from aconsole.core.domain.scope import check_scope
 from aconsole.core.infrastructure.codegraph.index import CodeGraphIndex
-from aconsole.core.infrastructure.mcp.tools import PlanBoard, impact_layers
+from aconsole.core.infrastructure.mcp.tools import (
+    PipelineReply,
+    PlanBoard,
+    TabContext,
+    as_domain_error,
+    impact_layers,
+    nodes_from_specs,
+)
 from aconsole.core.infrastructure.persistence.repositories.code_graph import persistent_impact
 from aconsole.core.infrastructure.vault.sync import VaultSync
 
@@ -46,9 +79,25 @@ PLAN_METHODS: Final = frozenset(
         "plan/setNodeStatus",
         "plan/freeze",
         "plan/applyChange",
+        "plan/create",
+        "plan/addNode",
+        "plan/ready",
     }
 )
-KNOWLEDGE_METHODS: Final = PLAN_METHODS | {"knowledge/noteUri", "knowledge/impact"}
+KNOWLEDGE_METHODS: Final = PLAN_METHODS | {
+    "knowledge/noteUri",
+    "knowledge/impact",
+    "knowledge/get",
+    "knowledge/add",
+    "handover/read",
+    "handover/write",
+    "node/claim",
+    "node/update",
+    "node/attach",
+    "node/step",
+    "node/escalate",
+    "gate/run",
+}
 _IMPACT_LIMIT: Final = 200
 _IMPACT_UNKNOWN: Final = 5007
 _PLAN_NOT_FOUND: Final = 4001
@@ -63,11 +112,131 @@ class KnowledgeService:
         self.code_graph: CodeGraphIndex = code_graph
 
     def dispatch(self, method: str, raw: bytes) -> msgspec.Struct:
+        if method in {"plan/create", "plan/addNode", "plan/ready"}:
+            return self._primitive(method, raw)
         if method.startswith("plan/"):
             return self._plan(method, raw)
+        if method in {"knowledge/get", "knowledge/add", "handover/read", "handover/write"}:
+            return self._primitive(method, raw)
+        if method.startswith(("node/", "gate/")):
+            return self._primitive(method, raw)
         if method == "knowledge/impact":
             return self._impact(msgspec.json.decode(raw, type=ImpactParams))
         return self._note_uri(msgspec.json.decode(raw, type=NoteUriParams))
+
+    def _primitive(self, method: str, raw: bytes) -> msgspec.Struct:
+        """One PlanBoard effect, with the ids from the request body."""
+        return _as_wire(method, run_primitive(self.board, method, raw))
+
+    def call_primitive(  # noqa: C901, PLR0911 -- one return per primitive, kept named for the branch
+        self, method: str, raw: bytes, actor: TabContext | None = None
+    ) -> BaseModel:
+        if method == "plan/create":
+            params = msgspec.json.decode(raw, type=PlanCreateParams)
+            return self.board.create(_bind(actor, str(params.project_id)), params.title, params.goal, [])
+        if method == "plan/addNode":
+            params = msgspec.json.decode(raw, type=PlanAddNodeParams)
+            return self.board.add_nodes(
+                _bind(actor, str(params.project_id)), str(params.plan_id), nodes_from_specs((params.node,))
+            )
+        if method == "plan/ready":
+            params = msgspec.json.decode(raw, type=PlanReadyParams)
+            return self.board.ready(
+                _bind(actor, str(params.project_id)),
+                None if params.plan_id is None else str(params.plan_id),
+                params.limit,
+            )
+        if method == "node/claim":
+            params = msgspec.json.decode(raw, type=NodeClaimParams)
+            return self.board.claim(
+                _bind(actor, str(params.project_id), str(params.tab_id), "execute"), str(params.node_id)
+            )
+        if method == "node/update":
+            params = msgspec.json.decode(raw, type=NodeUpdateParams)
+            return self.board.update(
+                _bind(actor, str(params.project_id), str(params.tab_id), "execute"),
+                str(params.node_id),
+                params.fence,
+                params.status,
+                params.note,
+                params.evidence,
+            )
+        if method == "node/attach":
+            params = msgspec.json.decode(raw, type=NodeAttachParams)
+            return self.board.attach(
+                _bind(actor, str(params.project_id), str(params.tab_id), "execute"),
+                str(params.node_id),
+                params.fence,
+                params.kind,
+                params.ref,
+                params.title,
+            )
+        if method == "node/step":
+            params = msgspec.json.decode(raw, type=NodeStepParams)
+            return self.board.pipeline_step(
+                _bind(actor, str(params.project_id), str(params.tab_id), "execute"),
+                "reset" if params.step == "reset" else "submit",
+                str(params.node_id),
+                params.fence,
+                step=_recorded_step(params.step),
+                symbols=params.affected_symbols,
+                note=params.note,
+                patch=params.patch,
+            )
+        if method == "node/escalate":
+            params = msgspec.json.decode(raw, type=NodeEscalateParams)
+            return self.board.pipeline_step(
+                _bind(actor, str(params.project_id), str(params.tab_id), "execute"),
+                "escalate",
+                str(params.node_id),
+                params.fence,
+                kind=params.kind,
+                reason=params.reason,
+            )
+        if method == "gate/run":
+            params = msgspec.json.decode(raw, type=GateRunParams)
+            return self.board.pipeline_step(
+                _bind(actor, str(params.project_id), str(params.tab_id), "execute"),
+                "gate",
+                str(params.node_id),
+                params.fence,
+                tier=params.tier,
+            )
+        if method == "knowledge/get":
+            params = msgspec.json.decode(raw, type=KnowledgeGetParams)
+            return self.board.ctx(
+                _bind(actor, str(params.project_id)),
+                None if params.node_id is None else str(params.node_id),
+                params.query,
+                params.max_items,
+            )
+        if method == "knowledge/add":
+            params = msgspec.json.decode(raw, type=KnowledgeAddParams)
+            return self.board.kb_add(
+                _bind(actor, str(params.project_id)),
+                params.kind,
+                params.title,
+                params.body,
+                params.source,
+                list(params.code_refs),
+                params.supersedes,
+            )
+        if method == "handover/read":
+            params = msgspec.json.decode(raw, type=HandoverReadParams)
+            return self.board.handover(
+                _bind(actor, str(params.project_id), str(params.tab_id)), "read", None, [], [], [], [], []
+            )
+        written = msgspec.json.decode(raw, type=HandoverWriteParams)
+        return self.board.handover(
+            _bind(actor, str(written.project_id), str(written.tab_id)),
+            "write",
+            written.goal,
+            list(written.done),
+            list(written.decisions),
+            list(written.open_questions),
+            list(written.next_steps),
+            list(written.failing_checks),
+        )
 
     def _plan(self, method: str, raw: bytes) -> msgspec.Struct:
         if method in {"plan/inbox", "plan/decide", "plan/directionGate"}:
@@ -214,3 +383,67 @@ class KnowledgeService:
         if path is None:
             raise DomainError(code=_NOTE_NOT_FOUND, name="NOTE_NOT_FOUND", retryable=False, extra=(str(params.note),))
         return NoteUriResult(uri=path.as_uri())
+
+
+_WIRE: dict[str, type[msgspec.Struct]] = {
+    "plan/create": PlanCreateResult,
+    "plan/addNode": PlanAddNodeResult,
+    "plan/ready": PlanReadyResult,
+    "node/claim": NodeClaimResult,
+    "node/update": NodeUpdateResult,
+    "node/attach": NodeAttachResult,
+    "knowledge/get": KnowledgeGetResult,
+    "knowledge/add": KnowledgeAddResult,
+    "handover/read": HandoverView,
+    "handover/write": HandoverView,
+}
+
+
+def run_primitive(
+    board: PlanBoard, method: str, raw: bytes, ctx: TabContext | None = None, *, translate: bool = True
+) -> BaseModel:
+    """The board effect behind one REST method. MCP passes the live tab and keeps tool errors."""
+    holder = KnowledgeService.__new__(KnowledgeService)
+    holder.board = board
+    try:
+        return holder.call_primitive(method, raw, ctx)
+    except Exception as exc:
+        if not translate:
+            raise
+        raise as_domain_error(exc) from exc
+
+
+def _bind(
+    given: TabContext | None,
+    project_id: str,
+    tab_id: str = "human",
+    mode: Literal["plan", "execute"] = "plan",
+) -> TabContext:
+    if given is not None:
+        return given
+    return _actor(project_id, tab_id, mode)
+
+
+def _as_wire(method: str, model: BaseModel) -> msgspec.Struct:
+    if isinstance(model, PipelineReply):
+        return PipelineStepResult(reply_json=model.model_dump_json())
+    return _wire(model, _WIRE[method])
+
+
+def _actor(project_id: str, tab_id: str = "human", mode: Literal["plan", "execute"] = "plan") -> TabContext:
+    """The caller of a primitive. MCP uses the same board methods with the tab's own context."""
+    return TabContext(tab_id=tab_id, project_id=project_id, worktree=None, agent="human", mode=mode)
+
+
+def _wire[T: msgspec.Struct](model: BaseModel, struct: type[T]) -> T:
+    return msgspec.json.decode(model.model_dump_json().encode(), type=struct)
+
+
+def _recorded_step(step: str) -> Step:
+    if step == "patch":
+        return "patch"
+    if step == "test":
+        return "test"
+    if step == "verify":
+        return "verify"
+    return "spec"

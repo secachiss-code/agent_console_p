@@ -2059,6 +2059,14 @@ def _mcp_specs(nodes: list[NodeIn]) -> tuple[PlanNodeSpec, ...]:
     )
 
 
+def nodes_from_specs(nodes: tuple[PlanNodeSpec, ...]) -> list[NodeIn]:
+    """The board's node input. A bad spec becomes a domain error, not a tool envelope."""
+    try:
+        return _node_inputs(nodes)
+    except _ToolError as exc:
+        raise _domain_error(exc) from exc
+
+
 def _node_inputs(nodes: tuple[PlanNodeSpec, ...]) -> list[NodeIn]:
     try:
         return [
@@ -2245,6 +2253,13 @@ def _planning_nodes(ctx: TabContext, nodes: list[NodeIn]) -> list[NodeIn]:
 def _domain(exc: DomainError) -> NoReturn:
     detail = exc.name if not exc.extra else exc.name + " " + ", ".join(exc.extra)
     _stop(exc.name, detail)
+
+
+def as_domain_error(exc: BaseException) -> DomainError:
+    """A board refusal as a domain error. Any other exception is raised unchanged."""
+    if not isinstance(exc, _ToolError):
+        raise exc
+    return _domain_error(exc)
 
 
 def _domain_error(exc: _ToolError) -> DomainError:
