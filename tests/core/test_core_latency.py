@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import os
 import threading
 import time
 from contextlib import asynccontextmanager
@@ -106,7 +107,8 @@ async def _running(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> AsyncIter
 
 
 def _measure(name: str, value: float) -> None:
-    directory = Path(__file__).parents[2] / ".aconsole-dev/core2-latency"
+    output = os.environ.get("ACONSOLE_TEST_LATENCY_DIR")
+    directory = Path(output) if output else Path(__file__).parents[2] / ".aconsole-dev/core2-latency"
     directory.mkdir(parents=True, exist_ok=True)
     (directory / f"{name}.json").write_text(json.dumps({"seconds": value, "limit_seconds": _LIMIT_S}) + "\n")
 
