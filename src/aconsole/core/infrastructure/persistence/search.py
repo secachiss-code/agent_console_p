@@ -15,6 +15,14 @@ _MATCH_ERRORS = (
     "no such column: ",
     "unknown special query:",
 )
+_FTS_TABLES = frozenset(
+    {"note_fts", "note_fts_config", "note_fts_content", "note_fts_data", "note_fts_docsize", "note_fts_idx"}
+)
+
+
+def include_orm_schema_name(name: str | None, type_: str, _parent_names: object) -> bool:
+    """Leave the migration-owned FTS5 table and its SQLite shadow tables to SQLite."""
+    return type_ != "table" or name not in _FTS_TABLES
 
 
 def create_index(connection: Connection) -> None:

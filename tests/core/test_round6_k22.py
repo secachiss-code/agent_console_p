@@ -35,6 +35,7 @@ from aconsole.core.infrastructure.ipc.server import IpcServer
 from aconsole.core.infrastructure.ipc.session import Connection
 from aconsole.core.infrastructure.persistence.engine import migrate, write_engine
 from aconsole.core.infrastructure.persistence.models import Base, Project, QuotaHistory, Setting, Tab
+from aconsole.core.infrastructure.persistence.search import include_orm_schema_name
 from aconsole.core.infrastructure.persistence.startup import (
     backup,
     default_database,
@@ -411,7 +412,8 @@ def test_round6_k22_daemon_sweep_runs(tmp_path: Path) -> None:
 def _drift(engine: Engine) -> object:
     """Alembic autogenerate's view of the difference between the database and the ORM metadata."""
     with engine.connect() as connection:
-        return _COMPARE(MigrationContext.configure(connection), Base.metadata)
+        context = MigrationContext.configure(connection, opts={"include_name": include_orm_schema_name})
+        return _COMPARE(context, Base.metadata)
 
 
 def test_round6_k22_migration_matches_models(tmp_path: Path) -> None:
@@ -420,6 +422,23 @@ def test_round6_k22_migration_matches_models(tmp_path: Path) -> None:
     engine = write_engine(url)
     try:
         assert _drift(engine) == []
+    finally:
+        engine.dispose()
+
+
+def test_round6_k22_migration_detects_an_unrelated_table_with_the_fts_prefix(tmp_path: Path) -> None:
+    url = f"sqlite:///{tmp_path / 'aconsole.db'}"
+    migrate(url, "head")
+    engine = write_engine(url)
+    try:
+        unexpected = Table("note_fts_unexpected", MetaData(), Column("id", Integer, primary_key=True))
+        unexpected.create(engine)
+        diff = _drift(engine)
+        assert isinstance(diff, list)
+        [(operation, reflected)] = diff
+        assert operation == "remove_table"
+        assert isinstance(reflected, Table)
+        assert reflected.name == unexpected.name
     finally:
         engine.dispose()
 
