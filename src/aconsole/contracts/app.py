@@ -559,6 +559,7 @@ class SetNodeStatusParams(msgspec.Struct, frozen=True, kw_only=True):
     node_id: NodeId
     status: NodeStatus
     note: str | None = None
+    accepted_debt: str | None = None
 
 
 class ImpactParams(msgspec.Struct, frozen=True, kw_only=True):

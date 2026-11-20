@@ -144,7 +144,9 @@ class KnowledgeService:
             self.board.delete_plan(str(wanted.plan_id))
             return EmptyResult()
         moved = msgspec.json.decode(raw, type=SetNodeStatusParams)
-        return self.board.set_node_status(str(moved.node_id), moved.status.value, moved.note)
+        return self.board.set_node_status(
+            str(moved.node_id), moved.status.value, moved.note, accepted_debt=moved.accepted_debt,
+        )
 
     def _save(self, raw: bytes) -> msgspec.Struct:
         try:

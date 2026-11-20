@@ -574,8 +574,12 @@ class PlanBoard:
             self._commit(candidate, change_id=change_id)
             return self._view(candidate)
 
-    def set_node_status(self, node_id: str, status: str, note: str | None) -> PlanNodeView:
+    def set_node_status(
+        self, node_id: str, status: str, note: str | None, *, accepted_debt: str | None = None,
+    ) -> PlanNodeView:
         """The user moves a node. A human holds no fence, so the node's own fence is used. A note serves as evidence."""
+        if accepted_debt is not None:
+            return self._complete_with_debt(node_id, status, note, accepted_debt)
         if status == "done":
             with self._lock:
                 stored, meta = self._find_node(node_id)
@@ -614,6 +618,31 @@ class PlanBoard:
             self._commit(stored)
             view = self._view(stored)
             return next(item for item in view.nodes if str(item.id) == node_id)
+
+    def _complete_with_debt(self, node_id: str, status: str, note: str | None, debt: str) -> PlanNodeView:
+        description = (note or "").strip()
+        debt = debt.strip()
+        if status != "done" or not description or not debt:
+            raise DomainError(code=4013, name="NODE_CONTRACT", retryable=False)
+        evidence = f"{debt}: {description}"
+        with self._lock:
+            stored, meta = self._find_node(node_id)
+            current = stored.dag.get(meta.key)
+            if current.level != 0 or not isinstance(self._store, PlanInboxStore):
+                raise DomainError(code=4013, name="NODE_CONTRACT", retryable=False)
+            if current.status is NodeStatus.DONE and current.evidence == evidence:
+                return next(node for node in self._view(stored).nodes if str(node.id) == node_id)
+            now = self._now()
+            _ = stored.dag.transition(Move(
+                key=meta.key, to=NodeStatus.DONE, role=Role.HUMAN, at=now,
+                note=evidence, evidence=evidence,
+                fence=current.fence if current.lease_expires_at is not None else None,
+            ))
+            self._commit(stored, decision=StoredPlanDecision(
+                id=uuid4().hex[:26], request_id=None, node_id=node_id,
+                action="accept_direction_debt", note=evidence, at=now,
+            ))
+            return next(node for node in self._view(stored).nodes if str(node.id) == node_id)
 
     def inbox(self, plan_id: str) -> tuple[StoredPlanChange, ...]:
         with self._lock:

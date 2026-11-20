@@ -154,6 +154,34 @@ def test_real_direction_receipt_audit_restart_and_completion(pipeline: PipelineH
         assert h.board.set_node_status(direction.id, "done", "Reviewed direction").status.value == "done"
 
 
+def test_direction_acceptance_with_debt_is_audited_and_requires_closed_children(pipeline: PipelineHarness) -> None:
+    from sqlalchemy import select
+
+    from aconsole.core.infrastructure.persistence.models import PlanInbox
+
+    h = pipeline
+    direction = h.board.export_plan(h.plan).nodes[0]
+    with pytest.raises(DomainError, match="NODE_NOT_READY"):
+        _ = h.board.set_node_status(direction.id, "done", "Accepted by user", accepted_debt="TD-1")
+    with pytest.raises(DomainError, match="NODE_CONTRACT"):
+        _ = h.board.set_node_status(h.node, "done", "Accepted by user", accepted_debt="TD-1")
+    _ = h.board.set_node_status(h.node, "cancelled", "Not needed")
+    _ = h.board.set_node_status(direction.id, "cancelled", "Awaiting decision")
+
+    accepted = h.board.set_node_status(direction.id, "done", "Accepted by user", accepted_debt="TD-1")
+    assert accepted.status.value == "done"
+    h.restart()
+    replayed = h.board.set_node_status(direction.id, "done", "Accepted by user", accepted_debt="TD-1")
+    assert replayed.status.value == "done"
+
+    def check_decision(session: Session) -> None:
+        row = session.scalars(select(PlanInbox).where(PlanInbox.node_id == direction.id)).one()
+        assert row.decided_by == "human"
+        assert row.payload == {"decision": "accept_direction_debt", "decision_note": "TD-1: Accepted by user"}
+
+    _ = h.writer.call(check_decision)
+
+
 def test_sealed_environment_is_rechecked_on_replay_and_during_execution(pipeline: PipelineHarness) -> None:
     h = pipeline
     direction = h.board.export_plan(h.plan).nodes[0]
