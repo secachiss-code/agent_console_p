@@ -1,13 +1,17 @@
 """Write JSON Schema, OpenAPI, and the Markdown type index from the structs."""
 
+import importlib
 import json
+import pkgutil
 from pathlib import Path
+from types import ModuleType
 
 import msgspec
 from pydantic import BaseModel
 
 from aconsole.contracts import ingest, methods
 from aconsole.contracts.catalog import STRUCTS
+from aconsole.contracts.errors import ErrorObject
 from aconsole.contracts.mcp_models import (
     GateRunIn,
     McpErrorBody,
@@ -67,6 +71,7 @@ def schema_documents() -> dict[str, str]:
         relative = f"contracts/schema/mcp/{model.__name__}.schema.json"
         documents[relative] = json.dumps(body, indent=2, sort_keys=True) + "\n"
     documents["contracts/schema/ingest.openapi.yaml"] = json.dumps(_openapi(), indent=2, sort_keys=True) + "\n"
+    documents["contracts/schema/api.openapi.yaml"] = json.dumps(_api_openapi(), indent=2, sort_keys=True) + "\n"
     return documents
 
 
@@ -139,6 +144,110 @@ def _openapi() -> dict[str, object]:
             "/v1/tabs/{tab_id}/codex/notify": {"post": _post(_accept_responses())},
         },
         "components": {"schemas": schemas},
+    }
+
+
+def _contract_structs() -> dict[str, type[msgspec.Struct]]:
+    """Every struct defined under ``aconsole.contracts``, including ones absent from ``STRUCTS``."""
+    import aconsole.contracts as package  # noqa: PLC0415 -- pkgutil needs the package path
+
+    found: dict[str, type[msgspec.Struct]] = {}
+    for module_info in pkgutil.iter_modules(package.__path__):
+        if module_info.name == "generate":
+            continue
+        module = importlib.import_module(f"aconsole.contracts.{module_info.name}")
+        found.update(_structs_defined_in(module))
+    return found
+
+
+def _structs_defined_in(module: ModuleType) -> dict[str, type[msgspec.Struct]]:
+    found: dict[str, type[msgspec.Struct]] = {}
+    for name in dir(module):
+        value: object = getattr(module, name)  # pyright: ignore[reportAny] -- module attributes are untyped
+        if isinstance(value, type) and issubclass(value, msgspec.Struct) and value.__module__ == module.__name__:
+            found[name] = value
+    return found
+
+
+def _api_openapi() -> dict[str, object]:
+    """One POST path per published method. The socket and the sidecar stay out of this document."""
+    by_name = _contract_structs()
+    selected = methods.rest_methods()
+    ordered: list[type[msgspec.Struct]] = [ErrorObject]
+    seen = {"ErrorObject"}
+    for method in selected:
+        for name in (method.params, method.result):
+            if name in seen:
+                continue
+            struct = by_name.get(name)
+            if struct is None:
+                message = f"{method.name} names unknown struct {name}"
+                raise KeyError(message)
+            seen.add(name)
+            ordered.append(struct)
+    _refs, components = msgspec.json.schema_components(tuple(ordered))
+    schemas = _openapi_schemas(components)
+    paths: dict[str, object] = {}
+    for method in selected:
+        paths[f"/api/v1/{method.name}"] = {"post": _api_operation(method)}
+    return {
+        "openapi": "3.1.0",
+        "info": {"title": "AConsole methods", "version": "1.0.0"},
+        "paths": paths,
+        "components": {
+            "schemas": schemas,
+            "securitySchemes": {"apiToken": {"type": "http", "scheme": "bearer"}},
+        },
+        "security": [{"apiToken": []}],
+    }
+
+
+def _openapi_schemas(components: dict[str, object]) -> dict[str, object]:
+    return {key: _rewrite_refs(value) for key, value in components.items()}
+
+
+def _rewrite_refs(value: object) -> object:
+    if isinstance(value, str):
+        return value.replace("#/$defs/", "#/components/schemas/")
+    if isinstance(value, list):
+        return [_rewrite_refs(item) for item in value]  # pyright: ignore[reportUnknownVariableType, reportUnknownArgumentType]
+    if isinstance(value, dict):
+        rewritten: dict[str, object] = {}
+        for key, item in value.items():  # pyright: ignore[reportUnknownVariableType]
+            rewritten[str(key)] = _rewrite_refs(item)  # pyright: ignore[reportUnknownArgumentType]
+        return rewritten
+    return value
+
+
+def _with_timeout(body: dict[str, object], header: dict[str, object]) -> dict[str, object]:
+    timed = dict(body)
+    timed["headers"] = {"X-Aconsole-Timeout-Ms": header}
+    return timed
+
+
+def _api_operation(method: methods.Method) -> dict[str, object]:
+    tag = method.capability if method.capability is not None else "core"
+    header: dict[str, object] = {
+        "description": "Milliseconds the caller should wait for this method.",
+        "schema": {"const": methods.rest_timeout_ms(method), "type": "integer"},
+    }
+    described: dict[str, dict[str, object]] = {
+        "200": _json_response("method result", _ref(method.result), media="application/json"),
+        "400": _json_response("invalid params", _ref("ErrorObject"), media="application/json"),
+        "401": _problem("unauthorized"),
+        "403": _json_response("forbidden", _ref("ErrorObject"), media="application/json"),
+        "404": _json_response("method not published", _ref("ErrorObject"), media="application/json"),
+        "409": _json_response("domain error", _ref("ErrorObject"), media="application/json"),
+        "413": _problem("payload too large"),
+        "500": _json_response("internal error", _ref("ErrorObject"), media="application/json"),
+        "503": _json_response("busy", _ref("ErrorObject"), media="application/json"),
+    }
+    responses: dict[str, object] = {code: _with_timeout(body, header) for code, body in described.items()}
+    return {
+        "tags": [tag],
+        "operationId": method.name.replace("/", "_"),
+        "requestBody": {"required": True, "content": {"application/json": {"schema": _ref(method.params)}}},
+        "responses": responses,
     }
 
 

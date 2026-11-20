@@ -9,11 +9,27 @@ from __future__ import annotations
 from collections.abc import Callable, Mapping
 from typing import Annotated, Literal, Protocol, override
 
+import msgspec
 from mcp.server.mcpserver import MCPServer
 from mcp.types import Tool, ToolAnnotations
-from pydantic import Field
+from pydantic import BaseModel, Field
 
+from aconsole.contracts.common import NodeId, PlanId, ProjectId, TabId
+from aconsole.contracts.primitives import (
+    GateRunParams,
+    HandoverReadParams,
+    HandoverWriteParams,
+    KnowledgeAddParams,
+    KnowledgeGetParams,
+    NodeAttachParams,
+    NodeClaimParams,
+    NodeEscalateParams,
+    NodeStepParams,
+    NodeUpdateParams,
+    PlanReadyParams,
+)
 from aconsole.core.infrastructure.http.auth import bearer_token, host_allowed, origin_allowed
+from aconsole.core.infrastructure.knowledge import run_primitive
 from aconsole.core.infrastructure.mcp.tools import (
     Added,
     Attached,
@@ -166,17 +182,18 @@ def http_app(server: MCPServer) -> _App:
     )
 
 
-def beside_ingest(ingest: _App, mcp: _App, tokens: TabTokens) -> _App:
-    """Serve MCP at ``/mcp`` and leave every other path on the ingest app."""
-    return _Beside(ingest, mcp, tokens)
+def beside_ingest(ingest: _App, mcp: _App, tokens: TabTokens, api: _App | None = None) -> _App:
+    """Serve MCP at ``/mcp``, the method API at ``/api``, and leave every other path on ingest."""
+    return _Beside(ingest, mcp, tokens, api)
 
 
 class _Beside:
     """One ASGI app: lifespan starts the MCP session manager; ``/mcp`` is the tool server."""
 
-    def __init__(self, ingest: _App, mcp: _App, tokens: TabTokens) -> None:
+    def __init__(self, ingest: _App, mcp: _App, tokens: TabTokens, api: _App | None = None) -> None:
         self._ingest: _App = ingest
         self._mcp: _App = mcp
+        self._api: _App | None = api
         self._tokens: TabTokens = tokens
         self._sessions: dict[str, str] = {}
 
@@ -187,6 +204,9 @@ class _Beside:
         path = scope.get("path")
         if isinstance(path, str) and (path == _MCP or path.startswith(f"{_MCP}/")):
             await self._mcp_request(scope, receive, send)
+            return
+        if self._api is not None and isinstance(path, str) and (path == "/api" or path.startswith("/api/")):
+            await self._api(scope, receive, send)
             return
         await self._ingest(scope, receive, send)
 
@@ -275,7 +295,18 @@ async def _bounded_request(scope: Mapping[str, object], receive: _Receive, send:
     return replay
 
 
-def _register(  # noqa: C901 -- one nested function per MCP tool
+def _primitive[T: BaseModel](
+    board: PlanBoard, ctx: TabContext, method: str, params: msgspec.Struct, kind: type[T]
+) -> T:
+    """One REST primitive, answered with the tab that owns this MCP session."""
+    found = run_primitive(board, method, msgspec.json.encode(params), ctx, translate=False)
+    if not isinstance(found, kind):
+        message = f"{method} returned {type(found).__name__}"
+        raise TypeError(message)
+    return found
+
+
+def _register(  # noqa: C901, PLR0915 -- one nested function per MCP tool
     server: MCPServer, board: PlanBoard, context: TabContext, sent: Callable[[str, int], None] | None
 ) -> None:
     def plan_create(
@@ -322,11 +353,19 @@ def _register(  # noqa: C901 -- one nested function per MCP tool
 
     def plan_ready(plan_id: _Id | None = None, limit: Annotated[int, Field(ge=1, le=20)] = 5) -> PlanReady:
         """Claimable nodes, highest priority first. Pipeline nodes require a frozen contract."""
-        return board.ready(active(context), plan_id, limit)
+        ctx = active(context)
+        return _primitive(board, ctx, "plan/ready", PlanReadyParams(
+            project_id=ProjectId(ctx.project_id),
+            plan_id=None if plan_id is None else PlanId(plan_id),
+            limit=limit,
+        ), PlanReady)
 
     def node_claim(node_id: _Id) -> Claimed:
         """Take the lease. Returns the fence later calls must send."""
-        return board.claim(active(context), node_id)
+        ctx = active(context)
+        return _primitive(board, ctx, "node/claim", NodeClaimParams(
+            project_id=ProjectId(ctx.project_id), node_id=NodeId(node_id), tab_id=TabId(ctx.tab_id),
+        ), Claimed)
 
     def step_begin(node_id: _Id, fence: int) -> PipelineReply:
         """Begin or resume L2 with stable context, handoff and lease tail."""
@@ -341,24 +380,27 @@ def _register(  # noqa: C901 -- one nested function per MCP tool
         patch: Annotated[str, Field(max_length=256 * 1024)] | None = None,
     ) -> PipelineReply:
         """Record a scoped L2 block. Verify executes the kernel micro gate."""
-        return board.pipeline_step(
-            active(context),
-            "submit",
-            node_id,
-            fence,
-            step=step,
-            symbols=tuple(affected_symbols or ()),
-            note=note,
-            patch=patch,
-        )
+        ctx = active(context)
+        return _primitive(board, ctx, "node/step", NodeStepParams(
+            project_id=ProjectId(ctx.project_id), node_id=NodeId(node_id), tab_id=TabId(ctx.tab_id),
+            fence=fence, step=step, affected_symbols=tuple(affected_symbols or ()), note=note, patch=patch,
+        ), PipelineReply)
 
     def step_reset(node_id: _Id, fence: int) -> PipelineReply:
         """Restore scope files to the last verified snapshot; keep other files."""
-        return board.pipeline_step(active(context), "reset", node_id, fence)
+        ctx = active(context)
+        return _primitive(board, ctx, "node/step", NodeStepParams(
+            project_id=ProjectId(ctx.project_id), node_id=NodeId(node_id), tab_id=TabId(ctx.tab_id),
+            fence=fence, step="reset",
+        ), PipelineReply)
 
     def gate_run(node_id: _Id, fence: int, tier: Literal["micro", "blast"]) -> PipelineReply:
         """Run a kernel gate or reuse its fresh receipt."""
-        return board.pipeline_step(active(context), "gate", node_id, fence, tier=tier)
+        ctx = active(context)
+        return _primitive(board, ctx, "gate/run", GateRunParams(
+            project_id=ProjectId(ctx.project_id), node_id=NodeId(node_id), tab_id=TabId(ctx.tab_id),
+            fence=fence, tier=tier,
+        ), PipelineReply)
 
     def node_escalate(
         node_id: _Id,
@@ -367,7 +409,11 @@ def _register(  # noqa: C901 -- one nested function per MCP tool
         kind: Annotated[str, Field(min_length=1, max_length=32)] = "replan",
     ) -> PipelineReply:
         """Block a node and request a human decision without adding vertices."""
-        return board.pipeline_step(active(context), "escalate", node_id, fence, kind=kind, reason=reason)
+        ctx = active(context)
+        return _primitive(board, ctx, "node/escalate", NodeEscalateParams(
+            project_id=ProjectId(ctx.project_id), node_id=NodeId(node_id), tab_id=TabId(ctx.tab_id),
+            fence=fence, reason=reason, kind=kind,
+        ), PipelineReply)
 
     def node_update(
         node_id: _Id,
@@ -377,7 +423,11 @@ def _register(  # noqa: C901 -- one nested function per MCP tool
         evidence: Annotated[str, Field(max_length=4000)] | None = None,
     ) -> Updated:
         """Move a node, or heartbeat. Omit fence only for a transition without an active lease."""
-        return board.update(active(context), node_id, fence, status, note, evidence)
+        ctx = active(context)
+        return _primitive(board, ctx, "node/update", NodeUpdateParams(
+            project_id=ProjectId(ctx.project_id), node_id=NodeId(node_id), tab_id=TabId(ctx.tab_id),
+            fence=fence, status=status, note=note, evidence=evidence,
+        ), Updated)
 
     def node_attach(
         node_id: _Id,
@@ -387,7 +437,11 @@ def _register(  # noqa: C901 -- one nested function per MCP tool
         title: Annotated[str, Field(max_length=300)] | None = None,
     ) -> Attached:
         """Attach one artifact. The same kind and ref return the same id."""
-        return board.attach(active(context), node_id, fence, kind, ref, title)
+        ctx = active(context)
+        return _primitive(board, ctx, "node/attach", NodeAttachParams(
+            project_id=ProjectId(ctx.project_id), node_id=NodeId(node_id), tab_id=TabId(ctx.tab_id),
+            fence=fence, kind=kind, ref=ref, title=title,
+        ), Attached)
 
     def ctx_get(
         node_id: _Id | None = None,
@@ -397,7 +451,13 @@ def _register(  # noqa: C901 -- one nested function per MCP tool
     ) -> CtxResult:
         """Knowledge for a node or a query. Summaries stay short."""
         _ = response_format
-        return board.ctx(active(context), node_id, query, max_items)
+        ctx = active(context)
+        return _primitive(board, ctx, "knowledge/get", KnowledgeGetParams(
+            project_id=ProjectId(ctx.project_id),
+            node_id=None if node_id is None else NodeId(node_id),
+            query=query,
+            max_items=max_items,
+        ), CtxResult)
 
     def kb_add(  # noqa: PLR0913, PLR0917 -- MCP_TOOLS.md fixes these fields
         type: Literal["fact", "decision", "requirement"],  # noqa: A002 -- MCP field name is type
@@ -408,9 +468,11 @@ def _register(  # noqa: C901 -- one nested function per MCP tool
         supersedes: _Id | None = None,
     ) -> KbAdded:
         """Record a fact, decision, or requirement. A fact's source must exist."""
-        return board.kb_add(
-            active(context), type, title, body, source, [] if code_refs is None else code_refs, supersedes
-        )
+        ctx = active(context)
+        return _primitive(board, ctx, "knowledge/add", KnowledgeAddParams(
+            project_id=ProjectId(ctx.project_id), kind=type, title=title, body=body, source=source,
+            code_refs=tuple(code_refs or ()), supersedes=supersedes,
+        ), KbAdded)
 
     def kb_impact(
         target: _Text,
@@ -431,16 +493,21 @@ def _register(  # noqa: C901 -- one nested function per MCP tool
         failing_checks: _Items | None = None,
     ) -> HandoverResult:
         """Write this tab's handover, or read the last one plus git diff --stat."""
-        return board.handover(
-            active(context),
-            action,
-            goal,
-            [] if done is None else done,
-            [] if decisions is None else decisions,
-            [] if open_questions is None else open_questions,
-            [] if next_steps is None else next_steps,
-            [] if failing_checks is None else failing_checks,
-        )
+        ctx = active(context)
+        if action == "read":
+            params: HandoverReadParams | HandoverWriteParams = HandoverReadParams(
+                project_id=ProjectId(ctx.project_id), tab_id=TabId(ctx.tab_id),
+            )
+            method = "handover/read"
+        else:
+            params = HandoverWriteParams(
+                project_id=ProjectId(ctx.project_id), tab_id=TabId(ctx.tab_id), goal=goal,
+                done=tuple(done or ()), decisions=tuple(decisions or ()),
+                open_questions=tuple(open_questions or ()), next_steps=tuple(next_steps or ()),
+                failing_checks=tuple(failing_checks or ()),
+            )
+            method = "handover/write"
+        return _primitive(board, ctx, method, params, HandoverResult)
 
     def plan_list(status: Literal["active", "all"] = "active") -> PlanList:
         """Plans for this project. Active means something is still open."""

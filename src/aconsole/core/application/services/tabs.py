@@ -48,6 +48,7 @@ from aconsole.contracts.app import (
 )
 from aconsole.contracts.common import AgentKind, NodeId, ProjectId, TabId, TabStatus, WorkspaceMode
 from aconsole.contracts.events import GitStateUpdated, ProjectsChanged, TabAdded, TabRemoved, TabUpdated, UiEvent
+from aconsole.contracts.primitives import ProjectListResult
 from aconsole.contracts.settings import Settings, commit_settings
 from aconsole.contracts.work_sessions import (
     WorkSessionCreateParams,
@@ -246,6 +247,8 @@ TAB_METHODS: Final = frozenset(
         "project/remove",
         "project/setActive",
         "project/setApprovalPolicy",
+        "project/list",
+        "project/get",
     }
 )
 
@@ -489,6 +492,8 @@ class TabService:
             "project/remove": self._route_project_remove,
             "project/setActive": self._route_project_active,
             "project/setApprovalPolicy": self._route_project_policy,
+            "project/list": self._route_project_list,
+            "project/get": self._route_project_get,
             "settings/get": self._route_settings_get,
             "settings/update": self._route_settings_update,
         }
@@ -1569,6 +1574,21 @@ class TabService:
         listener = self.listener
         if listener is not None:
             listener(event)
+
+    def _route_project_list(self, raw: bytes) -> ProjectListResult:
+        _ = msgspec.json.decode(raw, type=EmptyParams)
+        catalog = self._catalog
+        if catalog is None:
+            return ProjectListResult(projects=())
+        return ProjectListResult(projects=catalog.views())
+
+    def _route_project_get(self, raw: bytes) -> ProjectView:
+        params = msgspec.json.decode(raw, type=ProjectIdParams)
+        catalog = self._require_catalog()
+        project_id = str(params.project_id)
+        if not catalog.known(project_id):
+            raise TabRequestError(_PROJECT)
+        return next(view for view in catalog.views() if str(view.id) == project_id)
 
     def _route_project_add(self, raw: bytes) -> ProjectView:
         return self.add_project_at(msgspec.json.decode(raw, type=ProjectAddParams))

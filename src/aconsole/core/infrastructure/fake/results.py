@@ -46,6 +46,21 @@ from aconsole.contracts.git import (
 )
 from aconsole.contracts.ipc import InitializeResult, ProtocolLimits, ProtocolVersion
 from aconsole.contracts.methods import METHODS
+from aconsole.contracts.primitives import (
+    ApprovalListResult,
+    HandoverView,
+    KnowledgeAddResult,
+    KnowledgeGetResult,
+    NodeAttachResult,
+    NodeBriefText,
+    NodeClaimResult,
+    NodeUpdateResult,
+    PipelineStepResult,
+    PlanAddNodeResult,
+    PlanCreateResult,
+    PlanReadyResult,
+    ProjectListResult,
+)
 from aconsole.contracts.settings import Settings
 from aconsole.contracts.work_sessions import (
     WorkSessionHistoryResult,
@@ -183,6 +198,26 @@ def _samples() -> dict[str, msgspec.Struct]:
         "session/list": SessionListResult(sessions=()),
         "plan/list": PlanListResult(plans=(plan,)),
         "plan/get": plan,
+        "plan/create": PlanCreateResult(plan_id=str(plan.id), nodes=(), canvas_note=""),
+        "plan/addNode": PlanAddNodeResult(added=(), unchanged=()),
+        "plan/ready": PlanReadyResult(nodes=()),
+        "node/claim": NodeClaimResult(
+            lease_id="lease", fence=1, expires_at="2026-01-01T00:00:00Z",
+            brief=NodeBriefText(objective="do", acceptance=(), paths=(), boundaries=None, output_format=None),
+            context=KnowledgeGetResult(items=(), truncated=False),
+        ),
+        "node/update": NodeUpdateResult(status="pending", expires_at=None),
+        "node/attach": NodeAttachResult(artifact_id="art"),
+        "node/step": PipelineStepResult(reply_json="{}"),
+        "node/escalate": PipelineStepResult(reply_json="{}"),
+        "gate/run": PipelineStepResult(reply_json="{}"),
+        "knowledge/get": KnowledgeGetResult(items=(), truncated=False),
+        "knowledge/add": KnowledgeAddResult(kb_id="kb", note_ref="aconsole://note/kb"),
+        "handover/read": HandoverView(),
+        "handover/write": HandoverView(),
+        "project/list": ProjectListResult(projects=snap.projects),
+        "project/get": project,
+        "approval/list": ApprovalListResult(approvals=()),
         "plan/save": plan,
         "plan/delete": empty,
         "plan/inbox": PlanInboxResult(entries=()),
