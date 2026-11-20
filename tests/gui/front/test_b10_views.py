@@ -144,7 +144,8 @@ class _ViewTestApp(Adw.Application):
 def _run_ui(scenario: Callable[[_ViewTestApp], Awaitable[None]]) -> None:
     app = _ViewTestApp(scenario)
     assert run_app(lambda: app, ["aconsole-b10-views-test"]) == 0
-    assert app.error is None, repr(app.error)
+    if app.error is not None:
+        raise app.error
 
 
 async def _until(predicate: Callable[[], bool]) -> None:
@@ -161,14 +162,20 @@ def test_b10_wizard_later_closes_without_finishing_and_finish_persists_completio
     async def scenario(app: _ViewTestApp) -> None:
         snapshot = demo_snapshot()
         app.client.store.apply_snapshot(snapshot, 0)
-        window = Adw.ApplicationWindow(application=app)
+        window = Adw.ApplicationWindow(application=app, default_width=900, default_height=700)
         app.window = window
         window.present()
         preferences = PreferencesViewModel(app.client)
         await preferences.load()
         wizard = SetupWizard(app.client, preferences, on_tab=lambda _tab_id: None)
-        wizard.open(window)
-        await _until(lambda: not wizard.loading)
+
+        async def open_wizard() -> None:
+            wizard.open(window)
+            await _until(lambda: window.get_visible_dialog() is wizard and not wizard.loading)
+            # Libadwaita 1.5 can ignore close() during the opening transition.
+            await asyncio.sleep(0.5)
+
+        await open_wizard()
         assert any(method == "setup/checks" for method, _params in app.client.requests)
         assert all(
             method not in {"setup/previewFix", "setup/applyFix"}
@@ -176,13 +183,14 @@ def test_b10_wizard_later_closes_without_finishing_and_finish_persists_completio
         )
 
         wizard.skip()
-        await asyncio.sleep(0.05)
+        await _until(lambda: window.get_visible_dialog() is None)
         assert all(method != "settings/update" for method, _params in app.client.requests)
+        assert preferences.settings is not None
+        assert not preferences.settings.setup_completed
 
+        await open_wizard()
         wizard.finish()
-        await _until(
-            lambda: any(method == "settings/update" for method, _params in app.client.requests)
-        )
+        await _until(lambda: window.get_visible_dialog() is None)
         assert wizard.step == 4
         assert preferences.settings is not None
         assert preferences.settings.setup_completed

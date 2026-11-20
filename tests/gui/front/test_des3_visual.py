@@ -13,7 +13,7 @@ import pytest
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
 gi.require_version("GdkPixbuf", "2.0")
-from gi.repository import GdkPixbuf, Gtk  # noqa: E402
+from gi.repository import Adw, GdkPixbuf, Gtk  # noqa: E402
 
 from aconsole.contracts.app import EditDetail  # noqa: E402
 from aconsole.contracts.common import RiskTag  # noqa: E402
@@ -49,7 +49,11 @@ def test_native_widgets_match_reviewed_baselines(tmp_path: Path, theme: str, wid
     env = {**os.environ, "GSK_RENDERER": "cairo", "GDK_SCALE": "1", "GDK_DPI_SCALE": "1", "TZ": "UTC"}
     subprocess.run([sys.executable, "-m", "tests.gui.style_preview", theme, str(width), str(output)],
                    cwd=_ROOT, env=env, timeout=15, check=True)
-    difference = pixel_difference(_BASE / f"{name}.png", output)
+    # The Tier 3 image uses a newer native theme and renders the same widgets differently.
+    baselines = _BASE
+    if (Gtk.get_minor_version(), Adw.get_minor_version()) == (18, 7):
+        baselines /= "gtk-4.18-adw-1.7"
+    difference = pixel_difference(baselines / f"{name}.png", output)
     assert difference <= 0.001, f"{difference:.3%} channels differ; candidate: {output}"
 
 

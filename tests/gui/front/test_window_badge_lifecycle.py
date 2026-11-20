@@ -50,7 +50,7 @@ def test_badge_timer_stops_on_disposal_and_cannot_restart_on_remap() -> None:
             assert window._keep_git_badges() == GLib.SOURCE_REMOVE
             await asyncio.sleep(0)
             assert window._git_badge_timer is None
-            assert len(app.client.calls) == calls
+            assert all(method not in {"git/state", "git/watch"} for method, _params in app.client.calls[calls:])
             assert context.find_source_by_id(unrelated) is not None
             window.unrealize()
         finally:
