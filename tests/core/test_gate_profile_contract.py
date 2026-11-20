@@ -177,6 +177,22 @@ def _executed_plan() -> StoredPlan:
     return replace(frozen, nodes=(frozen.nodes[0], replace(frozen.nodes[1], status="done", fence=3)))
 
 
+def _executed_plan_with_accepted_direction() -> StoredPlan:
+    _, draft = _broken_plan()
+    direction, module = draft.nodes
+    accepted = replace(direction, id="accepted-direction", key="MEM-0", gate_profile=_DIRECTION_PROFILE)
+    ready = replace(draft, nodes=(replace(direction, gate_profile=_DIRECTION_PROFILE), module, accepted))
+    frozen = freeze_plan(ready, {}, at=_AT, graph_present=False)
+    return replace(
+        frozen,
+        nodes=(
+            frozen.nodes[0],
+            replace(frozen.nodes[1], status="done", fence=3),
+            replace(frozen.nodes[2], status="done", evidence="TD-HDG-MEM-1: accepted by human"),
+        ),
+    )
+
+
 @pytest.mark.parametrize("case", ["l1_open", "l0_done", "lease", "micro_change", "invalid_image", "invalid_argv"])
 def test_direction_repair_refuses_changes_outside_open_tier3(case: str) -> None:
     plan = _executed_plan()
@@ -202,9 +218,12 @@ def _check_direction_amendment(before: StoredPlan, after: StoredPlan) -> None:
     assert after.topology.frozen_at == before.topology.frozen_at
     assert after.topology.revision_no == before.topology.revision_no + 1
     assert after.topology.gates_sha256 != before.topology.gates_sha256
-    assert after.nodes[0].gate_profile == _SEALED_PROFILE
-    assert after.nodes[0].contract_sha256 != before.nodes[0].contract_sha256
-    assert after.nodes[1] == before.nodes[1]
+    original = {node.key: node for node in before.nodes}
+    repaired = {node.key: node for node in after.nodes}
+    assert repaired.keys() == original.keys()
+    assert repaired["IDX-0"].gate_profile == _SEALED_PROFILE
+    assert repaired["IDX-0"].contract_sha256 != original["IDX-0"].contract_sha256
+    assert all(repaired[key] == original[key] for key in original.keys() - {"IDX-0"})
 
 
 def test_planning_repairs_legacy_profiles_and_preserves_identity_after_reload() -> None:
@@ -320,10 +339,14 @@ def test_profile_repair_ipc_persists_audit_and_survives_restart(  # noqa: PLR091
         writer = daemon._writer
         assert writer is not None
         direction_repair = case == "direction"
-        saved = replace(_executed_plan() if direction_repair else _legacy_frozen(), project_id=str(project.id))
+        saved = replace(
+            _executed_plan_with_accepted_direction() if direction_repair else _legacy_frozen(),
+            project_id=str(project.id),
+        )
         database = PlanDatabase(writer)
         database.save(saved)
         daemon._plans.use_store(database)
+        module_id = next(node.id for node in saved.nodes if node.key == "IDX-1")
         profile: dict[str, object] = _SEALED_PROFILE if direction_repair else dict(MICRO_PROFILE)
         params = PlanSaveParams(
             project_id=project.id,
@@ -338,7 +361,7 @@ def test_profile_repair_ipc_persists_audit_and_survives_restart(  # noqa: PLR091
                 session.add(
                     NodeAttempt(
                         id="old-attempt",
-                        node_id=saved.nodes[1].id,
+                        node_id=module_id,
                         attempt_no=1,
                         status="passed" if direction_repair else "failed",
                         base_oid="a" * 40,
@@ -349,7 +372,7 @@ def test_profile_repair_ipc_persists_audit_and_survives_restart(  # noqa: PLR091
                     session.add(
                         GateReceipt(
                             receipt_hash="b" * 64,
-                            node_id=saved.nodes[1].id,
+                            node_id=module_id,
                             tier="blast",
                             state_hash="c" * 64,
                             argv_sha256="d" * 64,
@@ -409,10 +432,23 @@ def test_profile_repair_ipc_persists_audit_and_survives_restart(  # noqa: PLR091
         second = await _connect(again.socket)
         again._plans._now = lambda: _AT
         reloaded = again._plans.export_plan(saved.id)
+        assert reloaded.topology is not None
+        assert repaired.topology is not None
+        assert {node.key: node for node in reloaded.topology.nodes} == {
+            node.key: node for node in repaired.topology.nodes
+        }
+        assert dict(reloaded.topology.baseline_children) == dict(repaired.topology.baseline_children)
+        assert dict(reloaded.topology.contract_hashes) == dict(repaired.topology.contract_hashes)
         # Priority ages with wall time; durable contract and execution fields must match exactly.
         assert (
             replace(
                 reloaded,
+                topology=replace(
+                    reloaded.topology,
+                    nodes=repaired.topology.nodes,
+                    baseline_children=repaired.topology.baseline_children,
+                    contract_hashes=repaired.topology.contract_hashes,
+                ),
                 nodes=tuple(
                     replace(node, priority=before.priority)
                     for node, before in zip(reloaded.nodes, repaired.nodes, strict=True)

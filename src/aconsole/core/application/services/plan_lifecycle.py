@@ -183,10 +183,8 @@ def repair_direction_profiles(
         raise _direction_profile_error(detail)
     if any(node.lease_id is not None for node in plan.nodes):
         raise DomainError(code=4006, name="LEASE_HELD", retryable=True)
-    if any(node.status not in {"done", "cancelled"} for node in plan.nodes if node.level == 1) or any(
-        node.status not in {"pending", "blocked"} for node in directions.values()
-    ):
-        detail = "direction repair requires closed L1 work and open L0 directions"
+    if any(node.status not in {"done", "cancelled"} for node in plan.nodes if node.level == 1):
+        detail = "direction repair requires closed L1 work"
         raise _direction_profile_error(detail)
 
     changed: dict[str, dict[str, object]] = {}
@@ -194,6 +192,9 @@ def repair_direction_profiles(
         original = directions[key].gate_profile or {}
         if profile == original:
             continue
+        if directions[key].status not in {"pending", "blocked"}:
+            detail = f"{key}: direction profile repair requires pending or blocked status"
+            raise _direction_profile_error(detail)
         _validate_direction_repair(key, original, profile)
         changed[key] = profile
     if not changed:
