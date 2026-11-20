@@ -469,3 +469,38 @@ def method_by_name(name: str) -> Method:
             return method
     message = f"unknown method {name}"
     raise KeyError(message)
+
+
+# Socket lifecycle and the sidecar. A local caller uses the method API; these stay on the Unix socket.
+_REST_HIDDEN = frozenset({
+    "initialize",
+    "shutdown",
+    "events/subscribe",
+    "events/unsubscribe",
+    "tab/started",
+    "tab/exited",
+    "tab/launchSpec",
+    "terminal/screenTextReply",
+})
+_REST_SHORT_MS = 10_000
+_REST_LONG_MS = 120_000
+
+
+def rest_method(name: str) -> Method | None:
+    """The method a local HTTP caller may invoke, or None when it belongs to the socket or the sidecar."""
+    if name in _REST_HIDDEN or name.startswith("sidecar/"):
+        return None
+    for method in METHODS:
+        if method.name == name and ("ui" in method.roles or "cli" in method.roles):
+            return method
+    return None
+
+
+def rest_methods() -> tuple[Method, ...]:
+    """Methods published at ``POST /api/v1/{name}``, in table order."""
+    return tuple(method for method in METHODS if rest_method(method.name) is not None)
+
+
+def rest_timeout_ms(method: Method) -> int:
+    """How long a caller should wait. Long methods are the ones the socket already marks ``long``."""
+    return _REST_LONG_MS if method.long else _REST_SHORT_MS
