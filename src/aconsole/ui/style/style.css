@@ -18,7 +18,7 @@ button:focus-visible, entry:focus-visible, dropdown:focus-visible {
 }
 button.suggested-action { background-color: @ac_accent_button; }
 
-/* The left column: window buttons in one island, the application name, the tab list. */
+/* The left column: window controls, session actions and the tab list. */
 .ac-window-island { background-color: alpha(@window_fg_color, 0.07); border-radius: $radius_pill; padding: $space_xxs; }
 .ac-window-island-floating { background-color: @headerbar_bg_color; box-shadow: 0 1px 6px alpha(black, 0.3), 0 0 0 1px alpha(@window_fg_color, 0.08); opacity: 0.75; transition: opacity 120ms ease-out; }
 .ac-window-island-floating:hover { opacity: 1; }
@@ -27,6 +27,25 @@ button.suggested-action { background-color: @ac_accent_button; }
 .ac-window-island windowcontrols > button > image { background: none; box-shadow: none; padding: 0; }
 .ac-window-island windowcontrols > button:hover { background-color: alpha(@window_fg_color, 0.12); }
 .ac-window-island windowcontrols > button:active { background-color: alpha(@window_fg_color, 0.18); }
+
+.ac-preferences-sidebar {
+    background-color: @window_bg_color;
+    border-radius: $radius_control;
+    margin: $space_md;
+    box-shadow: 0 0 0 1px alpha(@window_fg_color, 0.1);
+}
+.ac-preferences-sidebar list {
+    background-color: alpha(@window_fg_color, 0.045);
+    border-radius: $radius_control;
+    padding: $space_xs;
+}
+.ac-preferences-sidebar row { border-radius: $radius_control; }
+.ac-preferences-content {
+    background-color: alpha(@window_fg_color, 0.035);
+    border-radius: $radius_control;
+    margin: $space_md;
+}
+.ac-preferences-actions { padding: $space_md $space_lg; }
 
 .ac-tabs row { min-height: 40px; margin: $space_xxs $space_md; border-radius: $radius_control; transition: background-color 120ms ease-out; }
 .ac-tabs row:selected { background-color: alpha(@window_fg_color, 0.1); color: @window_fg_color; }

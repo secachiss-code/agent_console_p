@@ -1048,6 +1048,18 @@ msgstr "Terminal"
 msgid "prefs.theme"
 msgstr "Theme"
 
+msgid "prefs.permissions"
+msgstr "Permissions"
+
+msgid "prefs.tools_limits"
+msgstr "Tools and limits"
+
+msgid "prefs.categories"
+msgstr "Settings categories"
+
+msgid "prefs.commands"
+msgstr "Application commands"
+
 msgid "prefs.title"
 msgstr "Preferences"
 

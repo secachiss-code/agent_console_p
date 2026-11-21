@@ -46,7 +46,8 @@ def _mcp_page() -> Adw.PreferencesPage:
             row = Adw.ExpanderRow(title=tool.name, subtitle=title)
             row.add_row(Adw.ActionRow(title=mode, subtitle=GLib.markup_escape_text(tool.arguments)))
             example = Adw.ActionRow(
-                title=translate("prefs.mcp.example"), subtitle=GLib.markup_escape_text(tool.example),
+                title=translate("prefs.mcp.example"),
+                subtitle=GLib.markup_escape_text(tool.example),
             )
             button = Gtk.Button(icon_name="edit-copy-symbolic", valign=Gtk.Align.CENTER)
             button.set_tooltip_text(translate("prefs.mcp.copy"))
@@ -62,9 +63,15 @@ def _copy_mcp_example(button: Gtk.Button, example: str) -> None:
     button.get_clipboard().set(example)
 
 
-class PreferencesDialog(Adw.PreferencesDialog):
-    def __init__(self, viewmodel: PreferencesViewModel) -> None:
-        super().__init__(title=translate("prefs.title"), content_width=560, content_height=560)
+class PreferencesDialog(Adw.Dialog):
+    def __init__(self, viewmodel: PreferencesViewModel, menu: Gio.MenuModel | None = None) -> None:
+        super().__init__(
+            title=translate("prefs.title"),
+            content_width=720,
+            content_height=560,
+            width_request=320,
+            height_request=300,
+        )
         self.viewmodel: PreferencesViewModel = viewmodel
         self.worker: asyncio.Task[None] | None = None
         self.loading: bool = False
@@ -83,33 +90,101 @@ class PreferencesDialog(Adw.PreferencesDialog):
         _ = self.connect("unmap", self._cancel_pending_close)
         self.set_can_close(False)
         _ = self.connect("close-attempt", self._close_attempt)
-        page = Adw.PreferencesPage(
-            title=translate("prefs.title"), icon_name="preferences-system-symbolic",
+        self._pages: Gtk.Stack = Gtk.Stack(vexpand=True)
+        self._editors: tuple[Adw.PreferencesPage, ...] = self._build_categories()
+        self._build_layout(menu)
+        _ = self.connect("closed", self._closed)
+
+    def _build_categories(self) -> tuple[Adw.PreferencesPage, ...]:
+        appearance = Adw.PreferencesPage()
+        terminal = Adw.PreferencesPage()
+        tools = Adw.PreferencesPage()
+        approvals = Adw.PreferencesPage()
+        self.mcp_page: Adw.PreferencesPage = _mcp_page()
+        self._build_appearance(appearance)
+        self._build_terminal(terminal)
+        tools.add(self._build_harness())
+        self._build_limits(tools)
+        approvals.add(self._build_approvals())
+        for page, name in (
+            (appearance, "appearance"),
+            (terminal, "terminal"),
+            (tools, "tools_limits"),
+            (approvals, "permissions"),
+            (self.mcp_page, "mcp"),
+        ):
+            _ = self._pages.add_titled(page, name, translate(f"prefs.{name}"))
+        return appearance, terminal, tools, approvals
+
+    def _build_layout(self, menu: Gio.MenuModel | None) -> None:
+        sidebar = Gtk.StackSidebar(stack=self._pages)
+        sidebar.add_css_class("ac-preferences-sidebar")
+        self._pages.add_css_class("ac-preferences-content")
+        self._layout: Adw.OverlaySplitView = Adw.OverlaySplitView(
+            sidebar=sidebar,
+            content=self._pages,
+            min_sidebar_width=164,
+            max_sidebar_width=205,
+            sidebar_width_fraction=0.28,
         )
-        self.page: Adw.PreferencesPage = page
-        self._build_terminal(page)
-        self._build_appearance(page)
-        page.add(self._build_approvals())
-        page.add(self._build_harness())
-        actions = Adw.PreferencesGroup()
+        self._layout.set_vexpand(True)
+        _ = self._pages.connect("notify::visible-child", self._category_changed)
+        narrow = Adw.Breakpoint.new(Adw.BreakpointCondition.parse("max-width: 560sp"))
+        narrow.add_setter(self._layout, "collapsed", True)  # noqa: FBT003 -- GI uses positional GValues.
+        narrow.add_setter(self._layout, "show-sidebar", False)  # noqa: FBT003 -- GI uses positional GValues.
+        self.add_breakpoint(narrow)
+
+        header = Adw.HeaderBar()
+        toggle = Gtk.ToggleButton(icon_name="sidebar-show-symbolic", tooltip_text=translate("prefs.categories"))
+        toggle.update_property(
+            [Gtk.AccessibleProperty.LABEL],
+            [GObject.Value(GObject.TYPE_STRING, translate("prefs.categories"))],
+        )
+        _ = self._layout.bind_property("collapsed", toggle, "visible", GObject.BindingFlags.SYNC_CREATE)
+        _ = self._layout.bind_property(
+            "show-sidebar",
+            toggle,
+            "active",
+            GObject.BindingFlags.SYNC_CREATE | GObject.BindingFlags.BIDIRECTIONAL,
+        )
+        header.pack_start(toggle)
+        if menu is not None:
+            header.pack_end(
+                Gtk.MenuButton(
+                    icon_name="open-menu-symbolic", menu_model=menu, tooltip_text=translate("prefs.commands")
+                )
+            )
+        view = Adw.ToolbarView(content=self._layout)
+        view.add_top_bar(header)
+        view.add_bottom_bar(self._build_actions())
+        self.set_child(view)
+
+    def _build_actions(self) -> Gtk.Box:
+        actions = Gtk.Box(spacing=12)
+        actions.add_css_class("ac-preferences-actions")
         self.save_button: Gtk.Button = Gtk.Button(label=translate("prefs.apply"))
         self.save_button.add_css_class("suggested-action")
         _ = self.save_button.connect("clicked", self._save_clicked)
-        actions.add(self.save_button)
-        self.status_label: Gtk.Label = Gtk.Label(xalign=0, wrap=True)
-        actions.add(self.status_label)
-        page.add(actions)
-        self.add(page)
-        self.mcp_page: Adw.PreferencesPage = _mcp_page()
-        self.add(self.mcp_page)
-        _ = self.connect("closed", self._closed)
+        self.status_label: Gtk.Label = Gtk.Label(xalign=0, wrap=True, hexpand=True)
+        actions.append(self.status_label)
+        actions.append(self.save_button)
+        return actions
+
+    def set_visible_page(self, page: Adw.PreferencesPage) -> None:
+        self._pages.set_visible_child(page)
+
+    def _category_changed(self, _stack: Gtk.Stack, _property: object) -> None:
+        if self._layout.get_collapsed():
+            self._layout.set_show_sidebar(False)
 
     def _build_terminal(self, page: Adw.PreferencesPage) -> None:
         terminal = Adw.PreferencesGroup(title=translate("prefs.terminal"))
         self.font_entry: Adw.EntryRow = Adw.EntryRow(title=translate("prefs.font"))
         self.font_entry.set_tooltip_text(translate("prefs.font_tip"))
         self.font_button: Gtk.Button = Gtk.Button(
-            icon_name="list-add-symbolic", valign=Gtk.Align.CENTER, tooltip_text=translate("prefs.font_add"),
+            icon_name="list-add-symbolic",
+            valign=Gtk.Align.CENTER,
+            tooltip_text=translate("prefs.font_add"),
         )
         self.font_button.add_css_class("flat")
         _ = self.font_button.connect("clicked", self._choose_font)
@@ -128,16 +203,20 @@ class PreferencesDialog(Adw.PreferencesDialog):
             model=Gtk.StringList.new([translate(f"prefs.{theme}") for theme in _THEMES]),
         )
         appearance.add(self.theme)
+        page.add(appearance)
+
+    def _build_limits(self, page: Adw.PreferencesPage) -> None:
+        limits = Adw.PreferencesGroup(title=translate("quota.title"))
         self.quota_display: Adw.ComboRow = Adw.ComboRow(
             title=translate("prefs.quota_display"),
             model=Gtk.StringList.new([translate(f"prefs.quota_{display}") for display in _QUOTA_DISPLAYS]),
         )
-        appearance.add(self.quota_display)
+        limits.add(self.quota_display)
         self.quota_warn: Gtk.SpinButton = Gtk.SpinButton.new_with_range(0, 100, 1)
         self.quota_critical: Gtk.SpinButton = Gtk.SpinButton.new_with_range(0, 100, 1)
-        self._add_spin(appearance, self.quota_warn, "prefs.quota_warn")
-        self._add_spin(appearance, self.quota_critical, "prefs.quota_critical")
-        page.add(appearance)
+        self._add_spin(limits, self.quota_warn, "prefs.quota_warn")
+        self._add_spin(limits, self.quota_critical, "prefs.quota_critical")
+        page.add(limits)
 
     def _build_approvals(self) -> Adw.PreferencesGroup:
         group = Adw.PreferencesGroup(title=translate("prefs.approvals"))
@@ -156,10 +235,12 @@ class PreferencesDialog(Adw.PreferencesDialog):
         group.add(self.policy)
         self.project_policy: Adw.ComboRow = Adw.ComboRow(
             title=translate("prefs.policy_project"),
-            model=Gtk.StringList.new([
-                translate("prefs.policy_inherit").format(mode=translate("prefs.policy_ask")),
-                *(translate(f"prefs.policy_{mode}") for mode in _PROJECT_POLICIES[1:]),
-            ]),
+            model=Gtk.StringList.new(
+                [
+                    translate("prefs.policy_inherit").format(mode=translate("prefs.policy_ask")),
+                    *(translate(f"prefs.policy_{mode}") for mode in _PROJECT_POLICIES[1:]),
+                ]
+            ),
         )
         group.add(self.project_policy)
         dangerous = Adw.ActionRow(title=translate("prefs.dangerous"))
@@ -215,7 +296,8 @@ class PreferencesDialog(Adw.PreferencesDialog):
             self._unsubscribe = self.viewmodel.subscribe(self._show_settings)
         self.save_button.set_sensitive(False)
         self.loading = True
-        self.page.set_sensitive(False)
+        for page in self._editors:
+            page.set_sensitive(False)
         self.present(parent)
         self.worker = spawn_task(self._load(self._generation))
 
@@ -228,7 +310,8 @@ class PreferencesDialog(Adw.PreferencesDialog):
         finally:
             if self._active and generation == self._generation:
                 self.loading = False
-                self.page.set_sensitive(self._shown is not None)
+                for page in self._editors:
+                    page.set_sensitive(self._shown is not None)
                 self.save_button.set_sensitive(self._shown is not None)
 
     def _show_settings(self, settings: Settings) -> None:
@@ -291,13 +374,18 @@ class PreferencesDialog(Adw.PreferencesDialog):
             scrollback_lines=scrollback if scrollback != shown.scrollback_lines else msgspec.UNSET,
             theme=theme if theme != shown.theme else msgspec.UNSET,
             quota_warn_pct=self.quota_warn.get_value()
-            if self.quota_warn.get_value() != shown.quota_warn_pct else msgspec.UNSET,
+            if self.quota_warn.get_value() != shown.quota_warn_pct
+            else msgspec.UNSET,
             quota_critical_pct=self.quota_critical.get_value()
-            if self.quota_critical.get_value() != shown.quota_critical_pct else msgspec.UNSET,
+            if self.quota_critical.get_value() != shown.quota_critical_pct
+            else msgspec.UNSET,
         )
 
     async def _save(
-        self, patch: SettingsPatch, project: ProjectApprovalPolicyParams | None, generation: int,
+        self,
+        patch: SettingsPatch,
+        project: ProjectApprovalPolicyParams | None,
+        generation: int,
     ) -> None:
         try:
             if patch != SettingsPatch():
@@ -307,9 +395,7 @@ class PreferencesDialog(Adw.PreferencesDialog):
                 if self._active and generation == self._generation:
                     self._project = confirmed
                     stored = confirmed.approval_policy
-                    self._project_loaded = (
-                        _PROJECT_POLICIES.index(stored) if stored in _PROJECT_POLICIES else 0
-                    )
+                    self._project_loaded = _PROJECT_POLICIES.index(stored) if stored in _PROJECT_POLICIES else 0
             if self._active and generation == self._generation:
                 dirty = self._has_changes()
                 self.status_label.set_label(translate("prefs.unsaved" if dirty else "prefs.saved"))
@@ -366,7 +452,8 @@ class PreferencesDialog(Adw.PreferencesDialog):
         switch.set_active(False)
         self.loading = False
         dialog = Adw.AlertDialog(
-            heading=translate("prefs.dangerous_confirm_title"), body=translate("prefs.dangerous_confirm_body"),
+            heading=translate("prefs.dangerous_confirm_title"),
+            body=translate("prefs.dangerous_confirm_body"),
         )
         dialog.add_response("cancel", translate("prefs.dangerous_cancel"))
         dialog.add_response("allow", translate("prefs.dangerous_allow"))
@@ -401,9 +488,14 @@ class PreferencesDialog(Adw.PreferencesDialog):
             mode=translate(f"prefs.policy_{settings.approval_policy}"),
         )
         self.project_policy.set_title(project.name)
-        self.project_policy.set_model(Gtk.StringList.new([
-            inherited, *(translate(f"prefs.policy_{mode}") for mode in _PROJECT_POLICIES[1:]),
-        ]))
+        self.project_policy.set_model(
+            Gtk.StringList.new(
+                [
+                    inherited,
+                    *(translate(f"prefs.policy_{mode}") for mode in _PROJECT_POLICIES[1:]),
+                ]
+            )
+        )
         stored = project.approval_policy
         if stored == "scenario":
             self.project_policy.set_subtitle(translate("prefs.policy_scenario_unavailable"))
@@ -422,7 +514,9 @@ class PreferencesDialog(Adw.PreferencesDialog):
             return ProjectApprovalPolicyParams(project_id=project.id, inherit=True)
         dangerous: Literal["ask", "allow"] = "allow" if chosen == "allow" and self.dangerous.get_active() else "ask"
         return ProjectApprovalPolicyParams(
-            project_id=project.id, approval_policy=chosen, approval_dangerous=dangerous,
+            project_id=project.id,
+            approval_policy=chosen,
+            approval_dangerous=dangerous,
         )
 
     def _show_harness(self) -> None:

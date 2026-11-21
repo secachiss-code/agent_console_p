@@ -181,6 +181,44 @@ def test_project_index_back_keeps_the_plan_node() -> None:
     _run_ui(scenario)
 
 
+def test_settings_action_opens_modal_categories() -> None:
+    async def scenario(app: _MenuTestApp) -> None:
+        window, _, _ = _window(app)
+        window.present()
+        await asyncio.sleep(0.05)
+        assert window.activate_action("win.settings", None)
+        dialog = window.preferences_dialog
+        assert dialog is not None
+        try:
+            await asyncio.sleep(0.35)
+            body = dialog.get_child()
+            assert isinstance(body, Adw.ToolbarView)
+            layout = body.get_content()
+            assert isinstance(layout, Adw.OverlaySplitView)
+            categories = layout.get_sidebar()
+            assert isinstance(categories, Gtk.StackSidebar)
+            assert categories.get_mapped()
+            focus = dialog.get_focus()
+            if focus is None or not focus.is_ancestor(categories):
+                assert categories.child_focus(Gtk.DirectionType.TAB_FORWARD)
+            focus = dialog.get_focus()
+            assert focus is not None
+            assert focus.is_ancestor(categories)
+            stack = categories.get_stack()
+            assert stack is not None
+            assert all(
+                isinstance(stack.get_child_by_name(name), Adw.PreferencesPage)
+                for name in ("appearance", "terminal", "tools_limits", "permissions", "mcp")
+            )
+            dialog.set_visible_page(dialog.mcp_page)
+            assert stack.get_visible_child() is dialog.mcp_page
+            assert dialog.save_button.get_visible()
+        finally:
+            dialog.force_close()
+
+    _run_ui(scenario)
+
+
 def test_b2_row_menu_rename_starts_editing_the_bound_row() -> None:
     async def scenario(app: _MenuTestApp) -> None:
         window, tabs, items = _window(app)

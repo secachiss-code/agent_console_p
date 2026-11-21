@@ -205,13 +205,13 @@ class MainWindow(Adw.ApplicationWindow):
         return header
 
     def _pack_header_actions(self, header: Adw.HeaderBar, search: Gtk.Button | None = None) -> None:
-        header.pack_end(
-            Gtk.MenuButton(
-                icon_name="emblem-system-symbolic",
-                menu_model=self._settings_menu,
-                tooltip_text=setup_text("prefs.title"),
-            )
+        label = setup_text("prefs.title")
+        settings = Gtk.Button(icon_name="emblem-system-symbolic", action_name="win.settings", tooltip_text=label)
+        settings.update_property(
+            [Gtk.AccessibleProperty.LABEL],
+            [GObject.Value(GObject.TYPE_STRING, label)],
         )
+        header.pack_end(settings)
         header.pack_end(self._search_button() if search is None else search)
 
     def _search_button(self) -> Gtk.Button:
@@ -1180,7 +1180,8 @@ class MainWindow(Adw.ApplicationWindow):
             action = Gio.SimpleAction.new(name, None)
             _ = action.connect("activate", self._settings_menu_action)
             self.add_action(action)
-            menu.append(label, f"win.{name}")
+            if name != "settings":
+                menu.append(label, f"win.{name}")
         return menu
 
     def _settings_menu_action(self, action: Gio.SimpleAction, _parameter: object) -> None:
@@ -1205,7 +1206,7 @@ class MainWindow(Adw.ApplicationWindow):
 
     def _open_preferences(self) -> None:
         if self.preferences_dialog is None:
-            self.preferences_dialog = PreferencesDialog(self.preferences_vm)
+            self.preferences_dialog = PreferencesDialog(self.preferences_vm, self._settings_menu)
         self.preferences_dialog.open(self)
 
     def show_setup(self) -> None:

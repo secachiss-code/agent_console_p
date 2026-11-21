@@ -1055,6 +1055,18 @@ msgstr "Терминал"
 msgid "prefs.theme"
 msgstr "Тема"
 
+msgid "prefs.permissions"
+msgstr "Разрешения"
+
+msgid "prefs.tools_limits"
+msgstr "Инструменты и лимиты"
+
+msgid "prefs.categories"
+msgstr "Категории настроек"
+
+msgid "prefs.commands"
+msgstr "Команды приложения"
+
 msgid "prefs.title"
 msgstr "Настройки"
 
