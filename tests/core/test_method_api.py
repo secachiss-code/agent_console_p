@@ -13,27 +13,29 @@ from aconsole.contracts.app import HealthResult
 from aconsole.contracts.generate import documents
 from aconsole.contracts.methods import rest_method, rest_methods, rest_timeout_ms
 from aconsole.core.infrastructure.http.api import MethodApi, issue_api_token
-from aconsole.core.infrastructure.http.problem import NOT_FOUND, OK, UNAUTHORIZED
+from aconsole.core.infrastructure.http.problem import NOT_FOUND, OK, TOO_LARGE, UNAUTHORIZED
 from aconsole.core.infrastructure.ipc.ring import EventRing
 from aconsole.core.infrastructure.ipc.session import Connection
 from aconsole.core.infrastructure.mcp.server import TabTokens, beside_ingest
 from aconsole.core.infrastructure.mcp.tools import TabContext
 
 if TYPE_CHECKING:
-    from collections.abc import Awaitable, Callable, MutableMapping
+    from collections.abc import Awaitable, Callable, Mapping, MutableMapping
 
     type _Message = MutableMapping[str, object]
 
-_HIDDEN = frozenset({
-    "initialize",
-    "shutdown",
-    "events/subscribe",
-    "events/unsubscribe",
-    "tab/started",
-    "tab/exited",
-    "tab/launchSpec",
-    "terminal/screenTextReply",
-})
+_HIDDEN = frozenset(
+    {
+        "initialize",
+        "shutdown",
+        "events/subscribe",
+        "events/unsubscribe",
+        "tab/started",
+        "tab/exited",
+        "tab/launchSpec",
+        "terminal/screenTextReply",
+    }
+)
 _TOKEN = "api-token"  # noqa: S105 -- fixture bearer, not a stored secret
 _TAB = "tab-token"
 _CONTEXT = TabContext(tab_id="t1", project_id="p1", worktree=None, agent="claude")
@@ -89,6 +91,45 @@ def test_tab_bearer_cannot_call_methods_and_api_token_is_not_a_tab() -> None:
     assert mcp_reached == []
 
 
+def test_non_ascii_bearer_is_unauthorized() -> None:
+    async def call(method: str, params: bytes, timeout_ms: int) -> bytes:
+        _ = method, params, timeout_ms
+        raise AssertionError
+
+    non_ascii = "é"
+    status, _, _ = asyncio.run(_drive(MethodApi(_TOKEN, call), "/api/v1/app/health", token=non_ascii, body=b"{}"))
+    assert status == UNAUTHORIZED
+
+
+def test_disconnect_discards_even_a_valid_json_prefix() -> None:
+    sent = asyncio.run(_body_messages({"type": "http.disconnect"}))
+    assert sent == []
+
+
+def test_streamed_body_over_limit_is_rejected() -> None:
+    sent = asyncio.run(_body_messages({"type": "http.request", "body": b" ", "more_body": False}))
+    assert sent[0]["status"] == TOO_LARGE
+
+
+async def _body_messages(last: _Message) -> list[Mapping[str, object]]:
+    incoming: tuple[_Message, ...] = ({"type": "http.request", "body": b"{}", "more_body": True}, last)
+    messages = iter(incoming)
+    sent: list[Mapping[str, object]] = []
+
+    async def receive() -> _Message:
+        return next(messages)
+
+    async def send(message: Mapping[str, object]) -> None:
+        sent.append(message)
+
+    async def call(method: str, params: bytes, timeout_ms: int) -> bytes:
+        _ = method, params, timeout_ms
+        raise AssertionError
+
+    await MethodApi(_TOKEN, call, body_limit=2)(_scope("/api/v1/app/health", _TOKEN), receive, send)
+    return sent
+
+
 async def _health() -> tuple[int, bytes, str | None, list[str]]:
     called: list[str] = []
     connection = _connection()
@@ -138,7 +179,12 @@ async def _boundary() -> tuple[int, list[str]]:
 def _connection() -> Connection:
     connection = Connection(EventRing())
     connection.health = lambda: HealthResult(
-        database=False, writer_queued=0, writer_failed=0, writer_last_commit_ms=0.0, ipc_answered=0, ipc_slowest_ms=0.0,
+        database=False,
+        writer_queued=0,
+        writer_failed=0,
+        writer_last_commit_ms=0.0,
+        ipc_answered=0,
+        ipc_slowest_ms=0.0,
     )
     return connection
 
@@ -158,13 +204,7 @@ async def _drive(
     async def send(message: _Message) -> None:
         sent.append(message)
 
-    scope: _Message = {
-        "type": "http",
-        "method": "POST",
-        "path": path,
-        "headers": [(b"authorization", f"Bearer {token}".encode())],
-    }
-    await app(scope, receive, send)
+    await app(_scope(path, token), receive, send)
     started = sent[0]
     status = started["status"]
     raw_headers = started["headers"]
@@ -180,13 +220,23 @@ async def _drive(
     return status, payload, timeout
 
 
+def _scope(path: str, token: str) -> _Message:
+    return {
+        "type": "http",
+        "method": "POST",
+        "path": path,
+        "headers": [(b"authorization", f"Bearer {token}".encode("latin-1"))],
+    }
+
+
 def _timeout(headers: object) -> str | None:
     if not isinstance(headers, list):
         return None
     for item in headers:  # pyright: ignore[reportUnknownVariableType] -- raw ASGI header list
         if not isinstance(item, tuple) or len(item) != 2:  # pyright: ignore[reportUnknownArgumentType]
             return None
-        name, value = item
+        name: object = item[0]  # pyright: ignore[reportUnknownVariableType] -- raw ASGI tuple
+        value: object = item[1]  # pyright: ignore[reportUnknownVariableType] -- raw ASGI tuple
         if isinstance(name, bytes) and name.lower() == b"x-aconsole-timeout-ms" and isinstance(value, bytes):
             return value.decode("ascii")
     return None

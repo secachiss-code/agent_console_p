@@ -43,6 +43,10 @@ _STATUS = {
 }
 
 
+class _BodyTooLargeError(Exception):
+    pass
+
+
 class MethodCall(Protocol):
     """One dispatcher frame. The bytes are a JSON-RPC result or error line."""
 
@@ -91,13 +95,14 @@ class MethodApi:
         if kind != "http":
             return
         response, timeout = await self._http(scope, receive)
-        await _send(send, response, timeout)
+        if response is not None:
+            await _send(send, response, timeout)
 
     async def _http(
         self,
         scope: Mapping[str, object],
         receive: Callable[[], Awaitable[Mapping[str, object]]],
-    ) -> tuple[HttpResponse, int | None]:
+    ) -> tuple[HttpResponse | None, int | None]:
         headers = _headers(scope.get("headers"))
         refused = _refused(headers, scope.get("method"), scope.get("path"), self._token)
         if refused is not None:
@@ -106,15 +111,19 @@ class MethodApi:
         if published is None:
             return _error_body("METHOD_NOT_FOUND"), None
         timeout = rest_timeout_ms(published)
-        body = await _body_within(receive, headers, self._body_limit)
-        if body is None:
+        declared = _content_length(headers.get("content-length"))
+        if declared is not None and declared > self._body_limit:
             return _problem("MESSAGE_TOO_LARGE", "api-body"), timeout
+        try:
+            body = await _read_body(receive, limit=self._body_limit)
+        except _BodyTooLargeError:
+            return _problem("MESSAGE_TOO_LARGE", "api-body"), timeout
+        if body is None:
+            return None, None
         return _from_frame(await self._call(published.name, body, timeout)), timeout
 
 
-def _refused(
-    headers: dict[str, str], method: object, path: object, token: str
-) -> tuple[HttpResponse, None] | None:
+def _refused(headers: dict[str, str], method: object, path: object, token: str) -> tuple[HttpResponse, None] | None:
     if not origin_allowed(headers.get("origin")) or not host_allowed(headers.get("host")):
         return _problem("INGEST_ORIGIN_FORBIDDEN", "api-origin"), None
     if not _token_matches(headers.get("authorization"), token):
@@ -124,20 +133,9 @@ def _refused(
     return None
 
 
-async def _body_within(
-    receive: Callable[[], Awaitable[Mapping[str, object]]],
-    headers: dict[str, str],
-    limit: int,
-) -> bytes | None:
-    declared = _content_length(headers.get("content-length"))
-    if declared is not None and declared > limit:
-        return None
-    return await _read_body(receive, limit=limit)
-
-
 def _token_matches(header: str | None, expected: str) -> bool:
     presented = bearer_token(header)
-    if presented is None:
+    if presented is None or not presented.isascii():
         return False
     return hmac.compare_digest(presented, expected)
 
@@ -223,20 +221,18 @@ def _content_length(value: str | None) -> int | None:
     return parsed
 
 
-async def _read_body(
-    receive: Callable[[], Awaitable[Mapping[str, object]]], *, limit: int
-) -> bytes | None:
+async def _read_body(receive: Callable[[], Awaitable[Mapping[str, object]]], *, limit: int) -> bytes | None:
     parts: list[bytes] = []
     total = 0
     while True:
         message = await receive()
         if message.get("type") != "http.request":
-            return b"".join(parts)
+            return None
         chunk = message.get("body", b"")
         data = b"" if not isinstance(chunk, (bytes, bytearray)) else bytes(chunk)
         total += len(data)
         if total > limit:
-            return None
+            raise _BodyTooLargeError
         parts.append(data)
         if message.get("more_body") is not True:
             return b"".join(parts)
