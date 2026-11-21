@@ -20,6 +20,7 @@ from aconsole.contracts.settings import Settings, SettingsPatch  # noqa: E402
 from aconsole.ui.bootstrap import spawn_task  # noqa: E402
 from aconsole.ui.viewmodels.logic.approval_modes import harness_effect_key, mode_enabled  # noqa: E402
 from aconsole.ui.viewmodels.logic.fonts import add_family, font_families  # noqa: E402
+from aconsole.ui.viewmodels.logic.quota_fmt import agent_name  # noqa: E402
 from aconsole.ui.viewmodels.setup_vm import PreferencesViewModel  # noqa: E402
 from aconsole.ui.views.setup.messages import _ as translate  # noqa: E402
 
@@ -105,8 +106,8 @@ class PreferencesDialog(Adw.Dialog):
         self.mcp_page: Adw.PreferencesPage = _mcp_page()
         self._build_appearance(appearance)
         self._build_terminal(terminal)
-        tools.add(self._build_harness())
         self._build_limits(tools)
+        tools.add(self._build_harness())
         approvals.add(self._build_approvals())
         for page, name in (
             (appearance, "appearance"),
@@ -190,6 +191,8 @@ class PreferencesDialog(Adw.Dialog):
             _ = spin.connect("value-changed", self._draft_changed)
         for row in (self.theme, self.quota_display, self.approvals_mode, self.project_policy):
             _ = row.connect("notify::selected", self._draft_changed)
+        for row in self._quota_switches.values():
+            _ = row.connect("notify::active", self._draft_changed)
 
     def _draft_changed(self, *_args: object) -> None:
         if self.loading or self._saving or self._shown is None:
@@ -262,6 +265,13 @@ class PreferencesDialog(Adw.Dialog):
         self._add_spin(limits, self.quota_warn, "prefs.quota_warn")
         self._add_spin(limits, self.quota_critical, "prefs.quota_critical")
         page.add(limits)
+        visibility = Adw.PreferencesGroup(title=translate("prefs.quota_visible_agents"))
+        self._quota_switches: dict[AgentKind, Adw.SwitchRow] = {}
+        for kind in AgentKind:
+            toggle = Adw.SwitchRow(title=agent_name(kind.value), active=True)
+            visibility.add(toggle)
+            self._quota_switches[kind] = toggle
+        page.add(visibility)
 
     def _build_approvals(self) -> Adw.PreferencesGroup:
         group = Adw.PreferencesGroup(title=translate("prefs.approvals"))
@@ -406,6 +416,9 @@ class PreferencesDialog(Adw.Dialog):
             self.quota_display.set_selected(_QUOTA_DISPLAYS.index(settings.quota_display))
         if "approvals_mode" not in keep:
             self.approvals_mode.set_selected(_APPROVAL_MODES.index(settings.approvals_mode))
+        if "quota_hidden_agents" not in keep:
+            for kind, row in self._quota_switches.items():
+                row.set_active(kind not in settings.quota_hidden_agents)
 
     def save(self, *, close_after: bool = False) -> None:
         if self._shown is None or not self._can_apply():
@@ -424,6 +437,7 @@ class PreferencesDialog(Adw.Dialog):
         scrollback = int(_spin_or_current(self.scrollback))
         theme = _THEMES[min(self.theme.get_selected(), len(_THEMES) - 1)]
         display = _QUOTA_DISPLAYS[min(self.quota_display.get_selected(), len(_QUOTA_DISPLAYS) - 1)]
+        hidden = frozenset(kind for kind, row in self._quota_switches.items() if not row.get_active())
         mode = _APPROVAL_MODES[min(self.approvals_mode.get_selected(), len(_APPROVAL_MODES) - 1)]
         hold = int(_spin_or_current(self.approval_hold))
         warn = _spin_or_current(self.quota_warn)
@@ -436,6 +450,7 @@ class PreferencesDialog(Adw.Dialog):
             approval_dangerous=dangerous if dangerous != shown.approval_dangerous else msgspec.UNSET,
             approval_hold_seconds=hold if hold != shown.approval_hold_seconds else msgspec.UNSET,
             quota_display=display if display != shown.quota_display else msgspec.UNSET,
+            quota_hidden_agents=hidden if hidden != shown.quota_hidden_agents else msgspec.UNSET,
             terminal_font=font if font != shown.terminal_font else msgspec.UNSET,
             terminal_font_size=size if size != shown.terminal_font_size else msgspec.UNSET,
             scrollback_lines=scrollback if scrollback != shown.scrollback_lines else msgspec.UNSET,

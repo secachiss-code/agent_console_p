@@ -1046,6 +1046,9 @@ msgstr "Предупреждение при использовании, %"
 msgid "prefs.quota_threshold_order"
 msgstr "Порог предупреждения не должен превышать критический порог."
 
+msgid "prefs.quota_visible_agents"
+msgstr "Показывать лимиты"
+
 msgid "prefs.saved"
 msgstr "Настройки сохранены"
 

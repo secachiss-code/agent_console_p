@@ -6592,6 +6592,14 @@
               "used"
             ]
           },
+          "quota_hidden_agents": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/AgentKind"
+            },
+            "type": "array",
+            "uniqueItems": true
+          },
           "quota_warn_pct": {
             "default": 80,
             "maximum": 100,
@@ -6716,6 +6724,13 @@
               "remaining",
               "used"
             ]
+          },
+          "quota_hidden_agents": {
+            "items": {
+              "$ref": "#/components/schemas/AgentKind"
+            },
+            "type": "array",
+            "uniqueItems": true
           },
           "quota_warn_pct": {
             "maximum": 100,

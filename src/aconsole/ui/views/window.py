@@ -461,13 +461,17 @@ class MainWindow(Adw.ApplicationWindow):
         if self.plan_page is not None:
             self.plan_page.set_inbox(self._summary_vm.inbox)
             self.plan_page.set_inbox_error(self._summary_vm.inbox_error)
-        self.quota_card.tabs = self._summary_vm.tabs
-        self.quota_card.set_accounts(self._summary_vm.accounts)
+        self._update_quota()
+
+    def _update_quota(self) -> None:
+        settings = self._terminal_settings
+        hidden = settings.quota_hidden_agents if settings is not None else ()
+        accounts = tuple(account for account in self._summary_vm.accounts if account.agent not in hidden)
+        self.quota_card.tabs = tuple(tab for tab in self._summary_vm.tabs if tab.agent not in hidden)
+        self.quota_card.set_accounts(accounts)
         self._sync_quota_header()
         critical = any(
-            self._quota_level(window.used_pct) == "critical"
-            for account in self._summary_vm.accounts
-            for window in account.quota
+            self._quota_level(window.used_pct) == "critical" for account in accounts for window in account.quota
         )
         self.quota_banner.set_revealed(critical)
         self._place_end_island(quota_critical=critical)
@@ -1337,7 +1341,7 @@ class MainWindow(Adw.ApplicationWindow):
     def _sync_quota_header(self) -> None:
         """Folded, the section still shows the most used window, coloured by how close it is to the limit."""
         self.quota_section.set_title(self.quota_card.title())
-        used = [window.used_pct for account in self._summary_vm.accounts for window in account.quota]
+        used = [window.used_pct for account in self.quota_card.accounts for window in account.quota]
         known = [value for value in used if value is not None]
         if not known:
             self.quota_section.set_detail("")
@@ -1378,7 +1382,7 @@ class MainWindow(Adw.ApplicationWindow):
         self._terminal_settings = settings
         self.quota_card.set_thresholds(settings.quota_warn_pct, settings.quota_critical_pct)
         self.quota_card.set_display(settings.quota_display)
-        self._update_summary()
+        self._update_quota()
         self._sync_approvals(self.tabs.client.store)
         self._apply_code_font(settings.terminal_font)
         _ = self.app_vm.apply_overrides(settings.keymap_overrides)

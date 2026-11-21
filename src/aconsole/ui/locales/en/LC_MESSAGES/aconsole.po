@@ -1039,6 +1039,9 @@ msgstr "Warning at used quota, %"
 msgid "prefs.quota_threshold_order"
 msgstr "The warning threshold must be at or below the critical threshold."
 
+msgid "prefs.quota_visible_agents"
+msgstr "Show limits for"
+
 msgid "prefs.saved"
 msgstr "Preferences saved"
 

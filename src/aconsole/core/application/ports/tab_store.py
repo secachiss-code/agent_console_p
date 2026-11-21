@@ -16,6 +16,7 @@ PREFERENCE_KEYS: Final = (
     "quota_warn_pct",
     "quota_critical_pct",
     "quota_display",
+    "quota_hidden_agents",
     "codegraph_languages",
     "checkpoints_enabled",
     "checkpoints_keep",
