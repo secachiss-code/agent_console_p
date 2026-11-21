@@ -59,7 +59,7 @@ def run_ui(
         "--snapshot-view",
         choices=(
             "window", "tabs", "plan-graph", "review", "git", "quota-dialog", "quota-account", "palette", "setup",
-            "prefs", "about",
+            "prefs", "mcp-prefs", "about",
         ),
     )
     _ = parser.add_argument("--theme", choices=("light", "dark"), default="light")

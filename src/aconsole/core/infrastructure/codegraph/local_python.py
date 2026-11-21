@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import ast
 import os
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Final
 
@@ -15,14 +16,30 @@ _INIT: Final = "__init__"
 _SOURCES: Final = "src"
 
 
-def scan_python(root: Path) -> ExtractorGraph:
+@dataclass(frozen=True, slots=True)
+class PythonImports:
+    stamp: tuple[int, int, int, int, int]
+    absolute: tuple[str, ...]
+    relative: tuple[tuple[int, str | None, tuple[str, ...]], ...]
+
+
+def scan_python(root: Path, *, cache: dict[str, PythonImports] | None = None) -> ExtractorGraph:
     """Modules under ``root`` and the imports between them. A file that does not parse is a node with no edges."""
     modules = _modules(root)
     edges: set[tuple[str, str]] = set()
+    updated: dict[str, PythonImports] = {}
     for name, path in modules.items():
-        for target in _imports(root / path, name, modules, is_package=Path(path).stem == _INIT):
+        held = None if cache is None else cache.get(path)
+        imports = _read_imports(root / path, held)
+        if imports is None:
+            continue
+        updated[path] = imports
+        for target in _imports(imports, name, modules, is_package=Path(path).stem == _INIT):
             if target != name:
                 edges.add((name, target))
+    if cache is not None:
+        cache.clear()
+        cache.update(updated)
     return ExtractorGraph(
         version=1,
         nodes=tuple(
@@ -40,7 +57,10 @@ def _modules(root: Path) -> dict[str, str]:
         for file in sorted(files):
             if not file.endswith(".py"):
                 continue
-            relative = (Path(directory) / file).relative_to(root)
+            candidate = Path(directory) / file
+            if candidate.is_symlink():
+                continue
+            relative = candidate.relative_to(root)
             found[_module_name(relative)] = relative.as_posix()
             if len(found) >= _FILE_LIMIT:
                 return found
@@ -61,36 +81,49 @@ def _module_name(relative: Path) -> str:
     return ".".join(parts)
 
 
-def _imports(path: Path, module: str, modules: dict[str, str], *, is_package: bool) -> set[str]:
+def _read_imports(path: Path, held: PythonImports | None) -> PythonImports | None:
     try:
+        info = path.stat()
+        stamp = (info.st_dev, info.st_ino, info.st_size, info.st_mtime_ns, info.st_ctime_ns)
+        if held is not None and held.stamp == stamp:
+            return held
         tree = ast.parse(path.read_bytes())
     except (OSError, SyntaxError, ValueError):
-        return set()
-    found: set[str] = set()
+        return None
+    absolute: list[str] = []
+    relative: list[tuple[int, str | None, tuple[str, ...]]] = []
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):
-            for alias in node.names:
-                found.update(_known(alias.name, modules))
+            absolute.extend(alias.name for alias in node.names)
         elif isinstance(node, ast.ImportFrom):
-            base = _base(node, module, is_package=is_package)
-            if base is None:
-                continue
-            for alias in node.names:
-                joined = f"{base}.{alias.name}" if base else alias.name
-                # `from pkg import mod` names a module; `from pkg import value` names something in `pkg`.
-                found.update(_known(joined if joined in modules else base, modules))
+            relative.append((node.level, node.module, tuple(alias.name for alias in node.names)))
+    return PythonImports(stamp, tuple(absolute), tuple(relative))
+
+
+def _imports(imports: PythonImports, module: str, modules: dict[str, str], *, is_package: bool) -> set[str]:
+    found: set[str] = set()
+    for name in imports.absolute:
+        found.update(_known(name, modules))
+    for level, imported, names in imports.relative:
+        base = _base(level, imported, module, is_package=is_package)
+        if base is None:
+            continue
+        for name in names:
+            joined = f"{base}.{name}" if base else name
+            # `from pkg import mod` names a module; `from pkg import value` names something in `pkg`.
+            found.update(_known(joined if joined in modules else base, modules))
     return found
 
 
-def _base(node: ast.ImportFrom, module: str, *, is_package: bool) -> str | None:
-    if node.level == 0:
-        return node.module or ""
+def _base(level: int, imported: str | None, module: str, *, is_package: bool) -> str | None:
+    if level == 0:
+        return imported or ""
     parts = module.split(".")
-    drop = node.level - 1 if is_package else node.level
+    drop = level - 1 if is_package else level
     if drop > len(parts):
         return None
     anchor = parts[: len(parts) - drop]
-    return ".".join((*anchor, node.module)) if node.module else ".".join(anchor)
+    return ".".join((*anchor, imported)) if imported else ".".join(anchor)
 
 
 def _known(name: str, modules: dict[str, str]) -> set[str]:

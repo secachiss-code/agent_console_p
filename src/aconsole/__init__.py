@@ -1,6 +1,6 @@
 """AConsole package."""
 
-__version__ = "0.1.4+e"
+__version__ = "0.1.4+f"
 
 
 def package_roots() -> tuple[str, ...]:

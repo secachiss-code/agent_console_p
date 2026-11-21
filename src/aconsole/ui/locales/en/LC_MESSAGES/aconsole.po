@@ -2101,3 +2101,93 @@ msgstr "The profiles file must be at most 256 KiB."
 
 msgid "plan.repair_empty"
 msgstr "Provide at least one direction profile."
+
+msgid "prefs.mcp"
+msgstr "MCP Tools"
+
+msgid "prefs.mcp.optional"
+msgstr "A question mark marks an optional argument. Node changes with an active lease require its fence."
+
+msgid "prefs.mcp.example"
+msgstr "Example arguments"
+
+msgid "prefs.mcp.copy"
+msgstr "Copy example"
+
+msgid "prefs.mcp.group.plan"
+msgstr "Plans"
+
+msgid "prefs.mcp.group.node"
+msgstr "Nodes"
+
+msgid "prefs.mcp.group.step"
+msgstr "Pipeline and checks"
+
+msgid "prefs.mcp.group.knowledge"
+msgstr "Knowledge and impact"
+
+msgid "prefs.mcp.mode.plan"
+msgstr "Planning tab"
+
+msgid "prefs.mcp.mode.execute"
+msgstr "Execution tab"
+
+msgid "prefs.mcp.mode.both"
+msgstr "Planning and execution tabs"
+
+msgid "prefs.mcp.tool.plan_create"
+msgstr "Create a project plan. Reusing its title returns the existing plan."
+
+msgid "prefs.mcp.tool.plan_add_nodes"
+msgstr "Add missing nodes to a plan."
+
+msgid "prefs.mcp.tool.plan_save"
+msgstr "Save a draft or repair an eligible frozen plan."
+
+msgid "prefs.mcp.tool.plan_delete"
+msgstr "Delete a plan if no one is working on it."
+
+msgid "prefs.mcp.tool.plan_get"
+msgstr "Read a plan or the nodes changed since a revision."
+
+msgid "prefs.mcp.tool.plan_ready"
+msgstr "List claimable nodes in priority order."
+
+msgid "prefs.mcp.tool.plan_list"
+msgstr "List active or all project plans."
+
+msgid "prefs.mcp.tool.node_claim"
+msgstr "Acquire a lease and return its fence."
+
+msgid "prefs.mcp.tool.node_update"
+msgstr "Change node status or renew its lease."
+
+msgid "prefs.mcp.tool.node_attach"
+msgstr "Attach an artifact or evidence to a node."
+
+msgid "prefs.mcp.tool.node_escalate"
+msgstr "Block the node and request a human decision."
+
+msgid "prefs.mcp.tool.step_begin"
+msgstr "Begin or resume a step with its context."
+
+msgid "prefs.mcp.tool.step_submit"
+msgstr "Submit a step result or a patch for preflight."
+
+msgid "prefs.mcp.tool.step_reset"
+msgstr "Restore in-scope files from the last verified snapshot."
+
+msgid "prefs.mcp.tool.gate_run"
+msgstr "Run Micro or Blast, or reuse an applicable receipt."
+
+msgid "prefs.mcp.tool.ctx_get"
+msgstr "Find brief facts by node or query."
+
+msgid "prefs.mcp.tool.kb_add"
+msgstr "Record a fact, decision, or requirement with a source."
+
+msgid "prefs.mcp.tool.kb_impact"
+msgstr "Read affected modules in increasing dependency distance."
+
+msgid "prefs.mcp.tool.handover"
+msgstr "Read or write the current work handover."

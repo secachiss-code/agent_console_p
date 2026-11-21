@@ -23,7 +23,7 @@ class _SnapshotArguments(argparse.Namespace):
 
 
 _PREVIEWS = frozenset(
-    {"plan-graph", "review", "git", "quota-dialog", "quota-account", "palette", "setup", "prefs", "about"}
+    {"plan-graph", "review", "git", "quota-dialog", "quota-account", "palette", "setup", "prefs", "mcp-prefs", "about"}
 )
 
 
@@ -50,7 +50,7 @@ def main(argv: list[str]) -> int:
         required=True,
         choices=(
             "window", "tabs", "plan-graph", "review", "git", "quota-dialog", "quota-account", "palette", "setup",
-            "prefs", "about",
+            "prefs", "mcp-prefs", "about",
         ),
     )
     _ = parser.add_argument("--theme", required=True, choices=("light", "dark"))
@@ -100,8 +100,11 @@ def _preview_app(client: CoreClient, request: SnapshotRequest | None, scenario: 
                     window.palette_dialog.search_entry.set_text("command")
             elif snapshot.view == "setup":
                 window.show_setup()
-            elif snapshot.view == "prefs":
+            elif snapshot.view in {"prefs", "mcp-prefs"}:
                 window.app_vm.dispatch("settings")
+                dialog = window.preferences_dialog
+                if snapshot.view == "mcp-prefs" and dialog is not None:
+                    dialog.set_visible_page(dialog.mcp_page)
             elif snapshot.view == "about":
                 window.activate_action("win.about", None)
             else:
@@ -123,7 +126,7 @@ def _preview_app(client: CoreClient, request: SnapshotRequest | None, scenario: 
                 return window.palette_dialog
             if snapshot.view == "setup":
                 return window.setup_wizard
-            if snapshot.view == "prefs":
+            if snapshot.view in {"prefs", "mcp-prefs"}:
                 return window.preferences_dialog
             if snapshot.view == "about":
                 return window.about_dialog
@@ -139,7 +142,7 @@ def _preview_app(client: CoreClient, request: SnapshotRequest | None, scenario: 
                 ) or (
                     snapshot.view == "setup" and window.setup_wizard is not None and window.setup_wizard.loading
                 ) or (
-                    snapshot.view == "prefs" and window.preferences_dialog is not None
+                    snapshot.view in {"prefs", "mcp-prefs"} and window.preferences_dialog is not None
                     and window.preferences_dialog.loading
                 )
                 if loading:

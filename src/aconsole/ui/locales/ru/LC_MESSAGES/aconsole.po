@@ -2113,3 +2113,93 @@ msgstr "Размер профилей не должен превышать 256 �
 
 msgid "plan.repair_empty"
 msgstr "Укажите хотя бы один профиль направления."
+
+msgid "prefs.mcp"
+msgstr "MCP-инструменты"
+
+msgid "prefs.mcp.optional"
+msgstr "Знак вопроса обозначает необязательный аргумент. Для правки узла с активной арендой нужен её fence."
+
+msgid "prefs.mcp.example"
+msgstr "Пример аргументов"
+
+msgid "prefs.mcp.copy"
+msgstr "Копировать пример"
+
+msgid "prefs.mcp.group.plan"
+msgstr "Планы"
+
+msgid "prefs.mcp.group.node"
+msgstr "Узлы"
+
+msgid "prefs.mcp.group.step"
+msgstr "Конвейер и проверки"
+
+msgid "prefs.mcp.group.knowledge"
+msgstr "Знания и влияние"
+
+msgid "prefs.mcp.mode.plan"
+msgstr "Вкладка планирования"
+
+msgid "prefs.mcp.mode.execute"
+msgstr "Вкладка исполнения"
+
+msgid "prefs.mcp.mode.both"
+msgstr "Вкладки планирования и исполнения"
+
+msgid "prefs.mcp.tool.plan_create"
+msgstr "Создать план проекта. Повтор заголовка возвращает существующий план."
+
+msgid "prefs.mcp.tool.plan_add_nodes"
+msgstr "Добавить новые узлы в план."
+
+msgid "prefs.mcp.tool.plan_save"
+msgstr "Сохранить черновик или применить допустимый ремонт замороженного плана."
+
+msgid "prefs.mcp.tool.plan_delete"
+msgstr "Удалить план, если никто сейчас над ним не работает."
+
+msgid "prefs.mcp.tool.plan_get"
+msgstr "Прочитать план или узлы, изменившиеся после заданной ревизии."
+
+msgid "prefs.mcp.tool.plan_ready"
+msgstr "Показать доступные узлы в порядке приоритета."
+
+msgid "prefs.mcp.tool.plan_list"
+msgstr "Показать активные или все планы проекта."
+
+msgid "prefs.mcp.tool.node_claim"
+msgstr "Взять в работу узел и получить fence аренды."
+
+msgid "prefs.mcp.tool.node_update"
+msgstr "Изменить статус узла или продлить аренду."
+
+msgid "prefs.mcp.tool.node_attach"
+msgstr "Прикрепить артефакт или подтверждение к узлу."
+
+msgid "prefs.mcp.tool.node_escalate"
+msgstr "Заблокировать узел и запросить решение пользователя."
+
+msgid "prefs.mcp.tool.step_begin"
+msgstr "Начать или продолжить шаг и получить его контекст."
+
+msgid "prefs.mcp.tool.step_submit"
+msgstr "Передать результат шага или патч на предпроверку."
+
+msgid "prefs.mcp.tool.step_reset"
+msgstr "Восстановить файлы в области шага из последнего проверенного снимка."
+
+msgid "prefs.mcp.tool.gate_run"
+msgstr "Запустить Micro или Blast либо использовать подходящую квитанцию."
+
+msgid "prefs.mcp.tool.ctx_get"
+msgstr "Найти краткие факты по узлу или поисковому запросу."
+
+msgid "prefs.mcp.tool.kb_add"
+msgstr "Записать факт, решение или требование с источником."
+
+msgid "prefs.mcp.tool.kb_impact"
+msgstr "Показать затронутые модули по расстоянию в графе."
+
+msgid "prefs.mcp.tool.handover"
+msgstr "Прочитать или записать краткую передачу работы."

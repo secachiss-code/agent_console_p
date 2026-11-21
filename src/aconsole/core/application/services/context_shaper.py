@@ -29,6 +29,14 @@ class DependencyContext:
 
 
 @dataclass(frozen=True, kw_only=True)
+class ImpactContext:
+    paths: tuple[str, ...]
+    truncated: bool
+    revision: str
+    unavailable_languages: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True, kw_only=True)
 class DirectionContext:
     key: str
     invariants: str
@@ -36,6 +44,7 @@ class DirectionContext:
     gate_profile_json: str
     skeletons: tuple[tuple[str, str], ...] = ()
     dependencies: tuple[DependencyContext, ...] = ()
+    impact: ImpactContext | None = None
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -75,6 +84,7 @@ class ShapedContext:
     handoff: str
     file_slice: str | None
     lease: LeaseTail
+    impact: ImpactContext | None = None
 
     def payload(self) -> dict[str, object]:
         """Insertion order is intentional; volatile lease fields always come last."""
@@ -84,6 +94,8 @@ class ShapedContext:
         result.update(prefix_sha256=self.prefix_sha256, contract=self.contract, handoff=self.handoff)
         if self.file_slice is not None:
             result["file_slice"] = self.file_slice
+        if self.impact is not None:
+            result["impact"] = asdict(self.impact)
         result.update(lease_id=self.lease.lease_id, fence=self.lease.fence, expires_at=self.lease.expires_at)
         return result
 
@@ -126,6 +138,7 @@ class ContextShaper:
         envelope: HandoffEnvelope,
         lease: LeaseTail,
         file_slice: str | None = None,
+        full_context: bool = False,
     ) -> ShapedContext:
         if (
             module.direction_key != direction.key
@@ -157,6 +170,7 @@ class ContextShaper:
                 handoff=handoff,
                 file_slice=file_slice,
                 lease=lease,
+                impact=direction.impact,
             )
             if len(_json(shaped.payload()).encode()) <= _CONTEXT_BYTES:
                 break
@@ -168,7 +182,8 @@ class ContextShaper:
         cached = self._scratch.prefix_get(session.plan_id, direction.key, digest)
         if cached != prefix:
             self._scratch.prefix_put(session.plan_id, direction.key, digest, prefix)
-        return self._deliver(shaped, session, digest)
+        delivered = self._deliver(shaped, session, digest)
+        return shaped if full_context else delivered
 
     def _deliver(self, shaped: ShapedContext, session: ContextSession, digest: str) -> ShapedContext:
         """One prefix per CLI session, and one per tab generation after `/clear`."""

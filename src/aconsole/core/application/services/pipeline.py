@@ -152,11 +152,11 @@ class PipelineService:
         with self._guard:
             return self._locks.setdefault(node_id, RLock())
 
-    def begin(self, actor: PipelineActor, node_id: str, fence: int) -> dict[str, object]:
+    def begin(self, actor: PipelineActor, node_id: str, fence: int, *, full_context: bool = False) -> dict[str, object]:
         with self._lock(node_id):
-            return self._begin(actor, node_id, fence)
+            return self._begin(actor, node_id, fence, full_context=full_context)
 
-    def _begin(self, actor: PipelineActor, node_id: str, fence: int) -> dict[str, object]:
+    def _begin(self, actor: PipelineActor, node_id: str, fence: int, *, full_context: bool) -> dict[str, object]:
         contract = self._book.contract(actor, node_id, fence)
         history = self._store.history(node_id)
         # An explicitly repaired frozen contract starts a fresh chain and baseline.
@@ -238,6 +238,7 @@ class PipelineService:
             envelope=envelope,
             lease=contract.lease,
             file_slice=sliced,
+            full_context=full_context,
         ).payload()
 
     def submit(  # noqa: PLR0913 -- compatible step API plus optional patch

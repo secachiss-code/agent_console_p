@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from aconsole.core.infrastructure.codegraph.index import CodeGraphIndex
-from aconsole.core.infrastructure.codegraph.local_python import scan_python
+from aconsole.core.infrastructure.codegraph.local_python import PythonImports, scan_python
 from aconsole.core.infrastructure.codegraph.protocol import ExtractorGraph, GraphEdge, GraphNode
 from aconsole.core.infrastructure.codegraph.runner import ExtractorRun, ExtractorRunner
 
@@ -61,11 +61,11 @@ def test_concurrent_callers_share_one_build(tmp_path: Path, monkeypatch: pytest.
     builds: list[Path] = []
     gate = threading.Lock()
 
-    def slow(path: Path) -> ExtractorGraph:
+    def slow(path: Path, *, cache: dict[str, PythonImports] | None = None) -> ExtractorGraph:
         with gate:
             builds.append(path)
         time.sleep(0.2)
-        return real(path)
+        return real(path, cache=cache)
 
     monkeypatch.setattr("aconsole.core.infrastructure.codegraph.index.scan_python", slow)
     index = _index(root)
@@ -101,6 +101,54 @@ def test_language_changes_invalidate_cached_graphs_immediately(tmp_path: Path) -
     assert index.dependents("p") == {}
     enabled[0] = frozenset({"python"})
     assert index.graph("p") == first
+
+
+def test_worktree_graphs_do_not_overwrite_the_project_snapshot(tmp_path: Path) -> None:
+    class Store:
+        def __init__(self) -> None:
+            self.saved: list[ExtractorGraph] = []
+
+        def sync(self, project_id: str, graph: ExtractorGraph) -> None:
+            assert project_id == "p"
+            self.saved.append(graph)
+
+    main, worker = tmp_path / "main", tmp_path / "worker"
+    for root in (main, worker):
+        root.mkdir()
+        _project(root)
+    _ = (worker / "a.py").write_text("import c\n")
+    _ = (worker / "c.py").write_text("")
+    store = Store()
+    index = CodeGraphIndex(_Runner(), lambda _: main, store=store)
+
+    graph = index.graph("p")
+    assert index.dependents("p", worktree=worker) == {"c": ("a",)}
+    assert index.resolve("p", "c.py", worktree=worker) == "c"
+    assert index.resolve("p", "c.py") is None
+    assert index.graph("p", worktree=main) is graph
+    assert index.dependents("p") == {"b": ("a",)}
+    assert store.saved == [graph]
+
+
+def test_watched_import_edits_refresh_without_waiting_for_ttl(tmp_path: Path) -> None:
+    root = _project(tmp_path)
+    (root / "c.py").touch()
+    index = _index(root)
+    index.start_watching()
+    try:
+        initial, _ = index.describe("p")
+        assert index.dependents("p") == {"b": ("a",)}
+        _ = (root / "a.py").write_text("import c\n")
+        deadline = time.monotonic() + 5
+        while time.monotonic() < deadline:
+            index.refresh_changed()
+            if index.dependents("p") == {"c": ("a",)}:
+                break
+            time.sleep(0.02)
+        assert index.dependents("p") == {"c": ("a",)}
+        assert index.describe("p")[0] != initial
+    finally:
+        index.stop_watching()
 
 
 def test_each_rebuild_is_persisted_before_publication(tmp_path: Path) -> None:

@@ -1,4 +1,4 @@
-"""MCP server for the twelve plan tools, served on ``/mcp`` beside ingest.
+"""MCP tools served on ``/mcp`` beside ingest.
 
 Missing ``Authorization`` is allowed so a protocol client can list tools.
 A bearer that is not a live tab token is rejected. A known token selects that tab.
@@ -15,6 +15,7 @@ from mcp.types import Tool, ToolAnnotations
 from pydantic import BaseModel, Field
 
 from aconsole.contracts.common import NodeId, PlanId, ProjectId, TabId
+from aconsole.contracts.mcp_catalog import TOOL_INFO
 from aconsole.contracts.primitives import (
     GateRunParams,
     HandoverReadParams,
@@ -125,17 +126,12 @@ class _LeanServer(MCPServer):
     @override
     async def list_tools(self) -> list[Tool]:
         listed = await super().list_tools()
-        if active(self.tab_context).mode == "execute":
-            listed = [
-                tool
-                for tool in listed
-                if tool.name not in {"plan_create", "plan_add_nodes", "plan_save", "plan_delete", "change_propose"}
-            ]
-        if active(self.tab_context).mode == "plan":
-            listed = [
-                tool for tool in listed if tool.name not in {"step_submit", "step_reset", "gate_run", "node_escalate"}
-            ]
-        return [tool.model_copy(update={"input_schema": lean_schema(tool.input_schema)}) for tool in listed]
+        mode = active(self.tab_context).mode
+        return [
+            tool.model_copy(update={"input_schema": lean_schema(tool.input_schema)})
+            for tool in listed
+            if mode is None or TOOL_INFO[tool.name].mode in {None, mode}
+        ]
 
 
 def lean_schema(schema: dict[str, object]) -> dict[str, object]:
@@ -385,9 +381,9 @@ def _register(  # noqa: C901, PLR0915 -- one nested function per MCP tool
             project_id=ProjectId(ctx.project_id), node_id=NodeId(node_id), tab_id=TabId(ctx.tab_id),
         ), Claimed)
 
-    def step_begin(node_id: _Id, fence: int) -> PipelineReply:
+    def step_begin(node_id: _Id, fence: int, *, full_context: bool = False) -> PipelineReply:
         """Begin or resume L2 with stable context, handoff and lease tail."""
-        return board.pipeline_step(active(context), "begin", node_id, fence)
+        return board.pipeline_step(active(context), "begin", node_id, fence, full_context=full_context)
 
     def step_submit(  # noqa: PLR0913, PLR0917 -- public MCP signature
         node_id: _Id,
@@ -532,25 +528,25 @@ def _register(  # noqa: C901, PLR0915 -- one nested function per MCP tool
         return board.list_plans(active(context), status)
 
     specs = (
-        (plan_create, "Create a plan. Same title returns the same plan.", _IDEMPOTENT),
-        (plan_add_nodes, "Add nodes. Existing keys stay.", _IDEMPOTENT),
-        (plan_save, "Replace one draft plan.", _IDEMPOTENT),
-        (plan_delete, "Delete one plan.", _DELETE),
-        (plan_get, "Read a plan. Pass since for changes only.", _READ),
-        (plan_ready, "List claimable nodes.", _READ),
-        (node_claim, "Take a node lease. Returns fence.", _WRITE),
-        (step_begin, "Resume one L2 step.", _IDEMPOTENT),
-        (step_submit, "Record one L2 step.", _IDEMPOTENT),
-        (step_reset, "Restore files of one step.", _IDEMPOTENT),
-        (gate_run, "Run micro or blast once.", _WRITE),
-        (node_escalate, "Ask a human. Adds no node.", _IDEMPOTENT),
-        (node_update, "Set status or heartbeat.", _WRITE),
-        (node_attach, "Attach one artifact.", _IDEMPOTENT),
-        (ctx_get, "Read short knowledge.", _READ),
-        (kb_add, "Record one fact, decision, or requirement.", _WRITE),
-        (kb_impact, "List neighbors of one target.", _READ),
-        (handover, "Read or write this tab handover.", _WRITE),
-        (plan_list, "List plans.", _READ),
+        (plan_create, _IDEMPOTENT),
+        (plan_add_nodes, _IDEMPOTENT),
+        (plan_save, _IDEMPOTENT),
+        (plan_delete, _DELETE),
+        (plan_get, _READ),
+        (plan_ready, _READ),
+        (node_claim, _WRITE),
+        (step_begin, _IDEMPOTENT),
+        (step_submit, _IDEMPOTENT),
+        (step_reset, _IDEMPOTENT),
+        (gate_run, _WRITE),
+        (node_escalate, _IDEMPOTENT),
+        (node_update, _WRITE),
+        (node_attach, _IDEMPOTENT),
+        (ctx_get, _READ),
+        (kb_add, _WRITE),
+        (kb_impact, _READ),
+        (handover, _WRITE),
+        (plan_list, _READ),
     )
 
     def counted(size: int) -> None:
@@ -558,9 +554,10 @@ def _register(  # noqa: C901, PLR0915 -- one nested function per MCP tool
         if sent is not None and tab:
             sent(tab, size)
 
-    for fn, description, marks in specs:
-        _ = server.tool(name=fn.__name__, description=description, annotations=marks, structured_output=False)(
-            publish(fn, counted)
+    for fn, marks in specs:
+        info = TOOL_INFO[fn.__name__]
+        _ = server.tool(name=info.name, description=info.description, annotations=marks, structured_output=False)(
+            publish(fn, counted),
         )
 
 

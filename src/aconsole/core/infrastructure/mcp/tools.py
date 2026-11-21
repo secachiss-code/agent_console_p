@@ -66,6 +66,7 @@ from aconsole.core.domain.plan_admission import PlanTopology
 from aconsole.core.domain.scope import check_scope
 from aconsole.core.domain.vault_sync import Note as VaultNote
 from aconsole.core.domain.vault_sync import Owners, resolve_ref
+from aconsole.core.infrastructure.codegraph.index import CodeGraphIndex, impact_layers
 from aconsole.core.infrastructure.git.diff import GitDiff
 from aconsole.core.infrastructure.git.runner import GitRunner
 from aconsole.core.infrastructure.persistence.cache.store import StaleScratchFenceError
@@ -340,7 +341,7 @@ def compact(result: BaseModel) -> CallToolResult:
     Every byte here is a token in the agent's context, on every call. Agents read the text, so no structured copy of
     the same answer goes beside it, and the tools publish no output schema.
     """
-    skipped = {"nodes"} if type(result).__name__ == "HandoverResult" else set()
+    skipped: set[str] = {"nodes"} if type(result).__name__ == "HandoverResult" else set()
     lean = result.model_dump(mode="json", exclude=skipped, exclude_defaults=True, exclude_none=True)
     encoded = pydantic_core.to_json(lean)
     if len(encoded) > _REPLY_BYTES:
@@ -914,6 +915,7 @@ class PlanBoard:
         kind: str = "replan",
         reason: str = "",
         patch: str | None = None,
+        full_context: bool = False,
     ) -> PipelineReply:
         _require_tab(ctx)
         if self.pipeline is None or self.pipeline_actor is None:
@@ -923,7 +925,7 @@ class PlanBoard:
             _stop("NODE_CONTRACT", "pipeline actor no longer matches its bearer context")
         try:
             if action == "begin":
-                body = self.pipeline.begin(actor, node_id, fence)
+                body = self.pipeline.begin(actor, node_id, fence, full_context=full_context)
             elif action == "submit":
                 body = self.pipeline.submit(actor, node_id, fence, step, symbols, patch=patch)
             elif action == "escalate":
@@ -1817,7 +1819,13 @@ class PlanBoard:
             facts = self._target(ctx.project_id, target) is not None or bool(self._edges(ctx.project_id, kinds))
         if not facts:
             saved = persistent_impact(
-                self.code_graph, ctx.project_id, target, hops, limit, None if kinds is None else frozenset(kinds)
+                self.code_graph,
+                ctx.project_id,
+                target,
+                hops,
+                limit,
+                None if kinds is None else frozenset(kinds),
+                worktree=ctx.worktree,
             )
             if saved is not None:
                 layers, truncated = saved
@@ -1825,7 +1833,7 @@ class PlanBoard:
                     layers=layers, truncated=truncated, canvas_note="aconsole://note/impact" if truncated else ""
                 )
         # Outside the lock: building a graph can take a minute, and plans must keep moving.
-        code_start, code_edges = self._code(ctx.project_id, target, kinds)
+        code_start, code_edges = self._code(ctx.project_id, target, kinds, worktree=ctx.worktree)
         with self._lock:
             start = self._target(ctx.project_id, target) or code_start
             edges = {**code_edges}
@@ -1842,16 +1850,20 @@ class PlanBoard:
         project_id: str,
         target: str,
         kinds: list[str] | None,
+        *,
+        worktree: Path | None,
     ) -> tuple[str | None, dict[str, tuple[str, ...]]]:
         """A failing extractor leaves the facts the board has. The tool's answer is still useful."""
         graph = self.code_graph
         if graph is None:
             return None, {}
+        selected = None if kinds is None else frozenset(kinds)
         try:
-            return graph.resolve(project_id, target), graph.dependents(
-                project_id,
-                None if kinds is None else frozenset(kinds),
-            )
+            if isinstance(graph, CodeGraphIndex):
+                return graph.resolve(project_id, target, worktree=worktree), graph.dependents(
+                    project_id, selected, worktree=worktree
+                )
+            return graph.resolve(project_id, target), graph.dependents(project_id, selected)
         except DomainError as exc:
             _LOG.warning("no code graph for project %s: %s", project_id, exc)
             return None, {}
@@ -2569,33 +2581,6 @@ def _check_source(ctx: TabContext, source: str) -> None:
     path = ctx.worktree / relative
     if not path.is_file():
         _stop("PATH_NOT_ALLOWED", f"{relative.as_posix()} is not a file in the worktree")
-
-
-def impact_layers(edges: dict[str, tuple[str, ...]], start: str, hops: int, limit: int) -> tuple[list[list[str]], bool]:
-    seen = {start}
-    frontier = [start]
-    layers: list[list[str]] = []
-    truncated = False
-    for _hop in range(hops):
-        nxt: list[str] = []
-        for node in frontier:
-            for linked in edges.get(node, ()):
-                if linked in seen:
-                    continue
-                seen.add(linked)
-                nxt.append(linked)
-                if sum(len(layer) for layer in layers) + len(nxt) > limit:
-                    truncated = True
-                    nxt = nxt[: limit - sum(len(layer) for layer in layers)]
-                    break
-            if truncated:
-                break
-        if nxt:
-            layers.append(nxt)
-        frontier = nxt
-        if truncated or not frontier:
-            break
-    return layers, truncated
 
 
 def _stamp(moment: datetime | None) -> str:

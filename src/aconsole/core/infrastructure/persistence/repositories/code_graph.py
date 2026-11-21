@@ -12,8 +12,9 @@ from sqlalchemy.orm import Session
 
 from aconsole.core.application.ports.plan_store import StoreWriteError
 from aconsole.core.domain.errors import DomainError
+from aconsole.core.infrastructure.codegraph.index import CodeGraphIndex, impact_layers
 from aconsole.core.infrastructure.codegraph.protocol import ExtractorGraph, GraphNode
-from aconsole.core.infrastructure.codegraph.skeleton import file_hashes
+from aconsole.core.infrastructure.codegraph.skeleton import FileHashes, file_hashes
 from aconsole.core.infrastructure.persistence.models import KbEdge, KbEdgeKind, KbNode, KbType, Project
 from aconsole.core.infrastructure.persistence.repositories.knowledge import code_ref_id
 from aconsole.core.infrastructure.persistence.writer import Writer
@@ -98,25 +99,33 @@ def dependency_rows(session: Session, project_id: str, targets: tuple[str, ...])
 
 
 def forward_dependencies(
-    index: _IndexWithStore, project_id: str, paths: tuple[str, ...]
+    index: CodeGraphIndex,
+    project_id: str,
+    paths: tuple[str, ...],
+    *,
+    worktree: Path | None = None,
+    snapshot: ExtractorGraph | None = None,
 ) -> tuple[tuple[GraphNode, int], ...]:
     """Use durable file identities when available, and the same BFS for transient indexes."""
-    snapshot = index.graph(project_id)
-    targets = {node.id for node in snapshot.nodes if node.path in paths}
-    distances: dict[str, int] = {}
-    if isinstance(index.store, CodeGraphDatabase):
+    graph = index.graph(project_id, worktree=worktree) if snapshot is None else snapshot
+    targets = {node.id for node in graph.nodes if node.path in paths}
+    if (
+        snapshot is None
+        and isinstance(index.store, CodeGraphDatabase)
+        and (worktree is None or index.is_project_root(project_id, worktree))
+    ):
         rows = index.store.dependencies(project_id, tuple(sorted({code_ref_id(project_id, path) for path in paths})))
         by_file = dict(rows)
         distances = {
             node.id: by_file[code_ref_id(project_id, node.path)]
-            for node in snapshot.nodes
+            for node in graph.nodes
             if code_ref_id(project_id, node.path) in by_file
         }
     else:
-        distances = _forward_distances(snapshot, targets)
+        distances = _forward_distances(graph, targets)
     # A file may carry several symbols; keep them together and count files, not symbols.
     files: dict[str, tuple[GraphNode, int]] = {}
-    for node in sorted(snapshot.nodes, key=lambda item: (item.path, item.id)):
+    for node in sorted(graph.nodes, key=lambda item: (item.path, item.id)):
         if node.id not in distances or node.path in paths:
             continue
         depth = distances[node.id]
@@ -163,14 +172,23 @@ def persistent_impact(  # noqa: PLR0913, PLR0917 -- existing impact request plus
     hops: int,
     limit: int,
     kinds: frozenset[str] | None,
+    *,
+    worktree: Path | None = None,
 ) -> tuple[list[list[str]], bool] | None:
-    """Bridge the existing index/store assembly; None preserves memory-only indexes."""
-    if not isinstance(graph, _IndexWithStore):
-        return None
-    store = graph.store
-    if not isinstance(store, CodeGraphDatabase):
-        return None
+    """Use SQLite for the registered root and the isolated snapshot for a worker."""
     try:
+        if (
+            worktree is not None
+            and isinstance(graph, CodeGraphIndex)
+            and not graph.is_project_root(project_id, worktree)
+        ):
+            resolved = graph.resolve(project_id, start, worktree=worktree)
+            if resolved is None:
+                return None
+            allowed = frozenset(kind.value for kind in _KINDS if kinds is None or kind.value in kinds)
+            return impact_layers(graph.dependents(project_id, allowed, worktree=worktree), resolved, hops, limit)
+        if not isinstance(graph, _IndexWithStore) or not isinstance(store := graph.store, CodeGraphDatabase):
+            return None
         resolved = graph.resolve(project_id, start)
         snapshot = graph.graph(project_id)  # Builds and commits before the CTE read.
     except DomainError:
@@ -247,7 +265,7 @@ def impact_rows(  # noqa: PLR0913, PLR0917 -- existing impact request plus sessi
 
 
 def sync_graph(session: Session, project_id: str, graph: ExtractorGraph) -> None:
-    """Update module hashes and reconcile only sources whose interface changed."""
+    """Update module hashes and persist only the edge differences."""
     project = session.get(Project, project_id)
     if project is None:
         message = f"unknown project {project_id}"
@@ -267,7 +285,7 @@ def sync_graph(session: Session, project_id: str, graph: ExtractorGraph) -> None
             select(KbNode).where(KbNode.project_id == project_id, KbNode.node_type == KbType.MODULE)
         )
     }
-    unchanged, invalid = _sync_nodes(session, project, graph, identifiers, held_nodes)
+    invalid = _sync_nodes(session, project, graph, identifiers, held_nodes)
     session.flush()
     project_nodes = select(KbNode.id).where(KbNode.project_id == project_id)
     existing = session.scalars(
@@ -282,11 +300,7 @@ def sync_graph(session: Session, project_id: str, graph: ExtractorGraph) -> None
         if edge.origin == _ORIGIN
         and edge.kind in _KINDS
         and edge.src_id in held_nodes
-        and (
-            edge.src_id not in present
-            or edge.dst_id not in present
-            or (edge.src_id not in unchanged and (edge.src_id, edge.dst_id, edge.kind) not in wanted)
-        )
+        and (edge.src_id, edge.dst_id, edge.kind) not in wanted
     ]
     if removed:
         _ = session.execute(
@@ -296,8 +310,7 @@ def sync_graph(session: Session, project_id: str, graph: ExtractorGraph) -> None
             )
         )
     for source, target, kind in sorted(wanted - held):
-        if source not in unchanged:
-            session.add(KbEdge(src_id=source, dst_id=target, kind=kind, origin=_ORIGIN))
+        session.add(KbEdge(src_id=source, dst_id=target, kind=kind, origin=_ORIGIN))
     _remove_vanished(session, held_nodes, present, existing)
 
 
@@ -325,8 +338,7 @@ def _sync_nodes(
     graph: ExtractorGraph,
     identifiers: dict[str, str],
     held: dict[str, KbNode],
-) -> tuple[set[str], set[str]]:
-    unchanged: set[str] = set()
+) -> set[str]:
     invalid: set[str] = set()
     now = datetime.now(UTC)
     files: dict[str, list[GraphNode]] = {}
@@ -336,8 +348,11 @@ def _sync_nodes(
         node = declarations[0]
         language = _language(node)
         symbols = tuple(symbol for declaration in declarations for symbol in declaration.symbols)
-        hashes = file_hashes(Path(project.root_path), node.path, language, symbols)
         current = held.get(node_id)
+        previous = None
+        if current is not None and current.language == language:
+            previous = FileHashes(current.body_hash, current.interface_hash)
+        hashes = file_hashes(Path(project.root_path), node.path, language, symbols, previous=previous)
         if current is None:
             current = KbNode(
                 id=node_id,
@@ -352,14 +367,12 @@ def _sync_nodes(
             held[node_id] = current
         if current.node_type is not KbType.MODULE:
             continue
-        if hashes.interface and hashes.interface == current.interface_hash:
-            unchanged.add(node_id)
         if language == "python" and hashes.interface == "":
             invalid.add(node_id)
         if (current.language, current.body_hash, current.interface_hash) != (language, hashes.body, hashes.interface):
             current.language, current.body_hash, current.interface_hash = language, hashes.body, hashes.interface
             current.updated_at = now
-    return unchanged, invalid
+    return invalid
 
 
 def _remove_vanished(session: Session, held: dict[str, KbNode], present: set[str], edges: Sequence[KbEdge]) -> None:

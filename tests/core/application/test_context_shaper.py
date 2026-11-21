@@ -108,6 +108,10 @@ def test_same_session_gets_digest_and_new_sessions_or_tabs_get_full_prefix() -> 
     assert second.direction_prefix is None
     assert second.prefix_sha256 == first.prefix_sha256
     assert "direction_prefix" not in second.payload()
+    recovered = shaper.shape(
+        session=SESSION, direction=DIRECTION, module=MODULE, envelope=ENVELOPE, lease=LEASE, full_context=True,
+    )
+    assert recovered.direction_prefix == first.direction_prefix
     for session in (replace(SESSION, agent_session_id="new"), replace(SESSION, tab_id="other")):
         result = shaper.shape(session=session, direction=DIRECTION, module=MODULE, envelope=ENVELOPE, lease=LEASE)
         assert result.direction_prefix == first.direction_prefix

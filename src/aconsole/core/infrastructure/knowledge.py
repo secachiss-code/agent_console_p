@@ -55,13 +55,12 @@ from aconsole.core.application.ports.plan_store import StoredPlan
 from aconsole.core.domain.errors import DomainError
 from aconsole.core.domain.pipeline import Step
 from aconsole.core.domain.scope import check_scope
-from aconsole.core.infrastructure.codegraph.index import CodeGraphIndex
+from aconsole.core.infrastructure.codegraph.index import CodeGraphIndex, impact_layers
 from aconsole.core.infrastructure.mcp.tools import (
     PipelineReply,
     PlanBoard,
     TabContext,
     as_domain_error,
-    impact_layers,
     nodes_from_specs,
 )
 from aconsole.core.infrastructure.persistence.repositories.code_graph import persistent_impact

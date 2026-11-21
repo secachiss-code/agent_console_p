@@ -15,6 +15,7 @@ from gi.repository import Adw, Gdk, Gio, GLib, GObject, Gtk, Pango  # noqa: E402
 
 from aconsole.contracts.app import ProjectApprovalPolicyParams, ProjectView  # noqa: E402
 from aconsole.contracts.common import AgentKind  # noqa: E402
+from aconsole.contracts.mcp_catalog import TOOL_CATALOG  # noqa: E402
 from aconsole.contracts.settings import Settings, SettingsPatch  # noqa: E402
 from aconsole.ui.bootstrap import spawn_task  # noqa: E402
 from aconsole.ui.viewmodels.logic.approval_modes import harness_effect_key, mode_enabled  # noqa: E402
@@ -29,6 +30,36 @@ _POLICY_MODES: tuple[Literal["ask", "allow", "deny", "scenario"], ...] = ("ask",
 _PROJECT_POLICIES: tuple[Literal["inherit", "ask", "allow", "deny"], ...] = ("inherit", "ask", "allow", "deny")
 _CLOSE_OPENING_TICKS = 3
 _HARNESSES: tuple[AgentKind, ...] = (AgentKind.CLAUDE, AgentKind.CODEX, AgentKind.OPENCODE, AgentKind.CURSOR)
+
+
+def _mcp_page() -> Adw.PreferencesPage:
+    page = Adw.PreferencesPage(title=translate("prefs.mcp"), icon_name="utilities-terminal-symbolic")
+    for category in ("plan", "node", "step", "knowledge"):
+        group = Adw.PreferencesGroup(title=translate(f"prefs.mcp.group.{category}"))
+        if category == "plan":
+            group.set_description(translate("prefs.mcp.optional"))
+        for tool in TOOL_CATALOG:
+            if tool.group != category:
+                continue
+            title = translate(f"prefs.mcp.tool.{tool.name}")
+            mode = translate(f"prefs.mcp.mode.{tool.mode or 'both'}")
+            row = Adw.ExpanderRow(title=tool.name, subtitle=title)
+            row.add_row(Adw.ActionRow(title=mode, subtitle=GLib.markup_escape_text(tool.arguments)))
+            example = Adw.ActionRow(
+                title=translate("prefs.mcp.example"), subtitle=GLib.markup_escape_text(tool.example),
+            )
+            button = Gtk.Button(icon_name="edit-copy-symbolic", valign=Gtk.Align.CENTER)
+            button.set_tooltip_text(translate("prefs.mcp.copy"))
+            _ = button.connect("clicked", _copy_mcp_example, tool.example)
+            example.add_suffix(button)
+            row.add_row(example)
+            group.add(row)
+        page.add(group)
+    return page
+
+
+def _copy_mcp_example(button: Gtk.Button, example: str) -> None:
+    button.get_clipboard().set(example)
 
 
 class PreferencesDialog(Adw.PreferencesDialog):
@@ -52,7 +83,9 @@ class PreferencesDialog(Adw.PreferencesDialog):
         _ = self.connect("unmap", self._cancel_pending_close)
         self.set_can_close(False)
         _ = self.connect("close-attempt", self._close_attempt)
-        page = Adw.PreferencesPage()
+        page = Adw.PreferencesPage(
+            title=translate("prefs.title"), icon_name="preferences-system-symbolic",
+        )
         self.page: Adw.PreferencesPage = page
         self._build_terminal(page)
         self._build_appearance(page)
@@ -67,6 +100,8 @@ class PreferencesDialog(Adw.PreferencesDialog):
         actions.add(self.status_label)
         page.add(actions)
         self.add(page)
+        self.mcp_page: Adw.PreferencesPage = _mcp_page()
+        self.add(self.mcp_page)
         _ = self.connect("closed", self._closed)
 
     def _build_terminal(self, page: Adw.PreferencesPage) -> None:

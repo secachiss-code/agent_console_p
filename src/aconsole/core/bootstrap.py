@@ -754,7 +754,7 @@ class Daemon:
         if self._listening:
             self._on_presence(was_quiet=was_quiet)
 
-    async def serve(self) -> int:
+    async def serve(self) -> int:  # noqa: PLR0915 -- ordered startup and teardown for the daemon's workers
         """0 after a clean stop. 1 when another process holds the lock. The socket is left untouched then."""
         self._closing = False
         self._listening = False
@@ -770,23 +770,30 @@ class Daemon:
         self._worker = ThreadPoolExecutor(max_workers=1, thread_name_prefix="aconsole-tabs")
         self._vault_thread = ThreadPoolExecutor(max_workers=1, thread_name_prefix="aconsole-vault")
         git_watch: asyncio.Task[None] | None = None
+        code_watch: asyncio.Task[None] | None = None
         try:
             await self._open_database()
             await self._restore_tabs()
             self._restore_credentials()
             await self._open_ingest()
+            self.knowledge.code_graph.start_watching()
             await self._listen()
             self._listening = True
             git_watch = asyncio.create_task(self._watch_git())
+            code_watch = asyncio.create_task(self._watch_code_graph(self._stopped))
             if self._quiet() and not self._stopped.is_set():
                 self._arm_idle()
             _ = await self._stopped.wait()
         finally:
+            self._stopped.set()
             self._git_watch.stop()
             if git_watch is not None:
                 _ = git_watch.cancel()
                 with contextlib.suppress(asyncio.CancelledError):
                     await git_watch
+            if code_watch is not None:
+                await code_watch
+            await asyncio.to_thread(self.knowledge.code_graph.stop_watching)
             self._closing = True
             self._listening = False
             self._cancel_idle()
@@ -1289,6 +1296,7 @@ class Daemon:
 
     def _git_heard(self, project_id: str) -> None:
         self.git.heard(project_id)
+        self.knowledge.code_graph.invalidate_project(project_id)
 
     def _facts_to_check(self, project_id: str) -> tuple[StoredFact, ...]:
         return self._plans.facts_to_check(project_id)
@@ -1372,6 +1380,13 @@ class Daemon:
                 _ = await asyncio.to_thread(self.git.check)
             except Exception:  # noqa: BLE001 -- logged; the next change brings another pass
                 _LOG.exception("git check failed")
+
+    async def _watch_code_graph(self, stopped: asyncio.Event) -> None:
+        while not stopped.is_set():
+            try:
+                _ = await asyncio.wait_for(stopped.wait(), 0.5)
+            except TimeoutError:
+                await asyncio.to_thread(self.knowledge.code_graph.refresh_changed)
 
     async def _watch_codex_turns(self) -> None:
         """Codex hooks are not trusted (ADR-0002), and notify only says that a turn ended."""

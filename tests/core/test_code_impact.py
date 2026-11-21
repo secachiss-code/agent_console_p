@@ -16,7 +16,7 @@ from aconsole.contracts.errors import ErrorData, ErrorObject
 from aconsole.contracts.ipc import ResponseErr, ResponseOk
 from aconsole.core.bootstrap import Daemon
 from aconsole.core.domain.errors import DomainError
-from aconsole.core.infrastructure.codegraph.index import CodeGraphIndex
+from aconsole.core.infrastructure.codegraph.index import CodeGraphIndex, impact_layers
 from aconsole.core.infrastructure.codegraph.local_python import scan_python
 from aconsole.core.infrastructure.codegraph.protocol import ExtractorGraph, GraphEdge, GraphNode
 from aconsole.core.infrastructure.codegraph.runner import ExtractorRun, ExtractorRunner
@@ -231,8 +231,6 @@ def test_persistent_cte_matches_memory_layers_and_is_used_by_mcp(
         board = PlanBoard()
         board.code_graph = index
         ctx = TabContext(tab_id="t", project_id="p", worktree=None, agent="codex")
-        from aconsole.core.infrastructure.mcp.tools import impact_layers
-
         for hops in (1, 2, 3):
             expected, truncated = impact_layers(index.dependents("p"), "pkg.base", hops, 50)
             actual = board.impact(ctx, "src/pkg/base.py", hops, 50, None)
@@ -393,7 +391,14 @@ def test_pipeline_context_delivers_lod_from_actual_worktree(tmp_path: Path) -> N
         "caller.py": "import a\nclass Caller: pass\n",
     }.items():
         _ = (repo / name).write_text(text)
-    index = CodeGraphIndex(_Runner(ExtractorRun(graph=None, error=None)), lambda _p: repo)
+    main = git_repo(tmp_path / "main")
+    _ = (main / "a.py").write_text("import other\n")
+    _ = (main / "other.py").write_text("")
+    index = CodeGraphIndex(_Runner(ExtractorRun(graph=None, error=None)), lambda _p: main)
+    board = PlanBoard()
+    board.code_graph = index
+    ctx = TabContext(tab_id="t", project_id="p", worktree=repo, agent="codex")
+    assert board.impact(ctx, "a.py", 1, 5, None).layers == [["caller"]]
     workspace = PipelineGit(index)
     paths = ("a.py",)
     contract = PipelineContract(
@@ -424,6 +429,9 @@ def test_pipeline_context_delivers_lod_from_actual_worktree(tmp_path: Path) -> N
     assert "NEIGHBOR_BODY" not in result.direction_prefix
     assert "e.py" not in result.direction_prefix
     assert "caller.py" not in result.direction_prefix
+    assert result.impact is not None
+    assert result.impact.paths == ("caller.py",)
+    assert not result.impact.truncated
 
 
 @pytest.mark.parametrize("persistent", [False, True])

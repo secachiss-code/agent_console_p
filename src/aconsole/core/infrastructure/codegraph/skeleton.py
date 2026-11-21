@@ -13,7 +13,9 @@ class FileHashes:
     interface: str | None
 
 
-def file_hashes(root: Path, path: str, language: str | None, symbols: tuple[str, ...]) -> FileHashes:
+def file_hashes(
+    root: Path, path: str, language: str | None, symbols: tuple[str, ...], *, previous: FileHashes | None = None
+) -> FileHashes:
     """Hash source bytes without executing code; an empty interface is never reusable."""
     if language is None:
         return FileHashes(None, None)
@@ -25,6 +27,8 @@ def file_hashes(root: Path, path: str, language: str | None, symbols: tuple[str,
     except OSError, ValueError:
         return FileHashes(None, None)
     body = hashlib.sha256(raw).hexdigest()
+    if language == "python" and previous is not None and previous.body == body and previous.interface is not None:
+        return previous
     interface = "\n".join(sorted(set(symbols))) if symbols else None
     if language == "python":
         interface = _python_interface(raw)

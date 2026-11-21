@@ -3,10 +3,12 @@
 import hashlib
 import json
 import time
+from collections import OrderedDict
 from collections.abc import Callable, Mapping
 from contextlib import AbstractContextManager
 from dataclasses import replace
 from datetime import UTC, datetime
+from threading import Lock
 from typing import Literal, final
 from uuid import uuid4
 
@@ -15,7 +17,12 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from aconsole.core.application.ports.gate_runner import GateResult, GateRunner
-from aconsole.core.application.services.context_shaper import ContextShaper, DependencyContext, DirectionContext
+from aconsole.core.application.services.context_shaper import (
+    ContextShaper,
+    DependencyContext,
+    DirectionContext,
+    ImpactContext,
+)
 from aconsole.core.application.services.gates import (
     BlastGate,
     BlastProfile,
@@ -39,7 +46,8 @@ from aconsole.core.domain.errors import DomainError
 from aconsole.core.domain.gate_profile import micro_commands
 from aconsole.core.domain.pipeline import PipelineState, StateBlock, genesis_hash, retry
 from aconsole.core.domain.scope import check_scope
-from aconsole.core.infrastructure.codegraph.index import CodeGraphIndex
+from aconsole.core.infrastructure.codegraph.index import CodeGraphIndex, impact_layers, reverse_edges
+from aconsole.core.infrastructure.codegraph.protocol import ExtractorGraph
 from aconsole.core.infrastructure.codegraph.skeleton import python_skeleton, python_slice
 from aconsole.core.infrastructure.gates.runner import prepare_patch
 from aconsole.core.infrastructure.git.checkpoints import GitCheckpoints, remove_worktree_file
@@ -62,6 +70,9 @@ from aconsole.core.infrastructure.persistence.repositories.code_graph import for
 from aconsole.core.infrastructure.persistence.writer import Writer
 
 _MODULE_ARGV_LENGTH = 3
+_SKELETON_ENTRIES = 128
+_SKELETON_SIZE = 64 * 1024
+_IMPACT_DISPLAY = 5
 
 
 def micro_profile(profile: Mapping[str, object], *, location: str = "gate_profile") -> MicroProfile:
@@ -238,6 +249,8 @@ class PipelineGit:
         self.git = GitRunner()
         self.checkpoints = GitCheckpoints()
         self.versions = versions or _missing_versions
+        self._skeletons: OrderedDict[str, str] = OrderedDict()
+        self._skeleton_lock = Lock()
 
     def head(self, actor: PipelineActor) -> str:
         return self.git.read(actor.worktree, "rev-parse", "--verify", "HEAD").text.strip()
@@ -258,9 +271,7 @@ class PipelineGit:
             actor.worktree, "diff", "--binary", "--no-ext-diff", "--no-textconv", attempt.base_oid, ref
         ).text
         skeletons = tuple(
-            (path, python_skeleton(self._source(actor, path)))
-            for path in contract.module.blast_radius or ()
-            if path.endswith(".py")
+            (path, self._skeleton(actor, path)) for path in contract.module.blast_radius or () if path.endswith(".py")
         )
         fingerprint = json.dumps(
             (
@@ -284,10 +295,10 @@ class PipelineGit:
 
     def tests(self, actor: PipelineActor, changed: tuple[str, ...]) -> tuple[str, ...]:
         paths: set[str] = {path for path in changed if path.startswith("tests/")}
-        graph = self.graph.graph(actor.project_id)
+        graph = self.graph.graph(actor.project_id, worktree=actor.worktree)
         names = {node.id: node.path for node in graph.nodes}
         for path in changed:
-            impact = persistent_impact(self.graph, actor.project_id, path, 1, 1000, None)
+            impact = persistent_impact(self.graph, actor.project_id, path, 1, 1000, None, worktree=actor.worktree)
             if impact is not None:
                 paths.update(
                     names[module]
@@ -298,14 +309,14 @@ class PipelineGit:
         return tuple(sorted(paths))[:3]
 
     def blast_tests(self, actor: PipelineActor, attempt: Attempt) -> tuple[str, ...]:
-        graph = self.graph.graph(actor.project_id)
+        graph = self.graph.graph(actor.project_id, worktree=actor.worktree)
         names = {node.id: node.path for node in graph.nodes}
         # The nearest dependent tests run first; cap only after combining all changed roots.
         distances: dict[str, int] = {}
         for path in GitDiff().changed_paths(actor.worktree, attempt.base_oid):
             if path.startswith("tests/") and path.endswith(".py"):
                 distances[path] = 0
-            impact = persistent_impact(self.graph, actor.project_id, path, 3, 10000, None)
+            impact = persistent_impact(self.graph, actor.project_id, path, 3, 10000, None, worktree=actor.worktree)
             if impact is None:
                 continue
             if impact[1]:
@@ -332,7 +343,7 @@ class PipelineGit:
         self, actor: PipelineActor, contract: PipelineContract, symbols: tuple[str, ...]
     ) -> tuple[DirectionContext, str | None]:
         paths = tuple(path for path in self._paths(actor) if not check_scope(contract.module.paths, (path,)).violations)
-        snapshot = self.graph.graph(actor.project_id)
+        snapshot, revision, failed = self.graph.snapshot(actor.project_id, worktree=actor.worktree)
         symbols_by_path: dict[str, set[str]] = {}
         for node in snapshot.nodes:
             symbols_by_path.setdefault(node.path, set()).update(node.symbols)
@@ -341,13 +352,14 @@ class PipelineGit:
             skeletons=tuple(
                 (
                     path,
-                    python_skeleton(self._source(actor, path))
+                    self._skeleton(actor, path)
                     if path.endswith(".py")
                     else "\n".join(sorted(symbols_by_path.get(path, ()))),
                 )
                 for path in paths
             ),
-            dependencies=self._dependencies(actor, paths),
+            dependencies=self._dependencies(actor, paths, snapshot),
+            impact=self._context_impact(paths, snapshot, revision, failed),
         )
         targets = [path for path in paths if path.endswith(".py")]
         sliced = None
@@ -365,17 +377,54 @@ class PipelineGit:
             )
         return direction, sliced
 
-    def _dependencies(self, actor: PipelineActor, paths: tuple[str, ...]) -> tuple[DependencyContext, ...]:
+    def _dependencies(
+        self, actor: PipelineActor, paths: tuple[str, ...], snapshot: ExtractorGraph
+    ) -> tuple[DependencyContext, ...]:
         dependencies: list[DependencyContext] = []
-        for node, depth in forward_dependencies(self.graph, actor.project_id, paths):
+        for node, depth in forward_dependencies(self.graph, actor.project_id, paths, snapshot=snapshot):
             interface = (
-                python_skeleton(self._source(actor, node.path))
-                if node.path.endswith(".py")
-                else "\n".join(sorted(set(node.symbols)))
+                self._skeleton(actor, node.path) if node.path.endswith(".py") else "\n".join(sorted(set(node.symbols)))
             )
             text = interface if depth == 1 else f"{node.path} {node.kind} {' '.join(interface.split())}"
             dependencies.append(DependencyContext(path=node.path, distance=depth, text=text))
         return tuple(dependencies)
+
+    @staticmethod
+    def _context_impact(
+        paths: tuple[str, ...], snapshot: ExtractorGraph, revision: str, failed: tuple[str, ...]
+    ) -> ImpactContext:
+        scoped = set(paths)
+        by_id = {node.id: node.path for node in snapshot.nodes}
+        starts = sorted(node for node, path in by_id.items() if path in scoped)
+        impacted: tuple[str, ...] = ()
+        if starts:
+            layers, _ = impact_layers(
+                reverse_edges(snapshot), starts[0], 3, len(by_id), additional_roots=tuple(starts[1:])
+            )
+            impacted = tuple(dict.fromkeys(by_id[node] for layer in layers for node in layer if node in by_id))
+        return ImpactContext(
+            paths=impacted[:_IMPACT_DISPLAY],
+            truncated=len(impacted) > _IMPACT_DISPLAY,
+            revision=revision,
+            unavailable_languages=failed,
+        )
+
+    def _skeleton(self, actor: PipelineActor, path: str) -> str:
+        source = self._source(actor, path)
+        key = _sha(source)
+        with self._skeleton_lock:
+            cached = self._skeletons.get(key)
+            if cached is not None:
+                self._skeletons.move_to_end(key)
+                return cached
+        skeleton = python_skeleton(source)
+        if len(skeleton.encode()) <= _SKELETON_SIZE:
+            with self._skeleton_lock:
+                self._skeletons[key] = skeleton
+                self._skeletons.move_to_end(key)
+                if len(self._skeletons) > _SKELETON_ENTRIES:
+                    _ = self._skeletons.popitem(last=False)
+        return skeleton
 
     def _paths(self, actor: PipelineActor) -> tuple[str, ...]:
         return tuple(

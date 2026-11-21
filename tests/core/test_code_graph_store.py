@@ -12,6 +12,7 @@ from sqlalchemy.event import listen
 
 from aconsole.core.application.ports.knowledge_store import StoredFact
 from aconsole.core.application.ports.plan_store import StoreWriteError
+from aconsole.core.infrastructure.codegraph.local_python import scan_python
 from aconsole.core.infrastructure.codegraph.protocol import ExtractorGraph, GraphEdge, GraphNode
 from aconsole.core.infrastructure.codegraph.skeleton import file_hashes, python_skeleton
 from aconsole.core.infrastructure.persistence.engine import migrate, write_engine
@@ -134,7 +135,7 @@ def test_body_edit_with_same_interface_writes_no_edges(stored: tuple[Writer, Eng
     before, edges = _snapshot(writer)
     writes = _capture(engine)
     _ = (root / "src/x.py").write_text("def x(value: int) -> int:\n    return value + 5\n")
-    database.sync("p", _graph(linked=False))
+    database.sync("p", _graph())
     after, actual = _snapshot(writer)
     identifier = code_ref_id("p", "src/x.py")
     assert after[identifier][0] == "python"
@@ -145,6 +146,29 @@ def test_body_edit_with_same_interface_writes_no_edges(stored: tuple[Writer, Eng
     assert all("kb_edges" not in statement for statement in writes)
     assert after[identifier][1] == hashlib.sha256((root / "src/x.py").read_bytes()).hexdigest()
     assert after[identifier][2] == hashlib.sha256(python_skeleton((root / "src/x.py").read_text()).encode()).hexdigest()
+
+
+def test_import_edit_updates_impact_with_same_interface(stored: tuple[Writer, Engine, Path]) -> None:
+    writer, _engine, root = stored
+    source = root / "src/x.py"
+    declaration = source.read_text()
+    _ = (root / "src/z.py").write_text("")
+    _ = source.write_text("import y\n" + declaration)
+    database = CodeGraphDatabase(writer)
+    database.sync("p", scan_python(root))
+    x, y, z = (code_ref_id("p", f"src/{name}.py") for name in ("x", "y", "z"))
+    before, _ = _snapshot(writer)
+    assert database.impact("p", y, 1, 5) == ([(x, 1)], False)
+    assert database.impact("p", z, 1, 5) == ([], False)
+
+    _ = source.write_text("import z\n" + declaration)
+    database.sync("p", scan_python(root))
+
+    after, _ = _snapshot(writer)
+    assert after[x][1] != before[x][1]
+    assert after[x][2] == before[x][2]
+    assert database.impact("p", y, 1, 5) == ([], False)
+    assert database.impact("p", z, 1, 5) == ([(x, 1)], False)
 
 
 def test_syntax_error_clears_edges_even_with_stale_extractor_edges(stored: tuple[Writer, Engine, Path]) -> None:
@@ -192,7 +216,7 @@ def test_foreign_symbols_and_implements_preserve_edges_on_body_edits(stored: tup
     _ = (root / "src/x.cs").write_text("class X : I { int f() => 2; }")
     # Declaration order has no effect on the canonical hash.
     reversed_x = GraphNode(id=x.id, path=x.path, name=x.name, kind=x.kind, symbols=tuple(reversed(x.symbols)))
-    database.sync("p", ExtractorGraph(version=1, nodes=(reversed_x, y), edges=()))
+    database.sync("p", ExtractorGraph(version=1, nodes=(reversed_x, y), edges=(edge,)))
     nodes, edges = _snapshot(writer)
     assert nodes[code_ref_id("p", x.path)][0] == "csharp"
     assert edges == {(code_ref_id("p", x.path), code_ref_id("p", y.path), KbEdgeKind.IMPLEMENTS)}
