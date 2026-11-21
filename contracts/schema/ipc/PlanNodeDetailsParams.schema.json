@@ -1,0 +1,33 @@
+{
+  "$defs": {
+    "PlanNodeDetailsParams": {
+      "properties": {
+        "cursor": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "node_id": {
+          "type": "string"
+        },
+        "project_id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "project_id",
+        "node_id"
+      ],
+      "title": "PlanNodeDetailsParams",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/PlanNodeDetailsParams",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

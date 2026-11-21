@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import json
+from collections.abc import Callable
 from typing import Final, Literal, final
 
 import msgspec
@@ -22,7 +24,10 @@ from aconsole.contracts.app import (
     PlanInboxResult,
     PlanListParams,
     PlanListResult,
+    PlanNodeDetailsParams,
+    PlanNodeDetailsView,
     PlanSaveParams,
+    ProjectIndexParams,
     SetNodeStatusParams,
 )
 from aconsole.contracts.common import NodeId, PlanId
@@ -56,6 +61,7 @@ from aconsole.core.domain.errors import DomainError
 from aconsole.core.domain.pipeline import Step
 from aconsole.core.domain.scope import check_scope
 from aconsole.core.infrastructure.codegraph.index import CodeGraphIndex, impact_layers
+from aconsole.core.infrastructure.mcp.project_index import ProjectIndex
 from aconsole.core.infrastructure.mcp.tools import (
     PipelineReply,
     PlanBoard,
@@ -73,6 +79,7 @@ PLAN_METHODS: Final = frozenset(
         "plan/decide",
         "plan/list",
         "plan/get",
+        "plan/nodeDetails",
         "plan/save",
         "plan/delete",
         "plan/setNodeStatus",
@@ -84,6 +91,7 @@ PLAN_METHODS: Final = frozenset(
     }
 )
 KNOWLEDGE_METHODS: Final = PLAN_METHODS | {
+    "project/index",
     "knowledge/noteUri",
     "knowledge/impact",
     "knowledge/get",
@@ -101,6 +109,8 @@ _IMPACT_LIMIT: Final = 200
 _IMPACT_UNKNOWN: Final = 5007
 _PLAN_NOT_FOUND: Final = 4001
 _NOTE_NOT_FOUND: Final = 5005
+_INDEX_QUERY_MAX: Final = 300
+_INDEX_PATH_MAX: Final = 4096
 
 
 @final
@@ -109,19 +119,39 @@ class KnowledgeService:
         self.board: PlanBoard = board
         self.vault: VaultSync = vault
         self.code_graph: CodeGraphIndex = code_graph
+        self.project_index: ProjectIndex = ProjectIndex(board)
+        self.tab_context: Callable[[str], TabContext | None] = lambda _tab: None
 
     def dispatch(self, method: str, raw: bytes) -> msgspec.Struct:
+        if method == "project/index":
+            return self._project_index(msgspec.json.decode(raw, type=ProjectIndexParams))
         if method in {"plan/create", "plan/addNode", "plan/ready"}:
             return self._primitive(method, raw)
         if method.startswith("plan/"):
             return self._plan(method, raw)
-        if method in {"knowledge/get", "knowledge/add", "handover/read", "handover/write"}:
-            return self._primitive(method, raw)
-        if method.startswith(("node/", "gate/")):
+        if method in {"knowledge/get", "knowledge/add"} or method.startswith(("handover/", "node/", "gate/")):
             return self._primitive(method, raw)
         if method == "knowledge/impact":
             return self._impact(msgspec.json.decode(raw, type=ImpactParams))
         return self._note_uri(msgspec.json.decode(raw, type=NoteUriParams))
+
+    def _project_index(self, params: ProjectIndexParams) -> msgspec.Struct:
+        if len(params.query) > _INDEX_QUERY_MAX or max(len(params.scope), len(params.anchor or "")) > _INDEX_PATH_MAX:
+            raise ValueError
+        if params.tab_id is None:
+            ctx = _bind(None, str(params.project_id))
+        else:
+            context = self.tab_context(str(params.tab_id))
+            if context is None or context.project_id != str(params.project_id):
+                raise DomainError(code=2003, name="TAB_NOT_FOUND", retryable=False, extra=(str(params.tab_id),))
+            ctx = context
+        if ctx.worktree is None and self.board.project_root(ctx.project_id) is None:
+            raise DomainError(code=2001, name="PROJECT_NOT_FOUND", retryable=False, extra=(ctx.project_id,))
+        try:
+            return self.project_index.scene(ctx, params)
+        except Exception as exc:
+            error = as_domain_error(exc)
+            raise ValueError(error.name) from exc
 
     def _primitive(self, method: str, raw: bytes) -> msgspec.Struct:
         """One PlanBoard effect, with the ids from the request body."""
@@ -237,7 +267,7 @@ class KnowledgeService:
             list(written.failing_checks),
         )
 
-    def _plan(self, method: str, raw: bytes) -> msgspec.Struct:
+    def _plan(self, method: str, raw: bytes) -> msgspec.Struct:  # noqa: PLR0911 -- one result per plan method
         if method in {"plan/inbox", "plan/decide", "plan/directionGate"}:
             return self._review(method, raw)
         if method == "plan/list":
@@ -256,7 +286,31 @@ class KnowledgeService:
         if method == "plan/applyChange":
             change = msgspec.json.decode(raw, type=PlanApplyChangeParams)
             return self.board.apply_change(str(change.plan_id), change.change_id, self._radii)
-        return self._document(method, raw)
+        if method != "plan/nodeDetails":
+            return self._document(method, raw)
+        return self._node_details(msgspec.json.decode(raw, type=PlanNodeDetailsParams))
+
+    def _node_details(self, params: PlanNodeDetailsParams) -> PlanNodeDetailsView:
+        ctx = _bind(None, str(params.project_id))
+        try:
+            detail = self.board.node_details(
+                ctx, str(params.node_id), ("contract", "relations", "attempts", "reviews", "artifacts"),
+                40, params.cursor,
+            )
+            paths = self.board.node_paths(ctx, str(params.node_id))
+        except Exception as error:
+            refusal = as_domain_error(error)
+            if refusal.name == "NODE_NOT_FOUND":
+                raise refusal from error
+            raise ValueError(refusal.name) from error
+        return PlanNodeDetailsView(
+            lines=tuple(
+                f"{entry.field}: " + (entry.value if isinstance(entry.value, str)
+                                      else json.dumps(entry.value, ensure_ascii=False))
+                for entry in detail.entries
+            ),
+            paths=paths, cursor=detail.cursor,
+        )
 
     def _review(self, method: str, raw: bytes) -> msgspec.Struct:
         if method == "plan/directionGate":

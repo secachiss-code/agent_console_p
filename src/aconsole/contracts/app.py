@@ -196,6 +196,7 @@ class PlanNodeView(msgspec.Struct, frozen=True, kw_only=True):
     evidence: str | None = None
     level: Literal[0, 1] = 1
     parent: NodeId | None = None
+    related: tuple[NodeId, ...] = ()
     pipeline: bool = False
     attempt_no: int = 0
     max_attempts: int = 4
@@ -341,6 +342,55 @@ class ProjectAddParams(msgspec.Struct, frozen=True, kw_only=True):
 
 class ProjectIdParams(msgspec.Struct, frozen=True, kw_only=True):
     project_id: ProjectId
+
+
+class ProjectIndexParams(msgspec.Struct, frozen=True, kw_only=True):
+    project_id: ProjectId
+    tab_id: TabId | None = None
+    scope: str = "."
+    query: str = ""
+    anchor: str | None = None
+    cursor: str | None = None
+    diagnose: bool = False
+
+
+class ProjectIndexItem(msgspec.Struct, frozen=True, kw_only=True):
+    id: str
+    name: str
+    path: str
+    kind: str
+    count: int | None = None
+    start_line: int | None = None
+
+
+class ProjectIndexLink(msgspec.Struct, frozen=True, kw_only=True):
+    source: str
+    target: str
+    kind: str
+
+
+class ProjectIndexView(msgspec.Struct, frozen=True, kw_only=True):
+    revision: str
+    state: str
+    items: tuple[ProjectIndexItem, ...]
+    links: tuple[ProjectIndexLink, ...] = ()
+    cursor: str | None = None
+    coverage: tuple[str, ...] = ()
+    excerpt: str | None = None
+    diagnostics: tuple[str, ...] = ()
+    lint_state: str | None = None
+
+
+class PlanNodeDetailsParams(msgspec.Struct, frozen=True, kw_only=True):
+    project_id: ProjectId
+    node_id: NodeId
+    cursor: str | None = None
+
+
+class PlanNodeDetailsView(msgspec.Struct, frozen=True, kw_only=True):
+    lines: tuple[str, ...]
+    paths: tuple[str, ...] = ()
+    cursor: str | None = None
 
 
 class ProjectApprovalPolicyParams(msgspec.Struct, frozen=True, kw_only=True):

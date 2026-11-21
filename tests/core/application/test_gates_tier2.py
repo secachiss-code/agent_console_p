@@ -215,7 +215,7 @@ def test_cte_selects_three_hops_by_depth_and_caps_at_thirty(pipeline: PipelineHa
     )
     graph = ExtractorGraph(version=1, nodes=nodes, edges=edges)
     index = CodeGraphIndex(ExtractorRunner(), lambda _p: h.repo, store=CodeGraphDatabase(h.writer))
-    with patch.object(CodeGraphIndex, "_build", return_value=graph):
+    with patch.object(CodeGraphIndex, "_build", return_value=(graph, ())):
         assert PipelineGit(index).blast_tests(h.actor, attempt) == ("tests/near.py", "tests/mid.py", "tests/far.py")
     direct = tuple(f"tests/t{i:02}.py" for i in range(35))
     graph = ExtractorGraph(
@@ -224,7 +224,7 @@ def test_cte_selects_three_hops_by_depth_and_caps_at_thirty(pipeline: PipelineHa
         edges=(*edges, *(GraphEdge(source=path, target="src/a.py", kind="imports") for path in direct)),
     )
     index = CodeGraphIndex(ExtractorRunner(), lambda _p: h.repo, store=CodeGraphDatabase(h.writer))
-    with patch.object(CodeGraphIndex, "_build", return_value=graph):
+    with patch.object(CodeGraphIndex, "_build", return_value=(graph, ())):
         chosen = PipelineGit(index).blast_tests(h.actor, attempt)
     assert len(chosen) == 30
     assert chosen == ("tests/near.py", *direct[:29])

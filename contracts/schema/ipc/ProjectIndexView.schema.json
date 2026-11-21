@@ -1,0 +1,149 @@
+{
+  "$defs": {
+    "ProjectIndexItem": {
+      "properties": {
+        "count": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "id": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "start_line": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "path",
+        "kind"
+      ],
+      "title": "ProjectIndexItem",
+      "type": "object"
+    },
+    "ProjectIndexLink": {
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string"
+        },
+        "target": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "source",
+        "target",
+        "kind"
+      ],
+      "title": "ProjectIndexLink",
+      "type": "object"
+    },
+    "ProjectIndexView": {
+      "properties": {
+        "coverage": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "cursor": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "diagnostics": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "excerpt": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "items": {
+          "items": {
+            "$ref": "#/$defs/ProjectIndexItem"
+          },
+          "type": "array"
+        },
+        "links": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/ProjectIndexLink"
+          },
+          "type": "array"
+        },
+        "lint_state": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "revision": {
+          "type": "string"
+        },
+        "state": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "revision",
+        "state",
+        "items"
+      ],
+      "title": "ProjectIndexView",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/ProjectIndexView",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

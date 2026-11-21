@@ -684,6 +684,7 @@ class Daemon:
             languages=lambda: self.tabs.current_settings().codegraph_languages,
         )
         self._plans.code_graph = code_graph
+        self._plans.project_root = self._project_root
         self.knowledge: KnowledgeService = KnowledgeService(self._plans, self.vault, code_graph)
         self.palette: PaletteService = PaletteService(
             self._palette_snapshot,
@@ -691,11 +692,13 @@ class Daemon:
             self.vault.note_ref,
         )
         self._mcp_tokens: TabTokens = TabTokens()
+        self.knowledge.tab_context = self._mcp_tokens.context
         self._mcp: MCPServer = build_server(
             self._plans,
             # No tab: a request without a token may list the tools, and every tool refuses it.
             TabContext(tab_id="", project_id="", worktree=None, agent="claude"),
             self._mcp_sent,
+            project_index=self.knowledge.project_index,
         )
         self._ingest_queue: IngestQueue = IngestQueue()
         self._ingest_ready: asyncio.Event | None = None

@@ -128,6 +128,13 @@
         "ready": {
           "type": "boolean"
         },
+        "related": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
         "status": {
           "$ref": "#/$defs/NodeStatus"
         },

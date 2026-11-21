@@ -19,8 +19,11 @@ from aconsole.contracts.app import (  # noqa: E402
     PaletteQuery,
     PlanDecideParams,
     PlanIdParams,
+    PlanNodeDetailsParams,
+    PlanNodeDetailsView,
     PlanNodeView,
     PlanView,
+    ProjectIndexParams,
     QuitCheckResult,
     SetNodeStatusParams,
     TabIdParams,
@@ -65,6 +68,7 @@ from aconsole.ui.views.sidebar.git_card import GitCard  # noqa: E402
 from aconsole.ui.views.sidebar.messages import _ as translate  # noqa: E402
 from aconsole.ui.views.sidebar.plan_card import PlanCard  # noqa: E402
 from aconsole.ui.views.sidebar.plan_graph import PlanGraph  # noqa: E402
+from aconsole.ui.views.sidebar.project_index import ProjectIndexPage  # noqa: E402
 from aconsole.ui.views.sidebar.quota_card import QuotaCard  # noqa: E402
 from aconsole.ui.views.sidebar.section import SummarySection  # noqa: E402
 from aconsole.ui.views.tabs.messages import _ as tabs_text  # noqa: E402
@@ -241,6 +245,9 @@ class MainWindow(Adw.ApplicationWindow):
         )
         self.git_section: SummarySection = SummarySection("git", translate("git.card.title"), self.git_card, ui_state)
         self.summary_card.append(self.plan_section)
+        index_button = Gtk.Button(label=translate("graph.index"))
+        _ = index_button.connect("clicked", self._index_clicked)
+        self.summary_card.append(index_button)
         self.summary_card.append(Gtk.Separator())
         self.summary_card.append(self.quota_section)
         self.summary_card.append(Gtk.Separator())
@@ -403,7 +410,8 @@ class MainWindow(Adw.ApplicationWindow):
         if plan is not None and plan.id == plan_id:
             self.plan_page = PlanGraph(plan, self._close_plan, self._select_tab, self._decide_node,
                                        on_freeze=self._freeze_plan, on_review=self._review_plan,
-                                       on_repair=self._repair_plan)
+                                       on_repair=self._repair_plan, on_inspect=self._inspect_plan_node,
+                                       on_index=self._open_plan_index)
             self.plan_page.set_inbox(self._summary_vm.inbox)
             self._summary_vm.refresh_inbox()
             self._summary_vm.refresh_plan()
@@ -474,6 +482,54 @@ class MainWindow(Adw.ApplicationWindow):
 
     def _close_plan(self) -> None:
         self._show_selected_terminal()
+
+    def _inspect_plan_node(self, node_id: NodeId, cursor: str | None) -> None:
+        page = self.plan_page
+        if page is not None:
+            _ = spawn_task(self._load_plan_node(page, node_id, cursor))
+
+    async def _load_plan_node(self, page: PlanGraph, node_id: NodeId, cursor: str | None) -> None:
+        params = PlanNodeDetailsParams(project_id=page.plan.project_id, node_id=node_id, cursor=cursor)
+        try:
+            detail = await self.tabs.client.request("plan/nodeDetails", params, PlanNodeDetailsView)
+        except Exception as error:  # noqa: BLE001 -- the core refusal is displayed to the person
+            self._tab_error(str(error))
+            return
+        if self.plan_page is page:
+            page.set_node_details(node_id, detail)
+
+    def _open_plan_index(self, path: str) -> None:
+        page = self.plan_page
+        if page is not None:
+            plan_id = page.plan.id
+
+            def back() -> None:
+                self._open_plan(plan_id)
+
+            self._open_index(project=page.plan.project_id, scope=path.split("*", 1)[0].rstrip("/"), on_back=back)
+
+    def _open_index(
+        self, *, project: ProjectId | None = None, scope: str = ".", on_back: Callable[[], None] | None = None
+    ) -> None:
+        snapshot = self.tabs.client.store.snapshot
+        selected = self.selection.get_selected_item()
+        tab = next((item for item in (() if snapshot is None else snapshot.tabs)
+                    if isinstance(selected, TabItem) and item.id == selected.tab_id), None)
+        if project is None:
+            project = tab.project_id if tab is not None else (snapshot.active_project if snapshot is not None else None)
+        if project is None:
+            self._tab_error(review_text("git.no_project"))
+            return
+        self.plan_page = None
+        self.review_page = None
+        self.git_pane = None
+        tab_id = tab.id if tab is not None and tab.project_id == project else None
+        params = ProjectIndexParams(project_id=project, tab_id=tab_id, scope=scope or ".")
+        page = ProjectIndexPage(self.tabs.client, params, on_back or self._show_selected_terminal)
+        self.content_view.set_content(page)
+
+    def _index_clicked(self, _button: Gtk.Button) -> None:
+        self._open_index()
 
     def _open_review(self, tab_id: str | None = None) -> None:
         """The chosen tab's changes and checkpoints. Without a tab: the selected one."""

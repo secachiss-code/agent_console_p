@@ -2191,3 +2191,57 @@ msgstr "Read affected modules in increasing dependency distance."
 
 msgid "prefs.mcp.tool.handover"
 msgstr "Read or write the current work handover."
+
+msgid "graph.index"
+msgstr "Project index"
+
+msgid "graph.select"
+msgstr "Select a graph node"
+
+msgid "graph.zoom_in"
+msgstr "Zoom in"
+
+msgid "graph.zoom_out"
+msgstr "Zoom out"
+
+msgid "graph.overview"
+msgstr "Overview"
+
+msgid "graph.dependencies"
+msgstr "Dependencies"
+
+msgid "graph.local"
+msgstr "Neighborhood"
+
+msgid "graph.search"
+msgstr "Find a file or a symbol"
+
+msgid "graph.more"
+msgstr "Next page"
+
+msgid "graph.loading"
+msgstr "Loading index…"
+
+msgid "graph.partial"
+msgstr "Partial index"
+
+msgid "graph.lint.clean"
+msgstr "No findings"
+
+msgid "graph.lint.findings"
+msgstr "Findings"
+
+msgid "graph.lint.no_targets"
+msgstr "No Python files"
+
+msgid "graph.lint.unavailable"
+msgstr "Unavailable"
+
+msgid "graph.lint.timeout"
+msgstr "Timed out"
+
+msgid "graph.lint.tool_error"
+msgstr "Check failed"
+
+msgid "graph.lint.stale"
+msgstr "Source changed"

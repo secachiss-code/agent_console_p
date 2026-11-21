@@ -51,6 +51,15 @@ TOOL_CATALOG = (
         '{"plan_id":"plan-1","response_format":"concise"}',
     ),
     ToolInfo("plan_ready", "List claimable nodes.", "plan", "plan_id?, limit?", '{"plan_id":"plan-1","limit":3}'),
+    ToolInfo(
+        "plan_graph", "Read plan overview or a neighborhood by node ID. Reuse arguments with cursor.", "plan",
+        "plan_id, mode?, anchor?, depth?, edge_kinds?, limit?, cursor?",
+        '{"plan_id":"plan-1","mode":"local","anchor":"node-1"}',
+    ),
+    ToolInfo(
+        "plan_node_get", "Read a node and selected sections. Reuse arguments with cursor.", "node",
+        "node_id, sections?, limit?, cursor?", '{"node_id":"node-1","sections":["contract","relations"]}',
+    ),
     ToolInfo("plan_list", "List plans.", "plan", "status?", '{"status":"active"}'),
     ToolInfo("node_claim", "Take a node lease. Returns fence.", "node", "node_id", '{"node_id":"node-1"}'),
     ToolInfo(
@@ -126,6 +135,30 @@ TOOL_CATALOG = (
         "knowledge",
         "target, hops?, limit?, kinds?",
         '{"target":"src/store.py","hops":3,"limit":5}',
+    ),
+    ToolInfo(
+        "index_overview", "Read the worktree inventory by directory.", "knowledge",
+        "scope?, depth?, limit?, cursor?", '{"scope":"src","depth":1}',
+    ),
+    ToolInfo(
+        "index_find", "Find paths, symbols and related tests in the current worktree.", "knowledge",
+        "query, intent?, scope?, kinds?, limit?, cursor?", '{"query":"plan_ready","intent":"change"}',
+    ),
+    ToolInfo(
+        "index_neighbors", "Read incoming or outgoing module links for up to eight targets.", "knowledge",
+        "targets, direction?, edge_kinds?, depth?, limit?, cursor?", '{"targets":["src/store.py"],"direction":"in"}',
+    ),
+    ToolInfo(
+        "index_read", "Read specific ranges from the authorized worktree snapshot.", "knowledge",
+        "refs, expected_revision?, max_bytes?", '{"refs":[{"path":"src/store.py","start_line":1,"end_line":20}]}',
+    ),
+    ToolInfo(
+        "index_task_context", "Read the task contract and relevant worktree paths. Reuse a known digest.", "knowledge",
+        "node_id, intent?, since_digest?, limit?", '{"node_id":"node-1","intent":"change"}',
+    ),
+    ToolInfo(
+        "index_lint", "Run read-only Ruff on changed Python files, a task scope, or selected paths.", "knowledge",
+        "scope?, node_id?, targets?, expected_revision?, limit?, cursor?", '{"scope":"node","node_id":"node-1"}',
     ),
     ToolInfo(
         "handover",

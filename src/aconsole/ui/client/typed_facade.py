@@ -39,6 +39,8 @@ from aconsole.contracts.app import (
     PlanInboxResult,
     PlanListParams,
     PlanListResult,
+    PlanNodeDetailsParams,
+    PlanNodeDetailsView,
     PlanNodeView,
     PlanSaveParams,
     PlanView,
@@ -47,6 +49,8 @@ from aconsole.contracts.app import (
     ProjectAddParams,
     ProjectApprovalPolicyParams,
     ProjectIdParams,
+    ProjectIndexParams,
+    ProjectIndexView,
     ProjectView,
     QuitCheckResult,
     ReleasedResult,
@@ -288,6 +292,12 @@ class TypedFacade(Facade):
 
     async def plan_get(self, params: PlanIdParams) -> PlanView:
         return await self.typed("plan/get", params, PlanView)
+
+    async def plan_node_details(self, params: PlanNodeDetailsParams) -> PlanNodeDetailsView:
+        return await self.typed("plan/nodeDetails", params, PlanNodeDetailsView)
+
+    async def project_index(self, params: ProjectIndexParams) -> ProjectIndexView:
+        return await self.typed("project/index", params, ProjectIndexView)
 
     async def plan_create(self, params: PlanCreateParams) -> PlanCreateResult:
         return await self.typed("plan/create", params, PlanCreateResult)

@@ -17,7 +17,7 @@ if TYPE_CHECKING:
     from aconsole.ui.views.app import AConsoleApp, SnapshotRequest
 
 _IPC_P99_LIMIT_MS = 5.0
-_SCENARIOS = ("demo", "empty", "stress", "errors", "waiting", "quota-critical", "approval-expired", "agents")
+_SCENARIOS = ("demo", "empty", "stress", "errors", "waiting", "quota-critical", "approval-expired", "agents", "graphs")
 
 
 class _UiArguments(argparse.Namespace):
@@ -58,8 +58,8 @@ def run_ui(
     _ = parser.add_argument(
         "--snapshot-view",
         choices=(
-            "window", "tabs", "plan-graph", "review", "git", "quota-dialog", "quota-account", "palette", "setup",
-            "prefs", "mcp-prefs", "about",
+            "window", "tabs", "plan-graph", "project-index", "review", "git", "quota-dialog", "quota-account",
+            "palette", "setup", "prefs", "mcp-prefs", "about",
         ),
     )
     _ = parser.add_argument("--theme", choices=("light", "dark"), default="light")

@@ -153,6 +153,10 @@ METHODS: tuple[Method, ...] = (
     Method(name="session/list", params="SessionListParams", result="SessionListResult"),
     Method(name="plan/list", params="PlanListParams", result="PlanListResult"),
     Method(name="plan/get", params="PlanIdParams", result="PlanView", errors=("PLAN_NOT_FOUND",)),
+    Method(name="plan/nodeDetails", params="PlanNodeDetailsParams", result="PlanNodeDetailsView", long=True,
+           errors=("NODE_NOT_FOUND", "INVALID_PARAMS")),
+    Method(name="project/index", params="ProjectIndexParams", result="ProjectIndexView", long=True,
+           errors=("PROJECT_NOT_FOUND", "TAB_NOT_FOUND", "INVALID_PARAMS")),
     Method(
         name="plan/create",
         params="PlanCreateParams",

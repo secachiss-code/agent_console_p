@@ -23,7 +23,8 @@ class _SnapshotArguments(argparse.Namespace):
 
 
 _PREVIEWS = frozenset(
-    {"plan-graph", "review", "git", "quota-dialog", "quota-account", "palette", "setup", "prefs", "mcp-prefs", "about"}
+    {"plan-graph", "project-index", "review", "git", "quota-dialog", "quota-account",
+     "palette", "setup", "prefs", "mcp-prefs", "about"}
 )
 
 
@@ -43,14 +44,16 @@ def main(argv: list[str]) -> int:
     _ = parser.add_argument(
         "--scenario",
         required=True,
-        choices=("demo", "empty", "stress", "errors", "waiting", "quota-critical", "approval-expired", "agents"),
+        choices=(
+            "demo", "empty", "stress", "errors", "waiting", "quota-critical", "approval-expired", "agents", "graphs",
+        ),
     )
     _ = parser.add_argument(
         "--view",
         required=True,
         choices=(
-            "window", "tabs", "plan-graph", "review", "git", "quota-dialog", "quota-account", "palette", "setup",
-            "prefs", "mcp-prefs", "about",
+            "window", "tabs", "plan-graph", "project-index", "review", "git", "quota-dialog", "quota-account",
+            "palette", "setup", "prefs", "mcp-prefs", "about",
         ),
     )
     _ = parser.add_argument("--theme", required=True, choices=("light", "dark"))
@@ -90,6 +93,8 @@ def _preview_app(client: CoreClient, request: SnapshotRequest | None, scenario: 
                 return
             if snapshot.view == "plan-graph":
                 window.plan_card.emit("clicked")
+            elif snapshot.view == "project-index":
+                window._open_index()  # noqa: SLF001 -- native preview uses the same entry point as the sidebar
             elif snapshot.view == "review":
                 window.app_vm.dispatch("diff")
             elif snapshot.view == "git":

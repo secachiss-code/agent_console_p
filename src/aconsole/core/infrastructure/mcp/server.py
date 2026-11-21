@@ -29,8 +29,27 @@ from aconsole.contracts.primitives import (
     NodeUpdateParams,
     PlanReadyParams,
 )
+from aconsole.core.application.services.plan_graph import (
+    PlanEdgeKind,
+    PlanGraphQuery,
+    PlanGraphView,
+    PlanNodeDetails,
+    PlanSection,
+)
+from aconsole.core.infrastructure.codegraph.project_lint import LintResult
+from aconsole.core.infrastructure.codegraph.project_search import SearchDirection, SearchIntent, SearchKind, SourceRef
 from aconsole.core.infrastructure.http.auth import bearer_token, host_allowed, origin_allowed
 from aconsole.core.infrastructure.knowledge import run_primitive
+from aconsole.core.infrastructure.mcp.graph_pages import CURSOR_PATTERN
+from aconsole.core.infrastructure.mcp.project_index import (
+    IndexPage,
+    IndexRead,
+    LintScope,
+    PageRequest,
+    ProjectIndex,
+    TaskContext,
+)
+from aconsole.core.infrastructure.mcp.skills import register_skills
 from aconsole.core.infrastructure.mcp.tools import (
     Added,
     Attached,
@@ -66,6 +85,10 @@ _SESSION_LIMIT = 2048
 type _Id = Annotated[str, Field(max_length=128)]
 type _Text = Annotated[str, Field(max_length=2000)]
 type _Items = Annotated[list[_Text], Field(max_length=100)]
+type _GraphCursor = Annotated[str, Field(pattern=CURSOR_PATTERN)]
+type _GraphLimit = Annotated[int, Field(ge=1, le=50)]
+type _IndexPath = Annotated[str, Field(min_length=1, max_length=4096)]
+type _IndexDepth = Annotated[int, Field(ge=1, le=3)]
 
 
 class _Receive(Protocol):
@@ -101,6 +124,10 @@ class TabTokens:
         if token is not None and token in self._by_token:
             del self._by_token[token]
 
+    def context(self, tab_id: str) -> TabContext | None:
+        token = self._by_tab.get(tab_id)
+        return None if token is None else self._by_token.get(token)
+
     def resolve(self, header: str | None) -> TabContext | Literal["absent"] | None:
         """The tab for a bearer, ``absent`` when no header was sent. None for a malformed or unknown one."""
         if header is None:
@@ -119,7 +146,10 @@ class _LeanServer(MCPServer):
     def __init__(self, context: TabContext) -> None:
         super().__init__(
             name="aconsole",
-            instructions="Order: plan_ready, node_claim, one step. plan_get uses concise and since.",
+            instructions=(
+                "Plan: plan_ready, node_claim, one step. Code: index_find, index_read. "
+                "Workflow skills at aconsole://skills/."
+            ),
         )
         self.tab_context: TabContext = context
 
@@ -161,13 +191,17 @@ def _lean_any(value: object) -> object:
     return value
 
 
-def build_server(board: PlanBoard, context: TabContext, sent: Callable[[str, int], None] | None = None) -> MCPServer:
+def build_server(
+    board: PlanBoard, context: TabContext, sent: Callable[[str, int], None] | None = None,
+    *, project_index: ProjectIndex | None = None,
+) -> MCPServer:
     """An in-process server. ``context`` serves a request with no bearer: it can list tools and call none.
 
     ``sent`` hears, per tab, the bytes of text each answer puts in that tab's agent's context.
     """
     server = _LeanServer(context)
-    _register(server, board, context, sent)
+    _register(server, board, context, sent, ProjectIndex(board) if project_index is None else project_index)
+    register_skills(server)
     return server
 
 
@@ -306,7 +340,8 @@ def _primitive[T: BaseModel](
 
 
 def _register(  # noqa: C901, PLR0915 -- one nested function per MCP tool
-    server: MCPServer, board: PlanBoard, context: TabContext, sent: Callable[[str, int], None] | None
+    server: MCPServer, board: PlanBoard, context: TabContext, sent: Callable[[str, int], None] | None,
+    index: ProjectIndex,
 ) -> None:
     def plan_create(
         title: Annotated[str, Field(max_length=120)],
@@ -373,6 +408,87 @@ def _register(  # noqa: C901, PLR0915 -- one nested function per MCP tool
             plan_id=None if plan_id is None else PlanId(plan_id),
             limit=limit,
         ), PlanReady)
+
+    def plan_graph(  # noqa: PLR0913, PLR0917 -- public MCP signature
+        plan_id: _Id,
+        mode: Literal["overview", "local"] = "overview",
+        anchor: _Id | None = None,
+        depth: Annotated[int, Field(ge=1, le=3)] = 1,
+        edge_kinds: Annotated[tuple[PlanEdgeKind, ...], Field(max_length=3)] = (),
+        limit: _GraphLimit = 12,
+        cursor: _GraphCursor | None = None,
+    ) -> PlanGraphView:
+        query = PlanGraphQuery(
+            plan_id=plan_id, mode=mode, anchor=anchor, depth=depth, edge_kinds=edge_kinds, limit=limit, cursor=cursor,
+        )
+        return board.graph(active(context), query)
+
+    def plan_node_get(
+        node_id: _Id,
+        sections: Annotated[tuple[PlanSection, ...], Field(max_length=5)] = (),
+        limit: _GraphLimit = 12,
+        cursor: _GraphCursor | None = None,
+    ) -> PlanNodeDetails:
+        return board.node_details(active(context), node_id, sections, limit, cursor)
+
+    def index_overview(
+        scope: _IndexPath = ".", depth: Annotated[int, Field(ge=0, le=3)] = 1,
+        limit: _GraphLimit = 12, cursor: _GraphCursor | None = None,
+    ) -> IndexPage:
+        page = PageRequest(method="index_overview", params=(scope, depth), limit=limit, cursor=cursor)
+        return index.overview(active(context), page, scope, depth)
+
+    def index_find(  # noqa: PLR0913, PLR0917 -- public MCP signature
+        query: Annotated[str, Field(min_length=1, max_length=300)],
+        intent: SearchIntent = "understand",
+        scope: _IndexPath = ".",
+        kinds: Annotated[tuple[SearchKind, ...], Field(max_length=5)] = (),
+        limit: _GraphLimit = 12,
+        cursor: _GraphCursor | None = None,
+    ) -> IndexPage:
+        page = PageRequest(method="index_find", params=(query, intent, scope, kinds), limit=limit, cursor=cursor)
+        return index.find(active(context), page, query=query, scope=scope, intent=intent, kinds=frozenset(kinds))
+
+    def index_neighbors(  # noqa: PLR0913, PLR0917 -- public MCP signature
+        targets: Annotated[tuple[_IndexPath, ...], Field(min_length=1, max_length=8)],
+        direction: SearchDirection = "both",
+        edge_kinds: Annotated[tuple[_Id, ...], Field(max_length=10)] = (),
+        depth: _IndexDepth = 1,
+        limit: _GraphLimit = 12,
+        cursor: _GraphCursor | None = None,
+    ) -> IndexPage:
+        page = PageRequest(
+            method="index_neighbors", params=(targets, direction, edge_kinds, depth), limit=limit, cursor=cursor,
+        )
+        return index.neighbors(
+            active(context), page, targets=targets, depth=depth, direction=direction, kinds=frozenset(edge_kinds),
+        )
+
+    def index_read(
+        refs: Annotated[tuple[SourceRef, ...], Field(min_length=1, max_length=8)],
+        expected_revision: _Id | None = None,
+        max_bytes: Annotated[int, Field(ge=1024, le=24 * 1024)] = 12 * 1024,
+    ) -> IndexRead:
+        return index.read(active(context), refs, expected_revision, max_bytes)
+
+    def index_task_context(
+        node_id: _Id, intent: SearchIntent = "change", since_digest: _Id | None = None,
+        limit: Annotated[int, Field(ge=1, le=5)] = 5,
+    ) -> TaskContext:
+        return index.task(active(context), node_id, intent, since_digest, limit)
+
+    def index_lint(  # noqa: PLR0913, PLR0917 -- public MCP signature
+        scope: LintScope = "changed",
+        node_id: _Id | None = None,
+        targets: Annotated[tuple[_IndexPath, ...], Field(max_length=8)] = (),
+        expected_revision: _Id | None = None,
+        limit: _GraphLimit = 12,
+        cursor: _GraphCursor | None = None,
+    ) -> LintResult:
+        page = PageRequest(method="index_lint", params=(scope, node_id, targets), limit=limit, cursor=cursor)
+        return index.lint(
+            active(context), page, scope=scope, node_id=node_id, targets=targets, expected_revision=expected_revision,
+        )
 
     def node_claim(node_id: _Id) -> Claimed:
         """Take the lease. Returns the fence later calls must send."""
@@ -533,6 +649,14 @@ def _register(  # noqa: C901, PLR0915 -- one nested function per MCP tool
         (plan_save, _IDEMPOTENT),
         (plan_delete, _DELETE),
         (plan_get, _READ),
+        (plan_graph, _READ),
+        (plan_node_get, _READ),
+        (index_overview, _READ),
+        (index_find, _READ),
+        (index_neighbors, _READ),
+        (index_read, _READ),
+        (index_task_context, _READ),
+        (index_lint, _READ),
         (plan_ready, _READ),
         (node_claim, _WRITE),
         (step_begin, _IDEMPOTENT),

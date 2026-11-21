@@ -4685,6 +4685,66 @@
         "title": "PlanListResult",
         "type": "object"
       },
+      "PlanNodeDetailsParams": {
+        "properties": {
+          "cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "node_id": {
+            "type": "string"
+          },
+          "project_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "project_id",
+          "node_id"
+        ],
+        "title": "PlanNodeDetailsParams",
+        "type": "object"
+      },
+      "PlanNodeDetailsView": {
+        "properties": {
+          "cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "lines": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "paths": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "lines"
+        ],
+        "title": "PlanNodeDetailsView",
+        "type": "object"
+      },
       "PlanNodeSpec": {
         "additionalProperties": false,
         "description": "One node in a `plan/save` document. The same shape creates a node or replaces it.",
@@ -4935,6 +4995,13 @@
           },
           "ready": {
             "type": "boolean"
+          },
+          "related": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           },
           "status": {
             "$ref": "#/components/schemas/NodeStatus"
@@ -5300,6 +5367,206 @@
           "project_id"
         ],
         "title": "ProjectIdParams",
+        "type": "object"
+      },
+      "ProjectIndexItem": {
+        "properties": {
+          "count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "id": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          },
+          "start_line": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "path",
+          "kind"
+        ],
+        "title": "ProjectIndexItem",
+        "type": "object"
+      },
+      "ProjectIndexLink": {
+        "properties": {
+          "kind": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          },
+          "target": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "source",
+          "target",
+          "kind"
+        ],
+        "title": "ProjectIndexLink",
+        "type": "object"
+      },
+      "ProjectIndexParams": {
+        "properties": {
+          "anchor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "diagnose": {
+            "default": false,
+            "type": "boolean"
+          },
+          "project_id": {
+            "type": "string"
+          },
+          "query": {
+            "default": "",
+            "type": "string"
+          },
+          "scope": {
+            "default": ".",
+            "type": "string"
+          },
+          "tab_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        },
+        "required": [
+          "project_id"
+        ],
+        "title": "ProjectIndexParams",
+        "type": "object"
+      },
+      "ProjectIndexView": {
+        "properties": {
+          "coverage": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "diagnostics": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "excerpt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ProjectIndexItem"
+            },
+            "type": "array"
+          },
+          "links": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/ProjectIndexLink"
+            },
+            "type": "array"
+          },
+          "lint_state": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "revision": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "revision",
+          "state",
+          "items"
+        ],
+        "title": "ProjectIndexView",
         "type": "object"
       },
       "ProjectListResult": {
@@ -19262,6 +19529,197 @@
         ]
       }
     },
+    "/api/v1/plan/nodeDetails": {
+      "post": {
+        "operationId": "plan_nodeDetails",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlanNodeDetailsParams"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlanNodeDetailsView"
+                }
+              }
+            },
+            "description": "method result",
+            "headers": {
+              "X-Aconsole-Timeout-Ms": {
+                "description": "Milliseconds the caller should wait for this method.",
+                "schema": {
+                  "const": 120000,
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorObject"
+                }
+              }
+            },
+            "description": "invalid params",
+            "headers": {
+              "X-Aconsole-Timeout-Ms": {
+                "description": "Milliseconds the caller should wait for this method.",
+                "schema": {
+                  "const": 120000,
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "unauthorized",
+            "headers": {
+              "X-Aconsole-Timeout-Ms": {
+                "description": "Milliseconds the caller should wait for this method.",
+                "schema": {
+                  "const": 120000,
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorObject"
+                }
+              }
+            },
+            "description": "forbidden",
+            "headers": {
+              "X-Aconsole-Timeout-Ms": {
+                "description": "Milliseconds the caller should wait for this method.",
+                "schema": {
+                  "const": 120000,
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorObject"
+                }
+              }
+            },
+            "description": "method not published",
+            "headers": {
+              "X-Aconsole-Timeout-Ms": {
+                "description": "Milliseconds the caller should wait for this method.",
+                "schema": {
+                  "const": 120000,
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorObject"
+                }
+              }
+            },
+            "description": "domain error",
+            "headers": {
+              "X-Aconsole-Timeout-Ms": {
+                "description": "Milliseconds the caller should wait for this method.",
+                "schema": {
+                  "const": 120000,
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "413": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "payload too large",
+            "headers": {
+              "X-Aconsole-Timeout-Ms": {
+                "description": "Milliseconds the caller should wait for this method.",
+                "schema": {
+                  "const": 120000,
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorObject"
+                }
+              }
+            },
+            "description": "internal error",
+            "headers": {
+              "X-Aconsole-Timeout-Ms": {
+                "description": "Milliseconds the caller should wait for this method.",
+                "schema": {
+                  "const": 120000,
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorObject"
+                }
+              }
+            },
+            "description": "busy",
+            "headers": {
+              "X-Aconsole-Timeout-Ms": {
+                "description": "Milliseconds the caller should wait for this method.",
+                "schema": {
+                  "const": 120000,
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "core"
+        ]
+      }
+    },
     "/api/v1/plan/ready": {
       "post": {
         "operationId": "plan_ready",
@@ -20206,6 +20664,197 @@
                 "description": "Milliseconds the caller should wait for this method.",
                 "schema": {
                   "const": 10000,
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "core"
+        ]
+      }
+    },
+    "/api/v1/project/index": {
+      "post": {
+        "operationId": "project_index",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProjectIndexParams"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectIndexView"
+                }
+              }
+            },
+            "description": "method result",
+            "headers": {
+              "X-Aconsole-Timeout-Ms": {
+                "description": "Milliseconds the caller should wait for this method.",
+                "schema": {
+                  "const": 120000,
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorObject"
+                }
+              }
+            },
+            "description": "invalid params",
+            "headers": {
+              "X-Aconsole-Timeout-Ms": {
+                "description": "Milliseconds the caller should wait for this method.",
+                "schema": {
+                  "const": 120000,
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "unauthorized",
+            "headers": {
+              "X-Aconsole-Timeout-Ms": {
+                "description": "Milliseconds the caller should wait for this method.",
+                "schema": {
+                  "const": 120000,
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorObject"
+                }
+              }
+            },
+            "description": "forbidden",
+            "headers": {
+              "X-Aconsole-Timeout-Ms": {
+                "description": "Milliseconds the caller should wait for this method.",
+                "schema": {
+                  "const": 120000,
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorObject"
+                }
+              }
+            },
+            "description": "method not published",
+            "headers": {
+              "X-Aconsole-Timeout-Ms": {
+                "description": "Milliseconds the caller should wait for this method.",
+                "schema": {
+                  "const": 120000,
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorObject"
+                }
+              }
+            },
+            "description": "domain error",
+            "headers": {
+              "X-Aconsole-Timeout-Ms": {
+                "description": "Milliseconds the caller should wait for this method.",
+                "schema": {
+                  "const": 120000,
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "413": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "payload too large",
+            "headers": {
+              "X-Aconsole-Timeout-Ms": {
+                "description": "Milliseconds the caller should wait for this method.",
+                "schema": {
+                  "const": 120000,
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorObject"
+                }
+              }
+            },
+            "description": "internal error",
+            "headers": {
+              "X-Aconsole-Timeout-Ms": {
+                "description": "Milliseconds the caller should wait for this method.",
+                "schema": {
+                  "const": 120000,
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorObject"
+                }
+              }
+            },
+            "description": "busy",
+            "headers": {
+              "X-Aconsole-Timeout-Ms": {
+                "description": "Milliseconds the caller should wait for this method.",
+                "schema": {
+                  "const": 120000,
                   "type": "integer"
                 }
               }

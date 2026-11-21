@@ -90,6 +90,20 @@ def load_script(name: str) -> Script:
             errors=False,
             expire_approvals=True,
         )
+    if name == "graphs":
+        snapshot = demo_snapshot()
+        plan = snapshot.plans[0]
+        first, second, *modules = plan.nodes
+        roots = (msgspec.structs.replace(first, level=0, title="Core"),
+                 msgspec.structs.replace(second, level=0, title="Interface", depends_on=()))
+        tasks = tuple(msgspec.structs.replace(node, parent=roots[index % 2].id, pipeline=True,
+                                             attempt_no=2 if index == 0 else 0)
+                      for index, node in enumerate(modules))
+        graph_plan = msgspec.structs.replace(plan, nodes=(*roots, *tasks))
+        snapshot = msgspec.structs.replace(snapshot, approvals=(), plans=(graph_plan,))
+        return Script(
+            name=name, snapshot=SnapshotResult(snapshot=snapshot, seq=0), events=(), palette_count=0, errors=False,
+        )
     builders = {
         "empty": empty_snapshot,
         "stress": stress_snapshot,
@@ -433,6 +447,8 @@ class _Session:
             built = demo_diff()
         elif method == "checkpoint/list":
             built = self._checkpoints()
+        elif method == "plan/get" and self.script.name == "graphs":
+            built = self.script.snapshot.snapshot.plans[0]
         else:
             built = result_for(method)
         return built

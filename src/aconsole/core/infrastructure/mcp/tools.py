@@ -47,6 +47,18 @@ from aconsole.core.application.ports.plan_store import (
 from aconsole.core.application.services.context_shaper import DirectionContext, LeaseTail, ModuleContext
 from aconsole.core.application.services.gates import DirectionVerifier
 from aconsole.core.application.services.pipeline import PipelineActor, PipelineContract, PipelineService
+from aconsole.core.application.services.plan_graph import (
+    PlanEdge,
+    PlanEdgeKind,
+    PlanGraphQuery,
+    PlanGraphView,
+    PlanNodeDetails,
+    PlanSection,
+    PlanVertex,
+    detail_entries,
+    neighborhood,
+    overview,
+)
 from aconsole.core.application.services.plan_lifecycle import (
     apply_plan_change,
     freeze_plan,
@@ -69,6 +81,7 @@ from aconsole.core.domain.vault_sync import Owners, resolve_ref
 from aconsole.core.infrastructure.codegraph.index import CodeGraphIndex, impact_layers
 from aconsole.core.infrastructure.git.diff import GitDiff
 from aconsole.core.infrastructure.git.runner import GitRunner
+from aconsole.core.infrastructure.mcp.graph_pages import GraphCursorError, graph_digest, graph_page
 from aconsole.core.infrastructure.persistence.cache.store import StaleScratchFenceError
 from aconsole.core.infrastructure.persistence.repositories.attempts import AttemptDatabase
 from aconsole.core.infrastructure.persistence.repositories.code_graph import persistent_impact
@@ -454,7 +467,9 @@ class PlanBoard:
         self.on_removed: Callable[[str], None] | None = None
         self.note_ref: Callable[[str, str], str | None] = lambda _plan, _key: None
         self.code_graph: CodeGraph | None = None
+        self.project_root: Callable[[str], Path | None] = lambda _project: None
         self._epoch: str = secrets.token_hex(3)
+        self._graph_secret: bytes = secrets.token_bytes(32)
         self._shown: int = 0
         self._seen: dict[str, OrderedDict[str, _Shown]] = {}
 
@@ -917,7 +932,7 @@ class PlanBoard:
         patch: str | None = None,
         full_context: bool = False,
     ) -> PipelineReply:
-        _require_tab(ctx)
+        require_tab(ctx)
         if self.pipeline is None or self.pipeline_actor is None:
             _stop("NODE_CONTRACT", "pipeline storage is unavailable")
         actor = self.pipeline_actor(ctx.tab_id)
@@ -1214,6 +1229,7 @@ class PlanBoard:
             evidence=node.evidence if node.status is NodeStatus.VERIFYING else None,
             level=0 if node.level == 0 else 1,
             parent=NodeId(by_key[meta.parent]) if meta.parent in by_key else None,
+            related=tuple(NodeId(by_key[key]) for key in meta.related if key in by_key),
             pipeline=node.pipeline,
             attempt_no=0 if attempt is None else attempt[0],
             max_attempts=meta.max_attempts,
@@ -1222,7 +1238,7 @@ class PlanBoard:
 
     def create(self, ctx: TabContext, title: str, goal: str, nodes: list[NodeIn]) -> PlanCreated:
         """Create a plan, or return the one this project already has under ``title``."""
-        _require_tab(ctx)
+        require_tab(ctx)
         nodes = _planning_nodes(ctx, nodes)
         with self._lock:
             stored = self._by_title(ctx.project_id, title)
@@ -1307,7 +1323,7 @@ class PlanBoard:
         repair_note: str | None = None,
     ) -> PlanSaved:
         """The planning tab's one-call create or draft replace. Execute tabs are refused."""
-        _require_tab(ctx)
+        require_tab(ctx)
         if ctx.mode == "execute":
             _stop("PLAN_ROLE", "graph changes require a planning tab")
         try:
@@ -1423,7 +1439,7 @@ class PlanBoard:
 
     def delete_for_tab(self, ctx: TabContext, plan_id: str) -> PlanDeleted:
         """Delete one plan of this project. A live lease keeps it."""
-        _require_tab(ctx)
+        require_tab(ctx)
         if ctx.mode == "execute":
             _stop("PLAN_ROLE", "graph changes require a planning tab")
         view = self.view(plan_id)
@@ -1516,7 +1532,7 @@ class PlanBoard:
 
     def add_nodes(self, ctx: TabContext, plan_id: str, nodes: list[NodeIn]) -> Added:
         """Add missing keys. A key that already exists is unchanged. A cycle adds nothing."""
-        _require_tab(ctx)
+        require_tab(ctx)
         nodes = _planning_nodes(ctx, nodes)
         with self._lock:
             stored = self._owned(ctx, plan_id)
@@ -1534,7 +1550,7 @@ class PlanBoard:
         dependency finishing that made it ready, or a lease running out. A revision this core no longer remembers
         (an older process, or one pushed out by newer ones) gets the whole plan.
         """
-        _require_tab(ctx)
+        require_tab(ctx)
         with self._lock:
             stored = self._owned(ctx, plan_id)
             briefs = [_brief(stored, meta, detailed=detailed) for meta in stored.meta.values()]
@@ -1568,8 +1584,127 @@ class PlanBoard:
             _ = seen.popitem(last=False)
         return revision
 
+    def graph(self, ctx: TabContext, query: PlanGraphQuery) -> PlanGraphView:
+        require_tab(ctx)
+        with self._lock:
+            stored = self._owned(ctx, query.plan_id)
+            nodes = tuple(_vertex(stored, meta) for meta in sorted(stored.meta.values(), key=lambda meta: meta.key))
+            edges = _plan_edges(stored)
+            title = stored.title
+            phase = "draft" if stored.topology is None else stored.topology.phase
+        graph_revision = graph_digest(query.plan_id, title, phase, nodes, edges)
+        if query.edge_kinds:
+            edges = tuple(edge for edge in edges if edge.kind in query.edge_kinds)
+        if query.mode == "local":
+            if query.anchor is None:
+                _stop("GRAPH_QUERY_INVALID", "local mode requires an anchor")
+            if not any(node.node_id == query.anchor for node in nodes):
+                _stop("NODE_NOT_FOUND", f"no node {query.anchor} in this plan")
+            nodes, edges = neighborhood(nodes, edges, query.anchor, query.depth)
+        else:
+            nodes, edges = overview(nodes, edges)
+        binding = graph_digest(
+            ctx.tab_id, "plan_graph", graph_revision, query.mode, query.anchor, query.depth,
+            tuple(sorted(set(query.edge_kinds))), query.limit,
+        )
+        by_id = {node.node_id: node for node in nodes}
+
+        def reply(start: int, end: int, cursor: str | None) -> PlanGraphView:
+            visible = nodes[start:end]
+            known = {node.node_id for node in visible}
+            links = edges[max(0, start - len(nodes)):max(0, end - len(nodes))]
+            boundary = {endpoint for edge in links for endpoint in (edge.source, edge.target)} - known
+            return PlanGraphView(
+                plan_id=query.plan_id, title=title, phase=phase, revision=graph_revision, nodes=visible, edges=links,
+                boundary=tuple(by_id[node_id] for node_id in sorted(boundary)), cursor=cursor,
+            )
+
+        try:
+            return graph_page(
+                self._graph_secret, binding, cursor=query.cursor, limit=query.limit,
+                length=len(nodes) + len(edges), reply=reply,
+            )
+        except GraphCursorError:
+            _stop("GRAPH_CURSOR_STALE", "the cursor no longer identifies this graph view")
+        except OverflowError as exc:
+            _stop("RESPONSE_TOO_LARGE", str(exc))
+
+    def node_details(
+        self, ctx: TabContext, node_id: str, sections: tuple[PlanSection, ...], limit: int, cursor: str | None
+    ) -> PlanNodeDetails:
+        require_tab(ctx)
+        sections = tuple(dict.fromkeys(sections))
+        with self._lock:
+            stored, meta = self._node(ctx, node_id)
+            node = _vertex(stored, meta)
+            plan_id = stored.plan_id
+            entries = tuple(
+                entry
+                for section in sections
+                for field, value in self._node_section(stored, meta, section)
+                for entry in detail_entries(section, field, value)
+            )
+        detail_revision = graph_digest(plan_id, node, entries)
+        binding = graph_digest(ctx.tab_id, "plan_node_get", detail_revision, sections, limit)
+
+        def reply(start: int, end: int, following: str | None) -> PlanNodeDetails:
+            return PlanNodeDetails(
+                plan_id=plan_id, revision=detail_revision, node=node, entries=entries[start:end], cursor=following,
+            )
+
+        try:
+            return graph_page(self._graph_secret, binding, cursor=cursor, limit=limit, length=len(entries), reply=reply)
+        except GraphCursorError:
+            _stop("GRAPH_CURSOR_STALE", "the cursor no longer identifies these node details")
+        except OverflowError as exc:
+            _stop("RESPONSE_TOO_LARGE", str(exc))
+
+    def node_paths(self, ctx: TabContext, node_id: str) -> tuple[str, ...]:
+        require_tab(ctx)
+        with self._lock:
+            _, meta = self._node(ctx, node_id)
+            return meta.paths
+
+    def _node_section(self, stored: _Stored, meta: _Meta, section: PlanSection) -> tuple[tuple[str, object], ...]:
+        if section == "contract":
+            return _node_contract(stored, meta)
+        if section == "relations":
+            return tuple(
+                ("edge", edge.model_dump())
+                for edge in _plan_edges(stored) if meta.node_id in (edge.source, edge.target)
+            )
+        if section == "artifacts":
+            return tuple(
+                ("artifact", {"id": artifact_id, "kind": kind, "ref": ref})
+                for (kind, ref), artifact_id in sorted(meta.artifacts.items())
+            )
+        if section == "reviews":
+            node = stored.dag.get(meta.key)
+            return (
+                *((name, value) for name, value in (("note", node.note), ("evidence", node.evidence)) if value),
+                *(("review", {"id": entry.id, "kind": entry.kind, "body": entry.body, "status": entry.status})
+                  for entry in self.inbox(stored.plan_id) if entry.node_id == meta.node_id),
+            )
+        return self._attempt_entries(meta.node_id)
+
+    def _attempt_entries(self, node_id: str) -> tuple[tuple[str, object], ...]:
+        if self._attempts is None:
+            return ()
+        return tuple(
+            ("attempt", {
+                "id": attempt.id, "number": attempt.attempt_no, "status": attempt.status,
+                "started_at": _optional_stamp(attempt.started_at), "finished_at": _optional_stamp(attempt.finished_at),
+                "verdict": attempt.compact_verdict,
+                "steps": [
+                    {"step": block.step_type, "sequence": block.seq, "hash": block.block_hash}
+                    for block in self._attempts.blocks(attempt.id)
+                ],
+            })
+            for attempt in self._attempts.attempts(node_id)
+        )
+
     def ready(self, ctx: TabContext, plan_id: str | None, limit: int) -> PlanReady:
-        _require_tab(ctx)
+        require_tab(ctx)
         with self._lock:
             stored = self._ready_plan(ctx, plan_id)
             ranked = [
@@ -1592,7 +1727,7 @@ class PlanBoard:
             return PlanReady(nodes=chosen)
 
     def claim(self, ctx: TabContext, node_id: str) -> Claimed:
-        _require_tab(ctx)
+        require_tab(ctx)
         with self._lock:
             stored, meta = self._node(ctx, node_id)
             if issue := _profile_error(stored, meta):
@@ -1674,7 +1809,7 @@ class PlanBoard:
         note: str | None,
         evidence: str | None,
     ) -> Updated:
-        _require_tab(ctx)
+        require_tab(ctx)
         self._pipeline_update(ctx, node_id, fence, status)
         with self._lock:
             stored, meta = self._node(ctx, node_id)
@@ -1720,7 +1855,7 @@ class PlanBoard:
     def attach(  # noqa: PLR0913, PLR0917 -- kind and ref identify the artifact
         self, ctx: TabContext, node_id: str, fence: int, kind: str, ref: str, title: str | None
     ) -> Attached:
-        _require_tab(ctx)
+        require_tab(ctx)
         with self._lock:
             stored, meta = self._node(ctx, node_id)
             current = stored.dag.get(meta.key)
@@ -1750,7 +1885,7 @@ class PlanBoard:
             return Attached(artifact_id=artifact_id)
 
     def ctx(self, ctx: TabContext, node_id: str | None, query: str | None, max_items: int) -> CtxResult:
-        _require_tab(ctx)
+        require_tab(ctx)
         with self._lock:
             return self._ctx(ctx, node_id=node_id, query=query, max_items=max_items)
 
@@ -1764,7 +1899,7 @@ class PlanBoard:
         code_refs: list[str],
         supersedes: str | None,
     ) -> KbAdded:
-        _require_tab(ctx)
+        require_tab(ctx)
         with self._lock:
             if kind == "fact":
                 _check_source(ctx, source)
@@ -1814,7 +1949,7 @@ class PlanBoard:
             _stop("INTERNAL_ERROR", str(exc))
 
     def impact(self, ctx: TabContext, target: str, hops: int, limit: int, kinds: list[str] | None) -> Impact:
-        _require_tab(ctx)
+        require_tab(ctx)
         with self._lock:
             facts = self._target(ctx.project_id, target) is not None or bool(self._edges(ctx.project_id, kinds))
         if not facts:
@@ -1879,14 +2014,14 @@ class PlanBoard:
         next_steps: list[str],
         failing_checks: list[str],
     ) -> HandoverResult:
-        _require_tab(ctx)
+        require_tab(ctx)
         with self._lock:
             if action == "write":
                 return self._write_handover(ctx, goal, done, decisions, open_questions, next_steps, failing_checks)
             return self._read_handover(ctx)
 
     def list_plans(self, ctx: TabContext, status: str) -> PlanList:
-        _require_tab(ctx)
+        require_tab(ctx)
         with self._lock:
             rows = [
                 _row(stored)
@@ -2351,7 +2486,7 @@ def _restored(saved: StoredPlan, *, checked_completion: bool = False) -> _Stored
     )
 
 
-def _require_tab(ctx: TabContext) -> None:
+def require_tab(ctx: TabContext) -> None:
     if ctx.tab_id == "":
         _stop("INGEST_UNAUTHORIZED", "the request has no tab token")
 
@@ -2397,6 +2532,11 @@ def _domain_error(exc: _ToolError) -> DomainError:
     return DomainError(
         code=code if isinstance(code, int) else 4013, name=name, retryable=name == "LEASE_HELD", extra=(detail,)
     )
+
+
+def tool_error(name: str, message: str) -> NoReturn:
+    """Abort an MCP read with the shared error envelope."""
+    _stop(name, message)
 
 
 def _stop(name: str, message: str) -> NoReturn:
@@ -2473,6 +2613,47 @@ def _counts(stored: _Stored) -> dict[str, int]:
         counts[stored.dag.get(meta.key).status.value] += 1
     counts["total"] = len(stored.meta)
     return counts
+
+
+def _vertex(stored: _Stored, meta: _Meta) -> PlanVertex:
+    node = stored.dag.get(meta.key)
+    parent = stored.meta.get(meta.parent or "")
+    return PlanVertex(
+        node_id=meta.node_id, key=meta.key, title=meta.title, status=node.status.value,
+        level=node.level, ready=_execution_ready(stored, meta), pipeline=node.pipeline,
+        parent=None if parent is None else parent.node_id,
+    )
+
+
+def _plan_edges(stored: _Stored) -> tuple[PlanEdge, ...]:
+    by_key = {meta.key: meta.node_id for meta in stored.meta.values()}
+    edges: set[tuple[str, str, PlanEdgeKind]] = set()
+    for meta in stored.meta.values():
+        if meta.parent is not None and meta.parent in by_key:
+            edges.add((by_key[meta.parent], meta.node_id, "decomposes"))
+        edges.update((by_key[key], meta.node_id, "depends_on") for key in stored.deps[meta.key] if key in by_key)
+        for key in meta.related:
+            if key in by_key:
+                source, target = sorted((meta.node_id, by_key[key]))
+                edges.add((source, target, "related"))
+    return tuple(PlanEdge(source=source, target=target, kind=kind) for source, target, kind in sorted(edges))
+
+
+def _node_contract(stored: _Stored, meta: _Meta) -> tuple[tuple[str, object], ...]:
+    node = stored.dag.get(meta.key)
+    fields: tuple[tuple[str, object], ...] = (
+        ("objective", meta.objective), ("owner", meta.owner), ("boundaries", meta.boundaries),
+        ("output_format", meta.output_format), ("test_cmd", meta.test_cmd), ("invariants", node.invariants),
+        ("gate_profile", node.gate_profile), ("review_required", node.review_required),
+        ("contract_sha256", meta.contract_sha256), ("contract_error", _profile_error(stored, meta)),
+        ("max_attempts", meta.max_attempts),
+    )
+    return (
+        *((name, value) for name, value in fields if value is not None),
+        *(("path", path) for path in meta.paths),
+        *(("acceptance", criterion) for criterion in meta.acceptance),
+        *(("blast_path", path) for path in meta.blast_radius or ()),
+    )
 
 
 def _pipeline_contract_ready(stored: _Stored, meta: _Meta) -> bool:
@@ -2624,6 +2805,10 @@ _CODES: dict[str, int] = {
     "PLAN_ROLE": 4012,
     "NODE_CONTRACT": 4013,
     "RESPONSE_TOO_LARGE": -32000,
+    "GRAPH_QUERY_INVALID": -32602,
+    "GRAPH_CURSOR_STALE": -32001,
+    "INDEX_UNAVAILABLE": -32002,
+    "INDEX_REVISION_STALE": -32003,
     "INTERNAL_ERROR": -32603,
     "INGEST_UNAUTHORIZED": 1001,
     "PATH_NOT_ALLOWED": 2011,
@@ -2643,8 +2828,12 @@ _CODES: dict[str, int] = {
 }
 
 _HINTS: dict[str, str] = {
-    "NODE_CONTRACT": "read plan_get contract_error, then fix the profile or plan_save repair_gate_profiles",
+    "NODE_CONTRACT": "Freeze draft plans. For a profile error, read plan_get contract_error and repair the profile",
     "RESPONSE_TOO_LARGE": "use concise output, a revision, or a narrower query; no answer was truncated",
+    "GRAPH_QUERY_INVALID": "pass the ID of the center vertex as anchor",
+    "GRAPH_CURSOR_STALE": "repeat the original read without a cursor",
+    "INDEX_UNAVAILABLE": "open a tab in a registered project or verify the worktree path",
+    "INDEX_REVISION_STALE": "resolve the references again with index_find",
     "INTERNAL_ERROR": "nothing was saved; retry, and read the core log if it keeps failing",
     "INGEST_UNAUTHORIZED": "open a tab and pass Authorization: Bearer <tab token>",
     "PATH_NOT_ALLOWED": "call kb_add with source path#Lx-Ly that exists in the worktree, or an https URL",

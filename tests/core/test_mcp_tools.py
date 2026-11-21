@@ -14,6 +14,7 @@ from mcp.types import TextContent
 from aconsole.core.infrastructure.mcp.server import build_server
 from aconsole.core.infrastructure.mcp.tools import PlanBoard, TabContext
 from tests.gate_profiles import MICRO_PROFILE
+from tests.mcp_names import ALL_TOOLS
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -22,30 +23,14 @@ if TYPE_CHECKING:
     from mcp.types import CallToolResult, Tool
 
 _HINT = "open a tab and pass Authorization: Bearer <tab token>"
-_READ = frozenset({"plan_get", "plan_ready", "ctx_get", "kb_impact", "plan_list"})
+_READ = frozenset({
+    "plan_get", "plan_graph", "plan_node_get", "plan_ready", "ctx_get", "kb_impact", "plan_list",
+    "index_overview", "index_find", "index_neighbors", "index_read", "index_task_context", "index_lint",
+})
 _IDEMPOTENT = frozenset({
     "node_escalate", "plan_create", "plan_add_nodes", "plan_save", "node_attach",
     "step_begin", "step_submit", "step_reset",
 })
-_TOOLS = frozenset(
-    {
-        "plan_create",
-        "plan_add_nodes",
-        "plan_save",
-        "plan_delete",
-        "plan_get",
-        "plan_ready",
-        "node_claim",
-        "node_update",
-        "node_attach",
-        "ctx_get",
-        "kb_add",
-        "kb_impact",
-        "handover",
-        "plan_list",
-        "step_begin", "step_submit", "step_reset", "gate_run", "node_escalate",
-    }
-)
 _ERROR_ARGS: dict[str, dict[str, object]] = {
     "step_begin": {"node_id": "node-1", "fence": 0},
     "step_submit": {"node_id": "node-1", "fence": 0, "step": "spec"},
@@ -57,6 +42,14 @@ _ERROR_ARGS: dict[str, dict[str, object]] = {
     "plan_save": {"title": "Plan", "goal": "Ship"},
     "plan_delete": {"plan_id": "plan-1"},
     "plan_get": {"plan_id": "plan-1"},
+    "plan_graph": {"plan_id": "plan-1"},
+    "plan_node_get": {"node_id": "node-1"},
+    "index_overview": {},
+    "index_find": {"query": "a"},
+    "index_neighbors": {"targets": ["a.py"]},
+    "index_read": {"refs": [{"path": "a.py"}]},
+    "index_task_context": {"node_id": "node-1"},
+    "index_lint": {"scope": "targets", "targets": ["a.py"]},
     "plan_ready": {},
     "node_claim": {"node_id": "node-1"},
     "node_update": {"node_id": "node-1", "fence": 0},
@@ -148,6 +141,56 @@ async def _call(client: Client, name: str, arguments: dict[str, object]) -> dict
 
 def test_mcp_tools_schema_content_and_hint(tmp_path: Path) -> None:
     asyncio.run(_each_tool(tmp_path))
+
+
+def test_plan_graph_and_details_scope_and_pagination() -> None:
+    async def scenario() -> None:
+        board, server = _server(_Clock(), "planner")
+        _, peer = _server(_Clock(), "peer", board=board)
+        _, foreign = _server(_Clock(), "elsewhere", board=board, project_id="foreign")
+        async with Client(server) as client, Client(peer) as second, Client(foreign) as other:
+            created = await _call(client, "plan_create", {
+                "title": "Graph", "goal": "Navigate",
+                "nodes": [
+                    {**_node("D-0"), "level": 0, "invariants": "Small graph", "gate_profile": MICRO_PROFILE},
+                    {**_node("N-1", paths=["src/a.py"]), "parent": "D-0", "acceptance": ["green"]},
+                    {**_node("N-2", depends_on=["N-1"]), "related": ["N-1"]},
+                ],
+            })
+            plan_id = str(created["plan_id"])
+            first, second_id, root = (_node_id(created, key) for key in ("N-1", "N-2", "D-0"))
+            summary = await _call(client, "plan_graph", {"plan_id": plan_id})
+            assert [(row["node_id"], row.get("children", 0)) for row in summary["nodes"]] == [(root, 1), (second_id, 0)]
+            query = {"plan_id": plan_id, "mode": "local", "anchor": first, "limit": 1}
+            page = await _call(client, "plan_graph", query)
+            assert page["nodes"][0]["node_id"] == first
+            cursor = page["cursor"]
+            replay = await second.call_tool("plan_graph", {**query, "cursor": cursor})
+            assert _error(replay)["reason"] == "GRAPH_CURSOR_STALE"
+            wrong_project = await other.call_tool("plan_node_get", {"node_id": first})
+            assert _error(wrong_project)["reason"] == "NODE_NOT_FOUND"
+            edges: list[dict[str, str]] = []
+            while page.get("cursor") is not None:
+                page = await _call(client, "plan_graph", {**query, "cursor": page["cursor"]})
+                edges.extend(page["edges"])
+            assert {edge["kind"] for edge in edges} == {"decomposes", "depends_on", "related"}
+            assert {"source": first, "target": second_id, "kind": "depends_on"} in edges
+
+            detail_query = {"node_id": first, "sections": ["contract"], "limit": 1}
+            detail = await _call(client, "plan_node_get", detail_query)
+            seen = {detail["entries"][0]["field"]: detail["entries"][0]["value"]}
+            while detail.get("cursor") is not None:
+                detail = await _call(client, "plan_node_get", {**detail_query, "cursor": detail["cursor"]})
+                entry = detail["entries"][0]
+                seen[entry["field"]] = entry["value"]
+            assert seen["path"] == "src/a.py"
+            assert seen["acceptance"] == "green"
+
+            _ = await _call(client, "node_claim", {"node_id": first})
+            expired = await client.call_tool("plan_graph", {**query, "cursor": cursor})
+            assert _error(expired)["reason"] == "GRAPH_CURSOR_STALE"
+
+    asyncio.run(scenario())
 
 
 def test_execute_cannot_list_or_call_graph_mutations() -> None:
@@ -242,7 +285,7 @@ async def _each_tool(worktree: Path) -> None:
     async with Client(server) as client, Client(denied) as blocked:
         listed = await client.list_tools()
         tools = {tool.name: tool for tool in listed.tools}
-        assert set(tools) == _TOOLS
+        assert set(tools) == ALL_TOOLS
         for name, tool in tools.items():
             _check_tool(name, tool)
             failed = await blocked.call_tool(name, _ERROR_ARGS[name])

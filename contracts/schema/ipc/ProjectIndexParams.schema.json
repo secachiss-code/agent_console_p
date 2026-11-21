@@ -1,0 +1,63 @@
+{
+  "$defs": {
+    "ProjectIndexParams": {
+      "properties": {
+        "anchor": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "cursor": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "diagnose": {
+          "default": false,
+          "type": "boolean"
+        },
+        "project_id": {
+          "type": "string"
+        },
+        "query": {
+          "default": "",
+          "type": "string"
+        },
+        "scope": {
+          "default": ".",
+          "type": "string"
+        },
+        "tab_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "project_id"
+      ],
+      "title": "ProjectIndexParams",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/ProjectIndexParams",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

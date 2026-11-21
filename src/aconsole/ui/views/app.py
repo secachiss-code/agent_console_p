@@ -189,6 +189,8 @@ class AConsoleApp(Adw.Application):
             _ = self.window.connect("close-request", self._close_requested)
             if request is not None:
                 self.window.set_default_size(request.width, request.height)
+                if request.view in {"plan-graph", "project-index"}:
+                    self.window.set_resizable(False)
                 after_first_paint(self.window, self._capture)
             self.window.present()
             if self.startup_window is not None:

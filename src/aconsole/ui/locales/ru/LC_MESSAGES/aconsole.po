@@ -2203,3 +2203,57 @@ msgstr "Показать затронутые модули по расстоян
 
 msgid "prefs.mcp.tool.handover"
 msgstr "Прочитать или записать краткую передачу работы."
+
+msgid "graph.index"
+msgstr "Индекс проекта"
+
+msgid "graph.select"
+msgstr "Выбрать вершину графа"
+
+msgid "graph.zoom_in"
+msgstr "Увеличить"
+
+msgid "graph.zoom_out"
+msgstr "Уменьшить"
+
+msgid "graph.overview"
+msgstr "Обзор"
+
+msgid "graph.dependencies"
+msgstr "Зависимости"
+
+msgid "graph.local"
+msgstr "Окрестность"
+
+msgid "graph.search"
+msgstr "Найти файл или символ"
+
+msgid "graph.more"
+msgstr "Следующая страница"
+
+msgid "graph.loading"
+msgstr "Загрузка индекса…"
+
+msgid "graph.partial"
+msgstr "Частичный индекс"
+
+msgid "graph.lint.clean"
+msgstr "Замечаний нет"
+
+msgid "graph.lint.findings"
+msgstr "Замечания"
+
+msgid "graph.lint.no_targets"
+msgstr "Нет файлов Python"
+
+msgid "graph.lint.unavailable"
+msgstr "Недоступен"
+
+msgid "graph.lint.timeout"
+msgstr "Истекло время проверки"
+
+msgid "graph.lint.tool_error"
+msgstr "Ошибка проверки"
+
+msgid "graph.lint.stale"
+msgstr "Исходник изменился"

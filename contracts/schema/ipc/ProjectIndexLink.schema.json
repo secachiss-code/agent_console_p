@@ -1,0 +1,26 @@
+{
+  "$defs": {
+    "ProjectIndexLink": {
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string"
+        },
+        "target": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "source",
+        "target",
+        "kind"
+      ],
+      "title": "ProjectIndexLink",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/ProjectIndexLink",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

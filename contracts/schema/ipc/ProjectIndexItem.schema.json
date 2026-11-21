@@ -1,0 +1,52 @@
+{
+  "$defs": {
+    "ProjectIndexItem": {
+      "properties": {
+        "count": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "id": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "start_line": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "path",
+        "kind"
+      ],
+      "title": "ProjectIndexItem",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/ProjectIndexItem",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

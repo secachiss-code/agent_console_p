@@ -202,11 +202,14 @@ def build(out: Path) -> Path:
             site = _copy_python(ROOT / venv, tree / INSTALLED / env)
             _copy_distributions(ROOT / venv, site, wanted)
             _copy_app(site)
+        _ = shutil.copy2(ROOT / ".venv-core" / "bin" / "ruff", tree / INSTALLED / "core" / "bin" / "ruff")
         launchers = (("aconsole", "ui", "aconsole"), ("aconsoled", "core", "aconsole.core"))
         for name, env, module in launchers:
             text = _LAUNCHER.format(installed=INSTALLED, env=env, module=module)
             _write(tree / "usr" / "bin" / name, text, executable=True)
         _share(tree)
+        ruff_license = next((ROOT / ".venv-core" / "lib").glob("*/site-packages/ruff-*.dist-info/licenses/LICENSE"))
+        _ = shutil.copy2(ruff_license, tree / "usr" / "share" / "doc" / "aconsole" / "copyright.ruff")
         _control(tree, version)
         out.mkdir(parents=True, exist_ok=True)
         package = out / f"aconsole_{version}_amd64.deb"

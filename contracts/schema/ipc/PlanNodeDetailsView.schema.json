@@ -1,0 +1,39 @@
+{
+  "$defs": {
+    "PlanNodeDetailsView": {
+      "properties": {
+        "cursor": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "lines": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "paths": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "lines"
+      ],
+      "title": "PlanNodeDetailsView",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/PlanNodeDetailsView",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

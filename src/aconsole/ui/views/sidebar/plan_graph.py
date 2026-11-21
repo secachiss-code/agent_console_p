@@ -12,11 +12,12 @@ import gi
 gi.require_version("Gtk", "4.0")
 from gi.repository import Gdk, GLib, GObject, Gtk, Pango  # noqa: E402
 
-from aconsole.contracts.app import PlanInboxEntry, PlanNodeView, PlanView  # noqa: E402
+from aconsole.contracts.app import PlanInboxEntry, PlanNodeDetailsView, PlanNodeView, PlanView  # noqa: E402
 from aconsole.contracts.common import NodeId, NodeStatus, PlanId, TabId  # noqa: E402
 from aconsole.ui.viewmodels.logic.plan_layout import PlanNodePosition, direction_columns, layout_plan, shown_nodes  # noqa: E402
 from aconsole.ui.viewmodels.logic.quota_fmt import agent_name  # noqa: E402
 from aconsole.ui.views.sidebar.messages import _ as translate  # noqa: E402
+from aconsole.ui.views.sidebar.network_map import Link, NetworkMap, Point  # noqa: E402
 
 _NODE_WIDTH = 128
 _NODE_HEIGHT = 64
@@ -37,6 +38,8 @@ class PlanGraph(Gtk.Box):
         on_freeze: Callable[[PlanId], None] | None = None,
         on_review: Callable[[str, str, str], None] | None = None,
         on_repair: Callable[[PlanView], None] | None = None,
+        on_inspect: Callable[[NodeId, str | None], None] | None = None,
+        on_index: Callable[[str], None] | None = None,
     ) -> None:
         super().__init__(orientation=Gtk.Orientation.VERTICAL)
         self.add_css_class("ac-plan-page")
@@ -44,6 +47,10 @@ class PlanGraph(Gtk.Box):
         self._on_freeze: Callable[[PlanId], None] | None = on_freeze
         self._on_review: Callable[[str, str, str], None] | None = on_review
         self._on_repair: Callable[[PlanView], None] | None = on_repair
+        self._on_inspect: Callable[[NodeId, str | None], None] | None = on_inspect
+        self._on_index: Callable[[str], None] | None = on_index
+        self._detail: PlanNodeDetailsView | None = None
+        self._detail_node: NodeId | None = None
         self._inbox: tuple[PlanInboxEntry, ...] = ()
         self._inbox_key: object = None
         self._review_actions: dict[str, Gtk.Box] = {}
@@ -55,7 +62,7 @@ class PlanGraph(Gtk.Box):
         self._hovered: NodeId | None = None
         self._selected: NodeId | None = None
         self._pending_decisions: set[NodeId] = set()
-        self._nodes: dict[NodeId, PlanNodeView] = {node.id: node for node in shown_nodes(plan.nodes)}
+        self._nodes: dict[NodeId, PlanNodeView] = {node.id: node for node in plan.nodes}
         self._positions: dict[NodeId, PlanNodePosition] = {
             position.node_id: position for position in layout_plan(plan.nodes)
         }
@@ -80,13 +87,14 @@ class PlanGraph(Gtk.Box):
         """Update state without replacing buttons, scroll or focus when the graph geometry is unchanged."""
 
         def geometry(node: PlanNodeView) -> tuple[object, ...]:
-            return node.id, node.key, node.title, node.layer, node.depends_on, node.level, node.parent, node.pipeline
+            return (node.id, node.key, node.title, node.layer, node.depends_on, node.level, node.parent, node.related,
+                    node.pipeline)
 
-        nodes = {node.id: node for node in shown_nodes(plan.nodes)}
+        nodes = {node.id: node for node in plan.nodes}
         if plan.id != self.plan.id or tuple(map(geometry, plan.nodes)) != tuple(map(geometry, self.plan.nodes)):
             return False
-        for key, node in nodes.items():
-            button = self.node_buttons[key]
+        for key, button in self.node_buttons.items():
+            node = nodes[key]
             button.remove_css_class(f"ac-plan-{self._nodes[key].status.value}")
             button.add_css_class(f"ac-plan-{node.status.value}")
             self._label_node(button, node)
@@ -96,6 +104,7 @@ class PlanGraph(Gtk.Box):
                 button.remove_css_class("ac-plan-ready")
         self.plan = plan
         self._nodes = nodes
+        self._update_map()
         self._title_label.set_text(plan.title)
         self._summary_label.set_text(translate("plan.card.progress").format(done=plan.done, total=plan.total))
         self.phase_label.set_text(translate(f"plan.phase.{plan.phase}"))
@@ -234,7 +243,8 @@ class PlanGraph(Gtk.Box):
                 label.set_size_request(self._node_width, 30)
                 label.set_tooltip_text(title)
                 fixed.put(label, column * 196 + 12, 4)
-        for node_id, node in self._nodes.items():
+        for node in shown_nodes(self.plan.nodes):
+            node_id = node.id
             button = Gtk.Button()
             label = Gtk.Label(ellipsize=Pango.EllipsizeMode.END, max_width_chars=16, justify=Gtk.Justification.CENTER)
             button.set_child(label)
@@ -258,9 +268,54 @@ class PlanGraph(Gtk.Box):
             fixed.put(button, position.x, position.y)
         scroll = Gtk.ScrolledWindow(hexpand=True, vexpand=True)
         scroll.set_child(overlay)
-        self.append(scroll)
+        self._setup_network(scroll)
         # Review stays beside the heading, above the window's bottom approval overlay.
         self.insert_child_after(self._build_details(), self.get_first_child())
+
+    def _setup_network(self, scroll: Gtk.ScrolledWindow) -> None:
+        self._network: NetworkMap = NetworkMap(self._select_on_map)
+        self._local: Gtk.ToggleButton = Gtk.ToggleButton(label=translate("graph.local"))
+        _ = self._local.connect("toggled", self._toggle_map)
+        self._graph_stack: Gtk.Stack = Gtk.Stack(vexpand=True, hexpand=True)
+        _ = self._graph_stack.add_titled(self._network, "map", translate("graph.overview"))
+        _ = self._graph_stack.add_titled(scroll, "dependencies", translate("graph.dependencies"))
+        switcher = Gtk.StackSwitcher(stack=self._graph_stack)
+        tools = Gtk.Box(spacing=8, margin_top=8, margin_start=8)
+        tools.append(switcher)
+        tools.append(self._local)
+        self.append(tools)
+        self.append(self._graph_stack)
+        self._update_map()
+
+    def _toggle_map(self, _button: Gtk.ToggleButton) -> None:
+        self._update_map()
+
+    def _update_map(self) -> None:
+        links: set[tuple[str, str, str]] = set()
+        for node in self._nodes.values():
+            target = str(node.id)
+            links.update((str(parent), target, "depends_on") for parent in node.depends_on)
+            for other in node.related:
+                left, right = sorted((target, str(other)))
+                links.add((left, right, "related"))
+            if node.parent is not None:
+                links.add((str(node.parent), target, "decomposes"))
+        selected = self._selected
+        visible = self._nodes.keys()
+        if self._local.get_active() and selected is not None:
+            visible = {selected, *(NodeId(endpoint) for link in links if str(selected) in link[:2]
+                                   for endpoint in link[:2])}
+        self._network.set_graph(
+            tuple(Point(str(node.id), node.key, node.level == 0, node.status.value)
+                  for node in self._nodes.values() if node.id in visible),
+            tuple(Link(source, target, kind) for source, target, kind in sorted(links)
+                  if NodeId(source) in visible and NodeId(target) in visible),
+        )
+
+    def _select_on_map(self, node_id: str) -> None:
+        self._inspect(NodeId(node_id))
+        if self._local.get_active():
+            self._update_map()
 
     @staticmethod
     def _label_node(button: Gtk.Button, node: PlanNodeView) -> None:
@@ -319,13 +374,42 @@ class PlanGraph(Gtk.Box):
         self.tab_button.set_sensitive(False)
         _ = self.tab_button.connect("clicked", self._go_tab)
         details.append(self.tab_button)
+        self.index_button: Gtk.Button = Gtk.Button(
+            icon_name="system-search-symbolic", tooltip_text=translate("graph.index"),
+        )
+        self.index_button.set_visible(False)
+        _ = self.index_button.connect("clicked", self._open_index)
+        details.append(self.index_button)
+        self.more_details: Gtk.Button = Gtk.Button(icon_name="go-next-symbolic", tooltip_text=translate("graph.more"))
+        self.more_details.set_visible(False)
+        _ = self.more_details.connect("clicked", self._next_details)
+        details.append(self.more_details)
         return details
 
     def _close(self, _button: Gtk.Button) -> None:
         self._on_close()
 
     def _node_clicked(self, _button: Gtk.Button, node_id: NodeId) -> None:
+        self._inspect(node_id)
+
+    def _inspect(self, node_id: NodeId) -> None:
         self.set_hovered(node_id)
+        if self._on_inspect is not None:
+            self._on_inspect(node_id, None)
+
+    def set_node_details(self, node_id: NodeId, details: PlanNodeDetailsView) -> None:
+        if node_id == self._selected:
+            self._detail_node = node_id
+            self._detail = details
+            self.set_hovered(node_id)
+
+    def _open_index(self, _button: Gtk.Button) -> None:
+        if self._on_index is not None and self._detail is not None and self._detail.paths:
+            self._on_index(self._detail.paths[0])
+
+    def _next_details(self, _button: Gtk.Button) -> None:
+        if self._on_inspect is not None and self._selected is not None and self._detail is not None:
+            self._on_inspect(self._selected, self._detail.cursor)
 
     def _node_enter(self, _motion: Gtk.EventControllerMotion, _x: float, _y: float, node_id: NodeId) -> None:
         self.set_hovered(node_id)
@@ -373,6 +457,7 @@ class PlanGraph(Gtk.Box):
         self._hovered = node.id if node is not None else None
         if node is not None:
             self._selected = node.id
+        self._network.highlight(None if node is None else str(node.id))
         neighbors: set[NodeId] = set(node.depends_on) if node is not None else set()
         if node is not None:
             neighbors.add(node.id)
@@ -389,6 +474,9 @@ class PlanGraph(Gtk.Box):
         self.accept_button.set_visible(deciding)
         self.send_back_button.set_visible(deciding)
         self._sync_decision_buttons()
+        detail = self._detail if self._selected == self._detail_node else None
+        self.index_button.set_visible(self._on_index is not None and detail is not None and bool(detail.paths))
+        self.more_details.set_visible(detail is not None and detail.cursor is not None)
         if selected is None:
             self.details_label.set_label(translate("plan.select_node"))
         else:
@@ -409,6 +497,8 @@ class PlanGraph(Gtk.Box):
             text.extend(_attempt_details(node))
             if node.evidence:
                 text.append(translate("plan.evidence").format(text=node.evidence))
+            if detail is not None:
+                text.extend(detail.lines)
             head, *rest = text
             self.details_label.set_markup(
                 "\n".join(
@@ -427,7 +517,9 @@ class PlanGraph(Gtk.Box):
         context.set_line_join(cairo.LineJoin.ROUND)
         ports: list[tuple[float, float, Gdk.RGBA, float]] = []
         for node in self._nodes.values():
-            target = self._positions[node.id]
+            target = self._positions.get(node.id)
+            if target is None:
+                continue
             for parent_id in node.depends_on:
                 source = self._positions.get(parent_id)
                 parent = self._nodes.get(parent_id)
