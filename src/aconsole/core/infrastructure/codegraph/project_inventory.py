@@ -8,6 +8,7 @@ import os
 import re
 import stat
 import threading
+import time
 from collections import OrderedDict
 from collections.abc import Iterator
 from contextlib import ExitStack
@@ -22,6 +23,8 @@ _MAX_FILE_BYTES = 512 * 1024
 _MAX_ROOTS = 4
 _MAX_FILES = 50_000
 _MAX_CONTENT_BYTES = 32 * 1024 * 1024
+_CACHE_SECONDS = 3.0
+_METADATA_ROOTS = frozenset({"artifacts", "dist"})
 _SKIP_DIRS = frozenset({".git", ".aconsole", ".aws", ".codex", ".agents", "node_modules", "__pycache__"})
 _PRIVATE_NAMES = frozenset({".env", ".netrc", ".npmrc", "id_rsa", "id_ed25519"})
 _UNSAFE_CHARS = re.compile(r"[\x00-\x1f\ud800-\udfff]")
@@ -85,7 +88,9 @@ def _open_relative(root: Path, path: str, stack: ExitStack) -> int:
     return fd
 
 
-def read_file(root: Path, path: str, cached: InventoryFile | None = None) -> InventoryFile | None:
+def read_file(
+    root: Path, path: str, cached: InventoryFile | None = None, *, content_limit: int = _MAX_FILE_BYTES
+) -> InventoryFile | None:
     """Read only a regular file beneath the authorized worktree."""
     try:
         with ExitStack() as stack:
@@ -94,10 +99,11 @@ def read_file(root: Path, path: str, cached: InventoryFile | None = None) -> Inv
             if not stat.S_ISREG(info.st_mode):
                 return None
             stamp = _stat_stamp(info)
-            if cached is not None and cached.stamp == stamp and not cached.metadata_only:
+            if (cached is not None and cached.stamp == stamp and not cached.metadata_only
+                    and cached.size <= content_limit):
                 return cached
-            if info.st_size > _MAX_FILE_BYTES:
-                return InventoryFile(path, info.st_size, stamp)
+            if info.st_size > content_limit:
+                return InventoryFile(path, info.st_size, stamp, metadata_only=True)
             with os.fdopen(fd, "rb", closefd=False) as stream:
                 raw = stream.read(_MAX_FILE_BYTES + 1)
             if len(raw) > _MAX_FILE_BYTES or _stat_stamp(os.fstat(fd)) != stamp:
@@ -158,14 +164,17 @@ class ProjectInventories:
     def __init__(self) -> None:
         self._git = GitRunner(timeout_s=5.0)
         self._lock = threading.RLock()
-        self._roots: OrderedDict[Path, WorktreeInventory] = OrderedDict()
+        self._roots: OrderedDict[Path, tuple[float, WorktreeInventory]] = OrderedDict()
 
-    def snapshot(self, root: Path) -> WorktreeInventory:
+    def snapshot(self, root: Path, *, refresh: bool = False) -> WorktreeInventory:
         root = root.resolve()
         with self._lock:
-            previous = self._roots.get(root)
-            inventory = self._snapshot(root, previous)
-            self._roots[root] = inventory
+            cached = self._roots.get(root)
+            if cached is not None and not refresh and time.monotonic() < cached[0]:
+                self._roots.move_to_end(root)
+                return cached[1]
+            inventory = self._snapshot(root, None if cached is None else cached[1])
+            self._roots[root] = time.monotonic() + _CACHE_SECONDS, inventory
             self._roots.move_to_end(root)
             if len(self._roots) > _MAX_ROOTS:
                 _ = self._roots.popitem(last=False)
@@ -193,13 +202,14 @@ class ProjectInventories:
                 complete = False
                 break
             cached = None if previous is None else previous.files.get(path)
-            found = read_file(root, path, cached)
+            archival = path.partition("/")[0] in _METADATA_ROOTS
+            limit = 0 if archival else min(_MAX_FILE_BYTES, max(0, _MAX_CONTENT_BYTES - content_bytes))
+            found = read_file(root, path, cached, content_limit=limit)
             if found is not None:
                 if found.text is not None:
                     content_bytes += found.size
-                    if content_bytes > _MAX_CONTENT_BYTES:
-                        complete = False
-                        found = replace(found, text=None, symbols=(), metadata_only=True)
+                elif found.metadata_only and not archival and found.size <= _MAX_FILE_BYTES:
+                    complete = False
                 files[path] = found
         digest = hashlib.sha256()
         for name, item in sorted(files.items()):
@@ -220,4 +230,9 @@ def _git_paths(raw: bytes) -> tuple[tuple[str, ...], tuple[str, ...]]:
                 names.add(name)
         else:
             names.add(row)
-    return tuple(sorted(names - submodules)), tuple(sorted(submodules))
+    return tuple(sorted(names - submodules, key=_index_order)), tuple(sorted(submodules))
+
+
+def _index_order(path: str) -> tuple[int, str]:
+    root = path.partition("/")[0]
+    return (2 if root in _METADATA_ROOTS else 0 if root in {"src", "tests"} else 1), path

@@ -116,9 +116,9 @@ class ProjectIndex:
             tool_error("INDEX_UNAVAILABLE", "this tab has no project root")
         return root.resolve()
 
-    def _snapshot(self, ctx: TabContext, root: Path) -> Snapshot:
+    def _snapshot(self, ctx: TabContext, root: Path, *, refresh: bool = False) -> Snapshot:
         try:
-            inventory = self._inventories.snapshot(root)
+            inventory = self._inventories.snapshot(root, refresh=refresh)
         except (GitCommandError, OSError):
             tool_error("INDEX_UNAVAILABLE", "the worktree inventory could not be read")
         index = self._board.code_graph
@@ -229,6 +229,9 @@ class ProjectIndex:
             tool_error("INDEX_REVISION_STALE", "the index advanced since these references were issued")
         base = IndexRead(revision=snapshot.revision, state=snapshot.state, items=())
         excerpts = [_excerpt(root, snapshot, ref) for ref in refs]
+        if expected_revision is not None and any(item.status == "stale" for item in excerpts):
+            _ = self._inventories.snapshot(root, refresh=True)
+            tool_error("INDEX_REVISION_STALE", "a requested file changed after indexing")
         budget = min(max_bytes, _MAX_READ_BYTES)
         return _bounded_read(base, excerpts, budget)
 
@@ -280,13 +283,13 @@ class ProjectIndex:
         targets: tuple[str, ...], expected_revision: str | None,
     ) -> LintResult:
         root = self._root(ctx)
-        snapshot = self._snapshot(ctx, root)
+        snapshot = self._snapshot(ctx, root, refresh=True)
         if expected_revision is not None and expected_revision != snapshot.revision:
             tool_error("INDEX_REVISION_STALE", "the index advanced since these targets were issued")
         paths = self._lint_paths(ctx, root, scope, node_id, targets)
         result = self._lint.run(root, snapshot.inventory, paths)
         state = result.state
-        if self._inventories.snapshot(root).revision != snapshot.inventory.revision:
+        if self._inventories.snapshot(root, refresh=True).revision != snapshot.inventory.revision:
             state = "stale"
         binding = graph_digest(ctx.tab_id, ctx.project_id, snapshot.revision, page.params, page.limit)
 
@@ -360,9 +363,10 @@ def _related(tests: dict[str, list[SourceRef]], row: IndexEntry, intent: SearchI
 
 def _excerpt(root: Path, snapshot: Snapshot, ref: SourceRef) -> SourceExcerpt:
     stored = snapshot.inventory.files.get(ref.path)
-    if stored is None or (current := read_file(root, ref.path, stored)) is None:
+    if stored is None:
         return SourceExcerpt(ref=ref, status="unavailable")
-    if current.stamp != stored.stamp or (ref.sha256 is not None and current.sha256 != ref.sha256):
+    current = read_file(root, ref.path, stored)
+    if current is None or current.stamp != stored.stamp or (ref.sha256 is not None and current.sha256 != ref.sha256):
         return SourceExcerpt(ref=ref, status="stale")
     if current.text is None:
         return SourceExcerpt(ref=ref, status="metadata_only")

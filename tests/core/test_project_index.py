@@ -8,9 +8,20 @@ import pytest
 from mcp import Client
 
 from aconsole.core.infrastructure.codegraph.index import CodeGraphIndex
+from aconsole.core.infrastructure.codegraph.project_inventory import ProjectInventories
 from aconsole.core.infrastructure.codegraph.runner import ExtractorRunner
 from aconsole.core.infrastructure.git.runner import GitRunner
 from tests.core.test_mcp_tools import _call, _Clock, _error, _node, _node_id, _server
+
+
+def test_project_inventory_reserves_content_budget_for_source(tmp_path: Path) -> None:
+    archive = tmp_path / "artifacts"
+    archive.mkdir()
+    _ = (archive / "debug.jsonl").write_text("trace content\n" * 4096)
+    _ = (tmp_path / "application.py").write_text("def entrypoint(): return True\n")
+    snapshot = ProjectInventories().snapshot(tmp_path)
+    assert snapshot.files["artifacts/debug.jsonl"].text is None
+    assert snapshot.files["application.py"].symbols[0].name == "entrypoint"
 
 
 def test_project_index_search_read_and_worktree_isolation(tmp_path: Path) -> None:
