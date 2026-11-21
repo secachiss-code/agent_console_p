@@ -2,12 +2,16 @@
 
 from __future__ import annotations
 
+from importlib.util import find_spec
 from typing import TYPE_CHECKING
 
 import msgspec
+import pytest
 
 if TYPE_CHECKING:
     from aconsole.contracts.app import TabView
+
+_requires_gi = pytest.mark.skipif(find_spec("gi") is None, reason="PyGObject is installed in the UI environment")
 
 
 def test_ui_imports_own_worktree() -> None:
@@ -21,6 +25,7 @@ def test_ui_imports_own_worktree() -> None:
     assert module_path.is_relative_to(expected_src)
 
 
+@_requires_gi
 def test_tabs_vm_tracks_ordered_tab_events() -> None:
     from aconsole.contracts.events import TabAdded, TabRemoved, TabUpdated
     from aconsole.contracts.ipc import EventEnvelope
@@ -60,9 +65,7 @@ def test_tabs_vm_tracks_ordered_tab_events() -> None:
     assert_projection((renamed, *ordered[1:]))
 
     removed = ordered[2]
-    assert state.apply(
-        EventEnvelope(seq=2, at=removed.status_since, event=TabRemoved(tab_id=removed.id))
-    )
+    assert state.apply(EventEnvelope(seq=2, at=removed.status_since, event=TabRemoved(tab_id=removed.id)))
     remaining = tuple(tab for tab in (renamed, *ordered[1:]) if tab.id != removed.id)
     assert_projection(remaining)
 
@@ -71,12 +74,11 @@ def test_tabs_vm_tracks_ordered_tab_events() -> None:
         title="Re-added demo tab",
         order=max(tab.order for tab in remaining) + 1,
     )
-    assert state.apply(
-        EventEnvelope(seq=3, at=readded.status_since, event=TabAdded(tab=readded))
-    )
+    assert state.apply(EventEnvelope(seq=3, at=readded.status_since, event=TabAdded(tab=readded)))
     assert_projection((*remaining, readded))
 
 
+@_requires_gi
 def test_tabs_vm_starts_empty_without_a_snapshot() -> None:
     from aconsole.ui.client.core_client import CoreClient
     from aconsole.ui.viewmodels.tabs_vm import TabsViewModel
@@ -85,6 +87,7 @@ def test_tabs_vm_starts_empty_without_a_snapshot() -> None:
     assert vm.model.get_n_items() == 0
 
 
+@_requires_gi
 def test_tabs_vm_retained_store_tracks_events_and_snapshot_resync() -> None:
     from aconsole.contracts.events import TabRemoved, TabUpdated
     from aconsole.contracts.ipc import EventEnvelope
@@ -123,9 +126,7 @@ def test_tabs_vm_retained_store_tracks_events_and_snapshot_resync() -> None:
     assert_retained_projection((renamed, *(tab for tab in source.tabs if tab.id != first.id)))
 
     removed = max(source.tabs, key=lambda tab: tab.order)
-    assert client.store.apply(
-        EventEnvelope(seq=2, at=removed.status_since, event=TabRemoved(tab_id=removed.id))
-    )
+    assert client.store.apply(EventEnvelope(seq=2, at=removed.status_since, event=TabRemoved(tab_id=removed.id)))
     after_remove = tuple(
         tab for tab in (renamed, *(tab for tab in source.tabs if tab.id != first.id)) if tab.id != removed.id
     )
@@ -140,6 +141,7 @@ def test_tabs_vm_retained_store_tracks_events_and_snapshot_resync() -> None:
     assert_retained_projection(resynced.tabs)
 
 
+@_requires_gi
 def test_tabs_vm_refreshes_from_a_resync_snapshot_without_a_later_tab_event() -> None:
     from aconsole.contracts.events import TabRemoved, UiEvent
     from aconsole.contracts.ipc import EventEnvelope

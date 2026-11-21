@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 from typing import TYPE_CHECKING
 
+import msgspec
 import pytest
 
 from aconsole.core.bootstrap import Daemon
@@ -13,10 +14,10 @@ from aconsole.core.infrastructure.mcp.tools import TabContext
 from tests.socket_paths import short_socket_path
 
 if TYPE_CHECKING:
-    from collections.abc import Awaitable, Callable, MutableMapping
+    from collections.abc import Mapping
     from pathlib import Path
 
-    type _Message = MutableMapping[str, object]
+    type _Message = Mapping[str, object]
 
 _CONTEXT = TabContext(tab_id="t1", project_id="p1", worktree=None, agent="claude")
 _UNAUTHORIZED = 401
@@ -47,10 +48,12 @@ def _call(header: bytes | None) -> tuple[list[_Message], list[str]]:
     tokens = TabTokens()
     tokens.register("t1", "good", _CONTEXT)
 
-    async def mcp(_scope: _Message, _receive: object, _send: object) -> None:
+    async def mcp(scope: _Message, receive: object, send: object) -> None:
+        _ = scope, receive, send
         reached.append("mcp")
 
-    async def ingest(_scope: _Message, _receive: object, _send: object) -> None:
+    async def ingest(scope: _Message, receive: object, send: object) -> None:
+        _ = scope, receive, send
         reached.append("ingest")
 
     async def send(message: _Message) -> None:
@@ -59,10 +62,10 @@ def _call(header: bytes | None) -> tuple[list[_Message], list[str]]:
     async def receive() -> _Message:
         return {"type": "http.request"}
 
-    app: Callable[[_Message, object, object], Awaitable[None]] = beside_ingest(ingest, mcp, tokens)  # pyright: ignore[reportAssignmentType] -- ASGI apps
+    app = beside_ingest(ingest, mcp, tokens)
     headers = [] if header is None else [(b"authorization", header)]
     scope: _Message = {"type": "http", "path": "/mcp", "headers": headers}
-    asyncio.run(app(scope, receive, send))  # pyright: ignore[reportArgumentType] -- `app` returns a coroutine
+    asyncio.run(app(scope, receive, send))
     return sent, reached
 
 
@@ -79,29 +82,41 @@ def test_a_good_token_and_no_token_reach_the_server() -> None:
 
 
 _SAMPLES: dict[str, object] = {"string": "x", "array": [], "integer": 1, "number": 1, "boolean": True, "object": {}}
+_REQUIRED_ARGUMENTS: dict[str, dict[str, object]] = {
+    "index_neighbors": {"targets": ["main.py"]},
+    "index_read": {"refs": [{"path": "main.py"}]},
+}
 
 
-def _sample(schema: dict[str, object]) -> object:
+class _Argument(msgspec.Struct):
+    type: str = "string"
+    enum: tuple[object, ...] = ()
+
+
+class _ToolSchema(msgspec.Struct):
+    properties: dict[str, _Argument] = msgspec.field(default_factory=dict)
+    required: tuple[str, ...] = ()
+
+
+def _sample(schema: _Argument) -> object:
     """A value the schema accepts, so that only the tab check can refuse the call."""
-    choices = schema.get("enum")
-    if isinstance(choices, list) and choices:
-        return choices[0]
-    return _SAMPLES.get(str(schema.get("type")), "x")
+    return schema.enum[0] if schema.enum else _SAMPLES.get(schema.type, "x")
 
 
 def test_the_daemon_refuses_every_tool_without_a_tab(tmp_path: Path) -> None:
     async def scenario() -> None:
         daemon = Daemon(short_socket_path(tmp_path / "core.sock"), idle_s=30, database=None)
-        tools = await daemon._mcp.list_tools()
+        mcp = daemon._mcp  # pyright: ignore[reportPrivateUsage] -- test the actual server wired by the daemon
+        tools = await mcp.list_tools()
         assert tools
-        created = await daemon._mcp.call_tool("plan_create", {"title": "t", "goal": "g"})
+        created = await mcp.call_tool("plan_create", {"title": "t", "goal": "g"})
         assert "INGEST_UNAUTHORIZED" in str(created)
-        assert daemon._plans.views() == ()
+        assert daemon._plans.views() == ()  # pyright: ignore[reportPrivateUsage] -- verify absence of side effects
         for tool in tools:
-            properties = tool.input_schema.get("properties", {})
-            required = tool.input_schema.get("required", [])
-            arguments = {name: _sample(properties[name]) for name in required}
-            answer = await daemon._mcp.call_tool(tool.name, arguments)
+            schema = msgspec.convert(tool.input_schema, type=_ToolSchema)
+            arguments = {name: _sample(schema.properties[name]) for name in schema.required}
+            arguments.update(_REQUIRED_ARGUMENTS.get(tool.name, {}))
+            answer = await mcp.call_tool(tool.name, arguments)
             assert "INGEST_UNAUTHORIZED" in str(answer), tool.name
 
     asyncio.run(scenario())
