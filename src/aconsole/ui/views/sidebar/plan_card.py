@@ -13,18 +13,22 @@ from aconsole.ui.views.sidebar.messages import _ as translate  # noqa: E402
 
 
 class PlanCard(Gtk.Button):
-    def __init__(self, on_activate: Callable[[PlanId], None], *, with_heading: bool = True) -> None:
+    def __init__(
+        self, on_activate: Callable[[PlanId], None], *, with_heading: bool = True, compact_label: str | None = None
+    ) -> None:
         """Under a `SummarySection` the section says "Plan", so the card starts with the plan's name."""
         super().__init__()
         self.update_property(
             [Gtk.AccessibleProperty.LABEL],
             [GObject.Value(GObject.TYPE_STRING, translate("plan.card.title"))],
         )
-        self.add_css_class("flat")
-        self.add_css_class("ac-summary-section")
+        if compact_label is None:
+            self.add_css_class("flat")
+            self.add_css_class("ac-summary-section")
         self.plan_id: PlanId | None = None
         self._on_activate: Callable[[PlanId], None] = on_activate
         self._plan: PlanView | None = None
+        self._compact: bool = compact_label is not None
         box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
         self.title_label: Gtk.Label = Gtk.Label(
             xalign=1 if with_heading else 0,
@@ -50,7 +54,10 @@ class PlanCard(Gtk.Button):
         self.detail_label: Gtk.Label = Gtk.Label(xalign=0, ellipsize=Pango.EllipsizeMode.END)
         self.detail_label.add_css_class("ac-summary-detail")
         box.append(self.detail_label)
-        self.set_child(box)
+        if compact_label is None:
+            self.set_child(box)
+        else:
+            self.set_label(compact_label)
         _ = self.connect("clicked", self._activate)
         self.set_plan(None)
 
@@ -75,20 +82,24 @@ class PlanCard(Gtk.Button):
             self.progress_bar.set_fraction(min(1, max(0, plan.done / plan.total)) if plan.total else 0)
             ready = ", ".join(node.key for node in plan.nodes if node.ready)
             self.detail_label.set_label(translate("plan.ready").format(nodes=ready) if ready else plan.goal)
-        self.set_tooltip_text(self.detail_label.get_label())
+        title = translate("plan.card.title")
+        self.set_tooltip_text(
+            f"{title} · {self.title_label.get_label()}" if self._compact else self.detail_label.get_label()
+        )
+        if self._compact:
+            self.set_sensitive(plan is not None)
+        accessible_parts = (
+            title,
+            self.title_label.get_label(),
+            self.progress_label.get_label(),
+            self.detail_label.get_label(),
+        )
         self.update_property(
             [Gtk.AccessibleProperty.LABEL],
             [
                 GObject.Value(
                     GObject.TYPE_STRING,
-                    ": ".join(
-                        (
-                            translate("plan.card.title"),
-                            self.title_label.get_label(),
-                            self.progress_label.get_label(),
-                            self.detail_label.get_label(),
-                        )
-                    ),
+                    ": ".join(accessible_parts),
                 )
             ],
         )

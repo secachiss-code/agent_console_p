@@ -255,18 +255,21 @@ def _assert_summary_container(window: MainWindow) -> None:
     summary = window.summary_card
     assert isinstance(summary, Gtk.Box)
     assert summary.get_visible()
-    sections = (window.plan_section, window.quota_section, window.git_section)
-    assert [section.body for section in sections] == [window.plan_card, window.quota_card, window.git_card]
-    children: list[Gtk.Widget] = []
-    child = summary.get_first_child()
-    while child is not None:
-        children.append(child)
-        child = child.get_next_sibling()
-    assert len(children) == 6
-    assert [children[0], children[3], children[5]] == list(sections)
-    assert isinstance(children[1], Gtk.Button)
-    assert isinstance(children[2], Gtk.Separator)
-    assert isinstance(children[4], Gtk.Separator)
+    assert summary.get_first_child() is window.quota_section
+    assert window.quota_section.body is window.quota_card
+    navigation = summary.get_last_child()
+    assert isinstance(navigation, Gtk.Box)
+    assert navigation.get_orientation() == Gtk.Orientation.HORIZONTAL
+    assert navigation.get_homogeneous()
+    assert navigation.get_first_child() is window.plan_card
+    assert window.plan_card.get_next_sibling() is window.index_button
+    assert window.index_button.get_next_sibling() is window.git_button
+    assert navigation.get_last_child() is window.git_button
+    assert [button.get_label() for button in (window.plan_card, window.index_button, window.git_button)] == [
+        translate("navigation.plan"),
+        "IDX",
+        "GIT",
+    ]
 
 
 def test_b4b_quota_card_shows_normal_unknown_estimated_and_critical_windows() -> None:

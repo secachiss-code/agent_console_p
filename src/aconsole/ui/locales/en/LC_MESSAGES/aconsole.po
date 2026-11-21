@@ -898,6 +898,9 @@ msgstr "Blocks: {nodes}"
 msgid "plan.card.progress"
 msgstr "{done} of {total} done"
 
+msgid "navigation.plan"
+msgstr "PLAN"
+
 msgid "plan.card.title"
 msgstr "Plan"
 

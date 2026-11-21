@@ -16,6 +16,9 @@ from aconsole.core.infrastructure.fake.scenarios import demo_snapshot  # noqa: E
 from aconsole.ui.bootstrap import run_app, spawn_task  # noqa: E402
 from aconsole.ui.client.core_client import CoreClient  # noqa: E402
 from aconsole.ui.viewmodels.tabs_vm import TabItem, TabsViewModel  # noqa: E402
+from aconsole.ui.views.review.page import ReviewPage  # noqa: E402
+from aconsole.ui.views.sidebar.plan_graph import PlanGraph  # noqa: E402
+from aconsole.ui.views.sidebar.project_index import ProjectIndexPage  # noqa: E402
 from aconsole.ui.views.tabs.row import TabRow  # noqa: E402
 from aconsole.ui.views.window import MainWindow  # noqa: E402
 
@@ -113,6 +116,25 @@ def test_header_session_search_filters_and_restores_focus() -> None:
         assert search.get_text() == ""
         assert window.selection.get_n_items() == count
         assert window.get_focus() is button
+
+    _run_ui(scenario)
+
+
+def test_project_navigation_opens_each_page_from_one_row() -> None:
+    async def scenario(app: _MenuTestApp) -> None:
+        window, _, _ = _window(app)
+        window.present()
+        selected = window.selection.get_selected_item()
+        for button, page_type in (
+            (window.plan_card, PlanGraph),
+            (window.index_button, ProjectIndexPage),
+            (window.git_button, ReviewPage),
+        ):
+            assert button.get_tooltip_text()
+            assert Gtk.test_accessible_has_property(button, Gtk.AccessibleProperty.LABEL)
+            button.emit("clicked")
+            assert isinstance(window.content_view.get_content(), page_type)
+            assert window.selection.get_selected_item() is selected
 
     _run_ui(scenario)
 

@@ -905,6 +905,9 @@ msgstr "Блокирует: {nodes}"
 msgid "plan.card.progress"
 msgstr "Выполнено {done} из {total}"
 
+msgid "navigation.plan"
+msgstr "ПЛАН"
+
 msgid "plan.card.title"
 msgstr "План"
 

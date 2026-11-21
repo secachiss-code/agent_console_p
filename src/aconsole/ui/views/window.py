@@ -47,7 +47,7 @@ from aconsole.ui.i18n import core_message  # noqa: E402
 from aconsole.ui.viewmodels.app_vm import AppViewModel  # noqa: E402
 from aconsole.ui.viewmodels.approval_alerts import Alert, ApprovalAlerts  # noqa: E402
 from aconsole.ui.viewmodels.approvals_vm import ApprovalsViewModel  # noqa: E402
-from aconsole.ui.viewmodels.git_vm import GitViewModel, git_summary  # noqa: E402
+from aconsole.ui.viewmodels.git_vm import GitViewModel  # noqa: E402
 from aconsole.ui.viewmodels.health_vm import HealthViewModel  # noqa: E402
 from aconsole.ui.viewmodels.logic.approval_modes import automatic_banner_key, effective_policy  # noqa: E402
 from aconsole.ui.viewmodels.logic.fonts import ZOOM_DEFAULT, css_font_family, font_families, zoomed  # noqa: E402
@@ -64,7 +64,6 @@ from aconsole.ui.views.review.messages import _ as review_text  # noqa: E402
 from aconsole.ui.views.review.page import ReviewPage  # noqa: E402
 from aconsole.ui.views.setup.messages import _ as setup_text  # noqa: E402
 from aconsole.ui.views.shortcuts import ShortcutManager  # noqa: E402
-from aconsole.ui.views.sidebar.git_card import GitCard  # noqa: E402
 from aconsole.ui.views.sidebar.messages import _ as translate  # noqa: E402
 from aconsole.ui.views.sidebar.plan_card import PlanCard  # noqa: E402
 from aconsole.ui.views.sidebar.plan_graph import PlanGraph  # noqa: E402
@@ -274,36 +273,39 @@ class MainWindow(Adw.ApplicationWindow):
         self.summary_card: Gtk.Box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         self.summary_card.add_css_class("ac-summary-card")
         ui_state = UiState()
-        self.plan_card: PlanCard = PlanCard(on_activate=self._open_plan, with_heading=False)
         self.quota_card: QuotaCard = QuotaCard(with_heading=False)
-        self.git_card: GitCard = GitCard()
         self.quota_card.on_refresh = self._refresh_limits
-        self._git_card_project: ProjectId | None = None
         self._code_font: Gtk.CssProvider | None = None
         self._code_font_css: str = ""
-        self.plan_section: SummarySection = SummarySection(
-            "plan",
-            translate("plan.card.title"),
-            self.plan_card,
-            ui_state,
-        )
         self.quota_section: SummarySection = SummarySection(
             "limits",
             self.quota_card.title(),
             self.quota_card,
             ui_state,
         )
-        self.git_section: SummarySection = SummarySection("git", translate("git.card.title"), self.git_card, ui_state)
-        self.summary_card.append(self.plan_section)
-        index_button = Gtk.Button(label=translate("graph.index"))
-        _ = index_button.connect("clicked", self._index_clicked)
-        self.summary_card.append(index_button)
-        self.summary_card.append(Gtk.Separator())
         self.summary_card.append(self.quota_section)
         self.summary_card.append(Gtk.Separator())
-        self.summary_card.append(self.git_section)
+        self.summary_card.append(self._build_summary_navigation())
         body.append(self.summary_card)
         return body
+
+    def _build_summary_navigation(self) -> Gtk.Box:
+        self.plan_card: PlanCard = PlanCard(self._open_plan, compact_label=translate("navigation.plan"))
+        self.index_button: Gtk.Button = self._navigation_button("IDX", translate("graph.index"))
+        _ = self.index_button.connect("clicked", self._index_clicked)
+        self.git_button: Gtk.Button = self._navigation_button("GIT", translate("git.card.open"))
+        self.git_button.set_action_name("win.open-git")
+        navigation = Gtk.Box(homogeneous=True)
+        navigation.add_css_class("linked")
+        for button in (self.plan_card, self.index_button, self.git_button):
+            navigation.append(button)
+        return navigation
+
+    @staticmethod
+    def _navigation_button(label: str, title: str) -> Gtk.Button:
+        button = Gtk.Button(label=label, tooltip_text=title)
+        button.update_property([Gtk.AccessibleProperty.LABEL], [GObject.Value(GObject.TYPE_STRING, title)])
+        return button
 
     def _setup_terminals(self, content: Adw.ToolbarView) -> None:
         self.context_title: Adw.WindowTitle = Adw.WindowTitle(title="AConsole")
@@ -451,11 +453,9 @@ class MainWindow(Adw.ApplicationWindow):
         if self.plan_page is not None:
             self.plan_page.set_inbox(self._summary_vm.inbox)
             self.plan_page.set_inbox_error(self._summary_vm.inbox_error)
-        self.plan_section.set_detail(f"{plan.done}/{plan.total}" if plan is not None else "")
         self.quota_card.tabs = self._summary_vm.tabs
         self.quota_card.set_accounts(self._summary_vm.accounts)
         self._sync_quota_header()
-        self._follow_git_project()
         critical = any(
             self._quota_level(window.used_pct) == "critical"
             for account in self._summary_vm.accounts
@@ -1268,22 +1268,6 @@ class MainWindow(Adw.ApplicationWindow):
         with contextlib.suppress(Exception):  # a hint in the sidebar: the core's own errors show elsewhere
             state = await GitViewModel(self.tabs.client, project_id).state()
             self.tabs.apply_git(state)
-            if state.project_id == self._git_card_project:
-                summary = git_summary(state)
-                self.git_card.set_summary(summary)
-                self.git_section.set_detail(summary.base_branch or "", "warning" if summary.conflicted else None)
-
-    def _follow_git_project(self) -> None:
-        """The Git section counts the active project. Changing project asks once; Git events keep it current."""
-        snapshot = self.tabs.client.store.snapshot
-        project = None if snapshot is None else snapshot.active_project
-        if project == self._git_card_project:
-            return
-        self._git_card_project = project
-        self.git_card.set_summary(None)
-        self.git_section.set_detail("")
-        if project is not None:
-            _ = spawn_task(self._load_git_badges(project))
 
     def _apply_code_font(self, setting: str | None) -> None:
         """Code in the window (diffs, commands, commit messages) reads in the terminal's fonts, in the same order."""
