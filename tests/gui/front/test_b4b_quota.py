@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import locale
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Literal, override
 
@@ -45,8 +46,8 @@ class _QuotaTestApp(Adw.Application):
             application_id="io.github.aconsole.B4bQuotaTest",
             flags=Gio.ApplicationFlags.NON_UNIQUE,
         )
-        self.scenario = scenario
-        self.client = CoreClient("unused")
+        self.scenario: Callable[[_QuotaTestApp], Awaitable[None]] = scenario
+        self.client: CoreClient = CoreClient("unused")
         self.window: MainWindow | None = None
         self.error: Exception | None = None
 
@@ -137,11 +138,11 @@ def test_the_main_pool_is_named_by_its_days_and_api_stays_api() -> None:
 
 @pytest.mark.parametrize(("language", "expected"), [("en_US", "$6.68 / $11.25"), ("ru_RU", "$6,68 / $11,25")])
 def test_the_cursor_card_counts_its_main_pool_in_percent_and_api_in_dollars(
-    monkeypatch: pytest.MonkeyPatch, language: str, expected: str,
+    monkeypatch: pytest.MonkeyPatch,
+    language: str,
+    expected: str,
 ) -> None:
-    from aconsole.ui import i18n
-
-    monkeypatch.setattr(i18n.locale, "getlocale", lambda: (language, "UTF-8"))
+    monkeypatch.setattr(locale, "getlocale", lambda: (language, "UTF-8"))
     from aconsole.ui.views.sidebar.quota_row import QuotaRow
 
     auto = msgspec.structs.replace(_quota("5h", 87, QuotaLevel.WARN), key="auto", spent_usd=391.54, limit_usd=450.0)
@@ -155,9 +156,17 @@ def _percents(card: QuotaCard) -> str:
     return " ".join(line.percent_label.get_text() for account in card.account_lines for line in account.windows)
 
 
-def _sidebar_window(key: str, used: float, *, period_days: int | None = None) -> QuotaWindowView:
+type WindowKey = Literal["5h", "7d", "week", "month", "budget", "auto", "api"]
+
+
+def _sidebar_window(key: WindowKey, used: float, *, period_days: int | None = None) -> QuotaWindowView:
     return QuotaWindowView(
-        key=key, used_pct=used, resets_at=None, level=QuotaLevel.OK, observed_at=None, estimated=False,  # pyright: ignore[reportArgumentType]
+        key=key,
+        used_pct=used,
+        resets_at=None,
+        level=QuotaLevel.OK,
+        observed_at=None,
+        estimated=False,
         period_days=period_days,
     )
 
@@ -176,11 +185,13 @@ def _sidebar_window(key: str, used: float, *, period_days: int | None = None) ->
     ],
 )
 def test_the_sidebar_shows_every_window_of_an_account_shortest_first(
-    monkeypatch: pytest.MonkeyPatch, language: str, agent: AgentKind, windows: tuple[str, ...], expected: list[str],
+    monkeypatch: pytest.MonkeyPatch,
+    language: str,
+    agent: AgentKind,
+    windows: tuple[WindowKey, ...],
+    expected: list[str],
 ) -> None:
-    from aconsole.ui import i18n
-
-    monkeypatch.setattr(i18n.locale, "getlocale", lambda: (language, "UTF-8"))
+    monkeypatch.setattr(locale, "getlocale", lambda: (language, "UTF-8"))
     quota = tuple(_sidebar_window(key, 10.0, period_days=31 if key in {"auto", "api"} else None) for key in windows)
     account = AccountView(id=AccountId("a"), agent=agent, plan_label="Pro", quota=quota)
     line = AccountLine(account)
@@ -192,7 +203,7 @@ def test_opencode_without_go_says_so_instead_of_waiting_for_numbers() -> None:
     line = AccountLine(account)
     assert line.windows == []
     assert "Go" in (line.get_tooltip_text() or "")
-    labels = []
+    labels: list[str] = []
     child = line.get_first_child()
     while child is not None:
         labels.append(child.get_label() if isinstance(child, Gtk.Label) else "")
@@ -230,17 +241,9 @@ def _assert_quota_dialog(dialog: QuotaDialog) -> None:
     dialog_labels = _labels(child)
     assert any("76" in label for label in dialog_labels)
     assert any("97" in label and "≈" in label for label in dialog_labels)
-    assert any(
-        any(value in label for value in ("5h", "5 h", "5 ч"))
-        for label in dialog_labels
-    )
-    assert any(
-        any(value in label for value in ("7d", "7 d", "7 д"))
-        for label in dialog_labels
-    )
-    dialog_unknown = next(
-        row for row in dialog.window_rows if row.window.used_pct is None
-    )
+    assert any(any(value in label for value in ("5h", "5 h", "5 ч")) for label in dialog_labels)
+    assert any(any(value in label for value in ("7d", "7 d", "7 д")) for label in dialog_labels)
+    dialog_unknown = next(row for row in dialog.window_rows if row.window.used_pct is None)
     assert not dialog_unknown.level_bar.get_visible()
     assert dialog_unknown.get_tooltip_text()
     before_times = [row.time_label.get_text() for row in dialog.window_rows]
@@ -259,8 +262,11 @@ def _assert_summary_container(window: MainWindow) -> None:
     while child is not None:
         children.append(child)
         child = child.get_next_sibling()
-    assert children[0::2] == list(sections)
-    assert all(isinstance(item, Gtk.Separator) for item in children[1::2])
+    assert len(children) == 6
+    assert [children[0], children[3], children[5]] == list(sections)
+    assert isinstance(children[1], Gtk.Button)
+    assert isinstance(children[2], Gtk.Separator)
+    assert isinstance(children[4], Gtk.Separator)
 
 
 def test_b4b_quota_card_shows_normal_unknown_estimated_and_critical_windows() -> None:
@@ -283,7 +289,7 @@ def test_b4b_quota_card_shows_normal_unknown_estimated_and_critical_windows() ->
         assert isinstance(dialog, QuotaDialog)
         assert isinstance(dialog, Adw.Dialog)
         _assert_quota_dialog(dialog)
-        dialog.close()
+        _ = dialog.close()
 
     _run_ui(scenario)
 
@@ -304,9 +310,7 @@ def test_b4b_summary_card_combines_plan_and_quota_and_tracks_live_updates() -> N
         _assert_summary_container(window)
 
         plan = next(
-            item
-            for item in snapshot.plans
-            if item.project_id == snapshot.active_project and item.status == "active"
+            item for item in snapshot.plans if item.project_id == snapshot.active_project and item.status == "active"
         )
         assert window.plan_card.plan_id == plan.id
         assert window.plan_card.title_label.get_text() == plan.title
@@ -319,21 +323,15 @@ def test_b4b_summary_card_combines_plan_and_quota_and_tracks_live_updates() -> N
         window.quota_card.emit("clicked")
         assert window.quota_card.details_dialog is dialog
 
-        changed_plan = msgspec.structs.replace(
-            plan, title="Live Plan Update", done=plan.done + 1, updated_at=_NOW
-        )
+        changed_plan = msgspec.structs.replace(plan, title="Live Plan Update", done=plan.done + 1, updated_at=_NOW)
         account = next(item for item in accounts if item.agent is AgentKind.CLAUDE)
         changed_account = msgspec.structs.replace(
             account,
             plan_label="Team",
             quota=(_quota("5h", 88, QuotaLevel.CRITICAL), _quota("7d", 44, QuotaLevel.WARN)),
         )
-        assert app.client.store.apply(
-            EventEnvelope(seq=1, at=_NOW, event=PlanUpdated(plan=changed_plan))
-        )
-        assert app.client.store.apply(
-            EventEnvelope(seq=2, at=_NOW, event=QuotaUpdated(account=changed_account))
-        )
+        assert app.client.store.apply(EventEnvelope(seq=1, at=_NOW, event=PlanUpdated(plan=changed_plan)))
+        assert app.client.store.apply(EventEnvelope(seq=2, at=_NOW, event=QuotaUpdated(account=changed_account)))
         tab = next(item for item in snapshot.tabs if item.account_id == account.id)
         changed_tab = msgspec.structs.replace(tab, title="Live Tab Update")
         assert app.client.store.apply(
@@ -360,6 +358,6 @@ def test_b4b_summary_card_combines_plan_and_quota_and_tracks_live_updates() -> N
         assert "на " not in " ".join(_labels(dialog.content))
         dialog.account_cards[account.id].emit("clicked")
         assert not dialog.panel_revealer.get_reveal_child()
-        dialog.close()
+        _ = dialog.close()
 
     _run_ui(scenario)

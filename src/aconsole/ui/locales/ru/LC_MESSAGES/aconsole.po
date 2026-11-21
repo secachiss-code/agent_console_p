@@ -2162,6 +2162,30 @@ msgstr "Удалить план, если никто сейчас над ним 
 msgid "prefs.mcp.tool.plan_get"
 msgstr "Прочитать план или узлы, изменившиеся после заданной ревизии."
 
+msgid "prefs.mcp.tool.plan_graph"
+msgstr "Просмотреть граф плана"
+
+msgid "prefs.mcp.tool.plan_node_get"
+msgstr "Прочитать узел плана"
+
+msgid "prefs.mcp.tool.index_overview"
+msgstr "Просмотреть индекс рабочей копии"
+
+msgid "prefs.mcp.tool.index_find"
+msgstr "Найти пути и символы"
+
+msgid "prefs.mcp.tool.index_neighbors"
+msgstr "Просмотреть связанные модули"
+
+msgid "prefs.mcp.tool.index_read"
+msgstr "Прочитать фрагменты исходного кода"
+
+msgid "prefs.mcp.tool.index_task_context"
+msgstr "Прочитать контекст задачи"
+
+msgid "prefs.mcp.tool.index_lint"
+msgstr "Запустить линтер без изменения файлов"
+
 msgid "prefs.mcp.tool.plan_ready"
 msgstr "Показать доступные узлы в порядке приоритета."
 

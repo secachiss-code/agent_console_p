@@ -2150,6 +2150,30 @@ msgstr "Delete a plan if no one is working on it."
 msgid "prefs.mcp.tool.plan_get"
 msgstr "Read a plan or the nodes changed since a revision."
 
+msgid "prefs.mcp.tool.plan_graph"
+msgstr "Inspect the plan graph"
+
+msgid "prefs.mcp.tool.plan_node_get"
+msgstr "Read a plan node"
+
+msgid "prefs.mcp.tool.index_overview"
+msgstr "Browse the worktree index"
+
+msgid "prefs.mcp.tool.index_find"
+msgstr "Find paths and symbols"
+
+msgid "prefs.mcp.tool.index_neighbors"
+msgstr "Inspect related modules"
+
+msgid "prefs.mcp.tool.index_read"
+msgstr "Read source ranges"
+
+msgid "prefs.mcp.tool.index_task_context"
+msgstr "Read task context"
+
+msgid "prefs.mcp.tool.index_lint"
+msgstr "Run read-only lint checks"
+
 msgid "prefs.mcp.tool.plan_ready"
 msgstr "List claimable nodes in priority order."
 

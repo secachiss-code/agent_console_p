@@ -9,7 +9,7 @@ import gi
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
-from gi.repository import Adw, Gdk, Gio, GLib  # noqa: E402
+from gi.repository import Adw, Gdk, Gio, GLib, Gtk  # noqa: E402
 
 from aconsole.contracts.app import EmptyResult, HealthResult  # noqa: E402
 from aconsole.core.infrastructure.fake.scenarios import demo_snapshot  # noqa: E402
@@ -36,8 +36,8 @@ class _MenuTestApp(Adw.Application):
             application_id="io.github.aconsole.B2MenuTest",
             flags=Gio.ApplicationFlags.NON_UNIQUE,
         )
-        self.scenario = scenario
-        self.client = CoreClient("unused")
+        self.scenario: Callable[[_MenuTestApp], Awaitable[None]] = scenario
+        self.client: CoreClient = CoreClient("unused")
         self.window: MainWindow | None = None
         self.error: Exception | None = None
 
@@ -89,6 +89,34 @@ def _close_target(row: TabRow) -> GLib.Variant:
     raise AssertionError(message)
 
 
+def test_header_session_search_filters_and_restores_focus() -> None:
+    async def scenario(app: _MenuTestApp) -> None:
+        window, _, _ = _window(app)
+        window.present()
+        await asyncio.sleep(0.05)
+        count = window.selection.get_n_items()
+        assert count > 0
+        search = window.session_search
+        button = window.session_search_button
+        assert Gtk.test_accessible_has_property(search, Gtk.AccessibleProperty.LABEL)
+        assert Gtk.test_accessible_has_property(button, Gtk.AccessibleProperty.LABEL)
+        assert not search.get_visible()
+        button.emit("clicked")
+        assert search.get_visible()
+        focus = window.get_focus()
+        assert focus is not None
+        assert focus.is_ancestor(search)
+        search.set_text("no session matches this query")
+        assert window.selection.get_n_items() == 0
+        search.emit("stop-search")
+        assert not search.get_visible()
+        assert search.get_text() == ""
+        assert window.selection.get_n_items() == count
+        assert window.get_focus() is button
+
+    _run_ui(scenario)
+
+
 def test_b2_row_menu_rename_starts_editing_the_bound_row() -> None:
     async def scenario(app: _MenuTestApp) -> None:
         window, tabs, items = _window(app)
@@ -122,12 +150,8 @@ def test_b2_context_menu_opens_from_shift_f10() -> None:
             assert popover is not None
             assert not popover.get_visible()
 
-            assert not row.context_keys.emit(
-                "key-pressed", Gdk.KEY_a, 0, Gdk.ModifierType(0)
-            )
-            assert row.context_keys.emit(
-                "key-pressed", Gdk.KEY_F10, 0, Gdk.ModifierType.SHIFT_MASK
-            )
+            assert not row.context_keys.emit("key-pressed", Gdk.KEY_a, 0, Gdk.ModifierType(0))
+            assert row.context_keys.emit("key-pressed", Gdk.KEY_F10, 0, Gdk.ModifierType.SHIFT_MASK)
             assert row.menu_button.get_active()
             assert popover.get_visible()
         finally:
@@ -170,9 +194,7 @@ def test_b2_close_intent_is_disabled_without_handler_and_targets_bound_row(
         window.set_close_tab_handler(calls.append)
         assert action.get_enabled()
         selected_index = next(
-            index
-            for index in range(window.selection.get_n_items())
-            if window.selection.get_item(index) is items[0]
+            index for index in range(window.selection.get_n_items()) if window.selection.get_item(index) is items[0]
         )
         window.selection.set_selected(selected_index)
         assert window.selection.get_selected_item() is items[0]

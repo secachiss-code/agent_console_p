@@ -98,7 +98,7 @@ if TYPE_CHECKING:
 
 class MainWindow(Adw.ApplicationWindow):
     def __init__(self, app: Adw.Application, tabs: TabsViewModel) -> None:
-        super().__init__(application=app, title="AConsole")
+        super().__init__(application=app, title=tabs_text("tabs.project"))
         self.set_default_size(1280, 800)
         self.set_size_request(360, 360)
         self.tabs: TabsViewModel = tabs
@@ -106,7 +106,9 @@ class MainWindow(Adw.ApplicationWindow):
         self._snapshot_mode: bool = getattr(app, "snapshot_request", None) is not None
         self._init_shortcuts(app)
         self.split: Adw.OverlaySplitView = Adw.OverlaySplitView(
-            min_sidebar_width=220, max_sidebar_width=320, sidebar_width_fraction=0.25,
+            min_sidebar_width=220,
+            max_sidebar_width=320,
+            sidebar_width_fraction=0.25,
         )
         self.split.add_css_class("ac-split")
         sidebar = Adw.ToolbarView()
@@ -122,12 +124,15 @@ class MainWindow(Adw.ApplicationWindow):
         self.content_view: Adw.ToolbarView = content
         header = Adw.HeaderBar()
         self.content_header: Adw.HeaderBar = header
-        header.pack_end(Gtk.MenuButton(icon_name="open-menu-symbolic", menu_model=self._settings_menu))
+        self._pack_header_actions(header)
         self.sidebar_button: Gtk.Button = Gtk.Button(icon_name="sidebar-show-symbolic")
         self.sidebar_button.set_action_name("win.toggle-sidebar")
         header.pack_start(self.sidebar_button)
         _ = self.split.bind_property(
-            "collapsed", self.sidebar_button, "visible", GObject.BindingFlags.SYNC_CREATE,
+            "collapsed",
+            self.sidebar_button,
+            "visible",
+            GObject.BindingFlags.SYNC_CREATE,
         )
         self._install_tab_actions()
         _ = self.split.bind_property("collapsed", header, "visible", GObject.BindingFlags.SYNC_CREATE)
@@ -170,26 +175,65 @@ class MainWindow(Adw.ApplicationWindow):
         self.add_breakpoint(narrow)
 
     def _build_side_header(self) -> Adw.HeaderBar:
-        """The only title bar of a wide window: window buttons in one island, then the application name."""
         self._settings_menu: Gio.Menu = self._build_settings_menu()
         header = Adw.HeaderBar(show_start_title_buttons=False, show_end_title_buttons=False)
         self.start_controls: Gtk.WindowControls = Gtk.WindowControls(side=Gtk.PackType.START)
         self.start_island: Gtk.Box = self._island(self.start_controls)
         header.pack_start(self.start_island)
-        menu = Gtk.MenuButton(icon_name="open-menu-symbolic", menu_model=self._settings_menu)
-        menu.set_tooltip_text(setup_text("prefs.title"))
-        header.pack_end(menu)
-        # New tab lives beside the menu: the list below it is then only tabs.
+        self.session_search_button: Gtk.Button = self._search_button()
+        self._pack_header_actions(header, self.session_search_button)
         self.new_tab_button: Gtk.Button = Gtk.Button(icon_name="list-add-symbolic", action_name="win.new-tab")
         self.new_tab_button.set_tooltip_text(tabs_text("tabs.new"))
         self.new_tab_button.update_property(
-            [Gtk.AccessibleProperty.LABEL], [GObject.Value(GObject.TYPE_STRING, tabs_text("tabs.new"))],
+            [Gtk.AccessibleProperty.LABEL],
+            [GObject.Value(GObject.TYPE_STRING, tabs_text("tabs.new"))],
         )
         header.pack_end(self.new_tab_button)
-        title = Gtk.Label(label="AConsole")
-        title.add_css_class("ac-app-title")
-        header.set_title_widget(title)
+        label = tabs_text("tabs.search")
+        self.session_search: Gtk.SearchEntry = Gtk.SearchEntry(
+            placeholder_text=label,
+            width_chars=8,
+            visible=False,
+            hexpand=True,
+        )
+        self.session_search.update_property(
+            [Gtk.AccessibleProperty.LABEL],
+            [GObject.Value(GObject.TYPE_STRING, label)],
+        )
+        _ = self.session_search.connect("changed", self._session_query_changed)
+        _ = self.session_search.connect("stop-search", self._close_session_search)
+        header.set_title_widget(self.session_search)
         return header
+
+    def _pack_header_actions(self, header: Adw.HeaderBar, search: Gtk.Button | None = None) -> None:
+        header.pack_end(
+            Gtk.MenuButton(
+                icon_name="emblem-system-symbolic",
+                menu_model=self._settings_menu,
+                tooltip_text=setup_text("prefs.title"),
+            )
+        )
+        header.pack_end(self._search_button() if search is None else search)
+
+    def _search_button(self) -> Gtk.Button:
+        label = tabs_text("tabs.search")
+        button = Gtk.Button(icon_name="system-search-symbolic", tooltip_text=label)
+        button.update_property([Gtk.AccessibleProperty.LABEL], [GObject.Value(GObject.TYPE_STRING, label)])
+        _ = button.connect("clicked", self._open_session_search)
+        return button
+
+    def _open_session_search(self, _button: Gtk.Button) -> None:
+        self.split.set_show_sidebar(True)
+        self.session_search.set_visible(True)
+        _ = self.session_search.grab_focus()
+
+    def _session_query_changed(self, entry: Gtk.SearchEntry) -> None:
+        self.tabs_sidebar.set_query(entry.get_text())
+
+    def _close_session_search(self, entry: Gtk.SearchEntry) -> None:
+        entry.set_text("")
+        entry.set_visible(False)
+        _ = self.session_search_button.grab_focus()
 
     @staticmethod
     def _island(controls: Gtk.WindowControls) -> Gtk.Box:
@@ -238,10 +282,16 @@ class MainWindow(Adw.ApplicationWindow):
         self._code_font: Gtk.CssProvider | None = None
         self._code_font_css: str = ""
         self.plan_section: SummarySection = SummarySection(
-            "plan", translate("plan.card.title"), self.plan_card, ui_state,
+            "plan",
+            translate("plan.card.title"),
+            self.plan_card,
+            ui_state,
         )
         self.quota_section: SummarySection = SummarySection(
-            "limits", self.quota_card.title(), self.quota_card, ui_state,
+            "limits",
+            self.quota_card.title(),
+            self.quota_card,
+            ui_state,
         )
         self.git_section: SummarySection = SummarySection("git", translate("git.card.title"), self.git_card, ui_state)
         self.summary_card.append(self.plan_section)
@@ -263,7 +313,8 @@ class MainWindow(Adw.ApplicationWindow):
         self.terminal_stack: Gtk.Stack = Gtk.Stack()
         self.terminal_stack.set_transition_type(Gtk.StackTransitionType.NONE)
         self.empty_terminal_page: Adw.StatusPage = Adw.StatusPage(
-            title=terminal_text("terminal.empty"), icon_name="tab-new-symbolic",
+            title=terminal_text("terminal.empty"),
+            icon_name="tab-new-symbolic",
         )
         self.empty_terminal_page.add_css_class("ac-empty")
         new_tab = Gtk.Button(label=tabs_text("tabs.new"), action_name="win.new-tab", halign=Gtk.Align.CENTER)
@@ -292,15 +343,22 @@ class MainWindow(Adw.ApplicationWindow):
     def _sync_context(self) -> None:
         snapshot = self.tabs.client.store.snapshot
         selected = self.selection.get_selected_item()
-        tab = next((tab for tab in (() if snapshot is None else snapshot.tabs)
-                    if isinstance(selected, TabItem) and str(tab.id) == str(selected.tab_id)), None)
+        tab = next(
+            (
+                tab
+                for tab in (() if snapshot is None else snapshot.tabs)
+                if isinstance(selected, TabItem) and str(tab.id) == str(selected.tab_id)
+            ),
+            None,
+        )
         project_id = tab.project_id if tab is not None else (snapshot.active_project if snapshot is not None else None)
-        project = next((project for project in (() if snapshot is None else snapshot.projects)
-                        if project.id == project_id), None)
-        name = project.name if project is not None else "AConsole"
+        project = next(
+            (project for project in (() if snapshot is None else snapshot.projects) if project.id == project_id), None
+        )
+        name = project.name if project is not None else tabs_text("tabs.project")
         self.context_title.set_title(f"{tab.title} · {tab.agent.value}" if tab is not None else name)
         self.context_title.set_subtitle(" · ".join(part for part in (name, tab.branch if tab else "") if part))
-        self.set_title(f"{tab.title} — {name} — AConsole" if tab is not None else f"{name} — AConsole")
+        self.set_title(f"{tab.title} — {name}" if tab is not None else name)
         self.empty_terminal_page.set_title(terminal_text("terminal.empty" if tab is not None else "terminal.start"))
 
     def _terminal_page(self, tab_id: str) -> TerminalPage:
@@ -400,7 +458,8 @@ class MainWindow(Adw.ApplicationWindow):
         self._follow_git_project()
         critical = any(
             self._quota_level(window.used_pct) == "critical"
-            for account in self._summary_vm.accounts for window in account.quota
+            for account in self._summary_vm.accounts
+            for window in account.quota
         )
         self.quota_banner.set_revealed(critical)
         self._place_end_island(quota_critical=critical)
@@ -408,10 +467,17 @@ class MainWindow(Adw.ApplicationWindow):
     def _open_plan(self, plan_id: PlanId) -> None:
         plan = self._summary_vm.plan
         if plan is not None and plan.id == plan_id:
-            self.plan_page = PlanGraph(plan, self._close_plan, self._select_tab, self._decide_node,
-                                       on_freeze=self._freeze_plan, on_review=self._review_plan,
-                                       on_repair=self._repair_plan, on_inspect=self._inspect_plan_node,
-                                       on_index=self._open_plan_index)
+            self.plan_page = PlanGraph(
+                plan,
+                self._close_plan,
+                self._select_tab,
+                self._decide_node,
+                on_freeze=self._freeze_plan,
+                on_review=self._review_plan,
+                on_repair=self._repair_plan,
+                on_inspect=self._inspect_plan_node,
+                on_index=self._open_plan_index,
+            )
             self.plan_page.set_inbox(self._summary_vm.inbox)
             self._summary_vm.refresh_inbox()
             self._summary_vm.refresh_plan()
@@ -446,8 +512,9 @@ class MainWindow(Adw.ApplicationWindow):
         if self.plan_page is None:
             return
         if decision == "unblock" or decision == "cancel" or decision == "reject" or decision == "apply":  # noqa: PLR1714 -- narrow the validated decision literal
-            params = PlanDecideParams(plan_id=self.plan_page.plan.id, request_id=request_id,
-                                      decision=decision, note=note)
+            params = PlanDecideParams(
+                plan_id=self.plan_page.plan.id, request_id=request_id, decision=decision, note=note
+            )
             _ = spawn_task(self._review_request(params, self.plan_page))
 
     async def _review_request(self, params: PlanDecideParams, page: PlanGraph) -> None:
@@ -470,7 +537,9 @@ class MainWindow(Adw.ApplicationWindow):
         note = None if accept else translate("plan.sent_back_note")
         try:
             _ = await self.tabs.client.request(
-                "plan/setNodeStatus", SetNodeStatusParams(node_id=node_id, status=status, note=note), PlanNodeView,
+                "plan/setNodeStatus",
+                SetNodeStatusParams(node_id=node_id, status=status, note=note),
+                PlanNodeView,
             )
             if page is not None:
                 await self._summary_vm.reload_plan(page.plan)
@@ -513,8 +582,14 @@ class MainWindow(Adw.ApplicationWindow):
     ) -> None:
         snapshot = self.tabs.client.store.snapshot
         selected = self.selection.get_selected_item()
-        tab = next((item for item in (() if snapshot is None else snapshot.tabs)
-                    if isinstance(selected, TabItem) and item.id == selected.tab_id), None)
+        tab = next(
+            (
+                item
+                for item in (() if snapshot is None else snapshot.tabs)
+                if isinstance(selected, TabItem) and item.id == selected.tab_id
+            ),
+            None,
+        )
         if project is None:
             project = tab.project_id if tab is not None else (snapshot.active_project if snapshot is not None else None)
         if project is None:
@@ -543,12 +618,16 @@ class MainWindow(Adw.ApplicationWindow):
             self._select_tab(TabId(tab_id))
         snapshot = self.tabs.client.store.snapshot
         title = next(
-            (tab.title for tab in (snapshot.tabs if snapshot is not None else ()) if str(tab.id) == tab_id), "",
+            (tab.title for tab in (snapshot.tabs if snapshot is not None else ()) if str(tab.id) == tab_id),
+            "",
         )
         self.plan_page = None
         self.git_pane = None
         self.review_page = ReviewPage(
-            ReviewViewModel(self.tabs.client, TabId(tab_id)), title, self._show_selected_terminal, self._tab_error,
+            ReviewViewModel(self.tabs.client, TabId(tab_id)),
+            title,
+            self._show_selected_terminal,
+            self._tab_error,
         )
         self.content_view.set_content(self.review_page)
 
@@ -579,7 +658,10 @@ class MainWindow(Adw.ApplicationWindow):
             self.content_view.set_content(_git_alone(pane, self._show_selected_terminal))
             return
         self.review_page = ReviewPage(
-            ReviewViewModel(self.tabs.client, tab.id), tab.title, self._show_selected_terminal, self._tab_error,
+            ReviewViewModel(self.tabs.client, tab.id),
+            tab.title,
+            self._show_selected_terminal,
+            self._tab_error,
             git_pane=pane,
         )
         self.review_page.stack.set_visible_child_name("git")
@@ -675,7 +757,11 @@ class MainWindow(Adw.ApplicationWindow):
         _ = spawn_task(self._close_tab_now(tab_id, None))
 
     async def _close_tab_now(
-        self, tab_id: str, decision: Literal["keep", "remove"] | None, *, agent_confirmed: bool = False,
+        self,
+        tab_id: str,
+        decision: Literal["keep", "remove"] | None,
+        *,
+        agent_confirmed: bool = False,
     ) -> None:
         if decision is None and not agent_confirmed:
             if tab_id in self._closing_tab_dialogs or tab_id in self._checking_tab_close:
@@ -709,9 +795,15 @@ class MainWindow(Adw.ApplicationWindow):
         if result.needs_decision:
             dialog = Adw.AlertDialog(
                 heading=tabs_text("tabs.close_heading"),
-                body=tabs_text(f"tabs.reason.{result.dirty_summary}") if result.dirty_summary in {
-                    "dirty", "ahead", "ignored", "kept",
-                } else tabs_text("tabs.close_body"),
+                body=tabs_text(f"tabs.reason.{result.dirty_summary}")
+                if result.dirty_summary
+                in {
+                    "dirty",
+                    "ahead",
+                    "ignored",
+                    "kept",
+                }
+                else tabs_text("tabs.close_body"),
             )
             dialog.add_response("cancel", tabs_text("tabs.close_cancel"))
             dialog.add_response("keep", tabs_text("tabs.close_keep"))
@@ -723,9 +815,17 @@ class MainWindow(Adw.ApplicationWindow):
             dialog.present(self)
             return
         if result.closed and result.dirty_summary:
-            reason = tabs_text(f"tabs.reason.{result.dirty_summary}") if result.dirty_summary in {
-                "dirty", "ahead", "ignored", "kept",
-            } else tabs_text("tabs.close_body")
+            reason = (
+                tabs_text(f"tabs.reason.{result.dirty_summary}")
+                if result.dirty_summary
+                in {
+                    "dirty",
+                    "ahead",
+                    "ignored",
+                    "kept",
+                }
+                else tabs_text("tabs.close_body")
+            )
             self._tab_error(tabs_text("tabs.close_kept").format(reason=reason))
 
     def _stop_tab_decided(self, _dialog: Adw.AlertDialog, response: str, tab_id: str) -> None:
@@ -794,8 +894,14 @@ class MainWindow(Adw.ApplicationWindow):
             **{
                 action: self._attention(action)
                 for action in (
-                    "next-attention", "attention-next", "attention-previous", "approve", "attention-allow",
-                    "deny", "attention-deny", "attention-open",
+                    "next-attention",
+                    "attention-next",
+                    "attention-previous",
+                    "approve",
+                    "attention-allow",
+                    "deny",
+                    "attention-deny",
+                    "attention-open",
                 )
             },
         }
@@ -964,7 +1070,9 @@ class MainWindow(Adw.ApplicationWindow):
             )
             if not self._snapshot_mode and self.get_mapped() and self._approval_ready:
                 self.approval_alerts.update(
-                    snapshot.approvals, titles, window_active=self.is_active(),
+                    snapshot.approvals,
+                    titles,
+                    window_active=self.is_active(),
                     notify_when="unfocused" if self._terminal_settings is None else self._terminal_settings.notify_when,
                     active_tab_id=TabId(str(selected.tab_id)) if isinstance(selected, TabItem) else None,
                 )
@@ -1190,7 +1298,9 @@ class MainWindow(Adw.ApplicationWindow):
         if self._code_font is None:
             self._code_font = Gtk.CssProvider()
             Gtk.StyleContext.add_provider_for_display(
-                display, self._code_font, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION + 1,
+                display,
+                self._code_font,
+                Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION + 1,
             )
         self._code_font.load_from_string(css)
 
@@ -1228,8 +1338,11 @@ class MainWindow(Adw.ApplicationWindow):
 
     def _quota_level(self, value: float | None) -> str:
         settings = self._terminal_settings
-        return quota_level(value, warn=80 if settings is None else settings.quota_warn_pct,
-            critical=95 if settings is None else settings.quota_critical_pct)
+        return quota_level(
+            value,
+            warn=80 if settings is None else settings.quota_warn_pct,
+            critical=95 if settings is None else settings.quota_critical_pct,
+        )
 
     def _apply_preferences(self, settings: Settings) -> None:
         if self._terminals_disposed or settings.rev < self._settings_revision:
@@ -1245,8 +1358,11 @@ class MainWindow(Adw.ApplicationWindow):
         for page in self.terminal_pages.values():
             page.apply_settings(settings)
         if not self._snapshot_mode:
-            schemes = {"system": Adw.ColorScheme.DEFAULT, "light": Adw.ColorScheme.FORCE_LIGHT,
-                       "dark": Adw.ColorScheme.FORCE_DARK}
+            schemes = {
+                "system": Adw.ColorScheme.DEFAULT,
+                "light": Adw.ColorScheme.FORCE_LIGHT,
+                "dark": Adw.ColorScheme.FORCE_DARK,
+            }
             Adw.StyleManager.get_default().set_color_scheme(schemes[settings.theme])
         self._place_end_island(quota_critical=self.quota_banner.get_revealed())
 
@@ -1262,7 +1378,8 @@ class MainWindow(Adw.ApplicationWindow):
             return False
         project = self.preferences_vm.active_project()
         mode, dangerous = effective_policy(
-            settings.approval_policy, settings.approval_dangerous,
+            settings.approval_policy,
+            settings.approval_dangerous,
             None if project is None else project.approval_policy,
             None if project is None else project.approval_dangerous,
         )
@@ -1283,7 +1400,6 @@ def _git_alone(pane: GitPane, on_close: Callable[[], None]) -> Gtk.Box:
     heading.add_css_class("ac-plan-heading")
     back = Gtk.Button(label=review_text("git.back"))
     back.add_css_class("ac-plan-back")
-
 
     def closed(_button: Gtk.Button) -> None:
         on_close()

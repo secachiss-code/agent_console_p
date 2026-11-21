@@ -1,4 +1,4 @@
-"""The project switcher and the session search above the tab list."""
+"""The project switcher above the tab list."""
 
 from __future__ import annotations
 
@@ -33,29 +33,26 @@ class ProjectBar(Gtk.Box):
         self.projects: Gtk.DropDown = Gtk.DropDown()
         self.projects.set_tooltip_text(translate("tabs.project"))
         self.projects.update_property(
-            [Gtk.AccessibleProperty.LABEL], [GObject.Value(GObject.TYPE_STRING, translate("tabs.project"))],
+            [Gtk.AccessibleProperty.LABEL],
+            [GObject.Value(GObject.TYPE_STRING, translate("tabs.project"))],
         )
         _ = self.projects.connect("notify::selected", self._project_chosen)
-        self.search: Gtk.SearchEntry = Gtk.SearchEntry(placeholder_text=translate("tabs.search"))
-        self.search.update_property(
-            [Gtk.AccessibleProperty.LABEL], [GObject.Value(GObject.TYPE_STRING, translate("tabs.search"))],
-        )
-        _ = self.search.connect("search-changed", self._search_changed)
         project_row = Gtk.Box(spacing=6)
         self.projects.set_hexpand(True)
         project_row.append(self.projects)
         self.remove_button: Gtk.Button = Gtk.Button(
-            icon_name="list-remove-symbolic", tooltip_text=translate("tabs.project.remove"),
+            icon_name="list-remove-symbolic",
+            tooltip_text=translate("tabs.project.remove"),
         )
         self.remove_button.update_property(
-            [Gtk.AccessibleProperty.LABEL], [GObject.Value(GObject.TYPE_STRING, translate("tabs.project.remove"))],
+            [Gtk.AccessibleProperty.LABEL],
+            [GObject.Value(GObject.TYPE_STRING, translate("tabs.project.remove"))],
         )
         _ = self.remove_button.connect("clicked", self._confirm_remove)
         project_row.append(self.remove_button)
         self.append(project_row)
         self.error_label: Gtk.Label = Gtk.Label(xalign=0, wrap=True, visible=False)
         self.append(self.error_label)
-        self.append(self.search)
         store = tabs.client.store
         store.subscribe(self._on_event)
         store.subscribe_snapshot(self._on_snapshot)
@@ -83,13 +80,15 @@ class ProjectBar(Gtk.Box):
     def _update_remove(self) -> None:
         project = self._selected()
         snapshot = self._tabs.client.store.snapshot
-        has_tabs = project is not None and snapshot is not None and any(
-            tab.project_id == project.id for tab in snapshot.tabs
+        has_tabs = (
+            project is not None and snapshot is not None and any(tab.project_id == project.id for tab in snapshot.tabs)
         )
         self.remove_button.set_sensitive(project is not None and not has_tabs and not self._removing)
-        self.remove_button.set_tooltip_text(translate(
-            "tabs.project.close_tabs" if has_tabs else "tabs.project.remove",
-        ))
+        self.remove_button.set_tooltip_text(
+            translate(
+                "tabs.project.close_tabs" if has_tabs else "tabs.project.remove",
+            )
+        )
 
     def _confirm_remove(self, _button: Gtk.Button) -> None:
         project = self._selected()
@@ -140,9 +139,6 @@ class ProjectBar(Gtk.Box):
         project = self._selected()
         if project is not None:
             _ = spawn_task(self._tabs.set_active_project(project.id))
-
-    def _search_changed(self, entry: Gtk.SearchEntry) -> None:
-        self._sidebar.set_query(entry.get_text())
 
     def show_project(self, project_id: str) -> None:
         """Make a tab of ``project_id`` visible: a tab opened in another project must not vanish."""
