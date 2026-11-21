@@ -1,0 +1,4 @@
+• Open session search from the header. Use Plan, IDX and Git to switch project pages.
+• Preferences open in a dialog. Choose which CLI tools appear in limits and set the critical threshold.
+• The plan graph shows directions, tasks and recorded attempt steps. A selected node stays pinned while you explore others.
+• The limits dialog shows subscriptions and daily token usage by model. Daily series come from local Claude and Codex logs.

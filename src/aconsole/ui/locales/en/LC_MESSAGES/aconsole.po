@@ -2371,3 +2371,18 @@ msgstr "Active days · {count}"
 
 msgid "quota.total_tokens"
 msgstr "Total tokens · {total}"
+
+msgid "about.core"
+msgstr "Application and core"
+
+msgid "about.ui"
+msgstr "Interface"
+
+msgid "about.rest"
+msgstr "REST API"
+
+msgid "about.mcp"
+msgstr "MCP"
+
+msgid "about.releases"
+msgstr "Releases and downloads"

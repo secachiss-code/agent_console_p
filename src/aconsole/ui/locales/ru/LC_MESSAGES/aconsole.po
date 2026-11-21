@@ -2383,3 +2383,18 @@ msgstr "Активные дни · {count}"
 
 msgid "quota.total_tokens"
 msgstr "Всего токенов · {total}"
+
+msgid "about.core"
+msgstr "Приложение и ядро"
+
+msgid "about.ui"
+msgstr "Интерфейс"
+
+msgid "about.rest"
+msgstr "REST API"
+
+msgid "about.mcp"
+msgstr "MCP"
+
+msgid "about.releases"
+msgstr "Выпуски и загрузки"

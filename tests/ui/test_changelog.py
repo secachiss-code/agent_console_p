@@ -1,9 +1,8 @@
-"""The about dialog can read the release notes resource."""
+"""The About dialog ships release notes for both UI languages."""
 
 from aconsole.ui.changelog import release_notes
 
 
 def test_release_notes_describe_the_update() -> None:
-    notes = release_notes()
-    assert "MCP" in notes
-    assert "Версия и изменения" in notes
+    assert "Граф плана" in release_notes(lang="ru")
+    assert "The plan graph" in release_notes(lang="en")
