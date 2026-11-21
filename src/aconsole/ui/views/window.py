@@ -582,16 +582,19 @@ class MainWindow(Adw.ApplicationWindow):
     def _inspect_plan_node(self, node_id: NodeId, cursor: str | None) -> None:
         page = self.plan_page
         if page is not None:
-            _ = spawn_task(self._load_plan_node(page, node_id, cursor))
+            _ = spawn_task(self._load_plan_node(page, node_id, cursor, page.detail_request))
 
-    async def _load_plan_node(self, page: PlanGraph, node_id: NodeId, cursor: str | None) -> None:
+    async def _load_plan_node(self, page: PlanGraph, node_id: NodeId, cursor: str | None, request: int) -> None:
         params = PlanNodeDetailsParams(project_id=page.plan.project_id, node_id=node_id, cursor=cursor)
         try:
             detail = await self.tabs.client.request("plan/nodeDetails", params, PlanNodeDetailsView)
         except Exception as error:  # noqa: BLE001 -- the core refusal is displayed to the person
-            self._tab_error(str(error))
+            if page.detail_request == request:
+                page.details_failed()
+                if self.plan_page is page:
+                    self._tab_error(str(error))
             return
-        if self.plan_page is page:
+        if page.detail_request == request:
             page.set_node_details(node_id, detail)
 
     def _open_plan_index(self, path: str) -> None:
@@ -615,8 +618,8 @@ class MainWindow(Adw.ApplicationWindow):
         else:
             self._open_plan(plan.id)
             selected = page.selected_node
-            if self.plan_page is not None and selected is not None and selected in self.plan_page.node_buttons:
-                self.plan_page.node_buttons[selected].emit("clicked")
+            if self.plan_page is not None and selected is not None:
+                self.plan_page.select_node(selected)
 
     def _open_index(
         self, *, project: ProjectId | None = None, scope: str = ".", on_back: Callable[[], None] | None = None

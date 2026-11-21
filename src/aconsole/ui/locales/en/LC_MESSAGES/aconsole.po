@@ -2296,3 +2296,15 @@ msgstr "Decomposition"
 
 msgid "graph.link.related"
 msgstr "Related"
+
+msgid "graph.direction_back"
+msgstr "Back to overview"
+
+msgid "graph.open_direction"
+msgstr "Show child tasks"
+
+msgid "graph.related_nodes"
+msgstr "Related: {nodes}"
+
+msgid "graph.child_nodes"
+msgstr "Child tasks: {nodes}"

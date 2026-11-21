@@ -53,7 +53,13 @@ class Link:
 
 
 class NetworkMap(Gtk.Box):
-    def __init__(self, on_select: Callable[[str], None], *, plan_legend: bool = False) -> None:
+    def __init__(
+        self,
+        on_select: Callable[[str], None],
+        *,
+        plan_legend: bool = False,
+        on_hover: Callable[[str | None], None] | None = None,
+    ) -> None:
         super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=8)
         self._on_select: Callable[[str], None] = on_select
         self._points: tuple[Point, ...] = ()
@@ -61,6 +67,7 @@ class NetworkMap(Gtk.Box):
         self._positions: dict[str, tuple[float, float]] = {}
         self._neighbors: set[str] = set()
         self._selected: str | None = None
+        self._hovered: str | None = None
         self._zoom: float = 1
         self._updating: bool = False
         toolbar = Gtk.Box(spacing=6)
@@ -91,6 +98,18 @@ class NetworkMap(Gtk.Box):
         click = Gtk.GestureClick()
         _ = click.connect("released", self._hit)
         self._area.add_controller(click)
+        if on_hover is not None:
+            motion = Gtk.EventControllerMotion()
+
+            def moved(_motion: Gtk.EventControllerMotion, x: float, y: float) -> None:
+                on_hover(self._point_at(x, y))
+
+            def left(_motion: Gtk.EventControllerMotion) -> None:
+                on_hover(None)
+
+            _ = motion.connect("motion", moved)
+            _ = motion.connect("leave", left)
+            self._area.add_controller(motion)
         self._scroll: Gtk.ScrolledWindow = Gtk.ScrolledWindow(vexpand=True, hexpand=True)
         self._scroll.set_child(self._area)
         self.append(self._scroll)
@@ -128,6 +147,11 @@ class NetworkMap(Gtk.Box):
         }
         self._area.queue_draw()
 
+    def preview(self, node_id: str | None) -> None:
+        if self._hovered != node_id:
+            self._hovered = node_id
+            self._area.queue_draw()
+
     def _scale(self, _button: Gtk.Button, direction: int) -> None:
         self._zoom = max(0.65, min(2.5, self._zoom + 0.2 * direction))
         self._area.set_content_width(round(_WIDTH * self._zoom))
@@ -158,13 +182,16 @@ class NetworkMap(Gtk.Box):
     def _hit(self, _gesture: Gtk.GestureClick, _presses: int, x: float, y: float) -> None:
         if self._dragged:
             return
+        if (identifier := self._point_at(x, y)) is not None:
+            self._on_select(identifier)
+
+    def _point_at(self, x: float, y: float) -> str | None:
         distances = (
             (math.hypot(cx - x / self._zoom, cy - y / self._zoom), identifier)
             for identifier, (cx, cy) in self._positions.items()
         )
         distance, identifier = min(distances, default=(math.inf, ""))
-        if distance <= _CLICK_RADIUS:
-            self._on_select(identifier)
+        return identifier if distance <= _CLICK_RADIUS else None
 
     def _draw(self, _area: Gtk.DrawingArea, ctx: cairo.Context[cairo.Surface], _width: int, _height: int) -> None:
         style = self.get_style_context()
@@ -175,7 +202,7 @@ class NetworkMap(Gtk.Box):
             source, target = self._positions.get(link.source), self._positions.get(link.target)
             if source is None or target is None:
                 continue
-            active = self._selected in (link.source, link.target)
+            active = (self._hovered or self._selected) in (link.source, link.target)
             alpha = 0.85 if active else 0.32 if self._selected is None else 0.1
             color = accent if active else foreground
             ctx.set_source_rgba(color.red, color.green, color.blue, alpha)
@@ -191,11 +218,12 @@ class NetworkMap(Gtk.Box):
     def _draw_point(self, ctx: cairo.Context[cairo.Surface], point: Point) -> None:
         style = self.get_style_context()
         selected = point.id == self._selected
-        label = selected or point.id in self._neighbors or len(self._points) <= _LABELS
+        hovered = point.id == self._hovered
+        label = selected or hovered or point.id in self._neighbors or len(self._points) <= _LABELS
         _, foreground = style.lookup_color("window_fg_color")
         x, y = self._positions[point.id]
         radius = _RADIUS + (6 if point.group else 0)
-        alpha = 1 if selected else 0.78 if self._selected is None or point.id in self._neighbors else 0.4
+        alpha = 1 if selected or hovered else 0.78 if self._selected is None or point.id in self._neighbors else 0.4
         _draw_marker(style, ctx, x, y, radius, point.state, alpha, hollow=point.group and not selected)
         if label:
             text = shorten(point.label, width=24, placeholder="…")

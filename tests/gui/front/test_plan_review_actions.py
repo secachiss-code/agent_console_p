@@ -7,7 +7,8 @@ from typing import TYPE_CHECKING
 
 import msgspec
 
-from aconsole.contracts.common import NodeStatus
+from aconsole.contracts.app import PlanNodeDetailsView, PlanNodeView, SetNodeStatusParams
+from aconsole.contracts.common import NodeId, NodeStatus
 from aconsole.contracts.events import PlanUpdated
 from aconsole.contracts.ipc import EventEnvelope
 from aconsole.core.infrastructure.fake.scenarios import demo_snapshot
@@ -16,6 +17,8 @@ from aconsole.ui.views.sidebar.plan_graph import PlanGraph
 from aconsole.ui.views.window import MainWindow
 from tests.gui.front.test_b10_views import _run_ui, _until
 
+# pyright: reportPrivateUsage=false
+
 if TYPE_CHECKING:
     from aconsole.contracts.app import PlanView
     from tests.gui.front.test_b10_views import _ViewTestApp
@@ -23,13 +26,20 @@ if TYPE_CHECKING:
 
 def _review_plan() -> PlanView:
     plan = demo_snapshot().plans[0]
-    nodes = tuple(msgspec.structs.replace(node, status=NodeStatus.VERIFYING, depends_on=(),
-        evidence="Full report <passed>\n" + "long_unbroken_report_" * 40) for node in plan.nodes[:2])
+    nodes = tuple(
+        msgspec.structs.replace(
+            node,
+            status=NodeStatus.VERIFYING,
+            depends_on=(),
+            evidence="Full report <passed>\n" + "long_unbroken_report_" * 40,
+        )
+        for node in plan.nodes[:2]
+    )
     return msgspec.structs.replace(plan, nodes=nodes, total=2, done=0)
 
 
-def test_busy_nodes_do_not_disable_other_reviews_or_send_duplicate_requests() -> None:
-    async def scenario(app: _ViewTestApp) -> None:
+def test_busy_nodes_do_not_disable_other_reviews_or_send_duplicate_requests() -> None:  # noqa: PLR0915
+    async def scenario(app: _ViewTestApp) -> None:  # noqa: PLR0915
         plan = _review_plan()
         first, second = plan.nodes
         snapshot = msgspec.structs.replace(demo_snapshot(), plans=(plan,), active_project=plan.project_id)
@@ -40,28 +50,35 @@ def test_busy_nodes_do_not_disable_other_reviews_or_send_duplicate_requests() ->
         window._open_plan(plan.id)
         page = window.plan_page
         assert page is not None
-        errors = []
-        window._tab_error = errors.append
-        requests = []
-        pending = []
+        errors: list[str] = []
+
+        def tab_error(message: str) -> None:
+            errors.append(message)
+
+        window._tab_error = tab_error
+        requests: list[SetNodeStatusParams] = []
+        pending: list[asyncio.Future[PlanNodeView]] = []
         original = app.client.request
 
         async def request(method: str, params: msgspec.Struct, result_type: type[msgspec.Struct]) -> msgspec.Struct:
+            if method == "plan/nodeDetails":
+                return PlanNodeDetailsView(lines=())
             if method != "plan/setNodeStatus":
                 return await original(method, params, result_type)
+            assert isinstance(params, SetNodeStatusParams)
             requests.append(params)
-            future = asyncio.get_running_loop().create_future()
+            future: asyncio.Future[PlanNodeView] = asyncio.get_running_loop().create_future()
             pending.append(future)
             return await future
 
         app.client.request = request
-        page.set_hovered(first.id)
+        page.select_node(first.id)
         assert "Full report <passed>" in page.details_label.get_text()
         page.accept_button.emit("clicked")
         page.accept_button.emit("clicked")
         await _until(lambda: len(requests) == 1)
         assert requests[0].status is NodeStatus.DONE
-        page.set_hovered(second.id)
+        page.select_node(second.id)
         assert page.send_back_button.get_sensitive()
         page.send_back_button.emit("clicked")
         await _until(lambda: len(requests) == 2)
@@ -72,7 +89,7 @@ def test_busy_nodes_do_not_disable_other_reviews_or_send_duplicate_requests() ->
         await _until(lambda: first.id not in page._pending_decisions)
         assert not page.send_back_button.get_sensitive()
         changed = msgspec.structs.replace(plan, nodes=(done, second), done=1)
-        app.client.store.apply(EventEnvelope(seq=1, at=plan.updated_at, event=PlanUpdated(plan=changed)))
+        assert app.client.store.apply(EventEnvelope(seq=1, at=plan.updated_at, event=PlanUpdated(plan=changed)))
         assert window.plan_page is page
         pending[1].set_exception(RuntimeError("disk rejected"))
         await _until(lambda: second.id not in page._pending_decisions)
@@ -97,8 +114,8 @@ def test_late_failure_finishes_the_original_page_only() -> None:
         old = PlanGraph(plan, lambda: None, on_decide=window._decide_node)
         window.plan_page = old
         original = app.client.request
-        release = asyncio.get_running_loop().create_future()
-        started = []
+        release: asyncio.Future[PlanNodeView] = asyncio.get_running_loop().create_future()
+        started: list[msgspec.Struct] = []
 
         async def request(method: str, params: msgspec.Struct, result_type: type[msgspec.Struct]) -> msgspec.Struct:
             if method != "plan/setNodeStatus":
@@ -107,11 +124,15 @@ def test_late_failure_finishes_the_original_page_only() -> None:
             return await release
 
         app.client.request = request
-        old.set_hovered(node.id)
+        old.select_node(node.id)
         old.accept_button.emit("clicked")
+
         # Change the page before the scheduled coroutine even starts.
-        replacement = PlanGraph(plan, lambda: None, on_decide=lambda *_args: None)
-        replacement.set_hovered(node.id)
+        def ignore_decision(_node_id: NodeId, _accept: bool) -> None:  # noqa: FBT001
+            pass
+
+        replacement = PlanGraph(plan, lambda: None, on_decide=ignore_decision)
+        replacement.select_node(node.id)
         replacement.accept_button.emit("clicked")
         window.plan_page = replacement
         await _until(lambda: bool(started))
@@ -133,8 +154,9 @@ def test_accept_updates_open_graph_from_core_reply_without_waiting_for_event() -
         plan = _review_plan()
         node = plan.nodes[0]
         done_node = msgspec.structs.replace(node, status=NodeStatus.DONE)
-        fresh = msgspec.structs.replace(plan, done=1, nodes=(done_node, plan.nodes[1]),
-                                       updated_at=plan.updated_at + timedelta(seconds=1))
+        fresh = msgspec.structs.replace(
+            plan, done=1, nodes=(done_node, plan.nodes[1]), updated_at=plan.updated_at + timedelta(seconds=1)
+        )
         latest = plan
         original = app.client.request
 
@@ -157,7 +179,7 @@ def test_accept_updates_open_graph_from_core_reply_without_waiting_for_event() -
         window._open_plan(plan.id)
         page = window.plan_page
         assert page is not None
-        page.set_hovered(node.id)
+        page.select_node(node.id)
         page.accept_button.emit("clicked")
         await _until(lambda: page.plan.done == 1)
         assert window.plan_page is page

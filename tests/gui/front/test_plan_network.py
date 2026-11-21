@@ -8,7 +8,8 @@ from msgspec.structs import replace
 gi.require_version("Gtk", "4.0")
 from gi.repository import Gtk  # noqa: E402
 
-from aconsole.contracts.common import NodeStatus  # noqa: E402
+from aconsole.contracts.app import PlanNodeDetailsView  # noqa: E402
+from aconsole.contracts.common import NodeId, NodeStatus  # noqa: E402
 from aconsole.ui.views.sidebar.plan_graph import PlanGraph  # noqa: E402
 from tests.gui.front.test_b4a_plan import _demo_plan, _in_gtk_context  # noqa: E402
 
@@ -52,5 +53,41 @@ def test_plan_overview_selects_by_title_and_retains_viewport_after_update() -> N
         assert network._choices.get_selected() == 2
         assert network._positions == before
         assert network._area.get_content_width() == zoom_width
+
+    _in_gtk_context(check)
+
+
+def test_direction_restores_pinned_selection_and_keeps_detail_pages() -> None:
+    base = _demo_plan()
+    direction = replace(base.nodes[0], id=NodeId("direction"), level=0, depends_on=())
+    child = replace(base.nodes[1], parent=direction.id, depends_on=())
+    unrelated = replace(base.nodes[2], depends_on=())
+    plan = replace(base, nodes=(direction, child, unrelated))
+
+    def check() -> None:
+        requests: list[tuple[NodeId, str | None]] = []
+        page = PlanGraph(plan, lambda: None, on_inspect=lambda node, cursor: requests.append((node, cursor)))
+        page.select_node(direction.id)
+        page.set_node_details(direction.id, PlanNodeDetailsView(lines=("Objective",), cursor="more"))
+        page.set_hovered(unrelated.id)
+        page.set_node_details(unrelated.id, PlanNodeDetailsView(lines=("Unrelated response",)))
+        assert page.selected_node == direction.id
+        assert "Objective" in page.details_label.get_text()
+        assert "Unrelated response" not in page.details_label.get_text()
+        _ = page.more_details.emit("clicked")  # pyright: ignore[reportAny]
+        assert requests[-1] == (direction.id, "more")
+        page.set_node_details(direction.id, PlanNodeDetailsView(lines=("Acceptance criterion",)))
+        assert "Objective" in page.details_label.get_text()
+        assert "Acceptance criterion" in page.details_label.get_text()
+
+        overview = page._network
+        width = overview._area.get_content_width()
+        _ = page.direction_button.emit("clicked")  # pyright: ignore[reportAny]
+        assert {point.id for point in page._direction_map._points} == {direction.id, child.id}
+        page.select_node(child.id)
+        _ = page.direction_back.emit("clicked")  # pyright: ignore[reportAny]
+        assert page.selected_node == direction.id
+        assert page._maps.get_visible_child() is overview
+        assert overview._area.get_content_width() == width
 
     _in_gtk_context(check)

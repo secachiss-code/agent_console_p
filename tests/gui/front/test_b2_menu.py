@@ -160,7 +160,7 @@ def test_project_index_back_keeps_the_plan_node() -> None:
         plan = window.plan_page
         assert plan is not None
         node = plan.plan.nodes[0]
-        plan.set_hovered(node.id)
+        plan.select_node(node.id)
         plan.set_node_details(node.id, PlanNodeDetailsView(lines=("Node details",), paths=("src/**",)))
         assert plan.index_button.get_visible()
         plan.index_button.emit("clicked")

@@ -2308,3 +2308,15 @@ msgstr "Декомпозиция"
 
 msgid "graph.link.related"
 msgstr "Связь"
+
+msgid "graph.direction_back"
+msgstr "К обзору"
+
+msgid "graph.open_direction"
+msgstr "Показать задачи направления"
+
+msgid "graph.related_nodes"
+msgstr "Связанные вершины: {nodes}"
+
+msgid "graph.child_nodes"
+msgstr "Дочерние задачи: {nodes}"

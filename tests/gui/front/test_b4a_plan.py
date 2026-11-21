@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 import pytest
+
+# pyright: reportPrivateUsage=false
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -49,8 +51,9 @@ def _in_gtk_context(check: Callable[[], None]) -> None:
                 flags=Gio.ApplicationFlags.NON_UNIQUE,
             )
             self.timeout_id: int | None = None
-            self.timed_out = False
+            self.timed_out: bool = False
 
+        @override
         def do_activate(self) -> None:
             self.timeout_id = GLib.timeout_add_seconds(5, self._timeout)
             try:
@@ -58,8 +61,8 @@ def _in_gtk_context(check: Callable[[], None]) -> None:
             except BaseException as error:  # noqa: BLE001 - Preserve GTK assertion failures for the caller.
                 failures.append(error)
             finally:
-                if self.timeout_id is not None and not self.timed_out:
-                    GLib.source_remove(self.timeout_id)
+                if not self.timed_out:
+                    _ = GLib.source_remove(self.timeout_id)
                     self.timeout_id = None
                 self.quit()
 
@@ -88,6 +91,7 @@ def _run_window_probe(  # noqa: C901 - Keep lifecycle setup, timeout, and cleanu
             self.watchdog_id: int | None = None
             self.poll_id: int | None = None
 
+        @override
         def do_activate(self) -> None:
             super().do_activate()
             self.watchdog_id = GLib.timeout_add_seconds(10, self._watchdog)
@@ -106,7 +110,7 @@ def _run_window_probe(  # noqa: C901 - Keep lifecycle setup, timeout, and cleanu
             except BaseException as error:  # noqa: BLE001 - Preserve GTK assertion failures for the caller.
                 failures.append(error)
             finally:
-                _ = window.emit("close-request")
+                _ = window.emit("close-request")  # pyright: ignore[reportAny]
             return GLib.SOURCE_REMOVE
 
         def _watchdog(self) -> bool:
@@ -119,9 +123,9 @@ def _run_window_probe(  # noqa: C901 - Keep lifecycle setup, timeout, and cleanu
     app = _WindowProbeApp()
     status = run_app(lambda: app, ["aconsole-b4a-window-test"])
     if app.poll_id is not None:
-        GLib.source_remove(app.poll_id)
+        _ = GLib.source_remove(app.poll_id)
     if app.watchdog_id is not None:
-        GLib.source_remove(app.watchdog_id)
+        _ = GLib.source_remove(app.watchdog_id)
     assert status == 0
     if failures:
         raise failures[0]
@@ -243,7 +247,7 @@ def test_b4a_plan_graph_shows_all_nodes_and_emphasizes_hovered_node_neighbors() 
     _in_gtk_context(check)
 
 
-def test_b4a_plan_graph_tab_action_targets_hovered_nodes_tab() -> None:
+def test_b4a_plan_graph_tab_action_targets_selected_nodes_tab() -> None:
     import msgspec
 
     from aconsole.contracts.common import TabId
@@ -256,7 +260,7 @@ def test_b4a_plan_graph_tab_action_targets_hovered_nodes_tab() -> None:
     def check() -> None:
         opened: list[TabId] = []
         graph = PlanGraph(plan, lambda: None, opened.append)
-        graph.set_hovered(node.id)
+        graph.select_node(node.id)
         assert graph.tab_button.get_sensitive()
         graph.tab_button.emit("clicked")
         assert opened == [tab_id]
@@ -297,7 +301,9 @@ def test_b4a_window_plan_card_opens_page(running_app: str) -> None:
 
         window.plan_card.emit("clicked")
         assert window.content_view.get_content() is window.plan_page
-        window.tabs_sidebar.on_row_pressed()
+        on_row_pressed = window.tabs_sidebar.on_row_pressed
+        assert on_row_pressed is not None
+        on_row_pressed()
         assert window.content_view.get_content() is window.terminal_stack
 
     _run_window_probe(running_app, check)
@@ -345,9 +351,9 @@ def test_a_person_accepts_or_sends_back_a_step_on_verification() -> None:
         decided: list[tuple[NodeId, bool]] = []
         graph = PlanGraph(plan, lambda: None, None, lambda node, accept: decided.append((node, accept)))
         assert not graph.accept_button.get_visible()
-        graph.set_hovered(other.id)
+        graph.select_node(other.id)
         assert not graph.accept_button.get_visible()
-        graph.set_hovered(waiting.id)
+        graph.select_node(waiting.id)
         assert graph.accept_button.get_visible()
         assert graph.send_back_button.get_visible()
         # A report is shown as text, whatever it contains.
@@ -370,7 +376,7 @@ def test_without_a_decision_handler_no_step_offers_to_be_accepted() -> None:
 
     def check() -> None:
         graph = PlanGraph(plan, lambda: None)
-        graph.set_hovered(waiting.id)
+        graph.select_node(waiting.id)
         assert not graph.accept_button.get_visible()
 
     _in_gtk_context(check)
@@ -381,13 +387,13 @@ def test_heartbeat_keeps_plan_buttons_and_selection() -> None:
         plan = _demo_plan()
         graph = PlanGraph(plan, lambda: None)
         node = plan.nodes[0]
-        graph.set_hovered(node.id)
+        graph.select_node(node.id)
         buttons = dict(graph.node_buttons)
         changed = msgspec.structs.replace(node, evidence="latest evidence", priority=node.priority + 1)
         updated = msgspec.structs.replace(plan, nodes=(changed, *plan.nodes[1:]))
         assert graph.update(updated)
         assert graph.node_buttons == buttons
-        assert graph._selected == node.id
+        assert graph.selected_node == node.id
         assert "latest evidence" in graph.details_label.get_text()
         topology = msgspec.structs.replace(changed, layer=changed.layer + 1)
         assert not graph.update(msgspec.structs.replace(updated, nodes=(topology, *plan.nodes[1:])))
@@ -472,7 +478,9 @@ def test_hdag_groups_freeze_and_inbox_actions() -> None:
         assert graph.inbox_scroll.get_visible()
         row = graph.inbox_list.get_last_child()
         assert isinstance(row, Gtk.Box)
-        note = row.get_first_child().get_next_sibling()
+        first = row.get_first_child()
+        assert first is not None
+        note = first.get_next_sibling()
         assert isinstance(note, Gtk.Entry)
         actions = graph._review_actions[request.id]
         unblock = actions.get_first_child()
@@ -496,6 +504,7 @@ def test_freeze_button_calls_rpc_and_shows_frozen_phase(running_app: str) -> Non
     failures: list[BaseException] = []
 
     class _FreezeApp(AConsoleApp):
+        @override
         def do_activate(self) -> None:
             super().do_activate()
             _ = spawn_task(self._check_freeze())
