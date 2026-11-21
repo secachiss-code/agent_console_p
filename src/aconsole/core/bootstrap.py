@@ -17,6 +17,7 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
+from datetime import time as datetime_time
 from enum import Enum, auto
 from pathlib import Path
 from threading import Lock
@@ -25,7 +26,15 @@ from typing import TYPE_CHECKING, override
 import msgspec
 import uvicorn
 
-from aconsole.contracts.app import AccountView, CloseTabParams, CommandResult, HealthResult, ModelUsageView, PlanView
+from aconsole.contracts.app import (
+    AccountView,
+    AgentUsageHistoryView,
+    CloseTabParams,
+    CommandResult,
+    HealthResult,
+    PlanView,
+    UsageOverviewView,
+)
 from aconsole.contracts.common import AccountId, AgentKind, ClientRole, NodeId, PlanId, QuotaLevel, TabId
 from aconsole.contracts.errors import ErrorData, ErrorObject, MessageTooLargeDetails, error_by_name
 from aconsole.contracts.events import (
@@ -76,7 +85,15 @@ from aconsole.core.infrastructure.agents.cursor.limits import CursorLimits
 from aconsole.core.infrastructure.agents.launch import HostAgentCommands
 from aconsole.core.infrastructure.agents.live_limits import CachedAuth
 from aconsole.core.infrastructure.agents.opencode.limits import OpenCodeLimits
-from aconsole.core.infrastructure.agents.usage_log import UsageEvent, UsageLog, claude_events, codex_events
+from aconsole.core.infrastructure.agents.usage_log import (
+    UsageEvent,
+    UsageLog,
+    claude_events,
+    codex_events,
+    model_totals,
+    usage_history,
+    usage_overview,
+)
 from aconsole.core.infrastructure.codegraph.index import CodeGraphIndex
 from aconsole.core.infrastructure.codegraph.runner import ExtractorRunner
 from aconsole.core.infrastructure.direction_gate import DirectionRuntime
@@ -417,6 +434,7 @@ _CLAUDE_CONTAINER = "agent-claude"
 _CLAUDE_LOGS = ".claude/projects"
 _CODEX_LOGS = ".codex/sessions"
 _TOKEN_DAYS = 7
+_HISTORY_DAYS = 30
 _CODEX_CONTAINER = "agent-codex"
 _CODEX_POLL = "codex-poll"
 _CODEX_POLL_S = 120.0
@@ -440,24 +458,33 @@ def codex_poll_delay(body: bytes) -> float:
     return _CODEX_POLL_S if body else _CODEX_RETRY_S
 
 
-def _read_usage(log: UsageLog, since: datetime) -> tuple[tuple[ModelUsageView, ...], tuple[UsageEvent, ...]]:
-    return log.models(since), log.replies()
+def _read_usage(
+    log: UsageLog,
+    agent: AgentKind,
+    now: datetime,
+) -> tuple[AgentUsageHistoryView, tuple[UsageEvent, ...]]:
+    end = now.astimezone(UTC).date()
+    start = end - timedelta(days=_HISTORY_DAYS - 1)
+    observations = log.observations(datetime.combine(start, datetime_time.min, UTC))
+    return usage_history(agent, start, end, observations), observations
 
 
 def _apply_usage(tabs: TabService, replies: tuple[UsageEvent, ...]) -> None:
     for event in replies:
-        tabs.note_usage(TokenReply(
-            model=event.model,
-            fresh_input=event.input_tokens,
-            output=event.output_tokens,
-            cache_read=event.cache_read_tokens,
-            cache_write=event.cache_write_tokens,
-            window_size=event.window_size,
-            window_tokens=event.window_tokens,
-            primary=event.primary,
-            key=event.ledger_key or event.key,
-            session=event.session_id or "",
-        ))
+        tabs.note_usage(
+            TokenReply(
+                model=event.model,
+                fresh_input=event.input_tokens,
+                output=event.output_tokens,
+                cache_read=event.cache_read_tokens,
+                cache_write=event.cache_write_tokens,
+                window_size=event.window_size,
+                window_tokens=event.window_tokens,
+                primary=event.primary,
+                key=event.ledger_key or event.key,
+                session=event.session_id or "",
+            )
+        )
 
 
 def tokens_since(account: AccountView, now: datetime) -> datetime:
@@ -729,11 +756,14 @@ class Daemon:
         self._codex_tokens: UsageLog = UsageLog(lambda: self._log_folder(_CODEX_CONTAINER, _CODEX_LOGS), codex_events)
         self._limits_events: dict[str, asyncio.Event] = {}
         self._accounts: dict[str, AccountView] = {}
+        self._usage_histories: dict[AgentKind, AgentUsageHistoryView] = {}
+        self._usage_overview: UsageOverviewView | None = None
         self._quota_thresholds: tuple[float, float] = (80, 95)
         self._account_sent: dict[str, float] = {}
         self._claude_usage_due: asyncio.Event = asyncio.Event()
         self._notices: set[asyncio.Task[None]] = set()
         self.tabs.use_accounts(lambda: shown_accounts(self._agents_source(), tuple(self._accounts.values())))
+        self.tabs.use_usage_overview(lambda: self._usage_overview)
 
     @property
     def lock_path(self) -> Path:
@@ -1416,6 +1446,7 @@ class Daemon:
     async def _poll_claude_limits(self) -> None:
         """`/usage` is what Claude itself shows. A statusline only repeats its tab's last reply, so it is not used."""
         while True:
+            observations = await self._sample_usage(AgentKind.CLAUDE, self._claude_tokens)
             if not await self._connected(AgentKind.CLAUDE):
                 await self._limits_wait(self._claude_usage_due, _CODEX_RETRY_S)
                 continue
@@ -1423,7 +1454,7 @@ class Daemon:
                 text = await asyncio.to_thread(self._host.claude_usage, _CLAUDE_CONTAINER)
                 event = await asyncio.to_thread(self._claude_limits.on_usage, text)
                 if event is not None:
-                    event = await self._with_tokens(event, self._claude_tokens)
+                    event = await self._with_tokens(event, self._claude_tokens, observations)
                     self._account_observed(event, source="claude-usage", every_s=_CLAUDE_POLL_S)
                 elif text.strip():
                     # The card keeps showing when it last heard: the numbers look stale rather than wrong.
@@ -1436,6 +1467,7 @@ class Daemon:
         """Codex reports limits only when asked, and answers without any open tab."""
         due = self._limits_due("codex")
         while True:
+            observations = await self._sample_usage(AgentKind.CODEX, self._codex_tokens)
             if not await self._connected(AgentKind.CODEX):
                 await self._limits_wait(due, _CODEX_RETRY_S)
                 continue
@@ -1443,7 +1475,7 @@ class Daemon:
                 body = await asyncio.to_thread(self._host.codex_rate_limits, _CODEX_CONTAINER)
                 event = await self._in_worker(lambda body=body: self._codex_limits.on_rate_limits(_CODEX_POLL, body))
                 if event is not None:
-                    event = await self._with_tokens(event, self._codex_tokens)
+                    event = await self._with_tokens(event, self._codex_tokens, observations)
                     self._account_observed(event, source="codex-app-server", every_s=_CODEX_POLL_S)
                 elif body:
                     # An error reply, such as a lost login. It says why and holds no credentials.
@@ -1499,15 +1531,31 @@ class Daemon:
         home = self._host.agent_home(container)
         return None if home is None else home / logs
 
-    async def _with_tokens(self, event: QuotaUpdated, log: UsageLog) -> QuotaUpdated:
-        """The account with its tokens since the long window began. The same replies update matching tabs."""
-        since = tokens_since(event.account, datetime.now(UTC))
+    async def _sample_usage(self, agent: AgentKind, log: UsageLog) -> tuple[UsageEvent, ...] | None:
         try:
-            models, replies = await asyncio.to_thread(_read_usage, log, since)
-        except Exception:  # noqa: BLE001 -- logged; the thread keeps serving other plans
-            _LOG.exception("cannot count tokens")
+            history, observations = await asyncio.to_thread(_read_usage, log, agent, datetime.now(UTC))
+        except Exception:  # noqa: BLE001 -- the next poll retries
+            _LOG.exception("cannot count %s tokens", agent)
+            return None
+        self._usage_histories[agent] = history
+        self._usage_overview = usage_overview(
+            tuple(self._usage_histories[kind] for kind in sorted(self._usage_histories, key=lambda item: item.value))
+        )
+        return observations
+
+    async def _with_tokens(
+        self,
+        event: QuotaUpdated,
+        log: UsageLog,
+        observations: tuple[UsageEvent, ...] | None,
+    ) -> QuotaUpdated:
+        """The account with its tokens since the long window began. The same replies update matching tabs."""
+        if observations is None:
             return event
+        since = tokens_since(event.account, datetime.now(UTC))
+        replies = tuple(reply for reply in log.replies() if reply.at >= since)
         await self._in_worker(lambda: _apply_usage(self.tabs, replies))
+        models = model_totals(reply for reply in observations if reply.at >= since)
         return QuotaUpdated(account=msgspec.structs.replace(event.account, usage=models, usage_since=since))
 
     async def _connected(self, kind: AgentKind) -> bool:

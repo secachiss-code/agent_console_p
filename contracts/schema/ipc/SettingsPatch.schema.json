@@ -1,5 +1,15 @@
 {
   "$defs": {
+    "AgentKind": {
+      "enum": [
+        "claude",
+        "codex",
+        "cursor",
+        "grok",
+        "opencode"
+      ],
+      "title": "AgentKind"
+    },
     "SettingsPatch": {
       "properties": {
         "approval_dangerous": {
@@ -65,6 +75,13 @@
             "remaining",
             "used"
           ]
+        },
+        "quota_hidden_agents": {
+          "items": {
+            "$ref": "#/$defs/AgentKind"
+          },
+          "type": "array",
+          "uniqueItems": true
         },
         "quota_warn_pct": {
           "maximum": 100,

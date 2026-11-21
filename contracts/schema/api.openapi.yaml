@@ -240,6 +240,43 @@
         "title": "AgentUnavailableDetails",
         "type": "object"
       },
+      "AgentUsageHistoryView": {
+        "description": "Usage in an inclusive UTC day range. Each boundary is midnight UTC on that day.",
+        "properties": {
+          "agent": {
+            "$ref": "#/components/schemas/AgentKind"
+          },
+          "days": {
+            "items": {
+              "$ref": "#/components/schemas/DailyUsageView"
+            },
+            "type": "array"
+          },
+          "end_day": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "start_day": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "totals": {
+            "items": {
+              "$ref": "#/components/schemas/ModelUsageView"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "agent",
+          "start_day",
+          "end_day",
+          "days",
+          "totals"
+        ],
+        "title": "AgentUsageHistoryView",
+        "type": "object"
+      },
       "AppSnapshot": {
         "properties": {
           "accounts": {
@@ -296,6 +333,17 @@
               "$ref": "#/components/schemas/TabView"
             },
             "type": "array"
+          },
+          "usage_overview": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/UsageOverviewView"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
           },
           "vault_ok": {
             "type": "boolean"
@@ -1013,6 +1061,27 @@
           "stderr_tail"
         ],
         "title": "ContainerStartFailedDetails",
+        "type": "object"
+      },
+      "DailyUsageView": {
+        "description": "A day with observations, identified by midnight UTC. Missing days have unknown usage.",
+        "properties": {
+          "day": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "models": {
+            "items": {
+              "$ref": "#/components/schemas/ModelUsageView"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "day",
+          "models"
+        ],
+        "title": "DailyUsageView",
         "type": "object"
       },
       "DecideParams": {
@@ -6523,6 +6592,14 @@
               "used"
             ]
           },
+          "quota_hidden_agents": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/AgentKind"
+            },
+            "type": "array",
+            "uniqueItems": true
+          },
           "quota_warn_pct": {
             "default": 80,
             "maximum": 100,
@@ -6647,6 +6724,13 @@
               "remaining",
               "used"
             ]
+          },
+          "quota_hidden_agents": {
+            "items": {
+              "$ref": "#/components/schemas/AgentKind"
+            },
+            "type": "array",
+            "uniqueItems": true
           },
           "quota_warn_pct": {
             "maximum": 100,
@@ -7240,6 +7324,25 @@
           "incident_id"
         ],
         "title": "UnexpectedDetails",
+        "type": "object"
+      },
+      "UsageOverviewView": {
+        "properties": {
+          "active_days": {
+            "type": "integer"
+          },
+          "histories": {
+            "items": {
+              "$ref": "#/components/schemas/AgentUsageHistoryView"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "histories",
+          "active_days"
+        ],
+        "title": "UsageOverviewView",
         "type": "object"
       },
       "VaultConflictDetails": {

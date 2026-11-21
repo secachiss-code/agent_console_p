@@ -5,6 +5,7 @@ import msgspec
 from aconsole.contracts.app import (
     AccountView,
     AgentInfo,
+    AgentUsageHistoryView,
     AppliedResult,
     ApplyFixParams,
     ApprovalView,
@@ -19,6 +20,7 @@ from aconsole.contracts.app import (
     CloseTabResult,
     CommandDetail,
     CommandResult,
+    DailyUsageView,
     DecideParams,
     DiffFileParams,
     DiffFileResult,
@@ -102,6 +104,7 @@ from aconsole.contracts.app import (
     TabView,
     TerminalLaunchSpec,
     TokenTaskView,
+    UsageOverviewView,
 )
 from aconsole.contracts.errors import (
     AgentConfigUnsupportedDetails,
@@ -343,6 +346,9 @@ STRUCTS: tuple[type[msgspec.Struct], ...] = (
     GitStateUpdated,
     AccountView,
     ModelUsageView,
+    DailyUsageView,
+    AgentUsageHistoryView,
+    UsageOverviewView,
     AgentInfo,
     AppSnapshot,
     AppliedResult,

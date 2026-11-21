@@ -64,6 +64,28 @@ class ModelUsageView(msgspec.Struct, frozen=True, kw_only=True):
     cost_usd: float | None = None
 
 
+class DailyUsageView(msgspec.Struct, frozen=True, kw_only=True):
+    """A day with observations, identified by midnight UTC. Missing days have unknown usage."""
+
+    day: AwareDatetime
+    models: tuple[ModelUsageView, ...]
+
+
+class AgentUsageHistoryView(msgspec.Struct, frozen=True, kw_only=True):
+    """Usage in an inclusive UTC day range. Each boundary is midnight UTC on that day."""
+
+    agent: AgentKind
+    start_day: AwareDatetime
+    end_day: AwareDatetime
+    days: tuple[DailyUsageView, ...]
+    totals: tuple[ModelUsageView, ...]
+
+
+class UsageOverviewView(msgspec.Struct, frozen=True, kw_only=True):
+    histories: tuple[AgentUsageHistoryView, ...]
+    active_days: int
+
+
 class AccountView(msgspec.Struct, frozen=True, kw_only=True):
     id: AccountId
     agent: AgentKind
@@ -284,6 +306,7 @@ class AppSnapshot(msgspec.Struct, frozen=True, kw_only=True):
     vault_ok: bool
     setup: SetupState
     settings_rev: int
+    usage_overview: UsageOverviewView | None = None
 
 
 class PrepareImagePasteParams(msgspec.Struct, frozen=True, kw_only=True):

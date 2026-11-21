@@ -597,7 +597,12 @@ class PlanBoard:
             return self._view(candidate)
 
     def set_node_status(
-        self, node_id: str, status: str, note: str | None, *, accepted_debt: str | None = None,
+        self,
+        node_id: str,
+        status: str,
+        note: str | None,
+        *,
+        accepted_debt: str | None = None,
     ) -> PlanNodeView:
         """The user moves a node. A human holds no fence, so the node's own fence is used. A note serves as evidence."""
         if accepted_debt is not None:
@@ -655,15 +660,28 @@ class PlanBoard:
             if current.status is NodeStatus.DONE and current.evidence == evidence:
                 return next(node for node in self._view(stored).nodes if str(node.id) == node_id)
             now = self._now()
-            _ = stored.dag.transition(Move(
-                key=meta.key, to=NodeStatus.DONE, role=Role.HUMAN, at=now,
-                note=evidence, evidence=evidence,
-                fence=current.fence if current.lease_expires_at is not None else None,
-            ))
-            self._commit(stored, decision=StoredPlanDecision(
-                id=uuid4().hex[:26], request_id=None, node_id=node_id,
-                action="accept_direction_debt", note=evidence, at=now,
-            ))
+            _ = stored.dag.transition(
+                Move(
+                    key=meta.key,
+                    to=NodeStatus.DONE,
+                    role=Role.HUMAN,
+                    at=now,
+                    note=evidence,
+                    evidence=evidence,
+                    fence=current.fence if current.lease_expires_at is not None else None,
+                )
+            )
+            self._commit(
+                stored,
+                decision=StoredPlanDecision(
+                    id=uuid4().hex[:26],
+                    request_id=None,
+                    node_id=node_id,
+                    action="accept_direction_debt",
+                    note=evidence,
+                    at=now,
+                ),
+            )
             return next(node for node in self._view(stored).nodes if str(node.id) == node_id)
 
     def inbox(self, plan_id: str) -> tuple[StoredPlanChange, ...]:
@@ -1604,25 +1622,41 @@ class PlanBoard:
         else:
             nodes, edges = overview(nodes, edges)
         binding = graph_digest(
-            ctx.tab_id, "plan_graph", graph_revision, query.mode, query.anchor, query.depth,
-            tuple(sorted(set(query.edge_kinds))), query.limit,
+            ctx.tab_id,
+            "plan_graph",
+            graph_revision,
+            query.mode,
+            query.anchor,
+            query.depth,
+            tuple(sorted(set(query.edge_kinds))),
+            query.limit,
         )
         by_id = {node.node_id: node for node in nodes}
 
         def reply(start: int, end: int, cursor: str | None) -> PlanGraphView:
             visible = nodes[start:end]
             known = {node.node_id for node in visible}
-            links = edges[max(0, start - len(nodes)):max(0, end - len(nodes))]
+            links = edges[max(0, start - len(nodes)) : max(0, end - len(nodes))]
             boundary = {endpoint for edge in links for endpoint in (edge.source, edge.target)} - known
             return PlanGraphView(
-                plan_id=query.plan_id, title=title, phase=phase, revision=graph_revision, nodes=visible, edges=links,
-                boundary=tuple(by_id[node_id] for node_id in sorted(boundary)), cursor=cursor,
+                plan_id=query.plan_id,
+                title=title,
+                phase=phase,
+                revision=graph_revision,
+                nodes=visible,
+                edges=links,
+                boundary=tuple(by_id[node_id] for node_id in sorted(boundary)),
+                cursor=cursor,
             )
 
         try:
             return graph_page(
-                self._graph_secret, binding, cursor=query.cursor, limit=query.limit,
-                length=len(nodes) + len(edges), reply=reply,
+                self._graph_secret,
+                binding,
+                cursor=query.cursor,
+                limit=query.limit,
+                length=len(nodes) + len(edges),
+                reply=reply,
             )
         except GraphCursorError:
             _stop("GRAPH_CURSOR_STALE", "the cursor no longer identifies this graph view")
@@ -1649,7 +1683,11 @@ class PlanBoard:
 
         def reply(start: int, end: int, following: str | None) -> PlanNodeDetails:
             return PlanNodeDetails(
-                plan_id=plan_id, revision=detail_revision, node=node, entries=entries[start:end], cursor=following,
+                plan_id=plan_id,
+                revision=detail_revision,
+                node=node,
+                entries=entries[start:end],
+                cursor=following,
             )
 
         try:
@@ -1671,7 +1709,8 @@ class PlanBoard:
         if section == "relations":
             return tuple(
                 ("edge", edge.model_dump())
-                for edge in _plan_edges(stored) if meta.node_id in (edge.source, edge.target)
+                for edge in _plan_edges(stored)
+                if meta.node_id in (edge.source, edge.target)
             )
         if section == "artifacts":
             return tuple(
@@ -1682,8 +1721,11 @@ class PlanBoard:
             node = stored.dag.get(meta.key)
             return (
                 *((name, value) for name, value in (("note", node.note), ("evidence", node.evidence)) if value),
-                *(("review", {"id": entry.id, "kind": entry.kind, "body": entry.body, "status": entry.status})
-                  for entry in self.inbox(stored.plan_id) if entry.node_id == meta.node_id),
+                *(
+                    ("review", {"id": entry.id, "kind": entry.kind, "body": entry.body, "status": entry.status})
+                    for entry in self.inbox(stored.plan_id)
+                    if entry.node_id == meta.node_id
+                ),
             )
         return self._attempt_entries(meta.node_id)
 
@@ -1691,15 +1733,21 @@ class PlanBoard:
         if self._attempts is None:
             return ()
         return tuple(
-            ("attempt", {
-                "id": attempt.id, "number": attempt.attempt_no, "status": attempt.status,
-                "started_at": _optional_stamp(attempt.started_at), "finished_at": _optional_stamp(attempt.finished_at),
-                "verdict": attempt.compact_verdict,
-                "steps": [
-                    {"step": block.step_type, "sequence": block.seq, "hash": block.block_hash}
-                    for block in self._attempts.blocks(attempt.id)
-                ],
-            })
+            (
+                "attempt",
+                {
+                    "id": attempt.id,
+                    "number": attempt.attempt_no,
+                    "status": attempt.status,
+                    "started_at": _optional_stamp(attempt.started_at),
+                    "finished_at": _optional_stamp(attempt.finished_at),
+                    "verdict": attempt.compact_verdict,
+                    "steps": [
+                        {"step": block.step_type, "sequence": block.seq, "hash": block.block_hash}
+                        for block in self._attempts.blocks(attempt.id)
+                    ],
+                },
+            )
             for attempt in self._attempts.attempts(node_id)
         )
 
@@ -2619,8 +2667,13 @@ def _vertex(stored: _Stored, meta: _Meta) -> PlanVertex:
     node = stored.dag.get(meta.key)
     parent = stored.meta.get(meta.parent or "")
     return PlanVertex(
-        node_id=meta.node_id, key=meta.key, title=meta.title, status=node.status.value,
-        level=node.level, ready=_execution_ready(stored, meta), pipeline=node.pipeline,
+        node_id=meta.node_id,
+        key=meta.key,
+        title=meta.title,
+        status=node.status.value,
+        level=node.level,
+        ready=_execution_ready(stored, meta),
+        pipeline=node.pipeline,
         parent=None if parent is None else parent.node_id,
     )
 
@@ -2642,10 +2695,16 @@ def _plan_edges(stored: _Stored) -> tuple[PlanEdge, ...]:
 def _node_contract(stored: _Stored, meta: _Meta) -> tuple[tuple[str, object], ...]:
     node = stored.dag.get(meta.key)
     fields: tuple[tuple[str, object], ...] = (
-        ("objective", meta.objective), ("owner", meta.owner), ("boundaries", meta.boundaries),
-        ("output_format", meta.output_format), ("test_cmd", meta.test_cmd), ("invariants", node.invariants),
-        ("gate_profile", node.gate_profile), ("review_required", node.review_required),
-        ("contract_sha256", meta.contract_sha256), ("contract_error", _profile_error(stored, meta)),
+        ("objective", meta.objective),
+        ("owner", meta.owner),
+        ("boundaries", meta.boundaries),
+        ("output_format", meta.output_format),
+        ("test_cmd", meta.test_cmd),
+        ("invariants", node.invariants),
+        ("gate_profile", node.gate_profile),
+        ("review_required", node.review_required),
+        ("contract_sha256", meta.contract_sha256),
+        ("contract_error", _profile_error(stored, meta)),
         ("max_attempts", meta.max_attempts),
     )
     return (
@@ -2828,7 +2887,10 @@ _CODES: dict[str, int] = {
 }
 
 _HINTS: dict[str, str] = {
-    "NODE_CONTRACT": "Freeze draft plans. For a profile error, read plan_get contract_error and repair the profile",
+    "NODE_CONTRACT": (
+        "Freeze draft plans. A profile error requires a repair based on plan_get contract_error, "
+        "because unblocking does not repair the profile."
+    ),
     "RESPONSE_TOO_LARGE": "use concise output, a revision, or a narrower query; no answer was truncated",
     "GRAPH_QUERY_INVALID": "pass the ID of the center vertex as anchor",
     "GRAPH_CURSOR_STALE": "repeat the original read without a cursor",

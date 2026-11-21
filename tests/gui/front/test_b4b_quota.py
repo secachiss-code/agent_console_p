@@ -255,8 +255,8 @@ def _assert_summary_container(window: MainWindow) -> None:
     summary = window.summary_card
     assert isinstance(summary, Gtk.Box)
     assert summary.get_visible()
-    assert summary.get_first_child() is window.quota_section
-    assert window.quota_section.body is window.quota_card
+    assert summary.get_first_child() is window.quota_card
+    assert not window.quota_settings_button.get_visible()
     navigation = summary.get_last_child()
     assert isinstance(navigation, Gtk.Box)
     assert navigation.get_orientation() == Gtk.Orientation.HORIZONTAL

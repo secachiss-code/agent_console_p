@@ -5,7 +5,7 @@ from typing import Annotated, Literal
 import msgspec
 from msgspec import UNSET, Meta, UnsetType
 
-from aconsole.contracts.common import Percent
+from aconsole.contracts.common import AgentKind, Percent
 
 
 def _languages() -> frozenset[str]:
@@ -34,6 +34,7 @@ class Settings(msgspec.Struct, frozen=True, kw_only=True):
     codegraph_languages: frozenset[str] = msgspec.field(default_factory=_languages)
     setup_completed: bool = False
     quota_display: Literal["used", "remaining"] = "used"
+    quota_hidden_agents: frozenset[AgentKind] = frozenset()
 
 
 class SettingsPatch(msgspec.Struct, frozen=True, kw_only=True):
@@ -56,6 +57,7 @@ class SettingsPatch(msgspec.Struct, frozen=True, kw_only=True):
     codegraph_languages: frozenset[str] | UnsetType = UNSET
     setup_completed: bool | UnsetType = UNSET
     quota_display: Literal["used", "remaining"] | UnsetType = UNSET
+    quota_hidden_agents: frozenset[AgentKind] | UnsetType = UNSET
 
 
 def _keep[T](incoming: T | UnsetType, current: T) -> T:
@@ -87,6 +89,7 @@ def commit_settings(current: Settings, patch: SettingsPatch) -> Settings:
         codegraph_languages=_keep(patch.codegraph_languages, current.codegraph_languages),
         setup_completed=_keep(patch.setup_completed, current.setup_completed),
         quota_display=_keep(patch.quota_display, current.quota_display),
+        quota_hidden_agents=_keep(patch.quota_hidden_agents, current.quota_hidden_agents),
     )
     if merged.quota_warn_pct > merged.quota_critical_pct:
         message = "quota warning threshold exceeds critical threshold"
