@@ -2296,3 +2296,15 @@ msgstr "Ошибка проверки"
 
 msgid "graph.lint.stale"
 msgstr "Исходник изменился"
+
+msgid "graph.legend"
+msgstr "Легенда"
+
+msgid "graph.link.depends_on"
+msgstr "Зависимость"
+
+msgid "graph.link.decomposes"
+msgstr "Декомпозиция"
+
+msgid "graph.link.related"
+msgstr "Связь"

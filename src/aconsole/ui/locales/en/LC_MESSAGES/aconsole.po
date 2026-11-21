@@ -2284,3 +2284,15 @@ msgstr "Check failed"
 
 msgid "graph.lint.stale"
 msgstr "Source changed"
+
+msgid "graph.legend"
+msgstr "Legend"
+
+msgid "graph.link.depends_on"
+msgstr "Dependency"
+
+msgid "graph.link.decomposes"
+msgstr "Decomposition"
+
+msgid "graph.link.related"
+msgstr "Related"
