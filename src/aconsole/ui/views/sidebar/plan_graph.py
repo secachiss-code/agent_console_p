@@ -80,12 +80,10 @@ class PlanGraph(Gtk.Box):
         """Update state without replacing buttons, scroll or focus when the graph geometry is unchanged."""
 
         def geometry(node: PlanNodeView) -> tuple[object, ...]:
-            return node.id, node.key, node.title, node.layer, node.depends_on, node.level, node.parent
+            return node.id, node.key, node.title, node.layer, node.depends_on, node.level, node.parent, node.pipeline
 
         nodes = {node.id: node for node in shown_nodes(plan.nodes)}
-        if plan.id != self.plan.id or tuple(map(geometry, nodes.values())) != tuple(
-            map(geometry, self._nodes.values())
-        ):
+        if plan.id != self.plan.id or tuple(map(geometry, plan.nodes)) != tuple(map(geometry, self.plan.nodes)):
             return False
         for key, node in nodes.items():
             button = self.node_buttons[key]
@@ -144,8 +142,10 @@ class PlanGraph(Gtk.Box):
             self._on_repair is not None
             and self.plan.phase == "frozen"
             and any(node.level == 0 for node in self.plan.nodes)
-            and all(node.status in {NodeStatus.PENDING, NodeStatus.BLOCKED}
-                    and node.tab_id is None and node.attempt_no == 0 for node in self.plan.nodes)
+            and all(
+                node.status in {NodeStatus.PENDING, NodeStatus.BLOCKED} and node.tab_id is None and node.attempt_no == 0
+                for node in self.plan.nodes
+            )
         )
 
     def _repair(self, _button: Gtk.Button) -> None:

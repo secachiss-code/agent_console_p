@@ -11,6 +11,7 @@ from aconsole.core.infrastructure.paths import runtime_cache_path
 from aconsole.core.infrastructure.persistence import engine as engine_module
 from aconsole.core.infrastructure.persistence.cache.schema import CACHE_SCHEMA, ast_skeleton_cache, node_scratchpad
 from aconsole.core.infrastructure.persistence.cache.store import CacheStore, StaleScratchFenceError
+from aconsole.core.infrastructure.pipeline import PipelineCache
 
 
 def _scratch(fence: int = 1, tab: str = "t") -> dict[str, str | int | None]:
@@ -198,3 +199,12 @@ def test_skeleton_cache_separates_extractors_and_changed_interfaces(tmp_path: Pa
             assert connection.scalar(select(func.count()).select_from(ast_skeleton_cache)) == 4
     finally:
         probe.dispose()
+
+
+def test_generation_mark_transfers_onto_a_new_session(tmp_path: Path) -> None:
+    store = CacheStore.open(tmp_path / "cache.db")
+    cache = PipelineCache(store)
+    cache.generation_mark("tab", 2, "a" * 64)
+    assert cache.generation_seen("tab", 2, "a" * 64)
+    assert not cache.generation_seen("tab", 2, "b" * 64)
+    store.close()

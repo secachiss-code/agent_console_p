@@ -13,6 +13,8 @@ from aconsole.core.domain.gate_profile import micro_commands
 from aconsole.core.domain.plan_admission import AppliedChange, PlanTopology, TopologyContract, validate_contract
 from aconsole.core.domain.vault_sync import Note, resolve_ref
 
+_MAX_SCOPE_PATHS = 100
+
 
 class ContractInput(Protocol):
     @property
@@ -322,5 +324,53 @@ def repair_gate_profiles(plan: StoredPlan, profiles: Mapping[str, dict[str, obje
         nodes=tuple(
             replace(node, baseline_children=original.baseline_children)
             for node, original in zip(frozen.nodes, plan.nodes, strict=True)
+        ),
+    )
+
+
+def repair_plan_paths(
+    plan: StoredPlan,
+    paths: Mapping[str, tuple[str, ...]],
+    expected: Mapping[str, str],
+    *,
+    at: datetime,
+) -> StoredPlan:
+    """Explicitly revise open frozen scopes; completed contracts and execution history stay intact."""
+    if plan.topology is None or plan.topology.phase != "frozen":
+        raise DomainError(code=4011, name="PLAN_FROZEN", retryable=False)
+    by_key = {node.key: node for node in plan.nodes}
+    if not paths or paths.keys() != expected.keys() or paths.keys() - by_key.keys():
+        raise DomainError(code=4013, name="NODE_CONTRACT", retryable=False)
+    if any(node.lease_id is not None for node in plan.nodes):
+        raise DomainError(code=4006, name="LEASE_HELD", retryable=True)
+    for key, offered in paths.items():
+        node = by_key[key]
+        if node.status not in {"pending", "blocked", "failed"} or node.contract_sha256 != expected[key]:
+            raise DomainError(code=4013, name="NODE_CONTRACT", retryable=False, extra=(key,))
+        if not offered or len(offered) > _MAX_SCOPE_PATHS:
+            raise DomainError(code=4013, name="NODE_CONTRACT", retryable=False, extra=(key,))
+    candidate = replace(
+        plan, nodes=tuple(replace(node, paths=paths[node.key]) if node.key in paths else node for node in plan.nodes)
+    )
+    if candidate == plan:
+        return plan
+    frozen = freeze_plan(
+        replace(candidate, topology=replace(plan.topology, phase="draft")),
+        {node.key: node.blast_radius for node in plan.nodes if node.blast_radius is not None},
+        at=at,
+        graph_present=False,
+    )
+    return replace(
+        frozen,
+        topology=replace(
+            topology_for(frozen),
+            frozen_at=plan.topology.frozen_at,
+            baseline_nodes=plan.topology.baseline_nodes,
+            baseline_children=plan.topology.baseline_children,
+            gross_added=plan.topology.gross_added,
+        ),
+        nodes=tuple(
+            replace(node, baseline_children=old.baseline_children)
+            for node, old in zip(frozen.nodes, plan.nodes, strict=True)
         ),
     )

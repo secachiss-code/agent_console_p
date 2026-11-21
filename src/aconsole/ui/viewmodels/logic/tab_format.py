@@ -7,6 +7,7 @@ from aconsole.contracts.app import AccountView, AgentInfo, TabView
 from aconsole.contracts.common import TabStatus
 from aconsole.ui.i18n import format_number
 from aconsole.ui.viewmodels.logic.approval_modes import NO_HOOKS_TAB
+from aconsole.ui.viewmodels.logic.quota_fmt import format_tokens
 
 _CENT = 0.01
 _SYMBOLS = {
@@ -36,6 +37,19 @@ class TabPresentation:
     hooks_note: str = ""
 
 
+def token_summary(tab: TabView) -> str:
+    """The open model's window and the tab's spent tokens. An empty string when the CLI has not reported any."""
+    current = next((task for task in tab.token_tasks if task.open), None)
+    parts: list[str] = []
+    if current is not None:
+        parts.append(current.model)
+        if current.window_pct is not None:
+            parts.append(f"{format_number(current.window_pct, 0)}%")
+    if tab.token_spent:
+        parts.append(format_tokens(tab.token_spent))
+    return " · ".join(parts)
+
+
 def session_cost(tab: TabView) -> str:
     """What the session has cost at API prices, as the agent counts it. Nothing below a cent, nothing unknown."""
     cost = tab.session_cost_usd
@@ -43,7 +57,10 @@ def session_cost(tab: TabView) -> str:
 
 
 def format_tab(
-    tab: TabView, _accounts: tuple[AccountView, ...], now: datetime, agents: tuple[AgentInfo, ...] = (),
+    tab: TabView,
+    _accounts: tuple[AccountView, ...],
+    now: datetime,
+    agents: tuple[AgentInfo, ...] = (),
 ) -> TabPresentation:
     """Convert a tab snapshot into the visible row fields."""
     section_title = tab.work_session_title or tab.agent.value.upper()
@@ -54,14 +71,17 @@ def format_tab(
         ),
         section_title=section_title,
         title=tab.title,
-        subtitle=" · ".join(value for value in (tab.branch, tab.plan_node_title, session_cost(tab)) if value),
+        subtitle=" · ".join(
+            value for value in (tab.branch, tab.plan_node_title, token_summary(tab), session_cost(tab)) if value
+        ),
         detail=tab.last_message or "",
         status_symbol=_SYMBOLS[tab.status],
         spinning=tab.status is TabStatus.WORKING,
         attention=tab.attention,
         waiting_minutes=(
             max(0, int((now - tab.status_since).total_seconds()) // 60)
-            if tab.status in (TabStatus.WAITING_APPROVAL, TabStatus.WAITING_INPUT) else None
+            if tab.status in (TabStatus.WAITING_APPROVAL, TabStatus.WAITING_INPUT)
+            else None
         ),
         status_note="tabs.status.answer_in_terminal" if tab.status_detail == "ANSWER_IN_TERMINAL" else "",
         hooks_note=NO_HOOKS_TAB if agent is not None and "hooks" not in agent.capabilities else "",

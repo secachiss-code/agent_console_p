@@ -218,6 +218,19 @@ def test_b2_tab_format_unknown_account_does_not_use_another_accounts_plan() -> N
     assert presentation.section_title == "CLAUDE"
 
 
+def test_the_subtitle_shows_the_open_model_window_and_the_tab_spend() -> None:
+    from aconsole.contracts.app import TokenTaskView
+    from aconsole.ui.viewmodels.logic.tab_format import format_tab
+
+    tab = msgspec.structs.replace(
+        _demo_tab(),
+        token_spent=128_000,
+        token_tasks=(TokenTaskView(model="sonnet", spent_tokens=128_000, window_pct=42, open=True),),
+    )
+    subtitle = format_tab(tab, (), NOW).subtitle
+    assert "sonnet · 42% · 128.0K" in subtitle or "sonnet · 42% · 128,0K" in subtitle
+
+
 def test_a_wait_without_a_card_names_the_terminal() -> None:
     from aconsole.ui.viewmodels.logic.tab_format import format_tab
 

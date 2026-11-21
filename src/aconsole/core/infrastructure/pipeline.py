@@ -188,6 +188,27 @@ class PipelineCache:
             ],
         )
 
+    def generation_seen(self, tab_id: str, generation: int, prefix_sha256: str) -> bool:
+        row = self.cache.get(
+            session_file_tracker,
+            {"tab_id": tab_id, "agent_session_id": f"gen:{generation}", "file_path": "generation"},
+        )
+        return row is not None and row["file_sha256"] == prefix_sha256
+
+    def generation_mark(self, tab_id: str, generation: int, prefix_sha256: str) -> None:
+        self.cache.put(
+            session_file_tracker,
+            [
+                {
+                    "tab_id": tab_id,
+                    "agent_session_id": f"gen:{generation}",
+                    "file_path": "generation",
+                    "file_sha256": prefix_sha256,
+                    "turn_number": generation,
+                }
+            ],
+        )
+
     def record(self, contract: PipelineContract, actor: PipelineActor, state: PipelineState) -> None:
         self.cache.put(
             node_scratchpad,

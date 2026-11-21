@@ -328,6 +328,9 @@ class KnowledgeService:
             params.goal,
             None if params.plan_id is None else str(params.plan_id),
             params.nodes,
+            repair_paths=params.repair_paths,
+            repair_contracts=params.repair_contracts,
+            repair_note=params.repair_note,
             repair_profiles=None
             if params.repair_gate_profiles is None
             else {

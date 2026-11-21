@@ -1,0 +1,51 @@
+{
+  "$defs": {
+    "TokenTaskView": {
+      "description": "One model stretch inside a tab. The open task owns the context window.",
+      "properties": {
+        "cost_usd": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "model": {
+          "type": "string"
+        },
+        "open": {
+          "default": false,
+          "type": "boolean"
+        },
+        "spent_tokens": {
+          "type": "integer"
+        },
+        "window_pct": {
+          "anyOf": [
+            {
+              "maximum": 100,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "model",
+        "spent_tokens"
+      ],
+      "title": "TokenTaskView",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/TokenTaskView",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

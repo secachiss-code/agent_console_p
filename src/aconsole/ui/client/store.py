@@ -6,7 +6,7 @@ from typing import final
 
 import msgspec
 
-from aconsole.contracts.app import AppSnapshot
+from aconsole.contracts.app import AppSnapshot, PlanView
 from aconsole.contracts.events import (
     AgentsChanged,
     ApprovalRequested,
@@ -130,6 +130,19 @@ class CoreStore:
         self._notify_snapshot()
         self._notify_connection()
 
+    def update_plan(self, plan: PlanView) -> None:
+        """Reconcile an authoritative RPC result without consuming an event sequence number."""
+        snapshot = self.snapshot
+        if snapshot is None:
+            return
+        current = next((item for item in snapshot.plans if item.id == plan.id), None)
+        # A late response must not resurrect a removed plan or overwrite a newer event.
+        if current is None or current.updated_at > plan.updated_at or current == plan:
+            return
+        event = PlanUpdated(plan=plan)
+        self.snapshot = _resources(snapshot, event)
+        self._notify(event)
+
     def apply(self, envelope: EventEnvelope) -> bool:
         """Apply one event. False means the UI must snapshot again."""
         self.event_types.add(event_name(envelope.event))
@@ -217,6 +230,9 @@ def _resources(snapshot: AppSnapshot, event: QuotaUpdated | PlanUpdated) -> AppS
     if isinstance(event, QuotaUpdated):
         accounts = _put(snapshot.accounts, event.account, lambda item: item.id)
         return msgspec.structs.replace(snapshot, accounts=accounts)
+    current = next((plan for plan in snapshot.plans if plan.id == event.plan.id), None)
+    if current is not None and current.updated_at > event.plan.updated_at:
+        return snapshot
     plans = _put(snapshot.plans, event.plan, lambda item: item.id)
     return msgspec.structs.replace(snapshot, plans=plans)
 

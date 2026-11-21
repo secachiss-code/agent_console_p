@@ -95,6 +95,7 @@ from aconsole.contracts.app import (
     TabIdParams,
     TabView,
     TerminalLaunchSpec,
+    TokenTaskView,
 )
 from aconsole.contracts.errors import (
     AgentConfigUnsupportedDetails,
@@ -423,6 +424,7 @@ STRUCTS: tuple[type[msgspec.Struct], ...] = (
     SubscribeResult,
     TabIdParams,
     TabView,
+    TokenTaskView,
     PrepareImagePasteParams,
     PreparedImagePaste,
     TerminalLaunchSpec,

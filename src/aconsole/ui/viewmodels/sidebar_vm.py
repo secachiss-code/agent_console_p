@@ -15,6 +15,7 @@ class SidebarSummaryViewModel:
         self.inbox: tuple[PlanInboxEntry, ...] = ()
         self.inbox_error: str | None = None
         self._inbox_task: asyncio.Task[None] | None = None
+        self._plan_task: asyncio.Task[None] | None = None
         self._requested_plan: PlanView | None = None
         self.plan: PlanView | None = None
         self.accounts: tuple[AccountView, ...] = ()
@@ -54,6 +55,27 @@ class SidebarSummaryViewModel:
         self.tabs = snapshot.tabs if snapshot is not None else ()
         if self.on_changed is not None:
             self.on_changed()
+
+    def refresh_plan(self) -> None:
+        """Opening a graph reconciles its cached snapshot with the core."""
+        if self.plan is None or self._plan_task is not None:
+            return
+        self._plan_task = asyncio.get_running_loop().create_task(self._load_plan(self.plan))
+
+    async def _load_plan(self, plan: PlanView) -> None:
+        try:
+            await self.reload_plan(plan)
+        except Exception as error:  # noqa: BLE001 -- keep stale data visible with an explicit refresh error
+            if self.plan is not None and self.plan.id == plan.id:
+                self.inbox_error = str(error)
+                if self.on_changed is not None:
+                    self.on_changed()
+        finally:
+            self._plan_task = None
+
+    async def reload_plan(self, plan: PlanView) -> None:
+        result = await self._client.request("plan/get", PlanIdParams(plan_id=plan.id), PlanView)
+        self._client.store.update_plan(result)
 
     def refresh_inbox(self) -> None:
         self._requested_plan = None

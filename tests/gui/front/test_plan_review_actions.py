@@ -122,3 +122,48 @@ def test_late_failure_finishes_the_original_page_only() -> None:
         await app.client.close()
 
     _run_ui(scenario)
+
+
+def test_accept_updates_open_graph_from_core_reply_without_waiting_for_event() -> None:
+    async def scenario(app: _ViewTestApp) -> None:
+        from datetime import timedelta
+
+        from aconsole.contracts.app import PlanInboxResult
+
+        plan = _review_plan()
+        node = plan.nodes[0]
+        done_node = msgspec.structs.replace(node, status=NodeStatus.DONE)
+        fresh = msgspec.structs.replace(plan, done=1, nodes=(done_node, plan.nodes[1]),
+                                       updated_at=plan.updated_at + timedelta(seconds=1))
+        latest = plan
+        original = app.client.request
+
+        async def request(method: str, params: msgspec.Struct, result_type: type[msgspec.Struct]) -> msgspec.Struct:
+            nonlocal latest
+            if method == "plan/get":
+                return latest
+            if method == "plan/inbox":
+                return PlanInboxResult(entries=())
+            if method == "plan/setNodeStatus":
+                latest = fresh
+                return done_node
+            return await original(method, params, result_type)
+
+        app.client.request = request
+        app.client.store.apply_snapshot(msgspec.structs.replace(demo_snapshot(), plans=(plan,)), 0)
+        window = MainWindow(app, TabsViewModel(app.client))
+        app.window = window
+        window.present()
+        window._open_plan(plan.id)
+        page = window.plan_page
+        assert page is not None
+        page.set_hovered(node.id)
+        page.accept_button.emit("clicked")
+        await _until(lambda: page.plan.done == 1)
+        assert window.plan_page is page
+        assert page._nodes[node.id].status is NodeStatus.DONE
+        assert page.node_buttons[node.id].has_css_class("ac-plan-done")
+        assert app.client.store.seq == 0, "RPC reconciliation must not invent an event sequence"
+        await app.client.close()
+
+    _run_ui(scenario)

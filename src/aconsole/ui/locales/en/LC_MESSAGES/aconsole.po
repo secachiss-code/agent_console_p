@@ -2,6 +2,12 @@
 msgid ""
 msgstr "Project-Id-Version: AConsole 0.1.2\nLanguage: en\nContent-Type: text/plain; charset=UTF-8\nPlural-Forms: nplurals=2; plural=(n != 1);\n"
 
+msgid "about.menu"
+msgstr "Version and changes"
+
+msgid "about.title"
+msgstr "Version and changes"
+
 msgid "approvals.alert.open"
 msgstr "Open"
 

@@ -10,7 +10,7 @@ import json
 import logging
 import os
 from collections.abc import Callable, Iterable
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import datetime
 from pathlib import Path
 from typing import Final, final
@@ -36,6 +36,11 @@ class UsageEvent:
     output_tokens: int
     cache_read_tokens: int
     cache_write_tokens: int
+    session_id: str | None = None
+    window_size: int | None = None
+    window_tokens: int | None = None
+    primary: bool = True
+    ledger_key: str | None = None
 
 
 _CHUNK_BYTES: Final = 64 * 1024
@@ -45,12 +50,14 @@ _MAX_LINE_BYTES: Final = 2 * 1024 * 1024
 class _TokenInfo(msgspec.Struct):
     total_token_usage: dict[str, object] | None = None
     last_token_usage: dict[str, object] | None = None
+    model_context_window: int | None = None
 
 
 class _CodexPayload(msgspec.Struct):
     type: str = ""
     model: str | None = None
     info: _TokenInfo | None = None
+    session_id: str | None = None
 
 
 class _CodexLine(msgspec.Struct):
@@ -60,7 +67,7 @@ class _CodexLine(msgspec.Struct):
 
 
 def _codex_line(line: bytes) -> _CodexLine | None:
-    if b'"turn_context"' not in line and b'"token_count"' not in line:
+    if b'"turn_context"' not in line and b'"token_count"' not in line and b'"session_meta"' not in line:
         return None
     try:
         return msgspec.json.decode(line, type=_CodexLine)
@@ -74,18 +81,25 @@ class _UsageParser:
         self.codex = codex
         self.model = _UNKNOWN_MODEL
         self.total: object = None
+        self.session_id: str | None = None
+        self.primary = True
 
     def feed(self, line: bytes) -> UsageEvent | None:
         if not self.codex:
             return _claude_event(_line(line)) if b'"usage"' in line and b'"assistant"' in line else None
         return self._codex(line)
 
-    def _codex(self, line: bytes) -> UsageEvent | None:
+    def _codex(self, line: bytes) -> UsageEvent | None:  # noqa: PLR0911 -- one return per record kind
         document = _codex_line(line)
         if document is None:
             return None
         payload = document.payload
         if payload is None:
+            return None
+        if document.type == "session_meta":
+            if payload.session_id:
+                self.session_id = payload.session_id[:_MODEL_CHARS]
+            self.primary = b'"thread_source":"subagent"' not in line and b'"thread_source": "subagent"' not in line
             return None
         if document.type == "turn_context":
             if payload.model:
@@ -98,14 +112,22 @@ class _UsageParser:
         if at is None or info.total_token_usage == self.total:
             return None
         self.total = info.total_token_usage
-        return _codex_event(at, self.model, info.last_token_usage)
+        return _codex_event(
+            at,
+            self.model,
+            info.last_token_usage,
+            session_id=self.session_id,
+            window_size=info.model_context_window,
+            primary=self.primary,
+            total=info.total_token_usage,
+        )
 
     def preview(self, line: bytes) -> UsageEvent | None:
-        model, total = self.model, self.total
+        model, total, session_id, primary = self.model, self.total, self.session_id, self.primary
         try:
             return self.feed(line)
         finally:
-            self.model, self.total = model, total
+            self.model, self.total, self.session_id, self.primary = model, total, session_id, primary
 
 
 @final
@@ -117,6 +139,7 @@ class _UsageCursor:
         self.tail = b""
         self.discarding = False
         self.events: list[UsageEvent] = []
+        self.session_id: str | None = None
 
     def append(self, data: bytes) -> None:
         parts = (self.tail + data).split(b"\n")
@@ -131,6 +154,8 @@ class _UsageCursor:
             if len(line) <= _MAX_LINE_BYTES:
                 event = self.parser.feed(line)
                 if event is not None:
+                    if self.session_id and event.session_id is None:
+                        event = replace(event, session_id=self.session_id)
                     self.events.append(event)
         if len(self.tail) > _MAX_LINE_BYTES:
             self.tail = b""
@@ -171,6 +196,10 @@ class UsageLog:
         self._files = files
         return _totals(events)
 
+    def replies(self) -> tuple[UsageEvent, ...]:
+        """Events from the last ``models`` pass. Claude's session id is the transcript file name."""
+        return tuple(event for cursor in self._files.values() for event in cursor.events)
+
     def _current(self, path: Path, since: datetime) -> _UsageCursor | None:
         try:
             status = path.stat()
@@ -180,10 +209,18 @@ class UsageLog:
             cursor = self._files.get(path)
             if cursor is not None and cursor.stamp == stamp:
                 cursor.events = [event for event in cursor.events if event.at >= since]
+                if self._read is claude_events:
+                    cursor.session_id = path.stem
                 return cursor
-            if (cursor is None or cursor.stamp is None or cursor.stamp[:2] != stamp[:2]
-                    or status.st_size <= cursor.offset):
+            if (
+                cursor is None
+                or cursor.stamp is None
+                or cursor.stamp[:2] != stamp[:2]
+                or status.st_size <= cursor.offset
+            ):
                 cursor = _UsageCursor(codex=self._read is codex_events)
+            if self._read is claude_events:
+                cursor.session_id = path.stem
             if self._read not in {claude_events, codex_events}:
                 # Preserve the callback contract for custom readers with their own formats.
                 cursor.events = [event for event in self._read(path) if event.at >= since]
@@ -223,7 +260,11 @@ def _totals(events: Iterable[UsageEvent]) -> tuple[ModelUsageView, ...]:
         row[3] += event.cache_write_tokens
     return tuple(
         ModelUsageView(
-            model=model, input_tokens=row[0], output_tokens=row[1], cache_read_tokens=row[2], cache_write_tokens=row[3],
+            model=model,
+            input_tokens=row[0],
+            output_tokens=row[1],
+            cache_read_tokens=row[2],
+            cache_write_tokens=row[3],
         )
         for model, row in sorted(totals.items(), key=lambda item: -sum(item[1]))
     )
@@ -272,8 +313,19 @@ def codex_events(path: Path) -> Iterable[UsageEvent]:
                 yield event
 
 
-def _codex_event(at: datetime, model: str, last: dict[str, object]) -> UsageEvent:
+def _codex_event(  # noqa: PLR0913 -- the reply's window and the session total travel with the buckets
+    at: datetime,
+    model: str,
+    last: dict[str, object],
+    *,
+    session_id: str | None,
+    window_size: int | None,
+    primary: bool,
+    total: object,
+) -> UsageEvent:
     cached = _count(last.get("cached_input_tokens"))
+    cumulative = _count(total.get("total_tokens")) if isinstance(total, dict) else 0  # pyright: ignore[reportUnknownMemberType, reportUnknownArgumentType]
+    window_tokens = _count(last.get("total_tokens"))
     return UsageEvent(
         key=None,
         at=at,
@@ -282,6 +334,11 @@ def _codex_event(at: datetime, model: str, last: dict[str, object]) -> UsageEven
         output_tokens=_count(last.get("output_tokens")),
         cache_read_tokens=cached,
         cache_write_tokens=_count(last.get("cache_write_input_tokens")),
+        session_id=session_id,
+        window_size=window_size,
+        window_tokens=None if window_tokens == 0 else window_tokens,
+        primary=primary,
+        ledger_key=None if session_id is None else f"{session_id}:{cumulative}",
     )
 
 

@@ -86,6 +86,7 @@ class _ViewClient(CoreClient):
             "setup/applyFix": self.apply_result,
             "project/add": self.project_result,
             "project/setActive": EmptyResult(),
+            "plan/get": self.store.snapshot.plans[0] if self.store.snapshot is not None else demo_snapshot().plans[0],
             "tab/open": self.tab_result,
             "tab/launchSpec": TerminalLaunchSpec(
                 argv=("/usr/bin/true",),

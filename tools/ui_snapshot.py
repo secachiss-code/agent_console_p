@@ -22,7 +22,9 @@ class _SnapshotArguments(argparse.Namespace):
     out: Path = Path("docs/ui/B0/window.png")
 
 
-_PREVIEWS = frozenset({"plan-graph", "review", "git", "quota-dialog", "quota-account", "palette", "setup", "prefs"})
+_PREVIEWS = frozenset(
+    {"plan-graph", "review", "git", "quota-dialog", "quota-account", "palette", "setup", "prefs", "about"}
+)
 
 
 def main(argv: list[str]) -> int:
@@ -48,7 +50,7 @@ def main(argv: list[str]) -> int:
         required=True,
         choices=(
             "window", "tabs", "plan-graph", "review", "git", "quota-dialog", "quota-account", "palette", "setup",
-            "prefs",
+            "prefs", "about",
         ),
     )
     _ = parser.add_argument("--theme", required=True, choices=("light", "dark"))
@@ -100,6 +102,8 @@ def _preview_app(client: CoreClient, request: SnapshotRequest | None, scenario: 
                 window.show_setup()
             elif snapshot.view == "prefs":
                 window.app_vm.dispatch("settings")
+            elif snapshot.view == "about":
+                window.activate_action("win.about", None)
             else:
                 dialog = window.quota_card.open_details(window)
                 if self.snapshot_request is not None and self.snapshot_request.view == "quota-account":
@@ -121,6 +125,8 @@ def _preview_app(client: CoreClient, request: SnapshotRequest | None, scenario: 
                 return window.setup_wizard
             if snapshot.view == "prefs":
                 return window.preferences_dialog
+            if snapshot.view == "about":
+                return window.about_dialog
             return window
 
         def _arm_preview(self) -> bool:

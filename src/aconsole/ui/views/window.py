@@ -72,6 +72,7 @@ from aconsole.ui.views.tabs.project_bar import ProjectBar  # noqa: E402
 from aconsole.ui.views.tabs.sidebar import TabSidebar  # noqa: E402
 from aconsole.ui.views.terminal.messages import _ as terminal_text  # noqa: E402
 from aconsole.ui.views.terminal.page import TerminalPage  # noqa: E402
+lazy from aconsole.ui.views.about import AboutDialog  # noqa: E402
 lazy from aconsole.ui.views.health_dialog import HealthDialog  # noqa: E402
 lazy from aconsole.ui.views.palette.dialog import PaletteDialog  # noqa: E402
 lazy from aconsole.ui.views.setup.preferences import PreferencesDialog  # noqa: E402
@@ -405,13 +406,15 @@ class MainWindow(Adw.ApplicationWindow):
                                        on_repair=self._repair_plan)
             self.plan_page.set_inbox(self._summary_vm.inbox)
             self._summary_vm.refresh_inbox()
+            self._summary_vm.refresh_plan()
             self.content_view.set_content(self.plan_page)
 
     def _repair_plan(self, plan: PlanView) -> None:
         page = self.plan_page
 
         def saved(result: PlanView) -> None:
-            if page is not None:
+            self.tabs.client.store.update_plan(result)
+            if page is not None and self.plan_page is page:
                 _ = page.update(result)
 
         PlanRepairDialog(self.tabs.client, plan, saved).present(self)
@@ -422,7 +425,8 @@ class MainWindow(Adw.ApplicationWindow):
     async def _freeze(self, plan_id: PlanId, page: PlanGraph | None) -> None:
         try:
             result = await self.tabs.client.request("plan/freeze", PlanIdParams(plan_id=plan_id), PlanView)
-            if page is not None:
+            self.tabs.client.store.update_plan(result)
+            if page is not None and self.plan_page is page:
                 _ = page.update(result)
         except Exception as error:  # noqa: BLE001 -- core refusal is displayed to the person
             self._tab_error(translate("plan.decision_error").format(error=error))
@@ -440,7 +444,8 @@ class MainWindow(Adw.ApplicationWindow):
 
     async def _review_request(self, params: PlanDecideParams, page: PlanGraph) -> None:
         try:
-            _ = await self.tabs.client.request("plan/decide", params, PlanView)
+            result = await self.tabs.client.request("plan/decide", params, PlanView)
+            self.tabs.client.store.update_plan(result)
             self._summary_vm.refresh_inbox()
         except Exception as error:  # noqa: BLE001 -- preserve the request and entered note on refusal
             self._tab_error(translate("plan.decision_error").format(error=error))
@@ -459,6 +464,8 @@ class MainWindow(Adw.ApplicationWindow):
             _ = await self.tabs.client.request(
                 "plan/setNodeStatus", SetNodeStatusParams(node_id=node_id, status=status, note=note), PlanNodeView,
             )
+            if page is not None:
+                await self._summary_vm.reload_plan(page.plan)
         except Exception as error:  # noqa: BLE001 -- a refusal stays visible; the node stays as the core keeps it
             self._tab_error(translate("plan.decision_error").format(error=error))
         finally:
@@ -584,6 +591,7 @@ class MainWindow(Adw.ApplicationWindow):
         self._preferences_unsubscribe: Callable[[], None] = self.preferences_vm.subscribe(self._apply_preferences)
         self.preferences_dialog: PreferencesDialog | None = None
         self.health_dialog: HealthDialog | None = None
+        self.about_dialog: AboutDialog | None = None
         self.setup_wizard: SetupWizard | None = None
         self._setup_shown: bool = False
         self.app_vm.action_handler = self._handle_action
@@ -961,6 +969,7 @@ class MainWindow(Adw.ApplicationWindow):
             ("settings", setup_text("prefs.title")),
             ("setup", setup_text("setup.restart")),
             ("health", setup_text("health.title")),
+            ("about", setup_text("about.menu")),
         ):
             action = Gio.SimpleAction.new(name, None)
             _ = action.connect("activate", self._settings_menu_action)
@@ -973,8 +982,15 @@ class MainWindow(Adw.ApplicationWindow):
             _ = spawn_task(self._restart_setup())
         elif action.get_name() == "health":
             self._open_health()
+        elif action.get_name() == "about":
+            self._open_about()
         else:
             _ = self.app_vm.dispatch(action.get_name())
+
+    def _open_about(self) -> None:
+        if self.about_dialog is None:
+            self.about_dialog = AboutDialog()
+        self.about_dialog.present(self)
 
     def _open_health(self) -> None:
         if self.health_dialog is None:

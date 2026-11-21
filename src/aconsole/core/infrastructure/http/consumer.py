@@ -9,7 +9,7 @@ from dataclasses import dataclass
 
 import msgspec
 
-from aconsole.contracts.ingest import CodexNotify
+from aconsole.contracts.ingest import ClaudeStatusline, CodexNotify
 from aconsole.core.infrastructure.agents.claude.telemetry import read_claude
 from aconsole.core.infrastructure.agents.opencode.stream import COST_EVENT
 from aconsole.core.infrastructure.http.routes import IngestItem, IngestQueue
@@ -67,6 +67,41 @@ def hook_event(item: IngestItem) -> str | None:
     return None
 
 
+async def _apply_item(
+    item: IngestItem, apply: Callable[[str, str], Awaitable[None]], found: IngestHandlers,
+) -> bool:
+    try:
+        name = _event_name(item)
+        if name is not None:
+            await apply(item.tab_id, name)
+        session = _session_id(item)
+        if session is not None and found.on_session is not None:
+            await found.on_session(item.tab_id, session)
+        status = status_line(item)
+        if status is not None and found.on_status is not None:
+            await found.on_status(item.tab_id, status)
+        cost = None if item.kind == "claude.statusline" else session_cost(item)
+        if cost is not None and found.on_cost is not None:
+            await found.on_cost(item.tab_id, cost)
+        prompt = submitted_prompt(item)
+        if prompt is not None and found.on_prompt is not None:
+            await found.on_prompt(item.tab_id, prompt)
+    except Exception:  # noqa: BLE001 -- one bad item must not stop the consumer
+        _LOG.exception("ingest item for %s failed", item.tab_id)
+        return True
+    return False
+
+
+def status_line(item: IngestItem) -> ClaudeStatusline | None:
+    """Claude's status line, when this item is one."""
+    if item.kind != "claude.statusline":
+        return None
+    try:
+        return msgspec.json.decode(item.body, type=ClaudeStatusline)
+    except msgspec.DecodeError:
+        return None
+
+
 def session_cost(item: IngestItem) -> float | None:
     """What the tab's session has cost so far, in dollars at API prices, when the item says it.
 
@@ -102,6 +137,7 @@ class IngestHandlers:
     on_prompt: Callable[[str, str], Awaitable[None]] | None = None
     on_session: Callable[[str, str], Awaitable[None]] | None = None
     on_cost: Callable[[str, float], Awaitable[None]] | None = None
+    on_status: Callable[[str, ClaudeStatusline], Awaitable[None]] | None = None
     on_loss: Callable[[str, int], Awaitable[None]] | None = None
 
 
@@ -113,28 +149,11 @@ async def consume(
 ) -> None:
     """Apply queued items in order until cancelled. `ready` is set whenever the HTTP side queued something."""
     found = handlers or IngestHandlers()
-    on_prompt, on_session, on_cost = found.on_prompt, found.on_session, found.on_cost
     while True:
         _ = await ready.wait()
         ready.clear()
         while (item := queue.pop()) is not None:
-            failed = False
-            try:
-                name = _event_name(item)
-                if name is not None:
-                    await apply(item.tab_id, name)
-                session = _session_id(item)
-                if session is not None and on_session is not None:
-                    await on_session(item.tab_id, session)
-                cost = session_cost(item)
-                if cost is not None and on_cost is not None:
-                    await on_cost(item.tab_id, cost)
-                prompt = submitted_prompt(item)
-                if prompt is not None and on_prompt is not None:
-                    await on_prompt(item.tab_id, prompt)
-            except Exception:  # noqa: BLE001 -- one bad item must not stop the consumer
-                _LOG.exception("ingest item for %s failed", item.tab_id)
-                failed = True
+            failed = await _apply_item(item, apply, found)
             lost = queue.take_applied_loss(item.tab_id) + int(failed)
             if lost and found.on_loss is not None:
                 try:

@@ -24,6 +24,7 @@ from aconsole.core.domain.pipeline import (
     Step,
     StepResult,
     block_hash,
+    genesis_hash,
     transition,
 )
 
@@ -38,6 +39,7 @@ class PipelineActor:
     model: str | None = None
     agent_session_id: str = ""
     container: str = ""
+    generation: int = 0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -157,6 +159,34 @@ class PipelineService:
     def _begin(self, actor: PipelineActor, node_id: str, fence: int) -> dict[str, object]:
         contract = self._book.contract(actor, node_id, fence)
         history = self._store.history(node_id)
+        # An explicitly repaired frozen contract starts a fresh chain and baseline.
+        # Old blocks and receipts remain durable evidence for the old contract only.
+        if history:
+            latest = history[-1]
+            blocks = self._store.blocks(latest.id)
+            obsolete = (
+                blocks[-1].contract_hash != contract.module.contract_sha256
+                if blocks
+                else latest.number == 1 and latest.head_block != genesis_hash(contract.module.contract_sha256)
+            )
+            if obsolete and latest.status == "running":
+                self._store.finish(
+                    latest.id, "abandoned", "Frozen scope contract repaired", actor=actor, contract=contract
+                )
+                history = self._store.history(node_id)
+            elif obsolete and latest.status == "passed":
+                # The old receipt cannot authorize the repaired contract.
+                history = (
+                    *history[:-1],
+                    Attempt(
+                        id=latest.id,
+                        number=latest.number,
+                        base_oid=latest.base_oid,
+                        status="abandoned",
+                        head_block=latest.head_block,
+                        compact_verdict="Frozen scope contract repaired",
+                    ),
+                )
         changed = False
         if history and history[-1].status in {"running", "passed"}:
             blocks = self._store.blocks(history[-1].id)
@@ -198,7 +228,10 @@ class PipelineService:
         )
         return self._shaper.shape(
             session=ContextSession(
-                plan_id=contract.plan_id, tab_id=actor.tab_id, agent_session_id=actor.agent_session_id
+                plan_id=contract.plan_id,
+                tab_id=actor.tab_id,
+                agent_session_id=actor.agent_session_id,
+                generation=actor.generation,
             ),
             direction=direction,
             module=contract.module,
@@ -414,6 +447,9 @@ class PipelineService:
         contract = self._book.contract(actor, node_id, fence)
         history = self._store.history(node_id)
         if not history or history[-1].status not in {"running", "passed"}:
+            raise DomainError(code=4017, name="STEP_OUT_OF_ORDER", retryable=False)
+        blocks = self._store.blocks(history[-1].id)
+        if blocks and blocks[-1].contract_hash != contract.module.contract_sha256:
             raise DomainError(code=4017, name="STEP_OUT_OF_ORDER", retryable=False)
         return contract, history[-1]
 

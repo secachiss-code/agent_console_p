@@ -7,7 +7,7 @@ import hmac
 import re
 import threading
 from collections.abc import Callable
-from dataclasses import dataclass, replace
+from dataclasses import dataclass, field, replace
 from datetime import datetime
 from pathlib import Path
 from typing import Final, Literal, Protocol, final
@@ -45,6 +45,7 @@ from aconsole.contracts.app import (
     TabIdParams,
     TabView,
     TerminalLaunchSpec,
+    TokenTaskView,
 )
 from aconsole.contracts.common import AgentKind, NodeId, ProjectId, TabId, TabStatus, WorkspaceMode
 from aconsole.contracts.events import GitStateUpdated, ProjectsChanged, TabAdded, TabRemoved, TabUpdated, UiEvent
@@ -76,6 +77,7 @@ from aconsole.core.application.services.git_state import GitProject, GitTab
 from aconsole.core.application.services.palette import NavigationSnapshot
 from aconsole.core.application.services.pipeline import PipelineActor
 from aconsole.core.application.services.projects import ProjectCatalog
+from aconsole.core.application.services.token_ledger import TokenBook, TokenReply
 from aconsole.core.application.services.work_session_history import WorkSessionHistory
 from aconsole.core.application.services.work_sessions import WorkSessionService, session_view
 from aconsole.core.domain.agent import CAPABILITIES
@@ -376,6 +378,9 @@ class _Tab:
     mcp_told: int = 0
     plan_mode: Literal["plan", "execute"] = "execute"
     model: str | None = None
+    # Bumped on every `/clear`. A new node sends the direction prefix once for this count.
+    context_generation: int = 0
+    tokens: TokenBook = field(default_factory=TokenBook)
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -643,20 +648,47 @@ class TabService:
         # It becomes a word of the command line that resumes the agent.
         if tab.session == session or _CODEX_ID.fullmatch(session) is None:
             return
+        changed = {"agent_session_id"}
+        if tab.session is not None and tab.tokens.close():
+            changed |= {"context_used_pct", "token_spent"}
         tab.session = session
         tab.fork = False
         self._remember(tab)
-        _ = self._updated(tab, {"agent_session_id"})
+        _ = self._updated(tab, changed)
 
     def session_cost(self, tab_id: str, usd: float) -> None:
-        """The agent's own running total for this tab's session. A cent's change or more is worth telling the UI."""
+        """The agent's own running total. OpenCode's total covers the whole tab; Claude's restarts with the session."""
         tab = self._tabs.get(tab_id)
         if tab is None or usd < 0:
             return
-        if tab.cost_usd is not None and abs(tab.cost_usd - usd) < _COST_STEP_USD:
+        scope: Literal["session", "tab"] = "tab" if tab.agent is AgentKind.OPENCODE else "session"
+        self._note_tokens(tab, TokenReply(cost_total=usd), scope=scope)
+
+    def note_status(self, tab_id: str, reply: TokenReply) -> None:
+        """Claude's status line: the open model's window, and the session cost as a running total."""
+        tab = self._tabs.get(tab_id)
+        if tab is not None:
+            self._note_tokens(tab, reply, scope="session")
+
+    def note_usage(self, reply: TokenReply) -> None:
+        """One logged reply, for every tab whose CLI session is the reply's session."""
+        if not reply.session:
             return
-        tab.cost_usd = round(usd, 4)
-        _ = self._updated(tab, {"session_cost_usd"})
+        for tab in self._tabs.values():
+            if tab.session == reply.session:
+                self._note_tokens(tab, reply, scope="session")
+
+    def _note_tokens(self, tab: _Tab, reply: TokenReply, *, scope: Literal["session", "tab"]) -> None:
+        change = tab.tokens.note(reply, generation=tab.context_generation, session=tab.session or "", scope=scope)
+        total = None if change.cost is None else round(change.cost, 4)
+        cost_moved = total is not None and (tab.cost_usd is None or abs(total - tab.cost_usd) >= _COST_STEP_USD)
+        if cost_moved:
+            tab.cost_usd = total
+        if cost_moved or change.spent or change.window:
+            self._publish_tokens(tab)
+
+    def _publish_tokens(self, tab: _Tab) -> None:
+        _ = self._updated(tab, {"session_cost_usd", "context_used_pct", "token_spent"})
 
     def mcp_sent(self, tab_id: str, size: int) -> None:
         """One MCP answer of ``size`` bytes went to this tab's agent. The UI hears of the first, then of every 4 KB."""
@@ -1046,7 +1078,22 @@ class TabService:
         tab = self._require(tab_id)
         return PipelineActor(tab_id=tab.id, project_id=tab.project_id, worktree=Path(tab.worktree),
                              mode=tab.plan_mode, agent=tab.agent.value, model=tab.model,
-                             agent_session_id=tab.session or "", container=tab.container)
+                             agent_session_id=tab.session or "", container=tab.container,
+                             generation=tab.context_generation)
+
+    def context_generation(self, tab_id: str) -> int:
+        tab = self._tabs.get(tab_id)
+        return 0 if tab is None else tab.context_generation
+
+    def bump_context_generation(self, tab_id: str) -> int:
+        """The tab's CLI conversation was cleared. The next shaped reply includes the direction prefix once."""
+        tab = self._tabs.get(tab_id)
+        if tab is None:
+            return 0
+        tab.context_generation += 1
+        if tab.tokens.close():
+            self._publish_tokens(tab)
+        return tab.context_generation
 
     def archive_removed_workspace(self, project_id: str, path: str) -> None:
         record = self.work_sessions.at(project_id, path)
@@ -1846,8 +1893,10 @@ class TabService:
             plan_id=None,
             plan_node=None if tab.plan_node is None else NodeId(tab.plan_node),
             plan_node_title=None,
-            context_used_pct=None,
+            context_used_pct=_window_pct(tab.tokens),
             session_cost_usd=tab.cost_usd,
+            token_spent=tab.tokens.spent() or None,
+            token_tasks=_task_views(tab.tokens),
             agent_session_id=None if tab.fork else tab.session,
             pending_approvals=0,
             checkpoints=0,
@@ -1861,3 +1910,23 @@ class TabService:
             work_session_id=tab.work_session_id,
             isolated=tab.isolated,
         )
+
+
+def _window_pct(book: TokenBook) -> float | None:
+    for task in book.tasks:
+        if task.open and task.primary and task.window_pct is not None:
+            return task.window_pct
+    return None
+
+
+def _task_views(book: TokenBook) -> tuple[TokenTaskView, ...]:
+    return tuple(
+        TokenTaskView(
+            model=task.model,
+            spent_tokens=task.spent(),
+            cost_usd=None if task.cost_usd == 0 else task.cost_usd,
+            window_pct=task.window_pct if task.open and task.primary else None,
+            open=task.open and task.primary,
+        )
+        for task in book.tasks
+    )

@@ -110,3 +110,69 @@ def test_review_inbox_is_fetched_separately_and_preserved_on_error() -> None:
             assert vm.inbox_error == "connection lost"
 
     asyncio.run(scenario())
+
+
+def test_authoritative_plan_reply_updates_graph_model_without_consuming_event_sequence() -> None:
+    from datetime import timedelta
+
+    from aconsole.contracts.events import PlanRemoved, PlanUpdated
+    from aconsole.contracts.ipc import EventEnvelope
+    from aconsole.core.infrastructure.fake.scenarios import demo_snapshot
+    from aconsole.ui.client.core_client import CoreClient
+    from aconsole.ui.viewmodels.sidebar_vm import SidebarSummaryViewModel
+
+    source = demo_snapshot()
+    plan = source.plans[0]
+    fresh = msgspec.structs.replace(plan, done=plan.done + 1, updated_at=plan.updated_at + timedelta(seconds=1))
+    client = CoreClient("unused")
+    client.store.apply_snapshot(source, 10)
+    vm = SidebarSummaryViewModel(client)
+    client.store.update_plan(fresh)
+    assert vm.plan == fresh
+    assert client.store.seq == 10
+    # A queued older broadcast must not roll back a newer RPC result.
+    client.store.apply(EventEnvelope(seq=11, at=plan.updated_at, event=PlanUpdated(plan=plan)))
+    assert vm.plan == fresh
+    client.store.apply(EventEnvelope(seq=12, at=fresh.updated_at, event=PlanRemoved(plan_id=plan.id)))
+    client.store.update_plan(fresh)
+    assert not any(p.id == plan.id for p in client.store.snapshot.plans)
+
+
+def test_open_graph_refresh_fetches_current_plan_and_discards_stale_response() -> None:
+    import asyncio
+    from datetime import timedelta
+    from unittest.mock import patch
+
+    from aconsole.contracts.app import PlanInboxResult, PlanView
+    from aconsole.core.infrastructure.fake.scenarios import demo_snapshot
+    from aconsole.ui.client.core_client import CoreClient
+    from aconsole.ui.viewmodels.sidebar_vm import SidebarSummaryViewModel
+
+    async def scenario() -> None:
+        source = demo_snapshot()
+        plan = source.plans[0]
+        fresh = msgspec.structs.replace(plan, done=plan.done + 1, updated_at=plan.updated_at + timedelta(seconds=1))
+        client = CoreClient("unused")
+        client.store.apply_snapshot(source, 0)
+        calls = []
+
+        async def request(
+            _self: CoreClient, method: str, _params: msgspec.Struct, _result_type: type[msgspec.Struct],
+        ) -> PlanView | PlanInboxResult:
+            calls.append(method)
+            return fresh if method == "plan/get" else PlanInboxResult(entries=())
+
+        with patch.object(CoreClient, "request", new=request):
+            vm = SidebarSummaryViewModel(client)
+            vm.refresh_plan()
+            assert vm._plan_task is not None
+            await vm._plan_task
+            assert vm.plan == fresh
+            assert "plan/get" in calls
+            assert isinstance(vm.plan, PlanView)
+            client.store.update_plan(plan)
+            assert vm.plan == fresh
+            if vm._inbox_task is not None:
+                await vm._inbox_task
+
+    asyncio.run(scenario())

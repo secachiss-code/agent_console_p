@@ -30,6 +30,7 @@ class Scratch:
     def __init__(self) -> None:
         self.prefixes: dict[tuple[str, str, str], str] = {}
         self.seen: set[tuple[str, str, str]] = set()
+        self.generations: dict[tuple[str, int], str] = {}
 
     def prefix_get(self, plan_id: str, direction_key: str, manifest_sha256: str) -> str | None:
         return self.prefixes.get((plan_id, direction_key, manifest_sha256))
@@ -42,6 +43,12 @@ class Scratch:
 
     def prefix_mark_seen(self, tab_id: str, agent_session_id: str, prefix_sha256: str) -> None:
         self.seen.add((tab_id, agent_session_id, prefix_sha256))
+
+    def generation_seen(self, tab_id: str, generation: int, prefix_sha256: str) -> bool:
+        return self.generations.get((tab_id, generation)) == prefix_sha256
+
+    def generation_mark(self, tab_id: str, generation: int, prefix_sha256: str) -> None:
+        self.generations[tab_id, generation] = prefix_sha256
 
 
 DIRECTION = DirectionContext(
@@ -404,3 +411,37 @@ def test_body_edits_keep_prefix_bytes_but_signature_edits_change_them(placement:
     assert "return value" not in first.direction_prefix
     assert "Другая реализация" not in body_edit.direction_prefix
     assert len(scratch.prefixes) == 2
+
+
+def test_a_new_generation_sends_the_cached_prefix_once_for_the_same_session() -> None:
+    scratch = Scratch()
+    shaper = ContextShaper(scratch)
+    first = shaper.shape(
+        session=replace(SESSION, generation=1), direction=DIRECTION, module=MODULE, envelope=ENVELOPE, lease=LEASE
+    )
+    repeat = shaper.shape(
+        session=replace(SESSION, generation=1), direction=DIRECTION, module=MODULE, envelope=ENVELOPE, lease=LEASE
+    )
+    nxt = shaper.shape(
+        session=replace(SESSION, generation=2), direction=DIRECTION, module=MODULE, envelope=ENVELOPE, lease=LEASE
+    )
+    moved = shaper.shape(
+        session=replace(SESSION, generation=2, agent_session_id="native-2"),
+        direction=DIRECTION,
+        module=MODULE,
+        envelope=ENVELOPE,
+        lease=LEASE,
+    )
+    settled = shaper.shape(
+        session=replace(SESSION, generation=2, agent_session_id="native-2"),
+        direction=DIRECTION,
+        module=MODULE,
+        envelope=ENVELOPE,
+        lease=LEASE,
+    )
+    assert first.direction_prefix is not None
+    assert repeat.direction_prefix is None
+    assert nxt.direction_prefix == first.direction_prefix
+    assert moved.direction_prefix == first.direction_prefix
+    assert settled.direction_prefix is None
+    assert len(scratch.prefixes) == 1

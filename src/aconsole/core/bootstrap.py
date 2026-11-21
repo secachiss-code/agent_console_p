@@ -25,10 +25,11 @@ from typing import TYPE_CHECKING, override
 import msgspec
 import uvicorn
 
-from aconsole.contracts.app import AccountView, CloseTabParams, CommandResult, HealthResult, PlanView
+from aconsole.contracts.app import AccountView, CloseTabParams, CommandResult, HealthResult, ModelUsageView, PlanView
 from aconsole.contracts.common import AccountId, AgentKind, ClientRole, NodeId, PlanId, QuotaLevel, TabId
 from aconsole.contracts.errors import ErrorData, ErrorObject, MessageTooLargeDetails, error_by_name
 from aconsole.contracts.events import (
+    InjectToTerminal,
     Notify,
     PlanAttention,
     PlanRemoved,
@@ -60,6 +61,7 @@ from aconsole.core.application.services.quota_aggregator import QuotaAggregator
 from aconsole.core.application.services.review import ReviewService
 from aconsole.core.application.services.setup import SetupService
 from aconsole.core.application.services.tabs import TabService
+from aconsole.core.application.services.token_ledger import TokenReply
 from aconsole.core.application.services.work_session_git import WorkSessionGit
 from aconsole.core.application.services.work_session_history import WorkSessionHistory
 from aconsole.core.domain.approval_policy import ApprovalPolicyChoice, ApprovalPolicyMode
@@ -74,7 +76,7 @@ from aconsole.core.infrastructure.agents.cursor.limits import CursorLimits
 from aconsole.core.infrastructure.agents.launch import HostAgentCommands
 from aconsole.core.infrastructure.agents.live_limits import CachedAuth
 from aconsole.core.infrastructure.agents.opencode.limits import OpenCodeLimits
-from aconsole.core.infrastructure.agents.usage_log import UsageLog, claude_events, codex_events
+from aconsole.core.infrastructure.agents.usage_log import UsageEvent, UsageLog, claude_events, codex_events
 from aconsole.core.infrastructure.codegraph.index import CodeGraphIndex
 from aconsole.core.infrastructure.codegraph.runner import ExtractorRunner
 from aconsole.core.infrastructure.direction_gate import DirectionRuntime
@@ -131,6 +133,7 @@ from aconsole.core.infrastructure.tabs import HostAgents, HostRepos, HostTabs
 from aconsole.core.infrastructure.vault.canvas import CanvasHistory
 from aconsole.core.infrastructure.vault.sync import VaultSync
 lazy from aconsole.contracts.git import FactReviewView
+lazy from aconsole.contracts.ingest import ClaudeStatusline
 lazy from aconsole.core.application.ports.gate_runner import GateRunner
 lazy from aconsole.core.application.ports.knowledge_store import StoredFact
 lazy from aconsole.core.application.services.pipeline import PipelineActor
@@ -437,6 +440,26 @@ def codex_poll_delay(body: bytes) -> float:
     return _CODEX_POLL_S if body else _CODEX_RETRY_S
 
 
+def _read_usage(log: UsageLog, since: datetime) -> tuple[tuple[ModelUsageView, ...], tuple[UsageEvent, ...]]:
+    return log.models(since), log.replies()
+
+
+def _apply_usage(tabs: TabService, replies: tuple[UsageEvent, ...]) -> None:
+    for event in replies:
+        tabs.note_usage(TokenReply(
+            model=event.model,
+            fresh_input=event.input_tokens,
+            output=event.output_tokens,
+            cache_read=event.cache_read_tokens,
+            cache_write=event.cache_write_tokens,
+            window_size=event.window_size,
+            window_tokens=event.window_tokens,
+            primary=event.primary,
+            key=event.ledger_key or event.key,
+            session=event.session_id or "",
+        ))
+
+
 def tokens_since(account: AccountView, now: datetime) -> datetime:
     """When the account's weekly window began: tokens are counted over the same days as the limit."""
     resets = [window.resets_at for window in account.quota if window.key in {"7d", "week"} and window.resets_at]
@@ -455,7 +478,8 @@ def shown_accounts(agents: tuple[AgentInfo, ...], observed: tuple[AccountView, .
 
 
 def accounts_without_limits(
-    agents: tuple[AgentInfo, ...], observed: tuple[AccountView, ...] = (),
+    agents: tuple[AgentInfo, ...],
+    observed: tuple[AccountView, ...] = (),
 ) -> tuple[AccountView, ...]:
     """A connected agent with no numbers yet, or none at all, still gets its card, which says they are unknown.
 
@@ -522,8 +546,13 @@ class Daemon:
         self._idle: asyncio.Task[None] | None = None
         self._writers: set[asyncio.StreamWriter] = set()
         self._ring: EventRing = EventRing()
-        self.approvals: ApprovalHold = ApprovalHold(ApprovalBook(), publish=self._approval_event,
-            notify=self._approval_notify, audit=self._approval_audit, now=lambda: datetime.now(UTC))
+        self.approvals: ApprovalHold = ApprovalHold(
+            ApprovalBook(),
+            publish=self._approval_event,
+            notify=self._approval_notify,
+            audit=self._approval_audit,
+            now=lambda: datetime.now(UTC),
+        )
         self._host: HostTabs = HostTabs(socket_path=str(socket)) if host is None else host
         self.tabs: TabService = TabService(Clock(), self._host, listener=self._from_worker)
         # The loop consumes immutable policy and loop-published paths without queueing behind tab/Git work.
@@ -533,18 +562,23 @@ class Daemon:
         self._approval_policy: ApprovalPolicyBook = ApprovalPolicyBook()
         self.tabs.on_ingest = self._ingest_minted
         self._catalog: ProjectCatalog = ProjectCatalog(
-            HostRepos(), new_id=self._host.new_id, now=lambda: datetime.now(UTC),
+            HostRepos(),
+            new_id=self._host.new_id,
+            now=lambda: datetime.now(UTC),
         )
         self.tabs.use_projects(self._catalog)
         self._agent_commands: HostAgentCommands = HostAgentCommands(
-            self._host.agent_home, self._opencode_heard, codex_hooks=self._host.codex_hooks,
+            self._host.agent_home,
+            self._opencode_heard,
+            codex_hooks=self._host.codex_hooks,
             codex_issue=self._codex_hook_issue,
             approval_choice=self.tabs.approval_choice,
             claude_version=self._host.claude_version,
             opencode_version=self._host.opencode_version,
         )
         self._agents_source: Callable[[], tuple[AgentInfo, ...]] = HostAgents(
-            self._host.inspect_container, signed_in=self._host.signed_in,
+            self._host.inspect_container,
+            signed_in=self._host.signed_in,
             capabilities=self._agent_commands.capabilities,
         ).agents
         self.tabs.use_agents(self._agents_source)
@@ -606,8 +640,12 @@ class Daemon:
             changed=self._git_changed,
         )
         self.tabs.session_git = WorkSessionGit(
-            sessions=self.tabs.work_sessions, history=self.tabs.history, state=self.git.state,
-            operations=self.git.operations, merges=self.git.merges, writer=mutations,
+            sessions=self.tabs.work_sessions,
+            history=self.tabs.history,
+            state=self.git.state,
+            operations=self.git.operations,
+            merges=self.git.merges,
+            writer=mutations,
             close_tab=self._close_session_worker,
             now=lambda: datetime.now(UTC),
         ).dispatch
@@ -630,6 +668,7 @@ class Daemon:
         self._palette_plan_lock: Lock = Lock()
         self._plans: PlanBoard = PlanBoard(checked_completion=True)
         self._plans.on_changed = self._plan_changed
+        self._plans.on_fresh_node = self._clear_for_new_node
         self._plans.on_removed = self._plan_removed
         self._plans.on_attention = self._plan_attention
         # Off the loop and off the tab worker: files can be slow, and an edit must not wait for a tab call.
@@ -640,12 +679,16 @@ class Daemon:
         self.vault_default: Path | None = None
         self.tabs.on_settings_changed = self._use_vault
         code_graph = CodeGraphIndex(
-            ExtractorRunner(), self._project_root, languages=lambda: self.tabs.current_settings().codegraph_languages,
+            ExtractorRunner(),
+            self._project_root,
+            languages=lambda: self.tabs.current_settings().codegraph_languages,
         )
         self._plans.code_graph = code_graph
         self.knowledge: KnowledgeService = KnowledgeService(self._plans, self.vault, code_graph)
         self.palette: PaletteService = PaletteService(
-            self._palette_snapshot, self._palette_note_uri, self.vault.note_ref,
+            self._palette_snapshot,
+            self._palette_note_uri,
+            self.vault.note_ref,
         )
         self._mcp_tokens: TabTokens = TabTokens()
         self._mcp: MCPServer = build_server(
@@ -677,7 +720,8 @@ class Daemon:
         self._cursor_limits: CursorLimits = CursorLimits(lambda: datetime.now(UTC))
         self._opencode_limits: OpenCodeLimits = OpenCodeLimits(lambda: datetime.now(UTC))
         self._claude_tokens: UsageLog = UsageLog(
-            lambda: self._log_folder(_CLAUDE_CONTAINER, _CLAUDE_LOGS), claude_events,
+            lambda: self._log_folder(_CLAUDE_CONTAINER, _CLAUDE_LOGS),
+            claude_events,
         )
         self._codex_tokens: UsageLog = UsageLog(lambda: self._log_folder(_CODEX_CONTAINER, _CODEX_LOGS), codex_events)
         self._limits_events: dict[str, asyncio.Event] = {}
@@ -765,8 +809,7 @@ class Daemon:
             self._recovery = _read_recovery(self._recovery_path)
             tabs = self.tabs.snapshot().tabs
             self._recovery.tokens = {
-                str(tab.id): token for tab in tabs
-                if (token := self._recovery.tokens.get(str(tab.id))) is not None
+                str(tab.id): token for tab in tabs if (token := self._recovery.tokens.get(str(tab.id))) is not None
             }
             for tab in tabs:
                 token = self._recovery.tokens.get(str(tab.id))
@@ -774,8 +817,15 @@ class Daemon:
                     self._register_tab(tab, token)
 
     def _codex_hook_issue(self, tab_id: str, body: str) -> None:
-        self._from_worker(Notify(tab_id=TabId(tab_id), title=UiMessage.CODEX_HOOKS_UNAVAILABLE, body=body,
-            priority="normal", episode_id=f"codex-hooks:{tab_id}"))
+        self._from_worker(
+            Notify(
+                tab_id=TabId(tab_id),
+                title=UiMessage.CODEX_HOOKS_UNAVAILABLE,
+                body=body,
+                priority="normal",
+                episode_id=f"codex-hooks:{tab_id}",
+            )
+        )
 
     def _from_worker(self, event: UiEvent) -> None:
         """Tab listener. Runs on the worker; the live count is read there, where the tab book is consistent."""
@@ -816,7 +866,9 @@ class Daemon:
         loop = self._loop
         if loop is not None:
             _ = loop.call_soon_threadsafe(
-                self._use_quota_thresholds, settings.quota_warn_pct, settings.quota_critical_pct,
+                self._use_quota_thresholds,
+                settings.quota_warn_pct,
+                settings.quota_critical_pct,
             )
 
     def _use_quota_thresholds(self, warn: float, critical: float) -> None:
@@ -838,6 +890,14 @@ class Daemon:
             self.vault.publish_all()
         except Exception:  # noqa: BLE001 -- logged; the thread keeps serving other plans
             _LOG.exception("the vault at %s could not be used", root)
+
+    def _clear_for_new_node(self, tab_id: str) -> None:
+        """A tab left one node for another. `/clear` drops that conversation before the next prompt."""
+        _ = self.tabs.bump_context_generation(tab_id)
+        event = InjectToTerminal(tab_id=TabId(tab_id), text="/clear", submit=True)
+        loop = self._loop
+        if loop is not None and not loop.is_closed():
+            _ = loop.call_soon_threadsafe(self._publish, event, self._live_tabs, None)
 
     def _plan_changed(self, plan: PlanView) -> None:
         """Any thread: MCP tools run on the loop, `plan/setNodeStatus` on the worker."""
@@ -894,19 +954,35 @@ class Daemon:
         self._publish(event, self._live_tabs, None)
 
     def _approval_notify(self, approval: Approval) -> None:
-        self._approval_event(Notify(tab_id=TabId(approval.tab_id), title=UiMessage.APPROVAL_REQUIRED,
-            body=approval.command or approval.tool, priority="high", episode_id=approval.id))
+        self._approval_event(
+            Notify(
+                tab_id=TabId(approval.tab_id),
+                title=UiMessage.APPROVAL_REQUIRED,
+                body=approval.command or approval.tool,
+                priority="high",
+                episode_id=approval.id,
+            )
+        )
 
     def _approval_audit(self, approval: Approval) -> None:
         writer = self._writer
         if writer is None:
             return
-        record = ApprovalRecord(id=approval.id, tab_id=approval.tab_id, agent_session_id=approval.session_id,
-            tool=approval.tool, input_sha256=approval.input_sha256, nonce=approval.nonce,
+        record = ApprovalRecord(
+            id=approval.id,
+            tab_id=approval.tab_id,
+            agent_session_id=approval.session_id,
+            tool=approval.tool,
+            input_sha256=approval.input_sha256,
+            nonce=approval.nonce,
             summary=(f"{approval.reason}: " if approval.reason else "") + (approval.command or approval.tool),
             risk=[tag.value for tag in approval.risk],
-            status=ApprovalStatus(approval.phase.value), decided_by=approval.by.value if approval.by else None,
-            requested_at=approval.requested_at, decided_at=datetime.now(UTC), expires_at=approval.expires_at)
+            status=ApprovalStatus(approval.phase.value),
+            decided_by=approval.by.value if approval.by else None,
+            requested_at=approval.requested_at,
+            decided_at=datetime.now(UTC),
+            expires_at=approval.expires_at,
+        )
         future = writer.submit(lambda session: ApprovalRepository().add(session, record))
         future.add_done_callback(self._audit_done)
 
@@ -927,15 +1003,20 @@ class Daemon:
             # A restart must neither grant unverified ALLOW nor forget DENY.
             choice = ApprovalPolicyChoice(mode=ApprovalPolicyMode.DENY)
         return await handle_permission(
-            item, self.approvals, hold_seconds=settings.approval_hold_seconds, worktree=worktree,
+            item,
+            self.approvals,
+            hold_seconds=settings.approval_hold_seconds,
+            worktree=worktree,
             choice=choice,
             inline=inline,
             scope_paths=self._plans.scope_for_tab(item.tab_id, self._permission_projects.get(item.tab_id)),
         )
 
     def _has_approval_ui(self) -> bool:
-        return any(connection.ready and connection.role is ClientRole.UI and
-            "approvals.inline" in connection.capabilities for connection in self._connections)
+        return any(
+            connection.ready and connection.role is ClientRole.UI and "approvals.inline" in connection.capabilities
+            for connection in self._connections
+        )
 
     def _publish(self, event: UiEvent, live: int, token: str | None) -> None:
         """Number the event once, send it to every subscribed connection, and keep tokens and liveness current."""
@@ -1010,9 +1091,14 @@ class Daemon:
             asyncio.create_task(server.serve(sockets=[listener])),
             asyncio.create_task(
                 consume(
-                    self._ingest_queue, ready, self._apply_hook,
+                    self._ingest_queue,
+                    ready,
+                    self._apply_hook,
                     IngestHandlers(
-                        on_prompt=self._prompt_sent, on_session=self._reported_session, on_cost=self._session_cost,
+                        on_prompt=self._prompt_sent,
+                        on_session=self._reported_session,
+                        on_cost=self._session_cost,
+                        on_status=self._status_line,
                         on_loss=self._ingest_lost,
                     ),
                 ),
@@ -1033,9 +1119,16 @@ class Daemon:
         if existing is not None:
             return existing
         connection = Connection(
-            self._ring, tabs=self.tabs, approval_hold=self.approvals, setup_service=self.setup_service,
-            review=self.review, knowledge=self.knowledge, git=self.git, palette=self.palette,
-            session_id="api", host_namespace=True,
+            self._ring,
+            tabs=self.tabs,
+            approval_hold=self.approvals,
+            setup_service=self.setup_service,
+            review=self.review,
+            knowledge=self.knowledge,
+            git=self.git,
+            palette=self.palette,
+            session_id="api",
+            host_namespace=True,
         )
         connection.health = self.health
         connection.quota_refresh = self.refresh_limits
@@ -1050,11 +1143,15 @@ class Daemon:
         _LOG.warning("ingest lost/coalesced %d events for %s", count, tab_id)
         if tab_id not in self._permission_worktrees:
             return
-        self._approval_event(Notify(
-            tab_id=TabId(tab_id), title="История событий агента может быть неполной",
-            body="Состояние обновлено после перегрузки. Проверьте историю действий агента.",
-            priority="high", episode_id=f"ingest-loss:{tab_id}:{self._ring.current_seq}",
-        ))
+        self._approval_event(
+            Notify(
+                tab_id=TabId(tab_id),
+                title="История событий агента может быть неполной",
+                body="Состояние обновлено после перегрузки. Проверьте историю действий агента.",
+                priority="high",
+                episode_id=f"ingest-loss:{tab_id}:{self._ring.current_seq}",
+            )
+        )
         self._approval_event(ResyncRequired(reason="backpressure"))
 
     async def _apply_hook(self, tab_id: str, event_name: str) -> None:
@@ -1075,6 +1172,17 @@ class Daemon:
 
     async def _session_cost(self, tab_id: str, usd: float) -> None:
         await self._in_worker(lambda: self.tabs.session_cost(tab_id, usd))
+
+    async def _status_line(self, tab_id: str, line: ClaudeStatusline) -> None:
+        window = line.context_window
+        reply = TokenReply(
+            model="" if line.model is None else line.model.id,
+            window_pct=None if window is None else window.used_percentage,
+            window_size=None if window is None else window.context_window_size,
+            cost_total=None if line.cost is None else line.cost.total_cost_usd,
+            session=line.session_id,
+        )
+        await self._in_worker(lambda: self.tabs.note_status(tab_id, reply))
 
     async def _reported_session(self, tab_id: str, session: str) -> None:
         await self._in_worker(lambda: self.tabs.reported_session(tab_id, session))
@@ -1196,18 +1304,30 @@ class Daemon:
                 accepted = {session.worktree: float("inf")}
                 merges = self.git.merges
                 for point in history.records(record.work_session_id):
-                    if point.kind == "result" and point.oid and merges is not None and merges.landed_from(
-                        record.project_id, point.ref, point.oid,
-                    ) is not None:
+                    if (
+                        point.kind == "result"
+                        and point.oid
+                        and merges is not None
+                        and merges.landed_from(
+                            record.project_id,
+                            point.ref,
+                            point.oid,
+                        )
+                        is not None
+                    ):
                         accepted[point.worktree] = max(accepted.get(point.worktree, 0), point.sequence)
                 nodes: set[str] = set()
                 for point in history.records(record.work_session_id):
-                    if point.sequence <= accepted.get(point.worktree, 0) and point.kind != "begin" and (
-                        point.plan_node is not None and point.plan_node not in nodes
+                    if (
+                        point.sequence <= accepted.get(point.worktree, 0)
+                        and point.kind != "begin"
+                        and (point.plan_node is not None and point.plan_node not in nodes)
                     ):
                         nodes.add(point.plan_node)
                         self._plans.record_merge(
-                            node_id=point.plan_node, tab_id=point.actor_tab_id, oid=record.result_oid,
+                            node_id=point.plan_node,
+                            tab_id=point.actor_tab_id,
+                            oid=record.result_oid,
                         )
 
     def _close_for_cleanup(self, tab_id: str) -> None:
@@ -1361,15 +1481,15 @@ class Daemon:
         home = self._host.agent_home(container)
         return None if home is None else home / logs
 
-    @staticmethod
-    async def _with_tokens(event: QuotaUpdated, log: UsageLog) -> QuotaUpdated:
-        """The account with its tokens since the long window began. Without them the limits still count."""
+    async def _with_tokens(self, event: QuotaUpdated, log: UsageLog) -> QuotaUpdated:
+        """The account with its tokens since the long window began. The same replies update matching tabs."""
         since = tokens_since(event.account, datetime.now(UTC))
         try:
-            models = await asyncio.to_thread(log.models, since)
+            models, replies = await asyncio.to_thread(_read_usage, log, since)
         except Exception:  # noqa: BLE001 -- logged; the thread keeps serving other plans
             _LOG.exception("cannot count tokens")
             return event
+        await self._in_worker(lambda: _apply_usage(self.tabs, replies))
         return QuotaUpdated(account=msgspec.structs.replace(event.account, usage=models, usage_since=since))
 
     async def _connected(self, kind: AgentKind) -> bool:
@@ -1396,22 +1516,42 @@ class Daemon:
             event.set()
 
     def _account_observed(
-        self, event: QuotaUpdated, *, source: str | None = None, every_s: float | None = None,
+        self,
+        event: QuotaUpdated,
+        *,
+        source: str | None = None,
+        every_s: float | None = None,
     ) -> None:
         """The snapshot always holds the newest; subscribers hear of a change, or at most twice a minute without one."""
         if source is not None:
             event = QuotaUpdated(
                 account=msgspec.structs.replace(
-                    event.account, source=source, refresh_s=None if every_s is None else int(every_s),
+                    event.account,
+                    source=source,
+                    refresh_s=None if every_s is None else int(every_s),
                 ),
             )
         account = event.account
         warn, critical = self._quota_thresholds
         now_at = datetime.now(UTC)
-        account = msgspec.structs.replace(account, quota=tuple(msgspec.structs.replace(window, level=QuotaLevel(
-            quota_level(used_pct=window.used_pct, resets_at=window.resets_at, now=now_at,
-                warn_pct=warn, critical_pct=critical).value,
-        )) for window in account.quota))
+        account = msgspec.structs.replace(
+            account,
+            quota=tuple(
+                msgspec.structs.replace(
+                    window,
+                    level=QuotaLevel(
+                        quota_level(
+                            used_pct=window.used_pct,
+                            resets_at=window.resets_at,
+                            now=now_at,
+                            warn_pct=warn,
+                            critical_pct=critical,
+                        ).value,
+                    ),
+                )
+                for window in account.quota
+            ),
+        )
         event = QuotaUpdated(account=account)
         key = str(account.id)
         previous = self._accounts.get(key)
@@ -1458,8 +1598,11 @@ class Daemon:
         await asyncio.to_thread(self._plans.use_knowledge, KnowledgeDatabase(writer))
         self.knowledge.code_graph.use_store(CodeGraphDatabase(writer))
         self._plans.pipeline, self._pipeline_cache = await asyncio.to_thread(
-            build_pipeline, book=self._plans, graph=self.knowledge.code_graph,
-            writer=writer, runner=self._pipeline_runner,
+            build_pipeline,
+            book=self._plans,
+            graph=self.knowledge.code_graph,
+            writer=writer,
+            runner=self._pipeline_runner,
         )
         await asyncio.to_thread(self.vault.use_bases, VaultFileDatabase(writer))
         self.vault.use_history(CanvasHistory(writer=writer))
@@ -1514,13 +1657,20 @@ class Daemon:
 
     def _bind_direction_gates(self, writer: Writer) -> None:
         self._plans.use_attempts(AttemptDatabase(writer))
-        self._plans.directions = DirectionRuntime(book=self._plans, writer=writer,
-            actor=self.tabs.pipeline_actor, runner=self._pipeline_runner,
-            tabs=lambda: self.tabs.snapshot().tabs, accounts=lambda: tuple(self._accounts.copy().values()),
-            ui_processes=self._ui_processes, environment=self._direction_environment)
+        self._plans.directions = DirectionRuntime(
+            book=self._plans,
+            writer=writer,
+            actor=self.tabs.pipeline_actor,
+            runner=self._pipeline_runner,
+            tabs=lambda: self.tabs.snapshot().tabs,
+            accounts=lambda: tuple(self._accounts.copy().values()),
+            ui_processes=self._ui_processes,
+            environment=self._direction_environment,
+        )
 
     def _direction_environment(self, actor: PipelineActor, image: str) -> str:
         return self._host.gate_environment(actor.container, str(actor.worktree), image)
+
     def _pipeline_runner(self, actor: PipelineActor, commands: tuple[tuple[str, ...], ...]) -> GateRunner:
         return self._host.gate_runner(actor.container, str(actor.worktree), commands)
 
@@ -1528,8 +1678,10 @@ class Daemon:
         with self._palette_plan_lock:
             plans = tuple(self._palette_plans.values())
         return msgspec.structs.replace(
-            self.tabs.navigation_snapshot(), plans=plans,
-            approvals=self.approvals.pending_views(), vault_ok=self.vault.root is not None,
+            self.tabs.navigation_snapshot(),
+            plans=plans,
+            approvals=self.approvals.pending_views(),
+            vault_ok=self.vault.root is not None,
         )
 
     def _palette_note_uri(self, note: str) -> str:
@@ -1750,11 +1902,16 @@ class Daemon:
             return
         request_id = envelope.id if isinstance(envelope, Request) else None
         # Register accepted queued work before it can receive a timeout cancellation.
-        apart_ready = ((route is _Route.APART and len(apart) < _MAX_APART)
-                       or (route is _Route.GIT and len(apart) < _MAX_QUEUED))
+        apart_ready = (route is _Route.APART and len(apart) < _MAX_APART) or (
+            route is _Route.GIT and len(apart) < _MAX_QUEUED
+        )
         turn_ready = route is _Route.TURN and not turns.full()
-        if (connection.ready and (apart_ready or turn_ready)
-                and request_id is not None and not connection.admit(request_id)):
+        if (
+            connection.ready
+            and (apart_ready or turn_ready)
+            and request_id is not None
+            and not connection.admit(request_id)
+        ):
             writer.write(connection.busy(request_id))
             await writer.drain()
             return
@@ -1806,9 +1963,17 @@ class Daemon:
             await writer.wait_closed()
             return
         connection = Connection(
-            self._ring, tabs=self.tabs, approval_hold=self.approvals, setup_service=self.setup_service,
-            review=self.review, knowledge=self.knowledge, git=self.git,
-            host_namespace=same_mnt_namespace(pid), palette=self.palette, peer_pid=pid, frame_limit=self._frame_limit,
+            self._ring,
+            tabs=self.tabs,
+            approval_hold=self.approvals,
+            setup_service=self.setup_service,
+            review=self.review,
+            knowledge=self.knowledge,
+            git=self.git,
+            host_namespace=same_mnt_namespace(pid),
+            palette=self.palette,
+            peer_pid=pid,
+            frame_limit=self._frame_limit,
             ui_processes=self._ui_processes,
         )
         connection.on_agent_notice = self._agent_notice
@@ -1843,8 +2008,12 @@ class Daemon:
             _ = self._connections.pop(connection, None)
             connection.close()
             self._sidecar_left(connection)
-            if (connection.ready and connection.role is ClientRole.UI and
-                "approvals.inline" in connection.capabilities and not self._has_approval_ui()):
+            if (
+                connection.ready
+                and connection.role is ClientRole.UI
+                and "approvals.inline" in connection.capabilities
+                and not self._has_approval_ui()
+            ):
                 self.approvals.release_pending()
             if connection.holds_core:
                 self._lose_holder()

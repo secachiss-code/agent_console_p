@@ -43,6 +43,16 @@ class QuotaWindowView(msgspec.Struct, frozen=True, kw_only=True):
     period_days: int | None = None
 
 
+class TokenTaskView(msgspec.Struct, frozen=True, kw_only=True):
+    """One model stretch inside a tab. The open task owns the context window."""
+
+    model: str
+    spent_tokens: int
+    cost_usd: float | None = None
+    window_pct: Percent | None = None
+    open: bool = False
+
+
 class ModelUsageView(msgspec.Struct, frozen=True, kw_only=True):
     """Tokens one model used. `cost_usd` only when the agent reports it."""
 
@@ -130,6 +140,9 @@ class TabView(msgspec.Struct, frozen=True, kw_only=True):
     work_session_title: str | None = None
     mode: Literal["plan", "execute"] = "execute"
     model: str | None = None
+    # Sum of every model's spend on this tab, and one row per model stretch. The window lives on the open row.
+    token_spent: int | None = None
+    token_tasks: tuple[TokenTaskView, ...] = ()
 
 
 class CommandDetail(msgspec.Struct, frozen=True, kw_only=True, tag="command", tag_field="type"):
@@ -544,6 +557,8 @@ class PlanSaveParams(msgspec.Struct, frozen=True, kw_only=True, forbid_unknown_f
     it requires `plan_id`, unchanged title/goal, omitted nodes, and no leases.
     Full repairs require no attempts. Once all L1 work is closed and L0 is still open,
     this IPC method can replace the legacy zero-digest Tier 3 settings of those L0 nodes.
+    `repair_paths` revises open frozen scopes and requires matching `repair_contracts`
+    and a nonempty `repair_note`. Old receipts cannot authorize the repaired contract.
     """
 
     project_id: ProjectId
@@ -553,6 +568,10 @@ class PlanSaveParams(msgspec.Struct, frozen=True, kw_only=True, forbid_unknown_f
     nodes: tuple[PlanNodeSpec, ...] | None = None
     # Explicit legacy repair, mutually exclusive with nodes; keyed by existing L0 key.
     repair_gate_profiles: dict[str, msgspec.Raw] | None = None
+    # Explicit human/planner repair of existing frozen scopes, with optimistic concurrency.
+    repair_paths: dict[str, tuple[str, ...]] | None = None
+    repair_contracts: dict[str, str] | None = None
+    repair_note: Annotated[str, Meta(max_length=2000)] | None = None
 
 
 class SetNodeStatusParams(msgspec.Struct, frozen=True, kw_only=True):

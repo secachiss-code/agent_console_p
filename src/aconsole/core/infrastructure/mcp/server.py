@@ -116,7 +116,10 @@ class _LeanServer(MCPServer):
     """
 
     def __init__(self, context: TabContext) -> None:
-        super().__init__(name="aconsole", instructions="Plan, claim, and record knowledge for the current tab.")
+        super().__init__(
+            name="aconsole",
+            instructions="Order: plan_ready, node_claim, one step. plan_get uses concise and since.",
+        )
         self.tab_context: TabContext = context
 
     @override
@@ -321,20 +324,35 @@ def _register(  # noqa: C901, PLR0915 -- one nested function per MCP tool
         """Add nodes. An existing key is left unchanged. A cycle adds nothing."""
         return board.add_nodes(active(context), plan_id, nodes)
 
-    def plan_save(
+    def plan_save(  # noqa: PLR0913, PLR0917 -- explicit document and repair arguments
         title: Annotated[str, Field(min_length=1, max_length=120)],
         goal: Annotated[str, Field(max_length=8000)] = "",
         plan_id: _Id | None = None,
         nodes: Annotated[list[NodeIn], Field(max_length=100)] | None = None,
         repair_gate_profiles: dict[str, dict[str, object]] | None = None,
+        repair_paths: dict[str, list[str]] | None = None,
+        repair_contracts: dict[str, str] | None = None,
+        repair_note: Annotated[str, Field(max_length=2000)] | None = None,
     ) -> PlanSaved:
         """Create or replace this project's draft in one call. The same title returns the same plan.
 
         Omit nodes to change only the title and goal. A nodes list replaces the whole draft set.
         For an invalid legacy frozen plan, pass plan_id and repair_gate_profiles keyed by L0 key,
         with unchanged title/goal and omitted nodes. Requires no leases or pipeline attempts.
+        repair_paths revises open frozen scopes with matching repair_contracts and a repair_note;
+        document identity stays unchanged, leases must be absent, and old attempts remain historical.
         """
-        return board.save_for_tab(active(context), title, goal, plan_id, nodes, repair_profiles=repair_gate_profiles)
+        return board.save_for_tab(
+            active(context),
+            title,
+            goal,
+            plan_id,
+            nodes,
+            repair_profiles=repair_gate_profiles,
+            repair_paths=None if repair_paths is None else {key: tuple(paths) for key, paths in repair_paths.items()},
+            repair_contracts=repair_contracts,
+            repair_note=repair_note,
+        )
 
     def plan_delete(plan_id: _Id) -> PlanDeleted:
         """Delete one plan of this project. A node someone is working keeps the plan."""
@@ -514,25 +532,25 @@ def _register(  # noqa: C901, PLR0915 -- one nested function per MCP tool
         return board.list_plans(active(context), status)
 
     specs = (
-        (plan_create, "Create a plan", _IDEMPOTENT),
-        (plan_add_nodes, "Add plan nodes", _IDEMPOTENT),
-        (plan_save, "Create or replace a draft plan", _IDEMPOTENT),
-        (plan_delete, "Delete a plan", _DELETE),
-        (plan_get, "Read a plan. since=<revision> returns only the nodes changed after that read", _READ),
-        (plan_ready, "List claimable nodes", _READ),
-        (node_claim, "Claim a node", _WRITE),
-        (step_begin, "Begin an L2 step", _IDEMPOTENT),
-        (step_submit, "Submit an L2 step", _IDEMPOTENT),
-        (step_reset, "Restore scope files", _IDEMPOTENT),
-        (gate_run, "Run a verification gate", _WRITE),
-        (node_escalate, "Request a human plan decision", _IDEMPOTENT),
-        (node_update, "Update a node or extend its lease", _WRITE),
-        (node_attach, "Attach an artifact", _IDEMPOTENT),
-        (ctx_get, "Read knowledge", _READ),
-        (kb_add, "Add knowledge", _WRITE),
-        (kb_impact, "Impact of a target", _READ),
-        (handover, "Write or read a handover", _WRITE),
-        (plan_list, "List plans", _READ),
+        (plan_create, "Create a plan. Same title returns the same plan.", _IDEMPOTENT),
+        (plan_add_nodes, "Add nodes. Existing keys stay.", _IDEMPOTENT),
+        (plan_save, "Replace one draft plan.", _IDEMPOTENT),
+        (plan_delete, "Delete one plan.", _DELETE),
+        (plan_get, "Read a plan. Pass since for changes only.", _READ),
+        (plan_ready, "List claimable nodes.", _READ),
+        (node_claim, "Take a node lease. Returns fence.", _WRITE),
+        (step_begin, "Resume one L2 step.", _IDEMPOTENT),
+        (step_submit, "Record one L2 step.", _IDEMPOTENT),
+        (step_reset, "Restore files of one step.", _IDEMPOTENT),
+        (gate_run, "Run micro or blast once.", _WRITE),
+        (node_escalate, "Ask a human. Adds no node.", _IDEMPOTENT),
+        (node_update, "Set status or heartbeat.", _WRITE),
+        (node_attach, "Attach one artifact.", _IDEMPOTENT),
+        (ctx_get, "Read short knowledge.", _READ),
+        (kb_add, "Record one fact, decision, or requirement.", _WRITE),
+        (kb_impact, "List neighbors of one target.", _READ),
+        (handover, "Read or write this tab handover.", _WRITE),
+        (plan_list, "List plans.", _READ),
     )
 
     def counted(size: int) -> None:

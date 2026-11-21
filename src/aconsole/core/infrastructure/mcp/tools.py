@@ -52,6 +52,7 @@ from aconsole.core.application.services.plan_lifecycle import (
     freeze_plan,
     repair_direction_profiles,
     repair_gate_profiles,
+    repair_plan_paths,
     require_note_contract,
     topology_contract,
     topology_for,
@@ -223,6 +224,8 @@ class Claimed(_Frozen):
     expires_at: str
     brief: Brief
     context: CtxResult
+    # True when this tab already held another node: the host sends `/clear` and this answer has no prior facts.
+    fresh: bool = False
 
 
 class Updated(_Frozen):
@@ -337,7 +340,8 @@ def compact(result: BaseModel) -> CallToolResult:
     Every byte here is a token in the agent's context, on every call. Agents read the text, so no structured copy of
     the same answer goes beside it, and the tools publish no output schema.
     """
-    lean = result.model_dump(mode="json", exclude_defaults=True, exclude_none=True)
+    skipped = {"nodes"} if type(result).__name__ == "HandoverResult" else set()
+    lean = result.model_dump(mode="json", exclude=skipped, exclude_defaults=True, exclude_none=True)
     encoded = pydantic_core.to_json(lean)
     if len(encoded) > _REPLY_BYTES:
         _stop("RESPONSE_TOO_LARGE", "the tool answer exceeds 256 KiB")
@@ -444,6 +448,8 @@ class PlanBoard:
         self._memory_inbox: dict[str, StoredPlanChange] = {}
         self._knowledge: KnowledgeStore | None = None
         self.on_changed: Callable[[PlanView], None] | None = None
+        self.on_fresh_node: Callable[[str], None] | None = None
+        self._open_node: dict[str, str] = {}
         self.on_removed: Callable[[str], None] | None = None
         self.note_ref: Callable[[str, str], str | None] = lambda _plan, _key: None
         self.code_graph: CodeGraph | None = None
@@ -1231,7 +1237,7 @@ class PlanBoard:
                 self._commit(stored)
             return PlanCreated(plan_id=stored.plan_id, nodes=_refs(stored), canvas_note=_canvas(stored.plan_id))
 
-    def save_document(  # noqa: PLR0913 -- document identity, nodes and explicit legacy repair
+    def save_document(  # noqa: PLR0913, C901 -- document identity, nodes and explicit legacy repair
         self,
         project_id: str,
         title: str,
@@ -1241,6 +1247,9 @@ class PlanBoard:
         *,
         repair_profiles: dict[str, dict[str, object]] | None = None,
         allow_direction_repair: bool = False,
+        repair_paths: dict[str, tuple[str, ...]] | None = None,
+        repair_contracts: dict[str, str] | None = None,
+        repair_note: str | None = None,
     ) -> PlanView:
         """Save a draft, or explicitly repair invalid frozen profiles without replacing the graph."""
         human = TabContext(tab_id=_HUMAN_TAB, project_id=project_id, worktree=None, agent="human", mode="plan")
@@ -1253,6 +1262,16 @@ class PlanBoard:
         if refusal is not None:
             raise refusal
         with self._lock:
+            if repair_paths is not None or repair_contracts is not None or repair_note is not None:
+                if (
+                    repair_profiles is not None
+                    or not repair_paths
+                    or repair_contracts is None
+                    or not (repair_note or "").strip()
+                ):
+                    raise DomainError(code=4013, name="NODE_CONTRACT", retryable=False)
+                stored = self._repair_target(project_id, title, goal, plan_id, nodes)
+                return self._repair_paths(stored, repair_paths, repair_contracts, repair_note or "")
             if repair_profiles is not None:
                 stored = self._repair_target(project_id, title, goal, plan_id, nodes)
                 try:
@@ -1281,6 +1300,9 @@ class PlanBoard:
         nodes: list[NodeIn] | None,
         *,
         repair_profiles: dict[str, dict[str, object]] | None = None,
+        repair_paths: dict[str, tuple[str, ...]] | None = None,
+        repair_contracts: dict[str, str] | None = None,
+        repair_note: str | None = None,
     ) -> PlanSaved:
         """The planning tab's one-call create or draft replace. Execute tabs are refused."""
         _require_tab(ctx)
@@ -1294,6 +1316,9 @@ class PlanBoard:
                 plan_id,
                 None if nodes is None else _mcp_specs(nodes),
                 repair_profiles=repair_profiles,
+                repair_paths=repair_paths,
+                repair_contracts=repair_contracts,
+                repair_note=repair_note,
             )
         except DomainError as exc:
             _domain(exc)
@@ -1304,6 +1329,37 @@ class PlanBoard:
             status=view.status,
             nodes=[NodeRef(key=node.key, node_id=str(node.id)) for node in view.nodes],
         )
+
+    def _repair_paths(
+        self,
+        stored: _Stored,
+        paths: dict[str, tuple[str, ...]],
+        expected: dict[str, str],
+        note: str,
+    ) -> PlanView:
+        before = self._state(stored)
+        repaired = repair_plan_paths(before, paths, expected, at=self._now())
+        if repaired == before:
+            return self._view(stored)
+        candidate = _restored(repaired, checked_completion=self._checked_completion)
+        self._plans[stored.plan_id] = candidate
+        details = {
+            node.key: {"before": node.paths, "after": paths[node.key], "contract": node.contract_sha256}
+            for node in before.nodes
+            if node.key in paths
+        }
+        self._commit(
+            candidate,
+            decision=StoredPlanDecision(
+                id=uuid4().hex[:26],
+                request_id=None,
+                node_id=None,
+                action="repair_paths",
+                note=json.dumps({"reason": note.strip(), "scopes": details}, ensure_ascii=False),
+                at=self._now(),
+            ),
+        )
+        return self._view(candidate)
 
     def _repair_profiles(
         self, stored: _Stored, profiles: dict[str, dict[str, object]], *, allow_direction_repair: bool
@@ -1545,20 +1601,32 @@ class PlanBoard:
                 node = stored.dag.claim(meta.key, tab_id=ctx.tab_id, at=self._now())
             except DomainError as exc:
                 _domain(exc)
-            self._commit(stored)
-            return Claimed(
-                lease_id=node.lease_id or "",
-                fence=node.fence,
-                expires_at=_stamp(node.lease_expires_at),
-                brief=Brief(
-                    objective=meta.objective,
-                    acceptance=list(meta.acceptance),
-                    paths=list(meta.paths),
-                    boundaries=meta.boundaries,
-                    output_format=meta.output_format,
-                ),
-                context=self._ctx(ctx, node_id=node_id, query=None, max_items=6),
+            previous = self._open_node.get(ctx.tab_id)
+            fresh = previous is not None and previous != meta.node_id
+            self._open_node[ctx.tab_id] = meta.node_id
+            context = (
+                CtxResult(items=[], truncated=False)
+                if fresh
+                else self._ctx(ctx, node_id=node_id, query=None, max_items=6)
             )
+            self._commit(stored)
+            notify = self.on_fresh_node
+        if fresh and notify is not None:
+            notify(ctx.tab_id)
+        return Claimed(
+            lease_id=node.lease_id or "",
+            fence=node.fence,
+            expires_at=_stamp(node.lease_expires_at),
+            brief=Brief(
+                objective=meta.objective,
+                acceptance=list(meta.acceptance),
+                paths=list(meta.paths),
+                boundaries=meta.boundaries,
+                output_format=meta.output_format,
+            ),
+            context=context,
+            fresh=fresh,
+        )
 
     def _pipeline_transition(self, ctx: TabContext, node_id: str, fence: int | None, *, status: str) -> None:
         with self._lock:
@@ -2590,13 +2658,7 @@ _CODES: dict[str, int] = {
 }
 
 _HINTS: dict[str, str] = {
-    "NODE_CONTRACT": (
-        "inspect plan_get phase and contract_error; correct draft gate_profile fields, or use a planning tab's "
-        "plan_save(plan_id, unchanged title/goal, repair_gate_profiles={L0 key: complete profile}) without nodes "
-        "for an invalid frozen plan with no leases or pipeline attempts; "
-        "Freeze applies only to a draft, and unblocking does not repair a profile; "
-        "legacy nodes use node_update instead of step_begin"
-    ),
+    "NODE_CONTRACT": "read plan_get contract_error, then fix the profile or plan_save repair_gate_profiles",
     "RESPONSE_TOO_LARGE": "use concise output, a revision, or a narrower query; no answer was truncated",
     "INTERNAL_ERROR": "nothing was saved; retry, and read the core log if it keeps failing",
     "INGEST_UNAUTHORIZED": "open a tab and pass Authorization: Bearer <tab token>",

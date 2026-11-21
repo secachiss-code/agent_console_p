@@ -57,6 +57,7 @@ class ContextSession:
     plan_id: str
     tab_id: str
     agent_session_id: str
+    generation: int = 0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -167,12 +168,25 @@ class ContextShaper:
         cached = self._scratch.prefix_get(session.plan_id, direction.key, digest)
         if cached != prefix:
             self._scratch.prefix_put(session.plan_id, direction.key, digest, prefix)
-        if (
-            session.tab_id
-            and session.agent_session_id
-            and self._scratch.prefix_seen(session.tab_id, session.agent_session_id, digest)
-        ):
+        return self._deliver(shaped, session, digest)
+
+    def _deliver(self, shaped: ShapedContext, session: ContextSession, digest: str) -> ShapedContext:
+        """One prefix per CLI session, and one per tab generation after `/clear`."""
+        tab = session.tab_id
+        agent = session.agent_session_id
+        if session.generation > 0 and tab:
+            # A new CLI id has not seen a prefix that was marked on the previous id.
+            marked = self._scratch.generation_seen(tab, session.generation, digest)
+            held = bool(agent) and self._scratch.prefix_seen(tab, agent, digest)
+            if marked and (held or not agent):
+                shaped = replace(shaped, direction_prefix=None)
+            else:
+                self._scratch.generation_mark(tab, session.generation, digest)
+                if agent:
+                    self._scratch.prefix_mark_seen(tab, agent, digest)
+            return shaped
+        if tab and agent and self._scratch.prefix_seen(tab, agent, digest):
             shaped = replace(shaped, direction_prefix=None)
-        if session.tab_id and session.agent_session_id:
-            self._scratch.prefix_mark_seen(session.tab_id, session.agent_session_id, digest)
+        if tab and agent:
+            self._scratch.prefix_mark_seen(tab, agent, digest)
         return shaped

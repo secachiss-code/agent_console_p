@@ -285,7 +285,9 @@ def load_plans(session: Session) -> tuple[StoredPlan, ...]:
                     baseline_nodes=row.baseline_nodes,
                     gross_added=row.gross_added,
                     gates_sha256=row.gates_sha256,
-                    contract_hashes=tuple((node.key, node.contract_sha256) for node in nodes if node.contract_sha256),
+                    contract_hashes=tuple(
+                        sorted((node.key, node.contract_sha256) for node in nodes if node.contract_sha256)
+                    ),
                     baseline_children=tuple((node.key, node.baseline_children) for node in nodes),
                     applied_changes=tuple(
                         session.scalars(

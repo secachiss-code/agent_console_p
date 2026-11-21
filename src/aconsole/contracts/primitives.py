@@ -100,6 +100,7 @@ class NodeClaimResult(msgspec.Struct, frozen=True, kw_only=True):
     expires_at: str
     brief: NodeBriefText
     context: KnowledgeGetResult
+    fresh: bool = False
 
 
 class NodeUpdateParams(msgspec.Struct, frozen=True, kw_only=True):

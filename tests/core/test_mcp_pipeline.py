@@ -592,3 +592,29 @@ def test_preflight_refuses_hardlinked_target(pipeline: _Harness) -> None:
     with pytest.raises(_ToolError, match="SCOPE_VIOLATION"):
         _ = board.pipeline_step(ctx, "submit", pipeline.node, pipeline.fence, patch=_PATCH)
     assert (pipeline.repo.parent / "linked.py").read_text() == "VALUE = 1\n"
+
+
+def test_repaired_scope_abandons_old_chain_and_starts_from_current_head(pipeline: _Harness) -> None:
+    h = pipeline
+    ctx = h.context()
+    h.board.pipeline_step(ctx, "begin", h.node, h.fence)
+    h.board.pipeline_step(ctx, "submit", h.node, h.fence, step="spec")
+    h.board.pipeline_step(ctx, "escalate", h.node, h.fence, kind="scope", reason="Missing directory glob")
+    saved = h.board.export_plan(h.plan)
+    module = next(n for n in saved.nodes if n.id == h.node)
+    assert module.contract_sha256 is not None
+    h.board.save_document("p", saved.title, saved.goal, saved.id, None,
+                          repair_paths={module.key: (*module.paths, "src/new.py")},
+                          repair_contracts={module.key: module.contract_sha256},
+                          repair_note="Explicitly include the newly required module")
+    h.board.set_node_status(h.node, "pending", "Scope repaired")
+    claim = h.board.claim(ctx, h.node)
+    (h.repo / "src/a.py").write_text("VALUE = 2\n")
+    _git(h.repo, "add", ".")
+    _git(h.repo, "commit", "-qm", "current accepted integration")
+    result = h.board.pipeline_step(ctx, "begin", h.node, claim.fence)
+    assert result.root["handoff"]
+    history = AttemptDatabase(h.writer).attempts(h.node)
+    assert [(a.attempt_no, a.status) for a in history] == [(1, "abandoned"), (2, "running")]
+    assert history[-1].base_oid == _git(h.repo, "rev-parse", "HEAD")
+    assert len(AttemptDatabase(h.writer).blocks(history[0].id)) == 1

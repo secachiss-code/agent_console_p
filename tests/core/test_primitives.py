@@ -12,7 +12,7 @@ from aconsole.contracts.primitives import (
     PlanReadyResult,
 )
 from aconsole.core.infrastructure.knowledge import KnowledgeService, run_primitive
-from aconsole.core.infrastructure.mcp.tools import PlanBoard, PlanReady, TabContext
+from aconsole.core.infrastructure.mcp.tools import NodeIn, PlanBoard, PlanReady, TabContext
 
 
 def test_create_add_and_ready_share_the_board() -> None:
@@ -49,6 +49,24 @@ def test_mcp_ready_keeps_the_live_tab() -> None:
     assert isinstance(found, PlanReady)
     assert seen[0].tab_id == "tab-1"
     assert seen[0].mode == "execute"
+
+
+def test_a_new_node_drops_the_previous_context() -> None:
+    board = PlanBoard()
+    ctx = TabContext(tab_id="t", project_id="p", worktree=None, agent="claude")
+    created = board.create(ctx, "Job", "", [
+        NodeIn(key="N-01", title="First", objective="one", acceptance=["ok"], paths=["a/**"]),
+        NodeIn(key="N-02", title="Second", objective="two", acceptance=["ok"], paths=["b/**"]),
+    ])
+    cleared: list[str] = []
+    board.on_fresh_node = cleared.append
+    first = board.claim(ctx, created.nodes[0].node_id)
+    assert first.fresh is False
+    assert cleared == []
+    second = board.claim(ctx, created.nodes[1].node_id)
+    assert second.fresh is True
+    assert second.context.items == []
+    assert cleared == ["t"]
 
 
 def _json(value: msgspec.Struct) -> bytes:
