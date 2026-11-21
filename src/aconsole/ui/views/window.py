@@ -308,8 +308,10 @@ class MainWindow(Adw.ApplicationWindow):
         return button
 
     def _setup_terminals(self, content: Adw.ToolbarView) -> None:
-        self.context_title: Adw.WindowTitle = Adw.WindowTitle(title="AConsole")
+        self.context_title: Adw.WindowTitle = Adw.WindowTitle(title=tabs_text("tabs.project"))
         self.content_header.set_title_widget(self.context_title)
+        self._navigation_project: ProjectId | None = None
+        _ = content.connect("notify::content", self._sync_navigation)
         self._terminals_disposed: bool = False
         self.terminal_pages: dict[str, TerminalPage] = {}
         self.terminal_stack: Gtk.Stack = Gtk.Stack()
@@ -442,6 +444,12 @@ class MainWindow(Adw.ApplicationWindow):
         _ = self.quota_card.open_details(self)
 
     def _update_summary(self) -> None:
+        snapshot = self.tabs.client.store.snapshot
+        project = snapshot.active_project if snapshot is not None else None
+        if project != self._navigation_project:
+            self._navigation_project = project
+            if self.content_view.get_content() is not self.terminal_stack:
+                self._show_selected_terminal()
         plan = self._summary_vm.plan
         self.plan_card.set_plan(plan)
         if self.plan_page is not None and plan != self.plan_page.plan:
@@ -463,6 +471,25 @@ class MainWindow(Adw.ApplicationWindow):
         )
         self.quota_banner.set_revealed(critical)
         self._place_end_island(quota_critical=critical)
+
+    def _sync_navigation(self, _widget: object, _property: object) -> None:
+        page = self.content_view.get_content()
+        active: Gtk.Button | None = None
+        if isinstance(page, PlanGraph):
+            active = self.plan_card
+        elif isinstance(page, ProjectIndexPage):
+            active = self.index_button
+        elif self.git_pane is not None and (
+            not isinstance(page, ReviewPage) or page.stack.get_visible_child_name() == "git"
+        ):
+            active = self.git_button
+        for button in (self.plan_card, self.index_button, self.git_button):
+            pressed = button is active
+            if pressed:
+                button.add_css_class("suggested-action")
+            else:
+                button.remove_css_class("suggested-action")
+            button.update_state([Gtk.AccessibleState.PRESSED], [GObject.Value(GObject.TYPE_INT, int(pressed))])
 
     def _open_plan(self, plan_id: PlanId) -> None:
         plan = self._summary_vm.plan
@@ -570,12 +597,26 @@ class MainWindow(Adw.ApplicationWindow):
     def _open_plan_index(self, path: str) -> None:
         page = self.plan_page
         if page is not None:
-            plan_id = page.plan.id
 
             def back() -> None:
-                self._open_plan(plan_id)
+                self._restore_plan(page)
 
             self._open_index(project=page.plan.project_id, scope=path.split("*", 1)[0].rstrip("/"), on_back=back)
+
+    def _restore_plan(self, page: PlanGraph) -> None:
+        plan = self._summary_vm.plan
+        if plan is None or plan.id != page.plan.id:
+            self._show_selected_terminal()
+        elif page.update(plan):
+            self.plan_page = page
+            page.set_inbox(self._summary_vm.inbox)
+            page.set_inbox_error(self._summary_vm.inbox_error)
+            self.content_view.set_content(page)
+        else:
+            self._open_plan(plan.id)
+            selected = page.selected_node
+            if self.plan_page is not None and selected is not None and selected in self.plan_page.node_buttons:
+                self.plan_page.node_buttons[selected].emit("clicked")
 
     def _open_index(
         self, *, project: ProjectId | None = None, scope: str = ".", on_back: Callable[[], None] | None = None
@@ -665,6 +706,7 @@ class MainWindow(Adw.ApplicationWindow):
             git_pane=pane,
         )
         self.review_page.stack.set_visible_child_name("git")
+        _ = self.review_page.stack.connect("notify::visible-child-name", self._sync_navigation)
         self.content_view.set_content(self.review_page)
 
     def _resume_work_session_tab(self, tab_id: TabId) -> None:

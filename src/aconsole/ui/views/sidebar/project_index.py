@@ -19,8 +19,14 @@ from aconsole.ui.views.sidebar.network_map import Link, NetworkMap, Point  # noq
 
 class ProjectIndexPage(Gtk.Box):
     def __init__(self, client: CoreClient, base: ProjectIndexParams, on_back: Callable[[], None]) -> None:
-        super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=8, margin_top=8, margin_bottom=8,
-                         margin_start=12, margin_end=12)
+        super().__init__(
+            orientation=Gtk.Orientation.VERTICAL,
+            spacing=8,
+            margin_top=8,
+            margin_bottom=8,
+            margin_start=12,
+            margin_end=12,
+        )
         self._client: CoreClient = client
         self._on_back: Callable[[], None] = on_back
         self._base: ProjectIndexParams = base
@@ -28,9 +34,9 @@ class ProjectIndexPage(Gtk.Box):
         self._generation: int = 0
         self._items: dict[str, ProjectIndexItem] = {}
         toolbar = Gtk.Box(spacing=8, margin_end=42)
-        back = Gtk.Button(label=translate("plan.back"))
-        _ = back.connect("clicked", self._back)
-        toolbar.append(back)
+        self.back_button: Gtk.Button = Gtk.Button(label=translate("plan.back"))
+        _ = self.back_button.connect("clicked", self._back)
+        toolbar.append(self.back_button)
         overview = Gtk.Button(label=translate("graph.overview"))
         _ = overview.connect("clicked", self._overview)
         toolbar.append(overview)

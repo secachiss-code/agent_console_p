@@ -87,8 +87,17 @@ class PlanGraph(Gtk.Box):
         """Update state without replacing buttons, scroll or focus when the graph geometry is unchanged."""
 
         def geometry(node: PlanNodeView) -> tuple[object, ...]:
-            return (node.id, node.key, node.title, node.layer, node.depends_on, node.level, node.parent, node.related,
-                    node.pipeline)
+            return (
+                node.id,
+                node.key,
+                node.title,
+                node.layer,
+                node.depends_on,
+                node.level,
+                node.parent,
+                node.related,
+                node.pipeline,
+            )
 
         nodes = {node.id: node for node in plan.nodes}
         if plan.id != self.plan.id or tuple(map(geometry, plan.nodes)) != tuple(map(geometry, self.plan.nodes)):
@@ -113,6 +122,10 @@ class PlanGraph(Gtk.Box):
         self.set_inbox(self._inbox)
         self.set_hovered(self._hovered)
         return True
+
+    @property
+    def selected_node(self) -> NodeId | None:
+        return self._selected
 
     def _build_heading(self) -> Gtk.Box:
         heading = Gtk.Box(spacing=12)
@@ -303,13 +316,21 @@ class PlanGraph(Gtk.Box):
         selected = self._selected
         visible = self._nodes.keys()
         if self._local.get_active() and selected is not None:
-            visible = {selected, *(NodeId(endpoint) for link in links if str(selected) in link[:2]
-                                   for endpoint in link[:2])}
+            visible = {
+                selected,
+                *(NodeId(endpoint) for link in links if str(selected) in link[:2] for endpoint in link[:2]),
+            }
         self._network.set_graph(
-            tuple(Point(str(node.id), node.key, node.level == 0, node.status.value)
-                  for node in self._nodes.values() if node.id in visible),
-            tuple(Link(source, target, kind) for source, target, kind in sorted(links)
-                  if NodeId(source) in visible and NodeId(target) in visible),
+            tuple(
+                Point(str(node.id), node.key, node.level == 0, node.status.value)
+                for node in self._nodes.values()
+                if node.id in visible
+            ),
+            tuple(
+                Link(source, target, kind)
+                for source, target, kind in sorted(links)
+                if NodeId(source) in visible and NodeId(target) in visible
+            ),
         )
 
     def _select_on_map(self, node_id: str) -> None:
@@ -375,7 +396,8 @@ class PlanGraph(Gtk.Box):
         _ = self.tab_button.connect("clicked", self._go_tab)
         details.append(self.tab_button)
         self.index_button: Gtk.Button = Gtk.Button(
-            icon_name="system-search-symbolic", tooltip_text=translate("graph.index"),
+            icon_name="system-search-symbolic",
+            tooltip_text=translate("graph.index"),
         )
         self.index_button.set_visible(False)
         _ = self.index_button.connect("clicked", self._open_index)

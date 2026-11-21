@@ -11,7 +11,9 @@ gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
 from gi.repository import Adw, Gdk, Gio, GLib, Gtk  # noqa: E402
 
-from aconsole.contracts.app import EmptyResult, HealthResult  # noqa: E402
+from aconsole.contracts.app import EmptyResult, HealthResult, PlanNodeDetailsView  # noqa: E402
+from aconsole.contracts.events import ProjectsChanged  # noqa: E402
+from aconsole.contracts.ipc import EventEnvelope  # noqa: E402
 from aconsole.core.infrastructure.fake.scenarios import demo_snapshot  # noqa: E402
 from aconsole.ui.bootstrap import run_app, spawn_task  # noqa: E402
 from aconsole.ui.client.core_client import CoreClient  # noqa: E402
@@ -135,6 +137,46 @@ def test_project_navigation_opens_each_page_from_one_row() -> None:
             button.emit("clicked")
             assert isinstance(window.content_view.get_content(), page_type)
             assert window.selection.get_selected_item() is selected
+            assert button.has_css_class("suggested-action")
+        assert window.review_page is not None
+        window.review_page.stack.set_visible_child_name("changes")
+        assert not window.git_button.has_css_class("suggested-action")
+        assert window.tabs_sidebar.on_row_pressed is not None
+        window.tabs_sidebar.on_row_pressed()
+        assert window.content_view.get_content() is window.terminal_stack
+        assert not any(
+            button.has_css_class("suggested-action")
+            for button in (window.plan_card, window.index_button, window.git_button)
+        )
+
+    _run_ui(scenario)
+
+
+def test_project_index_back_keeps_the_plan_node() -> None:
+    async def scenario(app: _MenuTestApp) -> None:
+        window, _, _ = _window(app)
+        window.present()
+        window.plan_card.emit("clicked")
+        plan = window.plan_page
+        assert plan is not None
+        node = plan.plan.nodes[0]
+        plan.set_hovered(node.id)
+        plan.set_node_details(node.id, PlanNodeDetailsView(lines=("Node details",), paths=("src/**",)))
+        assert plan.index_button.get_visible()
+        plan.index_button.emit("clicked")
+        index = window.content_view.get_content()
+        assert isinstance(index, ProjectIndexPage)
+        assert window.index_button.has_css_class("suggested-action")
+        index.back_button.emit("clicked")
+        assert window.content_view.get_content() is plan
+        assert plan.selected_node == node.id
+        assert plan.index_button.get_visible()
+        assert window.plan_card.has_css_class("suggested-action")
+        snapshot = demo_snapshot()
+        switched = ProjectsChanged(projects=snapshot.projects, active_project=snapshot.projects[1].id)
+        assert app.client.store.apply(EventEnvelope(seq=1, at=plan.plan.updated_at, event=switched))
+        assert window.content_view.get_content() is window.terminal_stack
+        assert not window.plan_card.get_sensitive()
 
     _run_ui(scenario)
 
