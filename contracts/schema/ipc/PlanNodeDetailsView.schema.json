@@ -1,7 +1,94 @@
 {
   "$defs": {
+    "PlanAttemptStepView": {
+      "properties": {
+        "hash": {
+          "type": "string"
+        },
+        "sequence": {
+          "type": "integer"
+        },
+        "step": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "step",
+        "sequence",
+        "hash"
+      ],
+      "title": "PlanAttemptStepView",
+      "type": "object"
+    },
+    "PlanAttemptView": {
+      "properties": {
+        "finished_at": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "id": {
+          "type": "string"
+        },
+        "number": {
+          "type": "integer"
+        },
+        "started_at": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "status": {
+          "type": "string"
+        },
+        "steps": {
+          "items": {
+            "$ref": "#/$defs/PlanAttemptStepView"
+          },
+          "type": "array"
+        },
+        "verdict": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "number",
+        "status",
+        "started_at",
+        "finished_at",
+        "verdict",
+        "steps"
+      ],
+      "title": "PlanAttemptView",
+      "type": "object"
+    },
     "PlanNodeDetailsView": {
       "properties": {
+        "attempts": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/PlanAttemptView"
+          },
+          "type": "array"
+        },
         "cursor": {
           "anyOf": [
             {

@@ -2317,3 +2317,45 @@ msgstr "Related: {nodes}"
 
 msgid "graph.child_nodes"
 msgstr "Child tasks: {nodes}"
+
+msgid "graph.open_steps"
+msgstr "Show workflow steps"
+
+msgid "graph.back_from_steps"
+msgstr "Back to graph"
+
+msgid "graph.attempt_choice"
+msgstr "Attempt {number} · {status}"
+
+msgid "graph.attempt_loading"
+msgstr "Loading attempts…"
+
+msgid "graph.attempt_unavailable"
+msgstr "The attempt history is unavailable."
+
+msgid "graph.no_attempts"
+msgstr "This task has no recorded attempts."
+
+msgid "graph.attempt.running"
+msgstr "Running"
+
+msgid "graph.attempt.passed"
+msgstr "Passed"
+
+msgid "graph.attempt.failed"
+msgstr "Failed"
+
+msgid "graph.attempt.abandoned"
+msgstr "Abandoned"
+
+msgid "graph.step.done"
+msgstr "Recorded"
+
+msgid "graph.step.skipped"
+msgstr "Skipped"
+
+msgid "graph.step.current"
+msgstr "Current"
+
+msgid "graph.step.pending"
+msgstr "Pending"

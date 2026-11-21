@@ -410,10 +410,27 @@ class PlanNodeDetailsParams(msgspec.Struct, frozen=True, kw_only=True):
     cursor: str | None = None
 
 
+class PlanAttemptStepView(msgspec.Struct, frozen=True, kw_only=True):
+    step: str
+    sequence: int
+    hash: str
+
+
+class PlanAttemptView(msgspec.Struct, frozen=True, kw_only=True):
+    id: str
+    number: int
+    status: str
+    started_at: str | None
+    finished_at: str | None
+    verdict: str | None
+    steps: tuple[PlanAttemptStepView, ...]
+
+
 class PlanNodeDetailsView(msgspec.Struct, frozen=True, kw_only=True):
     lines: tuple[str, ...]
     paths: tuple[str, ...] = ()
     cursor: str | None = None
+    attempts: tuple[PlanAttemptView, ...] = ()
 
 
 class ProjectApprovalPolicyParams(msgspec.Struct, frozen=True, kw_only=True):

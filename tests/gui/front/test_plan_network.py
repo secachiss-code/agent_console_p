@@ -8,7 +8,7 @@ from msgspec.structs import replace
 gi.require_version("Gtk", "4.0")
 from gi.repository import Gtk  # noqa: E402
 
-from aconsole.contracts.app import PlanNodeDetailsView  # noqa: E402
+from aconsole.contracts.app import PlanAttemptStepView, PlanAttemptView, PlanNodeDetailsView  # noqa: E402
 from aconsole.contracts.common import NodeId, NodeStatus  # noqa: E402
 from aconsole.ui.views.sidebar.plan_graph import PlanGraph  # noqa: E402
 from tests.gui.front.test_b4a_plan import _demo_plan, _in_gtk_context  # noqa: E402
@@ -89,5 +89,46 @@ def test_direction_restores_pinned_selection_and_keeps_detail_pages() -> None:
         assert page.selected_node == direction.id
         assert page._maps.get_visible_child() is overview
         assert overview._area.get_content_width() == width
+
+    _in_gtk_context(check)
+
+
+def test_workflow_steps_show_attempt_history_and_return_to_the_graph() -> None:
+    base = _demo_plan()
+    node = replace(base.nodes[0], pipeline=True)
+    plan = replace(base, nodes=(node, *base.nodes[1:]))
+    prior = PlanAttemptView(
+        id="prior",
+        number=1,
+        status="failed",
+        started_at=None,
+        finished_at=None,
+        verdict="Check failed",
+        steps=(PlanAttemptStepView(step="spec", sequence=1, hash="spec-hash"),),
+    )
+    current = replace(prior, id="current", number=2, status="running", steps=(), verdict=None)
+
+    def check() -> None:
+        page = PlanGraph(plan, lambda: None)
+        page.select_node(node.id)
+        assert page.steps_button.get_visible()
+        _ = page.steps_button.emit("clicked")  # pyright: ignore[reportAny]
+        assert page._body.get_visible_child() is page.steps
+        empty = page.steps.body.get_first_child()
+        assert isinstance(empty, Gtk.Label)
+        assert empty.get_text()
+        assert not page.steps.choices.get_visible()
+        page.set_node_details(node.id, PlanNodeDetailsView(lines=(), attempts=(prior, current)))
+        assert page.steps.choices.get_visible()
+        step = page.steps.body.get_first_child()
+        assert isinstance(step, Gtk.Label)
+        assert step.get_text().startswith("spec")
+        page.steps.choices.set_selected(1)
+        verdict = page.steps.body.get_last_child()
+        assert isinstance(verdict, Gtk.Label)
+        assert verdict.get_text() == "Check failed"
+        _ = page.steps_button.emit("clicked")  # pyright: ignore[reportAny]
+        assert page._body.get_visible_child_name() == "graphs"
+        assert page.selected_node == node.id
 
     _in_gtk_context(check)

@@ -1,0 +1,26 @@
+{
+  "$defs": {
+    "PlanAttemptStepView": {
+      "properties": {
+        "hash": {
+          "type": "string"
+        },
+        "sequence": {
+          "type": "integer"
+        },
+        "step": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "step",
+        "sequence",
+        "hash"
+      ],
+      "title": "PlanAttemptStepView",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/PlanAttemptStepView",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

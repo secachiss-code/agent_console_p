@@ -2329,3 +2329,45 @@ msgstr "Связанные вершины: {nodes}"
 
 msgid "graph.child_nodes"
 msgstr "Дочерние задачи: {nodes}"
+
+msgid "graph.open_steps"
+msgstr "Показать шаги задачи"
+
+msgid "graph.back_from_steps"
+msgstr "К графу"
+
+msgid "graph.attempt_choice"
+msgstr "Попытка {number} · {status}"
+
+msgid "graph.attempt_loading"
+msgstr "Загрузка попыток…"
+
+msgid "graph.attempt_unavailable"
+msgstr "История попыток недоступна."
+
+msgid "graph.no_attempts"
+msgstr "У задачи пока нет записанных попыток."
+
+msgid "graph.attempt.running"
+msgstr "В работе"
+
+msgid "graph.attempt.passed"
+msgstr "Пройдена"
+
+msgid "graph.attempt.failed"
+msgstr "Не пройдена"
+
+msgid "graph.attempt.abandoned"
+msgstr "Прервана"
+
+msgid "graph.step.done"
+msgstr "Записан"
+
+msgid "graph.step.skipped"
+msgstr "Пропущен"
+
+msgid "graph.step.current"
+msgstr "Текущий"
+
+msgid "graph.step.pending"
+msgstr "Ожидает"

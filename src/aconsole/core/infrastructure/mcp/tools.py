@@ -27,7 +27,7 @@ import pydantic_core
 from mcp.types import CallToolResult, TextContent
 from pydantic import BaseModel, ConfigDict, Field, RootModel, TypeAdapter
 
-from aconsole.contracts.app import PlanNodeSpec, PlanNodeView, PlanView
+from aconsole.contracts.app import PlanAttemptStepView, PlanAttemptView, PlanNodeSpec, PlanNodeView, PlanView
 from aconsole.contracts.common import AgentKind, NodeId, NoteRef, PlanId, ProjectId, TabId
 from aconsole.contracts.common import NodeStatus as NodeStatusView
 from aconsole.core.application.ports.gate_runner import GateRunnerUnavailableError
@@ -1730,23 +1730,29 @@ class PlanBoard:
         return self._attempt_entries(meta.node_id)
 
     def _attempt_entries(self, node_id: str) -> tuple[tuple[str, object], ...]:
+        return tuple(("attempt", msgspec.to_builtins(attempt)) for attempt in self._node_attempts(node_id))
+
+    def node_attempts(self, ctx: TabContext, node_id: str) -> tuple[PlanAttemptView, ...]:
+        require_tab(ctx)
+        with self._lock:
+            _ = self._node(ctx, node_id)
+            return self._node_attempts(node_id)
+
+    def _node_attempts(self, node_id: str) -> tuple[PlanAttemptView, ...]:
         if self._attempts is None:
             return ()
         return tuple(
-            (
-                "attempt",
-                {
-                    "id": attempt.id,
-                    "number": attempt.attempt_no,
-                    "status": attempt.status,
-                    "started_at": _optional_stamp(attempt.started_at),
-                    "finished_at": _optional_stamp(attempt.finished_at),
-                    "verdict": attempt.compact_verdict,
-                    "steps": [
-                        {"step": block.step_type, "sequence": block.seq, "hash": block.block_hash}
-                        for block in self._attempts.blocks(attempt.id)
-                    ],
-                },
+            PlanAttemptView(
+                id=attempt.id,
+                number=attempt.attempt_no,
+                status=attempt.status,
+                started_at=_optional_stamp(attempt.started_at),
+                finished_at=_optional_stamp(attempt.finished_at),
+                verdict=attempt.compact_verdict,
+                steps=tuple(
+                    PlanAttemptStepView(step=block.step_type, sequence=block.seq, hash=block.block_hash)
+                    for block in self._attempts.blocks(attempt.id)
+                ),
             )
             for attempt in self._attempts.attempts(node_id)
         )

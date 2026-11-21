@@ -294,10 +294,14 @@ class KnowledgeService:
         ctx = _bind(None, str(params.project_id))
         try:
             detail = self.board.node_details(
-                ctx, str(params.node_id), ("contract", "relations", "attempts", "reviews", "artifacts"),
-                40, params.cursor,
+                ctx,
+                str(params.node_id),
+                ("contract", "relations", "reviews", "artifacts"),
+                40,
+                params.cursor,
             )
             paths = self.board.node_paths(ctx, str(params.node_id))
+            attempts = self.board.node_attempts(ctx, str(params.node_id)) if params.cursor is None else ()
         except Exception as error:
             refusal = as_domain_error(error)
             if refusal.name == "NODE_NOT_FOUND":
@@ -305,11 +309,13 @@ class KnowledgeService:
             raise ValueError(refusal.name) from error
         return PlanNodeDetailsView(
             lines=tuple(
-                f"{entry.field}: " + (entry.value if isinstance(entry.value, str)
-                                      else json.dumps(entry.value, ensure_ascii=False))
+                f"{entry.field}: "
+                + (entry.value if isinstance(entry.value, str) else json.dumps(entry.value, ensure_ascii=False))
                 for entry in detail.entries
             ),
-            paths=paths, cursor=detail.cursor,
+            paths=paths,
+            cursor=detail.cursor,
+            attempts=attempts,
         )
 
     def _review(self, method: str, raw: bytes) -> msgspec.Struct:
@@ -367,7 +373,10 @@ class KnowledgeService:
             return EmptyResult()
         moved = msgspec.json.decode(raw, type=SetNodeStatusParams)
         return self.board.set_node_status(
-            str(moved.node_id), moved.status.value, moved.note, accepted_debt=moved.accepted_debt,
+            str(moved.node_id),
+            moved.status.value,
+            moved.note,
+            accepted_debt=moved.accepted_debt,
         )
 
     def _save(self, raw: bytes) -> msgspec.Struct:

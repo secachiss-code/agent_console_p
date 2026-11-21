@@ -17,6 +17,7 @@ from aconsole.contracts.app import PlanInboxEntry, PlanNodeDetailsView, PlanNode
 from aconsole.contracts.common import NodeId, NodeStatus, PlanId, TabId  # noqa: E402
 from aconsole.ui.viewmodels.logic.plan_layout import PlanNodePosition, direction_columns, layout_plan, shown_nodes  # noqa: E402
 from aconsole.ui.viewmodels.logic.quota_fmt import agent_name  # noqa: E402
+from aconsole.ui.views.sidebar.graph_steps import GraphSteps  # noqa: E402
 from aconsole.ui.views.sidebar.messages import _ as translate  # noqa: E402
 from aconsole.ui.views.sidebar.network_map import Link, NetworkMap, Point  # noqa: E402
 
@@ -52,6 +53,7 @@ class PlanGraph(Gtk.Box):
         self._on_index: Callable[[str], None] | None = on_index
         self._detail: PlanNodeDetailsView | None = None
         self.detail_request: int = 0
+        self._details_unavailable: bool = False
         self._direction: NodeId | None = None
         self._overview_page: str = "map"
         self._inbox: tuple[PlanInboxEntry, ...] = ()
@@ -312,8 +314,14 @@ class PlanGraph(Gtk.Box):
         self.direction_back.set_visible(False)
         _ = self.direction_back.connect("clicked", self._close_direction)
         tools.append(self.direction_back)
-        self.append(tools)
-        self.append(self._graph_stack)
+        graphs = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        graphs.append(tools)
+        graphs.append(self._graph_stack)
+        self.steps: GraphSteps = GraphSteps()
+        self._body: Gtk.Stack = Gtk.Stack(vexpand=True, hhomogeneous=False, vhomogeneous=False)
+        _ = self._body.add_named(graphs, "graphs")
+        _ = self._body.add_named(self.steps, "steps")
+        self.append(self._body)
         self._update_map()
 
     def _toggle_map(self, _button: Gtk.ToggleButton) -> None:
@@ -458,6 +466,10 @@ class PlanGraph(Gtk.Box):
         self.direction_button.set_visible(False)
         _ = self.direction_button.connect("clicked", self._open_direction)
         details.append(self.direction_button)
+        self.steps_button: Gtk.Button = Gtk.Button()
+        self.steps_button.set_visible(False)
+        _ = self.steps_button.connect("clicked", self._toggle_steps)
+        details.append(self.steps_button)
         self.more_details: Gtk.Button = Gtk.Button(icon_name="go-next-symbolic", tooltip_text=translate("graph.more"))
         self.more_details.set_visible(False)
         _ = self.more_details.connect("clicked", self._next_details)
@@ -473,10 +485,14 @@ class PlanGraph(Gtk.Box):
     def select_node(self, node_id: NodeId) -> None:
         if node_id not in self._nodes:
             return
+        if self._selected != node_id:
+            self._body.set_visible_child_name("graphs")
         self._selected = node_id
         self._detail = None
+        self._details_unavailable = False
         self.set_hovered(None)
         self._render_details()
+        self._sync_steps()
         if self._local.get_active():
             self._update_map()
         self._request_details(node_id, None)
@@ -495,13 +511,37 @@ class PlanGraph(Gtk.Box):
                 lines=(*self._detail.lines, *details.lines),
                 paths=tuple(dict.fromkeys((*self._detail.paths, *details.paths))),
                 cursor=details.cursor,
+                attempts=details.attempts or self._detail.attempts,
             )
         self._detail = details
         self.more_details.set_sensitive(True)
         self._render_details()
+        self._sync_steps()
 
     def details_failed(self) -> None:
+        self._details_unavailable = True
         self.more_details.set_sensitive(True)
+        self._sync_steps()
+
+    def _toggle_steps(self, _button: Gtk.Button) -> None:
+        opening = self._body.get_visible_child_name() != "steps"
+        self._body.set_visible_child_name("steps" if opening else "graphs")
+        self._sync_steps()
+
+    def _sync_steps(self) -> None:
+        opened = self._body.get_visible_child_name() == "steps"
+        self.steps_button.set_icon_name("go-previous-symbolic" if opened else "view-list-symbolic")
+        self.steps_button.set_tooltip_text(translate("graph.back_from_steps" if opened else "graph.open_steps"))
+        node = self._nodes.get(self._selected) if self._selected is not None else None
+        if not opened or node is None:
+            return
+        details = self._detail
+        self.steps.update(
+            f"{node.key} · {node.title}",
+            () if details is None else details.attempts,
+            loading=details is None and self._on_inspect is not None,
+            failed=self._details_unavailable,
+        )
 
     def _open_index(self, _button: Gtk.Button) -> None:
         if self._on_index is not None and self._detail is not None and self._detail.paths:
@@ -576,6 +616,7 @@ class PlanGraph(Gtk.Box):
 
     def _render_details(self) -> None:
         selected = self._nodes.get(self._selected) if self._selected is not None else None
+        self.steps_button.set_visible(selected is not None and selected.pipeline)
         self.direction_button.set_visible(
             selected is not None
             and selected.level == 0
