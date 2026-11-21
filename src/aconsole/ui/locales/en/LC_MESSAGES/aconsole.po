@@ -992,7 +992,13 @@ msgid "prefs.discard"
 msgstr "Discard changes"
 
 msgid "prefs.error"
-msgstr "Could not save preferences. Your edits are kept; try applying again."
+msgstr "Could not save preferences. Your edits are still available to apply."
+
+msgid "prefs.partial"
+msgstr "App preferences were saved. Apply again to retry the project policy."
+
+msgid "prefs.invalid_number"
+msgstr "Enter a number within the allowed range."
 
 msgid "prefs.font"
 msgstr "Fonts, in order (blank uses the system font)"
@@ -1029,6 +1035,9 @@ msgstr "Used"
 
 msgid "prefs.quota_warn"
 msgstr "Warning at used quota, %"
+
+msgid "prefs.quota_threshold_order"
+msgstr "The warning threshold must be at or below the critical threshold."
 
 msgid "prefs.saved"
 msgstr "Preferences saved"

@@ -1,6 +1,7 @@
 """Setup check and explicitly confirmed fix state."""
 
 import asyncio
+import contextlib
 from collections.abc import Callable
 from datetime import datetime
 
@@ -22,8 +23,9 @@ from aconsole.contracts.app import (
     TabView,
 )
 from aconsole.contracts.common import AgentKind, ProjectId, WorkspaceMode
+from aconsole.contracts.errors import error_by_name
 from aconsole.contracts.settings import Settings, SettingsPatch
-from aconsole.ui.client.core_client import CoreClient
+from aconsole.ui.client.core_client import CoreCallError, CoreClient, CoreTimeoutError
 
 
 class SetupViewModel:
@@ -50,7 +52,8 @@ class SetupViewModel:
 
     async def start_first_task(self, project_id: ProjectId, agent: AgentKind) -> TabView:
         return await self._client.request(
-            "tab/open", OpenTabParams(project_id=project_id, agent=agent, workspace=WorkspaceMode.NEW_WORKTREE),
+            "tab/open",
+            OpenTabParams(project_id=project_id, agent=agent, workspace=WorkspaceMode.NEW_WORKTREE),
             TabView,
         )
 
@@ -143,8 +146,16 @@ class PreferencesViewModel:
     async def update(self, patch: SettingsPatch) -> Settings:
         async with self._lock:
             current = self.settings if self.settings is not None else await self._load()
-            settings = await self._client.request(
-                "settings/update", SettingsUpdateParams(patch=patch, rev=current.rev), Settings,
-            )
+            try:
+                settings = await self._client.request(
+                    "settings/update",
+                    SettingsUpdateParams(patch=patch, rev=current.rev),
+                    Settings,
+                )
+            except CoreCallError as error:
+                if error.error.code == error_by_name("CONTENT_MODIFIED").code:
+                    with contextlib.suppress(CoreCallError, CoreTimeoutError, OSError):
+                        _ = await self._load()
+                raise
             self._publish(settings)
             return self.settings if self.settings is not None else settings

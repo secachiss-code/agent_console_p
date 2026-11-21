@@ -75,6 +75,8 @@ class PreferencesDialog(Adw.Dialog):
         self.viewmodel: PreferencesViewModel = viewmodel
         self.worker: asyncio.Task[None] | None = None
         self.loading: bool = False
+        self._saving: bool = False
+        self._submitted: SettingsPatch = SettingsPatch()
         self._active: bool = False
         self._generation: int = 0
         self._shown: Settings | None = None
@@ -83,7 +85,6 @@ class PreferencesDialog(Adw.Dialog):
         self._danger_ok: bool = False
         self._unsubscribe: Callable[[], None] | None = None
         self._close_prompt: Adw.AlertDialog | None = None
-        self._close_after_save: bool = False
         self._close_tick_id: int = 0
         self._close_ticks: int = 0
         self._discard_on_close: bool = False
@@ -93,6 +94,7 @@ class PreferencesDialog(Adw.Dialog):
         self._pages: Gtk.Stack = Gtk.Stack(vexpand=True)
         self._editors: tuple[Adw.PreferencesPage, ...] = self._build_categories()
         self._build_layout(menu)
+        self._watch_draft()
         _ = self.connect("closed", self._closed)
 
     def _build_categories(self) -> tuple[Adw.PreferencesPage, ...]:
@@ -162,13 +164,56 @@ class PreferencesDialog(Adw.Dialog):
     def _build_actions(self) -> Gtk.Box:
         actions = Gtk.Box(spacing=12)
         actions.add_css_class("ac-preferences-actions")
-        self.save_button: Gtk.Button = Gtk.Button(label=translate("prefs.apply"))
+        self.save_button: Gtk.Button = Gtk.Button(
+            label=translate("prefs.apply"),
+            sensitive=False,
+            valign=Gtk.Align.CENTER,
+        )
         self.save_button.add_css_class("suggested-action")
         _ = self.save_button.connect("clicked", self._save_clicked)
         self.status_label: Gtk.Label = Gtk.Label(xalign=0, wrap=True, hexpand=True)
         actions.append(self.status_label)
         actions.append(self.save_button)
         return actions
+
+    def _watch_draft(self) -> None:
+        _ = self.font_entry.connect("changed", self._draft_changed)
+        self._numbers: dict[str, Gtk.SpinButton] = {
+            "terminal_font_size": self.font_size,
+            "scrollback_lines": self.scrollback,
+            "quota_warn_pct": self.quota_warn,
+            "quota_critical_pct": self.quota_critical,
+            "approval_hold_seconds": self.approval_hold,
+        }
+        for spin in self._numbers.values():
+            _ = spin.connect("changed", self._draft_changed)
+            _ = spin.connect("value-changed", self._draft_changed)
+        for row in (self.theme, self.quota_display, self.approvals_mode, self.project_policy):
+            _ = row.connect("notify::selected", self._draft_changed)
+
+    def _draft_changed(self, *_args: object) -> None:
+        if self.loading or self._saving or self._shown is None:
+            return
+        dirty = self._has_changes()
+        self._sync_apply()
+        key = self._validation_error() or ("prefs.unsaved" if dirty else None)
+        self.status_label.set_label(translate(key) if key is not None else "")
+
+    def _validation_error(self) -> str | None:
+        if any(_spin_value(spin) is None for spin in self._numbers.values()):
+            return "prefs.invalid_number"
+        if _spin_or_current(self.quota_warn) > _spin_or_current(self.quota_critical):
+            return "prefs.quota_threshold_order"
+        return None
+
+    def _can_apply(self) -> bool:
+        return not self.loading and not self._saving and self._has_changes() and self._validation_error() is None
+
+    def _sync_apply(self) -> None:
+        enabled = self._can_apply()
+        self.save_button.set_sensitive(enabled)
+        if self._close_prompt is not None:
+            self._close_prompt.set_response_enabled("save", enabled)
 
     def set_visible_page(self, page: Adw.PreferencesPage) -> None:
         self._pages.set_visible_child(page)
@@ -292,6 +337,7 @@ class PreferencesDialog(Adw.Dialog):
         self._generation += 1
         self._shown = None
         self._project = None
+        self.status_label.set_label("")
         if self._unsubscribe is None:
             self._unsubscribe = self.viewmodel.subscribe(self._show_settings)
         self.save_button.set_sensitive(False)
@@ -312,55 +358,76 @@ class PreferencesDialog(Adw.Dialog):
                 self.loading = False
                 for page in self._editors:
                     page.set_sensitive(self._shown is not None)
-                self.save_button.set_sensitive(self._shown is not None)
+                self._sync_apply()
 
     def _show_settings(self, settings: Settings) -> None:
         if not self._active or settings == self._shown:
             return
         previous = self._shown
-        dirty = self._has_changes()
-        if previous is None or self.font_entry.get_text() == (previous.terminal_font or ""):
-            self.font_entry.set_text(settings.terminal_font or "")
-        if previous is None or self.font_size.get_value_as_int() == previous.terminal_font_size:
-            self.font_size.set_value(settings.terminal_font_size)
-        if previous is None or self.scrollback.get_value_as_int() == previous.scrollback_lines:
-            self.scrollback.set_value(settings.scrollback_lines)
-        if previous is None or self.theme.get_selected() == _THEMES.index(previous.theme):
-            self.theme.set_selected(_THEMES.index(settings.theme))
-        if previous is None or self.quota_display.get_selected() == _QUOTA_DISPLAYS.index(previous.quota_display):
-            self.quota_display.set_selected(_QUOTA_DISPLAYS.index(settings.quota_display))
-        if previous is None or self.approvals_mode.get_selected() == _APPROVAL_MODES.index(previous.approvals_mode):
-            self.approvals_mode.set_selected(_APPROVAL_MODES.index(settings.approvals_mode))
-        if previous is None or self.approval_hold.get_value_as_int() == previous.approval_hold_seconds:
-            self.approval_hold.set_value(settings.approval_hold_seconds)
-        self._show_thresholds(settings, previous)
-        self._show_policy(settings, previous)
+        local = self._changes(previous) if previous is not None else SettingsPatch()
+        keep: set[str] = set()
+        # A user may change a submitted field back to its old value before the reply arrives.
+        for patch in (local, self._submitted):
+            fields: dict[str, object] = msgspec.structs.asdict(patch)
+            keep.update(key for key, value in fields.items() if value is not msgspec.UNSET)
+        if previous is not None:
+            keep.update(key for key, spin in self._numbers.items() if _spin_value(spin) is None)
+        loading = self.loading
+        self.loading = True
+        self._show_values(settings, keep)
+        self._show_policy(settings, keep)
         self._shown = settings
-        if dirty:
-            self.status_label.set_label(translate("prefs.updated_draft"))
+        self.loading = loading
+        if not self._saving:
+            if self._has_changes():
+                key = self._validation_error() or "prefs.updated_draft"
+                self.status_label.set_label(translate(key))
+            elif local != SettingsPatch():
+                self.status_label.set_label("")
+        self._sync_apply()
 
-    def _show_thresholds(self, settings: Settings, previous: Settings | None) -> None:
-        if previous is None or self.quota_warn.get_value() == previous.quota_warn_pct:
-            self.quota_warn.set_value(settings.quota_warn_pct)
-        if previous is None or self.quota_critical.get_value() == previous.quota_critical_pct:
-            self.quota_critical.set_value(settings.quota_critical_pct)
+    def _show_values(self, settings: Settings, keep: set[str]) -> None:
+        if "terminal_font" not in keep:
+            self.font_entry.set_text(settings.terminal_font or "")
+        for key, value in (
+            ("terminal_font_size", settings.terminal_font_size),
+            ("scrollback_lines", settings.scrollback_lines),
+            ("approval_hold_seconds", settings.approval_hold_seconds),
+            ("quota_warn_pct", settings.quota_warn_pct),
+            ("quota_critical_pct", settings.quota_critical_pct),
+        ):
+            if key not in keep:
+                spin = self._numbers[key]
+                spin.set_value(value)
+                spin.set_text(f"{value:.0f}")
+        if "theme" not in keep:
+            self.theme.set_selected(_THEMES.index(settings.theme))
+        if "quota_display" not in keep:
+            self.quota_display.set_selected(_QUOTA_DISPLAYS.index(settings.quota_display))
+        if "approvals_mode" not in keep:
+            self.approvals_mode.set_selected(_APPROVAL_MODES.index(settings.approvals_mode))
 
-    def save(self) -> None:
-        if self.loading or self._shown is None or (self.worker is not None and not self.worker.done()):
+    def save(self, *, close_after: bool = False) -> None:
+        if self._shown is None or not self._can_apply():
             return
         patch = self._changes(self._shown)
         project = self._project_params()
-        self.save_button.set_sensitive(False)
-        self.worker = spawn_task(self._save(patch, project, self._generation))
+        self._saving = True
+        self._submitted = patch
+        self.status_label.set_label(translate("prefs.saving"))
+        self._sync_apply()
+        self.worker = spawn_task(self._save(patch, project, self._generation, close_after=close_after))
 
     def _changes(self, shown: Settings) -> SettingsPatch:
         font = ", ".join(font_families(self.font_entry.get_text())) or None
-        size = self.font_size.get_value_as_int()
-        scrollback = self.scrollback.get_value_as_int()
+        size = int(_spin_or_current(self.font_size))
+        scrollback = int(_spin_or_current(self.scrollback))
         theme = _THEMES[min(self.theme.get_selected(), len(_THEMES) - 1)]
         display = _QUOTA_DISPLAYS[min(self.quota_display.get_selected(), len(_QUOTA_DISPLAYS) - 1)]
         mode = _APPROVAL_MODES[min(self.approvals_mode.get_selected(), len(_APPROVAL_MODES) - 1)]
-        hold = self.approval_hold.get_value_as_int()
+        hold = int(_spin_or_current(self.approval_hold))
+        warn = _spin_or_current(self.quota_warn)
+        critical = _spin_or_current(self.quota_critical)
         policy = self._policy_value()
         dangerous: Literal["ask", "allow"] = "allow" if self.dangerous.get_active() else "ask"
         return SettingsPatch(
@@ -373,12 +440,8 @@ class PreferencesDialog(Adw.Dialog):
             terminal_font_size=size if size != shown.terminal_font_size else msgspec.UNSET,
             scrollback_lines=scrollback if scrollback != shown.scrollback_lines else msgspec.UNSET,
             theme=theme if theme != shown.theme else msgspec.UNSET,
-            quota_warn_pct=self.quota_warn.get_value()
-            if self.quota_warn.get_value() != shown.quota_warn_pct
-            else msgspec.UNSET,
-            quota_critical_pct=self.quota_critical.get_value()
-            if self.quota_critical.get_value() != shown.quota_critical_pct
-            else msgspec.UNSET,
+            quota_warn_pct=warn if warn != shown.quota_warn_pct else msgspec.UNSET,
+            quota_critical_pct=critical if critical != shown.quota_critical_pct else msgspec.UNSET,
         )
 
     async def _save(
@@ -386,10 +449,14 @@ class PreferencesDialog(Adw.Dialog):
         patch: SettingsPatch,
         project: ProjectApprovalPolicyParams | None,
         generation: int,
+        *,
+        close_after: bool,
     ) -> None:
+        settings_saved = False
         try:
             if patch != SettingsPatch():
                 _ = await self.viewmodel.update(patch)
+                settings_saved = True
             if project is not None:
                 confirmed = await self.viewmodel.set_project_policy(project)
                 if self._active and generation == self._generation:
@@ -398,28 +465,28 @@ class PreferencesDialog(Adw.Dialog):
                     self._project_loaded = _PROJECT_POLICIES.index(stored) if stored in _PROJECT_POLICIES else 0
             if self._active and generation == self._generation:
                 dirty = self._has_changes()
-                self.status_label.set_label(translate("prefs.unsaved" if dirty else "prefs.saved"))
-                if self._close_after_save and not dirty:
+                key = self._validation_error() or ("prefs.unsaved" if dirty else "prefs.saved")
+                self.status_label.set_label(translate(key))
+                if close_after and not dirty:
                     self._request_close()
         except Exception:  # noqa: BLE001 -- never publish an unconfirmed settings patch
             if self._active and generation == self._generation:
-                self.status_label.set_label(translate("prefs.error"))
+                self.status_label.set_label(translate("prefs.partial" if settings_saved else "prefs.error"))
         finally:
-            self._close_after_save = False
+            self._saving = False
+            self._submitted = SettingsPatch()
             if self._active and generation == self._generation:
-                self.save_button.set_sensitive(True)
+                self._sync_apply()
 
-    def _show_policy(self, settings: Settings, previous: Settings | None) -> None:
-        self.loading = True
-        if previous is None or self._selected_policy(previous.approval_policy) == self.policy.get_selected():
+    def _show_policy(self, settings: Settings, keep: set[str]) -> None:
+        if "approval_policy" not in keep:
             self.policy.set_selected(self._selected_policy(settings.approval_policy))
-        self._danger_ok = settings.approval_dangerous == "allow"
-        if previous is None or self.dangerous.get_active() == (previous.approval_dangerous == "allow"):
+        if "approval_dangerous" not in keep:
+            self._danger_ok = settings.approval_dangerous == "allow"
             self.dangerous.set_active(settings.approval_dangerous == "allow")
         self._show_project(settings)
         self._show_harness()
         self.dangerous.set_sensitive(self._policy_value() == "allow")
-        self.loading = False
 
     def _policy_value(self) -> Literal["ask", "allow", "deny", "scenario"]:
         return _POLICY_MODES[min(self.policy.get_selected(), len(_POLICY_MODES) - 1)]
@@ -432,7 +499,8 @@ class PreferencesDialog(Adw.Dialog):
         if self.loading:
             return
         mode = _POLICY_MODES[min(row.get_selected(), len(_POLICY_MODES) - 1)]
-        if not mode_enabled(mode):
+        available = mode_enabled(mode)
+        if not available:
             self.status_label.set_label(translate("prefs.policy_scenario_unavailable"))
             fallback = self._selected_policy(self._shown.approval_policy) if self._shown is not None else 0
             if not mode_enabled(_POLICY_MODES[fallback]):
@@ -442,11 +510,18 @@ class PreferencesDialog(Adw.Dialog):
             self.loading = False
             mode = _POLICY_MODES[fallback]
         self.dangerous.set_sensitive(mode == "allow")
+        if available:
+            self._draft_changed()
 
     def _dangerous_active(self, switch: Gtk.Switch, _pspec: GObject.ParamSpec) -> None:
-        if self.loading or not switch.get_active() or self._danger_ok:
-            if not switch.get_active():
-                self._danger_ok = False
+        if self.loading:
+            return
+        if not switch.get_active():
+            self._danger_ok = False
+            self._draft_changed()
+            return
+        if self._danger_ok:
+            self._draft_changed()
             return
         self.loading = True
         switch.set_active(False)
@@ -470,6 +545,7 @@ class PreferencesDialog(Adw.Dialog):
         self.loading = True
         self.dangerous.set_active(True)
         self.loading = False
+        self._draft_changed()
 
     def _show_project(self, settings: Settings) -> None:
         project = self.viewmodel.active_project()
@@ -533,20 +609,21 @@ class PreferencesDialog(Adw.Dialog):
 
     def _has_changes(self) -> bool:
         return self._shown is not None and (
-            self._changes(self._shown) != SettingsPatch() or self._project_params() is not None
+            self._changes(self._shown) != SettingsPatch()
+            or self._project_params() is not None
+            or any(_spin_value(spin) is None for spin in self._numbers.values())
         )
 
     def protect_close(self) -> bool:
         """Route application exit through the draft decision before the window can disappear."""
         dirty = self._has_changes()
-        saving = not self.loading and self.worker is not None and not self.worker.done()
-        if self._active and (dirty or saving):
+        if self._active and (dirty or self._saving):
             _ = self.close()
             return True
         return False
 
     def _close_attempt(self, _dialog: Adw.Dialog) -> None:
-        if not self.loading and self.worker is not None and not self.worker.done():
+        if self._saving:
             self.status_label.set_label(translate("prefs.saving"))
             return
         if not self._has_changes():
@@ -560,6 +637,7 @@ class PreferencesDialog(Adw.Dialog):
             prompt.add_response(response, translate(key))
         prompt.set_response_appearance("discard", Adw.ResponseAppearance.DESTRUCTIVE)
         prompt.set_response_appearance("save", Adw.ResponseAppearance.SUGGESTED)
+        prompt.set_response_enabled("save", self._can_apply())
         prompt.set_default_response("cancel")
         prompt.set_close_response("cancel")
         _ = prompt.connect("response", self._close_response)
@@ -572,8 +650,7 @@ class PreferencesDialog(Adw.Dialog):
         if response == "discard":
             self._request_close(discard=True)
         elif response == "save":
-            self._close_after_save = True
-            self.save()
+            self.save(close_after=True)
 
     def _request_close(self, *, discard: bool = False) -> None:
         if not self._active or self._close_tick_id:
@@ -590,6 +667,8 @@ class PreferencesDialog(Adw.Dialog):
         if self._close_ticks < _CLOSE_OPENING_TICKS:
             return GLib.SOURCE_CONTINUE
         self._close_tick_id = 0
+        if self._saving:
+            return GLib.SOURCE_REMOVE
         if not self._discard_on_close and self._has_changes():
             self.status_label.set_label(translate("prefs.unsaved"))
             return GLib.SOURCE_REMOVE
@@ -612,3 +691,24 @@ class PreferencesDialog(Adw.Dialog):
 
 def _is_monospace(item: object) -> bool:
     return isinstance(item, Pango.FontFamily) and item.is_monospace()
+
+
+def _spin_value(spin: Gtk.SpinButton) -> float | None:
+    text = spin.get_text().strip()
+    current = spin.get_value()
+    if text == f"{current:.0f}":
+        # Keep an exact value received from the core while the control displays rounded digits.
+        return current
+    if not text.isdecimal():
+        return None
+    adjustment = spin.get_adjustment()
+    try:
+        value = int(text)
+    except ValueError:
+        return None
+    return float(value) if adjustment.get_lower() <= value <= adjustment.get_upper() else None
+
+
+def _spin_or_current(spin: Gtk.SpinButton) -> float:
+    value = _spin_value(spin)
+    return spin.get_value() if value is None else value
