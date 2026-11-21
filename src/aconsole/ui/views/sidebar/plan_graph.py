@@ -9,6 +9,7 @@ from textwrap import shorten
 import cairo
 import gi
 
+gi.require_version("Gdk", "4.0")
 gi.require_version("Gtk", "4.0")
 from gi.repository import Gdk, GLib, GObject, Gtk, Pango  # noqa: E402
 
@@ -100,7 +101,9 @@ class PlanGraph(Gtk.Box):
             )
 
         nodes = {node.id: node for node in plan.nodes}
-        if plan.id != self.plan.id or tuple(map(geometry, plan.nodes)) != tuple(map(geometry, self.plan.nodes)):
+        if plan.id != self.plan.id or {node_id: geometry(node) for node_id, node in nodes.items()} != {
+            node_id: geometry(node) for node_id, node in self._nodes.items()
+        }:
             return False
         for key, button in self.node_buttons.items():
             node = nodes[key]
@@ -286,7 +289,7 @@ class PlanGraph(Gtk.Box):
         self.insert_child_after(self._build_details(), self.get_first_child())
 
     def _setup_network(self, scroll: Gtk.ScrolledWindow) -> None:
-        self._network: NetworkMap = NetworkMap(self._select_on_map)
+        self._network: NetworkMap = NetworkMap(self._select_on_map, plan_legend=True)
         self._local: Gtk.ToggleButton = Gtk.ToggleButton(label=translate("graph.local"))
         _ = self._local.connect("toggled", self._toggle_map)
         self._graph_stack: Gtk.Stack = Gtk.Stack(vexpand=True, hexpand=True)
@@ -322,8 +325,8 @@ class PlanGraph(Gtk.Box):
             }
         self._network.set_graph(
             tuple(
-                Point(str(node.id), node.key, node.level == 0, node.status.value)
-                for node in self._nodes.values()
+                Point(str(node.id), node.key, node.level == 0, node.status.value, description=node.title)
+                for node in sorted(self._nodes.values(), key=lambda item: (item.key, item.id))
                 if node.id in visible
             ),
             tuple(
@@ -479,7 +482,8 @@ class PlanGraph(Gtk.Box):
         self._hovered = node.id if node is not None else None
         if node is not None:
             self._selected = node.id
-        self._network.highlight(None if node is None else str(node.id))
+        current = self._hovered or self._selected
+        self._network.highlight(None if current is None else str(current))
         neighbors: set[NodeId] = set(node.depends_on) if node is not None else set()
         if node is not None:
             neighbors.add(node.id)
