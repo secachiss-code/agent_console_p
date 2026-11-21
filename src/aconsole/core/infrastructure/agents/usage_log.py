@@ -11,18 +11,31 @@ import logging
 import os
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass, replace
-from datetime import datetime
+from datetime import UTC, date, datetime, time
 from pathlib import Path
 from typing import Final, final
 
 import msgspec
 
-from aconsole.contracts.app import ModelUsageView
+from aconsole.contracts.app import AgentUsageHistoryView, DailyUsageView, ModelUsageView, UsageOverviewView
+from aconsole.contracts.common import AgentKind
 
 _LOG = logging.getLogger(__name__)
 _UNKNOWN_MODEL: Final = "unknown"
 _SYNTHETIC_MODEL: Final = "<synthetic>"
 _MODEL_CHARS: Final = 64
+_CLAUDE_COUNTERS: Final = (
+    "input_tokens",
+    "output_tokens",
+    "cache_read_input_tokens",
+    "cache_creation_input_tokens",
+)
+_CODEX_COUNTERS: Final = (
+    "input_tokens",
+    "output_tokens",
+    "cached_input_tokens",
+    "cache_write_input_tokens",
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -55,6 +68,7 @@ class _TokenInfo(msgspec.Struct):
 
 class _CodexPayload(msgspec.Struct):
     type: str = ""
+    id: str | None = None
     model: str | None = None
     info: _TokenInfo | None = None
     session_id: str | None = None
@@ -97,8 +111,9 @@ class _UsageParser:
         if payload is None:
             return None
         if document.type == "session_meta":
-            if payload.session_id:
-                self.session_id = payload.session_id[:_MODEL_CHARS]
+            session_id = payload.session_id or payload.id
+            if session_id:
+                self.session_id = session_id[:_MODEL_CHARS]
             self.primary = b'"thread_source":"subagent"' not in line and b'"thread_source": "subagent"' not in line
             return None
         if document.type == "turn_context":
@@ -109,9 +124,11 @@ class _UsageParser:
         if payload.type != "token_count" or info is None or info.last_token_usage is None:
             return None
         at = _moment(document.timestamp)
-        if at is None or info.total_token_usage == self.total:
+        if at is None or (info.total_token_usage is not None and info.total_token_usage == self.total):
             return None
-        self.total = info.total_token_usage
+        if not _has_counts(info.last_token_usage, _CODEX_COUNTERS):
+            return None
+        self.total = info.total_token_usage or self.total
         return _codex_event(
             at,
             self.model,
@@ -174,6 +191,10 @@ class UsageLog:
         self._since: datetime | None = None
 
     def models(self, since: datetime) -> tuple[ModelUsageView, ...]:
+        return model_totals(self.observations(since))
+
+    def observations(self, since: datetime) -> tuple[UsageEvent, ...]:
+        """Refresh the cursors and return one observation per reply, including a readable trailing record."""
         folder = self._folder()
         if folder is None:
             self._files.clear()
@@ -184,7 +205,7 @@ class UsageLog:
         self._since = since
         files: dict[Path, _UsageCursor] = {}
         events: list[UsageEvent] = []
-        for path in folder.rglob("*.jsonl"):
+        for path in sorted(folder.rglob("*.jsonl")):
             cursor = self._current(path, since)
             if cursor is not None:
                 files[path] = cursor
@@ -192,9 +213,11 @@ class UsageLog:
                 if cursor.tail and not cursor.discarding:
                     provisional = cursor.parser.preview(cursor.tail)
                     if provisional is not None and provisional.at >= since:
+                        if cursor.session_id and provisional.session_id is None:
+                            provisional = replace(provisional, session_id=cursor.session_id)
                         events.append(provisional)
         self._files = files
-        return _totals(events)
+        return _deduplicated(events)
 
     def replies(self) -> tuple[UsageEvent, ...]:
         """Events from the last ``models`` pass. Claude's session id is the transcript file name."""
@@ -247,12 +270,27 @@ class UsageLog:
                 cursor.append(data)
 
 
-def _totals(events: Iterable[UsageEvent]) -> tuple[ModelUsageView, ...]:
-    unique: dict[object, UsageEvent] = {}
-    for index, event in enumerate(events):
-        unique[event.key if event.key is not None else index] = event
+def _deduplicated(events: Iterable[UsageEvent]) -> tuple[UsageEvent, ...]:
+    claude: dict[str, UsageEvent] = {}
+    codex: dict[str, UsageEvent] = {}
+    unidentified: list[UsageEvent] = []
+    for event in events:
+        if event.key is not None:
+            previous = claude.get(event.key)
+            if previous is None or event.at >= previous.at:
+                claude[event.key] = event
+        elif event.ledger_key is not None:
+            previous = codex.get(event.ledger_key)
+            if previous is None or event.at < previous.at:
+                codex[event.ledger_key] = event
+        else:
+            unidentified.append(event)
+    return (*claude.values(), *codex.values(), *unidentified)
+
+
+def model_totals(events: Iterable[UsageEvent]) -> tuple[ModelUsageView, ...]:
     totals: dict[str, list[int]] = {}
-    for event in unique.values():
+    for event in events:
         row = totals.setdefault(event.model, [0, 0, 0, 0])
         row[0] += event.input_tokens
         row[1] += event.output_tokens
@@ -266,8 +304,44 @@ def _totals(events: Iterable[UsageEvent]) -> tuple[ModelUsageView, ...]:
             cache_read_tokens=row[2],
             cache_write_tokens=row[3],
         )
-        for model, row in sorted(totals.items(), key=lambda item: -sum(item[1]))
+        for model, row in sorted(totals.items(), key=lambda item: (-sum(item[1]), item[0]))
     )
+
+
+def usage_history(
+    agent: AgentKind,
+    start_day: date,
+    end_day: date,
+    events: tuple[UsageEvent, ...],
+) -> AgentUsageHistoryView:
+    observed: dict[date, list[UsageEvent]] = {}
+    for event in events:
+        day = event.at.astimezone(UTC).date()
+        if start_day <= day <= end_day:
+            observed.setdefault(day, []).append(event)
+    return AgentUsageHistoryView(
+        agent=agent,
+        start_day=datetime.combine(start_day, time.min, UTC),
+        end_day=datetime.combine(end_day, time.min, UTC),
+        days=tuple(
+            DailyUsageView(day=datetime.combine(day, time.min, UTC), models=model_totals(observed[day]))
+            for day in sorted(observed)
+        ),
+        totals=model_totals(event for replies in observed.values() for event in replies),
+    )
+
+
+def usage_overview(histories: tuple[AgentUsageHistoryView, ...]) -> UsageOverviewView:
+    active = {
+        row.day
+        for history in histories
+        for row in history.days
+        if any(
+            model.input_tokens or model.output_tokens or model.cache_read_tokens or model.cache_write_tokens
+            for model in row.models
+        )
+    }
+    return UsageOverviewView(histories=histories, active_days=len(active))
 
 
 def claude_events(path: Path) -> Iterable[UsageEvent]:
@@ -292,8 +366,11 @@ def _claude_event(document: dict[str, object] | None) -> UsageEvent | None:
     at = _moment(document.get("timestamp"))
     if not isinstance(usage, dict) or not isinstance(model, str) or model == _SYNTHETIC_MODEL or at is None:
         return None
+    if not _has_counts(usage, _CLAUDE_COUNTERS):  # pyright: ignore[reportUnknownArgumentType]
+        return None
+    message_id: object = message.get("id") or document.get("uuid")  # pyright: ignore[reportUnknownMemberType, reportUnknownVariableType]
     return UsageEvent(
-        key=f"{message.get('id')}:{document.get('requestId')}",  # pyright: ignore[reportUnknownMemberType]
+        key=f"{message_id}:{document.get('requestId')}" if isinstance(message_id, str) and message_id else None,
         at=at,
         model=model[:_MODEL_CHARS],
         input_tokens=_count(usage.get("input_tokens")),  # pyright: ignore[reportUnknownMemberType, reportUnknownArgumentType]
@@ -338,7 +415,7 @@ def _codex_event(  # noqa: PLR0913 -- the reply's window and the session total t
         window_size=window_size,
         window_tokens=None if window_tokens == 0 else window_tokens,
         primary=primary,
-        ledger_key=None if session_id is None else f"{session_id}:{cumulative}",
+        ledger_key=f"{session_id}:{cumulative}" if session_id and cumulative else None,
     )
 
 
@@ -362,3 +439,7 @@ def _moment(value: object) -> datetime | None:
 
 def _count(value: object) -> int:
     return value if isinstance(value, int) and not isinstance(value, bool) and value > 0 else 0
+
+
+def _has_counts(values: dict[str, object], keys: tuple[str, ...]) -> bool:
+    return any(type(value) is int and value >= 0 for key in keys if (value := values.get(key)) is not None)

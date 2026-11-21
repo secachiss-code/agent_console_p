@@ -46,6 +46,7 @@ from aconsole.contracts.app import (
     TabView,
     TerminalLaunchSpec,
     TokenTaskView,
+    UsageOverviewView,
 )
 from aconsole.contracts.common import AgentKind, NodeId, ProjectId, TabId, TabStatus, WorkspaceMode
 from aconsole.contracts.events import GitStateUpdated, ProjectsChanged, TabAdded, TabRemoved, TabUpdated, UiEvent
@@ -131,7 +132,8 @@ _CODEX_ASKS_APPROVAL: Final = ("Approval requested", "Codex wants to edit")
 _CODEX_ASKS_INPUT: Final = ("Plan mode prompt", "Question:")
 # Cursor has no hook for this. Read from the screen when it goes quiet; a line must start with the word.
 _CURSOR_ASKS_APPROVAL: Final = re.compile(
-    r"\[y/n\]|\(y/n\)|Run command\?|^\W*(?:Allow|Approve)\b", re.IGNORECASE | re.MULTILINE,
+    r"\[y/n\]|\(y/n\)|Run command\?|^\W*(?:Allow|Approve)\b",
+    re.IGNORECASE | re.MULTILINE,
 )
 _SCREEN_SUBMITTED: Final = "input_submitted"
 _SCREEN_QUIET: Final = "screen_quiet"
@@ -314,7 +316,12 @@ class AgentCommands(Protocol):
     """The argv that wires an agent to this core. Reaching for files keeps it out of the service."""
 
     def command(
-        self, agent: AgentKind, tab_id: str, token: str, container: str, port: str,
+        self,
+        agent: AgentKind,
+        tab_id: str,
+        token: str,
+        container: str,
+        port: str,
     ) -> tuple[str, ...] | None: ...
 
     def release(self, agent: AgentKind, tab_id: str, container: str) -> None: ...
@@ -477,6 +484,7 @@ class TabService:
         # Filled when `tab/launchSpec` mints an ingest token for a restored tab. The daemon registers it.
         self.on_ingest: Callable[[str, str], None] | None = None
         self._accounts: Callable[[], tuple[AccountView, ...]] | None = None
+        self._usage_overview: Callable[[], UsageOverviewView | None] | None = None
         self._catalog: ProjectCatalog | None = None
         self._agents: Callable[[], tuple[AgentInfo, ...]] | None = None
         self._commands: AgentCommands | None = None
@@ -522,6 +530,9 @@ class TabService:
         """The accounts and limits for the snapshot."""
         self._accounts = source
 
+    def use_usage_overview(self, source: Callable[[], UsageOverviewView | None]) -> None:
+        self._usage_overview = source
+
     def use_commands(self, commands: AgentCommands) -> None:
         self._commands = commands
 
@@ -539,8 +550,12 @@ class TabService:
     def approval_choice(self, tab_id: str) -> ApprovalPolicyChoice:
         """Resolve a tab's project override at the point the harness is launched."""
         tab = self._tabs.get(tab_id)
-        return ApprovalPolicyChoice() if self._policy is None else self._policy.choice_for(
-            None if tab is None else tab.project_id,
+        return (
+            ApprovalPolicyChoice()
+            if self._policy is None
+            else self._policy.choice_for(
+                None if tab is None else tab.project_id,
+            )
         )
 
     def note_settings(self, rev: int, *, setup_completed: bool = False) -> None:
@@ -594,6 +609,9 @@ class TabService:
                 warnings=self._warnings,
             ),
             settings_rev=stored.rev,
+            usage_overview=(
+                self._usage_overview() if include_runtime_details and self._usage_overview is not None else None
+            ),
         )
 
     def running_count(self) -> int:
@@ -837,12 +855,18 @@ class TabService:
         preferences = _preferences_of(nxt)
         store = self._store
         if store is not None:
-            store.save_settings(TabDirectory(
-                worktrees_dir=nxt.worktrees_dir or None, rev=nxt.rev,
-                setup_completed=nxt.setup_completed, approvals_mode=nxt.approvals_mode,
-                approval_hold_seconds=nxt.approval_hold_seconds, preferences=preferences,
-                approval_policy=nxt.approval_policy, approval_dangerous=nxt.approval_dangerous,
-            ))
+            store.save_settings(
+                TabDirectory(
+                    worktrees_dir=nxt.worktrees_dir or None,
+                    rev=nxt.rev,
+                    setup_completed=nxt.setup_completed,
+                    approvals_mode=nxt.approvals_mode,
+                    approval_hold_seconds=nxt.approval_hold_seconds,
+                    preferences=preferences,
+                    approval_policy=nxt.approval_policy,
+                    approval_dangerous=nxt.approval_dangerous,
+                )
+            )
         self._settings_rev = nxt.rev
         self._worktrees_dir = nxt.worktrees_dir or None
         self._setup_completed = nxt.setup_completed
@@ -852,10 +876,12 @@ class TabService:
         self._approval_dangerous = nxt.approval_dangerous
         self._preferences = preferences
         if self._policy is not None:
-            self._policy.remember_global(ApprovalPolicyChoice(
-                mode=ApprovalPolicyMode(nxt.approval_policy),
-                dangerous=DangerousSubmode(nxt.approval_dangerous),
-            ))
+            self._policy.remember_global(
+                ApprovalPolicyChoice(
+                    mode=ApprovalPolicyMode(nxt.approval_policy),
+                    dangerous=DangerousSubmode(nxt.approval_dangerous),
+                )
+            )
         if self.on_settings_changed is not None:
             self.on_settings_changed(nxt)
         return nxt
@@ -864,10 +890,15 @@ class TabService:
         store = self._store
         if store is None:
             return TabDirectory(
-                worktrees_dir=self._worktrees_dir, rev=self._settings_rev, setup_completed=self._setup_completed,
-                approvals_mode=self._approvals_mode, approval_hold_seconds=self._approval_hold_seconds,
-                approval_policy=self._approval_policy, approval_dangerous=self._approval_dangerous,
-                preferences=self._preferences)
+                worktrees_dir=self._worktrees_dir,
+                rev=self._settings_rev,
+                setup_completed=self._setup_completed,
+                approvals_mode=self._approvals_mode,
+                approval_hold_seconds=self._approval_hold_seconds,
+                approval_policy=self._approval_policy,
+                approval_dangerous=self._approval_dangerous,
+                preferences=self._preferences,
+            )
         return store.settings()
 
     def _route_settings_get(self, raw: bytes) -> Settings:
@@ -883,9 +914,12 @@ class TabService:
             result = self._session_dispatch(method, raw)
             if method not in {"workSession/list", "workSession/get", "workSession/history"} and "Preview" not in method:
                 project = msgspec.json.decode(raw, type=ProjectIdParams)
-                self._emit(GitStateUpdated(
-                    project_id=project.project_id, revision=f"session:{self._clock.now().isoformat()}",
-                ))
+                self._emit(
+                    GitStateUpdated(
+                        project_id=project.project_id,
+                        revision=f"session:{self._clock.now().isoformat()}",
+                    )
+                )
             return result
         route = self._routes.get(method)
         if route is None:
@@ -893,7 +927,9 @@ class TabService:
         return route(raw)
 
     def _session_dispatch(  # noqa: C901, PLR0911, PLR0912 -- one branch per session RPC
-        self, method: str, raw: bytes,
+        self,
+        method: str,
+        raw: bytes,
     ) -> msgspec.Struct:
         if method == "workSession/result":
             result = msgspec.json.decode(raw, type=WorkSessionResultParams)
@@ -916,11 +952,15 @@ class TabService:
             query = msgspec.json.decode(raw, type=WorkSessionListParams)
             if str(query.project_id) not in self._projects:
                 raise TabRequestError(_PROJECT)
-            return WorkSessionListResult(sessions=tuple(
-                session_view(row) for row in self.work_sessions.all(
-                    str(query.project_id), include_archived=query.include_archived,
+            return WorkSessionListResult(
+                sessions=tuple(
+                    session_view(row)
+                    for row in self.work_sessions.all(
+                        str(query.project_id),
+                        include_archived=query.include_archived,
+                    )
                 )
-            ))
+            )
         if method == "workSession/rename":
             rename = msgspec.json.decode(raw, type=WorkSessionRenameParams)
             renamed = self.work_sessions.rename(str(rename.project_id), rename.work_session_id, rename.title)
@@ -960,15 +1000,21 @@ class TabService:
         if target.work_session_id != record.id:
             raise DomainError(code=3040, name="WORK_SESSION_NOT_FOUND", retryable=False)
         with self.workspace_lock(target.worktree):
-            members = tuple(tab for tab in self._tabs.values() if tab.work_session_id == record.id
-                            and Path(tab.worktree).resolve() == Path(target.worktree).resolve())
+            members = tuple(
+                tab
+                for tab in self._tabs.values()
+                if tab.work_session_id == record.id and Path(tab.worktree).resolve() == Path(target.worktree).resolve()
+            )
             active = tuple(tab for tab in members if tab.running or tab.sidecar or tab.live_sidecar)
             pending = None
             if self.history is not None:
                 self.history.recover(record)
                 pending = self.history.prepare(
-                    record, active[0].id if len(active) == 1 else None,
-                    "handoff", f"Hand off to {target.title}", worktree=target.worktree,
+                    record,
+                    active[0].id if len(active) == 1 else None,
+                    "handoff",
+                    f"Hand off to {target.title}",
+                    worktree=target.worktree,
                 )
             for tab in members:
                 self._finish_session_actor(tab, "handoff", keep_snapshot=False)
@@ -994,8 +1040,10 @@ class TabService:
             tab.pid = None
             tab.running = False
             keep_result = tab.isolated and reason in {"close-tab", "archive"}
-            if keep_snapshot and (had_process or keep_result or needed_check) and (
-                self.history is not None and tab.work_session_id is not None
+            if (
+                keep_snapshot
+                and (had_process or keep_result or needed_check)
+                and (self.history is not None and tab.work_session_id is not None)
             ):
                 record = self.work_sessions.require(tab.project_id, tab.work_session_id)
                 kind = "result" if keep_result else reason
@@ -1023,7 +1071,9 @@ class TabService:
         key = (record.id, query.sequence, snapshot.oid)
         if preview is not None:
             return WorkSessionRestorePreview(
-                sequence=query.sequence, oid=snapshot.oid, confirm_token=self.history.tokens.issue(key),
+                sequence=query.sequence,
+                oid=snapshot.oid,
+                confirm_token=self.history.tokens.issue(key),
             )
         if restore is None:
             raise TabRequestError(_METHOD)
@@ -1059,11 +1109,20 @@ class TabService:
         if self.inspect_workspace is not None:
             dest, branch = self.inspect_workspace(project.project_id, dest)
         now = self._clock.now()
-        record = self.work_sessions.add(WorkSession(
-            id=session_id, project_id=project.project_id, title=title, worktree=dest,
-            branch=branch, base_branch=base, workspace_mode=params.workspace.value,
-            status="active", created_at=now, updated_at=now,
-        ))
+        record = self.work_sessions.add(
+            WorkSession(
+                id=session_id,
+                project_id=project.project_id,
+                title=title,
+                worktree=dest,
+                branch=branch,
+                base_branch=base,
+                workspace_mode=params.workspace.value,
+                status="active",
+                created_at=now,
+                updated_at=now,
+            )
+        )
         return session_view(record)
 
     def _project_base(self, project_id: str) -> str | None:
@@ -1076,10 +1135,17 @@ class TabService:
 
     def pipeline_actor(self, tab_id: str) -> PipelineActor:
         tab = self._require(tab_id)
-        return PipelineActor(tab_id=tab.id, project_id=tab.project_id, worktree=Path(tab.worktree),
-                             mode=tab.plan_mode, agent=tab.agent.value, model=tab.model,
-                             agent_session_id=tab.session or "", container=tab.container,
-                             generation=tab.context_generation)
+        return PipelineActor(
+            tab_id=tab.id,
+            project_id=tab.project_id,
+            worktree=Path(tab.worktree),
+            mode=tab.plan_mode,
+            agent=tab.agent.value,
+            model=tab.model,
+            agent_session_id=tab.session or "",
+            container=tab.container,
+            generation=tab.context_generation,
+        )
 
     def context_generation(self, tab_id: str) -> int:
         tab = self._tabs.get(tab_id)
@@ -1129,9 +1195,17 @@ class TabService:
             _ = self.work_sessions.require(tab.project_id, tab.work_session_id, active=True)
         for member in self._tabs.values():
             same_path = Path(member.worktree).resolve() == Path(tab.worktree).resolve()
-            if member.id != tab.id and same_path and member.status in {
-                TabStatus.STARTING, TabStatus.WORKING, TabStatus.WAITING_APPROVAL, TabStatus.UNKNOWN,
-            }:
+            if (
+                member.id != tab.id
+                and same_path
+                and member.status
+                in {
+                    TabStatus.STARTING,
+                    TabStatus.WORKING,
+                    TabStatus.WAITING_APPROVAL,
+                    TabStatus.UNKNOWN,
+                }
+            ):
                 raise DomainError(code=3006, name="CHECKPOINT_RESTORE_CONFLICT", retryable=False)
 
     def sessions(self, params: SessionListParams) -> SessionListResult:
@@ -1146,12 +1220,20 @@ class TabService:
         container = project.container or f"agent-{params.agent.value}"
         for root in sorted(roots):
             for item in self._commands.list_sessions(params.agent, root, container).sessions:
-                if (_CODEX_ID.fullmatch(item.session_id) is not None and
-                        Path(item.cwd).resolve() == Path(root).resolve()):
+                if (
+                    _CODEX_ID.fullmatch(item.session_id) is not None
+                    and Path(item.cwd).resolve() == Path(root).resolve()
+                ):
                     found[item.session_id] = item
-        return SessionListResult(sessions=tuple(sorted(
-            found.values(), key=lambda item: (item.updated_at, item.session_id), reverse=True,
-        )))
+        return SessionListResult(
+            sessions=tuple(
+                sorted(
+                    found.values(),
+                    key=lambda item: (item.updated_at, item.session_id),
+                    reverse=True,
+                )
+            )
+        )
 
     def _route_sessions(self, raw: bytes) -> SessionListResult:
         return self.sessions(msgspec.json.decode(raw, type=SessionListParams))
@@ -1192,8 +1274,14 @@ class TabService:
         if params.isolated and params.work_session_id is None:
             message = "an isolated executor needs a work session"
             raise ValueError(message)
-        session = None if params.work_session_id is None else self.work_sessions.require(
-            project.project_id, params.work_session_id, active=True,
+        session = (
+            None
+            if params.work_session_id is None
+            else self.work_sessions.require(
+                project.project_id,
+                params.work_session_id,
+                active=True,
+            )
         )
         if session is None:
             dest, branch, created = self._place(params, project, tab_id)
@@ -1209,10 +1297,16 @@ class TabService:
         if session is None:
             now = self._clock.now()
             session = WorkSession(
-                id=f"s-{tab_id}", project_id=project.project_id,
-                title=self._title(params.title, params.agent, tab_id), worktree=dest,
-                branch=branch, base_branch=params.base_branch or self._project_base(project.project_id),
-                workspace_mode=params.workspace.value, status="active", created_at=now, updated_at=now,
+                id=f"s-{tab_id}",
+                project_id=project.project_id,
+                title=self._title(params.title, params.agent, tab_id),
+                worktree=dest,
+                branch=branch,
+                base_branch=params.base_branch or self._project_base(project.project_id),
+                workspace_mode=params.workspace.value,
+                status="active",
+                created_at=now,
+                updated_at=now,
             )
         elif session.status != "active":
             raise DomainError(code=3041, name="WORK_SESSION_ARCHIVED", retryable=False)
@@ -1333,13 +1427,17 @@ class TabService:
             return
         _ = self.work_sessions.require(tab.project_id, tab.work_session_id, active=True)
         for other in self._tabs.values():
-            if other.id != tab.id and Path(other.worktree).resolve() == Path(tab.worktree).resolve() and (
-                other.running or other.sidecar or other.live_sidecar
+            if (
+                other.id != tab.id
+                and Path(other.worktree).resolve() == Path(tab.worktree).resolve()
+                and (other.running or other.sidecar or other.live_sidecar)
             ):
                 raise DomainError(code=3025, name="WORKTREE_BUSY", retryable=True)
         for other in self._tabs.values():
-            if other.id != tab.id and Path(other.worktree).resolve() == Path(tab.worktree).resolve() and (
-                other.needs_process_check
+            if (
+                other.id != tab.id
+                and Path(other.worktree).resolve() == Path(tab.worktree).resolve()
+                and (other.needs_process_check)
             ):
                 self._finish_session_actor(other, "recovery")
 
@@ -1392,9 +1490,13 @@ class TabService:
         project_id = str(params.project_id)
         if not catalog.known(project_id):
             raise TabRequestError(_PROJECT)
-        choice = None if params.inherit else ApprovalPolicyChoice(
-            mode=ApprovalPolicyMode(params.approval_policy),
-            dangerous=DangerousSubmode(params.approval_dangerous),
+        choice = (
+            None
+            if params.inherit
+            else ApprovalPolicyChoice(
+                mode=ApprovalPolicyMode(params.approval_policy),
+                dangerous=DangerousSubmode(params.approval_dangerous),
+            )
         )
         _ = catalog.set_approval_policy(project_id, choice, origin=PolicyOrigin.UI)
         if self._policy is not None:
@@ -1567,11 +1669,20 @@ class TabService:
             copy.work_session_id = f"s-{tab_id}"
         self._remember(copy)
         if new_session and copy.work_session_id is not None:
-            _ = self.work_sessions.add(WorkSession(
-                id=copy.work_session_id, project_id=copy.project_id, title=copy.title,
-                worktree=copy.worktree, branch=copy.branch, base_branch=copy.base,
-                workspace_mode=copy.mode, status="active", created_at=now, updated_at=now,
-            ))
+            _ = self.work_sessions.add(
+                WorkSession(
+                    id=copy.work_session_id,
+                    project_id=copy.project_id,
+                    title=copy.title,
+                    worktree=copy.worktree,
+                    branch=copy.branch,
+                    base_branch=copy.base,
+                    workspace_mode=copy.mode,
+                    status="active",
+                    created_at=now,
+                    updated_at=now,
+                )
+            )
         return self._added(copy)
 
     def rename(self, params: RenameParams) -> EmptyResult:
@@ -1779,12 +1890,20 @@ class TabService:
             record.id == saved.work_session_id
             for record in self.work_sessions.all(saved.project_id, include_archived=True)
         ):
-            _ = self.work_sessions.add(WorkSession(
-                id=saved.work_session_id, project_id=saved.project_id, title=saved.title,
-                worktree=saved.worktree, branch=saved.branch, base_branch=saved.base_branch,
-                workspace_mode=saved.workspace_mode, status="active",
-                created_at=saved.created_at, updated_at=saved.since,
-            ))
+            _ = self.work_sessions.add(
+                WorkSession(
+                    id=saved.work_session_id,
+                    project_id=saved.project_id,
+                    title=saved.title,
+                    worktree=saved.worktree,
+                    branch=saved.branch,
+                    base_branch=saved.base_branch,
+                    workspace_mode=saved.workspace_mode,
+                    status="active",
+                    created_at=saved.created_at,
+                    updated_at=saved.since,
+                )
+            )
         status = _resting(TabStatus(saved.status))
         current = saved if status.value == saved.status else replace(saved, status=status.value)
         if current is not saved:
@@ -1905,8 +2024,11 @@ class TabService:
             mcp_calls=tab.mcp_calls or None,
             mode=tab.plan_mode,
             model=tab.model,
-            work_session_title=(None if tab.work_session_id is None else
-                self.work_sessions.require(tab.project_id, tab.work_session_id).title),
+            work_session_title=(
+                None
+                if tab.work_session_id is None
+                else self.work_sessions.require(tab.project_id, tab.work_session_id).title
+            ),
             work_session_id=tab.work_session_id,
             isolated=tab.isolated,
         )

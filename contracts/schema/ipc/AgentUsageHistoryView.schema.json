@@ -1,0 +1,114 @@
+{
+  "$defs": {
+    "AgentKind": {
+      "enum": [
+        "claude",
+        "codex",
+        "cursor",
+        "grok",
+        "opencode"
+      ],
+      "title": "AgentKind"
+    },
+    "AgentUsageHistoryView": {
+      "description": "Usage in an inclusive UTC day range. Each boundary is midnight UTC on that day.",
+      "properties": {
+        "agent": {
+          "$ref": "#/$defs/AgentKind"
+        },
+        "days": {
+          "items": {
+            "$ref": "#/$defs/DailyUsageView"
+          },
+          "type": "array"
+        },
+        "end_day": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "start_day": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "totals": {
+          "items": {
+            "$ref": "#/$defs/ModelUsageView"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "agent",
+        "start_day",
+        "end_day",
+        "days",
+        "totals"
+      ],
+      "title": "AgentUsageHistoryView",
+      "type": "object"
+    },
+    "DailyUsageView": {
+      "description": "A day with observations, identified by midnight UTC. Missing days have unknown usage.",
+      "properties": {
+        "day": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "models": {
+          "items": {
+            "$ref": "#/$defs/ModelUsageView"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "day",
+        "models"
+      ],
+      "title": "DailyUsageView",
+      "type": "object"
+    },
+    "ModelUsageView": {
+      "description": "Tokens one model used. `cost_usd` only when the agent reports it.",
+      "properties": {
+        "cache_read_tokens": {
+          "type": "integer"
+        },
+        "cache_write_tokens": {
+          "type": "integer"
+        },
+        "cost_usd": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "input_tokens": {
+          "type": "integer"
+        },
+        "model": {
+          "type": "string"
+        },
+        "output_tokens": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "model",
+        "input_tokens",
+        "output_tokens",
+        "cache_read_tokens",
+        "cache_write_tokens"
+      ],
+      "title": "ModelUsageView",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/AgentUsageHistoryView",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

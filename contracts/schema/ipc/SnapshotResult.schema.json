@@ -173,6 +173,43 @@
       ],
       "title": "AgentKind"
     },
+    "AgentUsageHistoryView": {
+      "description": "Usage in an inclusive UTC day range. Each boundary is midnight UTC on that day.",
+      "properties": {
+        "agent": {
+          "$ref": "#/$defs/AgentKind"
+        },
+        "days": {
+          "items": {
+            "$ref": "#/$defs/DailyUsageView"
+          },
+          "type": "array"
+        },
+        "end_day": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "start_day": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "totals": {
+          "items": {
+            "$ref": "#/$defs/ModelUsageView"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "agent",
+        "start_day",
+        "end_day",
+        "days",
+        "totals"
+      ],
+      "title": "AgentUsageHistoryView",
+      "type": "object"
+    },
     "AppSnapshot": {
       "properties": {
         "accounts": {
@@ -229,6 +266,17 @@
             "$ref": "#/$defs/TabView"
           },
           "type": "array"
+        },
+        "usage_overview": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/UsageOverviewView"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
         },
         "vault_ok": {
           "type": "boolean"
@@ -357,6 +405,27 @@
         "args_preview"
       ],
       "title": "CommandDetail",
+      "type": "object"
+    },
+    "DailyUsageView": {
+      "description": "A day with observations, identified by midnight UTC. Missing days have unknown usage.",
+      "properties": {
+        "day": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "models": {
+          "items": {
+            "$ref": "#/$defs/ModelUsageView"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "day",
+        "models"
+      ],
+      "title": "DailyUsageView",
       "type": "object"
     },
     "EditDetail": {
@@ -1256,6 +1325,25 @@
         "spent_tokens"
       ],
       "title": "TokenTaskView",
+      "type": "object"
+    },
+    "UsageOverviewView": {
+      "properties": {
+        "active_days": {
+          "type": "integer"
+        },
+        "histories": {
+          "items": {
+            "$ref": "#/$defs/AgentUsageHistoryView"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "histories",
+        "active_days"
+      ],
+      "title": "UsageOverviewView",
       "type": "object"
     }
   },
