@@ -9,6 +9,7 @@ from types import ModuleType
 import msgspec
 from pydantic import BaseModel
 
+from aconsole import REST_API_VERSION
 from aconsole.contracts import ingest, methods
 from aconsole.contracts.catalog import STRUCTS
 from aconsole.contracts.errors import ErrorObject
@@ -192,7 +193,7 @@ def _api_openapi() -> dict[str, object]:
         paths[f"/api/v1/{method.name}"] = {"post": _api_operation(method)}
     return {
         "openapi": "3.1.0",
-        "info": {"title": "AConsole methods", "version": "1.0.0"},
+        "info": {"title": "AConsole methods", "version": REST_API_VERSION},
         "paths": paths,
         "components": {
             "schemas": schemas,

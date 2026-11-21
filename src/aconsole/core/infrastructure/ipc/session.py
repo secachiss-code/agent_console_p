@@ -91,9 +91,9 @@ OUTBOUND_LIMIT = 1024
 
 
 def _server_version() -> str:
-    from aconsole import __version__  # noqa: PLC0415 -- lightweight package version
+    from aconsole import CORE_VERSION  # noqa: PLC0415 -- lightweight package version
 
-    return __version__
+    return CORE_VERSION
 
 
 @final

@@ -14,6 +14,7 @@ from mcp.server.mcpserver import MCPServer
 from mcp.types import Tool, ToolAnnotations
 from pydantic import BaseModel, Field
 
+from aconsole import MCP_VERSION
 from aconsole.contracts.common import NodeId, PlanId, ProjectId, TabId
 from aconsole.contracts.mcp_catalog import TOOL_INFO
 from aconsole.contracts.primitives import (
@@ -146,6 +147,7 @@ class _LeanServer(MCPServer):
     def __init__(self, context: TabContext) -> None:
         super().__init__(
             name="aconsole",
+            version=MCP_VERSION,
             instructions=(
                 "Plan: plan_ready, node_claim, one step. Code: index_find, index_read. "
                 "Workflow skills at aconsole://skills/."
