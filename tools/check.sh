@@ -20,7 +20,7 @@ run import-linter "$root/.venv-core/bin/lint-imports" --config "$root/pyproject.
 run check_no_js "$py" "$root/tools/check_no_js.py" "$root"
 run check_no_raw_sql "$py" "$root/tools/check_no_raw_sql.py" "$root/src" "$root/tests"
 run contrast_check "$py" "$root/tools/contrast_check.py"
-run check_contracts "$py" "$root/tools/check_contracts.py" "$root"
+run check_contracts env PYTHONPATH="$root/src" "$py" "$root/tools/check_contracts.py" "$root"
 run api_floor_check "$py" "$root/tools/api_floor_check.py" "$root/src"
 printf '%s\n' api_floor_fixture
 if "$py" "$root/tools/api_floor_check.py" "$root/tests/fixtures/ui_banned"; then

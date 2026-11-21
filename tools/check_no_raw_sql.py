@@ -15,7 +15,9 @@ PATTERNS = (
 )
 # The engine owns PRAGMA and BEGIN IMMEDIATE; its own test reads them back.
 # Migration-worker fixtures must create legacy/unknown schemas without the current ORM.
+# Project search also owns an ephemeral SQLite FTS5 index.
 ALLOWED = (
+    "src/aconsole/core/infrastructure/codegraph/project_search.py",
     "src/aconsole/core/infrastructure/persistence/engine.py",
     "src/aconsole/core/infrastructure/persistence/search.py",
     "tests/core/test_persistence_a.py",
