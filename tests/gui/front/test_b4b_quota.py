@@ -15,7 +15,14 @@ gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
 from gi.repository import Adw, Gio, Gtk  # noqa: E402
 
-from aconsole.contracts.app import AccountView, QuotaWindowView  # noqa: E402
+from aconsole.contracts.app import (  # noqa: E402
+    AccountView,
+    AgentUsageHistoryView,
+    DailyUsageView,
+    ModelUsageView,
+    QuotaWindowView,
+    UsageOverviewView,
+)
 from aconsole.contracts.common import AccountId, AgentKind, QuotaLevel  # noqa: E402
 from aconsole.contracts.events import PlanUpdated, QuotaUpdated, TabUpdated  # noqa: E402
 from aconsole.contracts.ipc import EventEnvelope  # noqa: E402
@@ -297,7 +304,7 @@ def test_b4b_quota_card_shows_normal_unknown_estimated_and_critical_windows() ->
     _run_ui(scenario)
 
 
-def test_b4b_summary_card_combines_plan_and_quota_and_tracks_live_updates() -> None:
+def test_b4b_summary_card_combines_plan_and_quota_and_tracks_live_updates() -> None:  # noqa: PLR0915
     from aconsole.ui.views.quota_dialog import QuotaDialog
 
     async def scenario(app: _QuotaTestApp) -> None:
@@ -352,15 +359,62 @@ def test_b4b_summary_card_combines_plan_and_quota_and_tracks_live_updates() -> N
         assert any("88" in row.percent_label.get_text() for row in dialog.window_rows)
         # The list stays short; a card opens its account's details on the right, with the tabs using it.
         assert "Live Tab Update" not in " ".join(_labels(dialog.content))
+        assert dialog.pages.get_visible_child_name() == "overview"
+        width = dialog.get_content_width()
+        height = dialog.get_content_height()
         dialog.open_account(account.id)
-        assert dialog.panel_revealer.get_reveal_child()
+        assert dialog.pages.get_visible_child_name() == "account"
+        assert dialog.scroll.get_visible()
+        assert (dialog.get_content_width(), dialog.get_content_height()) == (width, height)
         assert dialog.panel.title_label.get_text() == "Claude"
         panel_labels = " ".join(_labels(dialog.panel))
         assert "Live Tab Update" in panel_labels
         assert "Team" in panel_labels
         assert "на " not in " ".join(_labels(dialog.content))
         dialog.account_cards[account.id].emit("clicked")
-        assert not dialog.panel_revealer.get_reveal_child()
+        assert dialog.pages.get_visible_child_name() == "overview"
+        assert (dialog.get_content_width(), dialog.get_content_height()) == (width, height)
+        _ = dialog.close()
+
+    _run_ui(scenario)
+
+
+def test_quota_overview_draws_daily_usage_and_respects_hidden_agents() -> None:
+    from aconsole.ui.views.quota_overview import DailyChart
+
+    async def scenario(app: _QuotaTestApp) -> None:
+        model = ModelUsageView(
+            model="example-model",
+            input_tokens=12,
+            output_tokens=4,
+            cache_read_tokens=2,
+            cache_write_tokens=0,
+        )
+        history = AgentUsageHistoryView(
+            agent=AgentKind.CODEX,
+            start_day=_NOW,
+            end_day=_NOW,
+            days=(DailyUsageView(day=_NOW, models=(model,)),),
+            totals=(model,),
+        )
+        usage = UsageOverviewView(histories=(history,), active_days=1)
+        snapshot = msgspec.structs.replace(demo_snapshot(), usage_overview=usage)
+        app.client.store.apply_snapshot(snapshot, 0)
+        window = MainWindow(app, TabsViewModel(app.client))
+        app.window = window
+        window.present()
+        dialog = window.quota_card.open_details(window)
+        assert dialog.pages.get_visible_child_name() == "overview"
+        child = dialog.overview.get_first_child()
+        chart_found = False
+        while child is not None:
+            title = child.get_first_child() if isinstance(child, Gtk.Box) else None
+            chart_found |= title is not None and isinstance(title.get_next_sibling(), DailyChart)
+            child = child.get_next_sibling()
+        assert chart_found
+        assert any("example-model" in label for label in _labels(dialog.overview))
+        window.quota_card.set_usage(usage, frozenset({AgentKind.CODEX}))
+        assert not any("example-model" in label for label in _labels(dialog.overview))
         _ = dialog.close()
 
     _run_ui(scenario)

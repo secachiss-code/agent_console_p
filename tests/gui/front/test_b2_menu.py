@@ -184,6 +184,7 @@ def test_project_index_back_keeps_the_plan_node() -> None:
 def test_settings_action_opens_modal_categories() -> None:
     async def scenario(app: _MenuTestApp) -> None:
         window, _, _ = _window(app)
+        window.set_default_size(1280, 800)
         window.present()
         await asyncio.sleep(0.05)
         assert window.activate_action("win.settings", None)

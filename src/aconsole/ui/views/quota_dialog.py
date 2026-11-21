@@ -6,22 +6,22 @@ import gi
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
-from gi.repository import Adw, GLib, Gtk  # noqa: E402
+from gi.repository import Adw, GLib, Gtk, Pango  # noqa: E402
 
-from aconsole.contracts.app import AccountView, TabView  # noqa: E402
+from aconsole.contracts.app import AccountView, TabView, UsageOverviewView  # noqa: E402
 from aconsole.contracts.common import AccountId  # noqa: E402
 from aconsole.ui.bootstrap import spawn_task  # noqa: E402
 from aconsole.ui.viewmodels.logic.quota_fmt import agent_name  # noqa: E402
 from aconsole.ui.views.quota_account import AccountPanel, ago, detail, source_text  # noqa: E402
+from aconsole.ui.views.quota_overview import UsageOverview  # noqa: E402
 from aconsole.ui.views.sidebar.messages import _ as translate  # noqa: E402
 from aconsole.ui.views.sidebar.quota_row import QuotaRow, no_numbers_copy  # noqa: E402
 
 _REFRESH_WAIT_S = 15
 _SECONDS_PER_MINUTE = 60
-_WIDTH = 460
-_WIDTH_WITH_PANEL = 900
-# Below this a window has no room for both: the panel takes the dialog until it is closed.
-_ROOM_FOR_BOTH = 720
+_WIDTH = 850
+_HEIGHT = 600
+_ACCOUNTS_WIDTH = 245
 
 
 class QuotaDialog(Adw.Dialog):
@@ -35,10 +35,11 @@ class QuotaDialog(Adw.Dialog):
         thresholds: tuple[float, float] = (80, 95),
     ) -> None:
         title = translate("quota.title_left" if display == "remaining" else "quota.title")
-        super().__init__(title=title, content_width=_WIDTH)
+        super().__init__(title=title, content_width=_WIDTH, content_height=_HEIGHT)
         self._display: str = display
         self._thresholds: tuple[float, float] = thresholds
         self._accounts: tuple[AccountView, ...] = ()
+        self._usage: UsageOverviewView | None = None
         self._tab_signature: tuple[tuple[str, str | None, str, float | None, int | None], ...] = ()
         self._tabs: tuple[TabView, ...] = ()
         self.open_account_id: AccountId | None = None
@@ -52,26 +53,38 @@ class QuotaDialog(Adw.Dialog):
         self.content: Gtk.Box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=16)
         self.content.add_css_class("ac-quota-details")
         self.scroll: Gtk.ScrolledWindow = Gtk.ScrolledWindow(
-            hscrollbar_policy=Gtk.PolicyType.NEVER, propagate_natural_height=True, hexpand=True,
+            hscrollbar_policy=Gtk.PolicyType.NEVER,
+            width_request=_ACCOUNTS_WIDTH,
+            vexpand=True,
         )
         self.scroll.set_child(self.content)
         self.panel: AccountPanel = AccountPanel(self.close_account)
-        panel_scroll = Gtk.ScrolledWindow(
-            hscrollbar_policy=Gtk.PolicyType.NEVER, propagate_natural_height=True, width_request=400,
+        self.overview: UsageOverview = UsageOverview()
+        self.panel_scroll: Gtk.ScrolledWindow = Gtk.ScrolledWindow(
+            child=self.panel,
+            hscrollbar_policy=Gtk.PolicyType.NEVER,
+            vexpand=True,
         )
-        panel_scroll.set_child(self.panel)
-        self.panel_revealer: Gtk.Revealer = Gtk.Revealer(
-            child=panel_scroll, transition_type=Gtk.RevealerTransitionType.SLIDE_LEFT, reveal_child=False,
-            visible=False,
+        overview_scroll = Gtk.ScrolledWindow(
+            child=self.overview,
+            hscrollbar_policy=Gtk.PolicyType.NEVER,
+            vexpand=True,
         )
+        self.pages: Gtk.Stack = Gtk.Stack(hexpand=True, vexpand=True, hhomogeneous=False, vhomogeneous=False)
+        _ = self.pages.add_named(overview_scroll, "overview")
+        _ = self.pages.add_named(self.panel_scroll, "account")
         sides = Gtk.Box()
         sides.append(self.scroll)
-        sides.append(self.panel_revealer)
+        sides.append(self.pages)
         toolbar.set_content(sides)
         self.set_child(toolbar)
         _ = self.connect("map", self._mapped)
         _ = self.connect("unmap", self._unmapped)
         self.update_accounts(accounts, tabs)
+
+    def update_usage(self, usage: UsageOverviewView | None) -> None:
+        self._usage = usage
+        self.overview.update(self._usage, self._accounts)
 
     def _build_header(self) -> Adw.HeaderBar:
         header = Adw.HeaderBar()
@@ -173,15 +186,16 @@ class QuotaDialog(Adw.Dialog):
             )
             for tab in tabs
         )
-        if (
-            (accounts, signature) == (self._accounts, self._tab_signature)
-            and self.content.get_first_child() is not None
-        ):
+        if (accounts, signature) == (
+            self._accounts,
+            self._tab_signature,
+        ) and self.content.get_first_child() is not None:
             return
         if self.refreshing and accounts != self._accounts:
             self._refresh_done()
         self._accounts, self._tab_signature, self._tabs = accounts, signature, tabs
         self._fill_info(accounts)
+        self.overview.update(self._usage, self._accounts)
         while (child := self.content.get_first_child()) is not None:
             self.content.remove(child)
         self.window_rows.clear()
@@ -199,7 +213,7 @@ class QuotaDialog(Adw.Dialog):
         name.add_css_class("heading")
         heading.append(name)
         if account.plan_label:
-            plan = Gtk.Label(label=account.plan_label)
+            plan = Gtk.Label(label=account.plan_label, ellipsize=Pango.EllipsizeMode.END, max_width_chars=14)
             plan.add_css_class("ac-git-pill")
             plan.add_css_class("dim-label")
             heading.append(plan)
@@ -231,6 +245,7 @@ class QuotaDialog(Adw.Dialog):
             return
         self.open_account_id = account_id
         self._rebuild()
+        self.panel_scroll.get_vadjustment().set_value(0)
 
     def close_account(self) -> None:
         self.open_account_id = None
@@ -246,15 +261,12 @@ class QuotaDialog(Adw.Dialog):
 
     def _sync_panel(self) -> None:
         account = next((item for item in self._accounts if item.id == self.open_account_id), None)
-        # Hidden, not only folded: a folded revealer still kept part of the dialog's width.
-        self.panel_revealer.set_visible(account is not None)
-        self.panel_revealer.set_reveal_child(account is not None)
-        self.set_content_width(_WIDTH if account is None else _WIDTH_WITH_PANEL)
-        root = self.get_root()
-        narrow = isinstance(root, Gtk.Widget) and 0 < root.get_width() < _ROOM_FOR_BOTH
-        self.scroll.set_visible(account is None or not narrow)
-        if account is not None:
+        if account is None:
+            self.open_account_id = None
+            self.pages.set_visible_child_name("overview")
+        else:
             self.panel.show_account(account, self._tabs)
+            self.pages.set_visible_child_name("account")
 
     def refresh_times(self) -> None:
         for row in self.window_rows:

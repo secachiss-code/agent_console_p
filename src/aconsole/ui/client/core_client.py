@@ -186,7 +186,7 @@ class CoreClient:
         await self._open_socket()
         try:
             return await self._handshake()
-        except (CoreCallError, msgspec.DecodeError):
+        except CoreCallError, msgspec.DecodeError:
             # A refused handshake is terminal until the user explicitly retries.
             # Disconnect only: the daemon may still own live agents and data.
             await self._disconnect()
@@ -261,8 +261,11 @@ class CoreClient:
         """Release client resources without signalling a possibly incompatible daemon."""
         self._closing = True
         current = asyncio.current_task()
-        tasks = tuple(task for task in (self._read_task, self._reconnect_task, self._resync_task)
-                      if task is not None and task is not current)
+        tasks = tuple(
+            task
+            for task in (self._read_task, self._reconnect_task, self._resync_task)
+            if task is not None and task is not current
+        )
         self._read_task = None
         self._reconnect_task = None
         self._resync_task = None
@@ -323,7 +326,8 @@ class CoreClient:
             raise ConnectionError(message)
         return msgspec.json.decode(envelope.result, type=result_type)
 
-    async def _load_snapshot(self) -> SnapshotResult:
+    async def read_snapshot(self) -> SnapshotResult:
+        """Read a fresh snapshot without changing the current event subscription."""
         try:
             return await self.request("app/snapshot", EmptyParams(), SnapshotResult)
         except CoreCallError as exc:
@@ -332,7 +336,9 @@ class CoreClient:
         assembly = SnapshotAssembly()
         for _ in range(MAX_SNAPSHOT_CHUNKS):
             chunk = await self.request(
-                "app/snapshotChunk", SnapshotChunkParams(cursor=assembly.cursor), SnapshotChunkResult,
+                "app/snapshotChunk",
+                SnapshotChunkParams(cursor=assembly.cursor),
+                SnapshotChunkResult,
             )
             if assembly.add(chunk):
                 return assembly.finish()
@@ -340,7 +346,7 @@ class CoreClient:
         raise ConnectionError(message)
 
     async def pull_snapshot(self) -> tuple[SnapshotResult, SubscribeResult]:
-        snapshot = await self._load_snapshot()
+        snapshot = await self.read_snapshot()
         self.store.apply_snapshot(snapshot.snapshot, snapshot.seq)
         subscribed = await self.request(
             "events/subscribe",
@@ -393,15 +399,21 @@ class CoreClient:
         result = await self.request("initialize", params, InitializeResult)
         if "work_sessions.v1" not in result.capabilities:
             error = error_by_name("PROTOCOL_VERSION_UNSUPPORTED")
-            raise CoreCallError(ErrorObject(
-                code=error.code, message=error.name,
-                data=ErrorData(
-                    reason=error.name, domain="aconsole.ipc", retryable=False,
-                    user_message_key="error.protocol_version_unsupported", user_message_args={},
-                    hint="Restart the core with the same AConsole version as the UI",
-                    details=ProtocolVersionUnsupportedDetails(supported=("work_sessions.v1",)),
-                ),
-            ))
+            raise CoreCallError(
+                ErrorObject(
+                    code=error.code,
+                    message=error.name,
+                    data=ErrorData(
+                        reason=error.name,
+                        domain="aconsole.ipc",
+                        retryable=False,
+                        user_message_key="error.protocol_version_unsupported",
+                        user_message_args={},
+                        hint="Restart the core with the same AConsole version as the UI",
+                        details=ProtocolVersionUnsupportedDetails(supported=("work_sessions.v1",)),
+                    ),
+                )
+            )
         self._snapshot_chunks = "snapshot.chunks.v1" in result.capabilities
         note = Notification(method="initialized", params=msgspec.Raw(b"{}"))
         await self._send(msgspec.json.encode(note) + b"\n")

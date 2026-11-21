@@ -8,7 +8,9 @@ gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
 from gi.repository import GLib, GObject, Gtk  # noqa: E402
 
-from aconsole.contracts.app import AccountView, TabView  # noqa: E402
+from aconsole.contracts.app import AccountView, TabView, UsageOverviewView  # noqa: E402
+from aconsole.contracts.common import AgentKind  # noqa: E402
+from aconsole.ui.bootstrap import spawn_task  # noqa: E402
 from aconsole.ui.views.quota_dialog import QuotaDialog  # noqa: E402
 from aconsole.ui.views.sidebar.messages import _ as translate  # noqa: E402
 from aconsole.ui.views.sidebar.quota_row import AccountLine  # noqa: E402
@@ -25,6 +27,11 @@ class QuotaCard(Gtk.Button):
         self.account_lines: list[AccountLine] = []
         # Set by the window: asks the core for fresh limits. The answers come back through `set_accounts`.
         self.on_refresh: Callable[[], Awaitable[None]] | None = None
+        self.read_usage: Callable[[], Awaitable[UsageOverviewView | None]] | None = None
+        self._usage: UsageOverviewView | None = None
+        self._snapshot_usage: UsageOverviewView | None = None
+        self._hidden: frozenset[AgentKind] = frozenset()
+        self._usage_request: int = 0
         self.details_dialog: QuotaDialog | None = None
         self._timer: int | None = None
         self._display: str = "used"
@@ -54,6 +61,8 @@ class QuotaCard(Gtk.Button):
             return
         self._all_hidden = all_hidden
         self._rebuild(accounts)
+        if self.details_dialog is not None and self.details_dialog.get_visible():
+            self._refresh_usage()
 
     def _rebuild(self, accounts: tuple[AccountView, ...]) -> None:
         self._accounts = accounts
@@ -97,6 +106,40 @@ class QuotaCard(Gtk.Button):
         if isinstance(root, Gtk.Widget):
             _ = self.open_details(root)
 
+    def set_usage(self, usage: UsageOverviewView | None, hidden: frozenset[AgentKind]) -> None:
+        if (usage, hidden) == (self._snapshot_usage, self._hidden):
+            return
+        if usage != self._snapshot_usage:
+            self._snapshot_usage = self._usage = usage
+        self._hidden = hidden
+        self._show_usage()
+
+    def _show_usage(self) -> None:
+        dialog = self.details_dialog
+        if dialog is None:
+            return
+        usage = self._usage
+        if usage is None:
+            dialog.update_usage(None)
+            return
+        histories = tuple(history for history in usage.histories if history.agent not in self._hidden)
+        active_days = len({day.day for history in histories for day in history.days})
+        dialog.update_usage(UsageOverviewView(histories=histories, active_days=active_days))
+
+    def _refresh_usage(self) -> None:
+        if self.read_usage is not None:
+            self._usage_request += 1
+            _ = spawn_task(self._load_usage(self.read_usage, self._usage_request))
+
+    async def _load_usage(self, read: Callable[[], Awaitable[UsageOverviewView | None]], request: int) -> None:
+        try:
+            usage = await read()
+        except Exception:  # noqa: BLE001 -- keep the last statistics on temporary connection failures
+            return
+        if request == self._usage_request:
+            self._usage = usage
+            self._show_usage()
+
     def open_details(self, parent: Gtk.Widget) -> QuotaDialog:
         if self.details_dialog is not None and self.details_dialog.get_visible():
             self.details_dialog.present(parent)
@@ -109,7 +152,9 @@ class QuotaCard(Gtk.Button):
             thresholds=self._thresholds,
         )
         self.details_dialog = dialog
+        self._show_usage()
         dialog.present(parent)
+        self._refresh_usage()
         return dialog
 
     def _sync_details(self) -> None:

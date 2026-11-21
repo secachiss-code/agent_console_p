@@ -2371,3 +2371,15 @@ msgstr "Текущий"
 
 msgid "graph.step.pending"
 msgstr "Ожидает"
+
+msgid "quota.overview"
+msgstr "Обзор расхода"
+
+msgid "quota.daily_unavailable"
+msgstr "Дневная статистика токенов недоступна."
+
+msgid "quota.active_days"
+msgstr "Активные дни · {count}"
+
+msgid "quota.total_tokens"
+msgstr "Всего токенов · {total}"

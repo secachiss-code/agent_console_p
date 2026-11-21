@@ -2359,3 +2359,15 @@ msgstr "Current"
 
 msgid "graph.step.pending"
 msgstr "Pending"
+
+msgid "quota.overview"
+msgstr "Usage overview"
+
+msgid "quota.daily_unavailable"
+msgstr "Daily token history is unavailable."
+
+msgid "quota.active_days"
+msgstr "Active days · {count}"
+
+msgid "quota.total_tokens"
+msgstr "Total tokens · {total}"

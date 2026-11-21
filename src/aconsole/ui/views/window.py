@@ -28,6 +28,7 @@ from aconsole.contracts.app import (  # noqa: E402
     SetNodeStatusParams,
     TabIdParams,
     TabView,
+    UsageOverviewView,
 )
 from aconsole.contracts.common import AgentKind, ApprovalDecision, NodeId, NodeStatus, PlanId, ProjectId, TabId  # noqa: E402
 from aconsole.contracts.events import (  # noqa: E402
@@ -272,6 +273,7 @@ class MainWindow(Adw.ApplicationWindow):
         self.summary_card.add_css_class("ac-summary-card")
         self.quota_card: QuotaCard = QuotaCard()
         self.quota_card.on_refresh = self._refresh_limits
+        self.quota_card.read_usage = self._read_quota_usage
         self._code_font: Gtk.CssProvider | None = None
         self._code_font_css: str = ""
         self.quota_settings_button: Gtk.Button = Gtk.Button(label=translate("quota.open_settings"), visible=False)
@@ -460,10 +462,12 @@ class MainWindow(Adw.ApplicationWindow):
 
     def _update_quota(self) -> None:
         settings = self._terminal_settings
-        hidden = settings.quota_hidden_agents if settings is not None else ()
+        hidden: frozenset[AgentKind] = settings.quota_hidden_agents if settings is not None else frozenset()
         accounts = tuple(account for account in self._summary_vm.accounts if account.agent not in hidden)
         self.quota_card.tabs = tuple(tab for tab in self._summary_vm.tabs if tab.agent not in hidden)
         all_hidden = len(hidden) == len(AgentKind)
+        snapshot = self.tabs.client.store.snapshot
+        self.quota_card.set_usage(None if snapshot is None else snapshot.usage_overview, hidden)
         self.quota_card.set_accounts(accounts, all_hidden=all_hidden)
         self.quota_settings_button.set_visible(all_hidden)
         critical = any(
@@ -1338,6 +1342,9 @@ class MainWindow(Adw.ApplicationWindow):
                 Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION + 1,
             )
         self._code_font.load_from_string(css)
+
+    async def _read_quota_usage(self) -> UsageOverviewView | None:
+        return (await self.tabs.client.read_snapshot()).snapshot.usage_overview
 
     async def _refresh_limits(self) -> None:
         _ = await self.tabs.client.request("quota/refresh", EmptyParams(), EmptyResult)

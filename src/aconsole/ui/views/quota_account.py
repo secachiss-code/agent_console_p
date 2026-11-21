@@ -6,7 +6,7 @@ from datetime import UTC, datetime
 import gi
 
 gi.require_version("Gtk", "4.0")
-from gi.repository import Gtk  # noqa: E402
+from gi.repository import Gtk, Pango  # noqa: E402
 
 from aconsole.contracts.app import AccountView, ModelUsageView, QuotaWindowView, TabView  # noqa: E402
 from aconsole.ui.i18n import format_date, format_number, language  # noqa: E402
@@ -45,11 +45,13 @@ def ago(observed: datetime | None) -> str:
         return translate("quota.info.now").format(time=local.strftime("%H:%M:%S"))
     if seconds < _SECONDS_PER_HOUR:
         return translate("quota.info.minutes", seconds // _SECONDS_PER_MINUTE).format(
-            time=local.strftime("%H:%M"), count=seconds // _SECONDS_PER_MINUTE,
+            time=local.strftime("%H:%M"),
+            count=seconds // _SECONDS_PER_MINUTE,
         )
     if seconds < _SECONDS_PER_DAY:
         return translate("quota.info.hours", seconds // _SECONDS_PER_HOUR).format(
-            time=local.strftime("%H:%M"), count=seconds // _SECONDS_PER_HOUR,
+            time=local.strftime("%H:%M"),
+            count=seconds // _SECONDS_PER_HOUR,
         )
     return translate("quota.info.date").format(time=format_date(local))
 
@@ -75,14 +77,14 @@ def money_lines(account: AccountView, tabs: tuple[TabView, ...]) -> list[str]:
 
 
 def detail(text: str) -> Gtk.Label:
-    label = Gtk.Label(label=text, xalign=0, wrap=True)
+    label = Gtk.Label(label=text, xalign=0, wrap=True, wrap_mode=Pango.WrapMode.WORD_CHAR)
     label.add_css_class("ac-summary-detail")
     return label
 
 
 def _two_sides(left: str, right: str) -> Gtk.Box:
     line = Gtk.Box(spacing=8)
-    name = Gtk.Label(label=left, xalign=0, hexpand=True, wrap=True)
+    name = Gtk.Label(label=left, xalign=0, hexpand=True, wrap=True, wrap_mode=Pango.WrapMode.WORD_CHAR)
     name.add_css_class("ac-summary-name")
     line.append(name)
     value = Gtk.Label(label=right, xalign=1)
