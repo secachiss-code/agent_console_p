@@ -9,20 +9,15 @@ gi.require_version("Adw", "1")
 from gi.repository import GLib, GObject, Gtk  # noqa: E402
 
 from aconsole.contracts.app import AccountView, TabView  # noqa: E402
-from aconsole.ui.i18n import format_date  # noqa: E402
 from aconsole.ui.views.quota_dialog import QuotaDialog  # noqa: E402
 from aconsole.ui.views.sidebar.messages import _ as translate  # noqa: E402
 from aconsole.ui.views.sidebar.quota_row import AccountLine  # noqa: E402
 
 
 class QuotaCard(Gtk.Button):
-    def __init__(self, *, with_heading: bool = True) -> None:
-        """Under a `SummarySection` the section names the card, and the time of the numbers goes last."""
+    def __init__(self) -> None:
         super().__init__()
-        self.update_property(
-            [Gtk.AccessibleProperty.LABEL], [GObject.Value(GObject.TYPE_STRING, translate("quota.title"))],
-        )
-        self._with_heading: bool = with_heading
+        self._all_hidden: bool = False
         self.add_css_class("flat")
         self.add_css_class("ac-summary-section")
         self._accounts: tuple[AccountView, ...] = ()
@@ -35,8 +30,6 @@ class QuotaCard(Gtk.Button):
         self._display: str = "used"
         self._thresholds: tuple[float, float] = (80, 95)
         self.rows: Gtk.Box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
-        self.summary_label: Gtk.Label = Gtk.Label(xalign=1)
-        self.summary_label.add_css_class("ac-summary-detail")
         self.set_child(self.rows)
         _ = self.connect("clicked", self._clicked)
         _ = self.connect("map", self._mapped)
@@ -55,26 +48,22 @@ class QuotaCard(Gtk.Button):
             self._thresholds = (warn, critical)
             self._rebuild(self._accounts)
 
-    def set_accounts(self, accounts: tuple[AccountView, ...]) -> None:
-        if accounts == self._accounts and self.rows.get_first_child() is not None:
+    def set_accounts(self, accounts: tuple[AccountView, ...], *, all_hidden: bool = False) -> None:
+        if accounts == self._accounts and all_hidden == self._all_hidden and self.rows.get_first_child() is not None:
             self._sync_details()
             return
+        self._all_hidden = all_hidden
         self._rebuild(accounts)
 
     def _rebuild(self, accounts: tuple[AccountView, ...]) -> None:
         self._accounts = accounts
-        parent = self.summary_label.get_parent()
-        if isinstance(parent, Gtk.Box):
-            parent.remove(self.summary_label)
         while (child := self.rows.get_first_child()) is not None:
             self.rows.remove(child)
-        if self._with_heading:
-            heading = Gtk.Box(spacing=8)
-            title = Gtk.Label(label=self._title().upper(), xalign=0, hexpand=True)
-            title.add_css_class("caption-heading")
-            heading.append(title)
-            heading.append(self.summary_label)
-            self.rows.append(heading)
+        title = self.title()
+        self.update_property([Gtk.AccessibleProperty.LABEL], [GObject.Value(GObject.TYPE_STRING, title)])
+        heading = Gtk.Label(label=title.upper(), xalign=0)
+        heading.add_css_class("caption-heading")
+        self.rows.append(heading)
         self.account_lines.clear()
         if accounts:
             # A line each, whatever their number: one bar and the time to its reset. The details are one click away.
@@ -85,18 +74,10 @@ class QuotaCard(Gtk.Button):
                 lines.append(line)
             self.rows.append(lines)
         else:
-            empty = Gtk.Label(label=translate("quota.empty"), xalign=0, wrap=True)
+            key = "quota.all_hidden" if self._all_hidden else "quota.empty"
+            empty = Gtk.Label(label=translate(key), xalign=0, wrap=True)
             empty.add_css_class("ac-summary-detail")
             self.rows.append(empty)
-        if not self._with_heading:
-            self.summary_label.set_xalign(0)
-            self.rows.append(self.summary_label)
-        observations = [window.observed_at for account in accounts for window in account.quota if window.observed_at]
-        self.summary_label.set_label(
-            translate("quota.observed").format(time=format_date(min(observations)))
-            if observations else "",
-        )
-        self.summary_label.set_visible(self._with_heading or bool(self.summary_label.get_label()))
         self._sync_details()
 
     @property
@@ -105,14 +86,10 @@ class QuotaCard(Gtk.Button):
 
     @property
     def display(self) -> str:
-        """"used" or "remaining", as the settings chose."""
+        """ "used" or "remaining", as the settings chose."""
         return self._display
 
     def title(self) -> str:
-        """The card's name for the section header: limits used, or limits left."""
-        return self._title()
-
-    def _title(self) -> str:
         return translate("quota.title_left" if self._display == "remaining" else "quota.title")
 
     def _clicked(self, _button: Gtk.Button) -> None:
@@ -125,7 +102,11 @@ class QuotaCard(Gtk.Button):
             self.details_dialog.present(parent)
             return self.details_dialog
         dialog = QuotaDialog(
-            self._accounts, self.tabs, self._display, on_refresh=self.on_refresh, thresholds=self._thresholds,
+            self._accounts,
+            self.tabs,
+            self._display,
+            on_refresh=self.on_refresh,
+            thresholds=self._thresholds,
         )
         self.details_dialog = dialog
         dialog.present(parent)

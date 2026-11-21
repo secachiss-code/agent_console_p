@@ -31,6 +31,7 @@ def test_hiding_limits_updates_an_open_dialog_and_keeps_new_session_options() ->
         hidden = Settings(rev=2, vault_path="", worktrees_dir="", quota_hidden_agents=frozenset(AgentKind))
         window.preferences_vm.accept(hidden)
         assert not window.quota_card.accounts
+        assert window.quota_settings_button.get_visible()
         assert not dialog.account_cards
         assert not window.quota_banner.get_revealed()
         agents = NewTabDialog(tabs, lambda _tab: None, lambda _text: None).agent_row.get_model()
@@ -40,6 +41,13 @@ def test_hiding_limits_updates_an_open_dialog_and_keeps_new_session_options() ->
         window.preferences_vm.accept(msgspec.structs.replace(hidden, rev=3, quota_hidden_agents=frozenset()))
         assert set(dialog.account_cards) == {account.id for account in accounts}
         assert window.quota_banner.get_revealed()
+        assert not window.quota_settings_button.get_visible()
         _ = dialog.close()
+
+        window.preferences_vm.accept(msgspec.structs.replace(hidden, rev=4))
+        window.quota_settings_button.emit("clicked")
+        preferences = window.preferences_dialog
+        assert preferences is not None
+        assert preferences.limits_page.get_child_visible()
 
     _run_ui(scenario)

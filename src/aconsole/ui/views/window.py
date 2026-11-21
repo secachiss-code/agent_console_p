@@ -29,7 +29,7 @@ from aconsole.contracts.app import (  # noqa: E402
     TabIdParams,
     TabView,
 )
-from aconsole.contracts.common import ApprovalDecision, NodeId, NodeStatus, PlanId, ProjectId, TabId  # noqa: E402
+from aconsole.contracts.common import AgentKind, ApprovalDecision, NodeId, NodeStatus, PlanId, ProjectId, TabId  # noqa: E402
 from aconsole.contracts.events import (  # noqa: E402
     CheckpointCreated,
     GitStateUpdated,
@@ -42,7 +42,6 @@ from aconsole.contracts.settings import Settings  # noqa: E402
 from aconsole.ui.bootstrap import spawn_task  # noqa: E402
 from aconsole.ui.client.core_client import CoreClient  # noqa: E402
 from aconsole.ui.client.store import CoreStore  # noqa: E402
-from aconsole.ui.client.ui_state import UiState  # noqa: E402
 from aconsole.ui.i18n import core_message  # noqa: E402
 from aconsole.ui.viewmodels.app_vm import AppViewModel  # noqa: E402
 from aconsole.ui.viewmodels.approval_alerts import Alert, ApprovalAlerts  # noqa: E402
@@ -69,7 +68,6 @@ from aconsole.ui.views.sidebar.plan_card import PlanCard  # noqa: E402
 from aconsole.ui.views.sidebar.plan_graph import PlanGraph  # noqa: E402
 from aconsole.ui.views.sidebar.project_index import ProjectIndexPage  # noqa: E402
 from aconsole.ui.views.sidebar.quota_card import QuotaCard  # noqa: E402
-from aconsole.ui.views.sidebar.section import SummarySection  # noqa: E402
 from aconsole.ui.views.tabs.messages import _ as tabs_text  # noqa: E402
 from aconsole.ui.views.tabs.project_bar import ProjectBar  # noqa: E402
 from aconsole.ui.views.tabs.sidebar import TabSidebar  # noqa: E402
@@ -272,18 +270,15 @@ class MainWindow(Adw.ApplicationWindow):
         body.append(self.tabs_sidebar)
         self.summary_card: Gtk.Box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         self.summary_card.add_css_class("ac-summary-card")
-        ui_state = UiState()
-        self.quota_card: QuotaCard = QuotaCard(with_heading=False)
+        self.quota_card: QuotaCard = QuotaCard()
         self.quota_card.on_refresh = self._refresh_limits
         self._code_font: Gtk.CssProvider | None = None
         self._code_font_css: str = ""
-        self.quota_section: SummarySection = SummarySection(
-            "limits",
-            self.quota_card.title(),
-            self.quota_card,
-            ui_state,
-        )
-        self.summary_card.append(self.quota_section)
+        self.quota_settings_button: Gtk.Button = Gtk.Button(label=translate("quota.open_settings"), visible=False)
+        self.quota_settings_button.add_css_class("flat")
+        _ = self.quota_settings_button.connect("clicked", self._quota_settings_clicked)
+        self.summary_card.append(self.quota_card)
+        self.summary_card.append(self.quota_settings_button)
         self.summary_card.append(Gtk.Separator())
         self.summary_card.append(self._build_summary_navigation())
         body.append(self.summary_card)
@@ -468,8 +463,9 @@ class MainWindow(Adw.ApplicationWindow):
         hidden = settings.quota_hidden_agents if settings is not None else ()
         accounts = tuple(account for account in self._summary_vm.accounts if account.agent not in hidden)
         self.quota_card.tabs = tuple(tab for tab in self._summary_vm.tabs if tab.agent not in hidden)
-        self.quota_card.set_accounts(accounts)
-        self._sync_quota_header()
+        all_hidden = len(hidden) == len(AgentKind)
+        self.quota_card.set_accounts(accounts, all_hidden=all_hidden)
+        self.quota_settings_button.set_visible(all_hidden)
         critical = any(
             self._quota_level(window.used_pct) == "critical" for account in accounts for window in account.quota
         )
@@ -1208,6 +1204,11 @@ class MainWindow(Adw.ApplicationWindow):
             self.health_dialog = HealthDialog(HealthViewModel(self.tabs.client))
         self.health_dialog.present(self)
 
+    def _quota_settings_clicked(self, _button: Gtk.Button) -> None:
+        self._open_preferences()
+        if self.preferences_dialog is not None:
+            self.preferences_dialog.set_visible_page(self.preferences_dialog.limits_page)
+
     def _open_preferences(self) -> None:
         if self.preferences_dialog is None:
             self.preferences_dialog = PreferencesDialog(self.preferences_vm, self._settings_menu)
@@ -1337,22 +1338,6 @@ class MainWindow(Adw.ApplicationWindow):
 
     async def _refresh_limits(self) -> None:
         _ = await self.tabs.client.request("quota/refresh", EmptyParams(), EmptyResult)
-
-    def _sync_quota_header(self) -> None:
-        """Folded, the section still shows the most used window, coloured by how close it is to the limit."""
-        self.quota_section.set_title(self.quota_card.title())
-        used = [window.used_pct for account in self.quota_card.accounts for window in account.quota]
-        known = [value for value in used if value is not None]
-        if not known:
-            self.quota_section.set_detail("")
-            return
-        peak = max(known)
-        shown = {"critical": "error", "warn": "warning"}.get(self._quota_level(peak))
-        if self.quota_card.display == "remaining":
-            text = translate("quota.peak_left").format(pct=round(100 - peak))
-        else:
-            text = translate("quota.peak").format(pct=round(peak))
-        self.quota_section.set_detail(text, shown)
 
     def _snapshot_changed(self, _store: CoreStore) -> None:
         self._sync_terminal_pages(_store)

@@ -101,23 +101,23 @@ class PreferencesDialog(Adw.Dialog):
     def _build_categories(self) -> tuple[Adw.PreferencesPage, ...]:
         appearance = Adw.PreferencesPage()
         terminal = Adw.PreferencesPage()
-        tools = Adw.PreferencesPage()
+        self.limits_page: Adw.PreferencesPage = Adw.PreferencesPage()
         approvals = Adw.PreferencesPage()
         self.mcp_page: Adw.PreferencesPage = _mcp_page()
         self._build_appearance(appearance)
         self._build_terminal(terminal)
-        self._build_limits(tools)
-        tools.add(self._build_harness())
+        self._build_limits(self.limits_page)
+        self.limits_page.add(self._build_harness())
         approvals.add(self._build_approvals())
         for page, name in (
             (appearance, "appearance"),
             (terminal, "terminal"),
-            (tools, "tools_limits"),
+            (self.limits_page, "tools_limits"),
             (approvals, "permissions"),
             (self.mcp_page, "mcp"),
         ):
             _ = self._pages.add_titled(page, name, translate(f"prefs.{name}"))
-        return appearance, terminal, tools, approvals
+        return appearance, terminal, self.limits_page, approvals
 
     def _build_layout(self, menu: Gio.MenuModel | None) -> None:
         sidebar = Gtk.StackSidebar(stack=self._pages)
