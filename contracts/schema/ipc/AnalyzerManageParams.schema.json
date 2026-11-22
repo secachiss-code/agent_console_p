@@ -1,0 +1,42 @@
+{
+  "$defs": {
+    "AnalyzerManageParams": {
+      "properties": {
+        "action": {
+          "enum": [
+            "check",
+            "install",
+            "remove",
+            "update"
+          ]
+        },
+        "id": {
+          "type": "string"
+        },
+        "project_id": {
+          "type": "string"
+        },
+        "tab_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "project_id",
+        "id",
+        "action"
+      ],
+      "title": "AnalyzerManageParams",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/AnalyzerManageParams",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

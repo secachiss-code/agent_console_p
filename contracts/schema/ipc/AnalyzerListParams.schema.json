@@ -1,0 +1,29 @@
+{
+  "$defs": {
+    "AnalyzerListParams": {
+      "properties": {
+        "project_id": {
+          "type": "string"
+        },
+        "tab_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "project_id"
+      ],
+      "title": "AnalyzerListParams",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/AnalyzerListParams",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

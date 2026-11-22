@@ -394,6 +394,7 @@ class _Route(Enum):
 _HEALTH_EVERY_S = 60.0
 _MS_PER_S = 1000
 _IMPACT = "knowledge/impact"
+_APART_IO_METHODS = frozenset({_IMPACT, "analyzer/list", "analyzer/manage", "analyzer/setEnabled"})
 _GIT_PREFIX = "git/"
 _MAX_GIT_READS = 4
 # `quota/refresh` only sets asyncio events, which belong to the loop: it is answered there, never in a worker.
@@ -423,7 +424,7 @@ def _route(envelope: Envelope, *, ready: bool) -> _Route:
         return _Route.NOW if envelope.method == _CANCEL else _Route.TURN
     if isinstance(envelope, Request) and envelope.method in _NOW_METHODS:
         return _Route.NOW
-    if isinstance(envelope, Request) and envelope.method == _IMPACT:
+    if isinstance(envelope, Request) and envelope.method in _APART_IO_METHODS:
         return _Route.APART
     if isinstance(envelope, Request) and envelope.method.startswith(_GIT_PREFIX):
         return _Route.GIT
@@ -1922,8 +1923,8 @@ class Daemon:
             envelope = decode_envelope(frame)
             if _route(envelope, ready=connection.ready) is _Route.NOW:
                 payloads = connection.receive(frame)
-            elif isinstance(envelope, Request) and envelope.method == _IMPACT:
-                # Building a graph can take a minute; the tab worker must keep answering.
+            elif isinstance(envelope, Request) and envelope.method in _APART_IO_METHODS:
+                # Graph extraction and analyzer setup can take a minute. Keep the tab worker available.
                 async with self._impacts:
                     payloads = await asyncio.to_thread(connection.receive, frame)
             elif isinstance(envelope, Request) and envelope.method.startswith(_GIT_PREFIX):

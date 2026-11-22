@@ -103,3 +103,51 @@ def test_project_index_ruff_is_read_only_and_cache_follows_config(tmp_path: Path
             assert not changed.get("cached")
 
     asyncio.run(scenario())
+
+
+def test_managed_analyzers_share_mcp_scope_and_report_coverage(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Filter reports to the indexed snapshot and avoid treating a missing signal as clean."""
+    from aconsole.core.infrastructure.analyzers.runtime import BridgeReport, ReportFinding
+    from aconsole.core.infrastructure.analyzers.service import AnalyzerService
+
+    _ = (tmp_path / "one.py").write_text("import os\n")
+    _ = (tmp_path / "two.py").write_text("print('hello')\n")
+    _ = (tmp_path / "notes.txt").write_text("unindexed as Python\n")
+    _, server = _server(_Clock(), "extension", worktree=tmp_path)
+
+    def diagnostics(_service: AnalyzerService, key: str, files: dict[str, str]) -> tuple[str, BridgeReport]:
+        assert key == "ruff"
+        assert "notes.txt" not in files
+        if "one.py" not in files:
+            return "2026.98.0", BridgeReport()
+        return "2026.98.0", BridgeReport(
+            diagnostics=(
+                ReportFinding("one.py", 1, 8, 1, 10, "warning", "F401", "Unused import"),
+                ReportFinding("../outside.py", 1, 1, 1, 2, "warning", "F401", "Out of scope"),
+            ),
+            observed=("one.py", "../outside.py"),
+        )
+
+    monkeypatch.setattr(AnalyzerService, "diagnostics", diagnostics)
+
+    async def scenario() -> None:
+        async with Client(server) as client:
+            listing = await _call(client, "analyzer_list", {})
+            assert [item["id"] for item in listing["items"]] == ["ruff", "pylint"]
+            report = await _call(client, "analyzer_diagnostics", {
+                "analyzer": "ruff", "targets": ["one.py", "two.py", "notes.txt"],
+            })
+            assert report["state"] == "findings"
+            assert report["version"] == "2026.98.0"
+            assert report["observed"] == ["one.py"]
+            assert [row["code"] for row in report["diagnostics"]] == ["F401"]
+            assert report["diagnostics"][0]["sha256"]
+            empty = await _call(client, "analyzer_diagnostics", {"analyzer": "ruff", "targets": ["two.py"]})
+            assert empty["state"] == "unconfirmed"
+            _ = (tmp_path / "one.py").write_text("print('changed')\n")
+            stale = await client.call_tool("analyzer_diagnostics", {
+                "analyzer": "ruff", "targets": ["one.py"], "expected_revision": report["revision"],
+            })
+            assert _error(stale)["reason"] == "INDEX_REVISION_STALE"
+
+    asyncio.run(scenario())

@@ -5,6 +5,8 @@ import base64
 import msgspec
 
 from aconsole.contracts.app import (
+    AnalyzerItem,
+    AnalyzerListResult,
     AppliedResult,
     CheckpointListResult,
     CheckResult,
@@ -183,6 +185,14 @@ def _samples() -> dict[str, msgspec.Struct]:
         "project/add": project,
         "project/remove": empty,
         "project/setActive": empty,
+        "analyzer/list": AnalyzerListResult(items=(
+            AnalyzerItem(id="ruff", name="Ruff", version="2026.98.0", installed_version="2026.98.0", state="ready"),
+            AnalyzerItem(id="pylint", name="Pylint", version="2026.8.0"),
+        )),
+        "analyzer/setEnabled": AnalyzerListResult(items=()),
+        "analyzer/manage": AnalyzerItem(
+            id="ruff", name="Ruff", version="2026.98.0", installed_version="2026.98.0", state="ready",
+        ),
         "project/index": ProjectIndexView(
             revision="demo", state="partial", coverage=("typescript",),
             items=(

@@ -1,0 +1,33 @@
+{
+  "$defs": {
+    "AnalyzerEnableParams": {
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "project_id": {
+          "type": "string"
+        },
+        "tab_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "project_id",
+        "enabled"
+      ],
+      "title": "AnalyzerEnableParams",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/AnalyzerEnableParams",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

@@ -10,6 +10,9 @@ import msgspec
 from pydantic import BaseModel, TypeAdapter
 
 from aconsole.contracts.app import (
+    AnalyzerEnableParams,
+    AnalyzerListParams,
+    AnalyzerManageParams,
     DirectionGateParams,
     DirectionGateResult,
     EmptyResult,
@@ -92,6 +95,9 @@ PLAN_METHODS: Final = frozenset(
 )
 KNOWLEDGE_METHODS: Final = PLAN_METHODS | {
     "project/index",
+    "analyzer/list",
+    "analyzer/manage",
+    "analyzer/setEnabled",
     "knowledge/noteUri",
     "knowledge/impact",
     "knowledge/get",
@@ -122,7 +128,9 @@ class KnowledgeService:
         self.project_index: ProjectIndex = ProjectIndex(board)
         self.tab_context: Callable[[str], TabContext | None] = lambda _tab: None
 
-    def dispatch(self, method: str, raw: bytes) -> msgspec.Struct:
+    def dispatch(self, method: str, raw: bytes) -> msgspec.Struct:  # noqa: PLR0911 -- one return per route family
+        if method.startswith("analyzer/"):
+            return self._analyzer(method, raw)
         if method == "project/index":
             return self._project_index(msgspec.json.decode(raw, type=ProjectIndexParams))
         if method in {"plan/create", "plan/addNode", "plan/ready"}:
@@ -135,23 +143,40 @@ class KnowledgeService:
             return self._impact(msgspec.json.decode(raw, type=ImpactParams))
         return self._note_uri(msgspec.json.decode(raw, type=NoteUriParams))
 
+    def _analyzer(self, method: str, raw: bytes) -> msgspec.Struct:
+        if method == "analyzer/list":
+            params = msgspec.json.decode(raw, type=AnalyzerListParams)
+            ctx = self._project_context(str(params.project_id), None if params.tab_id is None else str(params.tab_id))
+            return self.project_index.list_analyzers(ctx)
+        if method == "analyzer/setEnabled":
+            toggle = msgspec.json.decode(raw, type=AnalyzerEnableParams)
+            ctx = self._project_context(str(toggle.project_id), None if toggle.tab_id is None else str(toggle.tab_id))
+            return self.project_index.enable_analyzers(ctx, enabled=toggle.enabled)
+        manage = msgspec.json.decode(raw, type=AnalyzerManageParams)
+        ctx = self._project_context(str(manage.project_id), None if manage.tab_id is None else str(manage.tab_id))
+        return self.project_index.manage_analyzer(ctx, manage.id, manage.action)
+
     def _project_index(self, params: ProjectIndexParams) -> msgspec.Struct:
         if len(params.query) > _INDEX_QUERY_MAX or max(len(params.scope), len(params.anchor or "")) > _INDEX_PATH_MAX:
             raise ValueError
-        if params.tab_id is None:
-            ctx = _bind(None, str(params.project_id))
-        else:
-            context = self.tab_context(str(params.tab_id))
-            if context is None or context.project_id != str(params.project_id):
-                raise DomainError(code=2003, name="TAB_NOT_FOUND", retryable=False, extra=(str(params.tab_id),))
-            ctx = context
-        if ctx.worktree is None and self.board.project_root(ctx.project_id) is None:
-            raise DomainError(code=2001, name="PROJECT_NOT_FOUND", retryable=False, extra=(ctx.project_id,))
+        ctx = self._project_context(str(params.project_id), None if params.tab_id is None else str(params.tab_id))
         try:
             return self.project_index.scene(ctx, params)
         except Exception as exc:
             error = as_domain_error(exc)
             raise ValueError(error.name) from exc
+
+    def _project_context(self, project_id: str, tab_id: str | None) -> TabContext:
+        if tab_id is None:
+            ctx = _bind(None, project_id)
+        else:
+            context = self.tab_context(tab_id)
+            if context is None or context.project_id != project_id:
+                raise DomainError(code=2003, name="TAB_NOT_FOUND", retryable=False, extra=(tab_id,))
+            ctx = context
+        if ctx.worktree is None and self.board.project_root(ctx.project_id) is None:
+            raise DomainError(code=2001, name="PROJECT_NOT_FOUND", retryable=False, extra=(ctx.project_id,))
+        return ctx
 
     def _primitive(self, method: str, raw: bytes) -> msgspec.Struct:
         """One PlanBoard effect, with the ids from the request body."""

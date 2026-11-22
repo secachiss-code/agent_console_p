@@ -14,6 +14,7 @@ from aconsole.contracts.app import ProjectIndexItem, ProjectIndexParams, Project
 from aconsole.ui.bootstrap import spawn_task  # noqa: E402
 from aconsole.ui.client.core_client import CoreClient  # noqa: E402
 from aconsole.ui.i18n import _ as translate  # noqa: E402
+from aconsole.ui.views.sidebar.analyzers import AnalyzerManagerDialog  # noqa: E402
 from aconsole.ui.views.sidebar.network_map import Link, NetworkMap, Point  # noqa: E402
 
 
@@ -33,6 +34,7 @@ class ProjectIndexPage(Gtk.Box):
         self._request: ProjectIndexParams = base
         self._generation: int = 0
         self._items: dict[str, ProjectIndexItem] = {}
+        self.analyzer_dialog: AnalyzerManagerDialog | None = None
         toolbar = Gtk.Box(spacing=8, margin_end=42)
         self.back_button: Gtk.Button = Gtk.Button(label=translate("plan.back"))
         _ = self.back_button.connect("clicked", self._back)
@@ -51,6 +53,10 @@ class ProjectIndexPage(Gtk.Box):
         self._lint.set_sensitive(False)
         _ = self._lint.connect("clicked", self._run_lint)
         toolbar.append(self._lint)
+        self.analyzers_button: Gtk.Button = Gtk.Button(label=translate("analyzer.manage"))
+        self.analyzers_button.set_tooltip_text(translate("analyzer.manage"))
+        _ = self.analyzers_button.connect("clicked", self._manage_analyzers)
+        toolbar.append(self.analyzers_button)
         self.append(toolbar)
         self._map: NetworkMap = NetworkMap(self._select)
         self.append(self._map)
@@ -128,3 +134,10 @@ class ProjectIndexPage(Gtk.Box):
 
     def _run_lint(self, _button: Gtk.Button) -> None:
         self._load(replace(self._request, cursor=None, diagnose=True))
+
+    def _manage_analyzers(self, _button: Gtk.Button) -> None:
+        root = self.get_root()
+        if not isinstance(root, Gtk.Window):
+            return
+        self.analyzer_dialog = AnalyzerManagerDialog(self._client, self._base.project_id, self._base.tab_id)
+        self.analyzer_dialog.present(root)

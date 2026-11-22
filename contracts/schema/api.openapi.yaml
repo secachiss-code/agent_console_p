@@ -277,6 +277,87 @@
         "title": "AgentUsageHistoryView",
         "type": "object"
       },
+      "AnalyzerItem": {
+        "properties": {
+          "detail": {
+            "default": "",
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "installed_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "name": {
+            "type": "string"
+          },
+          "state": {
+            "default": "available",
+            "type": "string"
+          },
+          "version": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "version"
+        ],
+        "title": "AnalyzerItem",
+        "type": "object"
+      },
+      "AnalyzerListParams": {
+        "properties": {
+          "project_id": {
+            "type": "string"
+          },
+          "tab_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        },
+        "required": [
+          "project_id"
+        ],
+        "title": "AnalyzerListParams",
+        "type": "object"
+      },
+      "AnalyzerListResult": {
+        "properties": {
+          "enabled": {
+            "default": true,
+            "type": "boolean"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/AnalyzerItem"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "AnalyzerListResult",
+        "type": "object"
+      },
       "AppSnapshot": {
         "properties": {
           "accounts": {
@@ -8259,6 +8340,197 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/api/v1/analyzer/list": {
+      "post": {
+        "operationId": "analyzer_list",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnalyzerListParams"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalyzerListResult"
+                }
+              }
+            },
+            "description": "method result",
+            "headers": {
+              "X-Aconsole-Timeout-Ms": {
+                "description": "Milliseconds the caller should wait for this method.",
+                "schema": {
+                  "const": 120000,
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorObject"
+                }
+              }
+            },
+            "description": "invalid params",
+            "headers": {
+              "X-Aconsole-Timeout-Ms": {
+                "description": "Milliseconds the caller should wait for this method.",
+                "schema": {
+                  "const": 120000,
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "unauthorized",
+            "headers": {
+              "X-Aconsole-Timeout-Ms": {
+                "description": "Milliseconds the caller should wait for this method.",
+                "schema": {
+                  "const": 120000,
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorObject"
+                }
+              }
+            },
+            "description": "forbidden",
+            "headers": {
+              "X-Aconsole-Timeout-Ms": {
+                "description": "Milliseconds the caller should wait for this method.",
+                "schema": {
+                  "const": 120000,
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorObject"
+                }
+              }
+            },
+            "description": "method not published",
+            "headers": {
+              "X-Aconsole-Timeout-Ms": {
+                "description": "Milliseconds the caller should wait for this method.",
+                "schema": {
+                  "const": 120000,
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorObject"
+                }
+              }
+            },
+            "description": "domain error",
+            "headers": {
+              "X-Aconsole-Timeout-Ms": {
+                "description": "Milliseconds the caller should wait for this method.",
+                "schema": {
+                  "const": 120000,
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "413": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "payload too large",
+            "headers": {
+              "X-Aconsole-Timeout-Ms": {
+                "description": "Milliseconds the caller should wait for this method.",
+                "schema": {
+                  "const": 120000,
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorObject"
+                }
+              }
+            },
+            "description": "internal error",
+            "headers": {
+              "X-Aconsole-Timeout-Ms": {
+                "description": "Milliseconds the caller should wait for this method.",
+                "schema": {
+                  "const": 120000,
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorObject"
+                }
+              }
+            },
+            "description": "busy",
+            "headers": {
+              "X-Aconsole-Timeout-Ms": {
+                "description": "Milliseconds the caller should wait for this method.",
+                "schema": {
+                  "const": 120000,
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "core"
+        ]
+      }
+    },
     "/api/v1/app/health": {
       "post": {
         "operationId": "app_health",

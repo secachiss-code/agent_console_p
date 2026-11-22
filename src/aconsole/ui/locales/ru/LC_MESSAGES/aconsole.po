@@ -2398,3 +2398,72 @@ msgstr "MCP"
 
 msgid "about.releases"
 msgstr "Выпуски и загрузки"
+
+msgid "analyzer.manage"
+msgstr "Анализаторы"
+
+msgid "analyzer.title"
+msgstr "Анализаторы проекта"
+
+msgid "analyzer.loading"
+msgstr "Загрузка анализаторов…"
+
+msgid "analyzer.error"
+msgstr "Не удалось выполнить запрос анализатора: {error}"
+
+msgid "analyzer.empty"
+msgstr "Для этого проекта анализаторы не настроены."
+
+msgid "analyzer.available_version"
+msgstr "доступна версия {version}"
+
+msgid "analyzer.not_installed"
+msgstr "не установлен"
+
+msgid "analyzer.installed_version"
+msgstr "Установленная версия: {version}"
+
+msgid "analyzer.action.install"
+msgstr "Установить"
+
+msgid "analyzer.action.update"
+msgstr "Обновить"
+
+msgid "analyzer.action.remove"
+msgstr "Удалить"
+
+msgid "analyzer.action.check"
+msgstr "Проверить"
+
+msgid "analyzer.working"
+msgstr "Выполняется действие «{action}»…"
+
+msgid "analyzer.updated"
+msgstr "Обновлён анализатор {name}"
+
+msgid "analyzer.action_failed"
+msgstr "Анализатор {name} сообщил об ошибке."
+
+msgid "analyzer.state.available"
+msgstr "Доступен"
+
+msgid "analyzer.state.unsupported"
+msgstr "Не поддерживается"
+
+msgid "analyzer.state.installed"
+msgstr "Установлен"
+
+msgid "analyzer.state.update_available"
+msgstr "Доступно обновление"
+
+msgid "analyzer.state.ready"
+msgstr "Готов"
+
+msgid "analyzer.state.error"
+msgstr "Ошибка"
+
+msgid "analyzer.enable"
+msgstr "Включить диагностику Python-анализаторов"
+
+msgid "analyzer.install_preset"
+msgstr "Установить пресет"

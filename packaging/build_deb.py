@@ -34,6 +34,13 @@ _DEPENDS: Final = (
     "gir1.2-vte-3.91",
     "libgirepository-2.0-0",
     "libcairo2",
+    "libnspr4",
+    "libnss3",
+    "libasound2t64 | libasound2",
+    "libgtk-3-0t64 | libgtk-3-0",
+    "xvfb",
+    "xauth",
+    "python3",
     "libcairo-gobject2",
     "libffi8",
 )

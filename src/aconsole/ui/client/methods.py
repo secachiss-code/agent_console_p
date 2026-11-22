@@ -6,6 +6,11 @@ from dataclasses import dataclass
 import msgspec
 
 from aconsole.contracts.app import (
+    AnalyzerEnableParams,
+    AnalyzerItem,
+    AnalyzerListParams,
+    AnalyzerListResult,
+    AnalyzerManageParams,
     AppliedResult,
     ApplyFixParams,
     AppSnapshot,
@@ -204,6 +209,9 @@ def _bindings() -> dict[str, Binding]:
         ("plan/list", PlanListParams, PlanListResult),
         ("plan/get", PlanIdParams, PlanView),
         ("plan/nodeDetails", PlanNodeDetailsParams, PlanNodeDetailsView),
+        ("analyzer/list", AnalyzerListParams, AnalyzerListResult),
+        ("analyzer/setEnabled", AnalyzerEnableParams, AnalyzerListResult),
+        ("analyzer/manage", AnalyzerManageParams, AnalyzerItem),
         ("project/index", ProjectIndexParams, ProjectIndexView),
         ("plan/create", PlanCreateParams, PlanCreateResult),
         ("plan/addNode", PlanAddNodeParams, PlanAddNodeResult),

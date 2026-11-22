@@ -157,6 +157,13 @@ TOOL_CATALOG = (
         "node_id, intent?, since_digest?, limit?", '{"node_id":"node-1","intent":"change"}',
     ),
     ToolInfo(
+        "analyzer_list", "List managed Python analyzer extensions for this worktree.", "knowledge", "", "{}",
+    ),
+    ToolInfo(
+        "analyzer_diagnostics", "Read managed extension diagnostics for selected Python files.", "knowledge",
+        "analyzer, targets, expected_revision?", '{"analyzer":"ruff","targets":["src/example.py"]}',
+    ),
+    ToolInfo(
         "index_lint", "Run read-only Ruff on changed Python files, a task scope, or selected paths.", "knowledge",
         "scope?, node_id?, targets?, expected_revision?, limit?, cursor?", '{"scope":"node","node_id":"node-1"}',
     ),

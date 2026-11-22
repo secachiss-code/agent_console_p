@@ -25,6 +25,7 @@ if TYPE_CHECKING:
 _HINT = "open a tab and pass Authorization: Bearer <tab token>"
 _READ = frozenset({
     "plan_get", "plan_graph", "plan_node_get", "plan_ready", "ctx_get", "kb_impact", "plan_list",
+    "analyzer_list", "analyzer_diagnostics",
     "index_overview", "index_find", "index_neighbors", "index_read", "index_task_context", "index_lint",
 })
 _IDEMPOTENT = frozenset({
@@ -44,6 +45,8 @@ _ERROR_ARGS: dict[str, dict[str, object]] = {
     "plan_get": {"plan_id": "plan-1"},
     "plan_graph": {"plan_id": "plan-1"},
     "plan_node_get": {"node_id": "node-1"},
+    "analyzer_list": {},
+    "analyzer_diagnostics": {"analyzer": "ruff", "targets": ["a.py"]},
     "index_overview": {},
     "index_find": {"query": "a"},
     "index_neighbors": {"targets": ["a.py"]},

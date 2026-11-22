@@ -1,0 +1,64 @@
+{
+  "$defs": {
+    "AnalyzerItem": {
+      "properties": {
+        "detail": {
+          "default": "",
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "installed_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "name": {
+          "type": "string"
+        },
+        "state": {
+          "default": "available",
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "version"
+      ],
+      "title": "AnalyzerItem",
+      "type": "object"
+    },
+    "AnalyzerListResult": {
+      "properties": {
+        "enabled": {
+          "default": true,
+          "type": "boolean"
+        },
+        "items": {
+          "items": {
+            "$ref": "#/$defs/AnalyzerItem"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "items"
+      ],
+      "title": "AnalyzerListResult",
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/AnalyzerListResult",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

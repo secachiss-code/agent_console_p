@@ -367,6 +367,38 @@ class ProjectIdParams(msgspec.Struct, frozen=True, kw_only=True):
     project_id: ProjectId
 
 
+class AnalyzerListParams(msgspec.Struct, frozen=True, kw_only=True):
+    project_id: ProjectId
+    tab_id: TabId | None = None
+
+
+class AnalyzerManageParams(msgspec.Struct, frozen=True, kw_only=True):
+    project_id: ProjectId
+    id: str
+    action: Literal["install", "update", "remove", "check"]
+    tab_id: TabId | None = None
+
+
+class AnalyzerEnableParams(msgspec.Struct, frozen=True, kw_only=True):
+    project_id: ProjectId
+    enabled: bool
+    tab_id: TabId | None = None
+
+
+class AnalyzerItem(msgspec.Struct, frozen=True, kw_only=True):
+    id: str
+    name: str
+    version: str
+    installed_version: str | None = None
+    state: str = "available"
+    detail: str = ""
+
+
+class AnalyzerListResult(msgspec.Struct, frozen=True, kw_only=True):
+    items: tuple[AnalyzerItem, ...]
+    enabled: bool = True
+
+
 class ProjectIndexParams(msgspec.Struct, frozen=True, kw_only=True):
     project_id: ProjectId
     tab_id: TabId | None = None

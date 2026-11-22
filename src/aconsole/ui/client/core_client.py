@@ -43,6 +43,7 @@ _LOG = logging.getLogger(__name__)
 _READ_LIMIT = ProtocolLimits().max_message_bytes + 1
 _DEFAULT_TIMEOUT_S = 10.0
 _LONG_TIMEOUT_S = 60.0
+_ANALYZER_MANAGE_TIMEOUT_S = 180.0
 _CANCEL_GRACE_S = 1.0
 _MS_PER_S = 1000
 # The first start upgrades the database before the socket opens.
@@ -177,6 +178,8 @@ class CoreClient:
         return self._process.pid
 
     def timeout_for(self, method: str) -> float:
+        if method == "analyzer/manage":
+            return _ANALYZER_MANAGE_TIMEOUT_S
         if method_by_name(method).long:
             return _LONG_TIMEOUT_S
         return self.timeout_s

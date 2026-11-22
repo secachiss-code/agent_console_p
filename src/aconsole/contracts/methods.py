@@ -155,6 +155,12 @@ METHODS: tuple[Method, ...] = (
     Method(name="plan/get", params="PlanIdParams", result="PlanView", errors=("PLAN_NOT_FOUND",)),
     Method(name="plan/nodeDetails", params="PlanNodeDetailsParams", result="PlanNodeDetailsView", long=True,
            errors=("NODE_NOT_FOUND", "INVALID_PARAMS")),
+    Method(name="analyzer/list", params="AnalyzerListParams", result="AnalyzerListResult", long=True,
+           errors=("PROJECT_NOT_FOUND", "TAB_NOT_FOUND")),
+    Method(name="analyzer/setEnabled", params="AnalyzerEnableParams", result="AnalyzerListResult", long=True,
+           errors=("PROJECT_NOT_FOUND", "TAB_NOT_FOUND")),
+    Method(name="analyzer/manage", params="AnalyzerManageParams", result="AnalyzerItem", long=True,
+           errors=("PROJECT_NOT_FOUND", "TAB_NOT_FOUND", "INVALID_PARAMS")),
     Method(name="project/index", params="ProjectIndexParams", result="ProjectIndexView", long=True,
            errors=("PROJECT_NOT_FOUND", "TAB_NOT_FOUND", "INVALID_PARAMS")),
     Method(
@@ -561,6 +567,8 @@ _REST_HIDDEN = frozenset({
     "tab/exited",
     "tab/launchSpec",
     "terminal/screenTextReply",
+    "analyzer/manage",
+    "analyzer/setEnabled",
 })
 _REST_SHORT_MS = 10_000
 _REST_LONG_MS = 120_000

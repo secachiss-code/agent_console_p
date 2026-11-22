@@ -43,6 +43,8 @@ from aconsole.core.infrastructure.http.auth import bearer_token, host_allowed, o
 from aconsole.core.infrastructure.knowledge import run_primitive
 from aconsole.core.infrastructure.mcp.graph_pages import CURSOR_PATTERN
 from aconsole.core.infrastructure.mcp.project_index import (
+    AnalyzerDiagnostics,
+    AnalyzerStatuses,
     IndexPage,
     IndexRead,
     LintScope,
@@ -479,6 +481,16 @@ def _register(  # noqa: C901, PLR0915 -- one nested function per MCP tool
     ) -> TaskContext:
         return index.task(active(context), node_id, intent, since_digest, limit)
 
+    def analyzer_list() -> AnalyzerStatuses:
+        return index.analyzer_status(active(context))
+
+    def analyzer_diagnostics(
+        analyzer: Literal["ruff", "pylint"],
+        targets: Annotated[tuple[_IndexPath, ...], Field(min_length=1, max_length=8)],
+        expected_revision: _Id | None = None,
+    ) -> AnalyzerDiagnostics:
+        return index.analyzer_diagnostics(active(context), analyzer, targets, expected_revision)
+
     def index_lint(  # noqa: PLR0913, PLR0917 -- public MCP signature
         scope: LintScope = "changed",
         node_id: _Id | None = None,
@@ -659,6 +671,8 @@ def _register(  # noqa: C901, PLR0915 -- one nested function per MCP tool
         (index_read, _READ),
         (index_task_context, _READ),
         (index_lint, _READ),
+        (analyzer_list, _READ),
+        (analyzer_diagnostics, _READ),
         (plan_ready, _READ),
         (node_claim, _WRITE),
         (step_begin, _IDEMPOTENT),

@@ -1,0 +1,9 @@
+{
+  "name": "ruff-activation-probe",
+  "displayName": "Ruff Activation Probe",
+  "publisher": "aconsole-spikes",
+  "version": "0.0.1",
+  "engines": { "vscode": "^1.75.0" },
+  "main": "./extension.cts",
+  "activationEvents": [ "*" ]
+}

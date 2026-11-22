@@ -2386,3 +2386,72 @@ msgstr "MCP"
 
 msgid "about.releases"
 msgstr "Releases and downloads"
+
+msgid "analyzer.manage"
+msgstr "Analyzers"
+
+msgid "analyzer.title"
+msgstr "Project analyzers"
+
+msgid "analyzer.loading"
+msgstr "Loading analyzers…"
+
+msgid "analyzer.error"
+msgstr "Analyzer request failed: {error}"
+
+msgid "analyzer.empty"
+msgstr "No analyzers are configured for this project."
+
+msgid "analyzer.available_version"
+msgstr "available {version}"
+
+msgid "analyzer.not_installed"
+msgstr "not installed"
+
+msgid "analyzer.installed_version"
+msgstr "Installed version: {version}"
+
+msgid "analyzer.action.install"
+msgstr "Install"
+
+msgid "analyzer.action.update"
+msgstr "Update"
+
+msgid "analyzer.action.remove"
+msgstr "Remove"
+
+msgid "analyzer.action.check"
+msgstr "Check"
+
+msgid "analyzer.working"
+msgstr "Running {action}…"
+
+msgid "analyzer.updated"
+msgstr "Updated {name}"
+
+msgid "analyzer.action_failed"
+msgstr "{name} reported an error."
+
+msgid "analyzer.state.available"
+msgstr "Available"
+
+msgid "analyzer.state.unsupported"
+msgstr "Unsupported"
+
+msgid "analyzer.state.installed"
+msgstr "Installed"
+
+msgid "analyzer.state.update_available"
+msgstr "Update available"
+
+msgid "analyzer.state.ready"
+msgstr "Ready"
+
+msgid "analyzer.state.error"
+msgstr "Error"
+
+msgid "analyzer.enable"
+msgstr "Enable Python analyzer diagnostics"
+
+msgid "analyzer.install_preset"
+msgstr "Install preset"

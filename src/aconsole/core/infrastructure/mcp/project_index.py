@@ -8,17 +8,26 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal, final
 
+import msgspec
 from pydantic import BaseModel
 
-from aconsole.contracts.app import ProjectIndexItem, ProjectIndexLink, ProjectIndexParams, ProjectIndexView
+from aconsole.contracts.app import (
+    AnalyzerItem,
+    AnalyzerListResult,
+    ProjectIndexItem,
+    ProjectIndexLink,
+    ProjectIndexParams,
+    ProjectIndexView,
+)
 from aconsole.core.application.ports.diff_reader import DiffReadError
 from aconsole.core.application.ports.git_repo import GitCommandError
 from aconsole.core.application.ports.plan_store import StoreWriteError
 from aconsole.core.domain.errors import DomainError
 from aconsole.core.domain.scope import check_scope
+from aconsole.core.infrastructure.analyzers.service import Action, AnalyzerService
 from aconsole.core.infrastructure.codegraph.index import CodeGraphIndex
 from aconsole.core.infrastructure.codegraph.project_inventory import ProjectInventories, WorktreeInventory, read_file
-from aconsole.core.infrastructure.codegraph.project_lint import LintResult, ProjectLinter
+from aconsole.core.infrastructure.codegraph.project_lint import Diagnostic, LintResult, ProjectLinter, lint_targets
 from aconsole.core.infrastructure.codegraph.project_search import (
     FileSearch,
     IndexEntry,
@@ -42,6 +51,39 @@ _READ_LINES = 120
 _MAX_READ_BYTES = 24 * 1024
 _CONTEXT_BYTES = 8 * 1024
 type LintScope = Literal["changed", "node", "targets"]
+
+
+class AnalyzerStatus(BaseModel, frozen=True):
+    id: str
+    name: str
+    version: str
+    installed_version: str | None
+    state: str
+    detail: str
+
+
+class AnalyzerStatuses(BaseModel, frozen=True):
+    items: tuple[AnalyzerStatus, ...]
+    enabled: bool
+
+
+class AnalyzerFinding(Diagnostic, frozen=True):
+    severity: str
+
+
+class AnalyzerDiagnostics(BaseModel, frozen=True):
+    analyzer: str
+    version: str | None = None
+    revision: str
+    configuration: str
+    column_units: str
+    state: str
+    requested: tuple[str, ...]
+    staged: tuple[str, ...] = ()
+    observed: tuple[str, ...] = ()
+    diagnostics: tuple[AnalyzerFinding, ...] = ()
+    truncated: bool = False
+    detail: str | None = None
 
 
 class IndexPage(BaseModel, frozen=True):
@@ -107,6 +149,7 @@ class ProjectIndex:
         self._inventories = ProjectInventories()
         self._text = FileSearch()
         self._lint = ProjectLinter()
+        self._analyzers = AnalyzerService()
         self._secret = secrets.token_bytes(32)
 
     def _root(self, ctx: TabContext) -> Path:
@@ -277,6 +320,56 @@ class ProjectIndex:
         return answer if _reply_bytes(answer) <= _CONTEXT_BYTES else answer.model_copy(update={
             "contract": (), "contract_truncated": True, "contract_cursor": None,
         })
+
+    def list_analyzers(self, ctx: TabContext) -> AnalyzerListResult:
+        return self._analyzers.listing(self._root(ctx))
+
+    def enable_analyzers(self, ctx: TabContext, *, enabled: bool) -> AnalyzerListResult:
+        return self._analyzers.set_enabled(self._root(ctx), enabled=enabled)
+
+    def manage_analyzer(self, ctx: TabContext, key: str, action: Action) -> AnalyzerItem:
+        return self._analyzers.manage(self._root(ctx), key, action)
+
+    def analyzer_status(self, ctx: TabContext) -> AnalyzerStatuses:
+        listing = self.list_analyzers(ctx)
+        return AnalyzerStatuses(enabled=listing.enabled, items=tuple(
+            AnalyzerStatus.model_validate(msgspec.to_builtins(item))
+            for item in listing.items
+        ))
+
+    def analyzer_diagnostics(
+        self, ctx: TabContext, analyzer: str, paths: tuple[str, ...], expected_revision: str | None,
+    ) -> AnalyzerDiagnostics:
+        root = self._root(ctx)
+        snapshot = self._snapshot(ctx, root, refresh=True)
+        if expected_revision is not None and expected_revision != snapshot.revision:
+            tool_error("INDEX_REVISION_STALE", "the index advanced since these targets were issued")
+        files, truncated = lint_targets(snapshot.inventory, paths)
+        base = AnalyzerDiagnostics(
+            analyzer=analyzer, revision=snapshot.revision, configuration="bundled_defaults",
+            column_units="utf16_code_units", state="no_targets", requested=paths,
+        )
+        if not files:
+            return base
+        content = {item.path: item.text for item in files if item.text is not None}
+        version, report = self._analyzers.diagnostics(analyzer, content)
+        if self._inventories.snapshot(root, refresh=True).revision != snapshot.inventory.revision:
+            return base.model_copy(update={"version": version, "state": "stale"})
+        rows = tuple(
+            AnalyzerFinding.model_validate(
+                {**msgspec.structs.asdict(item), "sha256": snapshot.inventory.files[item.path].sha256},
+            )
+            for item in report.diagnostics if item.path in content
+        )
+        state = report.failure or ("error" if report.error else "findings" if rows else "unconfirmed")
+        return AnalyzerDiagnostics(
+            analyzer=analyzer, version=version, revision=snapshot.revision,
+            configuration=base.configuration, column_units=base.column_units, requested=paths,
+            state=state,
+            staged=tuple(content), observed=tuple(path for path in report.observed if path in content),
+            diagnostics=rows,
+            detail=report.error, truncated=truncated or report.truncated,
+        )
 
     def lint(  # noqa: PLR0913 -- public lint selectors and pagination
         self, ctx: TabContext, page: PageRequest, *, scope: LintScope, node_id: str | None,
