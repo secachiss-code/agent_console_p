@@ -14,9 +14,9 @@ def test_version_and_roots_import() -> None:
     project = tomllib.loads((root / "pyproject.toml").read_text("utf-8"))
     lock = tomllib.loads((root / "uv.lock").read_text("utf-8"))
     package = next(item for item in lock["package"] if item["name"] == "aconsole")  # pyright: ignore[reportAny]
-    expected = f"{aconsole.CORE_VERSION}+ui.{aconsole.UI_VERSION}"
+    expected = "0.1.5+a"
     assert aconsole.__version__ == project["project"]["version"] == package["version"] == expected
-    assert aconsole.CORE_VERSION == "0.1.4"
+    assert aconsole.CORE_VERSION == "0.1.5"
     assert aconsole.UI_VERSION == aconsole.REST_API_VERSION == aconsole.MCP_VERSION == "0.0.1"
     for name in aconsole.package_roots():
         module = importlib.import_module(name)

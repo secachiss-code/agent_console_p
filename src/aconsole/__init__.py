@@ -1,12 +1,12 @@
 """AConsole package."""
 
-CORE_VERSION = "0.1.4"
+CORE_VERSION = "0.1.5"
 UI_VERSION = "0.0.1"
 REST_API_VERSION = "0.0.1"
 MCP_VERSION = "0.0.1"
 
-# Keep package upgrades ordered after 0.1.4+g in both Debian and Python.
-__version__ = "0.1.4+ui.0.0.1"
+# Release identifier shared by the Python distribution and Debian package.
+__version__ = "0.1.5+a"
 
 
 def package_roots() -> tuple[str, ...]:
