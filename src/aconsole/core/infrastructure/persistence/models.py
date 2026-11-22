@@ -132,6 +132,25 @@ class Project(Base):
 
 
 @final
+class ProjectAnalysisTrust(Base):
+    """A missing row means the project is untrusted.
+
+    Kept off ``projects`` so a downgrade to an older revision can still insert a project
+    with the current ``Project`` model.
+    """
+
+    __tablename__ = "project_analysis_trust"
+
+    project_id: Mapped[str] = mapped_column(ForeignKey("projects.id", ondelete="CASCADE"), primary_key=True)
+    analysis_trusted: Mapped[bool] = mapped_column(
+        Boolean(create_constraint=True),
+        nullable=False,
+        default=False,
+        server_default=false(),
+    )
+
+
+@final
 class AgentAccount(Base):
     __tablename__ = "agent_accounts"
 

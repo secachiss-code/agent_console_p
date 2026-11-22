@@ -3,10 +3,8 @@
 
 Run `./install.sh` first: nothing is downloaded here. The package carries two relocatable Python builds under
 `/opt/aconsole`, `core` (free-threaded) and `ui` (with the GIL), each with only what the app needs at run time.
-GTK, libadwaita, VTE, Git and Podman stay the system's.
+GTK, libadwaita, VTE, Git, Podman and bubblewrap stay the system's.
 """
-
-from __future__ import annotations
 
 import os
 import re
@@ -16,6 +14,8 @@ import tempfile
 import tomllib
 from pathlib import Path
 from typing import Final
+
+import msgspec
 
 ROOT: Final = Path(__file__).resolve().parents[1]
 APP_ID: Final = "io.github.aconsole.AConsole"
@@ -41,6 +41,7 @@ _DEPENDS: Final = (
     "xvfb",
     "xauth",
     "python3",
+    "bubblewrap",
     "libcairo-gobject2",
     "libffi8",
 )
@@ -70,32 +71,58 @@ def _normal(name: str) -> str:
     return re.sub(r"[-_.]+", "-", name).lower()
 
 
+class _Dependency(msgspec.Struct):
+    name: str
+    marker: str = ""
+    extra: tuple[str, ...] = ()
+
+
+class _LockedPackage(msgspec.Struct, rename="kebab"):
+    name: str
+    dependencies: tuple[_Dependency, ...] = ()
+    dev_dependencies: dict[str, tuple[_Dependency, ...]] = msgspec.field(default_factory=dict)
+    optional_dependencies: dict[str, tuple[_Dependency, ...]] = msgspec.field(default_factory=dict)
+
+
+class _LockFile(msgspec.Struct):
+    package: list[_LockedPackage]
+
+
+class _ProjectMetadata(msgspec.Struct):
+    version: str
+
+
+class _Pyproject(msgspec.Struct):
+    project: _ProjectMetadata
+
+
 def _closure() -> tuple[frozenset[str], frozenset[str]]:
     """What the core and the UI need, from the lock. The UI imports the shared contracts, so it needs the core's too."""
-    packages = {package["name"]: package for package in tomllib.loads((ROOT / "uv.lock").read_text("utf-8"))["package"]}
+    document = tomllib.loads((ROOT / "uv.lock").read_text("utf-8"))
+    packages = {package.name: package for package in msgspec.convert(document, _LockFile).package}
 
-    def walk(entries: list[dict[str, object]]) -> frozenset[str]:
+    def walk(entries: list[_Dependency]) -> frozenset[str]:
         seen: set[str] = set()
         done: set[tuple[str, str]] = set()
         while entries:
             entry = entries.pop()
-            name = str(entry["name"])
-            if name in _NOT_AT_RUN_TIME or _OTHER_PLATFORM.search(str(entry.get("marker", ""))):
+            name = entry.name
+            if name in _NOT_AT_RUN_TIME or _OTHER_PLATFORM.search(entry.marker):
                 continue
             package = packages[name]
             if name not in seen:
                 seen.add(name)
-                entries.extend(package.get("dependencies", ()))
+                entries.extend(package.dependencies)
             # `pyjwt[crypto]`: what an extra asks for is listed apart from the package's own needs.
-            for extra in entry.get("extra", ()):
+            for extra in entry.extra:
                 if (name, extra) not in done:
                     done.add((name, extra))
-                    entries.extend(package["optional-dependencies"][extra])
+                    entries.extend(package.optional_dependencies[extra])
         return frozenset(seen)
 
     project = packages["aconsole"]
-    core = walk(list(project["dependencies"]))
-    ui = walk(list(project["dev-dependencies"]["ui"]))
+    core = walk(list(project.dependencies))
+    ui = walk(list(project.dev_dependencies["ui"]))
     return core, core | ui
 
 
@@ -113,7 +140,7 @@ def _copy_python(venv: Path, dest: Path) -> Path:
             return [name for name in names if _SKIP_BIN.match(name)]
         if here == home / "lib":
             return [name for name in names if name != stdlib.name and _SKIP_LIB.match(name)]
-        extra = _SKIP_STDLIB if here == stdlib else frozenset()
+        extra = _SKIP_STDLIB if here == stdlib else frozenset[str]()
         return [name for name in names if name in extra or name == "__pycache__"]
 
     _ = shutil.copytree(home, dest, symlinks=True, ignore=skipped)
@@ -147,7 +174,10 @@ def _copy_app(site: Path) -> None:
     """Ship a tracked source manifest, refusing to silently omit new application files."""
     untracked = subprocess.run(
         ("git", "ls-files", "--others", "--exclude-standard", "-z", "--", "src/aconsole", "migrations"),  # noqa: S607 -- Git by name
-        cwd=ROOT, check=True, capture_output=True, text=True,
+        cwd=ROOT,
+        check=True,
+        capture_output=True,
+        text=True,
     ).stdout
     if untracked:
         names = ", ".join(name for name in untracked.split("\0") if name)
@@ -155,7 +185,10 @@ def _copy_app(site: Path) -> None:
         raise SystemExit(message)
     listed = subprocess.run(
         ("git", "ls-files", "-z", "--", "src/aconsole", "migrations"),  # noqa: S607 -- Git by name
-        cwd=ROOT, check=True, capture_output=True, text=True,
+        cwd=ROOT,
+        check=True,
+        capture_output=True,
+        text=True,
     ).stdout
     for line in filter(None, listed.split("\0")):
         source = ROOT / line
@@ -201,7 +234,8 @@ def _control(tree: Path, version: str) -> None:
 
 
 def build(out: Path) -> Path:
-    version: str = tomllib.loads((ROOT / "pyproject.toml").read_text("utf-8"))["project"]["version"]
+    document = tomllib.loads((ROOT / "pyproject.toml").read_text("utf-8"))
+    version = msgspec.convert(document, _Pyproject).project.version
     core, ui = _closure()
     with tempfile.TemporaryDirectory(prefix="aconsole-deb-") as folder:
         tree = Path(folder) / "tree"
@@ -223,7 +257,9 @@ def build(out: Path) -> Path:
         env = {**os.environ, "SOURCE_DATE_EPOCH": str(int((ROOT / "uv.lock").stat().st_mtime))}
         _ = subprocess.run(  # noqa: S603 -- fixed argv
             ("dpkg-deb", "--root-owner-group", "--build", str(tree), str(package)),  # noqa: S607 -- by name
-            check=True, env=env, stdout=subprocess.DEVNULL,
+            check=True,
+            env=env,
+            stdout=subprocess.DEVNULL,
         )
     return package
 
