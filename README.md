@@ -41,13 +41,15 @@ Codex CLI, OpenCode и Cursor CLI в контейнерах Podman, объеди
 | API контрактов | `1.4.0`, протокол IPC `1.0` |
 | Пакет | `aconsole_0.1.1_amd64.deb`, 67 586 408 байт, SHA-256 `23b001936f03cc2f15c9ffdcc6fbc0b68235d212b817eea8e8bf44a2ded2de16` |
 
-Версия в `pyproject.toml`, `src/aconsole/__init__.py` и ответе ядра — `0.1.2`:
-исходники подняты 2026-11-15, выпуск 0.1.2 ещё не опубликован. Последний
-опубликованный пакет — `0.1.1` (2026-11-06); предыдущий — `0.1.0` (2026-11-04).
+Последний опубликованный GitHub-релиз — `v0.1.1` (2026-11-06). Для текущего checkout
+собран локальный пакет `aconsole_0.1.4+ui.0.0.1_amd64.deb` из исходного коммита
+`721c28ff2f450f9fb9dff78e78d3766dbce8cbe8`: 75 295 576 байт, SHA-256
+`85efb4fd63dec4d7052e6c9b1201a116e0e2453980a3d60746f1232c4a02a28a`. Это локальная
+сборка от 2026-11-22, она не опубликована как GitHub-релиз. Файл находится в игнорируемом
+Git каталоге `dist/`.
 
-Текущий `main` опережает `0.1.1` на 169 коммитов и отправлен в `origin/main` целиком, но
-CI на `main` красный на шаге «Lint, types, layers, contracts». Что вошло в `main` и не
-выпущено, — в [CHANGELOG.md](CHANGELOG.md); открытые проблемы — в [ISSUES.md](ISSUES.md).
+Что вошло в текущий checkout после опубликованного релиза, — в [CHANGELOG.md](CHANGELOG.md);
+открытые проблемы — в [ISSUES.md](ISSUES.md).
 
 ## Возможности
 
@@ -631,6 +633,16 @@ sha256sum aconsole_0.1.1_amd64.deb
 
 sudo apt install ./aconsole_0.1.1_amd64.deb
 aconsole
+```
+
+### Из текущей локальной сборки
+
+Из корня checkout, где пакет был собран:
+
+```sh
+sha256sum dist/aconsole_0.1.4+ui.0.0.1_amd64.deb
+# 85efb4fd63dec4d7052e6c9b1201a116e0e2453980a3d60746f1232c4a02a28a
+sudo apt install ./dist/aconsole_0.1.4+ui.0.0.1_amd64.deb
 ```
 
 Пакет ставит `/usr/bin/aconsole` (UI), `/usr/bin/aconsoled` (ядро), собственные Python 3.15t
