@@ -34,6 +34,9 @@ from aconsole.core.application.ports.gate_runner import GateRunnerUnavailableErr
 from aconsole.core.application.ports.git_repo import GitCommandError
 from aconsole.core.application.ports.knowledge_store import KnowledgeStore, StoredFact, StoredHandover
 from aconsole.core.application.ports.plan_store import (
+    AssemblyReceipt,
+    GraphPreview,
+    PlanAssemblyStore,
     PlanChangeStore,
     PlanInboxStore,
     PlanStore,
@@ -60,6 +63,7 @@ from aconsole.core.application.services.plan_graph import (
     overview,
 )
 from aconsole.core.application.services.plan_lifecycle import (
+    admit_draft_nodes,
     apply_plan_change,
     freeze_plan,
     repair_direction_profiles,
@@ -74,7 +78,7 @@ from aconsole.core.domain.errors import DomainError
 from aconsole.core.domain.gate_profile import micro_commands
 from aconsole.core.domain.pipeline import Step
 from aconsole.core.domain.plan import Move, Node, NodeSpec, NodeStatus, Plan, Role, after_merge
-from aconsole.core.domain.plan_admission import PlanTopology
+from aconsole.core.domain.plan_admission import PlanTopology, TopologyContract, assembly_node_id, graph_token
 from aconsole.core.domain.scope import check_scope
 from aconsole.core.domain.vault_sync import Note as VaultNote
 from aconsole.core.domain.vault_sync import Owners, resolve_ref
@@ -472,6 +476,7 @@ class PlanBoard:
         self._graph_secret: bytes = secrets.token_bytes(32)
         self._shown: int = 0
         self._seen: dict[str, OrderedDict[str, _Shown]] = {}
+        self._receipts: dict[tuple[str, str], AssemblyReceipt] = {}
 
     def use_store(self, store: PlanStore) -> None:
         """Take the plans `store` kept. From here on every change is saved there."""
@@ -1554,12 +1559,57 @@ class PlanBoard:
         nodes = _planning_nodes(ctx, nodes)
         with self._lock:
             stored = self._owned(ctx, plan_id)
+            if _busy(stored):
+                _stop("LEASE_HELD", "a live lease blocks adding nodes")
             added = self._insert(stored, nodes)
             if added:
                 self._commit(stored)
             fresh_keys = {ref.key for ref in added}
             unchanged = [item.key for item in nodes if item.key not in fresh_keys]
             return Added(added=added, unchanged=unchanged)
+
+    def preview_graph(self, ctx: TabContext, plan_id: str, nodes: list[NodeIn]) -> GraphPreview:
+        """Name the add-only commit for this topology revision. Nothing is written."""
+        require_tab(ctx)
+        nodes = _planning_nodes(ctx, nodes)
+        with self._lock:
+            stored = self._owned(ctx, plan_id)
+            self._refuse_assembly(stored, nodes)
+            token, revision = self._assembly_token(stored, nodes)
+            added = tuple(sorted(item.key for item in nodes if item.key not in stored.meta))
+            return GraphPreview(token=token, revision_no=revision, added=added)
+
+    def commit_graph(self, ctx: TabContext, plan_id: str, token: str, nodes: list[NodeIn]) -> AssemblyReceipt:
+        """Add missing keys for a preview token. A repeated token returns the original ids."""
+        require_tab(ctx)
+        nodes = _planning_nodes(ctx, nodes)
+        with self._lock:
+            stored = self._owned(ctx, plan_id)
+            self._refuse_assembly(stored, nodes)
+            current, revision = self._assembly_token(stored, nodes)
+            if token != current:
+                found = self._load_receipt(stored.plan_id, token)
+                if found is None or not self._receipt_matches(stored, nodes, found):
+                    _stop("GRAPH_TOKEN_STALE", "the graph changed since the preview")
+                return found
+            found = self._load_receipt(stored.plan_id, current)
+            if found is not None and self._receipt_matches(stored, nodes, found):
+                return found
+            fresh = [item for item in nodes if item.key not in stored.meta]
+            if fresh:
+                _ = self._insert(stored, fresh, node_id=lambda spec: assembly_node_id(stored.plan_id, spec.key))
+                topology = stored.topology
+                if topology is None:
+                    _stop("NODE_CONTRACT", "assembly did not admit a topology")
+                stored.topology = replace(topology, revision_no=revision + 1)
+            receipt = AssemblyReceipt(
+                token=current,
+                plan_id=stored.plan_id,
+                revision_no=0 if stored.topology is None else stored.topology.revision_no,
+                node_ids=tuple(sorted((item.key, stored.meta[item.key].node_id) for item in nodes)),
+            )
+            self._commit_assembly(stored, receipt, revision)
+            return receipt
 
     def get(self, ctx: TabContext, plan_id: str, *, detailed: bool, since: str | None = None) -> PlanGot:
         """The plan. With ``since``, a revision an earlier answer gave, only the nodes that read differently now.
@@ -2085,7 +2135,81 @@ class PlanBoard:
             rows.sort(key=lambda item: item.updated_at, reverse=True)
             return PlanList(plans=rows)
 
-    def _insert(self, stored: _Stored, nodes: list[NodeIn]) -> list[NodeRef]:
+    def _refuse_assembly(self, stored: _Stored, nodes: list[NodeIn]) -> None:
+        """Reject a graph commit before any node, attempt, or vault write."""
+        if not nodes:
+            _stop("NODE_CONTRACT", "assembly needs at least one node")
+        if _busy(stored):
+            _stop("LEASE_HELD", "a live lease blocks graph assembly")
+        phase = "draft" if stored.topology is None else stored.topology.phase
+        if phase != "draft":
+            _stop("PLAN_FROZEN", "assembly is only for a draft plan")
+        self._assembly_conflict(stored, nodes)
+        fresh = [item for item in nodes if item.key not in stored.meta]
+        if not fresh:
+            return
+        cycle = self._preview(stored, fresh)
+        if cycle is not None:
+            _stop("PLAN_CYCLE", "cycle " + " -> ".join(cycle))
+        try:
+            _ = admit_draft_nodes(self._state(stored), fresh)
+        except DomainError as exc:
+            _domain(exc)
+
+    def _assembly_conflict(self, stored: _Stored, nodes: list[NodeIn]) -> None:
+        if len({item.key for item in nodes}) != len(nodes):
+            _stop("NODE_CONTRACT", "duplicate key in one assembly")
+        for item in nodes:
+            meta = stored.meta.get(item.key)
+            if meta is not None and not _same_offer(stored, meta, item):
+                _stop("NODE_CONTRACT", f"key conflict {item.key}")
+
+    def _assembly_token(self, stored: _Stored, nodes: list[NodeIn]) -> tuple[str, int]:
+        revision = 0 if stored.topology is None else stored.topology.revision_no
+        contracts = tuple(sorted((topology_contract(item) for item in nodes), key=lambda item: item.key))
+        bindings = tuple(sorted((item.key, item.title, tuple(item.depends_on), tuple(item.related)) for item in nodes))
+        return graph_token(stored.plan_id, revision, contracts, bindings), revision
+
+    def _load_receipt(self, plan_id: str, token: str) -> AssemblyReceipt | None:
+        cached = self._receipts.get((plan_id, token))
+        if cached is not None:
+            return cached
+        if isinstance(self._store, PlanAssemblyStore):
+            found = self._store.load_assembly(plan_id, token)
+            if found is not None:
+                self._receipts[(plan_id, token)] = found
+            return found
+        return None
+
+    def _receipt_matches(self, stored: _Stored, nodes: list[NodeIn], receipt: AssemblyReceipt) -> bool:
+        offered = tuple(sorted(item.key for item in nodes))
+        recorded = tuple(key for key, _node_id in receipt.node_ids)
+        if offered != recorded:
+            return False
+        return all(key in stored.meta and stored.meta[key].node_id == node_id for key, node_id in receipt.node_ids)
+
+    def _commit_assembly(self, stored: _Stored, receipt: AssemblyReceipt, expected_revision: int) -> None:
+        stored.updated_at = self._now()
+        state = self._state(stored)
+        try:
+            if isinstance(self._store, PlanAssemblyStore):
+                self._store.save_assembly(state, receipt, expected_revision)
+            elif self._store is not None:
+                self._store.save(state)
+        except StoreWriteError as exc:
+            self._forget_unsaved(stored.plan_id)
+            _stop("INTERNAL_ERROR", str(exc))
+        except DomainError as exc:
+            self._forget_unsaved(stored.plan_id)
+            _domain(exc)
+        self._saved[state.id] = state
+        self._receipts[(stored.plan_id, receipt.token)] = receipt
+        if self.on_changed is not None:
+            self.on_changed(self._view(stored))
+
+    def _insert(
+        self, stored: _Stored, nodes: list[NodeIn], *, node_id: Callable[[NodeIn], str] | None = None
+    ) -> list[NodeRef]:
         fresh = [item for item in nodes if item.key not in stored.meta]
         if not fresh:
             return []
@@ -2100,7 +2224,7 @@ class PlanBoard:
         stored.dag.add_many(tuple(_spec(spec, now) for spec in fresh))
         for spec in fresh:
             stored.deps[spec.key] = tuple(spec.depends_on)
-            stored.meta[spec.key] = _meta(self._id("node"), spec)
+            stored.meta[spec.key] = _meta(self._id("node") if node_id is None else node_id(spec), spec)
         stored.updated_at = now
         stored.topology = topology
         return [NodeRef(key=spec.key, node_id=stored.meta[spec.key].node_id) for spec in fresh]
@@ -2636,6 +2760,30 @@ def _spec(spec: NodeIn, created_at: datetime) -> NodeSpec:
     )
 
 
+def _same_offer(stored: _Stored, meta: _Meta, item: NodeIn) -> bool:
+    node = stored.dag.get(meta.key)
+    gate = "null" if node.gate_profile is None else json.dumps(node.gate_profile, sort_keys=True, separators=(",", ":"))
+    current = TopologyContract(
+        key=meta.key,
+        objective=meta.objective,
+        level=node.level,
+        parent=meta.parent,
+        paths=meta.paths,
+        acceptance=meta.acceptance,
+        test_cmd=meta.test_cmd,
+        boundaries=meta.boundaries,
+        output_format=meta.output_format,
+        invariants=node.invariants,
+        gate_profile_json=gate,
+    )
+    return (
+        current == topology_contract(item)
+        and meta.title == item.title
+        and stored.deps.get(meta.key, ()) == tuple(item.depends_on)
+        and meta.related == tuple(item.related)
+    )
+
+
 def _meta(node_id: str, spec: NodeIn) -> _Meta:
     return _Meta(
         node_id=node_id,
@@ -2877,6 +3025,7 @@ _CODES: dict[str, int] = {
     "INTERNAL_ERROR": -32603,
     "INGEST_UNAUTHORIZED": 1001,
     "PATH_NOT_ALLOWED": 2011,
+    "GRAPH_TOKEN_STALE": 4022,
     "PLAN_NOT_FOUND": 4001,
     "NODE_NOT_FOUND": 4002,
     "PLAN_CYCLE": 4003,

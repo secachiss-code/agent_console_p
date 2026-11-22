@@ -61,6 +61,13 @@ def topology_for(plan: StoredPlan) -> PlanTopology:
     return replace(plan.topology or PlanTopology(), nodes=tuple(topology_contract(node) for node in plan.nodes))
 
 
+def admit_draft_nodes(plan: StoredPlan, nodes: Sequence[ContractInput]) -> PlanTopology:
+    """Check an add-only draft insertion. Callers commit the result themselves."""
+    if plan.topology is not None and plan.topology.phase != "draft":
+        raise DomainError(code=4011, name="PLAN_FROZEN", retryable=False)
+    return topology_for(plan).add(tuple(topology_contract(node) for node in nodes))
+
+
 def require_note_contract(plan: StoredPlan, key: str, note: Note) -> None:
     if plan.topology is None or plan.topology.phase == "draft":
         return

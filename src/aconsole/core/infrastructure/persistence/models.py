@@ -151,6 +151,40 @@ class ProjectAnalysisTrust(Base):
 
 
 @final
+class ConceptDocument(Base):
+    """One concept key inside a project. ``revision`` is the optimistic lock."""
+
+    __tablename__ = "concept_documents"
+    __table_args__ = _table_args(UniqueConstraint("project_id", "key"))
+
+    id: Mapped[str] = mapped_column(String(26), primary_key=True)
+    project_id: Mapped[str] = mapped_column(ForeignKey("projects.id", ondelete="CASCADE"), index=True)
+    key: Mapped[str] = mapped_column(String(16))
+    title: Mapped[str] = mapped_column(String(300))
+    body: Mapped[str] = mapped_column(Text)
+    revision: Mapped[int] = mapped_column()
+    updated_at: Mapped[datetime] = mapped_column()
+
+
+@final
+class ConceptRevision(Base):
+    """Immutable snapshot of one concept revision. Older rows stay after a later save."""
+
+    __tablename__ = "concept_revisions"
+    __table_args__ = _table_args(UniqueConstraint("document_id", "revision"))
+
+    id: Mapped[str] = mapped_column(String(26), primary_key=True)
+    document_id: Mapped[str] = mapped_column(
+        ForeignKey("concept_documents.id", ondelete="CASCADE"),
+        index=True,
+    )
+    revision: Mapped[int] = mapped_column()
+    title: Mapped[str] = mapped_column(String(300))
+    body: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column()
+
+
+@final
 class AgentAccount(Base):
     __tablename__ = "agent_accounts"
 

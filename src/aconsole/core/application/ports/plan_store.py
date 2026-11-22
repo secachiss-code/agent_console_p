@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Protocol, runtime_checkable
 
+from aconsole.core.domain.concepts import ConceptDocument
 from aconsole.core.domain.plan_admission import PlanTopology
 
 
@@ -125,3 +126,45 @@ class PlanInboxStore(PlanChangeStore, Protocol):
     def inbox(self, plan_id: str) -> tuple[StoredPlanChange, ...]: ...
     def save_attention(self, plan: StoredPlan, entry: StoredPlanChange) -> None: ...
     def save_decision(self, plan: StoredPlan, decision: StoredPlanDecision) -> None: ...
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class GraphPreview:
+    """What an add-only commit would insert at one topology revision."""
+
+    token: str
+    revision_no: int
+    added: tuple[str, ...]
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class AssemblyReceipt:
+    """The node ids a commit inserted, durable across replay and restart."""
+
+    token: str
+    plan_id: str
+    revision_no: int
+    node_ids: tuple[tuple[str, str], ...]
+
+
+@runtime_checkable
+class PlanAssemblyStore(Protocol):
+    def load_assembly(self, plan_id: str, token: str) -> AssemblyReceipt | None: ...
+
+    def save_assembly(self, plan: StoredPlan, receipt: AssemblyReceipt, expected_revision: int) -> None:
+        """Commit the plan and its receipt, or raise when the topology revision moved."""
+        ...
+
+
+@runtime_checkable
+class ConceptStore(Protocol):
+    def load_concept(self, project_id: str, key: str) -> ConceptDocument | None: ...
+
+    def save_concept(
+        self,
+        project_id: str,
+        key: str,
+        title: str,
+        body: str,
+        expected_revision: int,
+    ) -> ConceptDocument: ...

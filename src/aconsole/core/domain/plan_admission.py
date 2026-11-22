@@ -235,6 +235,46 @@ def _hash(value: object) -> str:
     return hashlib.sha256(_canonical(value)).hexdigest()
 
 
+def graph_token(
+    plan_id: str,
+    revision_no: int,
+    nodes: tuple[TopologyContract, ...],
+    bindings: tuple[tuple[str, str, tuple[str, ...], tuple[str, ...]], ...],
+) -> str:
+    """Bind a preview to PlanTopology.revision_no, not to a plan_get cursor."""
+    return _hash(
+        {
+            "plan_id": plan_id,
+            "revision_no": revision_no,
+            "nodes": [
+                {
+                    "key": node.key,
+                    "objective": node.objective,
+                    "level": node.level,
+                    "parent": node.parent,
+                    "paths": node.paths,
+                    "acceptance": node.acceptance,
+                    "test_cmd": node.test_cmd,
+                    "boundaries": node.boundaries,
+                    "output_format": node.output_format,
+                    "invariants": node.invariants,
+                    "gate_profile": node.gate_profile_json,
+                }
+                for node in nodes
+            ],
+            "bindings": [
+                {"key": key, "title": title, "depends_on": depends_on, "related": related}
+                for key, title, depends_on, related in bindings
+            ],
+        }
+    )
+
+
+def assembly_node_id(plan_id: str, key: str) -> str:
+    """The same plan and key always name the same new node, including after a failed commit."""
+    return _hash({"plan_id": plan_id, "node_key": key})[:26]
+
+
 def contract_sha256(node: TopologyContract, parent: TopologyContract | None) -> str:
     """The §4.3 payload; direction invariants and gates bind every child contract."""
     direction = node if node.level == 0 else parent
