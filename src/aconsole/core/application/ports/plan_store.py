@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Protocol, runtime_checkable
 
+from aconsole.core.domain.concepts import ConceptDocument
 from aconsole.core.domain.plan_admission import PlanTopology
 
 
@@ -125,3 +126,17 @@ class PlanInboxStore(PlanChangeStore, Protocol):
     def inbox(self, plan_id: str) -> tuple[StoredPlanChange, ...]: ...
     def save_attention(self, plan: StoredPlan, entry: StoredPlanChange) -> None: ...
     def save_decision(self, plan: StoredPlan, decision: StoredPlanDecision) -> None: ...
+
+
+@runtime_checkable
+class ConceptStore(Protocol):
+    def load_concept(self, project_id: str, key: str) -> ConceptDocument | None: ...
+
+    def save_concept(
+        self,
+        project_id: str,
+        key: str,
+        title: str,
+        body: str,
+        expected_revision: int,
+    ) -> ConceptDocument: ...
