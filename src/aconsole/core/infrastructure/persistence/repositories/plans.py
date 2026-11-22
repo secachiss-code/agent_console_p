@@ -8,11 +8,13 @@ from datetime import UTC, datetime
 from typing import final
 from uuid import uuid4
 
+import msgspec
 from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from aconsole.core.application.ports.plan_store import (
+    AssemblyReceipt,
     StoredArtifact,
     StoredNode,
     StoredPlan,
@@ -22,6 +24,7 @@ from aconsole.core.application.ports.plan_store import (
 )
 from aconsole.core.application.services.plan_lifecycle import topology_contract
 from aconsole.core.domain.agent import AgentKind
+from aconsole.core.domain.errors import DomainError
 from aconsole.core.domain.plan import NodeStatus
 from aconsole.core.domain.plan_admission import PlanTopology
 from aconsole.core.infrastructure.persistence.models import (
@@ -79,6 +82,35 @@ class PlanDatabase:
             _ = self._writer.call(lambda session: delete_plan(session, plan_id))
         except (SQLAlchemyError, TimeoutError) as exc:
             message = f"plan {plan_id} was not deleted: {exc}"
+            raise StoreWriteError(message) from exc
+
+    def load_assembly(self, plan_id: str, token: str) -> AssemblyReceipt | None:
+        found: list[AssemblyReceipt] = []
+
+        def read(session: Session) -> None:
+            row = session.scalars(
+                select(PlanInbox).where(
+                    PlanInbox.plan_id == plan_id, PlanInbox.body == token, PlanInbox.kind == "human"
+                )
+            ).first()
+            if row is not None:
+                receipt = _assembly_receipt(row)
+                if receipt is not None:
+                    found.append(receipt)
+
+        _ = self._writer.call(read)
+        return found[0] if found else None
+
+    def save_assembly(self, plan: StoredPlan, receipt: AssemblyReceipt, expected_revision: int) -> None:
+        def write(session: Session) -> None:
+            save_assembly(session, plan, receipt, expected_revision)
+
+        try:
+            _ = self._writer.call(write)
+        except DomainError:
+            raise
+        except (SQLAlchemyError, TimeoutError) as exc:
+            message = f"plan {plan.id} was not assembled: {exc}"
             raise StoreWriteError(message) from exc
 
     def load_change(self, change_id: str) -> StoredPlanChange | None:
@@ -252,6 +284,46 @@ def save_plan(session: Session, plan: StoredPlan) -> None:
         _sync_edges(session, plan, ids, node_ids)
         _sync_artifacts(session, plan, node_ids)
         _sync_leases(session, plan, node_ids)
+
+
+def save_assembly(session: Session, plan: StoredPlan, receipt: AssemblyReceipt, expected_revision: int) -> None:
+    """Insert the receipt in the same transaction as the plan. A moved revision writes nothing."""
+    row = session.get(Plan, plan.id)
+    if row is not None and row.revision_no != expected_revision:
+        raise DomainError(code=4022, name="GRAPH_TOKEN_STALE", retryable=False)
+    save_plan(session, plan)
+    inbox_id = "g" + receipt.token[:25]
+    if session.get(PlanInbox, inbox_id) is None:
+        session.add(
+            PlanInbox(
+                id=inbox_id,
+                plan_id=plan.id,
+                kind="human",
+                body=receipt.token,
+                payload={
+                    "assembly": True,
+                    "revision_no": receipt.revision_no,
+                    "node_ids": [list(pair) for pair in receipt.node_ids],
+                },
+                status="applied",
+                created_at=plan.updated_at,
+                decided_at=plan.updated_at,
+                decided_by="human",
+            )
+        )
+
+
+def _assembly_receipt(row: PlanInbox) -> AssemblyReceipt | None:
+    payload = row.payload
+    raw = payload.get("node_ids")
+    revision = payload.get("revision_no")
+    if payload.get("assembly") is not True or type(revision) is not int:
+        return None
+    try:
+        pairs = msgspec.json.decode(msgspec.json.encode(raw), type=list[tuple[str, str]])
+    except msgspec.ValidationError:
+        return None
+    return AssemblyReceipt(token=row.body, plan_id=row.plan_id, revision_no=revision, node_ids=tuple(pairs))
 
 
 def delete_plan(session: Session, plan_id: str) -> None:
