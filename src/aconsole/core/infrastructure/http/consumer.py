@@ -68,7 +68,9 @@ def hook_event(item: IngestItem) -> str | None:
 
 
 async def _apply_item(
-    item: IngestItem, apply: Callable[[str, str], Awaitable[None]], found: IngestHandlers,
+    item: IngestItem,
+    apply: Callable[[str, str], Awaitable[None]],
+    found: IngestHandlers,
 ) -> bool:
     try:
         name = _event_name(item)
@@ -160,6 +162,18 @@ async def consume(
                     await found.on_loss(item.tab_id, lost)
                 except Exception:  # noqa: BLE001 -- a failed notification must not stop ingest
                     _LOG.exception("ingest loss notification for %s failed", item.tab_id)
+
+
+async def shutdown_consumer(task: asyncio.Task[None]) -> None:
+    """Stop the ingest consumer and retrieve its result so a failed task is not left pending."""
+    if not task.done():
+        _ = task.cancel()
+    try:
+        await task
+    except asyncio.CancelledError:
+        return
+    except Exception:  # noqa: BLE001 -- the caller is shutting the consumer down; the error is logged, not raised
+        _LOG.exception("ingest consumer stopped")
 
 
 class _HasSession(msgspec.Struct, frozen=True):

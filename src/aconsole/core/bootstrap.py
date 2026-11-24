@@ -107,7 +107,7 @@ from aconsole.core.infrastructure.http.api import MethodApi, issue_api_token
 from aconsole.core.infrastructure.http.app import IngestApp, serve_config
 from aconsole.core.infrastructure.http.approval import handle_permission
 from aconsole.core.infrastructure.http.auth import TokenBook
-from aconsole.core.infrastructure.http.consumer import OPENCODE_EVENT, IngestHandlers, consume
+from aconsole.core.infrastructure.http.consumer import OPENCODE_EVENT, IngestHandlers, consume, shutdown_consumer
 from aconsole.core.infrastructure.http.problem import HttpResponse, empty_json, json_response
 from aconsole.core.infrastructure.http.routes import IngestItem, IngestQueue
 from aconsole.core.infrastructure.ipc.framing import (
@@ -246,7 +246,8 @@ def acquire_lock(path: Path) -> int | None:
     The descriptor is close-on-exec so a child does not keep the lock after this process exits.
     """
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.parent.chmod(_DIR_MODE)
+    with contextlib.suppress(PermissionError):
+        path.parent.chmod(_DIR_MODE)
     # flock follows the open file description. CLOEXEC drops it across exec.
     descriptor = os.open(path, os.O_CREAT | os.O_RDWR | os.O_CLOEXEC, _FILE_MODE)
     try:
@@ -689,6 +690,10 @@ class Daemon:
         # Hooks reach the core over HTTP on 127.0.0.1 (INGEST_HTTP). Off by default so tests stay socket-only.
         self.serve_ingest: bool = False
         self.ingest_port: int | None = None
+        self.ingest_serving: bool = False
+        self.ingest_detail: str = ""
+        self.ingest_consumer_open: bool = False
+        self.agent_notes: list[tuple[str, str]] = []
         self._tokens: TokenBook = TokenBook()
         self._recovery: _Recovery | None = None
         self._recovery_path: Path = self.socket.with_suffix(".recovery.json")
@@ -1080,6 +1085,8 @@ class Daemon:
             self._deliver(connection, writer, item)
         if self._listening:
             self.set_live_tabs(live)
+        if isinstance(event, TabAdded) and self.ingest_detail and not self.ingest_serving:
+            self._tell_agent(str(event.tab.id), self.ingest_detail)
 
     def _deliver(self, connection: Connection, writer: asyncio.StreamWriter, item: EventEnvelope) -> None:
         if writer.is_closing():
@@ -1099,9 +1106,69 @@ class Daemon:
             return call()
         return await asyncio.get_running_loop().run_in_executor(worker, call)
 
+    def _bind_ingest(self) -> sockets.socket | None:
+        """Bind the loopback listener. A failure is recorded and explained; the caller starts nothing."""
+        listener = sockets.socket(sockets.AF_INET, sockets.SOCK_STREAM)
+        listener.setsockopt(sockets.SOL_SOCKET, sockets.SO_REUSEADDR, 1)
+        port = self._recovery.port if self._recovery is not None else 0
+        try:
+            listener.bind(("127.0.0.1", port))
+        except OSError as exc:
+            listener.close()
+            self._ingest_failed(f"ingest could not bind 127.0.0.1: {exc}")
+            return None
+        return listener
+
+    def _server_stopped(self, task: asyncio.Task[None]) -> str:
+        """Why uvicorn left before `started`. The exception is retrieved here, not left on the task."""
+        detail = "ingest stopped before it was ready"
+        if task.done() and not task.cancelled():
+            error = task.exception()
+            if error is not None:
+                return f"{detail}: {type(error).__name__}: {error}"
+        return detail
+
+    def _ingest_is_serving(self, port: int) -> None:
+        self.ingest_serving = True
+        self.ingest_detail = ""
+        self.ingest_port = port
+        if self._recovery is not None:
+            self._recovery.port = port
+            _write_recovery(self._recovery_path, self._recovery)
+        self._host.set_ingest_port(port)
+
+    def _ingest_failed(self, detail: str) -> None:
+        """The core keeps running, but the port is not advertised and every current tab is told why."""
+        self.ingest_serving = False
+        self.ingest_port = None
+        self.ingest_detail = detail
+        self._host.set_ingest_port(0)
+        _LOG.error("%s", detail)
+        for tab in self.tabs.snapshot().tabs:
+            self._tell_agent(str(tab.id), detail)
+
+    def _tell_agent(self, tab_id: str, detail: str) -> None:
+        self.agent_notes.append((tab_id, detail))
+        self._publish(
+            InjectToTerminal(tab_id=TabId(tab_id), text=detail, submit=False),
+            self._live_tabs,
+            None,
+        )
+
+    async def open_ingest(self) -> None:
+        """Bind ingest and record whether the server became ready."""
+        await self._open_ingest()
+
+    async def close_ingest(self) -> None:
+        """Stop the ingest server and shut down its consumer."""
+        await self._close_ingest()
+
     async def _open_ingest(self) -> None:
         """Bind 127.0.0.1 on a free port, serve the ingest app, and start the consumer."""
         if not self.serve_ingest:
+            return
+        listener = self._bind_ingest()
+        if listener is None:
             return
         ready = asyncio.Event()
         self._ingest_ready = ready
@@ -1117,17 +1184,9 @@ class Daemon:
             self._mcp_tokens,
             MethodApi(issue_api_token(self.socket.parent), self._invoke_method),
         )
-        listener = sockets.socket(sockets.AF_INET, sockets.SOCK_STREAM)
-        listener.setsockopt(sockets.SOL_SOCKET, sockets.SO_REUSEADDR, 1)
-        listener.bind(("127.0.0.1", self._recovery.port if self._recovery is not None else 0))
         port = int(listener.getsockname()[1])  # pyright: ignore[reportAny] -- AF_INET address is (host, port)
         server = uvicorn.Server(serve_config(app, port=port))
         self._uvicorn = server
-        self.ingest_port = port
-        if self._recovery is not None:
-            self._recovery.port = port
-            _write_recovery(self._recovery_path, self._recovery)
-        self._host.set_ingest_port(port)
         self._ingest_tasks = [
             asyncio.create_task(server.serve(sockets=[listener])),
             asyncio.create_task(
@@ -1150,9 +1209,42 @@ class Daemon:
             asyncio.create_task(self._poll_opencode_limits()),
             asyncio.create_task(self._watch_codex_turns()),
         ]
+        self.ingest_consumer_open = True
         # uvicorn exposes only a `started` flag, no event to wait on.
         while not server.started and not self._ingest_tasks[0].done():  # noqa: ASYNC110
             await asyncio.sleep(0.01)
+        if server.started:
+            self._ingest_is_serving(port)
+            return
+        detail = self._server_stopped(self._ingest_tasks[0])
+        with contextlib.suppress(OSError):
+            listener.close()
+        await self._close_ingest()
+        self._ingest_failed(detail)
+
+    async def _close_ingest(self) -> None:
+        self._agent_commands.stop_streams()
+        server = self._uvicorn
+        self._uvicorn = None
+        if server is not None:
+            server.should_exit = True
+        tasks = self._ingest_tasks
+        self._ingest_tasks = []
+        consumer = tasks[1] if len(tasks) > 1 else None
+        for task in tasks[2:]:
+            _ = task.cancel()
+        if consumer is not None:
+            await shutdown_consumer(consumer)
+        if tasks:
+            with contextlib.suppress(asyncio.CancelledError, Exception):
+                await tasks[0]
+        for task in tasks[2:]:
+            with contextlib.suppress(asyncio.CancelledError, Exception):
+                await task
+        self.ingest_consumer_open = False
+        self.ingest_serving = False
+        self.ingest_port = None
+        self._host.set_ingest_port(0)
 
     def _method_session(self) -> Connection:
         """A UI-role connection used only by ``POST /api``. It never shares a socket client's handshake."""
@@ -1629,20 +1721,6 @@ class Daemon:
             self._account_sent[key] = now
             self._publish(event, self._live_tabs, None)
 
-    async def _close_ingest(self) -> None:
-        self._agent_commands.stop_streams()
-        server = self._uvicorn
-        self._uvicorn = None
-        if server is not None:
-            server.should_exit = True
-        tasks = self._ingest_tasks
-        self._ingest_tasks = []
-        for task in tasks[1:]:
-            _ = task.cancel()
-        for task in tasks:
-            with contextlib.suppress(asyncio.CancelledError, Exception):
-                await task
-
     async def _restore_tabs(self) -> None:
         """Load settings and open tabs before the socket accepts anyone.
 
@@ -1893,7 +1971,8 @@ class Daemon:
     async def _listen(self) -> None:
         directory = self.socket.parent
         directory.mkdir(parents=True, exist_ok=True)
-        directory.chmod(_DIR_MODE)
+        with contextlib.suppress(PermissionError):
+            directory.chmod(_DIR_MODE)
         if self.socket.exists():
             self.socket.unlink()
         self._server = await asyncio.start_unix_server(
